@@ -219,6 +219,7 @@ class StageGraph:
         self,
         source: str,
         dynamic_weights: dict[tuple[str, str], float] | None = None,
+        first_hops: dict[str, float] | None = None,
     ) -> dict[str, tuple[float, list[str]]]:
         """Dijkstra from *source* to every reachable exit.
 
@@ -227,8 +228,17 @@ class StageGraph:
 
         When *dynamic_weights* is provided, edge costs are looked up from
         the dict instead of using static Euclidean weights.
+
+        When *first_hops* is provided, the search starts from a point off the
+        graph rather than at *source*: it maps each node reachable first to
+        the cost of getting there, and replaces *source*'s own out-edges.
+        The search never goes back into *source*, so every path has the form
+        ``[source, first_hop, ..., exit]`` with *source* once, at index 0, and
+        its cost is ``first_hops[first_hop]`` plus the edge weights after it.
         """
-        dist, prev = self._dijkstra(source, dynamic_weights=dynamic_weights)
+        dist, prev = self._dijkstra(
+            source, dynamic_weights=dynamic_weights, first_hops=first_hops
+        )
         results: dict[str, tuple[float, list[str]]] = {}
         for exit_id in self.exit_nodes():
             if exit_id in dist and math.isfinite(dist[exit_id]):
@@ -267,25 +277,41 @@ class StageGraph:
         self,
         source: str,
         dynamic_weights: dict[tuple[str, str], float] | None = None,
+        first_hops: dict[str, float] | None = None,
     ) -> tuple[dict[str, float], dict[str, str | None]]:
         """Run Dijkstra from *source*.  Returns (dist, prev) dicts.
 
         When *dynamic_weights* is provided, edge cost is looked up from
         the dict instead of using the static edge weight.  Keys are
         ``(source_id, target_id)`` tuples.
+
+        With *first_hops* the search is seeded at those nodes, each with its
+        cost and *source* as its predecessor. *source* stands for the agent's
+        position only: no edge into it is relaxed, so it is never reached
+        through the graph and appears once, at the start of every path.
         """
         if source not in self.nodes:
             return {}, {}
         dist: dict[str, float] = {sid: math.inf for sid in self.nodes}
         prev: dict[str, str | None] = {sid: None for sid in self.nodes}
-        dist[source] = 0.0
-        heap: list[tuple[float, str]] = [(0.0, source)]
+        heap: list[tuple[float, str]] = []
+        if first_hops is None:
+            dist[source] = 0.0
+            heap.append((0.0, source))
+        else:
+            for node, cost in first_hops.items():
+                if node in dist and node != source and cost < dist[node]:
+                    dist[node] = cost
+                    prev[node] = source
+                    heapq.heappush(heap, (cost, node))
 
         while heap:
             d, u = heapq.heappop(heap)
             if d > dist[u]:
                 continue
             for edge in self.edges.get(u, []):
+                if first_hops is not None and edge.target == source:
+                    continue
                 if dynamic_weights is not None:
                     w = dynamic_weights.get((edge.source, edge.target), edge.weight)
                 else:
@@ -1094,6 +1120,80 @@ def evaluate_segment(
     )
 
 
+@dataclass(frozen=True)
+class _FirstLeg:
+    """The walk from an agent's position to the next node of a route."""
+
+    waypoints: list[tuple[float, float]]
+    length_m: float
+    k_avg: float
+    k_max: float
+    time_s: float
+
+
+def _first_leg(
+    graph: StageGraph,
+    agent_position: tuple[float, float],
+    node_id: str,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    config: RouteCostConfig,
+    walks: dict[str, _FirstLeg] | None = None,
+) -> _FirstLeg:
+    """The walk from *agent_position* to *node_id*, sampled for smoke at *time_s*.
+
+    *walks* caches the walks of one agent at one evaluation, keyed on the
+    node. It must never be shared between agents: unlike ``cached_segments``
+    the walk starts where this agent stands.
+    """
+    if walks is not None:
+        cached = walks.get(node_id)
+        if cached is not None and cached.time_s == time_s:
+            return cached
+    node = graph.nodes[node_id]
+    waypoints = _walkable_waypoints(
+        graph.routing_engine,
+        agent_position,
+        (node.centroid_x, node.centroid_y),
+    )
+    k_avg, k_max = _polyline_stats(
+        waypoints, time_s, extinction_sampler, config.sampling_step_m
+    )
+    leg = _FirstLeg(waypoints, _polyline_length(waypoints), k_avg, k_max, time_s)
+    if walks is not None:
+        walks[node_id] = leg
+    return leg
+
+
+def _leg_travel_time(
+    length_m: float, k_avg: float, config: RouteCostConfig
+) -> tuple[float, float]:
+    """``(speed_factor, travel_time)`` of a walk through mean extinction *k_avg*.
+
+    Timed as ``evaluate_segment`` times an edge.
+    """
+    sf = speed_factor_from_extinction(
+        k_avg,
+        alpha=config.alpha,
+        beta=config.beta,
+        min_speed_factor=config.min_speed_factor,
+    )
+    effective_speed = config.base_speed_m_per_s * sf
+    travel_time = length_m / effective_speed if effective_speed > 1e-9 else math.inf
+    return sf, travel_time
+
+
+def _first_share(remaining_m: float, first_length_m: float) -> float:
+    """The still-untraversed fraction of a first segment, in (0, 1].
+
+    Floored above zero so an impassable first segment (infinite travel time)
+    stays infinite even for an agent standing on its end node.
+    """
+    if first_length_m <= 1e-9:
+        return 1.0
+    return min(1.0, max(1e-9, remaining_m / first_length_m))
+
+
 def _position_aware_length(
     graph: StageGraph,
     path: list[str],
@@ -1106,8 +1206,9 @@ def _position_aware_length(
 
     Returns ``(effective_length, first_share)``, where ``first_share`` is the
     still-untraversed fraction of the first segment -- the stretch over which
-    the smoke and FED integrals are charged, so exposure already incurred is
-    not billed twice.
+    the FED integral is charged, so a dose already incurred is not billed
+    twice. Smoke and time on the first leg are measured on the walk itself,
+    see ``_measure_route``.
 
     Every route is measured the same way: from where the agent stands to the
     next node on that route, plus the rest of the route from there. The rule is
@@ -1141,12 +1242,10 @@ def _position_aware_length(
             (next_node.centroid_x, next_node.centroid_y),
         )
     remaining = _polyline_length(first_waypoints)
-    if first_length_m <= 1e-9:
-        return path_length - first_length_m + remaining, 1.0
-    # Floored above zero so an impassable first segment (infinite travel time)
-    # stays infinite even for an agent standing on its end node.
-    share = min(1.0, max(1e-9, remaining / first_length_m))
-    return path_length - first_length_m + remaining, share
+    return (
+        path_length - first_length_m + remaining,
+        _first_share(remaining, first_length_m),
+    )
 
 
 def _measure_route(
@@ -1161,11 +1260,13 @@ def _measure_route(
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     agent_position: tuple[float, float] | None = None,
+    walks: dict[str, _FirstLeg] | None = None,
 ) -> RouteMeasurements:
     """Measure a route: its segments, length, smoke, dose, time and queue.
 
     The measuring half of ``evaluate_route``, which see. No limit and no cost
-    model's ranking is applied here.
+    model's ranking is applied here. *walks* is the per-agent cache of
+    ``_first_leg``.
     """
     segments: list[SegmentCost] = []
     walked = 0.0
@@ -1203,16 +1304,19 @@ def _measure_route(
     # node-to-node path_length (used everywhere agent_position is absent).
     effective_length = path_length
     first_share = 1.0
-    # The walk from the agent to the next node, through the walkable area. It
-    # measures the first leg here and is resampled for smoke below.
-    first_waypoints = None
+    # The walk from the agent to the next node, through the walkable area,
+    # sampled for smoke when the first segment would be reached.
+    first_leg = None
     if agent_position is not None and len(path) >= 2:
-        next_node = graph.nodes.get(path[1])
-        if next_node is not None:
-            first_waypoints = _walkable_waypoints(
-                graph.routing_engine,
+        if graph.nodes.get(path[1]) is not None:
+            first_leg = _first_leg(
+                graph,
                 agent_position,
-                (next_node.centroid_x, next_node.centroid_y),
+                path[1],
+                segments[0].arrival_time_s,
+                extinction_sampler,
+                config,
+                walks,
             )
         effective_length, first_share = _position_aware_length(
             graph,
@@ -1220,26 +1324,46 @@ def _measure_route(
             agent_position,
             path_length,
             segments[0].length_m,
-            first_waypoints,
+            first_leg.waypoints if first_leg is not None else None,
         )
 
-    # Exposure is accumulated over the same stretch the distance term charges:
-    # the smoke and FED the agent already took on the traversed part of the first
-    # segment are in current_fed, so charging the full segment would count them
-    # twice and inflate the FED and smoke terms of a route it is midway along.
+    # The FED already taken on the traversed part of the first segment is in
+    # current_fed, so the first segment's dose is charged pro rata to what is
+    # left of it.
     shares = [first_share] + [1.0] * (len(segments) - 1)
     weighted = list(zip(shares, segments))
-    exposure_length = sum(w * s.length_m for w, s in weighted)
-    total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
-    k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
-    travel_time = sum(w * s.travel_time_s for w, s in weighted)
-    # The share is capped at 1, so an agent behind the route's origin node
-    # would be timed over the node legs alone and not the walk to the origin.
-    # That stretch is timed at the route's mean pace, the same assumption
-    # tau = K_ave * effective_length makes about its extinction. Only ever a
-    # stretch, never a shrink, so an impassable route stays infinite.
-    if effective_length > exposure_length > 1e-9:
-        travel_time *= effective_length / exposure_length
+    if first_leg is not None and graph.nodes.get(path[0]) is not None:
+        # Smoke and time on the first leg are those of the walk itself: the
+        # smoke ahead of the agent on the way to the next node, and none of the
+        # smoke behind it. Charging a share of the segment's mean instead
+        # billed an agent past a smoke patch for the patch, and a walk that
+        # leaves the segment -- back past the origin, or across a room -- for
+        # whatever the segment held rather than what lies on the walk. FDS+Evac
+        # likewise prices every door from the agent's position (evac.f90,
+        # Change_Target_Door).
+        legs = [(first_leg.k_avg, first_leg.length_m)] + [
+            (s.k_avg, s.length_m) for s in segments[1:]
+        ]
+        exposure_length = sum(length for _, length in legs)
+        total_k_samples = sum(k * length for k, length in legs)
+        k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
+        travel_time = sum(
+            [_leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]]
+            + [s.travel_time_s for s in segments[1:]]
+        )
+    else:
+        exposure_length = sum(w * s.length_m for w, s in weighted)
+        total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
+        k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
+        travel_time = sum(w * s.travel_time_s for w, s in weighted)
+        # The share is capped at 1, so an agent behind the route's origin node
+        # would be timed over the node legs alone and not the walk to the
+        # origin. That stretch is timed at the route's mean pace, the same
+        # assumption tau = K_ave * effective_length makes about its extinction.
+        # Only ever a stretch, never a shrink, so an impassable route stays
+        # infinite.
+        if effective_length > exposure_length > 1e-9:
+            travel_time *= effective_length / exposure_length
     fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
     # The worst point on the route, not its average: a route is refused because
@@ -1265,13 +1389,8 @@ def _measure_route(
     # Sampled along the walk itself, around walls, at sampling_step_m over its
     # real length -- which, behind the origin node, is longer than the capped
     # first_share of the segment.
-    if first_waypoints is not None:
-        first_k_avg, first_k_max = _polyline_stats(
-            first_waypoints,
-            segments[0].arrival_time_s,
-            extinction_sampler,
-            config.sampling_step_m,
-        )
+    if first_leg is not None:
+        first_k_avg, first_k_max = first_leg.k_avg, first_leg.k_max
     k_max = max(
         [first_k_max] + [s.k_max for _, s in weighted[1:]],
         default=0.0,
@@ -1785,10 +1904,12 @@ def evaluate_route(
     the route's first graph node, so an agent 1 m from one exit is not priced as
     if standing at the far upstream junction. Every route is measured the same
     way, whatever the agent is currently heading for -- see
-    ``_position_aware_length``. The smoke and FED terms are credited over the
-    same stretch as the distance, so exposure already incurred on the traversed
-    part -- and already carried in ``current_fed`` -- is not charged a second
-    time.
+    ``_position_aware_length``. The first leg is the walk from the agent to
+    ``path[1]``: its smoke and travel time are those of the walk, so smoke
+    behind the agent is not charged and smoke on a walk that leaves the first
+    segment is. The FED of the first segment is charged pro rata to what is
+    left of it, so a dose already incurred -- and carried in ``current_fed``
+    -- is not charged a second time.
 
     ``current_target`` is accepted and ignored; it is kept so callers that
     already thread it through do not have to change, and so the parameter is
@@ -1819,6 +1940,9 @@ def _generate_candidates(
     policy: RouteModePolicy,
     *,
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
+    agent_position: tuple[float, float] | None = None,
+    current_target: str | None = None,
+    walks: dict[str, _FirstLeg] | None = None,
 ) -> dict[str, tuple[float, list[str]]]:
     """The cheapest path from *source* to every reachable exit under *policy*.
 
@@ -1826,9 +1950,13 @@ def _generate_candidates(
     Dijkstra with those weights. *graph* is already restricted to what the
     agent knows. Returns exit_id -> (cost, path), as
     ``StageGraph.shortest_paths_to_exits``.
+
+    With *agent_position* the search starts where the agent stands, not at
+    *source*: see ``_first_hops``.
     """
     # Phase 1: evaluate all edges to get dynamic costs.
     dynamic_weights: dict[tuple[str, str], float] = {}
+    edge_segments: dict[tuple[str, str], SegmentCost] = {}
     for src_id, edges in graph.edges.items():
         for edge in edges:
             cache_key = (edge.source, edge.target)
@@ -1846,11 +1974,111 @@ def _generate_candidates(
                 )
                 if cached_segments is not None:
                     cached_segments[cache_key] = seg
+            edge_segments[cache_key] = seg
             dynamic_weights[cache_key] = policy.edge_weight(seg, config)
 
+    first_hops = None
+    if agent_position is not None and _search_from_position(graph, source):
+        first_hops = _first_hops(
+            graph,
+            source,
+            agent_position,
+            current_target,
+            time_s,
+            extinction_sampler,
+            fed_rate_sampler,
+            config,
+            policy,
+            edge_segments,
+            walks,
+        )
+
     # Phase 2: Dijkstra with dynamic weights.
-    all_paths = graph.shortest_paths_to_exits(source, dynamic_weights=dynamic_weights)
+    all_paths = graph.shortest_paths_to_exits(
+        source, dynamic_weights=dynamic_weights, first_hops=first_hops
+    )
     return all_paths
+
+
+def _search_from_position(graph: StageGraph, source: str) -> bool:
+    """Whether the candidate search may start from the agent's position.
+
+    Not from an exit, which is its own route, and not from a node outside
+    the graph, which has none.
+    """
+    node = graph.nodes.get(source)
+    return node is not None and node.stage_type != "exit"
+
+
+def _first_hops(
+    graph: StageGraph,
+    source: str,
+    agent_position: tuple[float, float],
+    current_target: str | None,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+    policy: RouteModePolicy,
+    edge_segments: dict[tuple[str, str], SegmentCost],
+    walks: dict[str, _FirstLeg] | None,
+) -> dict[str, float]:
+    """The cost of the walk from the agent to each node it can head for first.
+
+    Those nodes are *source*'s successors in *graph* and the node the agent is
+    walking to. Each walk is weighted by *policy* as an edge, measured as
+    ``_measure_route`` measures a first leg: the smoke on the walk, its time,
+    and the dose of the segment from *source* pro rata to what is left of it.
+    So every exit, the agent's own included, is searched for from where the
+    agent stands and not from the node it last left.
+    """
+    targets = [e.target for e in graph.edges.get(source, [])]
+    if (
+        current_target is not None
+        and current_target in graph.nodes
+        and current_target != source
+        and current_target not in targets
+    ):
+        targets.append(current_target)
+    hops: dict[str, float] = {}
+    for node_id in targets:
+        if node_id == source or node_id in hops:
+            continue
+        leg = _first_leg(
+            graph,
+            agent_position,
+            node_id,
+            time_s,
+            extinction_sampler,
+            config,
+            walks,
+        )
+        seg = edge_segments.get((source, node_id))
+        if seg is None:
+            seg = evaluate_segment(
+                graph,
+                source,
+                node_id,
+                time_s,
+                extinction_sampler,
+                fed_rate_sampler,
+                config,
+            )
+        speed_factor, travel_time = _leg_travel_time(leg.length_m, leg.k_avg, config)
+        walk = SegmentCost(
+            source=source,
+            target=node_id,
+            length_m=leg.length_m,
+            k_avg=leg.k_avg,
+            speed_factor=speed_factor,
+            travel_time_s=travel_time,
+            fed_growth=_first_share(leg.length_m, seg.length_m) * seg.fed_growth,
+            visible=leg.k_avg < config.visibility_extinction_threshold,
+            k_max=leg.k_max,
+            arrival_time_s=time_s,
+        )
+        hops[node_id] = policy.edge_weight(walk, config)
+    return hops
 
 
 def _fallback_holds_current(
@@ -1922,6 +2150,7 @@ def rank_routes(
     agent_position: tuple[float, float] | None = None,
     current_exit: str | None = None,
     current_target: str | None = None,
+    current_path: list[str] | None = None,
 ) -> list[RouteCost]:
     """Evaluate and rank all routes from *source* to reachable exits.
 
@@ -1929,6 +2158,14 @@ def rank_routes(
     then runs Dijkstra with those weights so pathfinding picks the
     cheapest path under current conditions (not just the geometrically
     shortest).
+
+    With *agent_position* the search starts where the agent stands, so every
+    exit is priced on the best path from there (see ``_first_hops``).
+    *current_path* is the path the agent is walking; when it leads to
+    *current_exit* and orders ahead of the path the search found to that
+    exit, it is that exit's entry. The search weighs edges at the present
+    time while routes are measured on arrival, so without it the agent's own
+    exit could be priced above the walk it is on.
 
     Returns routes sorted by composite cost (lowest first).
     Rejected routes are sorted to the end.
@@ -1945,6 +2182,9 @@ def rank_routes(
         graph = cognitive_subgraph(cognitive_map, graph)
 
     policy = policy_for(config)
+    # The walks from this agent to the nodes it may head for, shared by the
+    # search and the measurement below; never by another agent.
+    walks: dict[str, _FirstLeg] = {}
     all_paths = _generate_candidates(
         graph,
         source,
@@ -1954,14 +2194,15 @@ def rank_routes(
         config,
         policy,
         cached_segments=cached_segments,
+        agent_position=agent_position,
+        current_target=current_target,
+        walks=walks,
     )
     if not all_paths:
         return []
 
-    # Phase 3: evaluate full routes (reusing cached segments).
-    costs: list[RouteCost] = []
-    for exit_id, (_dist, path) in all_paths.items():
-        rc = evaluate_route(
+    def measure(path: list[str]) -> RouteCost:
+        m = _measure_route(
             graph,
             path,
             time_s,
@@ -1971,15 +2212,43 @@ def rank_routes(
             config,
             cached_segments=cached_segments,
             exit_counts=exit_counts,
-            current_exit=current_exit,
             agent_position=agent_position,
-            current_target=current_target,
+            walks=walks,
         )
-        costs.append(rc)
+        return _project_route_cost(_assess_measurements(m, config, current_exit))
+
+    # Phase 3: evaluate full routes (reusing cached segments).
+    costs = [measure(path) for _dist, path in all_paths.values()]
+    if (
+        agent_position is not None
+        and current_path is not None
+        and _prices_current_path(graph, current_path, current_exit)
+    ):
+        walked = measure(current_path)
+        costs = [
+            walked
+            if rc.exit_id == current_exit
+            and policy.order_key(walked, config, current_exit)
+            < policy.order_key(rc, config, current_exit)
+            else rc
+            for rc in costs
+        ]
 
     costs = policy.apply_candidate_set_rules(costs, config)
     costs.sort(key=lambda rc: policy.order_key(rc, config, current_exit))
     return _apply_fallback(costs, config, current_exit)
+
+
+def _prices_current_path(
+    graph: StageGraph, current_path: list[str], current_exit: str | None
+) -> bool:
+    """Whether *current_path* is a route to *current_exit* within *graph*."""
+    return (
+        current_exit is not None
+        and len(current_path) >= 2
+        and current_path[-1] == current_exit
+        and all(n in graph.nodes for n in current_path)
+    )
 
 
 # ── Dynamic rerouting (Phase 4) ──────────────────────────────────────
@@ -2553,6 +2822,7 @@ def evaluate_and_reroute(
         agent_position=agent_position,
         current_exit=route_state.current_exit,
         current_target=current_target,
+        current_path=_reconstruct_committed_path(wait_info),
     )
     if not ranked:
         # No exit reachable in the agent's known subgraph (typically a

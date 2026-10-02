@@ -380,6 +380,15 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
   `visibility_to_node` returned `None`. Only FDS-backed discovery runs whose
   agents pass a sign's cell change; on the first FDS case 70 of 150 agents
   leave instead of 72.
+- Exits are priced from where the agent stands (#451). The path search
+  starts at the agent's position and never routes back through the node the
+  agent last left, the first leg is charged the smoke on the
+  walk ahead of the agent rather than a share of its edge's mean, and the
+  current exit is never priced above the path the agent walks
+  (`rank_routes(current_path=...)`, #186). An agent past smoke near its
+  origin no longer leaves an exit a few seconds ahead for a detour, and a
+  walk back through smoke is charged. Without `agent_position` nothing
+  changes; FED keeps the share of the first segment (#171).
 - The mean extinction of a route edge (`k_avg`) averaged over all samples
   of its polyline, so short segments and interior vertices weighed too much
   and the mean depended on where the routing engine put its vertices. It is

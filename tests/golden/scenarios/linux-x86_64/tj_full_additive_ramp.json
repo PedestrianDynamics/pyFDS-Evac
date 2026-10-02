@@ -345,6 +345,13 @@
   ],
   [
    13.0,
+   4,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_A_left:ok > exit_B_right:ok"
+  ],
+  [
+   13.0,
    5,
    "jps-checkpoints_0",
    "exit_A_left",
@@ -376,13 +383,6 @@
    20,
    "jps-distributions_0",
    "exit_A_left",
-   "exit_A_left:ok > exit_B_right:ok"
-  ],
-  [
-   14.0,
-   4,
-   "jps-checkpoints_0",
-   "exit_B_right",
    "exit_A_left:ok > exit_B_right:ok"
   ],
   [
@@ -935,7 +935,7 @@
    "agent_id": 11,
    "new_cost": 25.297,
    "new_exit": "exit_A_left",
-   "old_cost": 36.191,
+   "old_cost": 36.056,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 8.0
@@ -998,16 +998,16 @@
    "agent_id": 8,
    "new_cost": 18.874,
    "new_exit": "exit_A_left",
-   "old_cost": 21.225,
+   "old_cost": 23.421,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 13.0
   },
   {
    "agent_id": 4,
-   "new_cost": 20.978,
+   "new_cost": 26.223,
    "new_exit": "exit_A_left",
-   "old_cost": 25.212,
+   "old_cost": 32.088,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 14.0
@@ -1023,9 +1023,9 @@
   },
   {
    "agent_id": 30,
-   "new_cost": 112.747,
+   "new_cost": 104.265,
    "new_exit": "exit_A_left",
-   "old_cost": 146.388,
+   "old_cost": 169.19,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 26.0

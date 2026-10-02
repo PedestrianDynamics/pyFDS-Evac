@@ -361,7 +361,7 @@
    15.0,
    4,
    "jps-checkpoints_0",
-   "exit_B_right",
+   "exit_A_left",
    "exit_A_left:ok > exit_B_right:nonvisible"
   ],
   [
@@ -443,13 +443,6 @@
   ],
   [
    16.0,
-   4,
-   "jps-checkpoints_0",
-   "exit_A_left",
-   "exit_A_left:ok > exit_B_right:nonvisible"
-  ],
-  [
-   16.0,
    24,
    "jps-distributions_0",
    "exit_A_left",
@@ -492,13 +485,6 @@
   ],
   [
    19.0,
-   19,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok"
-  ],
-  [
-   19.0,
    20,
    "jps-checkpoints_0",
    "exit_A_left",
@@ -521,13 +507,6 @@
   [
    20.0,
    21,
-   "jps-checkpoints_0",
-   "exit_A_left",
-   "exit_A_left:ok > exit_B_right:nonvisible"
-  ],
-  [
-   20.0,
-   23,
    "jps-checkpoints_0",
    "exit_A_left",
    "exit_A_left:ok > exit_B_right:nonvisible"
@@ -562,6 +541,13 @@
   ],
   [
    21.0,
+   23,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   21.0,
    27,
    "jps-checkpoints_0",
    "exit_A_left",
@@ -576,9 +562,23 @@
   ],
   [
    22.0,
+   24,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   22.0,
    25,
    "jps-checkpoints_0",
    "exit_B_right",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   22.0,
+   26,
+   "jps-checkpoints_0",
+   "exit_A_left",
    "exit_A_left:ok > exit_B_right:nonvisible"
   ],
   [
@@ -590,21 +590,7 @@
   ],
   [
    23.0,
-   24,
-   "jps-checkpoints_0",
-   "exit_A_left",
-   "exit_A_left:ok > exit_B_right:nonvisible"
-  ],
-  [
-   23.0,
    25,
-   "jps-checkpoints_0",
-   "exit_A_left",
-   "exit_A_left:ok > exit_B_right:nonvisible"
-  ],
-  [
-   23.0,
-   26,
    "jps-checkpoints_0",
    "exit_A_left",
    "exit_A_left:ok > exit_B_right:nonvisible"
@@ -845,7 +831,7 @@
    "agent_id": 11,
    "new_cost": 25.297,
    "new_exit": "exit_A_left",
-   "old_cost": 36.191,
+   "old_cost": 36.056,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 8.0
@@ -887,6 +873,15 @@
    "time_s": 10.0
   },
   {
+   "agent_id": 4,
+   "new_cost": 26.903,
+   "new_exit": "exit_A_left",
+   "old_cost": 29.961,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
+   "time_s": 14.0
+  },
+  {
    "agent_id": 15,
    "new_cost": 18.659,
    "new_exit": "exit_A_left",
@@ -896,73 +891,64 @@
    "time_s": 14.0
   },
   {
-   "agent_id": 4,
-   "new_cost": 22.646,
-   "new_exit": "exit_A_left",
-   "old_cost": 26.793,
-   "old_exit": "exit_B_right",
-   "reason": "smoke_reroute",
-   "time_s": 15.0
-  },
-  {
    "agent_id": 20,
-   "new_cost": 19.229,
+   "new_cost": 19.2,
    "new_exit": "exit_A_left",
-   "old_cost": 72.881,
+   "old_cost": 83.664,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 18.0
   },
   {
    "agent_id": 19,
-   "new_cost": 18.821,
+   "new_cost": 18.794,
    "new_exit": "exit_A_left",
-   "old_cost": 98.843,
+   "old_cost": 99.055,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 20.0
   },
   {
    "agent_id": 27,
-   "new_cost": 19.377,
+   "new_cost": 19.602,
    "new_exit": "exit_A_left",
-   "old_cost": 92.579,
+   "old_cost": 103.936,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 20.0
   },
   {
    "agent_id": 25,
-   "new_cost": 50.7,
+   "new_cost": 48.263,
    "new_exit": "exit_A_left",
-   "old_cost": 113.628,
+   "old_cost": 128.691,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 22.0
   },
   {
    "agent_id": 31,
-   "new_cost": 91.521,
+   "new_cost": 94.337,
    "new_exit": "exit_A_left",
-   "old_cost": 161.267,
+   "old_cost": 157.986,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 25.0
   },
   {
    "agent_id": 29,
-   "new_cost": 99.464,
+   "new_cost": 110.041,
    "new_exit": "exit_A_left",
-   "old_cost": 181.974,
+   "old_cost": 181.278,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 26.0
   },
   {
    "agent_id": 30,
-   "new_cost": 112.745,
+   "new_cost": 104.263,
    "new_exit": "exit_A_left",
-   "old_cost": 146.395,
+   "old_cost": 169.197,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 26.0

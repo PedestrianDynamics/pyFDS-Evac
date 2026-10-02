@@ -310,16 +310,16 @@
    "jps-exits_0:ok"
   ],
   [
-   12.0,
-   28,
-   "jps-checkpoints_0",
+   13.0,
+   6,
+   "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    13.0,
-   6,
-   "jps-checkpoints_3",
+   31,
+   "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
@@ -334,6 +334,13 @@
    14.0,
    11,
    "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   14.0,
+   29,
+   "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
@@ -360,35 +367,35 @@
   ],
   [
    15.0,
-   31,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   16.0,
-   34,
+   35,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    17.0,
-   10,
+   13,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    17.0,
-   29,
+   34,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    18.0,
-   13,
+   10,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   19.0,
+   12,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
@@ -409,14 +416,14 @@
   ],
   [
    21.0,
-   12,
-   "jps-checkpoints_3",
+   36,
+   "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   23.0,
-   5,
+   22.0,
+   26,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
@@ -429,7 +436,7 @@
    "jps-exits_0:ok"
   ],
   [
-   24.0,
+   23.0,
    27,
    "jps-checkpoints_0",
    "jps-exits_0",
@@ -437,70 +444,77 @@
   ],
   [
    24.0,
-   28,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   25.0,
-   35,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   26.0,
-   26,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   27.0,
-   36,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   28.0,
    31,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   29.0,
-   29,
+   26.0,
+   28,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   30.0,
+   26.0,
    32,
-   "jps-checkpoints_0",
+   "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   30.0,
+   27.0,
    33,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   30.0,
+   28.0,
+   18,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   29.0,
    34,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   33.0,
+   29.0,
+   35,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   30.0,
+   20,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   30.0,
    30,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   32.0,
+   15,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   33.0,
+   36,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
@@ -513,50 +527,15 @@
    "jps-exits_0:ok"
   ],
   [
-   36.0,
-   18,
+   35.0,
+   5,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   36.0,
-   20,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   38.0,
-   35,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   39.0,
-   15,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   40.0,
-   36,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   41.0,
-   26,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   41.0,
-   32,
+   37.0,
+   29,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
@@ -564,8 +543,36 @@
  ],
  "summary": {
   "agents_evacuated": 30,
-  "evacuation_time": 57.35,
+  "evacuation_time": 49.2,
   "total_agents": 30
  },
- "switches": []
+ "switches": [
+  {
+   "agent_id": 10,
+   "new_cost": 36.219,
+   "new_exit": "jps-exits_0",
+   "old_cost": 40.629,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  {
+   "agent_id": 26,
+   "new_cost": 30.199,
+   "new_exit": "jps-exits_0",
+   "old_cost": 34.354,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 13.0
+  },
+  {
+   "agent_id": 28,
+   "new_cost": 29.913,
+   "new_exit": "jps-exits_0",
+   "old_cost": 34.603,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 17.0
+  }
+ ]
 }

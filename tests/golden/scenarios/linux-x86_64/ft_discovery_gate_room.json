@@ -61,6 +61,20 @@
    "jps-exits_0:fallback/tau"
   ],
   [
+   57.0,
+   4,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   59.0,
+   2,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
    59.0,
    5,
    "jps-checkpoints_3",
@@ -292,7 +306,7 @@
   },
   {
    "agent_id": 4,
-   "new_cost": 13.783,
+   "new_cost": 13.927,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -301,7 +315,7 @@
   },
   {
    "agent_id": 2,
-   "new_cost": 13.785,
+   "new_cost": 13.93,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -310,7 +324,7 @@
   },
   {
    "agent_id": 3,
-   "new_cost": 13.839,
+   "new_cost": 14.0,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",

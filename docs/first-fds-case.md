@@ -154,7 +154,7 @@ Initialization finished.
 Simulation started.
 …
 Simulation incomplete: time limit reached after 300.00 s (70/150 evacuated, 80 remaining, 50 not spawned).
-Route switches: 179
+Route switches: 180
 ```
 
 Before this, fdsreader logs `Module vents: could not convert string to float`
@@ -235,7 +235,7 @@ if FDS_DIR is not None:
 ```text
 evacuated: 70/150 in 300 s
 FED max:   0.37
-route changes: {'smoke_reroute': 9, 'wander': 170}
+route changes: {'smoke_reroute': 10, 'wander': 170}
 ```
 
 ## 5. Results
@@ -249,9 +249,9 @@ uv run python scripts/docs/first_fds_case_figures.py --data "$FDS" --runs tj
 
 ### Where the agents went
 
-![Two plan views of walked trajectories; in clear air all 144 agents who left walk from the branch to exit B, 6 are still in the branch; in the fire, 9 agents walk left to exit A, 61 walk past the burner to exit B, and 80 are still in the branch or at the junction at 300 s](/images/first-fds-case/trajectories.png)
+![Two plan views of walked trajectories; in clear air all 144 agents who left walk from the branch to exit B, 6 are still in the branch; in the fire, 10 agents walk left to exit A, 60 walk past the burner to exit B, and 80 are still in the branch or at the junction at 300 s](/images/first-fds-case/trajectories.png)
 
-In clear air everyone takes the nearer exit B. In the fire, 9 early agents
+In clear air everyone takes the nearer exit B. In the fire, 10 early agents
 turn to exit A as smoke builds up on B's side. About half the agents, 80, are
 still inside at 300 s.
 
@@ -286,10 +286,10 @@ and from 120 s the median agent is there.
 
 ### Exit usage
 
-![Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 9 through exit A, 61 through exit B and 80 inside](/images/first-fds-case/exits.png)
+![Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 10 through exit A, 60 through exit B and 80 inside](/images/first-fds-case/exits.png)
 
-The route log explains the fire run. The 9 agents who switched to exit A
-(`smoke_reroute`) did so in the first 28 s, and all 9 left by it. 25 agents,
+The route log explains the fire run. The 10 agents who switched to exit A
+(`smoke_reroute`) did so in the first 28 s, and all 10 left by it. 25 agents,
 spawned between 24 and 236 s, never learned an exit: no exit sign was
 readable to them. They walk back and forth between the spawn area and the
 junction (169 `wander` route changes), and all 25 are still inside at 300 s.
@@ -312,7 +312,7 @@ tenability limit, and whether the agent got out before that.
   until the run is cut off at 300 s, with half of them still inside.
 - **Visibility and HCl became untenable early.** Each of six points in the T
   crossed the visibility limit between 18 and 46 s after ignition. The
-  first agent met it at 16 s. Of the 70 agents who got out, 62 met it before
+  first agent met it at 17 s. Of the 70 agents who got out, 61 met it before
   they reached an exit.
 - **The irritant limits were passed by most of those who got out.** 58 of
   the 70 met HCl ≥ 1000 ppm (ISO fractional effective concentration, FEC,
@@ -375,18 +375,18 @@ the agent met it before it left, or before 299 s if it is still inside.
 
 | Criterion (source) | Agents reaching it | First at | Got out, never reached it | Reached it, then got out | Reached it, still inside |
 |---|---|---|---|---|---|
-| Visibility 10 m (EA) with *C* = 3 (Jin; FDS default): *K* ≥ 0.3 1/m | 142 | 16 s | 8 | 62 | 80 |
-| HCl ≥ 200 ppm (Purser escape impairment, FIC<sub>imp</sub> = 1) | 142 | 16 s | 8 | 62 | 80 |
-| HCl ≥ 300 ppm (ISO FEC 0.3) | 139 | 16 s | 11 | 59 | 80 |
+| Visibility 10 m (EA) with *C* = 3 (Jin; FDS default): *K* ≥ 0.3 1/m | 141 | 17 s | 9 | 61 | 80 |
+| HCl ≥ 200 ppm (Purser escape impairment, FIC<sub>imp</sub> = 1) | 141 | 18 s | 9 | 61 | 80 |
+| HCl ≥ 300 ppm (ISO FEC 0.3) | 138 | 40 s | 12 | 58 | 80 |
 | HCl ≥ 900 ppm (SFPE FIC = 1) | 138 | 51 s | 12 | 58 | 80 |
 | HCl ≥ 1000 ppm (ISO FEC 1) | 138 | 52 s | 12 | 58 | 80 |
 | CO ≥ 2,700 ppm (EA) | 50 | 74 s | 25 | 45 | 5 |
 | FED ≥ 0.3 (FDS+Evac form) | 18 | 264 s | 70 | 0 | 18 |
 | FED ≥ 1 (FDS+Evac form) | 0 | – | 70 | 0 | 0 |
 
-The 62 agents who got out after the visibility limit spent a median of
+The 61 agents who got out after the visibility limit spent a median of
 99 s, and at most 162 s, inside beyond it. The four HCl limits change the
-count of evacuees who met a limit only from 62 to 58. CO above 2,700 ppm is
+count of evacuees who met a limit only from 61 to 58. CO above 2,700 ppm is
 met next to the burner, by agents who pass it on their way to exit B.
 
 ![One horizontal bar per agent, in order of spawning from top to bottom, on a time axis from 0 to 300 s after ignition. Each bar runs from the agent's spawn to its exit, pale before the agent first meets K 0.3 and solid after; bars of the 80 censored agents are grey and end in an arrow at 299 s. Circles mark the first K 0.3, diamonds the first HCl 300 ppm, squares the first FED 0.3. The first dozen agents meet the limits partway along their bar. From about 50 s on, the circles and diamonds sit at the start of every bar, forming a diagonal: agents spawn into air already past the visibility limit and meet HCl 300 ppm within about 3 s. The 18 FED 0.3 squares all lie between 264 and 297 s, on grey bars](/images/first-fds-case/aset_agents.png)
@@ -501,7 +501,7 @@ way: Jin's visibility data end near *K* ≈ 1.8 1/m (see
 ![Histogram of the extinction coefficient at the agents, one count per agent-second, on a log axis from 0.1 to 60 per metre. Almost all the mass lies between 8 and 20 per metre, with a peak near 13. Hatched bands mark the data ranges of Purser's fit to Jin, 0.30 to 1.27, and of Frantzich and Nilsson, 1.9 to 7.4, and a shaded band Jin's sign-visibility data, 0.3 to 1.8, all to the left of the mass. A dashed red line at 11.1 marks where the speed floor of 0.1 begins; 76 % of all agent-seconds are at the floor](/images/first-fds-case/aset_extinction.png)
 
 *Extinction coefficient K [1/m] at the agents, one count per agent and second
-inside (n = 14,419; the 264 with K < 0.1 1/m are not shown). Hatched: the K
+inside (n = 14,434; the 284 with K < 0.1 1/m are not shown). Hatched: the K
 ranges of the data behind the speed laws, from
 [walking speed in smoke](/fundamentals/walking-speed.md). Shaded: Jin's
 sign-visibility data for lit signs, *K* ≈ 0.3–1.8 1/m, from

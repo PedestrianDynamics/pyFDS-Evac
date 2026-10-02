@@ -94,27 +94,6 @@
   ],
   [
    6.0,
-   1,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
-   2,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
-   3,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
    4,
    "jps-distributions_0",
    "E_near",
@@ -149,11 +128,18 @@
    "E_far:ok > E_near:ok"
   ],
   [
-   6.0,
-   9,
+   7.0,
+   4,
    "jps-distributions_0",
    "E_near",
-   "E_far:ok > E_near:ok"
+   "E_near:ok > E_far:ok"
+  ],
+  [
+   7.0,
+   5,
+   "jps-distributions_0",
+   "E_near",
+   "E_near:ok > E_far:ok"
   ],
   [
    7.0,
@@ -180,15 +166,8 @@
    8.0,
    4,
    "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   8.0,
-   5,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:ok"
+   "E_near",
+   "E_near:ok > E_far:tau"
   ],
   [
    9.0,
@@ -207,20 +186,6 @@
   [
    9.0,
    8,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:tau"
-  ],
-  [
-   11.0,
-   4,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:tau"
-  ],
-  [
-   11.0,
-   5,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
@@ -228,15 +193,15 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 26.93,
+  "evacuation_time": 24.15,
   "total_agents": 10
  },
  "switches": [
   {
    "agent_id": 6,
-   "new_cost": 18.521,
+   "new_cost": 18.553,
    "new_exit": "E_far",
-   "old_cost": 3.542,
+   "old_cost": 3.586,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
@@ -245,37 +210,19 @@
    "agent_id": 7,
    "new_cost": 16.992,
    "new_exit": "E_far",
-   "old_cost": 5.083,
+   "old_cost": 5.121,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
   },
   {
    "agent_id": 8,
-   "new_cost": 18.091,
+   "new_cost": 18.125,
    "new_exit": "E_far",
-   "old_cost": 3.997,
+   "old_cost": 4.047,
    "old_exit": "E_near",
    "reason": "smoke_reroute",
    "time_s": 6.0
-  },
-  {
-   "agent_id": 4,
-   "new_cost": 20.105,
-   "new_exit": "E_far",
-   "old_cost": 2.06,
-   "old_exit": "E_near",
-   "reason": "smoke_reroute",
-   "time_s": 7.0
-  },
-  {
-   "agent_id": 5,
-   "new_cost": 19.96,
-   "new_exit": "E_far",
-   "old_cost": 2.104,
-   "old_exit": "E_near",
-   "reason": "smoke_reroute",
-   "time_s": 7.0
   }
  ]
 }

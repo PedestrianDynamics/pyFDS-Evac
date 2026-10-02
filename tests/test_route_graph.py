@@ -12,6 +12,7 @@ from pyfds_evac.core.route_graph import (
     StageEdge,
     StageGraph,
     StageNode,
+    _polyline_stats,
     _position_aware_length,
     compute_eval_offset,
     evaluate_and_reroute,
@@ -964,10 +965,10 @@ class TestPositionAwareRouting:
         )
         assert rc.fed_max_route == pytest.approx(0.1 * 2.0 / 60.0)
 
-    def test_continue_reweights_k_ave_by_remaining_share(self):
+    def test_continue_charges_k_ave_on_the_walk_ahead(self):
         # Two-leg route with smoke on the first leg only: an agent that has
-        # walked 8 m of that 10 m leg carries only the remaining fifth of it
-        # into the path mean, so its route looks less smoky than at the node.
+        # walked 8 m of that 10 m leg is charged the smoke on the 2 m still
+        # ahead of it (#451), so its route looks less smoky than at the node.
         class SmokyFirstLeg:
             """K = 1 upstream of the midpoint M at x = 10, clear beyond it."""
 
@@ -999,12 +1000,12 @@ class TestPositionAwareRouting:
 
         at_node = _cost((20.0, 0.0))
         mid_leg = _cost((12.0, 0.0))
-        s0, s1 = at_node.segments
-        rho = 2.0 / 10.0
-        expected = (rho * s0.k_avg * s0.length_m + s1.k_avg * s1.length_m) / (
-            rho * s0.length_m + s1.length_m
+        s1 = at_node.segments[1]
+        k_walk, _ = _polyline_stats(
+            [(12.0, 0.0), (10.0, 0.0)], 0.0, SmokyFirstLeg(), 2.0
         )
-        assert mid_leg.k_ave_route == pytest.approx(expected)
+        expected = (k_walk * 2.0 + s1.k_avg * s1.length_m) / (2.0 + s1.length_m)
+        assert mid_leg.k_ave_route == pytest.approx(expected, rel=1e-12)
         assert mid_leg.k_ave_route < at_node.k_ave_route
 
     def _fed_cost(self, graph, agent_position):
@@ -1584,6 +1585,45 @@ class TestDynamicDijkstra:
             "D0", dynamic_weights=None
         )
         assert paths_default == paths_explicit
+
+    def test_seeded_search_never_routes_back_through_the_source(self):
+        """From the agent's position, the source is not reached through the graph.
+
+        Going back from A into S and on to T would cost 1.2; the search takes
+        the dearer B instead, so the path starts at S once and its cost is
+        that of the path returned.
+        """
+        nodes = [
+            StageNode(stage_id=sid, centroid_x=x, centroid_y=0.0, stage_type=kind)
+            for sid, x, kind in [
+                ("S", 0.0, "distribution"),
+                ("A", 1.0, "checkpoint"),
+                ("B", 2.0, "checkpoint"),
+                ("T", 3.0, "exit"),
+            ]
+        ]
+        graph = StageGraph(nodes={n.stage_id: n for n in nodes})
+        weights = {
+            ("S", "A"): 0.1,
+            ("S", "T"): 0.1,
+            ("A", "S"): 0.1,
+            ("A", "T"): 10.0,
+            ("B", "T"): 1.0,
+        }
+        for (src, dst), w in weights.items():
+            graph.edges.setdefault(src, []).append(
+                StageEdge(source=src, target=dst, weight=w)
+            )
+        first_hops = {"A": 1.0, "B": 5.0}
+        paths = graph.shortest_paths_to_exits(
+            "S", dynamic_weights=weights, first_hops=first_hops
+        )
+        assert paths == {"T": (6.0, ["S", "B", "T"])}
+        dist, prev = graph._dijkstra(
+            "S", dynamic_weights=weights, first_hops=first_hops
+        )
+        assert prev["S"] is None
+        assert dist["S"] == float("inf")
 
 
 class TestDynamicRanking:

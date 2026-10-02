@@ -14,6 +14,12 @@ built but identical worlds, and requires the results to be exactly equal:
   including the uncached first-leg resample and the walked-path evaluation.
 
 No tolerance: stage 1 changes structure only.
+
+The frozen copy predates #451, which prices every exit from the agent's
+position. Both sides therefore run every case with ``agent_position=None``,
+where #451 changes nothing; the behaviour with a position is pinned by the
+golden snapshots (``tests/test_rerouting_golden.py``) and by
+``tests/test_gate_exit_pricing.py``.
 """
 
 from __future__ import annotations
@@ -39,6 +45,8 @@ from pyfds_evac.core.route_graph import (
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
 _SIDES = {"legacy": legacy, "live": live}
+# The frozen copy predates #451; see the module docstring.
+_NO_POSITION = None
 _DECISION_FUNCTIONS = (
     "evaluate_route",
     "rank_routes",
@@ -208,7 +216,7 @@ def _rank(side: str, case: golden.RankCase, with_cache: bool) -> dict:
         cached_segments=cache,
         exit_counts=copy.deepcopy(case.exit_counts),
         cognitive_map=case.cognitive_map() if case.cognitive_map else None,
-        agent_position=case.agent_position,
+        agent_position=_NO_POSITION,
         current_exit=case.current_exit,
     )
     return {
@@ -373,7 +381,7 @@ def _reroute(
         config=RerouteConfig(cost_config=case.config, exit_switch_anchor=case.anchor),
         cached_segments=cache,
         cognitive_map=world["cmap"],
-        agent_position=case.agent_position,
+        agent_position=_NO_POSITION,
     )
     return {
         "switch": switch,
@@ -574,7 +582,7 @@ def _run_passes(side: str, spec: _Pass) -> list:
                             cached_segments=cache,
                             exit_counts=exit_counts,
                             cognitive_map=None,
-                            agent_position=a.position,
+                            agent_position=_NO_POSITION,
                             current_exit=rs.current_exit or None,
                             current_target=wait_info.get("current_target_stage"),
                         )
@@ -592,7 +600,7 @@ def _run_passes(side: str, spec: _Pass) -> list:
                 cache,
                 exit_counts=exit_counts,
                 cognitive_map=None,
-                agent_position=a.position,
+                agent_position=_NO_POSITION,
             )
             if switch is not None and switch.old_exit != switch.new_exit:
                 if switch.old_exit in exit_counts:
