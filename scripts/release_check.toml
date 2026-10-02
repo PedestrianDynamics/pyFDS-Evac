@@ -176,7 +176,7 @@ expect_bundle = "rset-ensemble"
 name = "howto-with-without-fire"
 source = "docs/howto-with-without-fire.md"
 copy = [["fire", "t_junction/fire_2MW_PVC"]]
-copy_quick = [["runs", "t_junction/fire_blind_runs_794d5e1"]]
+copy_quick = [["runs", "t_junction/fire_blind_runs_f5c61f21"]]
 env = { FDS = "$WORK/fire", SC = "assets/t_junction/config_initial_pre0.json", RUNS = "$WORK/runs" }
 
 [[page.step]]
@@ -187,8 +187,7 @@ uv run python run.py --scenario $SC --seed 4 \\
     --output-sqlite ww/c.sqlite --output-exit-history ww/c_exits.csv"""
 cwd = "."
 timeout = 600
-expect_stale = ["Simulation finished in 50.54 s (100/100 evacuated)."]
-stale = "391"
+expect = ["Simulation finished in 55.11 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "1. arm U, smoke-blind"
@@ -200,9 +199,8 @@ timeout = 900
 expect = [
   "Smoke-blind: rerouting is off.",
   "Smoke-blind: FED is recorded, incapacitation and FIC slowdown off.",
+  "Simulation finished in 55.11 s (100/100 evacuated).",
 ]
-expect_stale = ["Simulation finished in 50.54 s (100/100 evacuated)."]
-stale = "391"
 
 [[page.step]]
 name = "2. arm S, replayed exits"
@@ -211,9 +209,10 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
     --no-enable-rerouting --disable-tenability --replay-exits ww/u_exits.csv \\
     --output-sqlite ww/s.sqlite --output-exit-history ww/s_exits.csv"""
 timeout = 900
-expect = ["Replaying the exits of 100 agents from ww/u_exits.csv."]
-expect_stale = ["Simulation finished in 64.12 s (100/100 evacuated)."]
-stale = "391"
+expect = [
+  "Replaying the exits of 100 agents from ww/u_exits.csv.",
+  "Simulation finished in 67.95 s (100/100 evacuated).",
+]
 
 [[page.step]]
 name = "2. arm R, coupled"
@@ -222,8 +221,7 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
     --disable-tenability \\
     --output-sqlite ww/r.sqlite --output-exit-history ww/r_exits.csv"""
 timeout = 900
-expect_stale = ["Simulation finished in 59.29 s (100/100 evacuated)."]
-stale = "391"
+expect = ["Simulation finished in 62.94 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "3. arm R-na, no anticipation"
@@ -242,26 +240,40 @@ uv run python run.py --scenario ww/na/config_initial_pre0.json --seed 4 \\
     --fds-dir "$FDS" --disable-tenability \\
     --output-sqlite ww/rna.sqlite --output-exit-history ww/rna_exits.csv"""
 timeout = 900
-expect_stale = ["Simulation finished in 66.82 s (100/100 evacuated)."]
-stale = "391"
+expect = ["Simulation finished in 63.82 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "4. whole study, stored runs"
 mode = "quick"
 run = 'uv run python scripts/docs/fire_blind_vs_coupled.py --data "$FDS" --runs "$RUNS"'
 timeout = 1200
-stored_runs = "30ca7f5 (fire_blind_runs_794d5e1)"
+# Rows the page's tables quote.
+expect = [
+  "U last 56.5 [52.2, 61.1] p95 53.9 [49.7, 58.9] censored 0/20 exit A 0% [0%, 0%]",
+  "R last 60.5 [56.2, 64.6] p95 58.0 [53.9, 61.8] censored 0/20 exit A 100% [98%, 100%]",
+  "pre 0 R-U median 3.7 [-3.1, 10.2] R>U in 17/20, R<U 3, sign p = 0.00258",
+  "ISO FEC 1 pre 0 n=20 U:0/15/20/0 S:0/0/5/0 R:0/6/20/0 R-na:0/0/20/0 R+FIC:0/0/0/0",
+]
+stored_runs = "f5c61f21 (fire_blind_runs_f5c61f21)"
 
 [[page.step]]
 name = "4. whole study, 320 runs"
 mode = "full"
 run = 'uv run python scripts/docs/fire_blind_vs_coupled.py --data "$FDS" --runs "$RUNS"'
 timeout = 3600
+# Rows the page's tables quote.
+expect = [
+  "U last 56.5 [52.2, 61.1] p95 53.9 [49.7, 58.9] censored 0/20 exit A 0% [0%, 0%]",
+  "R last 60.5 [56.2, 64.6] p95 58.0 [53.9, 61.8] censored 0/20 exit A 100% [98%, 100%]",
+  "pre 0 R-U median 3.7 [-3.1, 10.2] R>U in 17/20, R<U 3, sign p = 0.00258",
+  "ISO FEC 1 pre 0 n=20 U:0/15/20/0 S:0/0/5/0 R:0/6/20/0 R-na:0/0/20/0 R+FIC:0/0/0/0",
+]
 
 [[page.step]]
 name = "4. animation"
 run = 'uv run python scripts/docs/study_animations.py fire-blind --data "$FDS" --runs "$RUNS"'
 timeout = 1200
+expect = ["- pre 30 s: seed 11, R last out 118.7 s (median 116.6 s)"]
 
 # --- Verification -----------------------------------------------------------
 
