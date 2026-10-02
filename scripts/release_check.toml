@@ -177,11 +177,9 @@ timeout = 600
 expect = [
   "jps-distributions_0: 30 agents, use_premovement=False",
   "seed 1: last exit 41.5 s, evacuated 30, incapacitated 0, remaining 0",
+  "evacuation_time 1150 s (max_simulation_time 1150 s), success False",
 ]
 expect_bundle = "rset-ensemble"
-# success is False at the time limit since #443.
-expect_stale = ["evacuation_time 1150 s (max_simulation_time 1150 s), success True"]
-stale = "442"
 
 [[page]]
 name = "howto-with-without-fire"
