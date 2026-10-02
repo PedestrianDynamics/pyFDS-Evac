@@ -569,121 +569,202 @@
  },
  "switches": [
   {
-   "agent_id": 7,
-   "new_cost": 25.705,
+   "agent_id": 2,
+   "new_cost": 27.491,
    "new_exit": "jps-exits_0",
-   "old_cost": 19.963,
+   "old_cost": 18.756,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 27.038,
+   "new_exit": "jps-exits_0",
+   "old_cost": 18.678,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  {
+   "agent_id": 6,
+   "new_cost": 26.824,
+   "new_exit": "jps-exits_0",
+   "old_cost": 19.297,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 25.753,
+   "new_exit": "jps-exits_0",
+   "old_cost": 20.031,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 5.0
   },
   {
    "agent_id": 8,
-   "new_cost": 24.285,
+   "new_cost": 24.331,
    "new_exit": "jps-exits_0",
-   "old_cost": 21.373,
+   "old_cost": 21.453,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 5.0
   },
   {
    "agent_id": 9,
-   "new_cost": 24.704,
+   "new_cost": 24.751,
    "new_exit": "jps-exits_0",
-   "old_cost": 21.454,
+   "old_cost": 21.535,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 5.0
   },
   {
    "agent_id": 10,
-   "new_cost": 25.678,
+   "new_cost": 25.725,
    "new_exit": "jps-exits_0",
-   "old_cost": 21.931,
+   "old_cost": 22.017,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 5.0
   },
   {
    "agent_id": 11,
-   "new_cost": 25.838,
+   "new_cost": 25.886,
    "new_exit": "jps-exits_0",
-   "old_cost": 20.56,
+   "old_cost": 20.633,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 5.0
   },
   {
    "agent_id": 12,
-   "new_cost": 27.194,
+   "new_cost": 27.244,
+   "new_exit": "jps-exits_0",
+   "old_cost": 19.826,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  {
+   "agent_id": 13,
+   "new_cost": 27.227,
+   "new_exit": "jps-exits_0",
+   "old_cost": 20.861,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  {
+   "agent_id": 7,
+   "new_cost": 26.72,
+   "new_exit": "jps-exits_0",
+   "old_cost": 18.957,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 25.362,
+   "new_exit": "jps-exits_0",
+   "old_cost": 20.352,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 25.524,
+   "new_exit": "jps-exits_0",
+   "old_cost": 20.51,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 25.884,
+   "new_exit": "jps-exits_0",
+   "old_cost": 21.043,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 11,
+   "new_cost": 26.891,
+   "new_exit": "jps-exits_0",
+   "old_cost": 19.29,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 12,
+   "new_cost": 27.967,
+   "new_exit": "jps-exits_0",
+   "old_cost": 18.726,
+   "old_exit": "jps-exits_0",
+   "reason": "better_path",
+   "time_s": 6.0
+  },
+  {
+   "agent_id": 13,
+   "new_cost": 27.655,
    "new_exit": "jps-exits_0",
    "old_cost": 19.761,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 13,
-   "new_cost": 27.176,
-   "new_exit": "jps-exits_0",
-   "old_cost": 20.787,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
+   "time_s": 6.0
   },
   {
    "agent_id": 8,
-   "new_cost": 25.315,
+   "new_cost": 26.373,
    "new_exit": "jps-exits_0",
-   "old_cost": 20.282,
+   "old_cost": 19.274,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 6.0
+   "time_s": 7.0
   },
   {
    "agent_id": 9,
-   "new_cost": 25.477,
+   "new_cost": 26.426,
    "new_exit": "jps-exits_0",
-   "old_cost": 20.439,
+   "old_cost": 19.443,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 6.0
+   "time_s": 7.0
   },
   {
    "agent_id": 10,
-   "new_cost": 25.836,
+   "new_cost": 26.445,
    "new_exit": "jps-exits_0",
-   "old_cost": 20.967,
+   "old_cost": 19.975,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 6.0
+   "time_s": 7.0
   },
   {
    "agent_id": 13,
-   "new_cost": 27.604,
+   "new_cost": 28.156,
    "new_exit": "jps-exits_0",
-   "old_cost": 19.696,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 6.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 26.377,
-   "new_exit": "jps-exits_0",
-   "old_cost": 19.381,
+   "old_cost": 18.684,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 7.0
   },
   {
    "agent_id": 10,
-   "new_cost": 26.396,
+   "new_cost": 27.19,
    "new_exit": "jps-exits_0",
-   "old_cost": 19.908,
+   "old_cost": 18.903,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 7.0
+   "time_s": 8.0
   }
  ]
 }
