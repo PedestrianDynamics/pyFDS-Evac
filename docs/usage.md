@@ -38,6 +38,7 @@ scenarios and scripts of a source checkout; with pip, replace
 | `--scenario PATH` | Scenario JSON, ZIP, or directory (required). |
 | `--seed N` | Override the scenario's `baseSeed` (42 when the scenario sets none). |
 | `--print-summary` | Print the loaded scenario summary before running. |
+| `--debug` | Print debug messages, such as the `Reroute debug` trace of the rerouting pass. From Python, `logging.getLogger("pyfds_evac").setLevel(logging.DEBUG)` with a handler does the same. |
 | `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as `<stem>.manifest.json`. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, heat_fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
 | `--cleanup` | Delete the temp SQLite after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` for the app. |

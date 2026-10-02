@@ -162,9 +162,8 @@ enter, so it is incomplete and `run.py` exits with status 2
 ([Exit status](usage.md#exit-status)).
 
 Before this, fdsreader logs `Module vents: could not convert string to float`
-for this deck, and the terminal also shows `Reroute debug`
-lines and numpy `UserWarning` messages. None of them affects
-the run. The progress
+for this deck, and the terminal also shows a numpy `UserWarning`
+message. Neither affects the run. The progress
 line counts the 200 planned agents, not the 150 that spawned
 ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
 

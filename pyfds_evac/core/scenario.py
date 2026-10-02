@@ -1649,7 +1649,7 @@ def run_scenario(
                 else None
             )
             if reroute_config is not None:
-                print(
+                _logger.debug(
                     "Reroute debug: "
                     f"nodes={len(stage_graph.nodes)} "
                     f"edges={sum(len(edges) for edges in stage_graph.edges.values())} "
@@ -2654,7 +2654,7 @@ def run_scenario(
                         source = wait_info.get("current_origin") or wait_info.get(
                             "current_target_stage"
                         )
-                        print(
+                        _logger.debug(
                             "Reroute debug agent: "
                             f"time={current_time:.2f} "
                             f"agent={agent_id} "
@@ -2786,7 +2786,7 @@ def run_scenario(
                             }
                         )
                 if not reroute_debug_printed:
-                    print(
+                    _logger.debug(
                         "Reroute debug pass: "
                         f"time={current_time:.2f} "
                         f"path_agents={reroute_loop_agents} "

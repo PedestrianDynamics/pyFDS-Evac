@@ -3,8 +3,10 @@
 import argparse
 import csv
 import json
+import logging
 import pathlib
 import shutil
+import sys
 
 from rich_argparse import RawDescriptionRichHelpFormatter
 
@@ -122,6 +124,11 @@ def _build_parser() -> argparse.ArgumentParser:
         "--print-summary",
         action="store_true",
         help="Print the loaded scenario summary before running",
+    )
+    run.add_argument(
+        "--debug",
+        action="store_true",
+        help="Print debug messages, such as the rerouting trace",
     )
     outputs.add_argument(
         "--output-sqlite",
@@ -680,6 +687,50 @@ def _copy_manifest(result, output_path: pathlib.Path) -> pathlib.Path | None:
 EXIT_INCOMPLETE = 2
 
 
+class _RepeatedFdsreaderWarning(logging.Filter):
+    """Pass the first fdsreader module-parse warning of each kind, drop repeats.
+
+    fdsreader (1.11.7) logs a failure to parse an optional module, such as
+    ``vents``, on the root logger every time a ``Simulation`` is opened, and
+    a run opens one per sampler. The first occurrence still reaches the
+    console. Upstream issue: none yet. Remove when fdsreader reports each
+    failure once or through its own logger.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._seen: set[str] = set()
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.name != "root":
+            return True
+        message = record.getMessage()
+        if not message.startswith("Module ") or "safely ignored" not in message:
+            return True
+        key = message.splitlines()[0]
+        if key in self._seen:
+            return False
+        self._seen.add(key)
+        return True
+
+
+def _configure_logging(debug: bool) -> None:
+    """Collapse repeated fdsreader warnings; with ``debug``, print debug lines."""
+    root = logging.getLogger()
+    if not any(isinstance(f, _RepeatedFdsreaderWarning) for f in root.filters):
+        root.addFilter(_RepeatedFdsreaderWarning())
+    if not debug:
+        return
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(logging.Formatter("%(message)s"))
+    model_logger = logging.getLogger("pyfds_evac")
+    model_logger.addHandler(handler)
+    model_logger.setLevel(logging.DEBUG)
+    # The root logger may gain a handler later (fdsreader's first warning
+    # calls basicConfig), which would print every debug line a second time.
+    model_logger.propagate = False
+
+
 def _summary_line(result) -> str:
     """One line on how the run ended; a run cut off by the time limit is incomplete."""
     if result.success:
@@ -704,6 +755,7 @@ def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     parser = _build_parser()
     args = parser.parse_args()
+    _configure_logging(args.debug)
 
     scenario = load_scenario(args.scenario)
     print("Initialization started.")
