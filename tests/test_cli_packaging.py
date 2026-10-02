@@ -27,13 +27,15 @@ SMALL = "ISO-table21"
 INCOMPLETE = "t_junction"
 
 
-def _run(args: list[str], cwd: Path) -> subprocess.CompletedProcess:
+def _run(
+    args: list[str], cwd: Path, program: str = sys.executable
+) -> subprocess.CompletedProcess:
     env = {k: v for k, v in os.environ.items() if k != "PYFDS_EVAC_RESULTS_DIR"}
     # JuPedSim's SQLite writer keys the geometry by Python's salted hash() of
     # its WKT, so two runs differ in that key unless the salt is fixed.
     env["PYTHONHASHSEED"] = "0"
     return subprocess.run(
-        [sys.executable, *args], cwd=cwd, env=env, capture_output=True, text=True
+        [program, *args], cwd=cwd, env=env, capture_output=True, text=True
     )
 
 
@@ -78,12 +80,23 @@ def _log(stdout: str) -> list[str]:
     ]
 
 
-def test_run_py_and_module_give_identical_outputs(tmp_path):
-    """run.py and ``python -m pyfds_evac`` are the same CLI (#471 contract)."""
+# The console script that installing the package creates beside the interpreter.
+CONSOLE_SCRIPT = Path(sys.executable).parent / "pyfds-evac"
+
+
+@pytest.mark.parametrize("command", ["module", "console-script"])
+def test_run_py_and_the_command_give_identical_outputs(tmp_path, command):
+    """run.py, ``python -m pyfds_evac`` and ``pyfds-evac`` are one CLI (#471)."""
+    if command == "console-script" and not CONSOLE_SCRIPT.is_file():
+        pytest.skip(f"{CONSOLE_SCRIPT} not installed; run uv sync")
     scenario = str(ASSETS / INCOMPLETE)
-    a, b = tmp_path / "run_py", tmp_path / "module"
+    a, b = tmp_path / "run_py", tmp_path / command
     first = _run(["run.py", "--scenario", scenario, *_outputs(a)], REPO)
-    second = _run(["-m", "pyfds_evac", "--scenario", scenario, *_outputs(b)], REPO)
+    args = ["--scenario", scenario, *_outputs(b)]
+    if command == "module":
+        second = _run(["-m", "pyfds_evac", *args], REPO)
+    else:
+        second = _run(args, REPO, program=str(CONSOLE_SCRIPT))
 
     assert first.returncode == second.returncode == 2, first.stderr + second.stderr
     assert _rows(a / "run.sqlite") == _rows(b / "run.sqlite")
