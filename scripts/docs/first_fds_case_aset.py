@@ -17,11 +17,9 @@ Make the fire run first, as on the page (``RUNS`` any output directory,
         --output-fed-history RUNS/tj_fire_fed.csv \\
         --output-route-history RUNS/tj_fire_routes.csv
 
-then, with the fdsvismap version that has the ASET functions (it only reads
-the FDS fields here; do not run simulations in this environment)::
+then::
 
-    uv run --with git+https://github.com/FireDynamics/fdsvismap@31dc0b6 \\
-        python scripts/docs/first_fds_case_aset.py --data FDS --runs RUNS
+    uv run python scripts/docs/first_fds_case_aset.py --data FDS --runs RUNS
 
 Prints every number the page quotes and writes
 ``site/static/images/first-fds-case/aset_*.png`` and the slider frames

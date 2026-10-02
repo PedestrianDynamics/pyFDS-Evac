@@ -12,12 +12,11 @@ you need for your own FDS cases.
 |---|---|
 | Python 3.11 or 3.12 | pyFDS-Evac itself (`requires-python = ">=3.11,<3.13"`) |
 | [uv](https://github.com/astral-sh/uv) | the environment, the examples and every command on this site |
-| git and network access | fdsvismap is installed from its git repository, pinned to one commit |
+| git and network access | cloning the repository and installing its dependencies |
 | [FDS](https://github.com/firemodels/fds) (optional) | only to run your own fire; pyFDS-Evac reads the output of a finished FDS run and never starts FDS |
 | ffmpeg (optional) | only for the MP4 of `scripts/animate_cognitive_map.py` |
 
-pyFDS-Evac is not on PyPI yet. The release waits on an upstream fdsvismap
-merge.
+pyFDS-Evac is not on PyPI yet.
 
 ## Install from the repository
 
