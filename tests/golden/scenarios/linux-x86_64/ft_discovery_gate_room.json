@@ -292,7 +292,7 @@
   },
   {
    "agent_id": 4,
-   "new_cost": 13.697,
+   "new_cost": 13.783,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -301,7 +301,7 @@
   },
   {
    "agent_id": 2,
-   "new_cost": 13.699,
+   "new_cost": 13.785,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -310,7 +310,7 @@
   },
   {
    "agent_id": 3,
-   "new_cost": 13.753,
+   "new_cost": 13.839,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -319,7 +319,7 @@
   },
   {
    "agent_id": 1,
-   "new_cost": 13.643,
+   "new_cost": 13.728,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -328,7 +328,7 @@
   },
   {
    "agent_id": 5,
-   "new_cost": 13.607,
+   "new_cost": 13.693,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",

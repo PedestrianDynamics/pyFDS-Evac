@@ -203,9 +203,11 @@ def execute(job):
             stderr=subprocess.STDOUT,
         )
     wall = time.perf_counter() - start
-    if code == 0:
+    # 2: the run reached its time limit with agents inside; its outputs are
+    # written and RSET is censored.
+    if code in (0, 2):
         ok.write_text(f"{wall:.1f}\n")
-    return arm, pre, seed, "ok" if code == 0 else f"crashed ({code})", wall
+    return arm, pre, seed, "ok" if code in (0, 2) else f"crashed ({code})", wall
 
 
 def run_all(jobs_by_phase, workers):

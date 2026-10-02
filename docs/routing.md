@@ -114,16 +114,19 @@ the following steps:
 
 ### Line-of-sight extinction
 
-The mean extinction along a segment is computed by sampling K at
-uniform intervals along the edge polyline:
+The mean extinction along an edge is computed from its polyline. Each
+segment `s` of length `L_s` is sampled at evenly spaced points, both ends
+included, at most `sampling_step_m` apart, and `K_bar_s` is the mean of
+those samples. The segment means are combined weighted by length:
 
 ```
-sigma_bar = (1 / |P|) * sum(K_p)
+sigma_bar = sum(L_s * K_bar_s) / sum(L_s)
 ```
 
-where `|P|` is the number of sample points and `K_p` is the
-extinction at each point. The sample spacing is controlled by
-`sampling_step_m`. This is the discrete form of the Beer-Lambert
+so the result approximates the line integral of K divided by the edge
+length and does not depend on where the polyline has its vertices.
+Zero-length segments carry no weight. The worst sample over all
+segments is kept as `k_max`. This is the discrete form of the Beer-Lambert
 path-integrated mean of
 [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269),
 Eq. 8-9; the Beer-Lambert law itself is on

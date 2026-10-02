@@ -359,6 +359,12 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- The mean extinction of a route edge (`k_avg`) averaged over all samples
+  of its polyline, so short segments and interior vertices weighed too much
+  and the mean depended on where the routing engine put its vertices. It is
+  now the length-weighted mean of the per-segment means; the sample points
+  and the worst sample `k_max` are unchanged, and so are two-point edges
+  and clear-air runs. Route costs and choices in smoke change (#437).
 - In a deck with journeys, agents of a distribution without a journey whose
   nearest exit is throttled stood at their spawn points until the time
   limit. They are now steered to that exit and leave through it under its

@@ -104,7 +104,14 @@
    3,
    "jps-distributions_0",
    "E_end",
-   "E_end:ok > E_side:tau"
+   "E_end:ok > E_side:ok"
+  ],
+  [
+   12.0,
+   2,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:ok"
   ],
   [
    12.0,
@@ -115,90 +122,76 @@
   ],
   [
    13.0,
-   3,
-   "jps-distributions_0",
-   "E_end",
-   "E_end:ok > E_side:ok"
-  ],
-  [
-   14.0,
-   2,
+   4,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:ok"
   ],
   [
    15.0,
+   5,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:tau"
+  ],
+  [
+   15.0,
+   6,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:tau"
+  ],
+  [
+   16.0,
    1,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:tau"
   ],
   [
-   15.0,
-   4,
+   16.0,
+   5,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:ok"
   ],
   [
-   15.0,
-   5,
-   "jps-distributions_0",
-   "E_end",
-   "E_end:ok > E_side:tau"
-  ],
-  [
-   15.0,
+   16.0,
    6,
    "jps-distributions_0",
    "E_end",
-   "E_end:ok > E_side:tau"
-  ],
-  [
-   17.0,
-   5,
-   "jps-distributions_0",
-   "E_end",
    "E_end:ok > E_side:ok"
   ],
   [
-   18.0,
+   20.0,
    2,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:tau"
   ],
   [
-   18.0,
+   20.0,
    3,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:tau"
   ],
   [
-   18.0,
-   6,
-   "jps-distributions_0",
-   "E_end",
-   "E_end:ok > E_side:ok"
-  ],
-  [
-   19.0,
+   21.0,
    4,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:tau"
   ],
   [
-   22.0,
+   24.0,
    5,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:tau"
   ],
   [
-   22.0,
+   24.0,
    6,
    "jps-distributions_0",
    "E_end",
@@ -224,7 +217,7 @@
    "agent_id": 1,
    "new_cost": 11.296,
    "new_exit": "E_end",
-   "old_cost": 3.162,
+   "old_cost": 3.041,
    "old_exit": "E_side",
    "reason": "smoke_reroute",
    "time_s": 9.0

@@ -78,7 +78,9 @@ def _run(python: str, checkout: Path, run_args: list[str], sqlite: Path) -> floa
         text=True,
     )
     wall = time.perf_counter() - start
-    if proc.returncode != 0:
+    # 2: the run reached its time limit with agents inside (#443); its
+    # trajectories are written and are compared like any other run.
+    if proc.returncode not in (0, 2):
         sys.stderr.write(proc.stderr[-4000:])
         raise SystemExit(f"run.py failed in {checkout} (exit {proc.returncode})")
     return wall
