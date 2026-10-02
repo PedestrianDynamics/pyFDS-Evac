@@ -1,4 +1,4 @@
-"""Generate the parameter sidebar form from run.py's argparse flags.
+"""Generate the parameter sidebar form from the CLI's argparse flags.
 
 All argparse introspection, grouping and form_to_opts logic is unchanged.
 HTML rendering uses plain FastHTML + inline styles (no MonsterUI).
@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import sys
 from argparse import Namespace
 from pathlib import Path
 from typing import Any
@@ -35,17 +34,24 @@ except ImportError:
     except ImportError:
         from fasthtml.core import to_xml
 
+from pyfds_evac.cli import _build_parser
+from pyfds_evac.core.manifest import find_project_root
+
 from .runner import run_stamp, utc_now
 
-_REPO_ROOT = Path(__file__).resolve().parents[2]
-_ASSET_ROOT = _REPO_ROOT / "assets"
+# Root of the GUI's scenario, upload and result folders: the source checkout
+# the package runs from, else the directory the server started in. An
+# installed wheel thus never writes into site-packages, and finds scenarios
+# in ./assets.
+_WORK_ROOT = find_project_root() or Path.cwd()
+_ASSET_ROOT = _WORK_ROOT / "assets"
 # Scenarios uploaded through the GUI. Gitignored, and kept out of assets/ so a
 # user's drop can never shadow or overwrite a bundled scenario.
-_UPLOAD_ROOT = _REPO_ROOT / "uploads"
+_UPLOAD_ROOT = _WORK_ROOT / "uploads"
 # Picker values for uploads carry this prefix; bundled scenarios carry none.
 UPLOAD_PREFIX = "uploads/"
 # Derived output folders go under this root: PYFDS_EVAC_RESULTS_DIR when set,
-# else results/ in the repository, whatever directory the server started in.
+# else results/ under the root above (see _WORK_ROOT).
 RESULTS_ENV = "PYFDS_EVAC_RESULTS_DIR"
 
 _INPUT = (
@@ -117,11 +123,7 @@ _HIDDEN = {"help", "print_summary", "export_only", "inspect_fds", "cleanup"}
 
 
 def _load_parser() -> argparse.ArgumentParser:
-    if str(_REPO_ROOT) not in sys.path:
-        sys.path.insert(0, str(_REPO_ROOT))
-    import run
-
-    return run._build_parser()
+    return _build_parser()
 
 
 def _is_bool(action: argparse.Action) -> bool:
@@ -903,7 +905,7 @@ def run_name(scenario: Any) -> str:
 def results_root() -> Path:
     """Root of the derived output folders (see ``RESULTS_ENV``)."""
     configured = os.environ.get(RESULTS_ENV, "").strip()
-    return Path(configured).expanduser() if configured else _REPO_ROOT / "results"
+    return Path(configured).expanduser() if configured else _WORK_ROOT / "results"
 
 
 def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:

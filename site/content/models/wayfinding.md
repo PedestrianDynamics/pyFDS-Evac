@@ -132,7 +132,7 @@ Script: `scripts/figures/sign_rotation.py`.*
 - **From an FDS run** (`--fds-dir`). Grid, obstructions and extinction come
   from the FDS output. The `SOOT EXTINCTION COEFFICIENT` slice is the
   horizontal one nearest `--smoke-slice-height` (1.6 m by default since #164,
-  `run.py`, `_build_parser`), chosen by the same rule as walking speed and
+  `cli.py`, `_build_parser`), chosen by the same rule as walking speed and
   FED, with a warning when it is more than 0.5 m away (`fds_sampling.py`,
   `select_horizontal_slice`). Stored times are spaced by `--reroute-interval`
   (`visibility.py`, `_build_vismap`; `run_config.py`, `_build_vis_model`).
@@ -394,10 +394,10 @@ library use.
 | `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py`, `_default_sign`) | ° | bearing the sign faces |
 | \(V_{\max}\) | `--max-sign-distance` | 30 | 30 (`DEFAULT_MAX_SIGN_DISTANCE_M`) | m | reading distance of every sign, also in clear air |
 | `sign.max_distance` | node `sign` | – | none, i.e. \(V_{\max}\) | m | reading distance of this sign |
-| `--smoke-slice-height` | CLI | 1.6 (`run.py`, `_build_parser`) | 1.6 (`visibility.py`, `VisibilityModel.__init__`) | m | FDS slice height |
-| `--reroute-interval` | CLI | 1.0 (`run.py`, `_build_parser`) | 10.0 (`route_graph.py`, `RerouteConfig.reevaluation_interval_s`) | s | re-evaluation interval, hence periodic learning |
+| `--smoke-slice-height` | CLI | 1.6 (`cli.py`, `_build_parser`) | 1.6 (`visibility.py`, `VisibilityModel.__init__`) | m | FDS slice height |
+| `--reroute-interval` | CLI | 1.0 (`cli.py`, `_build_parser`) | 10.0 (`route_graph.py`, `RerouteConfig.reevaluation_interval_s`) | s | re-evaluation interval, hence periodic learning |
 | vismap time step | = `--reroute-interval` | 1.0 (`run_config.py`, `_build_vis_model`) | 10.0 (`visibility.py`, `VisibilityModel.__init__`) | s | FDS model only; clear air stores one time |
-| `--vis-cell-size` | CLI | 0.25 (`run.py`, `_build_parser`) | 0.5 (`visibility.py`, `VisibilityModel.clear_air`) | m | clear-air grid; FDS models use the FDS mesh |
+| `--vis-cell-size` | CLI | 0.25 (`cli.py`, `_build_parser`) | 0.5 (`visibility.py`, `VisibilityModel.clear_air`) | m | clear-air grid; FDS models use the FDS mesh |
 | `--vis-cache` | CLI | none | none | – | `.npz` cache path |
 
 The `--vis-cell-size` docstring advises a cell smaller than the thinnest wall

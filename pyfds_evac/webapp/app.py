@@ -42,6 +42,7 @@ from fasthtml.common import (
 )
 from starlette.requests import Request
 
+from pyfds_evac.cli import apply_outputs
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
@@ -840,7 +841,7 @@ _DIR_ROOT = Path.home()
 
 
 def _safe_dir(path: str) -> Path:
-    candidate = Path(path) if path else params._REPO_ROOT
+    candidate = Path(path) if path else params._WORK_ROOT
     try:
         resolved = candidate.resolve()
     except Exception:
@@ -1213,14 +1214,12 @@ async def post(request: Request):
             str(params.scenario_path(scenario_name)),
             started_at=started_at,
         )
-        import run as cli
-
         # The run is built from the snapshot, not from the handler's Namespace,
         # so what runs is exactly what the snapshot (and its export) records.
         run_opts = spec.namespace()
 
         def post_run(result):
-            return cli.apply_outputs(result, scenario, run_opts, log=lambda _m: None)
+            return apply_outputs(result, scenario, run_opts, log=lambda _m: None)
 
         manager.start(
             scenario,
@@ -2462,4 +2461,7 @@ async def progress(run: int | None = None):
 
 
 if __name__ == "__main__":
-    serve()
+    # Named explicitly: by default serve() imports the module named after this
+    # file ("app") from the working directory, which under
+    # ``python -m pyfds_evac.webapp.app`` is not this module.
+    serve(appname="pyfds_evac.webapp.app")

@@ -41,6 +41,9 @@ gui = [
     "python-multipart",
 ]
 
+[project.scripts]
+pyfds-evac = "pyfds_evac.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/PedestrianDynamics/pyFDS-Evac"
 Repository = "https://github.com/PedestrianDynamics/pyFDS-Evac"
@@ -96,8 +99,8 @@ markers = [
 ]
 
 [tool.coverage.run]
-# run.py is the CLI at the repository root; tests import it directly.
-source_pkgs = ["pyfds_evac", "run"]
+# The CLI is pyfds_evac.cli; run.py at the repository root only runs it.
+source_pkgs = ["pyfds_evac"]
 branch = true
 relative_files = true
 
