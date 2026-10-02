@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.2.0] - YYYY-MM-DD
+
+Highlights. Smoke along a route now changes an agent's exit: route costs
+add smoke and dose, and a gate on the route's optical depth rejects a
+smoky path. Agents choose exits from a cognitive map that grows with
+familiarity, signs they can read and exits they discover. The heat dose
+follows ISO 13571 and the SFPE Handbook, with opt-in total-flux,
+hot-layer and `INTEGRATED INTENSITY` methods. Defaults follow FDS+Evac
+where a mechanism has a direct counterpart. Exits can open and close on
+a schedule. A run checks its scenario against the FDS domain and stops at
+the end of the FDS output. A run that reaches its time limit with agents
+inside is reported as incomplete, and `run.py` then exits with status 2.
+Seeded results differ from v0.1; see Changed.
+
 ### Added
 
 - Python 3.13 and 3.14 support; CI tests 3.12, 3.13 and 3.14.
@@ -137,22 +151,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   q/U and `heat_radiometer_figures.py` draws it; page
   `docs/testing-heat-radiometer.md`. Reference data for #221-#223; the
   heat model is unchanged ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
-
-### Removed
-
-- Python 3.11 support. pyFDS-Evac requires Python 3.12, 3.13 or 3.14
-  (`requires-python = ">=3.12,<3.15"`). Python 3.15 waits on jupedsim
-  wheels for it.
-- The unused modules `pyfds_evac.config` (`SimulationConfig`) and
-  `pyfds_evac.utilities` (`distance`); nothing in the package has
-  imported them since `jpstooling.py` was removed. Code that imports
-  them breaks; this is acceptable for 0.2.0 under SemVer 0.x. Also the
-  three images in `assets/t_junction/` written by the removed demo
-  scripts (`cognitive_map_evolution.png`, `vismap_aset.png`,
-  `vismap_coverage.png`).
-- Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
-  FED line. The viewer and the live chart show the highest FED of any agent
-  at each time.
 
 ### Changed
 
@@ -379,6 +377,22 @@ incapacitation_mode="probabilistic")`,
 `DefaultHeatFedModel` passed to `run_scenario`, as before. The earlier HCN form is not available: it was a
 documentation error in the FDS+Evac Guide, and it differs from the current
 one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
+
+### Removed
+
+- Python 3.11 support. pyFDS-Evac requires Python 3.12, 3.13 or 3.14
+  (`requires-python = ">=3.12,<3.15"`). Python 3.15 waits on jupedsim
+  wheels for it.
+- The unused modules `pyfds_evac.config` (`SimulationConfig`) and
+  `pyfds_evac.utilities` (`distance`); nothing in the package has
+  imported them since `jpstooling.py` was removed. Code that imports
+  them breaks; this is acceptable for 0.2.0 under SemVer 0.x. Also the
+  three images in `assets/t_junction/` written by the removed demo
+  scripts (`cognitive_map_evolution.png`, `vismap_aset.png`,
+  `vismap_coverage.png`).
+- Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
+  FED line. The viewer and the live chart show the highest FED of any agent
+  at each time.
 
 ### Fixed
 
