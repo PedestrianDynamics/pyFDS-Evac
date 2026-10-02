@@ -115,7 +115,9 @@ def _apply_distance_caps(
     and obstructions, inside ``_get_visibility_array``. A sign with its own
     ``max_distance`` swaps that value in for its own waypoint only, so the
     order of operations stays fdsvismap's. This patches a private method,
-    which is why fdsvismap is pinned exactly.
+    which is why fdsvismap is pinned exactly. Workaround: no upstream issue
+    yet; regression test ``tests/test_visibility.py`` (per-sign caps); remove,
+    and relax the pin, once fdsvismap takes a ``max_vis`` per sign.
     """
     _check_max_sign_distance(max_sign_distance_m)
     vis.set_visibility_bounds(vis.min_vis, max_sign_distance_m)
@@ -149,8 +151,9 @@ def _extinction_slice_index(fds_dir: str, slice_height_m: float) -> int:
     """
     from fdsreader import Simulation
 
-    slices = list(Simulation(fds_dir).slices)
-    extinction = [s for s in slices if s.quantity.name == _EXTINCTION_QUANTITY]
+    collection = Simulation(fds_dir).slices
+    slices = list(collection)
+    extinction = collection.filter_by_quantity(_EXTINCTION_QUANTITY)
     chosen = fds_sampling.select_horizontal_slice(
         extinction, slice_height_m, _EXTINCTION_QUANTITY, fds_dir
     )
@@ -352,6 +355,9 @@ def _vis_metre_array(vis) -> np.ndarray:
     half-plane, then obstructions. It is duplicated here only to vectorise it --
     calling the public method per cell would be H*W*T*N calls. fdsvismap 0.3.1
     has no vectorised masked accessor, so this is the one place that mirrors it.
+    No upstream issue yet; regression test
+    ``tests/test_fdsvismap_adapter.py``, which compares it with
+    ``get_visibility_to_sign``; remove once fdsvismap exposes the masked array.
 
     float16 gives 0.1 m resolution at these magnitudes, which is far finer than
     the question ("can this route be walked") needs.

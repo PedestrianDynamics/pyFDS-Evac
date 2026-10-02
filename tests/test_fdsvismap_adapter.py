@@ -67,3 +67,20 @@ def test_directional_sign_is_hidden_from_behind():
     assert model.node_is_visible(0.0, 7.25, 2.25, "s")
     assert not model.node_is_visible(0.0, 3.25, 2.25, "s")
     assert model.visibility_to_node(0.0, 3.25, 2.25, "s") is None
+
+
+def test_cached_metres_mirror_fdsvismaps_masked_product(tmp_path):
+    """_vis_metre_array matches get_visibility_to_sign cell by cell."""
+    signs = {"s": {"x": 5.25, "y": 2.25, "alpha": 90.0, "c": C}}
+    walkable = box(0, 0, 10, 4)
+    kwargs = dict(cell_size_m=0.5, extinction_per_m=K_PER_M)
+    cache = tmp_path / "vis.npz"
+    live = VisibilityModel.clear_air(walkable, signs, cache_path=cache, **kwargs)
+    cached = VisibilityModel.clear_air(walkable, signs, cache_path=cache, **kwargs)
+    assert not hasattr(cached._vis, "vismap")
+    vismap = live._vis.vismap
+    for x in vismap.all_x_coords:
+        for y in vismap.all_y_coords:
+            expected = vismap.get_visibility_to_sign(0.0, x, y, sign_id=0)
+            got = cached._vis.visibility_to_wp(0.0, x, y, 0)
+            assert got == pytest.approx(expected, rel=1e-3)
