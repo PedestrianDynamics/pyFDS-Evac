@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- Python 3.13 and 3.14 support; CI tests 3.12, 3.13 and 3.14.
+  On 3.13 and 3.14, `uv sync` installs scikit-image 0.26 instead of the
+  0.23 that fdsvismap requires, which does not build there; fdsvismap's
+  sight lines are unchanged. A pip install needs Python 3.12.
 - A setup check of the scenario against the FDS slice coverage: the
   walkable area, exits, checkpoints, spawn areas and route edges outside
   the slices of every sampled quantity (m² and m), and signs outside them
@@ -136,6 +140,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- Python 3.11 support. pyFDS-Evac requires Python 3.12, 3.13 or 3.14
+  (`requires-python = ">=3.12,<3.15"`). Python 3.15 waits on jupedsim
+  wheels for it.
 - The unused modules `pyfds_evac.config` (`SimulationConfig`) and
   `pyfds_evac.utilities` (`distance`); nothing in the package has
   imported them since `jpstooling.py` was removed. Code that imports
