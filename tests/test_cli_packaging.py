@@ -303,19 +303,43 @@ def _get_when_up(url: str, server: subprocess.Popen) -> str | None:
     return None
 
 
-def test_wheel_gui_works_without_bundled_scenarios(installed_wheel, tmp_path):
-    """Without ./assets the picker is empty and the page still renders."""
+def test_wheel_gui_runs_an_uploaded_scenario(installed_wheel, tmp_path):
+    """Without ./assets the page renders; a user's upload runs, all under cwd."""
     pytest.importorskip("fasthtml")
     code = (
-        "import sys, warnings\n"
-        f"site, repo = {str(installed_wheel)!r}, {str(REPO)!r}\n"
+        "import sys, time, warnings\n"
+        f"site, repo, src = {str(installed_wheel)!r}, {str(REPO)!r}, "
+        f"{str(ASSETS / SMALL)!r}\n"
         "sys.path[:] = [site] + [p for p in sys.path if p not in ('', '.', repo)]\n"
         "warnings.simplefilter('ignore')\n"
+        "from pathlib import Path\n"
         "from starlette.testclient import TestClient\n"
         "from pyfds_evac.webapp import app, params\n"
         "assert params.__file__.startswith(site), params.__file__\n"
         "assert params._scenario_options() == []\n"
-        "assert TestClient(app.app).get('/').status_code == 200\n"
+        "client = TestClient(app.app)\n"
+        "assert client.get('/').status_code == 200\n"
+        "files = [('files', (n, (Path(src) / n).read_text())) "
+        "for n in ('config.json', 'geometry.wkt')]\n"
+        "r = client.post('/upload-scenario', data={'upload_name': 'mine'}, "
+        "files=files)\n"
+        "assert r.status_code == 200, r.text\n"
+        "assert ('mine', 'uploads/mine') in params._upload_options()\n"
+        "assert (Path.cwd() / 'uploads/mine/config.json').is_file()\n"
+        "r = client.post('/run', data={'scenario': 'uploads/mine', "
+        "'seed': '420', 'results_only': '1'})\n"
+        "assert r.status_code == 200, r.text\n"
+        "deadline = time.monotonic() + 120\n"
+        "while app.manager.status in ('idle', 'running', 'cancelling'):\n"
+        "    assert time.monotonic() < deadline, app.manager.status\n"
+        "    time.sleep(0.2)\n"
+        "assert app.manager.status == 'done', app.manager.status\n"
+        "(sqlite,) = (Path.cwd() / 'results').rglob('*.sqlite')\n"
+        "print(sqlite)\n"
     )
     result = _run(["-c", code], tmp_path)
     assert result.returncode == 0, result.stderr
+    sqlite = result.stdout.strip().splitlines()[-1]
+    assert sqlite.startswith(str(tmp_path / "results")), sqlite
+    for name in ("assets", "uploads", "results"):
+        assert not (installed_wheel / name).exists()
