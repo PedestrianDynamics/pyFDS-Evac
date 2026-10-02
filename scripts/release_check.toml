@@ -316,13 +316,7 @@ run coupled_clear assets/iso_table21_coupled/config.json
 run coupled_fds assets/iso_table21_coupled/config.json --fds-dir $OUT/fds
 uv run python scripts/verification/iso_test_18_figures.py --data $OUT"""
 timeout = 1800
-# The rows coupled_fds and K10 of the printed table, whose times the
-# README.txt of the bundle quotes, and the verdict.
-expect = [
-  "K10 10.0000 1.25 0.192635 79.24 408.91 408.913",
-  "coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296",
-  "pass criteria: all met",
-]
+expect_bundle = "iso-test-18"
 
 [[page]]
 name = "iso-test-19"
@@ -372,13 +366,8 @@ uv run python scripts/verification/heat_radiometer.py --data $WORK/heat_radiomet
 uv run python scripts/verification/heat_radiometer_figures.py --data $WORK/heat_radiometer
 HEAT_RADIOMETER_DATA=$WORK/heat_radiometer uv run pytest tests/verification/test_heat_radiometer.py"""
 timeout = 900
-# The rows whose medians the page's Result table and the README.txt quote.
-expect = [
-  "| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 |",
-  "| layer | 1.6 | up | 0.404 / 0.416 / 0.417 |",
-  "| burner | 1.6 | px | 0.395 / 0.530 / 0.570 |",
-  "passed",
-]
+expect = ["passed"]
+expect_bundle = "heat-radiometer"
 
 # --- Studies ----------------------------------------------------------------
 
@@ -484,15 +473,7 @@ run = """\
 uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \\
     --data "$DATA" --runs "$RUNS" --family rel"""
 timeout = 2400
-# Rows of the tables "Agents remaining" and "DIFF measures ... maximum
-# over n = 10 seeds" whose values the page's headline and the README.txt
-# of the bundle quote.
-expect = [
-  "| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |",
-  "| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 |",
-  "| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 |",
-  "| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 |",
-]
+expect_bundle = "study-schroeder2020"
 stored_runs = "4a7142f (evac_runs_rel)"
 
 [[page.step]]
@@ -502,15 +483,7 @@ run = """\
 uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder_room_maps.py \\
     --data "$DATA" --runs "$RUNS" --family rel"""
 timeout = 3600
-# Rows of the tables "Agents remaining" and "DIFF measures ... maximum
-# over n = 10 seeds" whose values the page's headline and the README.txt
-# of the bundle quote.
-expect = [
-  "| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |",
-  "| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 |",
-  "| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 |",
-  "| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 |",
-]
+expect_bundle = "study-schroeder2020"
 
 [[page.step]]
 name = "comparison with the release"
