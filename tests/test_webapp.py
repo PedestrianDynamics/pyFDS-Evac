@@ -1385,8 +1385,89 @@ def test_non_choice_flag_still_renders_as_input(client):
     html = client.get("/").text
     assert not re.search(r'<select[^>]*name="fed_threshold"', html)
     tag = re.search(r'<input[^>]*name="fed_threshold"[^>]*>', html)
-    assert tag and 'type="number"' in tag.group(0)
+    assert tag and 'inputmode="decimal"' in tag.group(0)
     assert 'value="1.0"' in tag.group(0)
+
+
+def test_decimal_fields_are_text_so_the_os_region_cannot_add_a_comma(client):
+    # Chromium on macOS shows a type=number value in the OS region's format
+    # ("1,6" on a German region), so float fields are text inputs (#487).
+    html = client.get("/").text
+    for dest, value in (
+        ("smoke_update_interval", "1.0"),
+        ("smoke_slice_height", "1.6"),
+        ("susceptibility_sigma", "0.94"),
+    ):
+        tag = re.search(rf'<input[^>]*name="{dest}"[^>]*>', html).group(0)
+        assert 'type="number"' not in tag
+        assert 'inputmode="decimal"' in tag
+        assert f'value="{value}"' in tag
+    seed = re.search(r'<input[^>]*name="seed"[^>]*>', html).group(0)
+    assert 'type="number"' in seed
+
+
+def test_decimal_values_round_trip_and_a_comma_is_rejected():
+    from pyfds_evac.webapp.params import form_to_opts
+
+    opts = form_to_opts(
+        {"scenario": "l_corridor", "smoke_slice_height": "1.6"}, baseseed=1
+    )
+    assert opts.smoke_slice_height == 1.6
+    with pytest.raises(ValueError, match="smoke_slice_height"):
+        form_to_opts({"scenario": "l_corridor", "smoke_slice_height": "1,6"})
+
+
+def test_artifacts_are_shown_relative_to_the_results_folder(tmp_path):
+    from fasthtml.common import to_xml
+
+    from pyfds_evac.webapp.app import _artifact_line, _folder_header, _results_folder
+
+    folder = _results_folder({"output_sqlite": str(tmp_path / "run" / "x.sqlite")})
+    assert folder == (tmp_path / "run").resolve()
+    full = folder / "bundle" / "app.json"
+    line = to_xml(_artifact_line(f"App bundle: {full}", folder))
+    assert "App bundle: " in line
+    assert f'title="{full}"' in line
+    assert ">bundle/<wbr>app.json<" in line
+    outside = to_xml(_artifact_line(f"Other: {tmp_path / 'y.csv'}", folder))
+    assert str(tmp_path.resolve()).replace("/", "/<wbr>") in outside
+    assert to_xml(_artifact_line("no path here", folder)).count("no path here") == 1
+    header = to_xml(_folder_header(folder))
+    assert f'data-copy-path="{folder}"' in header
+    assert 'aria-label="Copy results folder path"' in header
+
+
+def test_plots_without_data_for_the_run_are_listed_not_drawn():
+    from fasthtml.common import to_xml
+
+    from pyfds_evac.webapp import plots
+    from pyfds_evac.webapp.app import _plot_cards
+
+    def card(title, fig, div_id):
+        return title
+
+    no_growth = SimpleNamespace(
+        smoke_history=[],
+        cognitive_map_history=[
+            {"time_s": 0.0, "agent_id": 1, "known_nodes": [1], "known_edges": []},
+            {"time_s": 0.0, "agent_id": 2, "known_nodes": [1], "known_edges": []},
+        ],
+    )
+    assert not plots.cognitive_map_grew(no_growth)
+    cards = _plot_cards(no_growth, {}, card)
+    assert cards[:-1] == []
+    note = to_xml(cards[-1])
+    assert "Not shown" in note
+    assert "Smoke: not shown" in note and "no smoke source" in note
+    assert "Cognitive map growth: not shown" in note
+
+    grew = SimpleNamespace(
+        smoke_history=[{"time_s": 0.0, "speed_factor": 1.0, "extinction_per_m": 0.0}],
+        cognitive_map_history=no_growth.cognitive_map_history
+        + [{"time_s": 2.0, "agent_id": 1, "known_nodes": [1, 2], "known_edges": []}],
+    )
+    assert plots.cognitive_map_grew(grew)
+    assert _plot_cards(grew, {}, card) == ["Smoke", "Cognitive map growth"]
 
 
 def test_require_fds_coverage_sits_in_smoke_after_the_hold(client):

@@ -125,6 +125,23 @@ def smoke_figure(result: Any) -> go.Figure:
     return fig
 
 
+def cognitive_map_grew(result: Any) -> bool:
+    """True when some agent's cognitive map grew after it was first recorded.
+
+    ``cognitive_map_history`` adds a row only when an agent's map changes, so
+    a second row for the same agent is a growth event. Agents that know the
+    whole graph from the start (no discovery) have one row each.
+    """
+    rows = result.cognitive_map_history or []
+    seen: set[Any] = set()
+    for row in rows:
+        aid = row.get("agent_id")
+        if aid in seen:
+            return True
+        seen.add(aid)
+    return False
+
+
 def cognitive_map_figure(result: Any) -> go.Figure:
     """Mean known nodes/edges per agent over time (discovery-mode learning).
 
