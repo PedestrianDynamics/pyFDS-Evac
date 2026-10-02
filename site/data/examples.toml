@@ -54,7 +54,7 @@ results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
 [first-fds-case]
-title = "A crowd in a real fire"
+title = "A crowd in a fire"
 zip = "pyfds-evac-first-fds-case.zip"
 page = "docs/getting-started/first-fds-case/"
 source = "docs/first-fds-case.md"

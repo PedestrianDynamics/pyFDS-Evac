@@ -10,6 +10,10 @@ them. The deck-side causes (missing slices, `&REAC` yields) are explained on
 
 ## Errors
 
+Command-line errors start with the name of the command you ran:
+`pyfds-evac:` for the installed command, `run.py:` in a source checkout, and
+`__main__.py:` for `python -m pyfds_evac` on Python 3.12 and 3.13.
+
 | Message | Cause | Fix |
 |---|---|---|
 | `OSError: No simulations were found in the directory: DIR` | `--fds-dir` points at a directory without FDS output, for example one holding only the `.fds` deck. | Point it at the directory with the `.smv` file of a finished FDS run. |
@@ -22,7 +26,8 @@ them. The deck-side causes (missing slices, `&REAC` yields) are explained on
 | `ValueError: --heat-radiant-source integrated-intensity needs --heat-fed-method total-flux.` | As above, for the radiant source. | Add `--heat-fed-method total-flux`. |
 | `ValueError: --heat-radiant-source integrated-intensity needs --heat-u-factor in [0.25, 1]; there is no default.` | *f* has no default. | Set `--heat-u-factor`. |
 | `ValueError: DIR has no INTEGRATED INTENSITY slice. …` | The deck writes no `INTEGRATED INTENSITY` slice. | Add `&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height and rerun FDS. |
-| `run.py: error: argument --heat-u-factor: must be in [0.25, 1.0], got …` | *f* outside its range. | Use a value in [0.25, 1]. |
+| `pyfds-evac: error: argument --heat-u-factor: must be in [0.25, 1.0], got …` | *f* outside its range. | Use a value in [0.25, 1]. |
+| `pyfds-evac-gui needs the GUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[gui]'` | `pyfds-evac-gui` without the `gui` extra. | Run `pip install "pyfds-evac[gui]"`, or `uv sync --extra gui` in a source checkout. |
 | `IndexError: No slice with quantity '…' found in DIR` | A direct library call (`FdsFedField.from_fds`, `ExtinctionField.from_fds`, `load_slice_sampler`) on a case without that slice. `run.py` warns instead. | Add the slice to the deck, or check the case with `--inspect-fds` first. |
 
 ## Warnings that change the result

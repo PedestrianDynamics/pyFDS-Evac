@@ -16,7 +16,7 @@ output:
   {{< card link="getting-started/install" title="Install" subtitle="Requirements, install, and a one-line check." >}}
   {{< card link="getting-started/quickstart" title="Quickstart" subtitle="One run on a tracked scenario, with no FDS output needed." >}}
   {{< card link="getting-started/walkthrough" title="Real-FDS walkthrough" subtitle="From tracked FDS output to FED histories and exit times, and how to spot a run that succeeds but is wrong." >}}
-  {{< card link="getting-started/first-fds-case" title="A crowd in a real fire" subtitle="150 agents, a 2 MW FDS fire, and a figure for every step." >}}
+  {{< card link="getting-started/first-fds-case" title="A crowd in a fire" subtitle="150 agents, a 2 MW FDS fire, and a figure for every step." >}}
 {{< /cards >}}
 
 **Engineer with your own FDS case.** Prepare the deck, run, and read the

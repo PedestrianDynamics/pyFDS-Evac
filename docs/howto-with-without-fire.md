@@ -14,7 +14,7 @@ noted that most travel-time calculations assumed no interaction between
 occupants and the fire effluent. This page shows how to make the same
 comparison with pyFDS-Evac, what a run coupled to the fire adds, and whether
 the uncoupled run is conservative for one fire: the 2 MW PVC fire of
-[A crowd in a real fire](first-fds-case.md).
+[A crowd in a fire](first-fds-case.md).
 
 **You need** the `fire_2MW_PVC` FDS output of that page (step 3 there says
 where to get it) in `$FDS`. Each run below takes 4 to 6 s.
@@ -71,7 +71,7 @@ Simulation finished in 55.11 s (100/100 evacuated).
 
 This is the run an egress-only tool gives you. Take RSET from it and compare
 it with the location ASET from FDS, as in
-[A crowd in a real fire › At fixed points](first-fds-case.md#at-fixed-points-location-aset).
+[A crowd in a fire › At fixed points](first-fds-case.md#at-fixed-points-location-aset).
 
 **Arm U, smoke-blind.** The same run, with the fire sampled but not acting.
 `--smoke-blind` keeps every agent at its free speed and on its fire-free
@@ -193,10 +193,10 @@ agents at HCl >= 300 ppm for at least 1 s: 82
 The histories are written once per second, so `s_hcl300` and `s_k03` are
 seconds at HCl ≥ 300 ppm and at *K* ≥ 0.3 1/m. HCl = 900 × `fic` holds
 only because HCl is the only irritant of this deck
-([A crowd in a real fire › How the numbers are computed](first-fds-case.md#aset-rset)).
+([A crowd in a fire › How the numbers are computed](first-fds-case.md#aset-rset)).
 The classic comparison uses no such dose: it compares location ASET with
 RSET only. The per-agent dose is extra post-processing, as on
-[A crowd in a real fire › Each agent against its own limits](first-fds-case.md#each-agent-against-its-own-limits).
+[A crowd in a fire › Each agent against its own limits](first-fds-case.md#each-agent-against-its-own-limits).
 
 **The location ASET** comes from the FDS output alone, so it is the same for
 every arm. The study uses four points of the
@@ -455,7 +455,7 @@ R-na; U has fewer than R in 20 of 20 seeds (median 10 fewer). At 30 and 60 s all
 pre-movement, 1,000 at 30 and 60 s). Curve further right: more dose. Values
 until each agent's exit, at z = 2.0 m (the deck's only slice height; the
 1.6 m default resolves to it, see
-[A crowd in a real fire › The fire](first-fds-case.md#3-the-fire)), 1 s
+[A crowd in a fire › The fire](first-fds-case.md#3-the-fire)), 1 s
 resolution. Seconds at *K* ≥ 0.3
 1/m are secondary: obscuration alone is not treated as incapacitating for
 people who are not performing tasks (ISO 13571:2012, §4.5, note).
@@ -633,7 +633,7 @@ page.
   see. With no pre-movement it sends 94 % [91, 97] of the agents to exit A,
   against 100 % in R; at 30 and 60 s it gives the same exits as R.
 - **HCl is probably overestimated.** The deck has no HCl loss to walls
-  ([A crowd in a real fire › What this does not show](first-fds-case.md#what-this-does-not-show)).
+  ([A crowd in a fire › What this does not show](first-fds-case.md#what-this-does-not-show)).
   That makes the HCl crossings early and inflates R+FIC.
 - **The HCl slowdown is opt-in**, off in S and R, and incapacitation uses
   the FDS+Evac FED ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)
@@ -642,7 +642,7 @@ page.
   values were fixed from the fire before any run: 0 s moves before the
   junction reaches the visibility limit (24 s), 30 s falls between the first
   and last of the six points of
-  [A crowd in a real fire](first-fds-case.md#at-fixed-points-location-aset)
+  [A crowd in a fire](first-fds-case.md#at-fixed-points-location-aset)
   (18–46 s), 60 s after all of them. Babrauskas et al. (2010,
   pp. 346–347, 351) criticise pre-movement times of 0–80 s used for homes
   as unrealistic. Citing an NRCC study, they report that healthy occupants
@@ -654,7 +654,7 @@ page.
   exits could fail to find one, and the familiarity draw depends on the
   JuPedSim id ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)).
   For sign loss in this fire, see
-  [A crowd in a real fire](first-fds-case.md#at-fixed-points-location-aset).
+  [A crowd in a fire](first-fds-case.md#at-fixed-points-location-aset).
 - **The time limit is 270 s**, 30 s before the end of the FDS output. Route
   foresight samples ahead of the current time and can read past the end
   ([#356](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/356)); the

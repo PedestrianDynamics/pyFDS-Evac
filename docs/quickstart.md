@@ -29,9 +29,12 @@ You need one of:
 
 - a clone of the repository, with the environment installed by `uv sync`
   (see [Install](install.md)), and a shell opened in the repository root;
-- the zip above, unpacked, with the packages of its `requirements.txt`
-  installed, and a shell opened in the unpacked folder. Run the commands
-  below with `python` instead of `uv run python`.
+- the zip above, unpacked, and a shell opened in the folder it unpacks into
+  (`cd pyfds-evac-quickstart`). Install pyFDS-Evac in either of two ways:
+  `pip install pyfds-evac` ([Install](install.md)), or
+  `pip install -r requirements.txt` for the package versions pinned in the
+  zip. Run the commands below with `python` instead of
+  `uv run python`.
 
 The complete example is [`examples/quickstart.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/quickstart.py).
 Run it with:
@@ -270,7 +273,7 @@ Use real FDS output instead of a prescribed uniform smoke field:
 
 Also:
 
-- [A crowd in a real fire](first-fds-case.md): 150 agents in a 2 MW FDS fire,
+- [A crowd in a fire](first-fds-case.md): 150 agents in a 2 MW FDS fire,
   with figures for every step.
 - [What your FDS case must provide](fds-case-requirements.md), before you
   point the tool at your own FDS output.

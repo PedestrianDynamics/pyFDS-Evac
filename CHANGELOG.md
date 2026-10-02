@@ -28,6 +28,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `./assets` and writes `uploads/` and `results/` under the directory it
   starts in, not under site-packages.
 
+### Documentation
+
+- Install, Web GUI, Usage, Quickstart, Troubleshooting and the README
+  describe `pip install pyfds-evac` and the installed commands
+  `pyfds-evac`, `python -m pyfds_evac` and `pyfds-evac-gui`: where the
+  GUI reads and writes, its 127.0.0.1 default, the message without the
+  gui extra, and that an example zip unpacks into a folder of its own
+  (#475). The README links are absolute, so they work on PyPI.
+- The page "A crowd in a real fire" is renamed "A crowd in a fire". Its
+  address (`first-fds-case`) and anchors stay, so links keep working.
+  The Fundamentals and the figure of the design-fire page say "fire"
+  where they said "real fire".
+
 ## [0.2.0] - 2026-10-02
 
 Highlights. Smoke along a route now changes an agent's exit: route costs

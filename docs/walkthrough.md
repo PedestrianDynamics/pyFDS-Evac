@@ -360,7 +360,7 @@ temporary copy.
 
 ## Next steps
 
-- [A crowd in a real fire](first-fds-case.md): 150 agents in a 2 MW FDS
+- [A crowd in a fire](first-fds-case.md): 150 agents in a 2 MW FDS
   fire, with figures for the scenario, the smoke, the run and its results.
 - [What your FDS case must provide](fds-case-requirements.md): the slices to
   add to your deck and the full list of failure modes.

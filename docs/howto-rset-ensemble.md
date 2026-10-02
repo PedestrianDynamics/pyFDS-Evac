@@ -34,7 +34,7 @@ pre-movement, so its exit times are travel times only.
 
 A run that stops at its time limit with agents still inside has no RSET, and
 more seeds do not supply one, since every seed stops at the same limit;
-[A crowd in a real fire](first-fds-case.md#aset-rset) is such a run.
+[A crowd in a fire](first-fds-case.md#aset-rset) is such a run.
 
 ## Why not `result.evacuation_time`?
 

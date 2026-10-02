@@ -55,7 +55,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 |---|---|
 | `versions` | installed versions of pyfds-evac, jupedsim, fdsreader, fdsvismap |
 | `uv_lock_sha256` | hash of the `uv.lock` of the checkout, `null` for an installed wheel |
-| `git_commit`, `git_dirty` | commit of the checkout, and whether tracked files had uncommitted changes |
+| `git_commit`, `git_dirty` | commit of the checkout, and whether tracked files had uncommitted changes; both `null` for an installed wheel |
 | `seed` | the seed of the run |
 | `agent_seeding` | how per-agent and per-distribution draws are derived from the seed, `spawn-key-blake2b-v2`; runs of another scheme, or without the key, draw differently under the same seed (`v1` runs place agents from `seed + index`, #360) |
 | `scenario_path` | the scenario file that was loaded |

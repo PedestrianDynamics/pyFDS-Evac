@@ -1,4 +1,4 @@
-"""Figures for the "A crowd in a real fire" page: the T-junction with a 2 MW PVC fire.
+"""Figures for the "A crowd in a fire" page: the T-junction with a 2 MW PVC fire.
 
 The figures come from two runs of ``assets/t_junction`` (``config.json``,
 discovery agents, seed 42), one in clear air and one against the FDS output of

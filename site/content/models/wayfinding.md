@@ -12,7 +12,7 @@ aliases: [/models/visibility/]
 Based on: [Visibility through smoke](/fundamentals/visibility.md) and
 [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
-fdsvismap is pinned to release 0.3.1 in `pyproject.toml` (dependency
+fdsvismap is pinned to release 0.3.2 in `pyproject.toml` (dependency
 `fdsvismap`).
 
 The [routing model](/models/routing.md) ranks and refuses routes. This page
@@ -78,7 +78,7 @@ An optional `"max_distance"` (m, positive) sets that sign's reading distance
 west and 180 from the south (`visibility.py`, `VisibilityModel`).
 
 The test is computed by [fdsvismap](https://github.com/FireDynamics/fdsvismap)
-(pinned at 0.3.1 in `pyproject.toml`). For sign *k* and a grid cell at
+(pinned at 0.3.2 in `pyproject.toml`). For sign *k* and a grid cell at
 distance \(L\) (`FDSVisMap._get_view_angle_array`, `_get_visibility_array`,
 `get_sign_vismap`):
 
@@ -156,7 +156,7 @@ agent. View angle, walls and smoke are not tested there, and
 `visibility_to_node` returns `None`. In the half-cell strip between the
 slice edge and the grid edge, the agent still reads the edge cell, while
 its smoke and FED rows already count as outside the FDS domain. A sign that
-lies off the grid logs a warning when the model is built: fdsvismap 0.3.1
+lies off the grid logs a warning when the model is built: fdsvismap 0.2.1 to 0.3.2
 casts its sight lines from the nearest grid edge and keeps the true
 distance, so the part of the line outside the grid takes the mean *K* of
 the part inside (`VisibilityModel.signs_outside_grid`). With
@@ -666,7 +666,7 @@ the #172 fix. No test pins the #91 behaviour or convergence with the grid
   Interscience Communications. No DOI;
   [juser.fz-juelich.de/record/255940](https://juser.fz-juelich.de/record/255940).
 - fdsvismap, [github.com/FireDynamics/fdsvismap](https://github.com/FireDynamics/fdsvismap),
-  release 0.3.1 ([PyPI](https://pypi.org/project/fdsvismap/0.3.1/)).
+  release 0.3.2 ([PyPI](https://pypi.org/project/fdsvismap/0.3.2/)).
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
   Technical Reference and User's Guide*.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).

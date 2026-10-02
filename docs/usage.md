@@ -12,9 +12,10 @@ plotting script consumes each artefact. All commands assume the project venv
 contains is on [Outputs](outputs.md); error messages and their fixes are on
 [Troubleshooting](troubleshooting.md).
 
-## Running a simulation — `run.py`
+## Running a simulation — `run.py`, `pyfds-evac`
 
-`run.py` is the single entry point for an evacuation run. It loads a
+The pyFDS-Evac command line is the single entry point for an evacuation run.
+In a source checkout it is `run.py`. It loads a
 JSON-first JuPedSim scenario, optionally couples it to an FDS case for
 smoke-speed / FED / visibility, and writes CSV/SQLite artefacts for
 post-processing.
@@ -22,6 +23,13 @@ post-processing.
 ```
 uv run python run.py --scenario <scenario.json|.zip|dir> [options]
 ```
+
+After `pip install pyfds-evac` the same command line is installed as
+`pyfds-evac`, and `python -m pyfds_evac` runs it too ([Install](install.md)).
+Both take the flags below, with the same defaults, outputs and exit codes.
+The commands on this page use `uv run python run.py` because they read the
+scenarios and scripts of a source checkout; with pip, replace
+`uv run python run.py` by `pyfds-evac` and run them where those files are.
 
 ### Scenario selection and export
 
@@ -208,22 +216,24 @@ For a run identical to the command line, parse the same flags and build the
 keywords the same way:
 
 ```python
-import run  # run.py at the repository root
-from pyfds_evac import build_run_kwargs, load_scenario, run_scenario
+from pyfds_evac import build_run_kwargs, cli, load_scenario, run_scenario
 
 args = ["--scenario", "assets/iso_table22_coupled/config_a.json",
         "--fds-dir", "assets/iso_table22_coupled/fds/a"]
-opts = run._build_parser().parse_args(args)
+opts = cli._build_parser().parse_args(args)
 scenario = load_scenario(opts.scenario)
 result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
 print(f"FED max: {result.metrics['fed_max']:.3f}")
 result.cleanup()
 ```
 
-Run it from the repository root with `PYTHONPATH=. uv run python script.py`,
-so that `run.py` can be imported. It prints `FED max: 1.170`.
+Run it from the repository root with `uv run python script.py`; the scenario
+and its FDS output are tracked there. It prints `FED max: 1.170`.
+`_build_parser` is a private name of `pyfds_evac.cli`, not public API, and
+can change without notice
+([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
 
-[A crowd in a real fire](first-fds-case.md) does this end to end.
+[A crowd in a fire](first-fds-case.md) does this end to end.
 
 ### Agent visualisation
 
@@ -270,7 +280,7 @@ The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
 at 982 s. Rerouting is on by default, so `--enable-rerouting` is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 `assets/t_junction/t_junction.fds` with FDS, or see
-[A crowd in a real fire](first-fds-case.md).
+[A crowd in a fire](first-fds-case.md).
 
 ### Exit status
 

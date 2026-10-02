@@ -2,7 +2,9 @@
 [![tests](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml/badge.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/PedestrianDynamics/pyFDS-Evac/graph/badge.svg)](https://codecov.io/gh/PedestrianDynamics/pyFDS-Evac)
 [![docs](https://github.com/PedestrianDynamics/pyFDS-Evac/actions/workflows/docs.yml/badge.svg)](https://pedestriandynamics.org/pyFDS-Evac/)
-[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/pyfds-evac.svg)](https://pypi.org/project/pyfds-evac/)
+[![Python](https://img.shields.io/pypi/pyversions/pyfds-evac.svg)](https://pypi.org/project/pyfds-evac/)
 
 # pyFDS-Evac
 
@@ -38,7 +40,7 @@ The model descriptions, usage and verification live on the documentation site:
 - [Install](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/): requirements and a check that the install works
 - [Usage](https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/): CLI flags, post-processing scripts, run-and-plot driver
 - [Outputs](https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/) and [Scenario JSON](https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/): what a run writes, and the keys a scenario reads
-- Defaults follow FDS+Evac; see [what changed](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac) and the [changelog](CHANGELOG.md)
+- Defaults follow FDS+Evac; see [what changed](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#defaults-follow-fdsevac) and the [changelog](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md)
 - [Smoke-speed model](https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/), including FDS data access through `fdsreader`
 - [Fractional effective dose](https://pedestriandynamics.org/pyFDS-Evac/models/fed/), including heat dose and irritant slowdown
 - [Dynamic route rerouting](https://pedestriandynamics.org/pyFDS-Evac/models/routing/)
@@ -53,45 +55,62 @@ The model descriptions, usage and verification live on the documentation site:
 
 ## Installation
 
-This project needs Python 3.12, 3.13 or 3.14 and uses
-[uv](https://github.com/astral-sh/uv) for dependency management.
+pyFDS-Evac needs Python 3.12, 3.13 or 3.14. Install it from PyPI:
 
 ```bash
-uv sync
+pip install pyfds-evac
+pyfds-evac --help
 ```
+
+`pyfds-evac` runs a scenario; `python -m pyfds_evac` does the same. The
+package contains no scenarios, examples or scripts. Each example page on the
+documentation site offers its input files as a zip, which unpacks into a
+folder of its own; run the commands from inside that folder. The
+[Install](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/) page has a full check on a
+scenario.
 
 ## Development
 
-Run a JSON-first scenario with the CLI runner (`uv run` uses the project
-environment; `source .venv/bin/activate` activates it for the shell):
+To work on the code, or to run the examples, scripts and tracked scenarios of
+the repository, clone it and use [uv](https://github.com/astral-sh/uv):
 
 ```bash
+git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
+cd pyFDS-Evac
+uv sync
 uv run run.py --scenario assets/ISO-table21 --cleanup
 ```
 
-See [docs/usage.md](docs/usage.md) for the full catalogue of CLI flags,
-post-processing scripts, and the `scripts/run_and_plot.sh` driver that
-runs a simulation and produces every plot in one go.
+`run.py` is the same command line as `pyfds-evac` (`uv run` uses the project
+environment; `source .venv/bin/activate` activates it for the shell).
+[Usage](https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/) lists every CLI flag, the post-processing
+scripts, and the `scripts/run_and_plot.sh` driver that runs a simulation and
+produces every plot in one go.
 
 **Bringing your own FDS case?** Read
-[docs/fds-case-requirements.md](docs/fds-case-requirements.md) first. pyFDS-Evac
-does not run FDS, it samples the output of a finished run, and your deck has to
-dump specific slices for that to work. That page also covers the `&REAC` yields
-those slices depend on, and two failure modes that stay silent otherwise.
+[what your FDS case must provide](https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/)
+first. pyFDS-Evac does not run FDS, it samples the output of a finished run,
+and your deck has to dump specific slices for that to work. That page also
+covers the `&REAC` yields those slices depend on, and two failure modes that
+stay silent otherwise.
 
 ## Web GUI
 
 An optional local web app runs the same model behind a form:
 
 ```bash
-uv sync --extra gui
-uv run app.py
+pip install "pyfds-evac[gui]"
+pyfds-evac-gui
 ```
 
-Then open <http://localhost:5001>. The form groups, the options it does not
-offer, the result views and how to export a run as a Python script are on
-the [Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/)
-page.
+Then open <http://127.0.0.1:5001>. The GUI listens on this computer only;
+`--host` and `--port` change that. It lists the scenarios in `./assets` and
+writes `./uploads` and `./results` under the folder it starts in. In a source
+checkout, `uv sync --extra gui` and `uv run app.py` start it with the
+checkout's folders, listening on all interfaces with auto-reload. The form
+groups, the options it does not offer, the result views and how to export a
+run as a Python script are on the
+[Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/) page.
 
 ## Agent speed and pre-movement
 
@@ -119,7 +138,9 @@ smoke.
 Agent visualisation is handled by
 [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer), which
 renders the JuPedSim trajectory SQLite in a 3-D scene alongside the FDS
-smoke. Run with `--output-sqlite` to produce the file fds-viewer loads:
+smoke. Run with `--output-sqlite` to produce the file fds-viewer loads; this
+example uses a scenario and FDS output tracked in the repository, so run it
+in a source checkout:
 
 ```bash
 uv run run.py --scenario assets/iso_table22_coupled/config_a.json \
@@ -136,36 +157,37 @@ fds-viewer uses to colour agents by FED dose or speed.
 
 ## References
 
-See [docs/model-comparison.md](docs/model-comparison.md) for a
+See the [model comparison](https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/) for a
 section-by-section comparison of the FDS+Evac and pyFDS-Evac evacuation
 models (movement, smoke speed, FED, routing), referenced against the
 FDS+Evac guide below and the pyFDS-Evac source.
 
-Short summaries are stored in [`materials/`](materials/). The papers
+Short summaries are stored in [`materials/`](https://github.com/PedestrianDynamics/pyFDS-Evac/tree/main/materials). The papers
 themselves are linked by DOI and not redistributed here:
 
 - FDS+Evac Technical Reference and User's Guide — Korhonen (2021). Primary reference for the FED equations (Section 3.4) and smoke-speed model (Section 3.4, Eq. 11).
-- [Börger, Belt & Arnold (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) ([summary](materials/waypoint_based_visibility_summary.md)) — Beer-Lambert extinction averaged along the line of sight to a sign (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269. Averaging along the walked route, as pyFDS-Evac's route cost does, is our extension.
-- Haensel (2014) ([summary](materials/haensel2014_summary.md)) — Knowledge-based routing and cognitive map framework for evacuation modelling.
-- [Schroder et al. (2020)](https://doi.org/10.1016/j.firesaf.2020.103154) ([summary](materials/schroder2020_summary.md)) — A map representation of the ASET-RSET concept. *Fire Safety Journal*.
+- [Börger, Belt & Arnold (2024)](https://doi.org/10.1016/j.firesaf.2024.104269) ([summary](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/waypoint_based_visibility_summary.md)) — Beer-Lambert extinction averaged along the line of sight to a sign (Eq. 8-9), waypoint-based visibility maps. *Fire Safety Journal* 150:104269. Averaging along the walked route, as pyFDS-Evac's route cost does, is our extension.
+- Haensel (2014) ([summary](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/haensel2014_summary.md)) — Knowledge-based routing and cognitive map framework for evacuation modelling.
+- [Schroder et al. (2020)](https://doi.org/10.1016/j.firesaf.2020.103154) ([summary](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/schroder2020_summary.md)) — A map representation of the ASET-RSET concept. *Fire Safety Journal*.
 - [Ronchi et al. (2013)](https://doi.org/10.1007/s10694-012-0280-y) — Representation of the impact of smoke on agent walking speeds in evacuation models. *Fire Technology* 49.
-- [evac.f90](materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
-- [Haghani & Sarvi (2017)](materials/haghani2017_summary.md) — Human exit-choice behaviour under evacuation conditions: literature synthesis.
-- [Haghani & Sarvi (2018)](materials/haghani2018_summary.md) — Herding and route-choice in immersive-VR evacuation experiments.
-- [Lovreglio et al. (2014)](materials/lovreglio2014_summary.md) — Random-utility discrete choice model of exit selection.
-- [Lovreglio et al. (2016)](materials/lovreglio2016_summary.md) — Validation of a Bayesian random-utility exit-choice model.
+- [evac.f90](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/evac.f90) — Original FDS+Evac Fortran source for cross-referencing implementation details.
+- [Haghani & Sarvi (2017)](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/haghani2017_summary.md) — Human exit-choice behaviour under evacuation conditions: literature synthesis.
+- [Haghani & Sarvi (2018)](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/haghani2018_summary.md) — Herding and route-choice in immersive-VR evacuation experiments.
+- [Lovreglio et al. (2014)](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/lovreglio2014_summary.md) — Random-utility discrete choice model of exit selection.
+- [Lovreglio et al. (2016)](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/materials/lovreglio2016_summary.md) — Validation of a Bayesian random-utility exit-choice model.
 
 ## Assets
 
-Scenario definitions are stored in [`assets/`](assets/).
-[`assets/README.md`](assets/README.md) indexes the folders and the file
-conventions; [docs/assets.md](docs/assets.md) describes what each scenario
-proves and where that proof is checked.
+Scenario definitions are stored in [`assets/`](https://github.com/PedestrianDynamics/pyFDS-Evac/tree/main/assets).
+[`assets/README.md`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/assets/README.md) indexes the folders and the file
+conventions; [Scenario assets](https://pedestriandynamics.org/pyFDS-Evac/verification/assets/) describes what each
+scenario proves and where that proof is checked.
 
 ## Dependencies
 
-- jupedsim
-- pedpy
-- fdsreader
-- plotly
-- nbformat
+pyFDS-Evac depends on jupedsim, pedpy, fdsreader, fdsvismap, numpy, shapely,
+matplotlib, plotly and nbformat; the `gui` extra adds python-fasthtml,
+monsterui and python-multipart. fdsvismap is pinned exactly (0.3.2), and a
+plain `pip install` works on Python 3.12, 3.13 and 3.14. Versions and pins
+are in
+[`pyproject.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyproject.toml).
