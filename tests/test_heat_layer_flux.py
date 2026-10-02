@@ -611,6 +611,6 @@ def test_models_heat_page_documents_the_layer_regime():
 
 def test_changelog_mentions_the_layer_regime():
     text = (ROOT / "CHANGELOG.md").read_text()
-    unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+    unreleased = text.split("## [0.2.0]", 1)[1].split("\n## [", 1)[0]
     assert "--heat-regime" in unreleased
     assert "#222" in unreleased or "issues/222" in unreleased

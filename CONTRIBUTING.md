@@ -84,6 +84,20 @@ cd site && hugo --minify --panicOnWarning -e production
   `route_graph:`, `docs:`, `tests:`), no trailing period, a blank line, and a
   body wrapped at 72 columns that says what changed and why.
 
+## Versioning
+
+pyFDS-Evac follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+
+- Versions are `MAJOR.MINOR.PATCH`, and release tags are `vX.Y.Z`
+  (`v0.2.0`).
+- While MAJOR is 0, a breaking change bumps MINOR and a fix bumps PATCH.
+  Breaking changes include removed or renamed CLI flags, changed output
+  columns, changed defaults, changed exit codes and changes to the public
+  API.
+- A released version is never retagged or reused. A fix ships as a new
+  version.
+- The tag `v0.1` predates this convention; it is release 0.1.0.
+
 ## Documentation
 
 - The docs describe what the code does now. A feature that does not exist yet

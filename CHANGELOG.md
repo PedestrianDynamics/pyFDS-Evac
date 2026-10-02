@@ -2,12 +2,62 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.0] - YYYY-MM-DD
+
+Highlights. Smoke along a route now changes an agent's exit: route costs
+add smoke and dose, and a gate on the route's optical depth rejects a
+smoky path. Agents choose exits from a cognitive map that grows with
+familiarity, signs they can read and exits they discover. The heat dose
+follows ISO 13571 and the SFPE Handbook, with opt-in total-flux,
+hot-layer and `INTEGRATED INTENSITY` methods. Defaults follow FDS+Evac
+where a mechanism has a direct counterpart. Exits can open and close on
+a schedule. A run checks its scenario against the FDS domain and stops at
+the end of the FDS output. A run that reaches its time limit with agents
+inside is reported as incomplete, and `run.py` then exits with status 2.
+Seeded results differ from v0.1; see Changed. pyFDS-Evac runs on Python
+3.12, 3.13 and 3.14. Release 0.2.0 is installed from the source tree
+with uv; it is not published on PyPI.
+
+Breaking changes, which make this a MINOR release while MAJOR is 0:
+
+- Python 3.12, 3.13 or 3.14 is required; Python 3.11 and earlier are no
+  longer supported (Removed).
+- Exit status and run outcome: `run.py` exits with status 2 for an
+  incomplete run, and `success` is then `False` (Changed).
+- A run that outlasts the FDS output stops with `FdsHorizonError` (Changed).
+- Defaults follow FDS+Evac: sampling height, FIC slowdown, heat dose,
+  incapacitation, O2 threshold, pre-movement and `v0` (Changed, Migration).
+- Heat: the ISO 13571 clothed law by default, and one threshold for gas and
+  heat (Changed).
+- Seeded placements and outcomes differ from earlier versions (Changed).
+- Agents leave at an exit when their centre enters the exit polygon, and the
+  opening exit is ranked from each agent's position (Changed).
+- Exits are priced from where the agent stands, which changes route
+  switches and exit choice in smoke (Fixed, #451).
+- Rerouting is on by default, `w_queue` defaults to 0, `EXTINCTION` is no
+  longer read as smoke, and the FDS decks and demo assets moved to
+  `fds_directory/` and `assets/t_junction/` (Changed).
+- `speed_law="fridolf"` is Eq. 7 of Fridolf et al.; the V/(V+2) law is
+  removed (Changed).
+- New output columns and manifest keys: `in_fds_domain`, `fds_coverage`,
+  `outcome`, `agent_seeding` and the heat columns (Added, Changed).
+- Web GUI: the cumulative FED chart, sparkline and mean line (Removed).
+- The unused modules `pyfds_evac.config` and `pyfds_evac.utilities`
+  (Removed).
+
 ### Added
 
+- `scripts/release_check.sh`, the release gate. In a detached worktree of
+  the current commit it runs the tests per supported Python, builds and
+  follows the download bundles, runs the documented commands listed in
+  `scripts/release_check.toml` and builds the site, then writes
+  `release-check-<commit>.md`. Checks of pages an open issue already
+  lists are reported as STALE and do not fail the gate (#462).
 - Python 3.13 and 3.14 support; CI tests 3.12, 3.13 and 3.14.
   On 3.13 and 3.14, `uv sync` installs scikit-image 0.26 instead of the
   0.23 that fdsvismap requires, which does not build there; fdsvismap's
@@ -138,21 +188,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `docs/testing-heat-radiometer.md`. Reference data for #221-#223; the
   heat model is unchanged ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
 
-### Removed
-
-- Python 3.11 support. pyFDS-Evac requires Python 3.12, 3.13 or 3.14
-  (`requires-python = ">=3.12,<3.15"`). Python 3.15 waits on jupedsim
-  wheels for it.
-- The unused modules `pyfds_evac.config` (`SimulationConfig`) and
-  `pyfds_evac.utilities` (`distance`); nothing in the package has
-  imported them since `jpstooling.py` was removed. Code that imports
-  them breaks; this is acceptable for 0.2.0 under SemVer 0.x. Also the
-  three images in `assets/t_junction/` written by the removed demo
-  scripts (`cognitive_map_evolution.png`, `vismap_aset.png`,
-  `vismap_coverage.png`).
-- Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
-  FED line. The viewer and the live chart show the highest FED of any agent
-  at each time.
+- Routing and wayfinding since v0.1: congestion-aware routing (#16);
+  visibility-aware routing with cognitive maps (#17); auto-routing for
+  minimal configs with distributions and exits only (#18), whose
+  auto-wired adjacency has physical lengths (#58); familiarity-aware
+  frontier exploration for discovery agents (#39); familiarity as a
+  probability, with entrance seeding (#59); smoke as a gate on route
+  optical depth (#123); cognitive-map growth recorded by `run_scenario`
+  (#93).
+- An FDS deck generated from a JuPedSim walkable WKT (#28), and placeable
+  fires for discovery decks (#117).
+- Warnings on silent slice-height and FED mismatches (#67).
+- jupedsim 1.4.2 with `WarpDriverModel` (#85).
+- Web GUI: FDS smoke overlay in the trajectory viewer (#36), playback
+  speed and a live FED panel (#37), a dark theme (#38), results-only runs
+  and scenario upload (#109), a theme switch, run controls and a working
+  fullscreen viewer (#130), and a "Show equivalent Python" export (#329).
+- Verification and test scenarios: ISO 20414 Tables 21 and 22 (#82, #83),
+  stationary FED against FDS output (#74), blind-spawn discovery (#66),
+  cognitive-map acquisition and exit visibility scenarios (#50, #54), and
+  an in-repo world generator with invariant tests on generated decks
+  (#97).
+- CI runs the whole test suite (#381) and reports coverage on Codecov
+  (#435). Golden snapshots pin rerouting decisions (#201), and tests pin
+  route smoke sampling, scenario loading, spawn placement and direct
+  steering (#438-#441).
+- The FDS+Evac source of FDS 6.7.6 is bundled with an `evac.f90` notice
+  as the reference for the ported equations (#205, #206), and the
+  repository has community health files (#203).
 
 ### Changed
 
@@ -365,6 +428,18 @@ See [Defaults follow FDS+Evac](https://pedestriandynamics.org/pyFDS-Evac/docs/ge
   is `results/<scenario>/deterministic/…` accordingly
   ([#235](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/235)).
 
+- Rerouting is on by default and re-evaluates every 1 s (#41).
+- `w_queue` defaults to 0; the Station case sets its calibration against
+  Fahy Table 2 (0.03) in its deck (#90, #94).
+- Clear-air visibility comes from fdsvismap (#95), and the cognitive map
+  is the only visibility gate (#53). Discovery decks without FDS data use
+  clear-air sight instead of unlimited sight (#117).
+- `EXTINCTION` is no longer read as the smoke extinction coefficient; a
+  deck needs a `SOOT EXTINCTION COEFFICIENT` slice (#71).
+- Repository layout: `fds_data/` and `testing directory/` are merged into
+  `fds_directory/` (#47), and `assets/demo` is `assets/t_junction`; unused
+  scenarios are retired (#51).
+
 **Migration.** To reproduce results from earlier pyFDS-Evac versions, pass
 `--smoke-slice-height 2.0 --enable-fic-speed --o2-threshold-percent 19.5
 --enable-heat-fed --heat-incapacitation-mode probabilistic
@@ -379,6 +454,24 @@ incapacitation_mode="probabilistic")`,
 `DefaultHeatFedModel` passed to `run_scenario`, as before. The earlier HCN form is not available: it was a
 documentation error in the FDS+Evac Guide, and it differs from the current
 one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
+
+### Removed
+
+- Python 3.11 support. pyFDS-Evac requires Python 3.12, 3.13 or 3.14
+  (`requires-python = ">=3.12,<3.15"`). Python 3.15 waits on jupedsim
+  wheels for it.
+- The unused modules `pyfds_evac.config` (`SimulationConfig`) and
+  `pyfds_evac.utilities` (`distance`); nothing in the package has
+  imported them since `jpstooling.py` was removed. Code that imports
+  them breaks; this is acceptable for 0.2.0 under SemVer 0.x. Also the
+  three images in `assets/t_junction/` written by the removed demo
+  scripts (`cognitive_map_evolution.png`, `vismap_aset.png`,
+  `vismap_coverage.png`).
+- Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
+  FED line. The viewer and the live chart show the highest FED of any agent
+  at each time.
+
+- The notebooks and `Gregory.md` (#205).
 
 ### Fixed
 
@@ -478,3 +571,25 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
   It used to space the values evenly with half-cell offsets, which on
   node-centred slices read the wrong node for about a quarter of positions
   ([#212](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/212)).
+- The O2 hypoxia rate was 60 times too slow (#35, #52), and the FIC speed
+  factor compounded every step (#73).
+- Routing: first-segment FED and smoke were charged twice mid-leg (#44);
+  each agent is routed from its own spawn area (#46) and no-journey agents
+  are rooted at their spawn area (#64); distances are measured along the
+  walkable area (#48); every route is priced from the agent's position
+  (#65) and the frontier is chosen from where the agent stands (#70); the
+  first exit comes from the agent's cognitive map, not geometry (#87);
+  arrival learning is gated by visibility and learns reverse edges (#96);
+  stale `path_choices` no longer trap discovery agents (#107); a stage's
+  node lies inside its polygon, at its most open interior point for a
+  concave stage (#105, #108).
+- Web GUI: trajectories play at the recorded rate (#106), and agents are
+  drawn at map scale (#111).
+- Assets: the ISO-table21 deck runs (#79), and the Station doorways open
+  to their clear width (#110, #112).
+- Docs for the release (#470): the ISO Test 19 page runs
+  `build_geometry.py` with `uv run python` (#464); bundle READMEs quote
+  the printed rows verbatim (#465); the how-tos, limitations,
+  first-fds-case and routing pages describe incomplete runs and exit
+  status 2 (#442); the with/without-fire study and the cognitive-map
+  memory example are re-run on the current code (#391).

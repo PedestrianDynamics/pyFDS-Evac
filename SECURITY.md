@@ -3,7 +3,7 @@
 ## Supported versions
 
 Only the `main` branch is supported: security fixes land there. Releases
-(currently `v0.1`) and older revisions are not patched.
+(currently `v0.2.0`) and older revisions are not patched.
 
 ## Reporting a vulnerability
 

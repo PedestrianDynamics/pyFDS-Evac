@@ -542,5 +542,5 @@ def test_models_heat_page_documents_total_flux():
 
 def test_changelog_mentions_total_flux():
     text = (ROOT / "CHANGELOG.md").read_text()
-    unreleased = text.split("## [Unreleased]", 1)[1].split("\n## [", 1)[0]
+    unreleased = text.split("## [0.2.0]", 1)[1].split("\n## [", 1)[0]
     assert "--heat-fed-method" in unreleased
