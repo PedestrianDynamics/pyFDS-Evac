@@ -32,7 +32,7 @@ class _FakeVis:
 
     Provides the minimal attributes accessed by _build_cache_from_fds:
     - vismap_time_points, all_x_coords, all_y_coords  (coordinate arrays)
-    - all_time_all_wp_vismap_array_list  (nested list of per-wp bool arrays)
+    - all_time_all_sign_vismap_list  (nested list of per-wp bool arrays)
 
     Shape convention: 2 time steps × 2 waypoints × 1×1 spatial grid
     (matches the 2 entries in SIGNS).
@@ -41,15 +41,15 @@ class _FakeVis:
     vismap_time_points = np.array([0.0, 10.0])
     all_x_coords = np.array([0.0])
     all_y_coords = np.array([0.0])
-    all_time_all_wp_vismap_array_list = [
+    all_time_all_sign_vismap_list = [
         [np.zeros((1, 1), dtype=bool), np.zeros((1, 1), dtype=bool)],
         [np.zeros((1, 1), dtype=bool), np.zeros((1, 1), dtype=bool)],
     ]
     # Sighting distances are cached alongside the booleans, so the fake has to
     # answer the three arrays _vis_metre_array multiplies together.
-    all_wp_dict = {0: None, 1: None}
-    all_wp_angle_array_dict = {0: np.ones((1, 1)), 1: np.ones((1, 1))}
-    all_wp_non_concealed_cells_array_dict = {0: np.ones((1, 1)), 1: np.ones((1, 1))}
+    all_sign_dict = {0: None, 1: None}
+    all_sign_angle_array_dict = {0: np.ones((1, 1)), 1: np.ones((1, 1))}
+    all_sign_non_concealed_cells_array_dict = {0: np.ones((1, 1)), 1: np.ones((1, 1))}
 
     def _get_visibility_array(self, waypoint_id, time):
         del waypoint_id, time
@@ -243,14 +243,17 @@ class TestSignSynthesis:
 
         fake = MagicMock()
         fake.fds_time_points.max.return_value = 10.0
-        with patch("fdsvismap.VisMap", return_value=fake):
+        with (
+            patch("fdsvismap.VisMap", return_value=fake),
+            patch("pyfds_evac.core.visibility._extinction_slice_index", return_value=0),
+        ):
             _build_vismap(
                 "unused",
                 {"c0": {"x": 1.0, "y": 2.0, "alpha": None, "c": 3}},
                 time_step_s=5.0,
                 slice_height_m=2.0,
             )
-        assert fake.set_waypoint.call_args.kwargs["alpha"] is None
+        assert fake.add_sign.call_args.kwargs["alpha"] is None
 
     def test_synthesised_sign_is_genuinely_gated_end_to_end(self):
         """A previously-unsigned node must now be visibility-gated, not just present.
@@ -270,14 +273,14 @@ class TestSignSynthesis:
             vismap_time_points = np.array([0.0])
             all_x_coords = np.array([0.0, 1.0])
             all_y_coords = np.array([0.0])
-            all_time_all_wp_vismap_array_list = [
+            all_time_all_sign_vismap_list = [
                 [np.array([[True, False]])],
             ]
             # Sight of 12 m where the sign is visible, masked to 0 where it is
             # not -- the shape visibility_to_node has to read.
-            all_wp_dict = {0: None}
-            all_wp_angle_array_dict = {0: np.array([[1.0, 0.0]])}
-            all_wp_non_concealed_cells_array_dict = {0: np.array([[1.0, 1.0]])}
+            all_sign_dict = {0: None}
+            all_sign_angle_array_dict = {0: np.array([[1.0, 0.0]])}
+            all_sign_non_concealed_cells_array_dict = {0: np.array([[1.0, 1.0]])}
 
             def _get_visibility_array(self, waypoint_id, time):
                 del waypoint_id, time

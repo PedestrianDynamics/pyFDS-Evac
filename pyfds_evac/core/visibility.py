@@ -6,7 +6,6 @@ import hashlib
 import json
 import logging
 import math
-from contextlib import contextmanager
 from pathlib import Path
 from typing import Protocol
 
@@ -20,14 +19,17 @@ from .geometry import node_position
 class _VisBackend(Protocol):
     """What VisibilityModel needs from its backend.
 
-    Satisfied structurally by both the npz-backed ``_VisMapCache`` and a live
-    ``fdsvismap.VisMap`` (the clear-air route), so ``clear_air`` can assign
-    either without lying to the type checker.
+    Satisfied by the npz-backed ``_VisMapCache`` and by ``_LiveVisMap``, the
+    adapter around a live ``fdsvismap.VisMap`` (the uncached clear-air route).
     """
 
     def wp_is_visible(
         self, time: float, x: float, y: float, waypoint_id: int
     ) -> bool: ...
+
+    def visibility_to_wp(
+        self, time: float, x: float, y: float, waypoint_id: int
+    ) -> float: ...
 
 
 _logger = logging.getLogger(__name__)
@@ -112,7 +114,10 @@ def _apply_distance_caps(
     fdsvismap holds one ``max_vis`` and applies it to C/K before the view angle
     and obstructions, inside ``_get_visibility_array``. A sign with its own
     ``max_distance`` swaps that value in for its own waypoint only, so the
-    order of operations stays fdsvismap's.
+    order of operations stays fdsvismap's. This patches a private method,
+    which is why fdsvismap is pinned exactly. Workaround: no upstream issue
+    yet; regression test ``tests/test_visibility.py`` (per-sign caps); remove,
+    and relax the pin, once fdsvismap takes a ``max_vis`` per sign.
     """
     _check_max_sign_distance(max_sign_distance_m)
     vis.set_visibility_bounds(vis.min_vis, max_sign_distance_m)
@@ -132,33 +137,27 @@ def _apply_distance_caps(
     vis._get_visibility_array = capped
 
 
-@contextmanager
-def _nearest_horizontal_slice(fds_dir: str, slice_height_m: float):
-    """Make fdsvismap's slice lookup use pyFDS-Evac's slice rule.
+_EXTINCTION_QUANTITY = "SOOT EXTINCTION COEFFICIENT"
 
-    fdsvismap selects the extinction slice with fdsreader's
-    ``SliceCollection.get_nearest``, which returns the first horizontal slice
-    declared rather than the nearest one and can return a vertical slice. Its
-    alternative, a slice ID, is empty unless the deck names its slices. So the
-    lookup is replaced for the duration of ``read_fds_data`` by the rule the
-    walking-speed and FED samplers use.
+
+def _extinction_slice_index(fds_dir: str, slice_height_m: float) -> int:
+    """Index of the extinction slice that sign legibility reads.
+
+    The slice is chosen by ``fds_sampling.select_horizontal_slice``, the rule
+    the walking-speed and FED samplers use, and handed to fdsvismap by its
+    index in ``Simulation.slices``. fdsvismap 0.3.1 applies the same rule
+    itself (fdsvismap#55); passing the index keeps one owner of the rule and
+    its height-mismatch warning.
     """
-    from fdsreader.slcf.slice_collection import SliceCollection
+    from fdsreader import Simulation
 
-    original = SliceCollection.get_nearest
-
-    def nearest(collection, x=None, y=None, z=None):
-        del x, y, z
-        quantity = next((s.quantity.name for s in collection), "extinction")
-        return fds_sampling.select_horizontal_slice(
-            collection, slice_height_m, quantity, fds_dir
-        )
-
-    SliceCollection.get_nearest = nearest
-    try:
-        yield
-    finally:
-        SliceCollection.get_nearest = original
+    collection = Simulation(fds_dir).slices
+    slices = list(collection)
+    extinction = collection.filter_by_quantity(_EXTINCTION_QUANTITY)
+    chosen = fds_sampling.select_horizontal_slice(
+        extinction, slice_height_m, _EXTINCTION_QUANTITY, fds_dir
+    )
+    return next(i for i, s in enumerate(slices) if s is chosen)
 
 
 def _build_vismap(
@@ -171,13 +170,16 @@ def _build_vismap(
     from fdsvismap import VisMap
 
     vis = VisMap()
-    with _nearest_horizontal_slice(fds_dir, slice_height_m):
-        vis.read_fds_data(fds_dir, fds_slc_height=slice_height_m)
+    vis.read_fds_data(
+        fds_dir,
+        fds_slc_height=slice_height_m,
+        fds_slc_index=_extinction_slice_index(fds_dir, slice_height_m),
+    )
     t_max = vis.fds_time_points.max()
     vis.set_time_points(list(np.arange(0, t_max + time_step_s, time_step_s)))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
         alpha = sign.get("alpha")
-        vis.set_waypoint(
+        vis.add_sign(
             wp_id,
             float(sign["x"]),
             float(sign["y"]),
@@ -226,7 +228,9 @@ def _make_meta(
         # rebuilt rather than read as metres. Format 3 caps at the sign's
         # reading distance instead of the domain diagonal. Format 4 reads the
         # extinction slice nearest the height, not the first one declared.
-        "format": 4,
+        # Format 5 is fdsvismap 0.3.1, where a directional sign is legible
+        # from its own cell; earlier caches hold NaN there.
+        "format": 5,
     }
 
 
@@ -266,8 +270,8 @@ def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):
 class _VisMapCache:
     """Lightweight visibility lookup backed by pre-computed numpy arrays.
 
-    Mirrors the ``wp_is_visible`` interface of ``fdsvismap.VisMap`` without
-    carrying any of the heavy FDS reader state or requiring pickle.
+    Answers the ``_VisBackend`` queries without carrying any of the heavy FDS
+    reader state or requiring pickle.
     """
 
     def __init__(
@@ -312,10 +316,33 @@ class _VisMapCache:
         return float(self._metres[t_id, waypoint_id, y_id, x_id])
 
 
+class _LiveVisMap:
+    """Adapter from a live ``fdsvismap.VisMap`` to ``_VisBackend``.
+
+    The one place that names fdsvismap's per-cell query methods. Answers are
+    fdsvismap's own, in float64; only a cache stores float16.
+    """
+
+    def __init__(self, vismap) -> None:
+        self.vismap = vismap
+
+    def wp_is_visible(self, time: float, x: float, y: float, waypoint_id: int) -> bool:
+        return bool(
+            self.vismap.sign_is_visible(time=time, x=x, y=y, sign_id=waypoint_id)
+        )
+
+    def visibility_to_wp(
+        self, time: float, x: float, y: float, waypoint_id: int
+    ) -> float:
+        return float(
+            self.vismap.get_visibility_to_sign(time=time, x=x, y=y, sign_id=waypoint_id)
+        )
+
+
 def _vis_bool_array(vis) -> np.ndarray:
     """Convert VisMap's nested list to a (T, N_wp, H, W) bool array."""
     return np.array(
-        [list(ts) for ts in vis.all_time_all_wp_vismap_array_list],
+        [list(ts) for ts in vis.all_time_all_sign_vismap_list],
         dtype=bool,
     )
 
@@ -323,12 +350,14 @@ def _vis_bool_array(vis) -> np.ndarray:
 def _vis_metre_array(vis) -> np.ndarray:
     """Sighting distance in metres per (time, waypoint, cell).
 
-    The product below is the one ``VisMap.get_visibility_to_wp`` forms per cell:
-    Jin's c / K_ave along the sight line, then the sign's readable half-plane,
-    then obstructions. It is duplicated here only to vectorise it -- calling the
-    public method per cell would be H*W*T*N calls. fdsvismap should expose the
-    masked array directly; until the pin is updated this is the one place that
-    mirrors it.
+    The product below is the one ``VisMap.get_visibility_to_sign`` forms per
+    cell: Jin's c / K_ave along the sight line, then the sign's readable
+    half-plane, then obstructions. It is duplicated here only to vectorise it --
+    calling the public method per cell would be H*W*T*N calls. fdsvismap 0.3.1
+    has no vectorised masked accessor, so this is the one place that mirrors it.
+    No upstream issue yet; regression test
+    ``tests/test_fdsvismap_adapter.py``, which compares it with
+    ``get_visibility_to_sign``; remove once fdsvismap exposes the masked array.
 
     float16 gives 0.1 m resolution at these magnitudes, which is far finer than
     the question ("can this route be walked") needs.
@@ -336,11 +365,11 @@ def _vis_metre_array(vis) -> np.ndarray:
     frames = []
     for time in vis.vismap_time_points:
         per_wp = []
-        for wp_id in vis.all_wp_dict:
+        for wp_id in vis.all_sign_dict:
             masked = (
-                vis.all_wp_angle_array_dict[wp_id]
+                vis.all_sign_angle_array_dict[wp_id]
                 * vis._get_visibility_array(wp_id, time)
-                * vis.all_wp_non_concealed_cells_array_dict[wp_id]
+                * vis.all_sign_non_concealed_cells_array_dict[wp_id]
             )
             per_wp.append(masked)
         frames.append(per_wp)
@@ -606,7 +635,7 @@ class VisibilityModel:
     def signs_outside_grid(self) -> dict[str, float]:
         """Return {node_id: distance to the grid [m]} of signs off the vismap grid.
 
-        Empty for a clear-air model. fdsvismap 0.2.1 snaps the ray origin of
+        Empty for a clear-air model. fdsvismap 0.2.1-0.3.1 snaps the ray origin of
         such a sign onto the nearest edge cell while keeping the true distance,
         so the part of the sight line outside the grid takes the mean K of the
         part inside. Workaround: report it (warning, or error with
@@ -740,7 +769,7 @@ class VisibilityModel:
         vis.set_time_points([0.0])
         for wp_id, (_node_id, sign) in enumerate(sign_descriptors.items()):
             alpha = sign.get("alpha")
-            vis.set_waypoint(
+            vis.add_sign(
                 wp_id,
                 float(sign["x"]),
                 float(sign["y"]),
@@ -761,7 +790,7 @@ class VisibilityModel:
             )
 
         model = cls.__new__(cls)
-        model._vis = vis  # VisMap exposes the same wp_is_visible signature
+        model._vis = _LiveVisMap(vis)
         model._wp_ids = {
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
@@ -835,13 +864,8 @@ class VisibilityModel:
         if not self.in_grid(x, y):
             self._sight_outside_grid(time, x, y, node_id)
             return None
-        reader = getattr(self._vis, "visibility_to_wp", None)
-        if reader is None:
-            reader = getattr(self._vis, "get_visibility_to_wp", None)
-        if reader is None:
-            return None
         try:
-            metres = float(reader(time=time, x=x, y=y, waypoint_id=wp_id))
+            metres = self._vis.visibility_to_wp(time=time, x=x, y=y, waypoint_id=wp_id)
         except (RuntimeError, IndexError, KeyError):
             return None
         return metres if metres > 0.0 else None
@@ -851,7 +875,7 @@ class VisibilityModel:
 
         Computed from the descriptor rather than asked of the backend: a cache
         loaded from disk holds arrays, not the VisMap that could answer, and
-        this is the same Euclidean distance ``get_distance_to_wp`` returns.
+        this is the same Euclidean distance ``get_distance_to_sign`` returns.
         Reading it from the backend meant a cached run had no distance, so the
         sight test had nothing to compare against and silently fell back.
         """

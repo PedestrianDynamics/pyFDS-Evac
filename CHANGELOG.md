@@ -142,6 +142,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- fdsvismap 0.3.1 from PyPI replaces the git pin, pinned exactly because
+  `visibility.py` patches its private `_get_visibility_array`. numpy is now
+  at least 2.1. fdsvismap 0.3.1 also picks the horizontal slice nearest the
+  height (fdsvismap#55), so the patch of fdsreader's slice lookup is
+  removed; the extinction slice is still chosen by
+  `fds_sampling.select_horizontal_slice` and passed by index. Vismap caches
+  written before are rebuilt (cache format 5). `pyfds_evac/jpstooling.py`,
+  `scripts/demo_vismap_phase0.py` and `scripts/demo_cognitive_map_vis.py`,
+  which used the removed waypoint API and had no caller, are deleted.
 - A run that reaches `max_simulation_time` with agents inside, or with flow
   agents still to enter, is incomplete: `success` is `False` (it was
   `True`, #139), the new `metrics["status"]` is `"incomplete"` (else
@@ -359,6 +368,11 @@ one only when NO is present or by the offset, 4.5 × 10⁻⁵ /min.
 
 ### Fixed
 
+- A directional sign is legible from its own grid cell. fdsvismap before
+  0.3.0 divided 0 by 0 there, so the sign was hidden and
+  `visibility_to_node` returned `None`. Only FDS-backed discovery runs whose
+  agents pass a sign's cell change; on the first FDS case 70 of 150 agents
+  leave instead of 72.
 - The mean extinction of a route edge (`k_avg`) averaged over all samples
   of its polyline, so short segments and interior vertices weighed too much
   and the mean depended on where the routing engine put its vertices. It is
