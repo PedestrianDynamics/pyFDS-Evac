@@ -1,11 +1,9 @@
 """Contract of the scikit-image ray functions that fdsvismap casts sight lines with.
 
-fdsvismap requires scikit-image ~= 0.23.2, which has no wheels for Python 3.13
-and 3.14; pyproject.toml overrides it with 0.26 there (``[tool.uv]``). fdsvismap
-uses only ``skimage.draw.line`` and ``line_aa``. The expected cells and
-anti-aliasing weights below are the output of scikit-image 0.23.2, so every
-Python version must trace the same rays. Remove this test with the override
-once an fdsvismap release allows 0.26.
+fdsvismap allows scikit-image >= 0.23.2, < 1.0 and uses only
+``skimage.draw.line`` and ``line_aa``. The expected cells and anti-aliasing
+weights below are the output of scikit-image 0.23.2, so every installed
+scikit-image version must trace the same rays.
 """
 
 import numpy as np

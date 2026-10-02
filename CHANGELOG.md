@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- fdsvismap 0.3.2 replaces 0.3.1, still pinned exactly. Its code is the
+  same; it allows scikit-image `>=0.23.2,<1.0` instead of `~=0.23.2`.
+  The uv override of scikit-image is removed, and `pip install` now
+  works on Python 3.12, 3.13 and 3.14. The lock moves scikit-image from
+  0.23.2 to 0.26.0 on Python 3.12, as on 3.13 and 3.14 already; a seeded
+  reference run gives identical trajectories and visibility maps (#479).
+
 ### Fixed
 
 - The CLI and the GUI work from an installed wheel (#471). The CLI moved
