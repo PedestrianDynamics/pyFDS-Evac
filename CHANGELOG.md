@@ -39,6 +39,8 @@ Breaking changes, which make this a MINOR release while MAJOR is 0:
 - New output columns and manifest keys: `in_fds_domain`, `fds_coverage`,
   `outcome`, `agent_seeding` and the heat columns (Added, Changed).
 - Web GUI: the cumulative FED chart, sparkline and mean line (Removed).
+- The unused modules `pyfds_evac.config` and `pyfds_evac.utilities`
+  (Removed).
 
 ### Added
 
