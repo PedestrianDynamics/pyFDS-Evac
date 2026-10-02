@@ -150,9 +150,11 @@ Script: &lt;code>scripts/figures/stage_graph.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;a href="#the-exposure-gate" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model, one quantity carries all of the smoke
 reasoning: the optical depth along the walk, \(\tau_k = \bar K_k L_k\), the
 column of smoke the agent would pass through.&lt;/p>
-&lt;p>First, a shortest-path search finds one path to each exit, with every edge
-weighted by its own optical depth at decision time: the least-smoky path, which in clear air is
-the shortest. Second, each candidate is re-evaluated with anticipation, each
+&lt;p>First, a shortest-path search from the agent&amp;rsquo;s position finds one path to
+each exit, with every edge weighted by its own optical depth at decision time:
+the least-smoky path, which in clear air is the shortest. The first leg is the
+walk from the agent to the route&amp;rsquo;s first node, charged for the smoke ahead of
+the agent. Second, each candidate is re-evaluated with anticipation, each
 edge sampled at the time the agent would reach it. By default the router sees
 the whole future of the fire, so the result is an upper bound on how well an
 occupant could route. Third, the gate refuses a route whose \(\tau\) exceeds a
@@ -600,7 +602,8 @@ its familiarity, &lt;code>entrance&lt;/code> or a legible sign gave it, but it p
 sampled along the whole route, including stretches it has never seen
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">issue #125&lt;/a>).
 By default (&lt;code>routing.anticipate&lt;/code> = true, &lt;code>routing.foresight_horizon_s&lt;/code>
-unbounded), the path to each exit is found on the smoke at decision time,
+unbounded), the path to each exit is found from the agent&amp;rsquo;s position on the
+smoke at decision time,
 and each stretch of that path is then priced with the smoke that the
 finished FDS run holds for the time the agent would arrive there. Knowledge limits which
 routes an agent ranks, and only fully familiar agents know the whole graph;
@@ -608,8 +611,9 @@ it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.&lt;/p>
 &lt;p>&lt;strong>Route choice.&lt;/strong> Route choice has open limitations: switching can oscillate
 where two routes cross in cost (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>), routes are priced with smoke the agent
-cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), one path is priced per exit (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), and the FED along
-the walk to the route&amp;rsquo;s first graph node is not counted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). The full list, with
+cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), one path is priced per exit (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), the first-leg FED is taken pro rata from the first edge (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>), the ordering breaks
+optical-depth ties that the anchor&amp;rsquo;s deadband ignores (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452" target="_blank" rel="noopener">#452&lt;/a>), and the
+all-refused fallback holds the current exit on its worst extinction alone (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The full list, with
 one line per issue, is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing › Limitations&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Irritant slowdown.&lt;/strong> The opt-in irritant slowdown

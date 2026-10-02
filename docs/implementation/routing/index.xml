@@ -133,7 +133,9 @@ Eq. 8-9; the Beer-Lambert law itself is on
 &lt;h3>Arrival-time pricing&lt;span class="hx-absolute -hx-mt-20" id="arrival-time-pricing">&lt;/span>
 &lt;a href="#arrival-time-pricing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path search (&lt;code>_generate_candidates&lt;/code>) weights every edge with the
 smoke at decision time and finds one path to each exit from the agent&amp;rsquo;s
-origin node. With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of
+position. Its first legs are the walks from the agent to each successor of
+its origin node and to its current target, weighted by the smoke on each walk
+(&lt;code>_first_hops&lt;/code>); it never routes back through the origin node. With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of
 &lt;code>cost_model&lt;/code>&lt;/strong>), that path is then measured edge by edge at the time the
 agent would reach each edge&amp;rsquo;s start (&lt;code>_measure_route&lt;/code>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -526,8 +528,8 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
-&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth at decision time (&lt;code>k_avg&lt;/code> × length + 1e-6 × length); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>)&lt;/td>
-&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite at decision time (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth); one path per exit&lt;/td>
+&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth at decision time (&lt;code>k_avg&lt;/code> × length + 1e-6 × length), started at the agent&amp;rsquo;s position: the first legs are the walks to the source&amp;rsquo;s successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>); the current exit&amp;rsquo;s entry is replaced by the walked path when that path orders ahead&lt;/td>
+&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite at decision time (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth), started at the agent&amp;rsquo;s position as for the gate; one path per exit; the walked path as for the gate&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
@@ -573,7 +575,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
-&lt;td>&lt;code>_generate_candidates&lt;/code>, weighting edges with the policy&amp;rsquo;s &lt;code>edge_weight&lt;/code>&lt;/td>
+&lt;td>&lt;code>_generate_candidates&lt;/code>, weighting edges with the policy&amp;rsquo;s &lt;code>edge_weight&lt;/code>; the first legs are &lt;code>_first_hops&lt;/code>; the walked path is applied in &lt;code>rank_routes&lt;/code> (&lt;code>current_path&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
@@ -604,9 +606,11 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
 &lt;p>Several of these rules resist switching at different points (return margins,
 discount, anchor, fallback margin, same-exit threshold). Their consolidation is
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; the
-anchor&amp;rsquo;s baseline is the best path to the current exit, not the walked one
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186" target="_blank" rel="noopener">#186&lt;/a>).&lt;/p>
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>. The
+anchor&amp;rsquo;s baseline is the better of the best path to the current exit from the
+agent&amp;rsquo;s position and the path the agent walks, by the policy&amp;rsquo;s ordering
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/186" target="_blank" rel="noopener">#186&lt;/a>, resolved by
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451" target="_blank" rel="noopener">#451&lt;/a>).&lt;/p>
 &lt;p>When &lt;code>rank_routes&lt;/code> returns nothing at all — a discovery agent whose
 known subgraph holds no exit — the agent is sent toward the nearest
 unexplored frontier node instead of standing still (&lt;code>explore&lt;/code>), or
@@ -681,9 +685,10 @@ redundant extinction sampling when multiple candidate routes share
 segments. Under &lt;code>anticipate&lt;/code> the same edge on two routes is priced at
 two different arrival times, so the route measurement (&lt;code>_measure_route&lt;/code>)
 keys on &lt;code>(source, target, round(arrival_time_s))&lt;/code>. The path search keeps
-the &lt;code>(source, target)&lt;/code> key, since it prices every edge at decision time. The re-measured first leg of
-a position-aware route is deliberately not cached: it belongs to one
-agent&amp;rsquo;s position, and the cache is shared across agents in a pass.&lt;/p>
+the &lt;code>(source, target)&lt;/code> key, since it prices every edge at decision time. The walks from the agent
+to the first nodes of its routes are deliberately not cached there: they belong
+to one agent&amp;rsquo;s position, and the cache is shared across agents in a pass. They
+are cached per agent and call instead (&lt;code>_first_leg&lt;/code>).&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>cache: dict[SegmentCacheKey, SegmentCost] &lt;span style="color:#f92672">=&lt;/span> {}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ranked &lt;span style="color:#f92672">=&lt;/span> rank_routes(
@@ -1517,8 +1522,8 @@ would count for nothing exactly where decks calibrate one.&lt;/li>
 asymmetry, and it moved nothing: 34 returns before and after.&lt;/li>
 &lt;/ul>
 &lt;h3>Anticipation&lt;span class="hx-absolute -hx-mt-20" id="anticipation">&lt;/span>
-&lt;a href="#anticipation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path to each exit is found on the smoke at decision time
-(&lt;code>_generate_candidates&lt;/code>). With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), that path is
+&lt;a href="#anticipation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path to each exit is found on the smoke at decision time, starting from
+the agent&amp;rsquo;s position (&lt;code>_generate_candidates&lt;/code>, &lt;code>_first_hops&lt;/code>). With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), that path is
 then measured edge by edge at the time the agent would reach each edge&amp;rsquo;s
 start (&lt;code>_measure_route&lt;/code>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -1760,12 +1765,17 @@ it alone.&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a> — route
 choice oscillates at a genuine optical-depth crossover.&lt;/strong> &lt;code>l_corridor&lt;/code>&amp;rsquo;s 34
-returns, 31 of them in &lt;code>t = 40-60 s&lt;/code>, the window in which the two routes&amp;rsquo; &lt;code>tau&lt;/code>
+returns at &lt;code>25a6f8f&lt;/code>, 31 of them in &lt;code>t = 40-60 s&lt;/code>, the window in which the two routes&amp;rsquo; &lt;code>tau&lt;/code>
 cross over; at &lt;code>t = 40 s&lt;/code> their distributions overlap by 61 %. The crossover
 swings through 1.5-3x and sails past any
 hysteresis constant that would not also blind the model to real change. What is
 missing is &lt;em>commitment&lt;/em> — hysteresis in time or in progress along a leg — not a
-bigger threshold. Three attempts are already recorded as failures below.&lt;/li>
+bigger threshold. Three attempts are already recorded as failures below.
+Pricing the first leg on the walk from the agent&amp;rsquo;s position
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451" target="_blank" rel="noopener">#451&lt;/a>) makes
+the crossover more frequent near a smoky door: on the &lt;code>l_corridor_gate&lt;/code>
+reference deck (&lt;code>scripts/golden_rerouting.py&lt;/code>) switches went from 28 to 58
+and exit reversals from 16 to 40, 28 of them within 2 s.&lt;/li>
 &lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a> — route
 choice is not perception-limited.&lt;/strong> See
 &lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>.
