@@ -16,8 +16,6 @@ Run from the repository root::
 Writes ``site/static/images/wayfinding/sign_rotation.gif``.
 """
 
-import contextlib
-import io
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -61,14 +59,12 @@ def sweep():
         f"a{i}": dict(x=SIGN_XY[0], y=SIGN_XY[1], alpha=float(a), c=C_SIGN)
         for i, a in enumerate(ALPHAS)
     }
-    # fdsvismap prints progress and divides by zero at the sign's own cell.
-    with contextlib.redirect_stdout(io.StringIO()), np.errstate(invalid="ignore"):
-        vis = VisibilityModel.clear_air(
-            box(0, 0, ROOM_W, ROOM_L),
-            signs,
-            cell_size_m=CELL_M,
-            extinction_per_m=EXTINCTION,
-        )
+    vis = VisibilityModel.clear_air(
+        box(0, 0, ROOM_W, ROOM_L),
+        signs,
+        cell_size_m=CELL_M,
+        extinction_per_m=EXTINCTION,
+    )
     xs = np.arange(CELL_M / 2, ROOM_W, CELL_M)
     ys = np.arange(CELL_M / 2, ROOM_L, CELL_M)
     nodes = list(signs)
@@ -81,7 +77,7 @@ def sweep():
     ]
     dist = vis.distance_to_node(*AGENT_XY, nodes[0])
     # The model's own ceiling (30 m unless raised); read once, never recomputed.
-    v_max = float(vis._vis.max_vis)
+    v_max = float(vis._vis.vismap.max_vis)
     return np.array(legible), np.array(metres), regions, dist, v_max
 
 

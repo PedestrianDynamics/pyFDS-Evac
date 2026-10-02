@@ -213,7 +213,7 @@ def legible(geo, p, sign):
 def grid_tol(cell):
     """Largest shift of the sight boundary the vismap grid can cause [m].
 
-    ``VisibilityModel.clear_air`` and fdsvismap 0.2.1 introduce four errors,
+    ``VisibilityModel.clear_air`` and fdsvismap 0.3.1 introduce four errors,
     each a lateral shift of a sight line of at most:
 
     * the observer snaps to the nearest cell centre: c sqrt(2) / 2;

@@ -40,7 +40,7 @@ visibility = c / mean_extinction     capped at max_vis
                                      equal to max_vis when extinction is 0
 ```
 
-(`FDSVisMap._get_visibility_array`, `FDSVisMap.get_vismap`). fdsvismap's
+(`FDSVisMap._get_visibility_array`, `FDSVisMap.get_sign_vismap`). fdsvismap's
 default `max_vis` is 30 m, and pyFDS-Evac uses the same default
 (`--max-sign-distance`, or `"max_distance"` per sign;
 `pyfds_evac/core/visibility.py`).

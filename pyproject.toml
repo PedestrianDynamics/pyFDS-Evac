@@ -27,12 +27,10 @@ dependencies = [
     "nbformat>=4.2.0",
     "matplotlib",
     "shapely",
-    # Pinned to the branch adding set_grid()/set_uniform_extco(), which lets a
-    # scene with geometry but no fire be evaluated by fdsvismap itself instead
-    # of being approximated here. Repoint at a release once it lands:
-    # https://github.com/FireDynamics/fdsvismap/pull/41
-    "fdsvismap @ git+https://github.com/FireDynamics/fdsvismap.git@64d9aa73144b3902bdc6d2cdd1a08e3494ec5690",
-    "numpy>=1.26.4",
+    # Exact pin: visibility.py patches the private _get_visibility_array to
+    # cap each sign at its own reading distance.
+    "fdsvismap==0.3.1",
+    "numpy>=2.1",
 ]
 
 [project.optional-dependencies]
@@ -50,11 +48,6 @@ Repository = "https://github.com/PedestrianDynamics/pyFDS-Evac"
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-# Required while fdsvismap is pinned to a git branch (see the dependency
-# comment); remove together with the pin once a release is out.
-allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["pyfds_evac"]

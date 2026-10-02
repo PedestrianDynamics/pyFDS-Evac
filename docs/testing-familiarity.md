@@ -186,7 +186,7 @@ partition, and nobody turns back.
 ## Pass criteria
 
 **Grid tolerance.** The sight grid moves the edge of the legible region. From
-the code of `VisibilityModel.clear_air` and fdsvismap 0.2.1, each of four
+the code of `VisibilityModel.clear_air` and fdsvismap 0.3.1, each of four
 errors shifts a sight line sideways by at most:
 
 | Source | Shift, at most |
