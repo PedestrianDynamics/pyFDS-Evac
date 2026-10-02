@@ -10,9 +10,12 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import socket
 import sqlite3
 import subprocess
 import sys
+import time
+import urllib.request
 import zipfile
 from pathlib import Path
 
@@ -166,11 +169,11 @@ def installed_wheel(tmp_path_factory) -> Path:
 # checkout removed from sys.path (an editable install puts it there).
 _ENTRY_POINT = """
 import importlib.metadata, json, sys
-site, repo = sys.argv[1], sys.argv[2]
+site, repo, name = sys.argv[1], sys.argv[2], sys.argv[3]
 sys.path[:] = [site] + [p for p in sys.path if p not in ("", ".", repo)]
 (dist,) = importlib.metadata.distributions(path=[site])
-(ep,) = [e for e in dist.entry_points if e.group == "console_scripts"]
-assert ep.name == "pyfds-evac", ep
+(ep,) = [e for e in dist.entry_points if e.name == name]
+assert ep.group == "console_scripts", ep
 main = ep.load()
 import pyfds_evac
 assert pyfds_evac.__file__.startswith(site), pyfds_evac.__file__
@@ -180,7 +183,7 @@ except ImportError:
     pass
 else:
     raise AssertionError("run.py is importable: " + run.__file__)
-sys.argv = ["pyfds-evac", *sys.argv[3:]]
+sys.argv = [name, *sys.argv[4:]]
 sys.exit(main())
 """
 
@@ -192,14 +195,16 @@ def test_wheel_contains_the_cli(installed_wheel):
     assert {"pyfds_evac/cli.py", "pyfds_evac/__main__.py"} <= files
     assert "run.py" not in files
     (entry_points,) = installed_wheel.glob("pyfds_evac-*.dist-info/entry_points.txt")
-    assert "pyfds-evac = pyfds_evac.cli:main" in entry_points.read_text()
+    text = entry_points.read_text()
+    assert "pyfds-evac = pyfds_evac.cli:main" in text
+    assert "pyfds-evac-gui = pyfds_evac.webapp.launch:main" in text
 
 
 def test_wheel_command_runs_outside_the_repository(installed_wheel, tmp_path):
     script = tmp_path / "entry.py"
     script.write_text(_ENTRY_POINT)
     shutil.copytree(ASSETS / SMALL, tmp_path / SMALL)
-    args = [str(script), str(installed_wheel), str(REPO)]
+    args = [str(script), str(installed_wheel), str(REPO), "pyfds-evac"]
 
     shown = _run([*args, "--help"], tmp_path)
     assert shown.returncode == 0, shown.stderr
@@ -235,5 +240,82 @@ def test_wheel_gui_roots_are_the_working_directory(installed_wheel, tmp_path):
     )
     (tmp_path / "assets").mkdir()
     shutil.copytree(ASSETS / SMALL, tmp_path / "assets" / SMALL)
+    result = _run(["-c", code], tmp_path)
+    assert result.returncode == 0, result.stderr
+
+
+def test_gui_command_without_the_extra_says_how_to_install_it(tmp_path):
+    """--help works without the gui extra; starting names the extra to install."""
+    block = "import sys; sys.modules['fasthtml'] = None\n"
+    launch = "from pyfds_evac.webapp.launch import main; sys.exit(main({}))\n"
+    shown = _run(["-c", block + launch.format("['--help']")], tmp_path)
+    assert shown.returncode == 0, shown.stderr
+    assert shown.stdout.startswith("usage: pyfds-evac-gui")
+
+    started = _run(["-c", block + launch.format("[]")], tmp_path)
+    assert started.returncode == 1
+    assert "pip install 'pyfds-evac[gui]'" in started.stderr
+    assert "Traceback" not in started.stderr
+
+
+def _free_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def test_wheel_gui_command_serves_the_page(installed_wheel, tmp_path):
+    """pyfds-evac-gui from the wheel starts outside the repository and serves /."""
+    pytest.importorskip("fasthtml")
+    script = tmp_path / "entry.py"
+    script.write_text(_ENTRY_POINT)
+    (tmp_path / "assets").mkdir()
+    shutil.copytree(ASSETS / SMALL, tmp_path / "assets" / SMALL)
+    port = _free_port()
+    env = {k: v for k, v in os.environ.items() if k != "PYFDS_EVAC_RESULTS_DIR"}
+    command = [sys.executable, str(script), str(installed_wheel), str(REPO)]
+    server = subprocess.Popen(
+        [*command, "pyfds-evac-gui", "--port", str(port)],
+        cwd=tmp_path,
+        env=env,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.PIPE,
+    )
+    try:
+        page = _get_when_up(f"http://127.0.0.1:{port}/", server)
+    finally:
+        server.terminate()
+        _, stderr = server.communicate(timeout=30)
+    assert page is not None, stderr.decode(errors="replace")
+    assert f'value="{SMALL}"' in page
+    assert not (tmp_path / "results").exists()  # nothing written by a page view
+
+
+def _get_when_up(url: str, server: subprocess.Popen) -> str | None:
+    """The page at *url* once the server answers; None if it exits or times out."""
+    deadline = time.monotonic() + 60
+    while time.monotonic() < deadline and server.poll() is None:
+        try:
+            with urllib.request.urlopen(url, timeout=5) as response:
+                return response.read().decode()
+        except OSError:
+            time.sleep(0.5)
+    return None
+
+
+def test_wheel_gui_works_without_bundled_scenarios(installed_wheel, tmp_path):
+    """Without ./assets the picker is empty and the page still renders."""
+    pytest.importorskip("fasthtml")
+    code = (
+        "import sys, warnings\n"
+        f"site, repo = {str(installed_wheel)!r}, {str(REPO)!r}\n"
+        "sys.path[:] = [site] + [p for p in sys.path if p not in ('', '.', repo)]\n"
+        "warnings.simplefilter('ignore')\n"
+        "from starlette.testclient import TestClient\n"
+        "from pyfds_evac.webapp import app, params\n"
+        "assert params.__file__.startswith(site), params.__file__\n"
+        "assert params._scenario_options() == []\n"
+        "assert TestClient(app.app).get('/').status_code == 200\n"
+    )
     result = _run(["-c", code], tmp_path)
     assert result.returncode == 0, result.stderr

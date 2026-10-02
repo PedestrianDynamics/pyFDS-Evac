@@ -43,6 +43,8 @@ gui = [
 
 [project.scripts]
 pyfds-evac = "pyfds_evac.cli:main"
+# Needs the gui extra; without it, prints how to install it.
+pyfds-evac-gui = "pyfds_evac.webapp.launch:main"
 
 [project.urls]
 Homepage = "https://github.com/PedestrianDynamics/pyFDS-Evac"
