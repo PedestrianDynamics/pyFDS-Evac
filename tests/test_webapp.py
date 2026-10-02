@@ -1707,11 +1707,18 @@ print("METRICS" + json.dumps({k: m[k] for k in sys.argv[3].split(",")}))
 manager.result.cleanup()
 """
 
+# Runs the script as __main__ and keeps its globals even when it exits 2.
 _SCRIPT_DRIVER = r"""
-import json, runpy, sys
-g = runpy.run_path(sys.argv[1])
+import json, sys
+g = {"__name__": "__main__", "__file__": sys.argv[1]}
+code = 0
+try:
+    exec(compile(open(sys.argv[1]).read(), sys.argv[1], "exec"), g)
+except SystemExit as exc:
+    code = exc.code
 m = g["result"].metrics
 print("METRICS" + json.dumps({k: m[k] for k in sys.argv[2].split(",")}))
+print("EXIT" + json.dumps(code))
 """
 
 
@@ -1735,7 +1742,10 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     import sys
 
     repo = pathlib.Path(__file__).resolve().parents[1]
-    keys = "total_agents,agents_evacuated,agents_remaining,evacuation_time,seed"
+    keys = (
+        "total_agents,agents_evacuated,agents_remaining,agents_not_spawned,"
+        "evacuation_time,seed,status"
+    )
     script = tmp_path / "exported.py"
     gui = subprocess.run(
         [sys.executable, "-c", _GUI_DRIVER, "blind_spawn_discovery", str(script), keys],
@@ -1757,17 +1767,21 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     assert gui_metrics["seed"] == 1301
     assert gui_metrics["total_agents"] == 30
     assert script_metrics == gui_metrics
+    # Like run.py, the script exits 2 when the run is incomplete (#444).
+    exit_line = next(ln for ln in exported.stdout.splitlines() if ln.startswith("EXIT"))
+    expected_exit = 0 if gui_metrics["status"] == "completed" else 2
+    assert int(exit_line[len("EXIT") :]) == expected_exit
     (output,) = tmp_path.glob("pyfds_evac_blind_spawn_discovery_run1_*Z_output")
     assert (output / "trajectory.sqlite").is_file()
 
 
 class TestRunOutcome:
-    """#321: the outcome comes from all_evacuated, never from success."""
+    """#321, #444: the outcome comes from the run's status metric."""
 
     def test_complete(self):
         from pyfds_evac.webapp.runner import run_outcome
 
-        o = run_outcome(True, 0, 150, 212.4, 300.0)
+        o = run_outcome("completed", 0, 0)
         assert o.complete is True
         assert o.label == "Complete: all agents evacuated"
         assert o.time_label == "Evacuation time"
@@ -1775,22 +1789,25 @@ class TestRunOutcome:
     def test_time_limit(self):
         from pyfds_evac.webapp.runner import run_outcome
 
-        o = run_outcome(False, 60, 150, 300.0, 300.0)
+        o = run_outcome("incomplete", 60, 0)
         assert o.complete is False
-        assert o.label == "Incomplete: time limit reached (60 of 150 remaining)"
+        assert o.label == "Incomplete: time limit reached, 60 agents inside"
         assert o.time_label == "Simulated time (limit reached)"
 
-    def test_no_cause_claimed_when_numbers_disagree(self):
+    def test_flow_cut_off_with_nobody_inside(self):
+        """Nobody inside but flow agents not spawned is not an evacuation."""
         from pyfds_evac.webapp.runner import run_outcome
 
-        o = run_outcome(False, 3, 10, 120.0, 300.0)
-        assert o.label == "Incomplete (3 of 10 remaining)"
-        assert "limit" not in o.time_label
+        o = run_outcome("incomplete", 0, 50)
+        assert o.complete is False
+        assert o.label == (
+            "Incomplete: time limit reached, 0 agents inside, 50 not spawned"
+        )
 
     def test_not_reported(self):
         from pyfds_evac.webapp.runner import run_outcome
 
-        o = run_outcome(None, 0, 10, 10.0, 300.0)
+        o = run_outcome(None, 0, 0)
         assert o.complete is None
         assert o.label == "Outcome not reported"
 
@@ -1801,22 +1818,47 @@ class TestRunOutcome:
         from pyfds_evac.webapp.app import _kpi_tiles
 
         result = SimpleNamespace(
-            metrics={"success": True, "all_evacuated": False},
+            metrics={"success": False, "status": "incomplete"},
             agents_remaining=100,
             agents_evacuated=0,
             total_agents=100,
             evacuation_time=1000.0,
         )
         monkeypatch.setattr(manager, "spec", None)
-        monkeypatch.setattr(
-            manager, "scenario", SimpleNamespace(max_simulation_time=1000.0)
-        )
         html = to_xml(_kpi_tiles(result))
-        assert "True" not in html
-        assert "Incomplete: time limit reached (100 of 100 remaining)" in html
+        assert "False" not in html
+        assert "Incomplete: time limit reached, 100 agents inside" in html
         assert "Simulated time (limit reached)" in html
         assert "Evacuation time" not in html
+        assert "Not spawned" not in html
         assert "0 / 100 agents" in html
+
+    def test_tiles_flow_cut_off_is_not_complete(self, monkeypatch):
+        """#444: a flow run stopped with nobody inside showed as complete."""
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        result = SimpleNamespace(
+            metrics={
+                "success": False,
+                "status": "incomplete",
+                "all_evacuated": True,
+                "agents_not_spawned": 50,
+            },
+            agents_remaining=0,
+            agents_evacuated=150,
+            total_agents=150,
+            evacuation_time=300.0,
+        )
+        monkeypatch.setattr(manager, "spec", None)
+        html = to_xml(_kpi_tiles(result))
+        assert "Complete: all agents evacuated" not in html
+        assert "outcome-line is-incomplete" in html
+        assert "Incomplete: time limit reached, 0 agents inside, 50 not spawned" in html
+        assert "Not spawned" in html and "50 agents" in html
+        assert "150 / 150 spawned agents" in html
+        assert "Evacuation time" not in html
 
     def test_run_status_uses_the_snapshot(self):
         import dataclasses
@@ -1836,19 +1878,26 @@ class TestRunOutcome:
             expected_seed=1,
             status="done",
             time_limit=300.0,
-            all_evacuated=False,
+            completion="incomplete",
+            agents_not_spawned=0,
             total_agents=150,
             agents_evacuated=90,
             agents_remaining=60,
             evacuation_time=300.0,
         )
         assert run_status(spec) == (
-            "Incomplete: time limit reached (60 of 150 remaining), "
+            "Incomplete: time limit reached, 60 agents inside, simulated time 300.00 s"
+        )
+        cut_off = dataclasses.replace(
+            spec, agents_evacuated=150, agents_remaining=0, agents_not_spawned=50
+        )
+        assert run_status(cut_off) == (
+            "Incomplete: time limit reached, 0 agents inside, 50 not spawned, "
             "simulated time 300.00 s"
         )
         done = dataclasses.replace(
             spec,
-            all_evacuated=True,
+            completion="completed",
             agents_evacuated=150,
             agents_remaining=0,
             evacuation_time=212.4,
@@ -1856,6 +1905,73 @@ class TestRunOutcome:
         assert run_status(done) == (
             "Complete: all agents evacuated (150/150), evacuation time 212.40 s"
         )
+
+    @pytest.mark.parametrize(
+        ("success", "remaining", "not_spawned"),
+        [(True, 0, 0), (False, 6, 0), (False, 0, 50)],
+    )
+    def test_exported_summary_matches_run_py(
+        self, success, remaining, not_spawned, capsys
+    ):
+        """The script prints run.py's summary line and exits 2 when incomplete."""
+        from pyfds_evac.webapp.pyexport import preview_script
+        from run import _summary_line
+
+        code = preview_script(
+            {},
+            "t",
+            "t",
+            version=None,
+            commit=None,
+            dirty=None,
+            baseseed=None,
+        ).code
+        start = code.index("if result.success:")
+        stop = code.index("OUTPUT_DIR.mkdir")
+        tail = code.index("if not result.success:")
+        result = SimpleNamespace(
+            success=success,
+            evacuation_time=300.0,
+            agents_evacuated=150 - remaining,
+            total_agents=150,
+            agents_remaining=remaining,
+            agents_not_spawned=not_spawned,
+        )
+        exit_code = 0
+        # Test-only execution of the generated text; the GUI never runs it.
+        namespace = {"result": result, "sys": __import__("sys")}
+        exec(code[start:stop], namespace)
+        assert capsys.readouterr().out.strip() == _summary_line(result)
+        try:
+            exec(code[tail:], namespace)
+        except SystemExit as exc:
+            exit_code = exc.code
+        assert exit_code == (0 if success else 2)
+
+    def test_finished_spec_records_status(self):
+        from pyfds_evac.webapp.runner import RunSpec, _finished_spec
+
+        spec = RunSpec(
+            run_id=1,
+            scenario_name="t",
+            scenario_path="t",
+            opts={},
+            started_at="2026-09-29T12:00:00+00:00",
+            pyfds_evac_version=None,
+            git_commit=None,
+            git_dirty=None,
+            expected_seed=None,
+        )
+        result = SimpleNamespace(
+            metrics={"status": "incomplete", "agents_not_spawned": 50},
+            total_agents=150,
+            agents_evacuated=150,
+            agents_remaining=0,
+            evacuation_time=300.0,
+        )
+        done = _finished_spec(spec, "done", result, None)
+        assert done.completion == "incomplete"
+        assert done.agents_not_spawned == 50
 
 
 class TestModelTab:
@@ -2092,7 +2208,7 @@ class TestResultSummary:
     @staticmethod
     def _result(**metrics):
         return SimpleNamespace(
-            metrics={"all_evacuated": False, "seed": 7, **metrics},
+            metrics={"status": "incomplete", "seed": 7, **metrics},
             agents_remaining=60,
             agents_evacuated=90,
             total_agents=150,
@@ -2114,10 +2230,10 @@ class TestResultSummary:
         html = to_xml(_kpi_tiles(self._result()))
         assert "outcome-line is-incomplete" in html
         assert '<span aria-hidden="true" class="state-glyph">⚠</span>' in html
-        assert "Incomplete: time limit reached (60 of 150 remaining)" in html
+        assert "Incomplete: time limit reached, 60 agents inside" in html
         assert "Simulated time (limit reached)" in html
         assert "Seed used" in html and ">7<" in html
-        done = self._result(all_evacuated=True)
+        done = self._result(status="completed")
         assert "✓" in to_xml(_kpi_tiles(done))
 
     def test_doses_only_for_the_models_that_ran(self):

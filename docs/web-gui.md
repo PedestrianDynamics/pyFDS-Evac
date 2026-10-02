@@ -179,10 +179,12 @@ holds, so results survive a refresh. The form itself returns to its
 defaults, so the Settings changed banner appears until you set the run's
 settings again.
 
-The outcome line comes from whether every agent left, not from whether the
-run raised an error. It reads "Complete: all agents evacuated", "Incomplete:
-time limit reached (*k* of *N* remaining)" when the run stopped at its time
-limit, or "Incomplete (*k* of *N* remaining)" otherwise.
+The outcome line comes from the run's status, not from whether the run
+raised an error. It reads "Complete: all agents evacuated" when every agent
+has entered and left, and "Incomplete: time limit reached, *k* agents
+inside" when the time limit stopped the run first. When flow agents were
+still to enter, it adds ", *m* not spawned", a Not spawned tile appears, and
+the Evacuated tile counts spawned agents only.
 
 ### Settings changed
 
@@ -269,7 +271,7 @@ same run now ends as described in the steps below
    settings.
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
-   reports "Status: Incomplete: time limit reached (2 of 30 remaining),
+   reports "Status: Incomplete: time limit reached, 2 agents inside,
    simulated time 300.00 s".
 3. Click **Download .py**. The file is named after the scenario, the run
    number and the run's UTC start time, for example
@@ -284,13 +286,14 @@ same run now ends as described in the steps below
 
 {{< checkpoint title="Script run completed" >}}
 After the model's own progress and log lines, the script ends with
-(pyfds-evac 0.1.0 at commit `ba4ade3`; path shortened):
+(pyfds-evac 0.1.0; path shortened):
 
 ```text
-Simulation stopped after 300.00 s (28/30 evacuated, 2 remaining).
+Simulation incomplete: time limit reached after 300.00 s (28/30 evacuated, 2 remaining).
 Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite
 ```
 
+The run is incomplete, so the script exits with status 2, as `run.py` does.
 The folder `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output`, created in the
 folder you ran the script from, holds `trajectory.sqlite` and
 `trajectory.manifest.json`.
@@ -328,9 +331,8 @@ disabled. The file is named `pyfds_evac_<scenario>_preview.py`.
 **Run code.** It is built only from the run's frozen snapshot, never from the
 live form. The status line uses the wording of the results view:
 "Complete: all agents evacuated (*n*/*N*), evacuation time *t* s",
-"Incomplete: time limit reached (*k* of *N* remaining), simulated time *t* s",
-"Incomplete (*k* of *N* remaining), simulated time *t* s", failed,
-cancelled, or not recorded. The file is named
+"Incomplete: time limit reached, *k* agents inside[, *m* not spawned],
+simulated time *t* s", failed, cancelled, or not recorded. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.
 

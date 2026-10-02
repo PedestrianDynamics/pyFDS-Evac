@@ -67,8 +67,11 @@ class RunSpec:
     status: str = "running"
     # The scenario's max_simulation_time [s] at submission.
     time_limit: float | None = None
-    # result.metrics["all_evacuated"]; None when the run reported none.
-    all_evacuated: bool | None = None
+    # result.metrics["status"] ("completed" or "incomplete"); None when the
+    # run reported none.
+    completion: str | None = None
+    # Flow agents the time limit cut off before they entered.
+    agents_not_spawned: int | None = None
     total_agents: int | None = None
     agents_evacuated: int | None = None
     agents_remaining: int | None = None
@@ -158,7 +161,8 @@ def _finished_spec(
         if reported is not None and reported == spec.expected_seed:
             fields["seed_used"] = reported
         fields.update(
-            all_evacuated=result.metrics.get("all_evacuated"),
+            completion=result.metrics.get("status"),
+            agents_not_spawned=result.metrics.get("agents_not_spawned", 0),
             total_agents=result.total_agents,
             agents_evacuated=result.agents_evacuated,
             agents_remaining=result.agents_remaining,
@@ -171,10 +175,12 @@ def _finished_spec(
 class Outcome:
     """How a finished run ended, worded for the results view.
 
-    Taken from the run's own ``all_evacuated`` metric, never from
-    ``success``, which is also True when the time limit is reached (#139).
-    Why agents remain (incapacitated or still walking) is not reported by
-    the engine yet (#141), so it is not claimed.
+    Taken from the run's own ``status`` metric (``completed`` or
+    ``incomplete``), the same field ``success`` and run.py's exit status
+    follow. A run is incomplete when the time limit stops it with agents
+    inside or flow agents not yet spawned (#139, #444). Why agents remain
+    (incapacitated or still walking) is not reported by the engine yet
+    (#141), so it is not claimed.
     """
 
     complete: bool | None
@@ -182,31 +188,25 @@ class Outcome:
     time_label: str
 
 
+def agents_label(count: int | None) -> str:
+    """``"1 agent"`` or ``"<count> agents"``."""
+    return f"{count} agent" if count == 1 else f"{count} agents"
+
+
 def run_outcome(
-    all_evacuated: bool | None,
+    status: str | None,
     remaining: int | None,
-    total: int | None,
-    sim_time: float | None,
-    time_limit: float | None,
+    not_spawned: int | None,
 ) -> Outcome:
     """The :class:`Outcome` of a run from the values it reported."""
-    if all_evacuated is None:
+    if status is None:
         return Outcome(None, "Outcome not reported", "Simulated time")
-    if all_evacuated:
+    if status == "completed":
         return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
-    left = f"{remaining} of {total} remaining"
-    # run_scenario stops early only once every agent has left, so agents
-    # remaining means the time limit; say so only when the numbers agree.
-    at_limit = (
-        sim_time is not None and time_limit is not None and sim_time >= time_limit
-    )
-    if at_limit:
-        return Outcome(
-            False,
-            f"Incomplete: time limit reached ({left})",
-            "Simulated time (limit reached)",
-        )
-    return Outcome(False, f"Incomplete ({left})", "Simulated time")
+    label = f"Incomplete: time limit reached, {agents_label(remaining)} inside"
+    if not_spawned:
+        label += f", {not_spawned} not spawned"
+    return Outcome(False, label, "Simulated time (limit reached)")
 
 
 class _WarningCapture(logging.Handler):

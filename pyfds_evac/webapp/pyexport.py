@@ -155,6 +155,7 @@ def _body(
         "import argparse",
         "import pathlib",
         "import shutil",
+        "import sys",
         "",
         "from pyfds_evac.core import load_scenario, run_scenario",
         "from pyfds_evac.core.manifest import manifest_path_for",
@@ -187,16 +188,24 @@ def _body(
         "run_kwargs = build_run_kwargs(scenario, opts, log=print)",
         "result = run_scenario(scenario, **run_kwargs)",
         "",
-        "if result.agents_remaining == 0:",
+        "# The summary and exit status of run.py: a run the time limit stops with",
+        "# agents inside or flow agents not yet spawned is incomplete (exit 2).",
+        "if result.success:",
         "    print(",
         '        f"Simulation finished in {result.evacuation_time:.2f} s "',
         '        f"({result.agents_evacuated}/{result.total_agents} evacuated)."',
         "    )",
         "else:",
+        "    not_spawned = (",
+        '        f", {result.agents_not_spawned} not spawned"',
+        "        if result.agents_not_spawned",
+        '        else ""',
+        "    )",
         "    print(",
-        '        f"Simulation stopped after {result.evacuation_time:.2f} s "',
+        '        "Simulation incomplete: time limit reached after "',
+        '        f"{result.evacuation_time:.2f} s "',
         '        f"({result.agents_evacuated}/{result.total_agents} evacuated, "',
-        '        f"{result.agents_remaining} remaining)."',
+        '        f"{result.agents_remaining} remaining{not_spawned})."',
         "    )",
         "",
         "OUTPUT_DIR.mkdir(parents=True, exist_ok=True)",
@@ -207,6 +216,8 @@ def _body(
         "    if result.manifest_file:",
         "        shutil.copy2(result.manifest_file, manifest_path_for(trajectory))",
         "result.cleanup()  # remove the temporary copies run_scenario wrote",
+        "if not result.success:",
+        "    sys.exit(2)",
         "",
     ]
     return lines
@@ -295,11 +306,7 @@ def run_status(spec: RunSpec) -> str:
     if spec.status != "done" or spec.agents_remaining is None:
         return "not recorded"
     outcome = run_outcome(
-        spec.all_evacuated,
-        spec.agents_remaining,
-        spec.total_agents,
-        spec.evacuation_time,
-        spec.time_limit,
+        spec.completion, spec.agents_remaining, spec.agents_not_spawned
     )
     if outcome.complete:
         return (
