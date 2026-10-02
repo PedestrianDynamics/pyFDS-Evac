@@ -136,6 +136,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Removed
 
+- The unused modules `pyfds_evac.config` (`SimulationConfig`) and
+  `pyfds_evac.utilities` (`distance`); nothing in the package has
+  imported them since `jpstooling.py` was removed. Code that imports
+  them breaks; this is acceptable for 0.2.0 under SemVer 0.x. Also the
+  three images in `assets/t_junction/` written by the removed demo
+  scripts (`cognitive_map_evolution.png`, `vismap_aset.png`,
+  `vismap_coverage.png`).
 - Web GUI: the Cumulative FED results chart, the FED sparkline and the mean
   FED line. The viewer and the live chart show the highest FED of any agent
   at each time.
