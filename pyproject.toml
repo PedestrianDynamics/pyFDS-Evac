@@ -13,7 +13,6 @@ authors = [
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
@@ -45,6 +44,9 @@ gui = [
 [project.urls]
 Homepage = "https://github.com/PedestrianDynamics/pyFDS-Evac"
 Repository = "https://github.com/PedestrianDynamics/pyFDS-Evac"
+Documentation = "https://pedestriandynamics.org/pyFDS-Evac/"
+Issues = "https://github.com/PedestrianDynamics/pyFDS-Evac/issues"
+Changelog = "https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["hatchling"]
@@ -52,6 +54,19 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pyfds_evac"]
+
+[tool.hatch.build.targets.sdist]
+# The sdist carries the package, the CLI, tests and the scenarios they
+# use; the website, planning notes and literature summaries stay in git.
+exclude = [
+    "/.github",
+    "/.opencode",
+    "/.specify",
+    "/artifacts",
+    "/materials",
+    "/site",
+    "/specs",
+]
 
 [dependency-groups]
 dev = [
