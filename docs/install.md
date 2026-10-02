@@ -17,8 +17,6 @@ examples and scripts of the repository, use the
 | [FDS](https://github.com/firemodels/fds) (optional) | only to run your own fire; pyFDS-Evac reads the output of a finished FDS run and never starts FDS |
 | ffmpeg (optional) | only for the MP4 of `scripts/animate_cognitive_map.py` |
 
-pip on Python 3.13 and 3.14 currently fails while building scikit-image; use Python 3.12 or the source checkout until the fdsvismap pin is updated.
-
 ## Install with pip
 
 pyFDS-Evac is on [PyPI](https://pypi.org/project/pyfds-evac/). Install it in

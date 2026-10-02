@@ -19,8 +19,6 @@ pip install "pyfds-evac[gui]"
 pyfds-evac-gui
 ```
 
-pip on Python 3.13 and 3.14 currently fails while building scikit-image; use Python 3.12 or the source checkout until the fdsvismap pin is updated.
-
 Then open <http://127.0.0.1:5001>. The extra installs
 [FastHTML](https://fastht.ml/) and its dependencies. On a screen narrower
 than 900 px, such as a phone, the form sits above the results instead of

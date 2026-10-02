@@ -62,8 +62,6 @@ pip install pyfds-evac
 pyfds-evac --help
 ```
 
-pip on Python 3.13 and 3.14 currently fails while building scikit-image; use Python 3.12 or the source checkout until the fdsvismap pin is updated.
-
 `pyfds-evac` runs a scenario; `python -m pyfds_evac` does the same. The
 package contains no scenarios, examples or scripts. Each example page on the
 documentation site offers its input files as a zip, which unpacks into a
@@ -189,5 +187,7 @@ scenario proves and where that proof is checked.
 
 pyFDS-Evac depends on jupedsim, pedpy, fdsreader, fdsvismap, numpy, shapely,
 matplotlib, plotly and nbformat; the `gui` extra adds python-fasthtml,
-monsterui and python-multipart. Versions and pins are in
+monsterui and python-multipart. fdsvismap is pinned exactly (0.3.2), and a
+plain `pip install` works on Python 3.12, 3.13 and 3.14. Versions and pins
+are in
 [`pyproject.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyproject.toml).
