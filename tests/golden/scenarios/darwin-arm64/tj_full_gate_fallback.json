@@ -419,13 +419,6 @@
   ],
   [
    14.0,
-   10,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   14.0,
    11,
    "jps-checkpoints_0",
    "exit_B_right",
@@ -454,13 +447,6 @@
   ],
   [
    15.0,
-   13,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   15.0,
    15,
    "jps-checkpoints_0",
    "exit_B_right",
@@ -482,7 +468,7 @@
   ],
   [
    16.0,
-   5,
+   10,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -500,27 +486,6 @@
    "jps-distributions_0",
    "exit_B_right",
    "exit_B_right:fallback/tau > exit_A_left:tau"
-  ],
-  [
-   17.0,
-   8,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   17.0,
-   12,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   17.0,
-   15,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
   ],
   [
    17.0,
@@ -552,7 +517,14 @@
   ],
   [
    18.0,
-   11,
+   5,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   18.0,
+   13,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -573,13 +545,6 @@
   ],
   [
    18.0,
-   20,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   18.0,
    27,
    "jps-distributions_0",
    "exit_B_right",
@@ -587,7 +552,7 @@
   ],
   [
    19.0,
-   16,
+   8,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -622,14 +587,28 @@
   ],
   [
    20.0,
-   17,
+   11,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
   ],
   [
    20.0,
-   18,
+   12,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   20.0,
+   15,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   20.0,
+   20,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -657,7 +636,7 @@
   ],
   [
    21.0,
-   14,
+   16,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -678,7 +657,7 @@
   ],
   [
    22.0,
-   23,
+   17,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -713,21 +692,14 @@
   ],
   [
    23.0,
-   19,
+   14,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
   ],
   [
    23.0,
-   21,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   23.0,
-   22,
+   18,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -748,14 +720,7 @@
   ],
   [
    24.0,
-   25,
-   "jps-checkpoints_0",
-   "exit_B_right",
-   "exit_B_right:ok > exit_A_left:tau"
-  ],
-  [
-   24.0,
-   28,
+   23,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -769,7 +734,14 @@
   ],
   [
    25.0,
-   27,
+   19,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   25.0,
+   22,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -783,21 +755,28 @@
   ],
   [
    26.0,
-   24,
+   21,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
   ],
   [
    27.0,
-   26,
+   25,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
   ],
   [
    27.0,
-   29,
+   27,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   27.0,
+   28,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
@@ -811,24 +790,45 @@
   ],
   [
    28.0,
-   30,
+   24,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
   ],
   [
-   28.0,
+   30.0,
+   7,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:tau"
+  ],
+  [
+   30.0,
+   26,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   30.0,
+   29,
+   "jps-checkpoints_0",
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
+  ],
+  [
+   30.0,
    31,
    "jps-checkpoints_0",
    "exit_B_right",
    "exit_B_right:ok > exit_A_left:tau"
   ],
   [
-   29.0,
-   7,
+   31.0,
+   30,
    "jps-checkpoints_0",
-   "exit_A_left",
-   "exit_A_left:ok > exit_B_right:tau"
+   "exit_B_right",
+   "exit_B_right:ok > exit_A_left:tau"
   ],
   [
    32.0,
@@ -916,9 +916,9 @@
   },
   {
    "agent_id": 11,
-   "new_cost": 15.234,
+   "new_cost": 15.207,
    "new_exit": "exit_B_right",
-   "old_cost": 26.925,
+   "old_cost": 26.679,
    "old_exit": "exit_A_left",
    "reason": "fallback",
    "time_s": 7.0
@@ -963,7 +963,7 @@
    "agent_id": 8,
    "new_cost": 14.733,
    "new_exit": "exit_A_left",
-   "old_cost": 8.205,
+   "old_cost": 8.306,
    "old_exit": "exit_B_right",
    "reason": "smoke_reroute",
    "time_s": 11.0

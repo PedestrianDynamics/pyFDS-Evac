@@ -292,7 +292,7 @@
   },
   {
    "agent_id": 4,
-   "new_cost": 30.168,
+   "new_cost": 32.184,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -301,7 +301,7 @@
   },
   {
    "agent_id": 2,
-   "new_cost": 30.174,
+   "new_cost": 32.199,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",
@@ -310,7 +310,7 @@
   },
   {
    "agent_id": 3,
-   "new_cost": 30.292,
+   "new_cost": 32.529,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "jps-exits_0",

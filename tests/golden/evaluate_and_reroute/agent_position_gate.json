@@ -10,9 +10,9 @@
  },
  "switch": {
   "agent_id": 7,
-  "new_cost": 23.0847,
+  "new_cost": 23.1062,
   "new_exit": "west",
-  "old_cost": 37.3446,
+  "old_cost": 37.362,
   "old_exit": "east",
   "reason": "smoke_reroute",
   "time_s": 5.0

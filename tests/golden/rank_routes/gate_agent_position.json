@@ -13,10 +13,10 @@
     "east"
    ],
    "queue_time_s": 0.0,
-   "rank_cost": 48.0,
+   "rank_cost": 48.1243,
    "status": "ok",
-   "tau_route": 0.0,
-   "travel_time_s": 48.0
+   "tau_route": 1.536,
+   "travel_time_s": 48.1243
   },
   {
    "clean": false,
@@ -31,10 +31,10 @@
     "west"
    ],
    "queue_time_s": 0.0,
-   "rank_cost": 12.1788,
+   "rank_cost": 12.1969,
    "status": "ok",
-   "tau_route": 2.1818,
-   "travel_time_s": 12.1788
+   "tau_route": 2.4,
+   "travel_time_s": 12.1969
   }
  ]
 }
