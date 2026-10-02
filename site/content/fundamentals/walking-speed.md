@@ -552,7 +552,7 @@ citations does not match the paper.
 Fridolf et al. date the walking study 1976, 1978/1997 and 1979, and take a
 0.2 m/s floor from Purser and McAllister, who give about 0.3 m/s.
 
-**Different measurements.** Smoke: real-fire smoke, irritant or not, in
+**Different measurements.** Smoke: smoke from fires, irritant or not, in
 Jin; cold artificial smoke with 10–15 ppm acetic acid in Frantzich and
 Nilsson. Light: 0–8 lx in the smoke-filled Frantzich–Nilsson tunnel.
 Speed: along the corridor for Jin, along the walked path for Frantzich and

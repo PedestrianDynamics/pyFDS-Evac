@@ -13,7 +13,7 @@ examples and scripts of the repository, use the
 | Needed | For |
 |---|---|
 | Python 3.12, 3.13 or 3.14 | pyFDS-Evac itself (`requires-python = ">=3.12,<3.15"`) |
-| [uv](https://github.com/astral-sh/uv), git | only for the source checkout |
+| [uv](https://github.com/astral-sh/uv), git | the source checkout; git also for `pip install -r requirements.txt` of an example zip |
 | [FDS](https://github.com/firemodels/fds) (optional) | only to run your own fire; pyFDS-Evac reads the output of a finished FDS run and never starts FDS |
 | ffmpeg (optional) | only for the MP4 of `scripts/animate_cognitive_map.py` |
 
@@ -36,7 +36,7 @@ For the optional [web GUI](web-gui.md), install the `gui` extra:
 pip install "pyfds-evac[gui]"
 ```
 
-This installs three commands:
+You can then run:
 
 | Command | What it does |
 |---|---|
@@ -50,7 +50,7 @@ It contains no scenarios, examples or scripts: `assets/`, `examples/` and
 such as the [Quickstart](quickstart.md), or from a
 [source checkout](#install-from-the-repository).
 
-### Check the install
+### Check the pip install
 
 ```bash
 pyfds-evac --help
@@ -102,7 +102,7 @@ uv sync --extra gui
 `pyfds-evac-gui` commands are also available with `uv run`. `run.py` and
 `app.py` at the repository root run the same command line and GUI.
 
-### Check the install
+### Check the checkout
 
 ```bash
 uv run python run.py --scenario assets/ISO-table21 --cleanup

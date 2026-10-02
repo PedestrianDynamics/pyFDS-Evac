@@ -12,7 +12,7 @@ a GUI run into a script, see [Show the run as Python](#show-the-run-as-python).
 ## Install and launch
 
 Install the `gui` extra and start the GUI from the folder that contains
-`assets/`:
+`assets/` (see [Where the GUI reads and writes](#where-the-gui-reads-and-writes)):
 
 ```bash
 pip install "pyfds-evac[gui]"

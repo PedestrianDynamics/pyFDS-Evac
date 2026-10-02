@@ -1048,7 +1048,7 @@ grid).
 - [ASET, RSET and the egress timeline](/fundamentals/aset-rset.md): the
   classic single-point comparison this page maps.
 - [A crowd in a fire](first-fds-case.md): per-agent exposure and a
-  location ASET map on a real FDS fire.
+  location ASET map on an FDS fire.
 - [RSET from an ensemble of seeds](howto-rset-ensemble.md).
 - [Visibility through smoke](/fundamentals/visibility.md),
   [Fractional effective dose](/models/fed.md), [Heat](/models/heat.md).

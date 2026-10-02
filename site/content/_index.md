@@ -85,15 +85,15 @@ the [Install](docs/getting-started/install/) page.
 
 ```bash
 pip install pyfds-evac            # the pyfds-evac command
-pip install "pyfds-evac[gui]"     # adds the pyfds-evac-gui command
+pip install "pyfds-evac[gui]"     # adds what pyfds-evac-gui needs
 pyfds-evac --help
 ```
 
 pip on Python 3.13 and 3.14 currently fails while building scikit-image; use Python 3.12 or the source checkout until the fdsvismap pin is updated.
 
 The package contains no scenarios or examples. Each example page offers its
-input files as a zip. To run the examples, the scripts and the tracked
-scenarios of the repository, clone it and use
+input files as a zip. To run the scripts and the scenarios with tracked
+FDS output, clone the repository and use
 [uv](https://github.com/astral-sh/uv):
 
 ```bash
