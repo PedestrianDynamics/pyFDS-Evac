@@ -259,6 +259,10 @@ scenarios and scripts of a source checkout; with pip, replace
 &lt;td>Print the loaded scenario summary before running.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--debug&lt;/code>&lt;/td>
+&lt;td>Print debug messages, such as the &lt;code>Reroute debug&lt;/code> trace of the rerouting pass. From Python, &lt;code>logging.getLogger(&amp;quot;pyfds_evac&amp;quot;).setLevel(logging.DEBUG)&lt;/code> with a handler does the same.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--output-sqlite PATH&lt;/code>&lt;/td>
 &lt;td>Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as &lt;code>&amp;lt;stem&amp;gt;.manifest.json&lt;/code>. When FED is computed, also writes an optional &lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code> side table (base JuPedSim schema untouched) so &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a> can colour agents by FED or speed.&lt;/td>
 &lt;/tr>
@@ -3152,8 +3156,9 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;li>&lt;code>WARNING:root:Module csv: [Errno 2] No such file or directory: …_hrr.csv&lt;/code>
 (and &lt;code>…_steps.csv&lt;/code>), followed by &amp;ldquo;The error can be safely ignored if not
 requiring the csv module&amp;rdquo;: fdsreader looks for CSV output the case does not
-have.&lt;/li>
-&lt;li>&lt;code>Reroute debug: …&lt;/code> lines: a trace of the rerouting pass.&lt;/li>
+have. The command line prints each such warning once per run.&lt;/li>
+&lt;li>&lt;code>Reroute debug: …&lt;/code> lines: a trace of the rerouting pass, printed with
+&lt;code>--debug&lt;/code>.&lt;/li>
 &lt;li>&lt;code>Heat FED is off; pass --enable-heat-fed to accumulate it.&lt;/code>: the heat dose is
 off by default, as in FDS+Evac.&lt;/li>
 &lt;/ul>
@@ -3213,7 +3218,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b82281ffbd1868eb49d05447bcd227ede0a96b6">&lt;code>9b82281&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9386ef5c2c308e07dddfa20db41a8a89cf78c117">&lt;code>9386ef5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3237,7 +3242,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0fbc95c44eccf275a87b915c9e262679d2a5623258cd317d50bc5c668e7c367e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">983edf710811a96a467f6f02077dee460dc35193ecccd8bb78effe063f0e91a4&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
