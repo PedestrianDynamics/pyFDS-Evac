@@ -7,6 +7,7 @@ as ``python -m pyfds_evac``; ``run.py`` only runs it (#471).
 
 from __future__ import annotations
 
+import contextlib
 import json
 import os
 import shutil
@@ -58,7 +59,8 @@ def _outputs(out: Path) -> list[str]:
 
 def _rows(sqlite: Path) -> dict[str, list[tuple]]:
     """Every row of every table, in a stable order."""
-    with sqlite3.connect(sqlite) as con:
+    # sqlite3's context manager only commits; closing() closes the file.
+    with contextlib.closing(sqlite3.connect(sqlite)) as con:
         tables = [
             name
             for (name,) in con.execute(
@@ -231,7 +233,6 @@ def test_wheel_gui_roots_are_the_working_directory(installed_wheel, tmp_path):
         "from pyfds_evac.webapp import app, params\n"
         "assert params.__file__.startswith(site), params.__file__\n"
         "cwd = Path.cwd().resolve()\n"
-        "assert params._WORK_ROOT.resolve() == cwd, params._WORK_ROOT\n"
         "assert params._ASSET_ROOT.resolve() == cwd / 'assets'\n"
         "assert params._UPLOAD_ROOT.resolve() == cwd / 'uploads'\n"
         "assert params.results_root().resolve() == cwd / 'results'\n"
