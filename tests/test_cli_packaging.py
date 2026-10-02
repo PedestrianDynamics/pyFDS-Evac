@@ -114,10 +114,12 @@ def test_run_py_and_the_command_give_identical_outputs(tmp_path, command):
     assert "Simulation incomplete" in first.stdout
 
 
-def test_run_py_help_is_the_package_help():
+def test_run_py_help_is_the_package_help(monkeypatch):
     """Same flags, defaults and help text; only the program name differs."""
     from pyfds_evac import cli
 
+    # One width for both sides: the rich formatter wraps at the console width.
+    monkeypatch.setenv("COLUMNS", "100")
     shown = _run(["run.py", "--help"], REPO)
     assert shown.returncode == 0
     parser = cli._build_parser()

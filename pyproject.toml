@@ -31,6 +31,9 @@ dependencies = [
     # cap each sign at its own reading distance.
     "fdsvismap==0.3.2",
     "numpy>=2.1",
+    # On Python 3.14, 1.6.0 and 1.7.1 garble the help on a terminal with a
+    # second set of colours from argparse; 1.8.0 does not.
+    "rich-argparse>=1.8",
 ]
 
 [project.optional-dependencies]

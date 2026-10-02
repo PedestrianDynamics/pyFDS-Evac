@@ -54,7 +54,7 @@ such as the [Quickstart](quickstart.md), or from a
 pyfds-evac --help
 ```
 
-The first line reads `usage: pyfds-evac [-h] --scenario SCENARIO ...`.
+The first line reads `usage: pyfds-evac --scenario PATH [--fds-dir DIR] [options]`.
 
 For a full check, run a scenario. Download the
 [Quickstart example files](downloads/pyfds-evac-quickstart.zip) and unpack

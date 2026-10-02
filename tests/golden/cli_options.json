@@ -1,0 +1,554 @@
+{
+ "--allow-fds-horizon-hold": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "allow_fds_horizon_hold",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--cleanup": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "cleanup",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--clear-air-visibility": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "clear_air_visibility",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--constant-extinction": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "constant_extinction",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--disable-tenability": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "disable_tenability",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--enable-fic-speed": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "enable_fic_speed",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--enable-heat-fed": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "enable_heat_fed",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--enable-rerouting --no-enable-rerouting": {
+  "action": "BooleanOptionalAction",
+  "choices": null,
+  "const": null,
+  "default": true,
+  "dest": "enable_rerouting",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--export-app-bundle": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "export_app_bundle",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--export-only": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "export_only",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--fds-dir": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "fds_dir",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--fed-threshold": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 1.0,
+  "dest": "fed_threshold",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--fic-alpha": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.7,
+  "dest": "fic_alpha",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--fic-min-factor": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.3,
+  "dest": "fic_min_factor",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-clothing": {
+  "action": "_StoreAction",
+  "choices": [
+   "clothed",
+   "unclothed"
+  ],
+  "const": null,
+  "default": null,
+  "dest": "heat_clothing",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--heat-convective-coefficient": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 5.0,
+  "dest": "heat_convective_coefficient",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-emissivity": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.5,
+  "dest": "heat_emissivity",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-endpoint": {
+  "action": "_StoreAction",
+  "choices": [
+   "tolerance",
+   "injury",
+   "fatal"
+  ],
+  "const": null,
+  "default": null,
+  "dest": "heat_endpoint",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--heat-fed-method": {
+  "action": "_StoreAction",
+  "choices": [
+   "convective",
+   "total-flux"
+  ],
+  "const": null,
+  "default": "convective",
+  "dest": "heat_fed_method",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--heat-fed-threshold": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "heat_fed_threshold",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-incapacitation-mode": {
+  "action": "_StoreAction",
+  "choices": [
+   "probabilistic",
+   "deterministic"
+  ],
+  "const": null,
+  "default": "deterministic",
+  "dest": "heat_incapacitation_mode",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--heat-layer-emissivity": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "heat_layer_emissivity",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-layer-height": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "heat_layer_height",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-radiant-source": {
+  "action": "_StoreAction",
+  "choices": [
+   "gas",
+   "integrated-intensity"
+  ],
+  "const": null,
+  "default": "gas",
+  "dest": "heat_radiant_source",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--heat-regime": {
+  "action": "_StoreAction",
+  "choices": [
+   "smoke",
+   "layer"
+  ],
+  "const": null,
+  "default": "smoke",
+  "dest": "heat_regime",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--heat-skin-temperature": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 35.0,
+  "dest": "heat_skin_temperature",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-susceptibility-sigma": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.94,
+  "dest": "heat_susceptibility_sigma",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--heat-u-factor": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "heat_u_factor",
+  "nargs": null,
+  "required": false,
+  "type": "_u_factor"
+ },
+ "--heat-view-factor": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "heat_view_factor",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--incapacitation-mode": {
+  "action": "_StoreAction",
+  "choices": [
+   "probabilistic",
+   "deterministic"
+  ],
+  "const": null,
+  "default": "deterministic",
+  "dest": "incapacitation_mode",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--inspect-fds": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "inspect_fds",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--max-sign-distance": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 30.0,
+  "dest": "max_sign_distance",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--no-visibility": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "no_visibility",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--o2-threshold-percent": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 20.0,
+  "dest": "o2_threshold_percent",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--output-exit-history": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_exit_history",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--output-fed-history": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_fed_history",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--output-route-cost-history": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_route_cost_history",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--output-route-history": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_route_history",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--output-smoke-history": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_smoke_history",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--output-sqlite": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_sqlite",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--print-summary": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "print_summary",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--replay-exits": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "replay_exits",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--require-fds-coverage": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "require_fds_coverage",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--reroute-interval": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 1.0,
+  "dest": "reroute_interval",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--scenario": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "scenario",
+  "nargs": null,
+  "required": true,
+  "type": null
+ },
+ "--seed": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "seed",
+  "nargs": null,
+  "required": false,
+  "type": "int"
+ },
+ "--smoke-blind": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "smoke_blind",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
+ "--smoke-slice-height": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 1.6,
+  "dest": "smoke_slice_height",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--smoke-update-interval": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 1.0,
+  "dest": "smoke_update_interval",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--susceptibility-sigma": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.94,
+  "dest": "susceptibility_sigma",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--vis-cache": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "vis_cache",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
+ "--vis-cell-size": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.25,
+  "dest": "vis_cell_size",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "-h --help": {
+  "action": "_HelpAction",
+  "choices": null,
+  "const": null,
+  "default": "==SUPPRESS==",
+  "dest": "help",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ }
+}

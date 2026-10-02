@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `pyfds-evac --help` is shorter to read: a one-line usage
+  (`pyfds-evac --scenario PATH [--fds-dir DIR] [options]`), a description
+  of what the tool does, the flags in eight groups (scenario and run,
+  outputs, FDS input and smoke, toxic gas, heat, routing, visibility and
+  signs, ASET/RSET tools) and copy-paste examples. It is rendered by
+  rich-argparse, a new runtime dependency (`>=1.8`), in colour on a
+  terminal and as plain text when piped or with `NO_COLOR`. Flag names,
+  defaults, choices and behaviour are unchanged.
+
 ## [0.2.1] - 2026-10-02
 
 First release on PyPI: `pip install pyfds-evac`.
