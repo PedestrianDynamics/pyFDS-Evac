@@ -233,7 +233,7 @@ and its FDS output are tracked there. It prints `FED max: 1.170`.
 can change without notice
 ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
 
-[A crowd in a real fire](first-fds-case.md) does this end to end.
+[A crowd in a fire](first-fds-case.md) does this end to end.
 
 ### Agent visualisation
 
@@ -280,7 +280,7 @@ The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
 at 982 s. Rerouting is on by default, so `--enable-rerouting` is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 `assets/t_junction/t_junction.fds` with FDS, or see
-[A crowd in a real fire](first-fds-case.md).
+[A crowd in a fire](first-fds-case.md).
 
 ### Exit status
 

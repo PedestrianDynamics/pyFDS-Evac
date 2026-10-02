@@ -1,4 +1,4 @@
-"""ASET against exit time for the "A crowd in a real fire" page.
+"""ASET against exit time for the "A crowd in a fire" page.
 
 For every agent of the T-junction fire run, compares the first time a
 tenability limit is reached at the agent's own position with its exit time.

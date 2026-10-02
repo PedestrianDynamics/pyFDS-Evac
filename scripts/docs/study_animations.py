@@ -1,6 +1,6 @@
 """Agents-and-smoke animations for the two study pages.
 
-The same picture as "The run, animated" on "A crowd in a real fire"
+The same picture as "The run, animated" on "A crowd in a fire"
 (``scripts/docs/first_fds_case_figures.py``): the FDS extinction field as the
 background and the agents as dots. It reuses the helpers of
 ``scripts/animate_agents_smoke.py`` and a 40-colour GIF palette pass. The
@@ -32,7 +32,7 @@ R, pre-movement 30 s, one seed. ``DATA`` is the ``fire_2MW_PVC`` output and
         fire-blind --data DATA --runs RUNS
 
 The seed is the one whose last R agent leaves at the median time. Agents are
-coloured and sized by their speed factor, as on "A crowd in a real fire".
+coloured and sized by their speed factor, as on "A crowd in a fire".
 
 Route choice in smoke after Schröder et al. (2015)
 (``docs/study-schroeder2015.md``): the smoke-blind and gate arms side by side

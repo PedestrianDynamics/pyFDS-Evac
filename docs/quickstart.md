@@ -273,7 +273,7 @@ Use real FDS output instead of a prescribed uniform smoke field:
 
 Also:
 
-- [A crowd in a real fire](first-fds-case.md): 150 agents in a 2 MW FDS fire,
+- [A crowd in a fire](first-fds-case.md): 150 agents in a 2 MW FDS fire,
   with figures for every step.
 - [What your FDS case must provide](fds-case-requirements.md), before you
   point the tool at your own FDS output.

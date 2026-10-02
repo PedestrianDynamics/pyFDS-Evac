@@ -274,7 +274,7 @@ U_FACTORS = (0.25, 1.0)
 HEAT_TF_ENDPOINTS = ("tolerance", "fatal")
 
 TEXT = "dimgrey"
-NEVER = "#f3e3b5"  # censored cells: not by 600 s (as on "A crowd in a real fire")
+NEVER = "#f3e3b5"  # censored cells: not by 600 s (as on "A crowd in a fire")
 UNVISITED = "#e6e6e6"
 FIRE = "#bd0c0c"
 EXIT = "#33a02c"

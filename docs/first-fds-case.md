@@ -1,5 +1,5 @@
 ---
-title: "A crowd in a real fire"
+title: "A crowd in a fire"
 weight: 3
 ---
 

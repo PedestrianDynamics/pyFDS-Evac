@@ -467,7 +467,7 @@ DIFF = 0 counts as a pass. DIFF is the time window between the first
 exceedance in a cell and the last presence of *any* agent there. The paper
 notes that "the exposure time of individuals cannot be concluded from this
 value" (p. 6); for per-agent exposure, see
-[A crowd in a real fire](first-fds-case.md#aset-rset). Because DIFF is a
+[A crowd in a fire](first-fds-case.md#aset-rset). Because DIFF is a
 margin in seconds, the maps compare versions by how much time each leaves,
 which is how Babrauskas et al. (2010, pp. 350–351) propose to use
 ASET − RSET. RSET here is the maximum over seeds, high-end with respect to
@@ -1047,7 +1047,7 @@ grid).
 
 - [ASET, RSET and the egress timeline](/fundamentals/aset-rset.md): the
   classic single-point comparison this page maps.
-- [A crowd in a real fire](first-fds-case.md): per-agent exposure and a
+- [A crowd in a fire](first-fds-case.md): per-agent exposure and a
   location ASET map on a real FDS fire.
 - [RSET from an ensemble of seeds](howto-rset-ensemble.md).
 - [Visibility through smoke](/fundamentals/visibility.md),
