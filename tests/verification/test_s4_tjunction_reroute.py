@@ -11,8 +11,12 @@ Arms:
   reroutes -- ``route_switches == 0``.
 - **null-field control** (smoke model present, ``K = 0``): exercises the same
   route-cost-with-extinction wiring with a null field; still no switches.
-- **treatment** (smoke in the right arm): most agents switch from the right
-  (smoky) exit to the left (clear) one, and never the reverse.
+- **treatment** (smoke in the right arm): agents not yet in the smoky arm
+  switch from the right exit to the left (clear) one, and never the reverse.
+  An agent already inside the arm is charged the smoke on its walk back as
+  well as ahead (#451); with every route refused, the fallback keeps its
+  current exit unless a rival's worst K is clearly lower
+  (``_fallback_holds_current``), so it may walk on to the right exit.
 
 The smoke starts at ``smoke_onset_s``, once the whole population is inside and
 still walking. That delay is what makes this a test of *re*-routing: the opening
@@ -49,6 +53,10 @@ from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 from pyfds_evac.core.scenario import run_scenario
 
 REEVAL_INTERVAL_S = 5.0
+# A quarter of the population: at onset about half the agents are already in
+# the K = 6 arm, where both routes are refused and the fallback holds their
+# exit (see the module docstring). The rest, still in the stem, switch.
+MIN_SWITCHES = TJunctionSpec().num_agents // 4
 # Right-arm extinction: enough that the short smoky route costs more than the
 # long clear one (w_smoke = 5 amplifies it in the composite cost).
 SMOKE_K = 6.0
@@ -116,8 +124,8 @@ def test_smoke_forces_switch_to_clear_exit():
         directions = route_switch_directions(result)
         # Every reroute goes smoky-right -> clear-left; none the other way.
         assert directions == {(EXIT_RIGHT, EXIT_LEFT): route_switch_count(result)}
-        # A clear majority of the population actually reroutes (vs control's 0).
-        assert route_switch_count(result) >= spec.num_agents // 2
+        # The agents still in the stem reroute (vs control's 0).
+        assert route_switch_count(result) >= MIN_SWITCHES
         assert result.metrics["agents_remaining"] == 0
     finally:
         result.cleanup()
@@ -150,7 +158,7 @@ def test_reroute_latency_within_interval():
 
 @pytest.mark.slow
 def test_switch_outcome_stable_under_fixed_seed():
-    """Same seed -> same qualitative outcome: majority switch, all right->left.
+    """Same seed -> same qualitative outcome: stem agents switch, all right->left.
 
     Not the same *count*. The reroute now happens mid-walk rather than at spawn,
     and by then agents have jostled each other into positions that vary run to
@@ -175,4 +183,4 @@ def test_switch_outcome_stable_under_fixed_seed():
     first_count, first_dirs = _outcome()
     second_count, second_dirs = _outcome()
     assert first_dirs == second_dirs == {(EXIT_RIGHT, EXIT_LEFT)}
-    assert min(first_count, second_count) >= spec.num_agents // 2
+    assert min(first_count, second_count) >= MIN_SWITCHES
