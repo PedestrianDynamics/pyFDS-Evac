@@ -84,7 +84,7 @@ steps = [
     "mkdir -p fire && cp assets/t_junction/t_junction.fds fire/",
     "cd fire && mpiexec -n 4 fds t_junction.fds && cd ..",
   ]],
-  ["Run pyFDS-Evac in the fire (about 25 s) and in clear air", [
+  ["Run pyFDS-Evac in the fire (about 10 s) and in clear air", [
     "FDS=fire",
     "mkdir -p tj",
     "python run.py --scenario assets/t_junction --fds-dir \"$FDS\" \\",
@@ -105,7 +105,7 @@ steps = [
 ]
 fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS"
-evac_runtime = "about 25 s for the fire run"
+evac_runtime = "about 10 s for the fire run"
 expected = [
   "evacuated: 70/150 in 300 s",
   "FED max:   0.37",

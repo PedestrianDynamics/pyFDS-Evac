@@ -141,8 +141,7 @@ uv run python run.py --scenario assets/t_junction --fds-dir "$FDS" \
     --output-route-history tj/tj_fire_routes.csv
 ```
 
-It takes about 25 s. Most of that goes into computing which signs are
-readable through the smoke. The output ends with:
+It takes about 10 s. The output ends with:
 
 ```text
 Configuring smoke calculation.
@@ -160,7 +159,7 @@ Route switches: 179
 
 Before this, fdsreader logs `Module vents: could not convert string to float`
 for this deck, and the terminal also shows `Reroute debug`
-lines and numpy `UserWarning`/`RuntimeWarning` messages. None of them affects
+lines and numpy `UserWarning` messages. None of them affects
 the run. The progress
 line counts the 200 planned agents, not the 150 that spawned
 ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
@@ -363,9 +362,10 @@ holds only when HCl is the only irritant.
 
 **Who counts as out.** The run reports 70 evacuated, and so does the
 trajectory: the last agent leaves at 297.3 s. The per-agent histories stop
-at 299 s, so they cannot show whether that agent met a limit in its last
-second. The script therefore counts an agent as out only if it left before
-299 s: **70 got out and 80 are censored**. For a censored agent we know only
+at 299 s, so an agent leaving in the last second could not be checked
+against the limits. The script therefore counts an agent as out only if it
+left before 299 s. In this run every exit is earlier: **70 got out and 80
+are censored**. For a censored agent we know only
 that its margin is negative or longer than the run.
 
 ### Each agent against its own limits
