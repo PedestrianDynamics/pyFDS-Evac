@@ -511,8 +511,10 @@ the repository root, or from the unpacked zip with `python` instead of
 
    `assets/schroeder2015_route/run_p1.sh` runs every seed and adds
    `--output-route-history`, `--output-exit-history`,
-   `--output-fed-history` and `--output-route-cost-history`. It exits
-   non-zero if any run fails. For all seeds at once:
+   `--output-fed-history` and `--output-route-cost-history`. A run with
+   agents still walking at the 400 s cap is incomplete, and `run.py` exits
+   with status 2 ([Exit status](usage.md#exit-status)); the script counts
+   such a run as done. It exits non-zero if any run fails. For all seeds at once:
 
    ```bash
    PY="uv run python" bash assets/schroeder2015_route/run_p1.sh \

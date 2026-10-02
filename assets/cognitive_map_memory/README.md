@@ -129,7 +129,9 @@ rather than lying on a line at y = 12.5. The window is derived for the
 centreline x = 2. The sign hangs on the east wall, so an agent near that
 wall (x ≈ 3.7) sees it at a grazing angle and has to get closer, to
 y ≈ 17–19, before it becomes legible. An agent near the west wall
-(x < 1.5) sees it closer to face-on and can read it from y ≈ 10.5.
+(x < 1.5) sees it closer to face-on and switches from y ≈ 10.5. Route
+switches fall on whole seconds, so a switch can trail the moment the sign
+becomes legible by up to about a metre of walking.
 
 **What this does not show is persistence.** An agent that turns off at y ≈ 13
 never reaches y = 30, so no trajectory exercises "still remembers `E_side`

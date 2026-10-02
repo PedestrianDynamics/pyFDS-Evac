@@ -431,7 +431,7 @@ mouth / exit A. Bold: the most passes at that point where the arms differ.
   size of the margin, not the verdict. R+FIC at 30 and 60 s is undetermined
   for FED 0.3: its RSET is censored ([Sensitivity arms](#sensitivity-arms)).
 - **HCl with no pre-movement is knife-edge.** U's median margin at the
-  junction under HCl 1000 ppm is about +2 s (59 − 56.5), inside the seed
+  junction under HCl 1000 ppm is about +2.5 s (59 − 56.5), inside the seed
   spread. So a single uncoupled run can give either verdict. The coupled
   arms pass less often at this level (35 point-passes in U, 26 in R, 20 in
   R-na, 5 in S), and R keeps most of U's. At every point and criterion U
