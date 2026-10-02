@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-10-02
+
+First release on PyPI: `pip install pyfds-evac`.
+
+### Added
+
+- Releases are published to PyPI as `pyfds-evac` by a GitHub workflow
+  with Trusted Publishing, when a GitHub release is published (#472).
+  The sdist leaves out the site, specs and working material.
+
 ### Changed
 
 - fdsvismap 0.3.2 replaces 0.3.1, still pinned exactly. Its code is the
