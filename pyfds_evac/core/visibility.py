@@ -353,7 +353,7 @@ def _vis_metre_array(vis) -> np.ndarray:
     The product below is the one ``VisMap.get_visibility_to_sign`` forms per
     cell: Jin's c / K_ave along the sight line, then the sign's readable
     half-plane, then obstructions. It is duplicated here only to vectorise it --
-    calling the public method per cell would be H*W*T*N calls. fdsvismap 0.3.1
+    calling the public method per cell would be H*W*T*N calls. fdsvismap 0.3.2
     has no vectorised masked accessor, so this is the one place that mirrors it.
     No upstream issue yet; regression test
     ``tests/test_fdsvismap_adapter.py``, which compares it with
@@ -635,7 +635,7 @@ class VisibilityModel:
     def signs_outside_grid(self) -> dict[str, float]:
         """Return {node_id: distance to the grid [m]} of signs off the vismap grid.
 
-        Empty for a clear-air model. fdsvismap 0.2.1-0.3.1 snaps the ray origin of
+        Empty for a clear-air model. fdsvismap 0.2.1-0.3.2 snaps the ray origin of
         such a sign onto the nearest edge cell while keeping the true distance,
         so the part of the sight line outside the grid takes the mean K of the
         part inside. Workaround: report it (warning, or error with

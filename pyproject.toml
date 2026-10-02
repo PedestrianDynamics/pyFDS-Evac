@@ -29,7 +29,7 @@ dependencies = [
     "shapely",
     # Exact pin: visibility.py patches the private _get_visibility_array to
     # cap each sign at its own reading distance.
-    "fdsvismap==0.3.1",
+    "fdsvismap==0.3.2",
     "numpy>=2.1",
 ]
 
@@ -80,18 +80,6 @@ dev = [
     "pytest-cov>=7.1.0",
     "ruff>=0.15.7",
     "seaborn>=0.13.2",
-]
-
-[tool.uv]
-# fdsvismap 0.3.1 requires scikit-image ~= 0.23.2, which
-# has no cp313/cp314 wheels and fails to build from source on 3.13 and 3.14.
-# fdsvismap uses only skimage.draw.line and line_aa, whose output is the same
-# in 0.26; tests/test_skimage_line_contract.py checks it on every version.
-# Upstream issue: none yet. Remove once an fdsvismap release allows 0.26.
-# The override applies to uv only; pip still sees fdsvismap's pin.
-override-dependencies = [
-    "scikit-image~=0.23.2; python_version < '3.13'",
-    "scikit-image~=0.26.0; python_version >= '3.13'",
 ]
 
 [tool.pytest.ini_options]
