@@ -5,8 +5,8 @@ weight: 2
 
 ASET depends on the fire, and a fire model needs its heat release rate
 (HRR) over time as input. A **design fire** is that input chosen for an
-engineering analysis: an idealised HRR curve; a real fire follows its own
-curve. The published conventions are the t² growth law and
+engineering analysis: an idealised HRR curve; a fire follows its own
+course. The published conventions are the t² growth law and
 its four classes, how growth is capped, steady fires, fits to tests, and
 what a design fire represents. The last section lists the fires
 used in the pyFDS-Evac studies.
@@ -36,10 +36,10 @@ The vfdb guide separates the two (vfdb 2020, §4.1, pp. 39–40):
 - A **design fire** turns the scenario into numbers, mainly an HRR curve
   over time.
 
-Design fires are chosen so that a real fire in that use exceeds them only
+Design fires are chosen so that a fire in that use exceeds them only
 with a very low probability: "worst credible", not "worst case" (§4.1,
 pp. 40–41). The guide calls a design fire a theoretical but possible curve
-that covers many real fires on the safe side (§4.3.1.1, p. 53). The SFPE
+that covers many fires on the safe side (§4.3.1.1, p. 53). The SFPE
 Handbook likewise calls the assumed fire characteristics of a scenario the
 "design fire" and describes them as a time-dependent HRR (Fleischmann and
 Wade 2026, Ch. 3, p. 54).
@@ -56,7 +56,7 @@ and checked by varying it (Karlsson and Quintiere 2000, §3.5.1).
 
 ## The t² law as published
 
-In real fires the early growth is nearly always accelerating. The
+The early growth of a fire is nearly always accelerating. The
 simplest description takes the HRR as growing with the square of time
 (Karlsson and Quintiere 2000, §3.4.4, Eq. 3.7; vfdb 2020, §4.3.2.1,
 Eq. 4.1, p. 58):
@@ -130,7 +130,7 @@ normalisation it uses.
 
 ## How growth ends
 
-The t² curve describes growth only. A real fire stops growing, and the
+The t² curve describes growth only. A fire stops growing, and the
 design fire must say when and how.
 
 - **Fuel or ventilation limit.** The maximum HRR is the lesser of the

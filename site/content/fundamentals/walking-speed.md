@@ -312,7 +312,7 @@ with \(R^2\) = 0.50 (Fig. 70.10) and a population SD of 0.157 m/s
 1.9–7.5 1/m, with none in between (pp. 2285–2286).
 
 {{< details title="Caveats on Eq. 70.8" closed="true" >}}
-**Pooling.** The fit combines smoke from real fires with artificial smoke
+**Pooling.** The fit combines smoke from fires with artificial smoke
 made mildly irritating, which is the pooling the
 [Known limits](#known-limits) section warns against; Purser and McAllister
 do it deliberately, as a conservative envelope.
@@ -497,7 +497,7 @@ is drawn on K = 0.32–0.5 and 1.9–7.5 1/m. Script: `scripts/figures/fundament
 All laws come from volunteers who knew they were in an experiment: short
 walks by healthy, mostly young adults for Jin (20 m) and Frantzich and
 Nilsson (37 m), plus longer tunnels and older people in Fridolf et al.'s fit.
-Only Jin used smoke from real fires, and none covers heat. The Jin and
+Only Jin used smoke from fires, and none covers heat. The Jin and
 Frantzich–Nilsson data should not be combined as one data set, and a
 relation used outside its measured range is an extrapolation.
 

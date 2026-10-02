@@ -13,7 +13,7 @@ Panel (a) draws Q = alpha t^2 for the four classes of vfdb TB 04-01
 alpha = 0.002931, 0.01172, 0.04689 and 0.1876 kW/s^2, with growth times
 of 600, 300, 150 and 75 s to 1000 Btu/s (about 1055 kW). Each curve is
 solid up to 1055 kW and dashed beyond, where fuel, ventilation or
-suppression limit a real fire.
+suppression limit a fire.
 
 Panel (b) draws the heat release rate of the three study fires, which are
 study inputs, not design fires:
@@ -176,7 +176,7 @@ def main():
     ax_a.text(
         510,
         2650,
-        "dashed: extrapolated;\na real fire is limited\nby fuel, ventilation\n"
+        "dashed: extrapolated;\na fire is limited\nby fuel, ventilation\n"
         "or suppression",
         fontsize=8,
         color="dimgrey",

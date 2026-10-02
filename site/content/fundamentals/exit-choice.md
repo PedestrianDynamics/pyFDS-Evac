@@ -67,7 +67,7 @@ research (Haghani and Sarvi 2018) surveys more than 160 studies.
 
 Apart from incident studies such as Sime's and Edelman et al.'s, the
 evidence above comes from hypothetical choices, virtual reality and evacuation trials, none of which
-carries the threat of a real fire. Whether parameters calibrated in one
+carries the threat of a fire. Whether parameters calibrated in one
 geometry and population transfer to another is an open question; Haghani and
 Sarvi (2017) set out to test exactly this context-dependence. The guide to [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source), the evacuation module of the Fire Dynamics
 Simulator (FDS),

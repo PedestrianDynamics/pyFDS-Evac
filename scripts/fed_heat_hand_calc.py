@@ -17,7 +17,7 @@ regenerate the first column of the table in docs/testing-heat.md:
     uv run python scripts/fed_heat_hand_calc.py
 
 Radiant heat is a separate ISO term and is not modelled here, so these times
-are an upper bound on tolerance in a real fire.
+are an upper bound on tolerance in a fire.
 """
 
 from __future__ import annotations
