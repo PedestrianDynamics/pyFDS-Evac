@@ -48,8 +48,9 @@ Command-line errors start with the name of the command you ran:
 - `WARNING:root:Module csv: [Errno 2] No such file or directory: …_hrr.csv`
   (and `…_steps.csv`), followed by "The error can be safely ignored if not
   requiring the csv module": fdsreader looks for CSV output the case does not
-  have.
-- `Reroute debug: …` lines: a trace of the rerouting pass.
+  have. The command line prints each such warning once per run.
+- `Reroute debug: …` lines: a trace of the rerouting pass, printed with
+  `--debug`.
 - `Heat FED is off; pass --enable-heat-fed to accumulate it.`: the heat dose is
   off by default, as in FDS+Evac.
 

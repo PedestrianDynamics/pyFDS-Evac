@@ -39,6 +39,16 @@
   "required": false,
   "type": "float"
  },
+ "--debug": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "debug",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
  "--disable-tenability": {
   "action": "_StoreTrueAction",
   "choices": null,

@@ -30,6 +30,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GUI: the Smoke and Cognitive map growth plots are left out when the
   run has no data for them (no smoke source, no agent's cognitive map
   grew); one "Not shown" note says why (#489).
+- A default run no longer prints the `Reroute debug` trace of the
+  rerouting pass; it is a debug log, printed with the `--debug` flag. The
+  command line prints fdsreader's repeated module-parse warning (such as
+  `Module vents`) once instead of once per opened case. Results and
+  written outputs are unchanged (#486).
 
 ## [0.2.1] - 2026-10-02
 

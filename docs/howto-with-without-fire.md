@@ -248,7 +248,8 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \
 Simulation finished in 62.94 s (100/100 evacuated).
 ```
 
-C and R print `Reroute debug` lines; they do not affect the result.
+With `--debug`, C and R also print `Reroute debug` lines; they do not affect
+the result.
 
 `--disable-tenability` in S and R records FED and FIC but lets nobody be
 incapacitated, so that everyone leaves and RSET stays defined. It also
