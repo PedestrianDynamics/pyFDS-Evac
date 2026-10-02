@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.2.0] - YYYY-MM-DD
+## [0.2.0] - 2026-10-02
 
 Highlights. Smoke along a route now changes an agent's exit: route costs
 add smoke and dose, and a gate on the route's optical depth rejects a
