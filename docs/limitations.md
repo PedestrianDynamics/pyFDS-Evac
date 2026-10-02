@@ -203,7 +203,8 @@ its familiarity, `entrance` or a legible sign gave it, but it prices the routes 
 sampled along the whole route, including stretches it has never seen
 ([issue #125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 By default (`routing.anticipate` = true, `routing.foresight_horizon_s`
-unbounded), the path to each exit is found on the smoke at decision time,
+unbounded), the path to each exit is found from the agent's position on the
+smoke at decision time,
 and each stretch of that path is then priced with the smoke that the
 finished FDS run holds for the time the agent would arrive there. Knowledge limits which
 routes an agent ranks, and only fully familiar agents know the whole graph;
@@ -212,8 +213,9 @@ a discovery agent is therefore not limited by what it has perceived.
 
 **Route choice.** Route choice has open limitations: switching can oscillate
 where two routes cross in cost ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)), routes are priced with smoke the agent
-cannot perceive ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)), one path is priced per exit ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)), and the FED along
-the walk to the route's first graph node is not counted ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). The full list, with
+cannot perceive ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)), one path is priced per exit ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)), the first-leg FED is taken pro rata from the first edge ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)), the ordering breaks
+optical-depth ties that the anchor's deadband ignores ([#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)), and the
+all-refused fallback holds the current exit on its worst extinction alone ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The full list, with
 one line per issue, is on
 [Models › Routing › Limitations](/models/routing.md#limitations).
 

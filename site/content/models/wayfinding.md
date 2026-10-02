@@ -303,14 +303,15 @@ routes; adoption is whether a moving agent switches to the first of them. The
 two differ:
 
 - **Opening choice** (`_assign_initial_exit`, `scenario.py`). It
-  ranks the routes from the spawn node, with distances measured from the
-  agent's position, as re-evaluation measures them, and without the queue
-  tally (`scenario.py`, `_assign_initial_exit`). Agents of one spawn area
-  can therefore start towards different exits. Only the first leg is
-  measured from the agent: each exit's candidate path is still the single
-  shortest path from the spawn node (#185), as in re-evaluation.
+  ranks the routes from the agent's position, as re-evaluation does, and
+  without the queue tally (`scenario.py`, `_assign_initial_exit`). The path
+  search starts with the walks to the spawn node's successors, and each exit
+  gets one path (#185). Agents of one spawn area can therefore start towards
+  different exits.
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
-  position. It adopts a different exit only if the rival passes the
+  position: the path search starts there and never routes back through the
+  origin node, and the current exit is never ranked behind the path the
+  agent walks ([Routing](/models/routing.md)). It adopts a different exit only if the rival passes the
   [switching rule](/models/routing.md#switching-rule) of the routing model:
   an optical-depth margin, then an anchor on the ranking cost. The
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
@@ -360,19 +361,21 @@ sign-legibility test or a line-of-sight visibility
 `distance_to_node` have no caller in `pyfds_evac/`
 ([#158](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/158)). Route
 smoke is sampled from the global extinction field (see
-[routing](/models/routing.md)) along the stored node-to-node polylines. The
-route mean \(\bar K\), and so \(\tau\), the gate and the ranking, take the
-first leg as the agent's share of that polyline. When the agent's position is
-given, the first leg is also resampled along the walk from the agent to its
-next node, for every familiarity tier (`_polyline_stats` in `evaluate_route`).
+[routing](/models/routing.md)) along the stored node-to-node polylines. When
+the agent's position is given, the first leg is sampled along the walk from the agent to its next node, for
+every familiarity tier (`_first_leg`, `_polyline_stats` in `route_graph.py`).
 That walk is the routing engine's path through the walkable area, the same one
 that measures the first leg's length; without an engine, or when the query
 fails, it is the straight line. Samples are spaced at most `sampling_step_m`
-along the walk's full length, including the stretch behind the route's origin
-node. The resample feeds only two secondary quantities: the route's worst sample
-`k_max_route`, which decides whether an agent keeps its exit when every route
-is refused (`route_graph.py`, `_fallback_holds_current`), and the worst leg mean, which decides the optional
-clean tier, off by default (`clean_extinction_threshold` = 0). Under the `"additive"` model only, a route
+along the walk's full length, including any stretch behind the route's origin
+node. The walk's mean \(\bar K\), length and travel time enter the route
+mean \(\bar K\), \(\tau\), the gate and the ranking, so the agent is charged
+for the smoke ahead of it only (`_measure_route`). The walk also gives the
+route's worst sample `k_max_route`, which decides whether an agent keeps its
+exit when every route is refused (`route_graph.py`, `_fallback_holds_current`),
+and the worst leg mean, which decides the optional clean tier, off by default
+(`clean_extinction_threshold` = 0). Without a position, the first leg is the
+whole node-to-node polyline. Under the `"additive"` model only, a route
 whose every segment has \(\bar K \ge 0.5\) m⁻¹ is refused while another
 non-refused route has a segment below it (`route_graph.py`, `AdditivePolicy.apply_candidate_set_rules`); this is
 an extinction threshold, not a sign test.
@@ -485,13 +488,14 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **An agent with no known exit can walk to an unknown one**
   ([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)). See
   the exception under §2.4. The intended behaviour is exploration.
-- **FED and arrival times behind the origin node**
+- **FED and arrival times on the first leg**
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
-  The first-leg smoke now follows the walked path at `sampling_step_m`, but
-  the FED growth over the walk to the route's origin node is not counted, and
-  anticipated arrival times start at the origin node (`route_graph.py`,
-  `_measure_route`, `_arrival_time`). See §2.4, "What route choice does not
-  read".
+  The first-leg smoke and travel time follow the walked path at
+  `sampling_step_m`, but the first-leg FED is a share of the first segment's
+  FED growth, in proportion to the walk's length, so the dose over a walk
+  behind the route's origin node is not counted. Anticipated arrival times
+  are counted from the origin node (`route_graph.py`, `_measure_route`,
+  `_arrival_time`). See §2.4, "What route choice does not read".
 - **A sign is never read beyond its reading distance.** \(V_{\max}\) is
   30 m by default ([#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
   so in clear air a sign farther away is illegible at any bearing, and a
