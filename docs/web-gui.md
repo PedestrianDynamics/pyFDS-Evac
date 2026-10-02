@@ -11,13 +11,15 @@ a GUI run into a script, see [Show the run as Python](#show-the-run-as-python).
 
 ## Install and launch
 
-Install the `gui` extra and start the GUI from the folder that holds your
-scenarios:
+Install the `gui` extra and start the GUI from the folder that contains
+`assets/`:
 
 ```bash
 pip install "pyfds-evac[gui]"
 pyfds-evac-gui
 ```
+
+pip on Python 3.13 and 3.14 currently fails while building scikit-image; use Python 3.12 or the source checkout until the fdsvismap pin is updated.
 
 Then open <http://127.0.0.1:5001>. The extra installs
 [FastHTML](https://fastht.ml/) and its dependencies. On a screen narrower
@@ -77,9 +79,10 @@ before the GUI has smoke to read.
 
 The steps use `iso_table21_coupled`, a scenario tracked in the repository
 together with its FDS output, so they need a
-[source checkout](install.md#install-from-the-repository): one agent walks a 100 m corridor filled with smoke of about
-K = 1 1/m. The numbered markers in the first screenshot show where each
-control is. Click a screenshot to open it at full size.
+[source checkout](install.md#install-from-the-repository). One agent walks a
+100 m corridor filled with smoke of about K = 1 1/m. The numbered markers in
+the first screenshot show where each control is. Click a screenshot to open
+it at full size.
 
 [![The start screen. On the left, the Parameters panel with the Show equivalent Python button in its header, the open Core group with the scenario picker set to iso_table21_coupled, the Smoke group with fields labelled with units such as "Constant extinction (1/m)" and "Smoke update interval (s)", and the Run scenario and Results only buttons at the bottom. On the right, the left part of the empty results area. Numbered markers: 1 at the scenario picker, 2 at the Smoke group, 3 at Run scenario, 4 at the results area](/images/web-gui/overview.png "The start screen: 1 scenario picker, 2 parameter groups, 3 Run scenario, 4 results area.")](images/web-gui/overview.png)
 
