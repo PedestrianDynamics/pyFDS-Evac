@@ -93,14 +93,14 @@ trajectory database of a real run:
 mkdir -p /tmp/cmm && cd /tmp/cmm \
   && fds /path/to/assets/cognitive_map_memory/cognitive_map_memory.fds && cd -
 
-.venv/bin/python run.py \
+uv run python run.py \
     --scenario assets/cognitive_map_memory/config.json \
     --fds-dir /tmp/cmm --allow-fds-horizon-hold \
     --vis-cache /tmp/vis_cmm.npz \
     --output-sqlite /tmp/cmm.sqlite \
     --output-route-history /tmp/cmm_routes.csv
 
-.venv/bin/python scripts/plot_trajectories.py /tmp/cmm.sqlite \
+uv run python scripts/plot_trajectories.py /tmp/cmm.sqlite \
     --config assets/cognitive_map_memory/config.json \
     --route-history /tmp/cmm_routes.csv \
     -o assets/cognitive_map_memory/trajectories.png \
@@ -115,18 +115,21 @@ the spawn area onward and the scenario looks like agents that aimed at the side
 door from the start. With it, each path is coloured by the exit the agent was
 aiming at *at that moment*, and a dot marks the change of mind.
 
-**20 of 20 agents divert into `E_side`**, egress 22.3 s. One switch each:
-`E_end → E_side` between t = 5 and t = 20 s, as each agent crosses the
-legibility window and the sign becomes readable. Agent 1 switches at
-t = 12 s, y = 13.4. Measured at `8bda7f7` against the deck's FDS output, with
+**20 of 20 agents divert into `E_side`**, egress 21.5 s (`Simulation
+finished in 21.47 s (20/20 evacuated).`). One switch each: `E_end → E_side`
+between t = 5 and t = 19 s, as each agent enters the legibility region and
+the sign becomes readable. Agent 1 switches at t = 11 s, at x = 3.7,
+y = 18.9. Measured at `289b33d0` against the deck's FDS output, with
 `--allow-fds-horizon-hold` because the FDS run ends before the 300 s run
 time; the run files are in the project's data store under
-`cognitive_map_memory/rerun_8bda7f7/`.
+`cognitive_map_memory/rerun_289b33d0/`.
 
-The switch dots are spread over y ∈ [11.0, 19.3], most of them below 15,
-rather than lying on a line at y = 12. That is correct: the window is derived for the centreline
-x = 2, and an agent off-centre sees the sign at a worse view angle, so it has to
-get closer before the sign becomes legible.
+The switch dots are spread over y ∈ [10.5, 18.9], 13 of 20 below 15,
+rather than lying on a line at y = 12.5. The window is derived for the
+centreline x = 2. The sign hangs on the east wall, so an agent near that
+wall (x ≈ 3.7) sees it at a grazing angle and has to get closer, to
+y ≈ 17–19, before it becomes legible. An agent near the west wall
+(x < 1.5) sees it closer to face-on and can read it from y ≈ 10.5.
 
 **What this does not show is persistence.** An agent that turns off at y ≈ 13
 never reaches y = 30, so no trajectory exercises "still remembers `E_side`
