@@ -1044,6 +1044,17 @@ def test_fds_search_is_bounded(tmp_path):
 # --------------------------------------------------
 
 
+def pin_wall(run, seconds: int) -> None:
+    """Fix the wall time a snapshot shows (#553).
+
+    ``started`` comes from time.monotonic(); ``(started + 44) - started``
+    rounds to 43.999… for some start values (about 0.4 % of them shortly
+    after boot), and the truncating clock then shows 0:43. Both ends are
+    set to exact values instead.
+    """
+    run.started, run.ended = 1000.0, 1000.0 + seconds
+
+
 def _snap_app(workdir, theme="evac-dark"):
     return make_app(workdir, theme=theme)
 
@@ -1076,7 +1087,7 @@ def test_snapshot_run_with_plan(workdir, snap_compare, monkeypatch, theme):
         await pilot.press("ctrl+r")
         await pilot.pause()
         replay(app)
-        app.current_run.ended = app.current_run.started + 44  # fixed wall time
+        pin_wall(app.current_run, 44)
         await pilot.pause(0.2)
         app.render_run()
         await pilot.pause()
@@ -1094,7 +1105,7 @@ def test_snapshot_results(workdir, snap_compare):
         await pilot.press("ctrl+r")
         await pilot.pause()
         replay(app, result_event(events.STATUS_INCOMPLETE))
-        app.current_run.ended = app.current_run.started + 72
+        pin_wall(app.current_run, 72)
         app.render_results()
         await pilot.pause()
 
