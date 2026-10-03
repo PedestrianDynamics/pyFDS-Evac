@@ -1213,7 +1213,9 @@ def test_sweep_removes_folders_of_dead_tui_processes(tmp_path):
 @pytest.mark.slow
 def test_child_stops_and_cleans_up_when_the_tui_is_killed(tmp_path):
     """A killed TUI (SIGKILL, terminal gone) leaves no run or temp folder."""
+    import queue
     import signal
+    import threading
 
     tmp = tmp_path / "tmp"
     tmp.mkdir()
@@ -1223,9 +1225,14 @@ def test_child_stops_and_cleans_up_when_the_tui_is_killed(tmp_path):
     values = vars(form.namespace(form.output_paths(base)))
     parent = f"""
 import os, sys, time
-from pyfds_evac.tui.runner import ProcessRunner
+from pyfds_evac.tui.runner import Progress, ProcessRunner
+seen = []
+def post(event):
+    if isinstance(event, Progress) and not seen:
+        seen.append(event)
+        print("in the run", flush=True)
 runner = ProcessRunner()
-runner.start({dict(values)!r}, {base!r}, lambda e: None)
+runner.start({dict(values)!r}, {base!r}, post)
 print(runner._proc.pid, flush=True)
 time.sleep(600)
 """
@@ -1234,10 +1241,19 @@ time.sleep(600)
         [sys.executable, "-c", parent], stdout=subprocess.PIPE, text=True, env=env
     )
     child = int(proc.stdout.readline())
-    time.sleep(4)  # inside the run
-    proc.send_signal(signal.SIGKILL)
-    proc.wait()
-    for _ in range(100):
+    # Kill the TUI once the child reports progress (it is then inside the
+    # run), not after a fixed sleep: under load the child may still be
+    # starting after a few seconds.
+    lines: queue.Queue[str] = queue.Queue()
+    threading.Thread(
+        target=lambda: [lines.put(line) for line in proc.stdout], daemon=True
+    ).start()
+    try:
+        assert lines.get(timeout=120).strip() == "in the run"
+    finally:
+        proc.send_signal(signal.SIGKILL)
+        proc.wait()
+    for _ in range(300):
         try:
             os.kill(child, 0)
         except ProcessLookupError:
