@@ -15,6 +15,7 @@ Usage::
     df = result.trajectory_dataframe()
 """
 
+import contextlib
 import hashlib
 import json
 import logging
@@ -96,7 +97,12 @@ from .fed import (
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
-from .manifest import fds_dir_from_models, run_settings, write_manifest
+from .manifest import (
+    fds_dir_from_models,
+    manifest_path_for,
+    run_settings,
+    write_manifest,
+)
 from .route_graph import (
     AgentRouteState,
     RerouteConfig,
@@ -241,6 +247,16 @@ def _require_jupedsim():
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
+
+
+def _remove_run_files(output_file: str) -> None:
+    """Remove a failed run's temporary trajectory and its manifest, if present.
+
+    A removal error is ignored so that the run's own exception propagates.
+    """
+    for path in (pathlib.Path(output_file), manifest_path_for(output_file)):
+        with contextlib.suppress(OSError):
+            path.unlink(missing_ok=True)
 
 
 def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
@@ -1516,20 +1532,25 @@ def run_scenario(
 
     sqlite_tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
     output_file = sqlite_tmp.name
-    sqlite_tmp.close()
-
-    writer = jps.SqliteTrajectoryWriter(
-        output_file=pathlib.Path(output_file),
-        every_nth_frame=10,
-    )
-    simulation = jps.Simulation(
-        model=model,
-        geometry=scenario.walkable_polygon,
-        trajectory_writer=writer,
-    )
-
-    config_tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
+    writer = None
+    config_tmp = None
+    # Set once the result is built; until then a raise removes the run's
+    # temporary trajectory and manifest (#331).
+    result_built = False
     try:
+        sqlite_tmp.close()
+
+        writer = jps.SqliteTrajectoryWriter(
+            output_file=pathlib.Path(output_file),
+            every_nth_frame=10,
+        )
+        simulation = jps.Simulation(
+            model=model,
+            geometry=scenario.walkable_polygon,
+            trajectory_writer=writer,
+        )
+
+        config_tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
         json.dump(scenario.raw, config_tmp, indent=2)
         config_tmp.close()
 
@@ -3197,7 +3218,7 @@ def run_scenario(
             _logger.warning("Could not write the run manifest: %s", exc)
             manifest_file = None
 
-        return ScenarioResult(
+        result = ScenarioResult(
             metrics=metrics,
             sqlite_file=output_file,
             manifest_file=manifest_file,
@@ -3238,12 +3259,18 @@ def run_scenario(
             ),
             agents_incapacitated=len(incapacitated_agents),
         )
+        result_built = True
+        return result
     finally:
-        try:
-            writer.close()
-        except Exception:
-            pass
-        try:
-            os.unlink(config_tmp.name)
-        except Exception:
-            pass
+        if writer is not None:
+            try:
+                writer.close()
+            except Exception:
+                pass
+        if config_tmp is not None:
+            try:
+                os.unlink(config_tmp.name)
+            except Exception:
+                pass
+        if not result_built:
+            _remove_run_files(output_file)
