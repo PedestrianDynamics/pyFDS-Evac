@@ -86,6 +86,13 @@ def _outputs(ns: argparse.Namespace) -> dict:
     return {"rows": _rows(ns.output_sqlite), "csv": files}
 
 
+def _assert_same(label: str, got: dict, reference: dict) -> None:
+    """Compare per output, so a failure names the file."""
+    assert got["rows"] == reference["rows"], (label, "trajectory_data")
+    for dest in CSV_DESTS:
+        assert got["csv"][dest] == reference["csv"][dest], (label, dest)
+
+
 @pytest.mark.slow
 def test_frames_do_not_change_the_run(tmp_path, monkeypatch):
     tmp = tmp_path / "tmp"
@@ -98,8 +105,8 @@ def test_frames_do_not_change_the_run(tmp_path, monkeypatch):
 
     # Each variant observed the run differently, smoke grids included.
     frames = {
-        label: [e for e in got if isinstance(e, events.FrameEvent)]
-        for label, (_ns, got) in runs.items()
+        label: [e for e in run[1] if isinstance(e, events.FrameEvent)]
+        for label, run in runs.items()
     }
     assert frames["off"] == []
     for label in ("5hz", "1hz", "dense"):
@@ -113,9 +120,15 @@ def test_frames_do_not_change_the_run(tmp_path, monkeypatch):
     assert result.status == events.STATUS_SUCCESS
     assert result.seed == int(SEED)
     assert reference["rows"]
-    assert reference["csv"]["output_smoke_history"] is not None
+    # A file the reference does not write would compare equal (None == None).
+    for dest in (
+        "output_smoke_history",
+        "output_route_history",
+        "output_route_cost_history",
+    ):
+        assert reference["csv"][dest] is not None, dest
     for label, (ns, got) in runs.items():
-        assert _outputs(ns) == reference, label
+        _assert_same(label, _outputs(ns), reference)
         for name in RESULT_FIELDS:
             assert getattr(got[-1], name) == getattr(result, name), (label, name)
 
@@ -128,4 +141,4 @@ def test_frames_do_not_change_the_run(tmp_path, monkeypatch):
     exe = Path(sys.executable).with_name("pyfds-evac")
     done = subprocess.run([str(exe), *command[1:]], capture_output=True, text=True)
     assert done.returncode == events.EXIT_CODES[result.status], done.stderr
-    assert _outputs(cli_ns) == reference
+    _assert_same("CLI", _outputs(cli_ns), reference)
