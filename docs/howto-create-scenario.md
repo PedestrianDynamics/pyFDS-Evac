@@ -25,8 +25,8 @@ use its results. The keys of `config.json` and their defaults are on
 draw the walkable area, obstacles, exits, spawn areas (called
 *distributions*), checkpoints, zones and journeys. It imports geometry from
 DXF (CAD) and IFC (BIM) files. Creating and saving scenarios needs a login
-with [Helmholtz AAI](https://www.fz-juelich.de/en/ias/ias-7/services/software/jupedsim-app-en),
-which accepts external accounts. To run the app on your own machine, see the
+with Helmholtz AAI, which accepts external accounts (see the
+[FZJ page of the app](https://www.fz-juelich.de/en/ias/ias-7/services/software/jupedsim-app-en)). To run the app on your own machine, see the
 Docker set-up in
 [jupedsim-web-community](https://github.com/PedestrianDynamics/jupedsim-web-community)
 (`docker/README.md`).
@@ -47,7 +47,8 @@ There is no need to unzip it:
 pyfds-evac --scenario scenario.zip --print-summary --export-only
 ```
 
-In a source checkout, run `uv run pyfds-evac` instead of `pyfds-evac`.
+In a source checkout, prefix the commands on this page with `uv run`, as in
+`uv run pyfds-evac` or `uv run python -m …`.
 
 {{< checkpoint title="The files load" >}}
 For a ZIP with one spawn area of 50 agents and one exit:
@@ -119,7 +120,7 @@ can apply them again after the next export.
   `flow_end_time`; and next to the parameters, `journey_weights`.
 - `checkpoints.<id>`: `waiting_time` with its distribution and spread, the
   throughput keys, `speed_factor` (always 1) and an optional `sign`.
-- `zones.<id>.speed_factor` and the obstacle heights.
+- `zones.<id>.speed_factor`, and `obstacles` with their heights.
 - `journeys: []`, `transitions: []` and `journeys_v2`, which holds each
   journey as a sequence of exits and checkpoints.
 
@@ -173,8 +174,8 @@ loaded and the walkable area as WKT. The command-line options, such as
 - `journeys` and `transitions` built from `journeys_v2`.
 
 `journeys_v2`, `ui_state` and keys the app does not know are kept. The app
-ignores the unknown keys and drops them on its next export, so add the
-pyFDS-Evac keys again afterwards.
+ignores the unknown keys and drops them on its next export, so apply your
+hand edits again afterwards.
 {{< /details >}}
 
 ## Start from an example

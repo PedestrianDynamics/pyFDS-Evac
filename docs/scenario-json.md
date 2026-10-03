@@ -16,7 +16,7 @@ the run.
 
 ## Where scenario files come from
 
-Most scenarios are drawn in [JuPedSim Web](https://app.jupedsim.org) and
+Scenario files are drawn in [JuPedSim Web](https://app.jupedsim.org) and
 exported as a ZIP, or copied from an example and edited. The app does not
 write the pyFDS-Evac keys (`routing`, exit schedules, `familiarity`, the
 sign's `max_distance`); add them by hand after the last export.
