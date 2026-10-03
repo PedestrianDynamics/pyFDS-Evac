@@ -145,6 +145,7 @@ def stream_run(
     frames: bool = False,
     max_hz: float = DEFAULT_MAX_HZ,
     smoke_hz: float = DEFAULT_SMOKE_HZ,
+    min_sim_s: float | None = None,
     cancel: Callable[[], bool] | None = None,
     send_traceback: bool = False,
 ) -> events.ResultEvent:
@@ -153,8 +154,9 @@ def stream_run(
     Order: phase and log events while the run is built; the
     :class:`~pyfds_evac.config.events.PlanEvent` once the models are built
     (it states the smoke mode and slice height the run uses); progress and,
-    with *frames*, frame events (at most *max_hz* per wall second, the smoke
-    grid at most *smoke_hz*); the final frame; the
+    with *frames*, frame events (at most *max_hz* per wall second, or one
+    per *min_sim_s* simulated seconds when given; the smoke grid at most
+    *smoke_hz*); the final frame; the
     :class:`~pyfds_evac.config.events.ResultEvent`, which is also returned.
     *cancel* is polled at each progress sample and between phases.
     Warnings carry the simulated time of the last progress sample.
@@ -200,7 +202,9 @@ def stream_run(
                 )
             )
             if frames:
-                recorder = FrameRecorder(emit, max_hz=max_hz, smoke_hz=smoke_hz)
+                recorder = FrameRecorder(
+                    emit, max_hz=max_hz, smoke_hz=smoke_hz, min_sim_s=min_sim_s
+                )
             emit(events.PhaseEvent(events.PHASE_RUNNING))
             result = run_scenario(
                 scenario,

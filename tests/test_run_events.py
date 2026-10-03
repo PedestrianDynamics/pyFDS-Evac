@@ -574,6 +574,86 @@ def test_exit_stage_removals_count_in_the_step_they_leave():
     assert last.smoke is None
 
 
+class _Steps:
+    """A fake run: wall and simulated time advance by fixed steps."""
+
+    def __init__(self, wall_step: float, sim_step: float) -> None:
+        self.wall = 0.0
+        self.sim = _Simulation()
+        self.sim_step = sim_step
+        self.wall_step = wall_step
+        self.sim.elapsed_time = lambda: self.t  # type: ignore[method-assign]
+        self.t = 0.0
+
+    def clock(self) -> float:
+        return self.wall
+
+    def run(self, recorder, steps: int) -> None:
+        recorder.start({}, [], None, (0, 0, 1, 1))
+        for _ in range(steps):
+            self.wall += self.wall_step
+            self.t += self.sim_step
+            recorder.after_step(self.sim, incapacitated=set(), not_spawned=0)
+
+
+@pytest.mark.parametrize(
+    ("wall_step", "sim_step", "min_sim_s", "expected"),
+    [
+        # Wall only: 1/128 s of wall time per step, max_hz 5 -> every 26 steps.
+        (0.0078125, 0.01, None, [0.01 + 0.26 * k for k in range(4)]),
+        # A fast run without min_sim_s: unchanged, one frame per 0.2 s wall.
+        (0.01, 1.0, None, [1.0 + 20 * k for k in range(5)]),
+        # Sim only: fast run, at least one frame per 2 s of simulated time.
+        (0.01, 1.0, 2.0, [1.0 + 2 * k for k in range(50)]),
+        # Both: a slow run still gets the wall-time frames.
+        (0.0625, 0.01, 0.5, [0.01 * (1 + 4 * k) for k in range(25)]),
+    ],
+)
+def test_frame_cadence_by_wall_and_sim_time(wall_step, sim_step, min_sim_s, expected):
+    from pyfds_evac.core.plan_view import FrameRecorder
+
+    steps = _Steps(wall_step, sim_step)
+    frames: list[events.FrameEvent] = []
+    recorder = FrameRecorder(
+        frames.append, max_hz=5.0, min_sim_s=min_sim_s, clock=steps.clock
+    )
+    steps.run(recorder, 100)
+    assert [f.sim_time for f in frames] == pytest.approx(expected)
+
+
+@pytest.mark.parametrize("bad", [0.0, -1.0, float("nan")])
+def test_min_sim_s_must_be_positive(bad):
+    from pyfds_evac.core.plan_view import FrameRecorder
+
+    with pytest.raises(ValueError, match="min_sim_s"):
+        FrameRecorder(lambda e: None, min_sim_s=bad)
+
+
+def test_sim_time_frames_do_not_change_the_run_and_send_grids_on_change():
+    """min_sim_s=1: a frame per simulated second, outputs bit-identical."""
+    from pyfds_evac.core.plan_view import FrameRecorder
+
+    frames: list[events.FrameEvent] = []
+    recorder = FrameRecorder(frames.append, max_hz=1e-6, smoke_hz=1e9, min_sim_s=1.0)
+    on = _run(ISO21_CONFIG, recorder, "--fds-dir", ISO21_FDS)
+    off = _run(ISO21_CONFIG, None, "--fds-dir", ISO21_FDS)
+    try:
+        assert _trajectory(on) == _trajectory(off)
+        for name in ("smoke_history", "route_history", "exit_history"):
+            assert _without_ids(getattr(on, name) or []) == _without_ids(
+                getattr(off, name) or []
+            ), name
+        assert on.metrics == off.metrics
+    finally:
+        on.cleanup()
+        off.cleanup()
+    times = [f.sim_time for f in frames[:-1]]
+    gaps = [b - a for a, b in zip(times, times[1:], strict=False)]
+    assert len(times) > 10 and max(gaps) < 1.0 + 0.1
+    grids = [f.smoke for f in frames if f.smoke is not None]
+    assert len({g.fds_time_s for g in grids}) == len(grids)  # only on a change
+
+
 def test_jupedsim_removal_semantics():
     """The FrameRecorder relies on these (JuPedSim 1.4.2).
 
