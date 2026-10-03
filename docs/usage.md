@@ -39,6 +39,7 @@ scenarios and scripts of a source checkout; with pip, replace
 | `--seed N` | Override the scenario's `baseSeed` (42 when the scenario sets none). |
 | `--print-summary` | Print the loaded scenario summary before running. |
 | `--debug` | Print debug messages, such as the `Reroute debug` trace of the rerouting pass. From Python, `logging.getLogger("pyfds_evac").setLevel(logging.DEBUG)` with a handler does the same. |
+| `--show-config` | Print the effective configuration and exit without running; see [Checking a configuration before the run](#checking-a-configuration-before-the-run). |
 | `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as `<stem>.manifest.json`. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, heat_fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
 | `--cleanup` | Delete the temp SQLite after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` [for the app](howto-create-scenario.md#open-a-scenario-in-the-app-again). |
@@ -56,7 +57,7 @@ add and the failure modes that stay silent unless you read the warnings.
 | Flag | Default | Purpose |
 |------|---------|---------|
 | `--fds-dir DIR` | none | FDS output directory. Drives smoke speed, gas FED, heat FED (with `--enable-heat-fed`) and smoke-aware sign legibility. |
-| `--constant-extinction K` | none | Use a constant `K` [1/m] for walking speed instead of the FDS extinction slice. Speed only: FED, heat FED and sign legibility still read `--fds-dir` when it is given. |
+| `--constant-extinction K` | none | Use a constant `K` [1/m] instead of the FDS extinction slice for walking speed and for route pricing (the optical depth `K·L` of the route gate). FED, heat FED and sign legibility still read `--fds-dir` when it is given; without `--fds-dir`, sign legibility stays clear air, so a constant `K` hides no sign. |
 | `--smoke-update-interval S` | 1.0 s | Seconds between smoke-speed updates. The same interval is the integration step of the gas FED and heat FED, and the row spacing of the smoke and FED histories. |
 | `--smoke-slice-height M` | 1.6 m | Height of the horizontal slices that are read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.5 m away. See [FDS slice sampling](fds-sampling.md). |
 | `--allow-fds-horizon-hold` | off | Let the run outlast the FDS output by holding the last slice frame, with a warning at setup and one per quantity. Without it, a `max_simulation_time` more than one slice output interval past the last FDS frame stops the run at setup, and so does any smoke, FED, heat or sign-visibility sample past it. See [FDS slice sampling](fds-sampling.md#past-the-end-of-the-fds-output). |
@@ -196,7 +197,14 @@ each flag sets.
 
 - `--seed N` overrides the scenario's `baseSeed`; a scenario without one uses 42.
 - `--constant-extinction` takes precedence over the FDS extinction slice for
-  walking speed only.
+  walking speed and route pricing. Sign legibility reads the FDS extinction
+  slice, or clear air without `--fds-dir`; it never reads the constant `K`.
+- A sign's own `max_distance` in the scenario JSON takes precedence over
+  `--max-sign-distance`.
+- `--heat-fed-threshold` takes precedence over `--fed-threshold` for the heat
+  track.
+- `--smoke-blind` turns rerouting and tenability off, whatever
+  `--enable-rerouting` and `--disable-tenability` say.
 
 ### Python API and command line
 
@@ -207,6 +215,7 @@ scenario can behave differently:
 | What | `run.py` | `run_scenario()` without that argument |
 |------|----------|----------------------------------------|
 | Rerouting | on, every 1 s (`--reroute-interval`) | off; `RerouteConfig()` defaults to 10 s |
+| Route costs | the scenario's `routing` block, for the first exit choice and for rerouting | the `routing` block for the first exit choice. A `RerouteConfig()` built by hand carries the code defaults of `RouteCostConfig` and ignores the `routing` block, for the first choice as well; pass `cost_config=RouteCostConfig.from_routing_params(scenario.raw.get("routing"))` to keep it |
 | Smoke speed | from `--fds-dir`, or `--constant-extinction` | none |
 | Gas FED, heat FED | from `--fds-dir` (heat with `--enable-heat-fed`) | none |
 | Incapacitation | `TenabilityConfig` whenever a FED track runs | none: a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
@@ -235,6 +244,36 @@ can change without notice
 ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
 
 [A crowd in a fire](first-fds-case.md) does this end to end.
+
+### Checking a configuration before the run
+
+`--show-config` prints the effective configuration and exits without
+running: which models are on or off and why, every option with its unit and
+whether it is the default or departs from FDS+Evac, the scenario's `routing`
+values, options that have no effect, the setup warnings and errors the run
+would report, and the shortest equivalent command. With `--fds-dir` it reads
+the FDS inventory (slices and output end time), not the slice data. It exits
+with status 1 when the configuration has an error, else 0.
+
+```bash
+uv run python run.py --scenario assets/t_junction/config_discovery.json \
+    --constant-extinction 0.5 --enable-fic-speed --show-config
+```
+
+```text
+Options with no effect:
+  --enable-fic-speed on: without --fds-dir
+
+Setup warnings:
+  --enable-fic-speed has no effect without --fds-dir.
+```
+
+A run with such an option logs the same warning at setup. Options left at
+their default are never reported. The run manifest written with
+`--output-sqlite` records the same configuration under `configuration`.
+From Python, `pyfds_evac.config.effective_configuration(opts, scenario)`
+returns it; `pyfds_evac.config` is provisional public API in 0.3.0 and can
+change in 0.3.x.
 
 ### Agent visualisation
 

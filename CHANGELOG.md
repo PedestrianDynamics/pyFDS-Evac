@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `pyfds_evac.config`: one model of the run options (name, type, unit,
+  default, choices, help, the Python field each sets) from which the
+  `pyfds-evac` parser and the GUI form are built, the effective
+  configuration of a run (models on or off and why, options with their
+  origin, options that have no effect, setup warnings and errors) and the
+  equivalent command and Python script. Provisional public API: it can
+  change in 0.3.x. Flags, defaults, help and results are unchanged (#484).
+- `--show-config` prints the effective configuration and exits without
+  running; exit status 1 when the configuration has an error (#484).
+- The run manifest written with `--output-sqlite` records the effective
+  configuration under `configuration` (#484).
+- `ProgressEvent` counts incapacitated agents and flow agents not yet
+  spawned (`incapacitated`, `not_spawned`; provisional) (#484).
+
+### Changed
+
+- An option set away from its default that changes nothing in the run now
+  logs a warning at setup, e.g. `--enable-fic-speed has no effect without
+  --fds-dir.` Runs with default options log nothing new (#484).
+
 ## [0.2.4] - 2026-10-03
 
 ### Added
