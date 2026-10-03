@@ -165,11 +165,18 @@ last FDS release with FDS+Evac:
   ([line 5512](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L5512)).
 - The smoke-free test multiplies the mean extinction by the distance to
   the door: `K_ave_Door(i)*SQRT((x1_old-x_o)**2 + (y1_old-y_o)**2) <
-  ABS(FED_DOOR_CRIT)` ([line 16312](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16312)).  The tested quantity is an
-  optical depth, so the 2.6.1 threshold 0.003 has no unit.  The smoke
-  mark on the previous target uses the same product
-  ([line 16347](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16347)), and the floor `0.5 * ABS(FED_DOOR_CRIT)` on
-  `K_ave_Door` is gone ([line 16220](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16220)).
+  ABS(FED_DOOR_CRIT)` in tiers 1 and 3 ([line 16312](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16312),
+  [line 16455](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16455)); tier 2, for doors without a line of sight,
+  uses the L1 distance `ABS(x1_old-x_o) + ABS(y1_old-y_o)`
+  ([line 16406](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16406)).  The tested quantity is an optical depth,
+  so the 2.6.1 threshold 0.003 has no unit.  The smoke mark on the
+  previous target uses the same product ([line 16347](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16347)).
+- The floor `0.5 * ABS(FED_DOOR_CRIT)` on `K_ave_Door` is gone.  Each
+  call of `Change_Target_Door` resets every entry to
+  `1.0E-7 * ABS(FED_DOOR_CRIT)` = 3 × 10⁻¹⁰ /m
+  ([line 15891](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L15891)), and a visible door then takes
+  `MAX(ave_K, K_ave_Door(i))` ([line 16220](https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16220)), so the floor
+  is now 3 × 10⁻¹⁰ /m instead of 0.015 /m.
 
 The commit message says the new test equals the old one for an agent
 10 m from the door.  With the coded default it does not: at 10 m a door
