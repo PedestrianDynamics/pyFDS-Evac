@@ -321,8 +321,11 @@ class PlanView(Widget):
 def scrubber(
     t: float, limit: float, ticks: list[float], width: int, theme: Any
 ) -> Text:
-    """``sim 120.0 s ━━━━╋┊──── 300 s limit``: time on the time-limit scale."""
-    lead = f" sim {t:5.1f} s "
+    """``plan at 120.0 s ━━╋┊── 300 s limit``: the time of the frame drawn.
+
+    Frames are throttled by wall time, so the plan can lag the status line.
+    """
+    lead = f" plan at {t:5.1f} s "
     tail = f" {limit:g} s limit"
     n = max(10, width - len(lead) - len(tail) - 1)
     limit = limit if limit > 0 else 1.0
