@@ -335,8 +335,10 @@ PARAMETERS: tuple[Parameter, ...] = (
         "smoke_slice_height",
         ("--smoke-slice-height",),
         GROUP_FDS,
-        "FDS slice height [m] for smoke and heat sampling "
-        f"(default: {SMOKE_SLICE_HEIGHT_M}, FDS+Evac HUMAN_SMOKE_HEIGHT; pass 2.0 "
+        "FDS slice height [m]; the slices nearest it give the smoke for walking "
+        "speed, the gases and temperature for FED, and the extinction for sign "
+        f"legibility (default: {SMOKE_SLICE_HEIGHT_M}, FDS+Evac "
+        "HUMAN_SMOKE_HEIGHT; pass 2.0 "
         "for the previous pyFDS-Evac default)",
         type=float,
         default=SMOKE_SLICE_HEIGHT_M,
@@ -344,8 +346,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         python="slice_height_m of SmokeSpeedConfig, DefaultFedConfig, "
         "FdsFedField, FdsHeatField, VisibilityModel",
         fds_evac=SMOKE_SLICE_HEIGHT_M,
-        gui_help="Height (m) of the horizontal FDS slice sampled for smoke — "
-        "roughly head height of a standing person. "
+        gui_help="Height (m) of the horizontal FDS slices sampled for smoke "
+        "(walking speed), gases and temperature (FED) and extinction (sign "
+        "legibility) — roughly head height of a standing person. "
         f"{SMOKE_SLICE_HEIGHT_M} by default, as FDS+Evac.",
     ),
     Parameter(

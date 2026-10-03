@@ -12,12 +12,15 @@
 #
 # Run from the repository root:
 #
-#     uv run python examples/rset_ensemble.py
+#     uv run python examples/rset_ensemble.py               # figure in a temp dir
+#     uv run python examples/rset_ensemble.py <figure.png>  # figure at that path
 
 # %%
 import json
 import pathlib
 import sqlite3
+import sys
+import tempfile
 
 import numpy as np
 from matplotlib.figure import Figure
@@ -32,7 +35,11 @@ from pyfds_evac import (
 )
 
 SEEDS = [1, 2, 3, 4, 5]
-FIGURE = pathlib.Path("site/static/images/howto/egress_exit_curve.png")
+FIGURE = pathlib.Path(
+    sys.argv[1]
+    if len(sys.argv) > 1
+    else pathlib.Path(tempfile.mkdtemp()) / "egress_exit_curve.png"
+)
 COLOURS = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9"]  # Okabe-Ito
 LINESTYLES = ["-", "--", "-.", ":", (0, (5, 1, 1, 1, 1, 1))]
 
