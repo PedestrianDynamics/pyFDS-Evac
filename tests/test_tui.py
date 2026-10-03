@@ -1275,3 +1275,108 @@ def test_recent_records_the_run_scenario_not_the_form(workdir):
             assert entry["fds_dir"].endswith("iso_table21_coupled/fds")
 
     run(go())
+
+
+# --- #526: smoke on a fast fire run ---------------------------------------------
+
+T_JUNCTION_FDS = Path(
+    os.environ.get(
+        "T_JUNCTION_FDS",
+        Path.home()
+        / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
+        / "fds-evac-data"
+        / "t_junction"
+        / "fire_2MW_PVC",
+    )
+)
+
+
+def test_tui_asks_for_a_frame_per_sim_second_and_every_grid():
+    from pyfds_evac.tui.runner import FRAME_SIM_S, SMOKE_HZ, stream_options
+
+    options = stream_options(True, 2.0)
+    assert options["min_sim_s"] == FRAME_SIM_S == 1.0
+    assert options["smoke_hz"] == SMOKE_HZ >= 100
+    assert options["max_hz"] == 2.0
+
+
+async def _real_fire_run(pilot, app, scenario: Path, fds: Path) -> None:
+    await to_configure(pilot, app, scenario, fds)
+    app.goto(3)
+    await pilot.pause()
+    await pilot.press("ctrl+r")
+    await pilot.pause()
+    if app.current_run is None:
+        await pilot.press("r")
+    for _ in range(3000):
+        await asyncio.sleep(0.1)
+        if app.current_run is not None and app.current_run.done:
+            break
+    await pilot.pause()
+    assert app.current_run.result is not None, app.current_run.exited
+
+
+def _plan_shows_smoke(app, sim_time: float) -> tuple[float, float, int]:
+    """Scrub to *sim_time*; return (frame t, FDS frame t, smoke cells drawn)."""
+    from pyfds_evac.tui.planview import PlanView
+
+    run = app.current_run
+    times = [f.sim_time for f, _ in run.frames]
+    app.scrub_index = min(range(len(times)), key=lambda i: abs(times[i] - sim_time))
+    app.refresh_plans()
+    frame, grid = run.frames[app.scrub_index]
+    view = app.query_one("#res-planview", PlanView)
+    view.render()
+    upper, lower = view._bins(view._raster)
+    return frame.sim_time, grid.fds_time_s, int((upper > 0).sum() + (lower > 0).sum())
+
+
+@pytest.mark.slow
+@pytest.mark.external_data
+@pytest.mark.skipif(not T_JUNCTION_FDS.is_dir(), reason="t_junction FDS output absent")
+def test_fire_run_draws_smoke_and_replays_it(tmp_path):
+    """t_junction + fire_2MW_PVC through the real child: smoke after 10 s."""
+    work = tmp_path / "work"
+    shutil.copytree(ASSETS / "t_junction", work / "assets" / "t_junction")
+    (work / "fire").symlink_to(T_JUNCTION_FDS)
+
+    async def go():
+        app = EvacTui(cwd=work, inspector=lambda path: None, debounce=0)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _real_fire_run(
+                pilot, app, work / "assets" / "t_junction", work / "fire"
+            )
+            frames = app.current_run.frames
+            gaps = [
+                b.sim_time - a.sim_time for (a, _), (b, _) in zip(frames, frames[1:])
+            ]
+            assert max(gaps) <= 1.0 + 0.1
+            seen = []
+            for t in (5.0, 30.0, 120.0):
+                frame_t, fds_t, cells = _plan_shows_smoke(app, t)
+                seen.append((frame_t, fds_t, cells))
+            (t5, _f5, _c5), (t30, f30, c30), (t120, f120, c120) = seen
+            assert abs(t30 - 30.0) <= 1.0 and f30 > 0 and c30 > 0, seen
+            assert abs(t120 - 120.0) <= 1.0 and f120 > f30 and c120 >= c30, seen
+
+    run(go())
+
+
+@pytest.mark.slow
+def test_coupled_run_sends_grids_after_the_first_fds_frame(tmp_path):
+    """In-repo FDS output: frames every simulated second, grids at t > 0."""
+    from pyfds_evac.tui.runner import ProcessRunner
+
+    form = model.Form()
+    form.scenario = model.read_scenario(ASSETS / "iso_table21_coupled")
+    form.fds_dir = str(ASSETS / "iso_table21_coupled" / "fds")
+    base = form.run_folder("GRID", tmp_path)
+    got: list = []
+    runner = ProcessRunner()
+    runner.start(vars(form.namespace(form.output_paths(base))), base, got.append)
+    assert runner.join(300)
+    frames = [e for e in got if isinstance(e, events.FrameEvent)]
+    gaps = [b.sim_time - a.sim_time for a, b in zip(frames, frames[1:-1])]
+    assert frames and max(gaps) <= 1.0 + 0.1
+    grids = [f.smoke for f in frames if f.smoke is not None]
+    assert any(g.fds_time_s > 0 for g in grids)
