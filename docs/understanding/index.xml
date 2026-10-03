@@ -433,8 +433,15 @@ parameters are library-level.&lt;/li>
 for regulatory or design use. It is developed at Forschungszentrum Jülich
 (IAS-7); its maintainers are listed in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/.github/CODEOWNERS" target="_blank" rel="noopener">CODEOWNERS&lt;/a>.
-It has no release policy yet, so behaviour
-and defaults can change between commits. A result from pyFDS-Evac is a
+Releases follow
+&lt;a href="https://semver.org/spec/v2.0.0.html" target="_blank" rel="noopener">Semantic Versioning&lt;/a>: they are tagged
+&lt;code>vX.Y.Z&lt;/code> and published on
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/releases" target="_blank" rel="noopener">GitHub&lt;/a> and
+&lt;a href="https://pypi.org/project/pyfds-evac/" target="_blank" rel="noopener">PyPI&lt;/a>. While the major version is 0, a
+change to CLI flags, output columns, defaults, exit codes or the public API
+bumps the minor version. The
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md" target="_blank" rel="noopener">changelog&lt;/a>
+lists every notable change. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.&lt;/p>
 &lt;p>The evidence that exists is listed on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.
