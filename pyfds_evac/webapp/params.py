@@ -682,6 +682,7 @@ ARTIFACT_SUFFIXES = (
     "_fed_history.csv",
     "_route_history.csv",
     "_route_cost_history.csv",
+    "_exit_history.csv",
 )
 
 _DOT = (

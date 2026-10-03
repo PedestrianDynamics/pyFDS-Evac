@@ -2326,6 +2326,7 @@ _ARTIFACT_SPECS = [
     ("output_fed_history", "FED history CSV", "fed_history"),
     ("output_route_history", "Route switch CSV", "route_history"),
     ("output_route_cost_history", "Route cost CSV", "route_cost_history"),
+    ("output_exit_history", "Exit history CSV", "exit_history"),
     ("export_app_bundle", "Scenario bundle", None),
 ]
 
