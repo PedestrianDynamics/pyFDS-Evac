@@ -28,10 +28,12 @@ source .venv/bin/activate    # Windows: .venv\Scripts\activate
 pip install pyfds-evac
 ```
 
-For the optional [web GUI](web-gui.md), install the `gui` extra:
+For the optional [web GUI](web-gui.md), install the `gui` extra; for the
+optional terminal UI, the `tui` extra:
 
 ```bash
 pip install "pyfds-evac[gui]"
+pip install "pyfds-evac[tui]"
 ```
 
 You can then run:
@@ -41,6 +43,7 @@ You can then run:
 | `pyfds-evac` | Runs a scenario. Same flags, defaults, outputs and exit codes as `run.py` in the repository ([Usage](usage.md)). |
 | `python -m pyfds_evac` | The same command, run through the Python interpreter. |
 | `pyfds-evac-gui` | Starts the [web GUI](web-gui.md) on <http://127.0.0.1:5001>. Needs the `gui` extra. |
+| `pyfds-evac-tui` | Starts the terminal UI, for example on a remote machine over SSH. Reads examples from `./assets` and writes runs under `./results`. Needs the `tui` extra. |
 
 The package contains the `pyfds_evac` library with its command line and GUI.
 It contains no scenarios, examples or scripts: `assets/`, `examples/` and
