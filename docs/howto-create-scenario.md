@@ -51,7 +51,7 @@ In a source checkout, prefix the commands on this page with `uv run`, as in
 `uv run pyfds-evac` or `uv run python -m …`.
 
 {{< checkpoint title="The files load" >}}
-For a ZIP with one spawn area of 50 agents and one exit:
+For a ZIP built by hand in the app's export format, with one spawn area of 50 agents and one exit:
 
 ```text
 Initialization started.
@@ -89,7 +89,7 @@ hand in `config.json`:
 | `open_from_s`, `closed_after_s`, `capacity_agents_per_s` | `exits.<id>` | [Exits](scenario-json.md#exits-exitsid) |
 | `max_distance` | `sign` | [Signs](scenario-json.md#signs-sign) |
 | `familiarity`, `entrance` | `distributions.<id>.parameters` | [Spawn areas](scenario-json.md#spawn-areas-distributionsidparameters) |
-| `waypoints` | top level | [Top-level structure](scenario-json.md#top-level-structure) |
+| `waypoint_routing` | top level | [Journey splits](scenario-json.md#journey-splits-waypoint_routing) |
 
 FDS settings (`--fds-dir`, the slice height and the others) are command-line
 options and never go into the JSON; see [Usage](usage.md).
@@ -102,7 +102,8 @@ its own state. A re-export drops `routing`, `open_from_s`, `closed_after_s`,
 `capacity_agents_per_s` and the sign's `max_distance`. Finish the geometry,
 exits, spawn areas and journeys in the app, export, and only then add the
 pyFDS-Evac keys. Keep a note or a small script of your hand edits, so you
-can apply them again after the next export.
+can apply them again after the next export
+([jupedsim-web-community#182](https://github.com/PedestrianDynamics/jupedsim-web-community/issues/182)).
 {{< /callout >}}
 
 {{< details title="What the app writes, key by key" closed="true" >}}
@@ -138,14 +139,18 @@ one `journey_weights` entry. A spawn area split over several journeys is not
 converted.
 {{< /details >}}
 
-{{< details title="Agents that never move: older exports" closed="true" >}}
-Older app exports, such as the `bottleneck-zone` example of
-jupedsim-web-community, have journeys with `stages` but no `transitions`.
-With such a file the agents never move, no warning is printed, and
-`--print-summary` looks normal
+{{< details title="Agents that never move: journeys without transitions" closed="true" >}}
+A file whose `journeys` list `stages` but which has no `transitions` runs
+with agents that never move. No warning is printed, and `--print-summary`
+looks normal
 ([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504)).
-Export the scenario again from the current app, which writes `journeys_v2`,
-or add the `transitions` by hand.
+Older app exports have this shape, for example the `bottleneck-zone` example
+and 23 of the 55 scenario ZIPs of jupedsim-web-community, which also carry
+`journeys_v2`.
+
+If the file also has `journeys_v2`, set `"journeys": []` and
+`"transitions": []` so that `journeys_v2` is converted. Otherwise export the
+scenario again from the current app, or add the `transitions` by hand.
 {{< /details >}}
 
 ### Open a scenario in the app again
@@ -191,7 +196,7 @@ starting points:
 A ZIP keeps the layout of the repository: the scenario is in
 `assets/<name>/config.json` and `assets/<name>/geometry.wkt`. The steps
 below use the Quickstart scenario, from a source checkout or from the
-unpacked Quickstart ZIP.
+unpacked Quickstart ZIP (`cd pyfds-evac-quickstart` first).
 
 {{% steps %}}
 
@@ -260,13 +265,14 @@ Simulation finished in 80.11 s (3/3 evacuated).
 
 {{< details title="If the run stops with \"requested 20 agents but area can hold at most ~6\"" closed="true" >}}
 The spawn area of ISO-table21 is about 0.94 m × 1.81 m. With `"number": 20`
-the summary still reads `Agents: ~20`, but the run stops with exit status 1:
+the summary still reads `Agents: ~20`, but the run stops with exit status 1
+and a traceback ending in:
 
 ```text
 ValueError: Distribution 0: requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.
 ```
 
-The estimate is an upper bound. With `"number": 5` the run stops with:
+The estimate is an upper bound. With `"number": 5` the traceback ends in:
 
 ```text
 jupedsim.distributions.AgentNumberError: Only 4 of 5  could be placed. density: 2.35 p/m²
@@ -328,7 +334,11 @@ Simulation finished in 85.30 s (1/1 evacuated).
 
 When something lies outside, the set-up prints what and how much, and the
 run still finishes. This excerpt is from a scenario coupled to the FDS output
-of a different geometry:
+of a different geometry: the `bottleneck-zone` example of
+jupedsim-web-community (25 m × 10 m, 50 agents) with `transitions` added and
+its zone removed, run with `--fds-dir assets/iso_table21_coupled/fds` and
+`--allow-fds-horizon-hold`, because its `max_simulation_time` of 300 s
+exceeds the 150 s of FDS output:
 
 ```text
 WARNING:pyfds_evac.core.fds_coverage:FDS coverage: outside the FDS slices (SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear sight: walkable area 185.00 m² (90.2 %); exit jps-exits_0 18.00 m²; distribution jps-distributions_0 34.00 m²; sign jps-exits_0; edge jps-distributions_0 -> jps-exits_0 21.50 m.
@@ -399,7 +409,8 @@ all round. The deck has no `&VENT SURF_ID='OPEN'` at the exits; add openings
 where your fire scenario needs them.
 
 {{< details title="Options and the fire template" closed="true" >}}
-The cell size is set from the thinnest wall (default 0.25 m, at least
+The cell size is set from the smallest gap between vertex coordinates,
+which in a rectilinear plan is the thinnest wall (default 0.25 m, at least
 0.1 m); `--dx` sets it. `--z-max` sets the height (3 m), `--meshes NX NY`
 splits the domain into NX × NY meshes, and `--t-end` sets the end time
 (120 s).
