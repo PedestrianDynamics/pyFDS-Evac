@@ -2138,11 +2138,9 @@ finished FDS run (the &lt;code>.smv&lt;/code> file); &lt;code>$FDS&lt;/code> sta
 example the output of &lt;code>assets/t_junction/t_junction.fds&lt;/code>. The script calls
 &lt;code>run.py&lt;/code> with all diagnostic outputs enabled and then invokes each
 plotting script against the resulting CSVs / SQLite. It writes the vismap
-cache into &lt;code>&amp;lt;fds-dir&amp;gt;/vismap_cache.pkl&lt;/code>, so do not point it at a tracked
+cache into &lt;code>&amp;lt;fds-dir&amp;gt;/vismap_cache.npz&lt;/code>, so do not point it at a tracked
 directory under &lt;code>assets/&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313" target="_blank" rel="noopener">#313&lt;/a>). The usage line in the script itself still names
-&lt;code>assets/t_junction&lt;/code>, which has no FDS output
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312" target="_blank" rel="noopener">#312&lt;/a>).&lt;/p></description></item><item><title>Outputs</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</guid><description>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313" target="_blank" rel="noopener">#313&lt;/a>).&lt;/p></description></item><item><title>Outputs</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</guid><description>
 &lt;p>What a run writes, when each file is missing, and how to read the results
 without being misled. Every file below is written by &lt;code>run.py&lt;/code> (and the web
 GUI) only when you ask for it with its flag. From Python, the same data are
@@ -3949,7 +3947,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ff402325a606c0031f9ad7792d864fcc52cd641c">&lt;code>ff40232&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0c956a0687b2fbe6769526c6b58fb7c14abaafd9">&lt;code>0c956a0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3973,7 +3971,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ced4d37223c1171f702e5e3d3149cf2d5fbfbda44989290b5a939101c64eb4a9&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">af6479a550686e3281c06f0cf7292da8cab07a00903167469c61b75a9b46a49c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -3995,6 +3993,8 @@ title="Copy code"
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> json
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> pathlib
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sqlite3
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sys
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> tempfile
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> numpy &lt;span style="color:#66d9ef">as&lt;/span> np
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> matplotlib.figure &lt;span style="color:#f92672">import&lt;/span> Figure
@@ -4009,7 +4009,11 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>SEEDS &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">2&lt;/span>, &lt;span style="color:#ae81ff">3&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>]
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FIGURE &lt;span style="color:#f92672">=&lt;/span> pathlib&lt;span style="color:#f92672">.&lt;/span>Path(&lt;span style="color:#e6db74">&amp;#34;site/static/images/howto/egress_exit_curve.png&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FIGURE &lt;span style="color:#f92672">=&lt;/span> pathlib&lt;span style="color:#f92672">.&lt;/span>Path(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> sys&lt;span style="color:#f92672">.&lt;/span>argv[&lt;span style="color:#ae81ff">1&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">if&lt;/span> len(sys&lt;span style="color:#f92672">.&lt;/span>argv) &lt;span style="color:#f92672">&amp;gt;&lt;/span> &lt;span style="color:#ae81ff">1&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#66d9ef">else&lt;/span> pathlib&lt;span style="color:#f92672">.&lt;/span>Path(tempfile&lt;span style="color:#f92672">.&lt;/span>mkdtemp()) &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#e6db74">&amp;#34;egress_exit_curve.png&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>COLOURS &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;#0072B2&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#E69F00&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#009E73&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#CC79A7&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;#56B4E9&amp;#34;&lt;/span>] &lt;span style="color:#75715e"># Okabe-Ito&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>LINESTYLES &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;-&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;--&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;-.&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;:&amp;#34;&lt;/span>, (&lt;span style="color:#ae81ff">0&lt;/span>, (&lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>))]&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -4193,17 +4197,17 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The script writes the figure into &lt;code>site/static/images/howto/&lt;/code>, a tracked file
-of this site, so running it changes your checkout; restore it with
-&lt;code>git checkout -- site/static/images/howto/egress_exit_curve.png&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312" target="_blank" rel="noopener">#312&lt;/a>).&lt;/p>
+&lt;p>The script writes the figure into a new temporary directory and prints its
+path. To write it elsewhere, pass the path:
+&lt;code>uv run python examples/rset_ensemble.py egress_exit_curve.png&lt;/code>.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/howto/egress_exit_curve.png" alt="Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 34 s to 30 between 41 and 46 s, and a grey band spans the range of last exit times" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Cumulative number of agents evacuated [-] against time since the start of the
 simulation [s], &lt;code>assets/fic_vs_fed_speed&lt;/code>, N = 30 agents, clear air, no
 pre-movement. One line per seed, each with its own colour and line style,
 n = 5 seeds. The grey band spans the last exit time over the seeds, from the
 earliest to the latest. Exit times are read from the
-trajectory at 0.1 s resolution. Regenerated by &lt;code>examples/rset_ensemble.py&lt;/code>.&lt;/em>&lt;/p>
+trajectory at 0.1 s resolution. Regenerated by
+&lt;code>uv run python examples/rset_ensemble.py site/static/images/howto/egress_exit_curve.png&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>Part 2: an incapacitated agent and &lt;code>evacuation_time&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="part-2-an-incapacitated-agent-and-evacuation_time">&lt;/span>
 &lt;a href="#part-2-an-incapacitated-agent-and-evacuation_time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>No tracked FDS case gives incapacitations and exits in the same run within a
 few seconds of runtime. Part 2 therefore uses the ISO 20414 Test 19 room of the
