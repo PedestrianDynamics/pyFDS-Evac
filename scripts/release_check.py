@@ -510,11 +510,18 @@ def _fresh_venv(venv: Path, python: str, spec: str, env: dict, log: Path):
     return run_shell(script, venv.parent, env, 1800, log)
 
 
+def _install_log(args, page: str, step: str) -> Path:
+    return args.logs / f"install_{_slug(page)}__{_slug(step)}.log"
+
+
+def _slug(text: str) -> str:
+    return re.sub(r"[^A-Za-z0-9.]+", "_", text).strip("_")
+
+
 def _timed(page: str, cmd: str, cwd, env, args) -> None:
     """Time the first call of ``cmd`` after the install; FAIL above the limit."""
     step, limit = f"first {cmd}", args.limit
-    log = args.logs / f"install_{page}__{re.sub(r'[^A-Za-z0-9]+', '_', step)}.log"
-    rc, output, secs = run_shell(cmd, cwd, env, 300, log)
+    rc, output, secs = run_shell(cmd, cwd, env, 300, _install_log(args, page, step))
     timing = f"{secs:.2f} s (limit {limit:.1f} s, cold)"
     if rc != 0:
         status, detail = "FAIL", f"exit {rc}: {_last_line(output)}; {timing}"
@@ -524,9 +531,7 @@ def _timed(page: str, cmd: str, cwd, env, args) -> None:
 
 
 def _check(page: str, step: dict, cwd, env, args) -> str:
-    log = (
-        args.logs / f"install_{page}__{re.sub(r'[^A-Za-z0-9]+', '_', step['name'])}.log"
-    )
+    log = _install_log(args, page, step["name"])
     timeout = float(step.get("timeout", 300))
     rc, output, secs = run_shell(step["run"], cwd, env, timeout, log)
     status, detail = judge(step, rc, output, secs, timeout)
@@ -567,7 +572,7 @@ def _wait_for_page(proc: subprocess.Popen, url: str, timeout: float):
 def _gui_serves(page: str, bin_dir: Path, cwd: Path, env: dict, args) -> None:
     """Start ``pyfds-evac-gui``, wait for ``GET /`` to return 200, stop it."""
     port = _free_port()
-    log = args.logs / f"install_{page}__gui_serve.log"
+    log = _install_log(args, page, "gui serve")
     start = time.monotonic()
     with log.open("w") as out:
         proc = subprocess.Popen(
@@ -593,14 +598,14 @@ def _gui_serves(page: str, bin_dir: Path, cwd: Path, env: dict, args) -> None:
 def install_one(python: str, args, with_gui: bool) -> None:
     """Fresh venv for ``python``; install the wheel and check the commands."""
     page = f"Python {python}" if with_gui else f"Python {python}, no gui extra"
-    work = args.work / ("install-" + re.sub(r"[^A-Za-z0-9.]+", "-", page))
+    work = args.work / f"install_{_slug(page)}"
     shutil.rmtree(work, ignore_errors=True)
     work.mkdir(parents=True)
     env = _install_env(work / "home")
     venv = work / "venv"
     spec = f"{args.wheel}[gui]" if with_gui else str(args.wheel)
     label = "pip install wheel[gui]" if with_gui else "pip install wheel"
-    log = args.logs / f"install_{page.replace(' ', '_').replace(',', '')}__pip.log"
+    log = _install_log(args, page, "pip install")
     rc, output, secs = _fresh_venv(venv, python, spec, env, log)
     if rc != 0:
         detail = f"exit {rc}: {_last_line(output)}"
@@ -611,7 +616,6 @@ def install_one(python: str, args, with_gui: bool) -> None:
     env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
     cwd = work / "run"
     cwd.mkdir()
-    name = page.replace(" ", "_").replace(",", "")
     if not with_gui:
         step = {
             "name": "pyfds-evac-gui without the extra",
@@ -619,12 +623,12 @@ def install_one(python: str, args, with_gui: bool) -> None:
             "exit_ok": [1],
             "expect": [GUI_HINT],
         }
-        _check(name, step, cwd, env, args)
+        _check(page, step, cwd, env, args)
         return
     # The first calls after the install, before anything else imports the
     # package: these are the times a new user waits.
     for command in ("pyfds-evac --help", "pyfds-evac-gui --help"):
-        _timed(name, command, cwd, env, args)
+        _timed(page, command, cwd, env, args)
     steps = [
         {"name": "pip check", "run": "python -m pip check"},
         {
@@ -636,11 +640,12 @@ def install_one(python: str, args, with_gui: bool) -> None:
         {
             "name": "python -m pyfds_evac --help",
             "run": "python -m pyfds_evac --help",
-            "expect": ["usage: pyfds-evac --scenario PATH"],
+            # The program name is __main__.py before Python 3.14.
+            "expect": ["--scenario PATH [--fds-dir DIR] [options]"],
         },
     ]
     for step in steps:
-        _check(name, step, cwd, env, args)
+        _check(page, step, cwd, env, args)
     shutil.copytree(args.repo / "assets" / SCENARIO, cwd / "assets" / SCENARIO)
     scenario = {
         "name": f"pyfds-evac --scenario assets/{SCENARIO}",
@@ -648,8 +653,8 @@ def install_one(python: str, args, with_gui: bool) -> None:
         "expect": SCENARIO_EXPECT,
         "timeout": 900,
     }
-    _check(name, scenario, cwd, env, args)
-    _gui_serves(name, bin_dir, cwd, env, args)
+    _check(page, scenario, cwd, env, args)
+    _gui_serves(page, bin_dir, cwd, env, args)
 
 
 def cmd_install(args) -> int:
