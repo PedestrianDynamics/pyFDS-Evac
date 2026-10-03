@@ -1214,3 +1214,23 @@ time.sleep(600)
         os.kill(child, signal.SIGKILL)
         raise AssertionError("the child kept running after the TUI was killed")
     assert list(tmp.glob("pyfds-evac-run-*")) == []
+
+
+def test_events_from_the_reader_thread_run_in_the_app_context(workdir):
+    """Events posted from another thread may start timers; quitting is clean."""
+    import threading
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            sender = threading.Thread(
+                target=app._post, args=(Progress(1, 6, 5.0, 0.5, 16, 0, 0),)
+            )
+            sender.start()
+            sender.join()
+            await pilot.pause(0.3)
+            assert app.current_run.progress.sim_time == 5.0
+            await pilot.pause()
+
+    run(go())

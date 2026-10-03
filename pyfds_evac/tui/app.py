@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import contextvars
 import os
 import time
 from collections.abc import Callable, Iterable
@@ -459,6 +460,7 @@ class EvacTui(App[None]):
         self._cfg_timer: Any = None
         self.warned_confirmed = False
         self._ui_loop: asyncio.AbstractEventLoop | None = None
+        self._ui_context = contextvars.copy_context()
         self._render_timer: Any = None
         super().__init__()
 
@@ -478,6 +480,8 @@ class EvacTui(App[None]):
 
     def on_mount(self) -> None:
         self._ui_loop = asyncio.get_running_loop()
+        # Textual's context (the active app), for callbacks from the reader.
+        self._ui_context = contextvars.copy_context()
         self.register_theme(EVAC_DARK)
         self.theme = self.start_theme
         self._fill_recent()
@@ -1385,7 +1389,9 @@ class EvacTui(App[None]):
         if loop is None or loop.is_closed():
             return
         with contextlib.suppress(RuntimeError):  # the app has ended
-            loop.call_soon_threadsafe(self.on_run_event, event)
+            loop.call_soon_threadsafe(
+                self.on_run_event, event, context=self._ui_context
+            )
 
     def on_run_event(self, event: Any) -> None:
         run = self.current_run
