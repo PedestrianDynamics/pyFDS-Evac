@@ -64,9 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   on its first import: a regular expression in its inline JavaScript was
   not escaped for Python. The page sends the same JavaScript (#476).
 - The custom replay speed of the GUI's trajectory viewer shows a decimal
-  point on a host with a comma region (`1.5`, not `1,5`). A value with a
-  comma is marked invalid and no longer applies as its integer part
-  (#493).
+  point on a host with a comma region (`1.5`, not `1,5`). It takes digits
+  with a point, at least 0.05; any other value (`1,5`, `2x`, `-1`) is not
+  applied, and a message under the controls says so and names the speed
+  that is kept. Before, `1,5` applied as 1 (#493).
 
 ## [0.2.4] - 2026-10-03
 
