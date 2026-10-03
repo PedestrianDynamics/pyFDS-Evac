@@ -945,6 +945,10 @@ def test_normal_run_still_builds_the_viewer(client):
     assert r.status_code == 200
     assert manager.results_only is False
     _stream_until_terminal(client)
+    # The viewer's custom speed is a text input, not type=number (#493).
+    panel = client.get("/panel").text
+    assert 'id="traj-speed-custom" type="text"' in panel
+    assert 'id="traj-speed-msg"' in panel
     _drop_temp_trajectory()
 
 
@@ -2441,3 +2445,27 @@ def test_webapp_sources_compile_without_escape_warnings():
             compile(path.read_text(encoding="utf-8"), str(path), "exec")
     # The emitted regex for an absolute output folder is unchanged.
     assert r"!/^([\/~]|[A-Za-z]:\/)/.test(typed)" in _AUTOFILL_JS
+
+
+def test_trajectory_custom_speed_is_a_decimal_text_input():
+    """The custom speed shows a point, not the OS region's comma (#493)."""
+    from pyfds_evac.webapp import trajviz
+
+    html = trajviz._SPEED_CUSTOM_INPUT
+    assert 'id="traj-speed-custom"' in html
+    assert 'type="text"' in html
+    assert 'type="number"' not in html
+    # A comma-region decimal keypad may have no point key.
+    assert "inputmode" not in html
+    # parseFloat("1,5") is 1; Number("1,5") is NaN and is not applied.
+    assert "parseFloat(customInput.value)" not in trajviz._JS
+    assert r'pattern="[0-9]*\.?[0-9]+"' in html
+    pattern = re.compile(r"^(?:[0-9]*\.?[0-9]+)$")
+    assert all(pattern.match(v) for v in ("1.5", ".5", "2", "0.05"))
+    assert not any(pattern.match(v) for v in ("1,5", "2x", "-1", "0x10", "1e3"))
+    assert "customInput.pattern" in trajviz._JS
+    # A value that is not applied says so in text, not by colour alone.
+    assert 'id="traj-speed-msg"' in trajviz._SPEED_MSG
+    assert 'aria-live="polite"' in trajviz._SPEED_MSG
+    assert "setAttribute('aria-invalid', 'true')" in trajviz._JS
+    assert "v >= SPEED_MIN" in trajviz._JS and "SPEED_MIN = 0.05" in trajviz._JS

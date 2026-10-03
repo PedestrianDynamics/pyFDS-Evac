@@ -719,7 +719,10 @@ html[data-theme="light"] .cmode.active { color: #b54708; }
   background: var(--surface-input); color: hsl(var(--foreground));
 }
 .speed-custom.active { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember) inset; }
-.speed-custom::-webkit-inner-spin-button, .speed-custom::-webkit-outer-spin-button { margin-left: .2rem; }
+.speed-custom[aria-invalid="true"] { border-color: var(--danger-ink); }
+/* Its own row under the controls; empty, it cancels the row gap. */
+.speed-msg { flex: 1 0 100%; font-family: var(--font-mono); font-size: .68rem; color: var(--danger-ink); }
+.speed-msg:empty { margin-top: -.5rem; }
 
 /* ---- console ---- */
 .console-box {
