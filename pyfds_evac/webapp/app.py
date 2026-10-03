@@ -46,6 +46,7 @@ from starlette.requests import Request
 from pyfds_evac.cli import apply_outputs
 from pyfds_evac.config.parameters import default
 from pyfds_evac.core import load_scenario
+from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
 from . import docs, params, plots, pyexport, theme, trajviz
@@ -2314,10 +2315,13 @@ def _fmt_size(path: Path) -> str:
     return "?"
 
 
-# Every artifact apply_outputs can write: the opts attribute holding its path,
-# a label, and the RunResult field it is gated on (None = always written).
+# Every artifact apply_outputs can write: the opts attribute holding its path
+# (_MANIFEST: the manifest beside the trajectory), a label, and the RunResult
+# field it is gated on (None = always written).
+_MANIFEST = "manifest"
 _ARTIFACT_SPECS = [
     ("output_sqlite", "Trajectory SQLite", "sqlite_file"),
+    (_MANIFEST, "Run manifest", "sqlite_file"),
     ("output_smoke_history", "Smoke history CSV", "smoke_history"),
     ("output_fed_history", "FED history CSV", "fed_history"),
     ("output_route_history", "Route switch CSV", "route_history"),
@@ -2346,13 +2350,23 @@ def _missing_reason(field: str, opts) -> str:
     return "not produced by this run"
 
 
+def _artifact_path(opts, attr: str) -> Path | None:
+    """Where apply_outputs writes the artifact named by ``attr``, if anywhere."""
+    if opts is None:
+        return None
+    if attr == _MANIFEST:
+        sqlite = getattr(opts, "output_sqlite", None)
+        return manifest_path_for(Path(sqlite).resolve()) if sqlite else None
+    raw = getattr(opts, attr, None)
+    return Path(raw) if raw else None
+
+
 def _artifact_rows(result, opts) -> Div:
     folder = _results_folder(vars(opts)) if opts is not None else None
     rows = [_folder_header(folder)] if folder is not None else []
     for attr, label, field in _ARTIFACT_SPECS:
-        raw = getattr(opts, attr, None) if opts is not None else None
         produced = field is None or getattr(result, field, None) is not None
-        path = Path(raw) if raw else None
+        path = _artifact_path(opts, attr)
         exists = bool(path and path.exists())
 
         if exists:
