@@ -1138,7 +1138,13 @@ def test_a20_tui_run_equals_cli(tmp_path):
             ).fetchall()
 
     assert rows(ns.output_sqlite) == rows(cli_ns.output_sqlite)
-    for dest in ("output_smoke_history", "output_fed_history", "output_route_history"):
+    for dest in (
+        "output_smoke_history",
+        "output_fed_history",
+        "output_route_history",
+        "output_exit_history",
+        "output_route_cost_history",
+    ):
         tui_file, cli_file = Path(getattr(ns, dest)), Path(getattr(cli_ns, dest))
         assert tui_file.exists() == cli_file.exists()
         if tui_file.exists():
