@@ -1044,13 +1044,45 @@ def test_fds_search_is_bounded(tmp_path):
 # --------------------------------------------------
 
 
+def pin_wall(run, seconds: int) -> None:
+    """Fix the wall time a snapshot shows (#553).
+
+    ``started`` comes from time.monotonic(); ``(started + 44) - started``
+    rounds to 43.999… for some start values (about 0.4 % of them shortly
+    after boot), and the truncating clock then shows 0:43. Both ends are
+    set to exact values instead.
+    """
+    run.started, run.ended = 1000.0, 1000.0 + seconds
+
+
 def _snap_app(workdir, theme="evac-dark"):
     return make_app(workdir, theme=theme)
 
 
+def steady(before=None):
+    """Run *before*, then stop the cursors blinking (#553).
+
+    A focused Input toggles its cursor every 0.5 s, so on a slow runner
+    the capture can fall into the hidden phase. A cursor that does not
+    blink stays visible.
+    """
+
+    async def run(pilot):
+        if before is not None:
+            await before(pilot)
+        for widget in pilot.app.screen.query("*"):
+            if hasattr(widget, "cursor_blink"):
+                widget.cursor_blink = False
+        await pilot.pause()
+
+    return run
+
+
 @pytest.mark.parametrize("theme", ["evac-dark", "solarized-light"])
 def test_snapshot_scenario(workdir, snap_compare, theme):
-    assert snap_compare(_snap_app(workdir, theme), terminal_size=(80, 24))
+    assert snap_compare(
+        _snap_app(workdir, theme), terminal_size=(80, 24), run_before=steady()
+    )
 
 
 @pytest.mark.parametrize("theme", ["evac-dark", "solarized-light"])
@@ -1059,7 +1091,7 @@ def test_snapshot_configure(workdir, snap_compare, theme):
         await to_configure(pilot, pilot.app, workdir / "assets" / "ISO-table21", None)
 
     assert snap_compare(
-        _snap_app(workdir, theme), terminal_size=(80, 24), run_before=before
+        _snap_app(workdir, theme), terminal_size=(80, 24), run_before=steady(before)
     )
 
 
@@ -1076,13 +1108,13 @@ def test_snapshot_run_with_plan(workdir, snap_compare, monkeypatch, theme):
         await pilot.press("ctrl+r")
         await pilot.pause()
         replay(app)
-        app.current_run.ended = app.current_run.started + 44  # fixed wall time
+        pin_wall(app.current_run, 44)
         await pilot.pause(0.2)
         app.render_run()
         await pilot.pause()
 
     app = _snap_app(workdir, "evac-dark" if theme == "NO_COLOR" else theme)
-    assert snap_compare(app, terminal_size=(120, 35), run_before=before)
+    assert snap_compare(app, terminal_size=(120, 35), run_before=steady(before))
 
 
 def test_snapshot_results(workdir, snap_compare):
@@ -1094,19 +1126,36 @@ def test_snapshot_results(workdir, snap_compare):
         await pilot.press("ctrl+r")
         await pilot.pause()
         replay(app, result_event(events.STATUS_INCOMPLETE))
-        app.current_run.ended = app.current_run.started + 72
+        pin_wall(app.current_run, 72)
         app.render_results()
         await pilot.pause()
 
-    assert snap_compare(_snap_app(workdir), terminal_size=(80, 24), run_before=before)
+    assert snap_compare(
+        _snap_app(workdir), terminal_size=(80, 24), run_before=steady(before)
+    )
 
 
 # --- A20 CLI <-> TUI equivalence (slow, real child process) -----------------------------------
 
 
 @pytest.mark.slow
-def test_a20_tui_run_equals_cli(tmp_path):
+def test_a20_tui_run_equals_cli(tmp_path, monkeypatch):
     from pyfds_evac.tui.runner import ProcessRunner
+
+    # A temp root of its own: other runs sharing the system temp dir
+    # (parallel suites, a TUI) do not affect the clean-up check (#551).
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    monkeypatch.setenv("TMPDIR", str(tmp))
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp))
+    made: list[str] = []
+    mkdtemp = tempfile.mkdtemp
+
+    def recording_mkdtemp(*args, **kwargs):
+        made.append(mkdtemp(*args, **kwargs))
+        return made[-1]
+
+    monkeypatch.setattr(tempfile, "mkdtemp", recording_mkdtemp)
 
     form = model.Form()
     form.scenario = model.read_scenario(ASSETS / "ISO-table21")
@@ -1114,7 +1163,6 @@ def test_a20_tui_run_equals_cli(tmp_path):
     base = form.run_folder("TUI", tmp_path)
     ns = form.namespace(form.output_paths(base))
     got: list = []
-    before_tmp = sorted(Path(tempfile.gettempdir()).glob("pyfds-evac-run-*"))
     runner = ProcessRunner()
     runner.start(vars(ns), base, got.append)
     assert runner.join(300)
@@ -1138,13 +1186,21 @@ def test_a20_tui_run_equals_cli(tmp_path):
             ).fetchall()
 
     assert rows(ns.output_sqlite) == rows(cli_ns.output_sqlite)
-    for dest in ("output_smoke_history", "output_fed_history", "output_route_history"):
+    for dest in (
+        "output_smoke_history",
+        "output_fed_history",
+        "output_route_history",
+        "output_route_cost_history",
+    ):
         tui_file, cli_file = Path(getattr(ns, dest)), Path(getattr(cli_ns, dest))
         assert tui_file.exists() == cli_file.exists()
         if tui_file.exists():
             assert tui_file.read_bytes() == cli_file.read_bytes()
-    # The child's private temporary folder is gone (#331).
-    assert sorted(Path(tempfile.gettempdir()).glob("pyfds-evac-run-*")) == before_tmp
+    # The child's private temporary folder was made here and is gone (#331).
+    run_tmp = [Path(p) for p in made if Path(p).name.startswith("pyfds-evac-run-")]
+    assert len(run_tmp) == 1 and run_tmp[0].parent == tmp, made
+    assert not run_tmp[0].exists()
+    assert list(tmp.glob("pyfds-evac-run-*")) == []
     assert (Path(base) / "child.log").exists()
 
 
@@ -1180,7 +1236,9 @@ def test_sweep_removes_folders_of_dead_tui_processes(tmp_path):
 @pytest.mark.slow
 def test_child_stops_and_cleans_up_when_the_tui_is_killed(tmp_path):
     """A killed TUI (SIGKILL, terminal gone) leaves no run or temp folder."""
+    import queue
     import signal
+    import threading
 
     tmp = tmp_path / "tmp"
     tmp.mkdir()
@@ -1190,9 +1248,14 @@ def test_child_stops_and_cleans_up_when_the_tui_is_killed(tmp_path):
     values = vars(form.namespace(form.output_paths(base)))
     parent = f"""
 import os, sys, time
-from pyfds_evac.tui.runner import ProcessRunner
+from pyfds_evac.tui.runner import Progress, ProcessRunner
+seen = []
+def post(event):
+    if isinstance(event, Progress) and not seen:
+        seen.append(event)
+        print("in the run", flush=True)
 runner = ProcessRunner()
-runner.start({dict(values)!r}, {base!r}, lambda e: None)
+runner.start({dict(values)!r}, {base!r}, post)
 print(runner._proc.pid, flush=True)
 time.sleep(600)
 """
@@ -1201,10 +1264,19 @@ time.sleep(600)
         [sys.executable, "-c", parent], stdout=subprocess.PIPE, text=True, env=env
     )
     child = int(proc.stdout.readline())
-    time.sleep(4)  # inside the run
-    proc.send_signal(signal.SIGKILL)
-    proc.wait()
-    for _ in range(100):
+    # Kill the TUI once the child reports progress (it is then inside the
+    # run), not after a fixed sleep: under load the child may still be
+    # starting after a few seconds.
+    lines: queue.Queue[str] = queue.Queue()
+    threading.Thread(
+        target=lambda: [lines.put(line) for line in proc.stdout], daemon=True
+    ).start()
+    try:
+        assert lines.get(timeout=120).strip() == "in the run"
+    finally:
+        proc.send_signal(signal.SIGKILL)
+        proc.wait()
+    for _ in range(300):
         try:
             os.kill(child, 0)
         except ProcessLookupError:

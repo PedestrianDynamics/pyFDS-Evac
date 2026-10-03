@@ -41,6 +41,15 @@ jobs:
       - name: Run the test suite with coverage
         if: env.COVERAGE_LEG == 'true'
         run: uv run pytest -q -m "not external_data" --cov --cov-report=xml --cov-report=term
+      # The Textual snapshot report shows expected and actual screens of
+      # a failed SVG snapshot side by side.
+      - name: Upload the snapshot report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapshot-report-${{ matrix.python-version }}
+          path: snapshot_report.html
+          if-no-files-found: ignore
       # Pull requests from forks get no OIDC token; they upload tokenless,
       # which Codecov accepts for public repositories. An upload failure
       # never fails the job.
