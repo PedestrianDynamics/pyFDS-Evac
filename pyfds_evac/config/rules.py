@@ -531,12 +531,13 @@ def inactive_settings(opts: Any, mechanisms: Mechanisms) -> list[Inactive]:
 
 # --- values checked when a model is built (B) ------------------------------
 
+# Most specific key first: "Heat layer emissivity ..." also contains "emissivity".
 _HEAT_VALUE_OPTIONS = (
+    ("layer emissivity", "heat_layer_emissivity"),
     ("emissivity", "heat_emissivity"),
     ("convective coefficient", "heat_convective_coefficient"),
     ("Skin temperature", "heat_skin_temperature"),
     ("view factor", "heat_view_factor"),
-    ("layer emissivity", "heat_layer_emissivity"),
 )
 
 
@@ -545,7 +546,9 @@ def heat_value_issue(opts: Any) -> ConfigIssue | None:
 
     Calls the same checks the constructor calls, in its order, so the
     message is the one the run raises. Only meaningful when a heat model
-    is built (after D17 and the layer field passed).
+    is built (after D17 and the layer field passed). When D19 reports the
+    layer regime, the layer presence and method checks are skipped (D19
+    owns them); the range checks of the layer values still run.
     """
     from pyfds_evac.core import fed
 
@@ -563,8 +566,10 @@ def heat_value_issue(opts: Any) -> ConfigIssue | None:
         )
         # run_config passes the layer values only in the layer regime.
         layer = regime == "layer"
+        # A non-layer regime runs only the range checks of the layer values.
+        owned_by_d19 = _check_heat_layer(opts) is not None
         fed._check_layer_parameters(
-            regime,
+            "smoke" if owned_by_d19 else regime,
             method,
             object() if layer else None,
             option(opts, "heat_view_factor") if layer else None,

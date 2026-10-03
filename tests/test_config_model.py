@@ -690,6 +690,21 @@ def test_visibility_value_errors_are_predicted(argv, option):
             ],
             "heat_view_factor",
         ),
+        (
+            [
+                "--heat-fed-method",
+                "total-flux",
+                "--heat-regime",
+                "layer",
+                "--heat-layer-height",
+                "2",
+                "--heat-view-factor",
+                "1",
+                "--heat-layer-emissivity",
+                "2",
+            ],
+            "heat_layer_emissivity",
+        ),
     ],
 )
 def test_heat_value_errors_are_predicted(heat_scenario, argv, option):
@@ -710,6 +725,108 @@ def test_heat_value_errors_are_predicted(heat_scenario, argv, option):
     assert [(e.option, e.message) for e in cfg.errors] == [(option, str(raised.value))]
     assert option not in {i.option for i in cfg.inactive}
     assert not any(option.replace("_", "-") in w for w in cfg.warnings)
+
+
+_D19_FLAG = {
+    "heat_regime": "--heat-fed-method total-flux",
+    "heat_layer_height": "--heat-layer-height",
+    "heat_view_factor": "--heat-view-factor",
+    "heat_layer_emissivity": "--heat-layer-emissivity",
+}
+
+
+def _d19(dest: str) -> tuple[str, str, str]:
+    """The D19 issue for ``dest``, worded as validate_opts words it."""
+    return ("D19", dest, f"--heat-regime layer needs {_D19_FLAG[dest]}")
+
+
+_TOTAL_FLUX_LAYER = ["--heat-fed-method", "total-flux", "--heat-regime", "layer"]
+_HEIGHT = ["--heat-layer-height", "2"]
+_LAYER_EMISSIVITY_RANGE = "Heat layer emissivity must be in [0, 1], got 1.5"
+_VIEW_FACTOR_RANGE = "Heat view factor must be in [0, 1], got 1.5"
+
+
+@pytest.mark.parametrize(
+    ("argv", "expected"),
+    [
+        pytest.param(_TOTAL_FLUX_LAYER, [_d19("heat_layer_height")], id="none"),
+        pytest.param(
+            [*_TOTAL_FLUX_LAYER, *_HEIGHT], [_d19("heat_view_factor")], id="height"
+        ),
+        pytest.param(
+            [*_TOTAL_FLUX_LAYER, *_HEIGHT, "--heat-view-factor", "0.5"],
+            [_d19("heat_layer_emissivity")],
+            id="height-view-factor",
+        ),
+        pytest.param(
+            [*_TOTAL_FLUX_LAYER, *_HEIGHT, "--heat-layer-emissivity", "1.5"],
+            [
+                _d19("heat_view_factor"),
+                ("B", "heat_layer_emissivity", _LAYER_EMISSIVITY_RANGE),
+            ],
+            id="height-layer-emissivity-out-of-range",
+        ),
+        pytest.param(
+            [*_TOTAL_FLUX_LAYER, *_HEIGHT, "--heat-view-factor", "1.5"],
+            [
+                _d19("heat_layer_emissivity"),
+                ("B", "heat_view_factor", _VIEW_FACTOR_RANGE),
+            ],
+            id="height-view-factor-out-of-range",
+        ),
+        pytest.param(
+            [
+                *_TOTAL_FLUX_LAYER,
+                *_HEIGHT,
+                "--heat-view-factor",
+                "0.5",
+                "--heat-layer-emissivity",
+                "1.5",
+            ],
+            [("B", "heat_layer_emissivity", _LAYER_EMISSIVITY_RANGE)],
+            id="all-layer-emissivity-out-of-range",
+        ),
+        pytest.param(
+            ["--heat-fed-method", "convective", "--heat-regime", "layer"],
+            [_d19("heat_regime")],
+            id="convective",
+        ),
+        pytest.param(
+            [*_TOTAL_FLUX_LAYER, "--heat-emissivity", "1.5"],
+            [
+                _d19("heat_layer_height"),
+                ("B", "heat_emissivity", "Heat emissivity must be in [0, 1], got 1.5"),
+            ],
+            id="gas-emissivity-out-of-range-height-missing",
+        ),
+        pytest.param(
+            [
+                *_TOTAL_FLUX_LAYER,
+                *_HEIGHT,
+                "--heat-view-factor",
+                "0.5",
+                "--heat-layer-emissivity",
+                "0.9",
+            ],
+            [],
+            id="all-valid",
+        ),
+    ],
+)
+def test_layer_errors_are_reported_once(heat_scenario, argv, expected):
+    """#522: D19 owns layer presence and method; B only values, attributed."""
+    opts = _parse(
+        "--scenario",
+        "x",
+        "--fds-dir",
+        HEAT_ONLY_FDS,
+        "--enable-heat-fed",
+        "--allow-fds-horizon-hold",
+        "--no-visibility",
+        *argv,
+    )
+    cfg = effective_configuration(opts, heat_scenario)
+    assert [(e.rule, e.option, e.message) for e in cfg.errors] == expected
 
 
 def test_layer_value_outside_the_layer_regime_has_no_effect():
