@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-10-03
+
 ### Added
 
 - `scripts/release_check.sh` has an install gate, in `--quick` and
@@ -28,6 +30,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   loads when FDS data is read. On macOS the first numpy import after an
   install took up to 1.2 s and made the 1 s limit of the install gate
   fail now and then (#503).
+
+### Documentation
+
+- New how-to "Create a scenario": the three ways to get `config.json` and
+  `geometry.wkt` (JuPedSim Web, an example download, matching the FDS
+  deck), the keys to add by hand after an export from the app, and how to
+  check a scenario before a run (#506, #512). Scenario JSON documents
+  `waypoint_routing`, `transitions` and `journeys_v2`.
+- `CONTRIBUTING.md` is one screen: issue, fork, pull request. Setup, CI,
+  docs build, commit style and versioning moved to a new Development
+  page. The Limitations page states the release policy (SemVer) (#511,
+  closes #502).
 
 ## [0.2.3] - 2026-10-03
 
