@@ -17,6 +17,8 @@ Three things the heat pages must state:
 import ast
 import importlib.util
 import re
+import subprocess
+import sys
 from functools import lru_cache
 from pathlib import Path
 
@@ -79,10 +81,23 @@ def _pages() -> list[Path]:
 
 @lru_cache(maxsize=1)
 def _repo_sources() -> tuple[Path, ...]:
+    """Python files git sees in the checkout: tracked or untracked, not ignored.
+
+    Asking git, not walking the tree, leaves out nested git worktrees and
+    clones (e.g. ``.worktrees/``), whose copies of a file would match too.
+    """
+    listed = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert listed.returncode == 0, f"git ls-files in {ROOT}: {listed.stderr}"
+    rel = sorted({r for r in listed.stdout.split("\0") if r.endswith(".py")})
     return tuple(
-        p
-        for p in ROOT.rglob("*.py")
-        if not _NOT_SOURCE & set(p.relative_to(ROOT).parts[:-1])
+        ROOT / r
+        for r in rel
+        if not _NOT_SOURCE & set(Path(r).parts[:-1]) and (ROOT / r).is_file()
     )
 
 
@@ -166,6 +181,43 @@ def test_cited_symbol_exists_in_cited_file(cited_file, symbol):
     if path is None:
         pytest.skip(f"{cited_file}: package not installed")
     assert _is_defined(symbol, path), f"`{symbol}` is not defined in {cited_file}"
+
+
+def _git(*args: str, cwd: Path) -> None:
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=t",
+            "-c",
+            "user.email=t@t",
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        cwd=cwd,
+        check=True,
+        capture_output=True,
+    )
+
+
+def test_resolve_ignores_nested_git_worktree(tmp_path, monkeypatch):
+    """A worktree inside the checkout does not add a second match (#304)."""
+    _git("init", "-q", cwd=tmp_path)
+    (tmp_path / "run.py").write_text("def _build_parser():\n    pass\n")
+    _git("add", "run.py", cwd=tmp_path)
+    _git("commit", "-q", "-m", "init", cwd=tmp_path)
+    _git("worktree", "add", "-q", ".worktrees/feat", cwd=tmp_path)
+    assert (tmp_path / ".worktrees" / "feat" / "run.py").is_file()
+    (tmp_path / "untracked.py").write_text("x = 1\n")
+
+    monkeypatch.setattr(sys.modules[__name__], "ROOT", tmp_path)
+    _repo_sources.cache_clear()
+    try:
+        assert _resolve("run.py") == tmp_path / "run.py"
+        assert _resolve("untracked.py") == tmp_path / "untracked.py"
+    finally:
+        _repo_sources.cache_clear()
 
 
 def test_citation_check_finds_citations():
