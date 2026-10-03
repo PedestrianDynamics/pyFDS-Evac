@@ -11,7 +11,17 @@ the equations.
 
 The keys are read by `load_scenario` and the JuPedSim set-up in
 `simulation_init.py`. A key that is not listed here is either layout data for
-the web app (`ui_state`) or not read by the run.
+[JuPedSim Web](https://app.jupedsim.org) (`config.ui_state`) or not read by
+the run.
+
+## Where scenario files come from
+
+Scenario files are drawn in [JuPedSim Web](https://app.jupedsim.org) and
+exported as a ZIP, or copied from an example and edited. The app does not
+write the pyFDS-Evac keys (`routing`, exit schedules, `familiarity`, the
+sign's `max_distance`); add them by hand after the last export.
+[Create a scenario](howto-create-scenario.md) shows the three routes and how to
+check the result.
 
 ## Top-level structure
 

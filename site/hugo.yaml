@@ -47,6 +47,7 @@ module:
         - "limitations.md"
         - "model-comparison.md"
         - "fds-case-requirements.md"
+        - "howto-create-scenario.md"
         - "usage.md"
         - "howto-with-without-fire.md"
         - "outputs.md"
@@ -80,6 +81,7 @@ module:
       target: content/docs/using
       includeFiles:
         - "fds-case-requirements.md"
+        - "howto-create-scenario.md"
         - "usage.md"
         - "outputs.md"
         - "scenario-json.md"
