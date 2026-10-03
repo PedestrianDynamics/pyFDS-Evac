@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `scripts/release_check.sh` has an install gate, in `--quick` and
+  `--full`: it builds the wheel of the commit and, per supported Python
+  version, installs `<wheel>[gui]` with plain pip into a fresh venv. It
+  checks `pip check`, `pyfds-evac --help`, an argument error,
+  `python -m pyfds_evac --help`, the GUI page and the `ISO-table21`
+  scenario from a folder outside the repository, and the install hint
+  of `pyfds-evac-gui` without the extra. The first `pyfds-evac --help`
+  and `pyfds-evac-gui --help` after the install are timed with an empty
+  matplotlib cache and fail above 1 s. CI runs the same check on Python
+  3.12 with a 3 s limit (#478).
+
 ## [0.2.3] - 2026-10-03
 
 ### Fixed
