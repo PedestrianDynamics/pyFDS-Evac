@@ -108,6 +108,7 @@ def output_paths(base: str, name: str) -> dict[str, str]:
         "output_fed_history": f"{base}/{name}_fed_history.csv",
         "output_route_history": f"{base}/{name}_route_history.csv",
         "output_route_cost_history": f"{base}/{name}_route_cost_history.csv",
+        "output_exit_history": f"{base}/{name}_exit_history.csv",
         "export_app_bundle": f"{base}/bundle",
     }
 
