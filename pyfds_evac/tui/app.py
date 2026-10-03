@@ -462,6 +462,7 @@ class EvacTui(App[None]):
         self._ui_loop: asyncio.AbstractEventLoop | None = None
         self._ui_context = contextvars.copy_context()
         self._render_timer: Any = None
+        self._quitting = False
         super().__init__()
 
     # --- set-up --------------------------------------------------------------
@@ -499,6 +500,7 @@ class EvacTui(App[None]):
 
     def on_unmount(self) -> None:
         """Let the reader thread remove the run's temporary folder."""
+        self._quitting = True  # the screens are gone; drop late events
         join = getattr(self.runner, "join", None)
         if join is not None:
             join(10.0)
@@ -1386,7 +1388,7 @@ class EvacTui(App[None]):
     def _post(self, event: Any) -> None:
         """From the runner's reader thread: queue *event*, never wait."""
         loop = self._ui_loop
-        if loop is None or loop.is_closed():
+        if self._quitting or loop is None or loop.is_closed():
             return
         with contextlib.suppress(RuntimeError):  # the app has ended
             loop.call_soon_threadsafe(
@@ -1395,7 +1397,7 @@ class EvacTui(App[None]):
 
     def on_run_event(self, event: Any) -> None:
         run = self.current_run
-        if run is None:
+        if run is None or self._quitting:
             return
         log = self.query_one("#run-log", RichLog)
         if isinstance(event, events.PhaseEvent):
@@ -1439,11 +1441,7 @@ class EvacTui(App[None]):
         status = status_word(run)
         snap = run.snapshot
         self.recent.add(
-            str(
-                self.form.scenario.path
-                if self.form.scenario
-                else snap.values["scenario"]
-            ),
+            str(snap.values["scenario"]),
             snap.values.get("fds_dir"),
             status,
             frontend.utc_now(),
@@ -1484,7 +1482,7 @@ class EvacTui(App[None]):
         total = None if p is None else p.total
         counts = (
             m(
-                "evacuated $e/$t ($c %)   incapacitated $i   not spawned $n",
+                "evacuated $e of $t planned ($c %)   incapacitated $i   not spawned $n",
                 e=p.evacuated,
                 t=p.total,
                 c=p.pct,
@@ -1525,7 +1523,7 @@ class EvacTui(App[None]):
             m("[b]Evacuated[/]\n"),
             _bar(frac_e, width),
             m(
-                "  $e of $t\n",
+                "  $e of $t planned\n",
                 e=0 if p is None else p.evacuated,
                 t="?" if total is None else total,
             ),
@@ -1664,6 +1662,7 @@ class EvacTui(App[None]):
 
     def _confirmed_quit(self, yes: bool | None) -> None:
         if yes:
+            self._quitting = True
             self.runner.stop()
             self.exit()
 
@@ -1958,7 +1957,7 @@ def results_text(run: RunState) -> Content:
             x=r.exit_code,
         )
         nums = m(
-            "  $t $e s   Evacuated $v/$a   Incapacitated $i\n",
+            "  $t $e s   Evacuated $v of $a that entered   Incapacitated $i\n",
             t=outcome.time_label,
             e=f"{r.end_time_s:.1f}",
             v=r.evacuated,
@@ -1967,7 +1966,9 @@ def results_text(run: RunState) -> Content:
         )
         frac = (r.evacuated or 0) / r.total if r.total else 0.0
         bar = Content.assemble(
-            m("  "), _bar(frac, 40), m("  $e of $t\n", e=r.evacuated, t=r.total)
+            m("  "),
+            _bar(frac, 40),
+            m("  $e of $t that entered\n", e=r.evacuated, t=r.total),
         )
         extra = m("")
         if r.fds_outside and r.fds_outside.get("rows"):

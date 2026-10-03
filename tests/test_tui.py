@@ -1234,3 +1234,44 @@ def test_events_from_the_reader_thread_run_in_the_app_context(workdir):
             await pilot.pause()
 
     run(go())
+
+
+def test_events_after_quit_are_dropped(workdir):
+    """ctrl+q, y during a run: late events from the reader do nothing."""
+    import threading
+
+    runner = FakeRunner()
+    errors: list = []
+
+    async def go():
+        app = make_app(workdir, runner)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            app._ui_loop.set_exception_handler(lambda loop, ctx: errors.append(ctx))
+            app._confirmed_quit(True)
+            await pilot.pause()
+        # The screens are gone; the loop still runs, as during a real exit.
+        sender = threading.Thread(target=app._post, args=(events.LogEvent("late"),))
+        sender.start()
+        sender.join()
+        await asyncio.sleep(0.1)
+        assert runner.stopped == 1
+
+    run(go())
+    assert errors == []
+
+
+def test_recent_records_the_run_scenario_not_the_form(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            app.select_scenario(workdir / "assets" / "ISO-table21", advance=False)
+            await settle(pilot, app)
+            app.on_run_event(result_event(events.STATUS_SUCCESS))
+            await pilot.pause()
+            entry = model.Recent().runs[0]
+            assert entry["scenario"].endswith("iso_table21_coupled")
+            assert entry["fds_dir"].endswith("iso_table21_coupled/fds")
+
+    run(go())
