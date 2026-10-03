@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `pyfds-evac-tui`, a terminal UI (`pip install 'pyfds-evac[tui]'`, built
+  on Textual): pick a scenario and FDS folder, configure with the options
+  of `pyfds-evac` (inactive options greyed out with the reason), review
+  the effective configuration and the equivalent command, run in a
+  separate process with a live plan view of walls, exits, agents and
+  smoke, and inspect the outcome and output files. Runs write to the GUI's
+  folder layout under `./results`; the same options give the same files as
+  `pyfds-evac` (#485).
+- `pyfds_evac.config.frontend`: the run folders and outcome wording the GUI
+  and the TUI share (provisional) (#485).
 - `pyfds_evac.config`: one model of the run options (name, type, unit,
   default, choices, help, the Python field each sets) from which the
   `pyfds-evac` parser and the GUI form are built, the effective
