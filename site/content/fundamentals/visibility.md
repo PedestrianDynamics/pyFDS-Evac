@@ -317,7 +317,8 @@ visibility into an allowable smoke density, citing Jin's 1971 FRI Report
 but without citing FRI Report 33 for the rule: 3–5 m and 0.4–0.7 1/m for people
 familiar with the building, 15–20 m and 0.1 1/m for strangers. Jin (2002,
 Table 2-4.2) pairs 13 m with 0.15 1/m and 4 m with 0.5 1/m; *our
-arithmetic:* both products are about 2.
+arithmetic:* both products are about 2. For whom each pair is meant, see
+[Familiar and unfamiliar occupants](#familiar-and-unfamiliar-occupants).
 
 **What C is.** Eq. 4 makes *C* a property of the sign, its lighting and the
 smoke, through \(B_{E0}/L\), \(\delta_c\) and \(k_s\). *Our inference:* *C*
@@ -556,10 +557,13 @@ for a long time", without a number. Jin (1978, p. 142) elsewhere writes
 done is 0.5/m", as an assumption for judging spectral effects, citing
 Moriya and Watanabe (1967) for the 10 minutes, not for the 0.5. Yamada
 and Akizuki (2026, Ch. 68, p. 2211) put it "under 0.5 [1/m]" and, two sentences later, "over 0.5 [1/m]". We
-found no primary source for the number. Possible origins, not
+found no primary source for 0.5 1/m as a limit for keeping the eyes open. Possible origins, not
 established: Jin (1972, abstract) uses 0.5 1/m as its example of dense
-irritant smoke; Jin (1997, §2.1) finds most subjects emotionally affected
-near 0.5 1/m; Jin (1978, p. 142) and Jin (2002, p. 2-45) assume escape
+irritant smoke; Jin (1997, pp. 10–11), summarising Jin (1981), sets
+0.5 1/m as the allowable density for familiar occupants, where most of the
+Fire Research Institute researchers among his subjects began to lose their
+steadiness (see [Familiar and unfamiliar
+occupants](#familiar-and-unfamiliar-occupants)); Jin (1978, p. 142) and Jin (2002, p. 2-45) assume escape
 is still possible at 0.5 1/m; and in Jin and Yamada (1985, Fig. 6) a dashed construction meets
 the acuity curve near 0.53 1/m.
 
@@ -573,6 +577,78 @@ K_\text{blue}/K_\text{red}\) (unnumbered equation, p. 142) from measured spectra
 colours (p. 142). Jin concludes that visibility "varies by only tens of
 percent at the most with differences in color of lights of the same
 brightness" (abstract, p. 135).
+
+## Familiar and unfamiliar occupants {#familiar-and-unfamiliar-occupants}
+
+Jin derived two allowable smoke densities for escape: *K* = 0.5 1/m
+(visibility about 4 m) for people familiar with the building and
+*K* = 0.15 1/m (about 13 m) for people unfamiliar with it (Yamada and Akizuki
+2026, Table 68.3, p. 2215; Jin 1997, §2.1 and Table 1, p. 11; Jin 2002,
+Table 2-4.2, p. 2-47). Jin (1997,
+pp. 10–11), summarising Jin (1981), places 0.15 1/m where most of the
+subjects from the general public, taken as unfamiliar occupants, began to
+feel uneasy, and 0.5 1/m where researchers of the Fire Research Institute,
+taken as familiar occupants, began to lose their steadiness. Strangers
+need to see farther, so they get the lower density.
+
+The SFPE Handbook gives the pair both ways. The visibility chapter (Yamada
+and Akizuki 2026, 2016; Jin 2002) follows Jin. The hazard chapter
+(Purser 2002; Purser and McAllister 2016, 2026) cites the same Jin (1981) paper but assigns 0.15 1/m (OD/m 0.06)
+to familiar and 0.5 1/m (OD/m 0.2) to unfamiliar occupants, in three
+editions. In the table, Purser's values are in bold.
+
+| Source | Familiar | Unfamiliar | Where |
+| --- | --- | --- | --- |
+| Yamada and Akizuki 2026, SFPE 6th ed., Ch. 68 | 0.5&nbsp;1/m (4&nbsp;m) | 0.15&nbsp;1/m (13&nbsp;m) | Table 68.3, p.&nbsp;2215 |
+| Purser and McAllister 2026, SFPE 6th ed., Ch. 70 | **0.15&nbsp;1/m** | **0.5&nbsp;1/m** | p.&nbsp;2285 |
+| Yamada and Akizuki 2016, SFPE 5th ed., Ch. 61 | 0.5&nbsp;1/m (4&nbsp;m) | 0.15&nbsp;1/m (13&nbsp;m) | Table 61.3, p.&nbsp;2198 |
+| Purser and McAllister 2016, SFPE 5th ed., Ch. 63 | **0.15&nbsp;1/m** | **0.5&nbsp;1/m** | p.&nbsp;2338 |
+| Jin 2002, SFPE 3rd ed., Ch. 2-4 | 0.5&nbsp;1/m (4&nbsp;m) | 0.15&nbsp;1/m (13&nbsp;m) | Table 2-4.2, p.&nbsp;2-47 |
+| Purser 2002, SFPE 3rd ed., Ch. 2-6 | **0.15&nbsp;1/m** | **0.5&nbsp;1/m** | p.&nbsp;2-118 |
+| Jin 1997, Fire Safety Science 5 | 0.5&nbsp;1/m (4&nbsp;m) | 0.15&nbsp;1/m (13&nbsp;m) | Table 1, p.&nbsp;11 |
+
+We read Purser's labels as swapped, for four reasons:
+
+- Both chapters cite Jin (1981) for the same two numbers.
+- Purser's own preceding sentence says that less stringent limits may suit
+  small spaces if occupants are familiar with the building, and more
+  stringent ones large spaces, particularly if occupants are unfamiliar
+  and need to see farther (2026, p. 2285; 2016, p. 2338; 2002,
+  p. 2-118). That is the direction of Jin's assignment.
+- Purser's Table 70.3 (2026, p. 2284) suggests OD/m 0.2 (about 5 m) for
+  small enclosures and short travel distances and OD/m 0.08 (about 10 m)
+  for large ones. The direction agrees with Jin; the numbers are a
+  different pair.
+- Jin's earlier rule (1976), built from minimum visibilities and walking
+  speed, also allows familiar occupants the denser smoke (see
+  "Allowable smoke density" in the block "Jin's data: sources, ranges,
+  darkness and participants" on [Walking speed in
+  smoke](/fundamentals/walking-speed.md#jin-irritant-and-non-irritant-smoke)).
+
+We have not read Jin (1981) itself: it has no DOI and we could not obtain
+it. Only the original can rule out a wrong label there, although Jin's
+1997 and 2002 summaries of it are explicit.
+
+The thresholds come from one Japanese experiment, reported in 1981, with
+49 seated subjects, about half of them Fire Research Institute
+researchers, in white wood smoke that irritated their eyes and throats
+(Jin 1997, pp. 9–10; Jin 2002, p. 2-46). They mark the onset of unease
+or unsteadiness. They are not incapacitation data.
+
+No pyFDS-Evac default applies these limits by familiarity. Familiarity in pyFDS-Evac sets
+which exits an agent knows, its cognitive map (see
+[Wayfinding](/models/wayfinding.md) and
+[Familiarity](/verification/testing-familiarity.md)). It does not change
+how much smoke the agent tolerates. The opt-in additive routing model
+counts a segment as not visible at or above
+`visibility_extinction_threshold` = 0.5 1/m
+(`RouteCostConfig` in `pyfds_evac/core/route_graph.py`). The value equals
+Jin's familiar limit, but it applies to all agents, has no recorded source, and is listed as an
+uncalibrated pyFDS-Evac assumption in [Routing](/models/routing.md).
+
+If you read these sources differently, please
+[open a documentation issue](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/new?template=docs.yml)
+and name the primary source and page.
 
 ## Known limits
 
@@ -654,10 +730,13 @@ Read for this page:
   [doi:10.3210/fst.5.79](https://doi.org/10.3210/fst.5.79)
 - Jin, T. (1997). *Studies on human behavior and tenability in fire
   smoke*. Fire Safety Science, 5, 3–21.
-  [doi:10.3801/iafss.fss.5-3](https://doi.org/10.3801/iafss.fss.5-3)
+  §2.1, Table 1, pp. 9–11.
+  [doi:10.3801/iafss.fss.5-3](https://doi.org/10.3801/iafss.fss.5-3),
+  [publications.iafss.org](https://publications.iafss.org/publications/fss/5/3/view)
 - Jin, T. (2002). *Visibility and human behavior in fire smoke*. SFPE
   Handbook of Fire Protection Engineering, 3rd ed., Ch. 2-4, 2-42–2-53.
-  National Fire Protection Association, Quincy, MA. No DOI or public URL.
+  National Fire Protection Association, Quincy, MA. Table 2-4.2, p. 2-47.
+  No DOI or public URL.
 - Jin, T. (1978). *Visibility through fire smoke*. Journal of Fire &
   Flammability, 9, 135–155 (April 1978). The scan ends at p. 155; the
   pages 135–157 given in some citations do not match it. No DOI or public
@@ -677,8 +756,25 @@ Read for this page:
   National Fire Protection Association, Quincy, MA. No DOI or public URL.
 - Yamada, T., & Akizuki, Y. (2026). *Visibility and human behavior in fire
   smoke*. SFPE Handbook of Fire Protection Engineering, 6th ed., Ch. 68,
-  2201–2224. Eqs. 68.8–68.10, Table 68.2, Fig. 68.15, pp. 2208–2211.
+  2201–2224. Eqs. 68.8–68.10, Table 68.2, Fig. 68.15, pp. 2208–2211;
+  Table 68.3, p. 2215.
   [doi:10.1007/978-3-031-59212-6_68](https://doi.org/10.1007/978-3-031-59212-6_68)
+- Yamada, T., & Akizuki, Y. (2016). *Visibility and human behavior in fire
+  smoke*. SFPE Handbook of Fire Protection Engineering, 5th ed., Ch. 61,
+  2181–2206. Table 61.3, p. 2198.
+  [doi:10.1007/978-1-4939-2565-0_61](https://doi.org/10.1007/978-1-4939-2565-0_61)
+- Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 6th ed., Ch. 70, 2271–2352. pp. 2284–2285,
+  Table 70.3.
+  [doi:10.1007/978-3-031-59212-6_70](https://doi.org/10.1007/978-3-031-59212-6_70)
+- Purser, D. A., & McAllister, J. L. (2016). *Assessment of hazards to
+  occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
+  Protection Engineering, 5th ed., Ch. 63, 2308–2428. p. 2338.
+  [doi:10.1007/978-1-4939-2565-0_63](https://doi.org/10.1007/978-1-4939-2565-0_63)
+- Purser, D. A. (2002). *Toxicity assessment of combustion products*.
+  SFPE Handbook of Fire Protection Engineering, 3rd ed., Sec. 2, Ch. 6.
+  NFPA, Quincy, MA. p. 2-118. No DOI or public URL.
 - Cheung, W. K., Bielawski, J., Arnold, L., Huang, X., & Węgrzyński, W.
   (2026). *Reappraisal of Jin's visibility through fire smoke experiment:
   Insights into signage visibility and the impact of ambient light*. Fire
@@ -710,6 +806,11 @@ Read for this page:
 
 Cited by the sources above, not obtained:
 
+- Jin, T. (1981). *Studies of emotional instability in smoke from fires*.
+  Journal of Fire & Flammability, 12, 130–142. Cited by Jin (1997,
+  ref. 3), Jin (2002), Purser (2002) and Purser and McAllister (2016,
+  2026) for the familiar and
+  unfamiliar limits.
 - Jin, T. (1969). Abstract, Lecture Meeting of the Architectural
   Institute of Japan, p. 77. Cited by FRI Report 33 (ref. 5, p. 48) for
   signs whose place is unknown to the observer.
