@@ -31,7 +31,7 @@ jobs:
       - name: Install uv
         run: pip install --upgrade uv
       - name: Install dependencies
-        run: uv sync --locked --python ${{ matrix.python-version }} --all-groups --extra gui
+        run: uv sync --locked --python ${{ matrix.python-version }} --all-groups --extra gui --extra tui
       # The whole suite (testpaths in pyproject.toml). Tests that need FDS
       # output from the external data store carry the external_data marker
       # and are deselected here; locally they skip when the data is absent.

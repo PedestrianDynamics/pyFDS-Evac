@@ -43,11 +43,16 @@ gui = [
     # Starlette needs this to parse multipart forms (the scenario upload).
     "python-multipart",
 ]
+tui = [
+    "textual>=8.2",
+]
 
 [project.scripts]
 pyfds-evac = "pyfds_evac.cli:main"
 # Needs the gui extra; without it, prints how to install it.
 pyfds-evac-gui = "pyfds_evac.webapp.launch:main"
+# Needs the tui extra; without it, prints how to install it.
+pyfds-evac-tui = "pyfds_evac.tui.launch:main"
 
 [project.urls]
 Homepage = "https://github.com/PedestrianDynamics/pyFDS-Evac"
@@ -81,6 +86,7 @@ dev = [
     "mypy>=1.19.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",
+    "pytest-textual-snapshot>=1.0",
     "ruff>=0.15.7",
     "seaborn>=0.13.2",
 ]
@@ -88,6 +94,7 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = [
+    "slow: runs a real simulation in a child process; deselect with -m 'not slow'",
     "external_data: needs FDS output from the external data store (sciebo); skips when absent, CI deselects it",
 ]
 
