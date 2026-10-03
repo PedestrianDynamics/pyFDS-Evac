@@ -270,7 +270,7 @@ title="Copy code"
 &lt;aside class="docs-checkpoint" aria-label="Expected result: The files load">
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> The files load&lt;/p>
 &lt;div class="docs-checkpoint__body">
-&lt;p>For a ZIP with one spawn area of 50 agents and one exit:&lt;/p>
+&lt;p>For a ZIP built by hand in the app&amp;rsquo;s export format, with one spawn area of 50 agents and one exit:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Initialization started.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Scenario: .../scenario.zip
@@ -336,9 +336,9 @@ hand in &lt;code>config.json&lt;/code>:&lt;/p>
 &lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#spawn-areas-distributionsidparameters">Spawn areas&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>waypoints&lt;/code>&lt;/td>
+&lt;td>&lt;code>waypoint_routing&lt;/code>&lt;/td>
 &lt;td>top level&lt;/td>
-&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#top-level-structure">Top-level structure&lt;/a>&lt;/td>
+&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journey-splits-waypoint_routing">Journey splits&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -356,7 +356,8 @@ its own state. A re-export drops &lt;code>routing&lt;/code>, &lt;code>open_from_
 &lt;code>capacity_agents_per_s&lt;/code> and the sign&amp;rsquo;s &lt;code>max_distance&lt;/code>. Finish the geometry,
 exits, spawn areas and journeys in the app, export, and only then add the
 pyFDS-Evac keys. Keep a note or a small script of your hand edits, so you
-can apply them again after the next export.
+can apply them again after the next export
+(&lt;a href="https://github.com/PedestrianDynamics/jupedsim-web-community/issues/182" target="_blank" rel="noopener">jupedsim-web-community#182&lt;/a>).
 &lt;/div>
 &lt;/div>
 &lt;/div>
@@ -399,16 +400,19 @@ converted.&lt;/p>
 &lt;/details>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">Agents that never move: older exports&lt;/strong>
+&lt;strong class="hx-text-lg">Agents that never move: journeys without transitions&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-Older app exports, such as the &lt;code>bottleneck-zone&lt;/code> example of
-jupedsim-web-community, have journeys with &lt;code>stages&lt;/code> but no &lt;code>transitions&lt;/code>.
-With such a file the agents never move, no warning is printed, and
-&lt;code>--print-summary&lt;/code> looks normal
+&lt;p>A file whose &lt;code>journeys&lt;/code> list &lt;code>stages&lt;/code> but which has no &lt;code>transitions&lt;/code> runs
+with agents that never move. No warning is printed, and &lt;code>--print-summary&lt;/code>
+looks normal
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).
-Export the scenario again from the current app, which writes &lt;code>journeys_v2&lt;/code>,
-or add the &lt;code>transitions&lt;/code> by hand.
+Older app exports have this shape, for example the &lt;code>bottleneck-zone&lt;/code> example
+and 23 of the 55 scenario ZIPs of jupedsim-web-community, which also carry
+&lt;code>journeys_v2&lt;/code>.&lt;/p>
+&lt;p>If the file also has &lt;code>journeys_v2&lt;/code>, set &lt;code>&amp;quot;journeys&amp;quot;: []&lt;/code> and
+&lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code> so that &lt;code>journeys_v2&lt;/code> is converted. Otherwise export the
+scenario again from the current app, or add the &lt;code>transitions&lt;/code> by hand.&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h3>Open a scenario in the app again&lt;span class="hx-absolute -hx-mt-20" id="open-a-scenario-in-the-app-again">&lt;/span>
@@ -468,7 +472,7 @@ with signs, a &lt;code>routing&lt;/code> block, flow spawning, and the FDS deck.
 &lt;p>A ZIP keeps the layout of the repository: the scenario is in
 &lt;code>assets/&amp;lt;name&amp;gt;/config.json&lt;/code> and &lt;code>assets/&amp;lt;name&amp;gt;/geometry.wkt&lt;/code>. The steps
 below use the Quickstart scenario, from a source checkout or from the
-unpacked Quickstart ZIP.&lt;/p>
+unpacked Quickstart ZIP (&lt;code>cd pyfds-evac-quickstart&lt;/code> first).&lt;/p>
 &lt;div class="steps hx-ml-4 hx-mb-12 ltr:hx-border-l rtl:hx-border-r hx-border-gray-200 ltr:hx-pl-6 rtl:hx-pr-6 dark:hx-border-neutral-800 [counter-reset:step]">
 &lt;h3>Copy the scenario&lt;span class="hx-absolute -hx-mt-20" id="copy-the-scenario">&lt;/span>
 &lt;a href="#copy-the-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -569,7 +573,8 @@ title="Copy code"
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>The spawn area of ISO-table21 is about 0.94 m × 1.81 m. With &lt;code>&amp;quot;number&amp;quot;: 20&lt;/code>
-the summary still reads &lt;code>Agents: ~20&lt;/code>, but the run stops with exit status 1:&lt;/p>
+the summary still reads &lt;code>Agents: ~20&lt;/code>, but the run stops with exit status 1
+and a traceback ending in:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>ValueError: Distribution 0: requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -581,7 +586,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The estimate is an upper bound. With &lt;code>&amp;quot;number&amp;quot;: 5&lt;/code> the run stops with:&lt;/p>
+&lt;p>The estimate is an upper bound. With &lt;code>&amp;quot;number&amp;quot;: 5&lt;/code> the traceback ends in:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>jupedsim.distributions.AgentNumberError: Only 4 of 5 could be placed. density: 2.35 p/m²&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -670,7 +675,11 @@ title="Copy code"
 &lt;/div>
 &lt;p>When something lies outside, the set-up prints what and how much, and the
 run still finishes. This excerpt is from a scenario coupled to the FDS output
-of a different geometry:&lt;/p>
+of a different geometry: the &lt;code>bottleneck-zone&lt;/code> example of
+jupedsim-web-community (25 m × 10 m, 50 agents) with &lt;code>transitions&lt;/code> added and
+its zone removed, run with &lt;code>--fds-dir assets/iso_table21_coupled/fds&lt;/code> and
+&lt;code>--allow-fds-horizon-hold&lt;/code>, because its &lt;code>max_simulation_time&lt;/code> of 300 s
+exceeds the 150 s of FDS output:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>WARNING:pyfds_evac.core.fds_coverage:FDS coverage: outside the FDS slices (SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear sight: walkable area 185.00 m² (90.2 %); exit jps-exits_0 18.00 m²; distribution jps-distributions_0 34.00 m²; sign jps-exits_0; edge jps-distributions_0 -&amp;gt; jps-exits_0 21.50 m.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
@@ -768,7 +777,8 @@ where your fire scenario needs them.&lt;/p>
 &lt;strong class="hx-text-lg">Options and the fire template&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>The cell size is set from the thinnest wall (default 0.25 m, at least
+&lt;p>The cell size is set from the smallest gap between vertex coordinates,
+which in a rectilinear plan is the thinnest wall (default 0.25 m, at least
 0.1 m); &lt;code>--dx&lt;/code> sets it. &lt;code>--z-max&lt;/code> sets the height (3 m), &lt;code>--meshes NX NY&lt;/code>
 splits the domain into NX × NY meshes, and &lt;code>--t-end&lt;/code> sets the end time
 (120 s).&lt;/p>
@@ -2633,7 +2643,10 @@ check the result.&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;checkpoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;zones&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys&amp;#34;: […],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys&amp;#34;: [ { &amp;#34;id&amp;#34;: …, &amp;#34;stages&amp;#34;: […] } ],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;transitions&amp;#34;: [ { &amp;#34;from&amp;#34;: …, &amp;#34;to&amp;#34;: …, &amp;#34;journey_id&amp;#34;: … } ],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys_v2&amp;#34;: [ { &amp;#34;id&amp;#34;: …, &amp;#34;sequence&amp;#34;: […] } ],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoint_routing&amp;#34;: {…},
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;routing&amp;#34;: {…}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -2645,6 +2658,13 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>&lt;code>journeys&lt;/code> and &lt;code>transitions&lt;/code> are the stage graph that set-up builds on; a
+journey needs its &lt;code>transitions&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).
+&lt;code>journeys_v2&lt;/code>, as JuPedSim Web writes it, is converted into them only when
+&lt;code>journeys&lt;/code> is empty; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/#add-the-pyfds-evac-keys-last">Create a scenario&lt;/a>.
+&lt;code>waypoints&lt;/code> carry signs only.&lt;/p>
 &lt;h2>Simulation settings&lt;span class="hx-absolute -hx-mt-20" id="simulation-settings">&lt;/span>
 &lt;a href="#simulation-settings" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Under &lt;code>config.simulation_settings&lt;/code>.&lt;/p>
 &lt;table>
@@ -2938,6 +2958,53 @@ subject to smoke-dependent legibility.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;h2>Journey splits: &lt;code>waypoint_routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journey-splits-waypoint_routing">&lt;/span>
+&lt;a href="#journey-splits-waypoint_routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A journey in which a checkpoint has more than one outgoing transition needs
+the shares of agents that take each branch:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;#34;waypoint_routing&amp;#34;: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;&amp;lt;checkpoint id&amp;gt;&amp;#34;: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;&amp;lt;journey id&amp;gt;&amp;#34;: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;destinations&amp;#34;: [ { &amp;#34;target&amp;#34;: &amp;#34;&amp;lt;stage id&amp;gt;&amp;#34;, &amp;#34;percentage&amp;#34;: 60 }, … ]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>destinations[].target&lt;/code>&lt;/td>
+&lt;td>required&lt;/td>
+&lt;td>A stage the journey&amp;rsquo;s transitions lead to from this checkpoint. Every such stage must be listed.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>destinations[].percentage&lt;/code>&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>Share of the agents sent to &lt;code>target&lt;/code>. The sum must be greater than 0.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Without it, or with a target missing, the set-up stops with &lt;code>Explicit routing required for &amp;lt;checkpoint&amp;gt; in &amp;lt;journey&amp;gt;&lt;/code> or &lt;code>Explicit routing for &amp;lt;checkpoint&amp;gt; in &amp;lt;journey&amp;gt; is incomplete&lt;/code> (&lt;code>_create_journeys_with_percentages&lt;/code>
+in &lt;code>simulation_init.py&lt;/code>). The shares set the authored journey only. With
+rerouting on, the default of &lt;code>run.py&lt;/code>, the route-cost model picks each
+agent&amp;rsquo;s exit: in &lt;code>assets/t_junction&lt;/code> with 40 agents, shares of 99/1 and 1/99
+both sent all 40 to the nearer east exit, while with &lt;code>--no-enable-rerouting&lt;/code>
+99/1 sent all 40 west. JuPedSim Web does not write this key.&lt;/p>
 &lt;h2>Route choice: &lt;code>routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-choice-routing">&lt;/span>
 &lt;a href="#route-choice-routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The &lt;code>routing&lt;/code> block sets the route-cost model. Its keys, defaults and the
 constants that no key can set are listed in one place,
@@ -3808,7 +3875,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/598277bdbec44d39fbec9fcb05fa1b4a173251c3">&lt;code>598277b&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/537dd10ae87e435cfadbeb9f4211b29512c36c76">&lt;code>537dd10&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3832,7 +3899,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2ed057b2dd6fce55af1eddeabdf587f13885b1e18811314888f2596d30e4d349&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3da648db1eae9b44a76d915ad197fce7d3da7b760d6119378b2062e1dfb0225c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
