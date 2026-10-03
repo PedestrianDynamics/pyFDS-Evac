@@ -4,8 +4,10 @@
 # Usage:
 #   scripts/run_and_plot.sh <scenario.json> <fds-dir> <results-dir>
 #
+# <fds-dir> holds a finished FDS run (its .smv file), not the deck.
+#
 # Example:
-#   scripts/run_and_plot.sh assets/t_junction/config.json assets/t_junction results/demo
+#   scripts/run_and_plot.sh assets/t_junction/config.json "$FDS" results/demo
 #
 # See docs/usage.md for the per-script options.
 

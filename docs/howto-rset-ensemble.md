@@ -68,6 +68,8 @@ uv run python examples/rset_ensemble.py
 import json
 import pathlib
 import sqlite3
+import sys
+import tempfile
 
 import numpy as np
 from matplotlib.figure import Figure
@@ -82,7 +84,13 @@ from pyfds_evac import (
 )
 
 SEEDS = [1, 2, 3, 4, 5]
-FIGURE = pathlib.Path("site/static/images/howto/egress_exit_curve.png")
+# The figure goes to the path given as the first argument, else to a
+# temporary directory.
+FIGURE = (
+    pathlib.Path(sys.argv[1])
+    if len(sys.argv) > 1
+    else pathlib.Path(tempfile.mkdtemp()) / "egress_exit_curve.png"
+)
 COLOURS = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#56B4E9"]  # Okabe-Ito
 LINESTYLES = ["-", "--", "-.", ":", (0, (5, 1, 1, 1, 1, 1))]
 ```
@@ -227,10 +235,13 @@ fig.savefig(FIGURE, dpi=150, bbox_inches="tight")
 print(f"figure: {FIGURE}")
 ```
 
-The script writes the figure into `site/static/images/howto/`, a tracked file
-of this site, so running it changes your checkout; restore it with
-`git checkout -- site/static/images/howto/egress_exit_curve.png`
-([#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)).
+The script writes the figure to a temporary directory and prints its path.
+To write it elsewhere, pass the path as the first argument. The figure below
+was made with:
+
+```bash
+uv run python examples/rset_ensemble.py site/static/images/howto/egress_exit_curve.png
+```
 
 ![Five step curves of agents evacuated against time, one per seed in its own colour and line style; each rises from 1 near 34 s to 30 between 41 and 46 s, and a grey band spans the range of last exit times](/images/howto/egress_exit_curve.png)
 

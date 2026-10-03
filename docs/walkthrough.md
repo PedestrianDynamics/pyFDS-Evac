@@ -275,7 +275,7 @@ opts = SimpleNamespace(
     fds_dir=str(broken),
     constant_extinction=None,
     smoke_update_interval=1.0,
-    smoke_slice_height=2.0,
+    smoke_slice_height=1.6,
     disable_tenability=False,
     fed_threshold=1.0,
     fic_alpha=0.7,
@@ -292,10 +292,6 @@ print(
     f"{silent.agents_remaining} agent still in the room"
 )
 ```
-
-The example passes `smoke_slice_height=2.0` rather than the 1.6 m default of
-`run.py`; [#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)
-tracks aligning it.
 
 ```text
 Evacuated 0/1  sim=1150.0s  wall=0m05s  done
