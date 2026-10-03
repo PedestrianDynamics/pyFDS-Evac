@@ -136,7 +136,6 @@ def plan_event(
     *,
     smoke_speed_model: Any = None,
     smoke_blind: bool = False,
-    total_agents: int | None = None,
     tolerance_m: float = PLAN_TOLERANCE_M,
 ) -> events.PlanEvent:
     """The :class:`~pyfds_evac.config.events.PlanEvent` of *scenario*.
@@ -177,7 +176,6 @@ def plan_event(
         smoke_k=k,
         smoke_z_m=None if sampler is None else float(sampler.z_m),
         max_time_s=float(scenario.max_simulation_time),
-        total_agents=total_agents,
         tolerance_m=float(tolerance_m),
     )
 

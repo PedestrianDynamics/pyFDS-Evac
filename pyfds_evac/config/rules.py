@@ -609,7 +609,8 @@ class Applicability(NamedTuple):
     ``active`` False comes with the rule (``D…``) and the reason, worded as
     in the "has no effect" warnings ("without --fds-dir"). ``active`` True
     means no rule says the option is inert; an option without rules (the
-    seed, output paths) is always active.
+    seed, output paths) is always active, and so is an option whose value
+    is a configuration error (it must stay editable).
     """
 
     active: bool
@@ -669,6 +670,17 @@ def _default_reason(opts: Any, dest: str, m: Mechanisms) -> _Reason:
     return None
 
 
+def invalid_options(
+    opts: Any, raw: Mapping[str, Any], fds: Any, mechanisms: Mechanisms
+) -> frozenset[str]:
+    """Options named by the errors of the effective configuration."""
+    from .effective import _errors, _max_simulation_time
+
+    max_time = _max_simulation_time(None, raw)
+    errors = _errors(opts, mechanisms, fds, max_time, raw)
+    return frozenset(e.option for e in errors if e.option is not None)
+
+
 def applies(
     dest: str,
     opts: Any,
@@ -676,6 +688,7 @@ def applies(
     fds: Any = UNKNOWN_FDS,
     *,
     mechanisms: Mechanisms | None = None,
+    invalid: frozenset[str] | None = None,
 ) -> Applicability:
     """Whether the option *dest* changes the run, at the value *opts* holds.
 
@@ -684,12 +697,18 @@ def applies(
     --enable-heat-fed". A switch at its default (``--enable-heat-fed``,
     ``--clear-air-visibility``, ``--vis-cache``) is active when switching it
     on would build its model. For an option set away from its default the
-    answer is the one :func:`inactive_settings` gives. *mechanisms* is
-    ``predict_mechanisms(opts, raw, fds)``, passed to skip recomputing it.
+    answer is the one the effective configuration gives: its ``inactive``
+    list, where an option with an invalid value is an error, not inactive.
+    *mechanisms* (``predict_mechanisms``) and *invalid*
+    (:func:`invalid_options`) may be passed to skip recomputing them.
     """
     parameter(dest)  # KeyError naming an unknown option
     if mechanisms is None:
         mechanisms = predict_mechanisms(opts, raw, fds)
+    if invalid is None:
+        invalid = invalid_options(opts, raw, fds, mechanisms)
+    if dest in invalid:
+        return _ACTIVE
     at_default = not is_set(opts, dest)
     if at_default and dest in _SWITCH_ON:
         reason = _switch_reason(opts, dest, raw, fds)
@@ -710,8 +729,9 @@ def applicability(
     from .parameters import PARAMETERS
 
     mechanisms = predict_mechanisms(opts, raw, fds)
+    invalid = invalid_options(opts, raw, fds, mechanisms)
     return {
-        p.dest: applies(p.dest, opts, raw, fds, mechanisms=mechanisms)
+        p.dest: applies(p.dest, opts, raw, fds, mechanisms=mechanisms, invalid=invalid)
         for p in PARAMETERS
         if p.run_option
     }

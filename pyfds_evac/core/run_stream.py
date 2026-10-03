@@ -22,6 +22,7 @@ import io
 import logging
 import traceback
 from collections.abc import Callable, Mapping
+from pathlib import Path
 from typing import Any
 
 from pyfds_evac.config import events
@@ -107,8 +108,10 @@ def _status_line(emit: Emit) -> Callable[[str], None]:
 
 
 def _files(artifacts: list[str]) -> tuple[str, ...]:
-    """The paths of ``apply_outputs``'s ``"<what>: <path>"`` lines."""
-    return tuple(a.split(": ", 1)[1] for a in artifacts if ": " in a)
+    """The absolute paths of ``apply_outputs``'s ``"<what>: <path>"`` lines."""
+    return tuple(
+        str(Path(a.split(": ", 1)[1]).resolve()) for a in artifacts if ": " in a
+    )
 
 
 def _result_event(
@@ -177,7 +180,11 @@ def stream_run(
     _configure_logging(bool(getattr(opts, "debug", False)))
     handler = _WarningEvents(emit, clock)
     root = logging.getLogger()
-    root.addHandler(handler)
+    # With --debug the model logger does not propagate to the root.
+    model = logging.getLogger("pyfds_evac")
+    loggers = [root] if model.propagate else [root, model]
+    for logger in loggers:
+        logger.addHandler(handler)
     log = _status_line(emit)
     try:
         with contextlib.redirect_stdout(_StdoutEvents(emit, clock)):
@@ -218,7 +225,8 @@ def stream_run(
             traceback=traceback.format_exc() if send_traceback else None,
         )
     finally:
-        root.removeHandler(handler)
+        for logger in loggers:
+            logger.removeHandler(handler)
     emit(events.PhaseEvent(events.PHASE_DONE))
     emit(outcome)
     return outcome

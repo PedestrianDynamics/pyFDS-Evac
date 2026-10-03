@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from pyfds_evac import cli
-from pyfds_evac.config import PARAMETERS, events
+from pyfds_evac.config import PARAMETERS, effective_configuration, events
 from pyfds_evac.config.parameters import (
     GUI_HIDDEN,
     GUI_SECTIONS,
@@ -166,19 +166,24 @@ _SETTINGS = [
     ["--max-sign-distance", "10", "--disable-tenability"],
     ["--clear-air-visibility"],
     ["--vis-cache", "v.npz"],
+    # Invalid values: an error, never inactive (#509 I1).
+    ["--enable-heat-fed", "--heat-emissivity", "2"],
+    ["--clear-air-visibility", "--vis-cell-size", "0"],
+    ["--max-sign-distance", "-1"],
+    ["--enable-heat-fed", "--heat-regime", "layer"],
 ]
 
 
 @pytest.mark.parametrize("context", _CONTEXTS)
 @pytest.mark.parametrize("raw", [{}, {**_DISCOVERY, **_SIGNS}])
-def test_applies_agrees_with_the_no_effect_warnings(context, raw):
-    """Greying out and the "has no effect" warnings come from one rule."""
+def test_applies_agrees_with_the_effective_configuration(context, raw):
+    """Greying out and the Review's "no effect" list come from one rule."""
     argv, facts = context
     fds = facts if facts is not None else _ALL
     for setting in _SETTINGS:
         opts = _parse(*argv, *setting)
-        mechanisms = predict_mechanisms(opts, raw, fds)
-        warned = {i.option: i for i in inactive_settings(opts, mechanisms)}
+        cfg = effective_configuration(opts, raw, fds=fds, inspect_fds=False)
+        warned = {i.option: i for i in cfg.inactive}
         for param in PARAMETERS:
             if not param.run_option or not is_set(opts, param.dest):
                 continue
@@ -187,6 +192,14 @@ def test_applies_agrees_with_the_no_effect_warnings(context, raw):
             assert found.active == (listed is None), (argv, setting, param.dest)
             if listed is not None:
                 assert (found.rule, found.reason) == (listed.rule, listed.reason)
+
+
+def test_an_invalid_value_stays_editable():
+    """The field holding an error is never greyed out."""
+    opts = _parse("--fds-dir", "c", "--enable-heat-fed", "--heat-emissivity", "2")
+    cfg = effective_configuration(opts, _SIGNS, fds=_ALL, inspect_fds=False)
+    assert [e.option for e in cfg.errors] == ["heat_emissivity"]
+    assert applies("heat_emissivity", opts, _SIGNS, _ALL).active
 
 
 def test_no_new_warning_for_the_default_only_rule():
@@ -440,6 +453,41 @@ def test_frames_do_not_change_the_run():
     assert frames[-1].evacuated == on.agents_evacuated == 1
 
 
+ISO22 = REPO / "assets" / "iso_table22_coupled"
+
+
+def test_frames_do_not_change_a_fire_run_with_incapacitation(tmp_path):
+    """FED, rerouting, smoke on iso22/a (one agent incapacitated at 982 s)."""
+    from pyfds_evac.core.plan_view import FrameRecorder
+    from pyfds_evac.core.run_stream import options, stream_run
+
+    config, fds = str(ISO22 / "config_a.json"), str(ISO22 / "fds" / "a")
+    frames: list[events.FrameEvent] = []
+    recorder = FrameRecorder(frames.append, max_hz=1e9, smoke_hz=1e9)
+    on = _run(config, recorder, "--fds-dir", fds)
+    off = _run(config, None, "--fds-dir", fds)
+    try:
+        assert _trajectory(on) == _trajectory(off)
+        for name in ("smoke_history", "fed_history", "route_history", "exit_history"):
+            assert _without_ids(getattr(on, name) or []) == _without_ids(
+                getattr(off, name) or []
+            ), name
+        assert on.metrics == off.metrics
+        assert on.agents_incapacitated == off.agents_incapacitated == 1
+    finally:
+        on.cleanup()
+        off.cleanup()
+    fallen = [a for a in frames[-1].agents() if a[3] == events.AGENT_INCAPACITATED]
+    assert len(fallen) == 1 and frames[-1].incapacitated == 1  # still inside
+
+    sent: list = []
+    values = {"scenario": config, "fds_dir": fds, "seed": 7}
+    result = stream_run(options(values), sent.append)
+    assert result.incapacitated == 1
+    assert result.remaining == result.total - result.evacuated
+    assert not any(isinstance(e, events.FrameEvent) for e in sent)  # off by default
+
+
 def test_frames_are_throttled_by_wall_time():
     from pyfds_evac.core.plan_view import FrameRecorder
 
@@ -611,7 +659,7 @@ def test_result_event_is_the_run_outcome(tmp_path):
     assert result.seed == 3 and result.incapacitated == 0
     assert set(result.files) == {
         str(sqlite.resolve()),
-        str(tmp_path / "exits.csv"),
+        str((tmp_path / "exits.csv").resolve()),
         str(sqlite.with_suffix(".manifest.json").resolve()),
     }
     assert sum(result.exit_counts.values()) == result.evacuated

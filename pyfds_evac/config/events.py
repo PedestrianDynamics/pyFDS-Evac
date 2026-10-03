@@ -181,7 +181,6 @@ class PlanEvent:
     smoke_k: float | None = None
     smoke_z_m: float | None = None
     max_time_s: float | None = None
-    total_agents: int | None = None
     tolerance_m: float = 0.0
 
 
