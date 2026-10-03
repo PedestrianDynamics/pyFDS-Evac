@@ -664,6 +664,4 @@ example the output of `assets/t_junction/t_junction.fds`. The script calls
 plotting script against the resulting CSVs / SQLite. It writes the vismap
 cache into `<fds-dir>/vismap_cache.pkl`, so do not point it at a tracked
 directory under `assets/`
-([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)). The usage line in the script itself still names
-`assets/t_junction`, which has no FDS output
-([#312](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/312)).
+([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)).
