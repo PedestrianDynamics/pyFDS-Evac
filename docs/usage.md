@@ -274,11 +274,15 @@ Setup warnings:
 A run with such an option logs the same warning at setup. Options left at
 their default are never reported. The run manifest written with
 `--output-sqlite` records the configuration under `configuration`, checked
-against the seed and models the run used: `source` is `run` when they
-agree. When `run_scenario` was called with other models than the options
-imply, `source` is `run, options differ`: only the run's seed and models
-(`run`) are recorded as facts, and the configuration of the options is kept
-apart under `predicted_from_options` with the `mismatches`.
+against the seed, the models and the model parameters the run used
+(thresholds, FIC slope, incapacitation modes, heat law and parameters,
+reroute interval and route costs, visibility grid and reading distance,
+sampling interval and slice height): `source` is `run` when they agree.
+When `run_scenario` was given other models or parameters than the options
+imply, `source` is `run, options differ`: only the run's settings (`run`)
+are recorded as facts, and the configuration of the options is kept apart
+under `predicted_from_options`, with the differing settings in
+`mismatches` (e.g. `tenability.fic_alpha`).
 From Python, `pyfds_evac.config.effective_configuration(opts, scenario)`
 returns it; `pyfds_evac.config` is provisional public API in 0.3.0 and can
 change in 0.3.x.

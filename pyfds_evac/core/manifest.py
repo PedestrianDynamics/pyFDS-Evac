@@ -4,6 +4,7 @@ The manifest answers "which code, which inputs, which FDS build produced
 this run?" so a result can be traced and reproduced later.
 """
 
+import dataclasses
 import hashlib
 import json
 import pathlib
@@ -123,38 +124,103 @@ def run_settings(
     replay_exits: Any = None,
     require_fds_coverage: bool = False,
 ) -> dict[str, Any]:
-    """What a run used: the seed and the models it was given (provisional).
+    """What a run used: the seed, and the models with their parameters.
 
-    Plain values only, from the objects ``run_scenario`` received, so a
-    record of the run never depends on the options that produced them.
+    Read from the objects ``run_scenario`` received, never from the options
+    that produced them; a model that was not given is None (provisional).
     """
-    from .smoke_speed import ConstantExtinctionField  # numpy: not on --help
-
-    field = getattr(smoke_speed_model, "field", None)
-    if smoke_speed_model is None:
-        smoke = None
-    elif isinstance(field, ConstantExtinctionField):
-        smoke = "constant"
-    else:
-        smoke = "fds"
-    if vis_model is None:
-        visibility = None
-    else:
-        visibility = "smoky" if getattr(vis_model, "from_fds", False) else "clear-air"
     return {
         "seed": seed,
-        "smoke_speed": smoke,
-        "gas_fed": fed_model is not None,
-        "heat_fed": heat_fed_model is not None,
-        "tenability": tenability_config is not None,
-        "fic": bool(getattr(tenability_config, "enable_fic_speed", False)),
-        "rerouting": reroute_config is not None,
-        "reroute_interval_s": getattr(reroute_config, "reevaluation_interval_s", None),
-        "visibility": visibility,
+        "smoke_speed": _smoke_settings(smoke_speed_model),
+        "gas_fed": _gas_settings(fed_model),
+        "heat_fed": _heat_settings(heat_fed_model),
+        "tenability": _plain(tenability_config),
+        "rerouting": _reroute_settings(reroute_config),
+        "visibility": _vis_settings(vis_model),
         "smoke_blind": bool(smoke_blind),
         "replay_exits": replay_exits is not None,
         "require_fds_coverage": bool(require_fds_coverage),
     }
+
+
+def _plain(obj: Any) -> dict[str, Any] | None:
+    """The fields of a dataclass instance as a dict, or None."""
+    if obj is None:
+        return None
+    return dataclasses.asdict(obj)
+
+
+def _fed_config(config: Any) -> dict[str, Any]:
+    return {
+        "update_interval_s": getattr(config, "update_interval_s", None),
+        "slice_height_m": getattr(config, "slice_height_m", None),
+    }
+
+
+def _smoke_settings(model: Any) -> dict[str, Any] | None:
+    if model is None:
+        return None
+    from .smoke_speed import ConstantExtinctionField  # numpy: not on --help
+
+    field = getattr(model, "field", None)
+    constant = isinstance(field, ConstantExtinctionField)
+    return {
+        "source": "constant" if constant else "fds",
+        "extinction_per_m": getattr(field, "extinction_per_m", None),
+        **_fed_config(getattr(model, "config", None)),
+    }
+
+
+def _gas_settings(model: Any) -> dict[str, Any] | None:
+    if model is None:
+        return None
+    config = getattr(model, "config", None)
+    return {
+        **_fed_config(config),
+        "o2_threshold_percent": getattr(config, "o2_threshold_percent", None),
+    }
+
+
+_HEAT_ATTRIBUTES = (
+    "method",
+    "endpoint",
+    "clothing",
+    "emissivity",
+    "convective_coefficient",
+    "skin_temperature_celsius",
+    "radiant_source",
+    "u_factor",
+    "regime",
+    "view_factor",
+    "layer_emissivity",
+    "layer_height_m",
+)
+
+
+def _heat_settings(model: Any) -> dict[str, Any] | None:
+    if model is None:
+        return None
+    settings = {name: getattr(model, name, None) for name in _HEAT_ATTRIBUTES}
+    return {**settings, **_fed_config(getattr(model, "config", None))}
+
+
+def _reroute_settings(config: Any) -> dict[str, Any] | None:
+    if config is None:
+        return None
+    return {
+        "reevaluation_interval_s": config.reevaluation_interval_s,
+        "exit_switch_anchor": getattr(config, "exit_switch_anchor", None),
+        "cost_config": _plain(getattr(config, "cost_config", None)),
+    }
+
+
+def _vis_settings(model: Any) -> dict[str, Any] | None:
+    if model is None:
+        return None
+    parameters = getattr(model, "parameters", None)
+    if parameters is not None:
+        return dict(parameters)
+    return {"kind": "smoky" if getattr(model, "from_fds", False) else "clear-air"}
 
 
 def fds_dir_from_models(*models: Any) -> str | None:

@@ -294,7 +294,8 @@ def _configuration_record(scenario, opts, result) -> dict | None:
 
     try:
         configuration = effective_configuration(opts, scenario)
-        return run_record(configuration, getattr(result, "run_settings", None))
+        used = getattr(result, "run_settings", None)
+        return run_record(configuration, used, opts, scenario)
     except (OSError, ValueError, TypeError) as exc:
         logging.getLogger(__name__).warning(
             "Could not record the effective configuration in the manifest: %s",

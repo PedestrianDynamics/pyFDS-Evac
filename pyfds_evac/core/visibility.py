@@ -575,6 +575,8 @@ class VisibilityModel:
     # (last time point, time step) of an FDS-built model; None for clear air.
     _horizon: tuple[float, float] | None = None
     _allow_horizon_hold = False
+    # The settings the model was built with (for the run manifest).
+    parameters: dict[str, object] | None = None
     _warned_horizon = False
     # Area the FDS vismap grid covers; None for clear air, whose grid is the
     # walkable area's bounding box and so holds every agent by construction.
@@ -624,6 +626,12 @@ class VisibilityModel:
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
         self._sign_xy = _sign_positions(sign_descriptors)
+        self.parameters = {
+            "kind": "smoky",
+            "time_step_s": time_step_s,
+            "slice_height_m": slice_height_m,
+            "max_sign_distance_m": max_sign_distance_m,
+        }
         self._grid = _grid_bounds(self._vis._x_coords, self._vis._y_coords)
         self._require_fds_coverage = require_fds_coverage
         self._reading_caps = {
@@ -756,6 +764,11 @@ class VisibilityModel:
             extinction_per_m,
             max_sign_distance_m,
         )
+        clear_air_parameters: dict[str, object] = {
+            "kind": "clear-air",
+            "cell_size_m": cell_size_m,
+            "max_sign_distance_m": max_sign_distance_m,
+        }
         cache = Path(cache_path) if cache_path else None
         if cache is not None:
             cached = _load_vismap_cache(cache, expected_meta)
@@ -766,6 +779,7 @@ class VisibilityModel:
                     node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
                 }
                 model._sign_xy = _sign_positions(sign_descriptors)
+                model.parameters = clear_air_parameters
                 return model
 
         vis = VisMap()
@@ -800,6 +814,7 @@ class VisibilityModel:
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
         model._sign_xy = _sign_positions(sign_descriptors)
+        model.parameters = clear_air_parameters
         return model
 
     def _check_horizon(self, time: float) -> None:

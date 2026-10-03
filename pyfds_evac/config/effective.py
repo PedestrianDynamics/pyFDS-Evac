@@ -21,6 +21,7 @@ in 0.3.x.
 
 from __future__ import annotations
 
+import math
 import os
 import pathlib
 import shlex
@@ -179,6 +180,8 @@ def _json_safe(value: Any) -> Any:
     """*value* with path objects as text, for ``json.dumps``."""
     if isinstance(value, os.PathLike):
         return os.fspath(value)
+    if isinstance(value, float) and not math.isfinite(value):
+        return str(value)  # strict JSON has no inf or nan
     if isinstance(value, Mapping):
         return {key: _json_safe(item) for key, item in value.items()}
     if isinstance(value, (list, tuple)):
@@ -687,50 +690,146 @@ def _format_text(cfg: EffectiveConfiguration) -> str:
 
 # --- the manifest record ---------------------------------------------------
 
-# Settings compared between the run and the configuration its options imply.
-_COMPARED = (
-    "seed",
-    "smoke_speed",
-    "gas_fed",
-    "heat_fed",
-    "tenability",
-    "fic",
-    "rerouting",
-    "visibility",
-    "smoke_blind",
-    "replay_exits",
-)
 
+def predicted_run_settings(
+    opts: Any, raw: Mapping[str, Any], cfg: EffectiveConfiguration
+) -> dict[str, Any]:
+    """What ``build_run_kwargs`` would give ``run_scenario`` for these options.
 
-def _predicted_settings(cfg: EffectiveConfiguration) -> dict[str, Any]:
+    The same layout as ``ScenarioResult.run_settings``
+    (``pyfds_evac.core.manifest.run_settings``), built from the options,
+    the scenario and the predicted models.
+    """
     m = cfg._mechanisms
     if m is None:
         raise ValueError("effective configuration without mechanisms")
-    on = {mech.name: mech.on for mech in cfg.mechanisms}
+    sampling = {
+        "update_interval_s": option(opts, "smoke_update_interval"),
+        "slice_height_m": option(opts, "smoke_slice_height"),
+    }
     return {
         "seed": cfg.inputs["seed"],
-        "smoke_speed": m.smoke,
-        "gas_fed": m.gas_fed,
-        "heat_fed": m.heat_fed,
-        "tenability": m.tenability,
-        "fic": m.fic,
-        "rerouting": m.rerouting,
-        "visibility": m.visibility,
-        "smoke_blind": on["smoke_blind"],
-        "replay_exits": on["replay_exits"],
+        "smoke_speed": None
+        if m.smoke is None
+        else {
+            "source": m.smoke,
+            "extinction_per_m": option(opts, "constant_extinction"),
+            **sampling,
+        },
+        "gas_fed": None
+        if not m.gas_fed
+        else {**sampling, "o2_threshold_percent": option(opts, "o2_threshold_percent")},
+        "heat_fed": _predicted_heat(opts, sampling) if m.heat_fed else None,
+        "tenability": _predicted_tenability(opts, m) if m.tenability else None,
+        "rerouting": _predicted_rerouting(opts, raw) if m.rerouting else None,
+        "visibility": _predicted_visibility(opts, m),
+        "smoke_blind": bool(option(opts, "smoke_blind")),
+        "replay_exits": bool(option(opts, "replay_exits")),
+        "require_fds_coverage": bool(option(opts, "require_fds_coverage")),
     }
 
 
+def _predicted_heat(opts: Any, sampling: dict[str, Any]) -> dict[str, Any]:
+    layer = option(opts, "heat_regime") == "layer"
+    return {
+        "method": option(opts, "heat_fed_method"),
+        "endpoint": option(opts, "heat_endpoint"),
+        "clothing": option(opts, "heat_clothing") or "clothed",
+        "emissivity": option(opts, "heat_emissivity"),
+        "convective_coefficient": option(opts, "heat_convective_coefficient"),
+        "skin_temperature_celsius": option(opts, "heat_skin_temperature"),
+        "radiant_source": option(opts, "heat_radiant_source"),
+        "u_factor": option(opts, "heat_u_factor"),
+        "regime": option(opts, "heat_regime"),
+        "view_factor": option(opts, "heat_view_factor") if layer else None,
+        "layer_emissivity": option(opts, "heat_layer_emissivity") if layer else None,
+        "layer_height_m": option(opts, "heat_layer_height") if layer else None,
+        **sampling,
+    }
+
+
+def _predicted_tenability(opts: Any, m: Mechanisms) -> dict[str, Any]:
+    return {
+        "enable_fic_speed": m.fic,
+        "fic_alpha": option(opts, "fic_alpha"),
+        "fic_min_factor": option(opts, "fic_min_factor"),
+        "enable_incapacitation": m.gas_fed,
+        "fed_threshold": option(opts, "fed_threshold"),
+        "incapacitation_mode": option(opts, "incapacitation_mode"),
+        "susceptibility_sigma": option(opts, "susceptibility_sigma"),
+        "enable_heat_incapacitation": m.heat_fed,
+        "heat_fed_threshold": option(opts, "heat_fed_threshold"),
+        "heat_incapacitation_mode": option(opts, "heat_incapacitation_mode"),
+        "heat_susceptibility_sigma": option(opts, "heat_susceptibility_sigma"),
+    }
+
+
+def _predicted_rerouting(opts: Any, raw: Mapping[str, Any]) -> dict[str, Any]:
+    import dataclasses
+
+    from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
+
+    cost = RouteCostConfig.from_routing_params(raw.get("routing", {}))
+    return {
+        "reevaluation_interval_s": option(opts, "reroute_interval"),
+        "exit_switch_anchor": RerouteConfig.exit_switch_anchor,
+        "cost_config": dataclasses.asdict(cost),
+    }
+
+
+def _predicted_visibility(opts: Any, m: Mechanisms) -> dict[str, Any] | None:
+    if m.visibility is None:
+        return None
+    if m.visibility == "clear-air":
+        return {
+            "kind": "clear-air",
+            "cell_size_m": option(opts, "vis_cell_size"),
+            "max_sign_distance_m": option(opts, "max_sign_distance"),
+        }
+    return {
+        "kind": "smoky",
+        "time_step_s": option(opts, "reroute_interval"),
+        "slice_height_m": option(opts, "smoke_slice_height"),
+        "max_sign_distance_m": option(opts, "max_sign_distance"),
+    }
+
+
+def _differences(predicted: Any, used: Any, path: str = "") -> list[str]:
+    """Dotted names of the settings that differ (``tenability.fic_alpha``)."""
+    if isinstance(predicted, Mapping) and isinstance(used, Mapping):
+        found: list[str] = []
+        for key in list(predicted) + [k for k in used if k not in predicted]:
+            name = f"{path}.{key}" if path else str(key)
+            found += _differences(predicted.get(key), used.get(key), name)
+        return found
+    return [] if _same(predicted, used) else [path]
+
+
+def _same(a: Any, b: Any) -> bool:
+    """Equal, with nan equal to nan (an unset float stays nan on both sides)."""
+    if (
+        isinstance(a, float)
+        and isinstance(b, float)
+        and math.isnan(a)
+        and math.isnan(b)
+    ):
+        return True
+    return bool(a == b)
+
+
 def run_record(
-    cfg: EffectiveConfiguration, used: Mapping[str, Any] | None
+    cfg: EffectiveConfiguration,
+    used: Mapping[str, Any] | None,
+    opts: Any = None,
+    scenario: Any = None,
 ) -> dict[str, Any]:
     """The manifest's ``configuration``: what the run used, then the options.
 
     *used* is ``ScenarioResult.run_settings``, what ``run_scenario`` was
     given. ``source`` says where the record comes from:
 
-    - ``"run"``: the run used what the options imply; the whole effective
-      configuration describes it, with the seed and models of the run.
+    - ``"run"``: the run used the seed, models and model parameters the
+      options imply; the whole effective configuration describes it.
     - ``"run, options differ"``: the options do not describe the run (e.g.
       ``run_scenario`` called with other models). Only ``run`` and the
       seed are recorded as facts; the configuration the options imply is
@@ -743,8 +842,8 @@ def run_record(
         record["source"] = "predicted from options"
         return record
     run = _json_safe(dict(used))
-    predicted = _predicted_settings(cfg)
-    mismatches = [key for key in _COMPARED if predicted[key] != used.get(key)]
+    predicted = predicted_run_settings(opts, _raw(scenario), cfg)
+    mismatches = _differences(predicted, used)
     if not mismatches:
         record["source"] = "run"
         record["run"] = run

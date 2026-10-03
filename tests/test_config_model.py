@@ -768,7 +768,7 @@ def test_manifest_records_what_a_direct_run_used(tmp_path):
     assert section["source"] == "run, options differ"
     assert section["inputs"] == {"seed": 7, "seed_origin": "run"}
     assert section["run"]["seed"] == 7
-    assert section["run"]["rerouting"] is False
+    assert section["run"]["rerouting"] is None
     assert section["run"]["visibility"] is None
     assert {"seed", "rerouting", "visibility"} <= set(section["mismatches"])
     # Nothing outside predicted_from_options claims a model or a command.
@@ -795,6 +795,156 @@ def test_manifest_of_a_cli_run_is_the_run(tmp_path):
     result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
     _, section = _copied_configuration(tmp_path, scenario, result, opts)
     assert section["source"] == "run"
-    assert section["run"]["rerouting"] and section["run"]["visibility"] == "clear-air"
+    assert section["run"]["rerouting"]["reevaluation_interval_s"] == 1.0
+    assert section["run"]["visibility"]["kind"] == "clear-air"
+    assert section["run"]["visibility"]["cell_size_m"] == 0.25
     assert section["inputs"]["seed"] == section["run"]["seed"] == 420
     assert section["mechanisms"]["visibility"]["on"] is True
+
+
+def test_manifest_compares_model_parameters(tmp_path, iso22_scenario):
+    """I4: same models, other parameters: FIC alpha 0.2 and FED threshold 0.3."""
+    import dataclasses
+
+    from pyfds_evac.core import run_scenario
+
+    opts = _parse(
+        "--scenario",
+        str(ISO22 / "config_a.json"),
+        "--fds-dir",
+        ISO22_A,
+        "--seed",
+        "7",
+        "--enable-fic-speed",
+        "--output-sqlite",
+        str(tmp_path / "r.sqlite"),
+    )
+    kwargs = build_run_kwargs(iso22_scenario, opts)
+    kwargs["tenability_config"] = dataclasses.replace(
+        kwargs["tenability_config"], fic_alpha=0.2, fed_threshold=0.3
+    )
+    result = run_scenario(iso22_scenario, **kwargs)
+    _, section = _copied_configuration(tmp_path, iso22_scenario, result, opts)
+    assert section["source"] == "run, options differ"
+    assert section["mismatches"] == ["tenability.fic_alpha", "tenability.fed_threshold"]
+    assert section["run"]["tenability"]["fic_alpha"] == 0.2
+    assert section["run"]["tenability"]["fed_threshold"] == 0.3
+    predicted = section["predicted_from_options"]["options"]
+    assert predicted["fic_alpha"]["value"] == 0.7
+
+
+def test_manifest_compares_the_reroute_interval(tmp_path):
+    """I4: rerouting on in both, every 2.0 s in the run, 5.0 s in the options."""
+    from pyfds_evac.core import run_scenario
+    from pyfds_evac.core.route_graph import RerouteConfig
+
+    scenario = _load(DISCOVERY)
+    opts = _parse(
+        "--scenario",
+        DISCOVERY,
+        "--reroute-interval",
+        "5.0",
+        "--output-sqlite",
+        str(tmp_path / "r.sqlite"),
+    )
+    kwargs = build_run_kwargs(scenario, opts)
+    kwargs["reroute_config"] = RerouteConfig(
+        reevaluation_interval_s=2.0, cost_config=kwargs["reroute_config"].cost_config
+    )
+    result = run_scenario(scenario, **kwargs)
+    _, section = _copied_configuration(tmp_path, scenario, result, opts)
+    assert section["source"] == "run, options differ"
+    assert section["mismatches"] == ["rerouting.reevaluation_interval_s"]
+    assert section["run"]["rerouting"]["reevaluation_interval_s"] == 2.0
+
+
+def test_manifest_of_a_fire_run_is_the_run(tmp_path, iso22_scenario):
+    """R2p through build_run_kwargs: every model parameter agrees."""
+    from pyfds_evac.core import run_scenario
+
+    opts = _parse(
+        "--scenario",
+        str(ISO22 / "config_a.json"),
+        "--fds-dir",
+        ISO22_A,
+        "--seed",
+        "7",
+        "--enable-fic-speed",
+        "--incapacitation-mode",
+        "probabilistic",
+        "--output-sqlite",
+        str(tmp_path / "r.sqlite"),
+    )
+    result = run_scenario(iso22_scenario, **build_run_kwargs(iso22_scenario, opts))
+    _, section = _copied_configuration(tmp_path, iso22_scenario, result, opts)
+    assert section["source"] == "run", section.get("mismatches")
+    run = section["run"]
+    assert run["smoke_speed"]["source"] == "fds"
+    assert run["gas_fed"]["o2_threshold_percent"] == 20.0
+    assert run["tenability"]["incapacitation_mode"] == "probabilistic"
+    assert run["rerouting"]["cost_config"]["w_smoke"] == 0.0
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        ["--enable-heat-fed"],
+        [
+            "--enable-heat-fed",
+            "--heat-clothing",
+            "unclothed",
+            "--heat-fed-threshold",
+            "0.5",
+        ],
+        [
+            "--enable-heat-fed",
+            "--heat-fed-method",
+            "total-flux",
+            "--heat-emissivity",
+            "0.8",
+        ],
+        [
+            "--enable-heat-fed",
+            "--heat-fed-method",
+            "total-flux",
+            "--heat-regime",
+            "layer",
+            "--heat-layer-height",
+            "2",
+            "--heat-view-factor",
+            "0.5",
+            "--heat-layer-emissivity",
+            "0.9",
+        ],
+        ["--enable-heat-fed", "--smoke-update-interval", "2", "--vis-cell-size", "0.5"],
+    ],
+)
+def test_predicted_run_settings_match_the_built_models(heat_scenario, argv):
+    """The prediction equals what build_run_kwargs gives run_scenario."""
+    from pyfds_evac.config.effective import predicted_run_settings
+    from pyfds_evac.core.manifest import run_settings
+
+    opts = _parse(
+        "--scenario", "x", "--fds-dir", HEAT_ONLY_FDS, "--allow-fds-horizon-hold", *argv
+    )
+    kwargs = build_run_kwargs(heat_scenario, opts)
+    used = run_settings(
+        seed=heat_scenario.seed,
+        **{
+            key: kwargs[key]
+            for key in (
+                "smoke_speed_model",
+                "fed_model",
+                "heat_fed_model",
+                "tenability_config",
+                "reroute_config",
+                "vis_model",
+                "smoke_blind",
+                "replay_exits",
+                "require_fds_coverage",
+            )
+        },
+    )
+    cfg = effective_configuration(opts, heat_scenario)
+    assert used["heat_fed"] is not None and used["visibility"] is not None
+    assert predicted_run_settings(opts, heat_scenario.raw, cfg) == used
