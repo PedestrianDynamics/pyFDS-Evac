@@ -20,37 +20,25 @@ the generated script.
 from __future__ import annotations
 
 import ast
-import math
-import pathlib
 import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from .runner import RunSpec, run_outcome, run_stamp
-
-# Options that are paths on this machine. They go into the PATHS block,
-# resolved to absolute paths, so they are easy to find and edit.
-_PATH_KEYS = ("scenario", "fds_dir", "vis_cache")
-
-# Output files the GUI writes through run.py's apply_outputs. That writer is
-# not part of the installed package, so the script does not write them; the
-# keys are set to None (build_run_kwargs reads only output_route_cost_history,
-# and collect_route_cost_history keeps that history on).
-OMITTED_OUTPUT_KEYS = (
-    "output_sqlite",
-    "output_smoke_history",
-    "output_fed_history",
-    "output_route_history",
-    "output_route_cost_history",
-    "export_app_bundle",
+# The literal checks and the script body are shared with
+# pyfds_evac.config.python_script; the names stay importable from here.
+from pyfds_evac.config.script import (  # noqa: F401
+    _PATH_KEYS,
+    OMITTED_OUTPUT_KEYS,
+    ExportError,
+    _abs_path,
+    _body,
+    _literal,
+    _safe,
+    export_options,
 )
 
-_PLAIN = re.compile(r"[\w.+:@/-]*")
-
-
-class ExportError(ValueError):
-    """The configuration holds a value that cannot be written as a literal."""
+from .runner import RunSpec, run_outcome, run_stamp
 
 
 @dataclass(frozen=True)
@@ -62,49 +50,10 @@ class ExportedScript:
     options: dict[str, Any]
 
 
-def _safe(text: Any) -> str:
-    """Return *text* for a comment: plain as is, anything else as ``repr``.
-
-    ``repr`` escapes newlines, carriage returns and every other line or
-    paragraph separator, so a hostile name cannot end the comment line.
-    """
-    s = str(text)
-    return s if _PLAIN.fullmatch(s) else repr(s)
-
-
-def _literal(key: str, value: Any) -> str:
-    """Return ``repr(value)``, refusing anything that is not a plain literal."""
-    if value is not None and not isinstance(value, (bool, int, float, str)):
-        raise ExportError(f"{key}: {type(value).__name__} is not exportable")
-    if isinstance(value, float) and not math.isfinite(value):
-        raise ExportError(f"{key}: {value!r} is not a finite number")
-    text = repr(value)
-    if ast.literal_eval(text) != value:  # pragma: no cover - defensive
-        raise ExportError(f"{key}: {value!r} does not round-trip")
-    return text
-
-
-def _abs_path(value: Any) -> str | None:
-    """Resolve a path option as the GUI process sees it, or keep None."""
-    if value is None or str(value).strip() == "":
-        return None
-    return str(pathlib.Path(str(value)).expanduser().resolve())
-
-
 def _stem(scenario_name: str) -> str:
     """A filename-safe stem for the scenario."""
     stem = re.sub(r"[^A-Za-z0-9_-]+", "_", scenario_name.replace(".json", ""))
     return stem.strip("_") or "scenario"
-
-
-def export_options(opts: Mapping[str, Any], seed: Any) -> dict[str, Any]:
-    """The non-path options the script passes, in a stable order."""
-    options = {"seed": seed}
-    for key in sorted(opts):
-        if key in _PATH_KEYS or key == "seed":
-            continue
-        options[key] = None if key in OMITTED_OUTPUT_KEYS else opts[key]
-    return options
 
 
 def _header(lines: list[str], version: Any, commit: Any, dirty: Any) -> list[str]:
@@ -141,86 +90,6 @@ def _seed_comment(kind: str, spec: RunSpec | None, seed: Any, baseseed: Any) -> 
     if seed is None:
         return f"  # None = the scenario's baseSeed ({_safe(baseseed)})"
     return ""
-
-
-def _body(
-    paths: dict[str, str | None],
-    output_dir: str,
-    options: dict[str, Any],
-    seed_comment: str,
-) -> list[str]:
-    """Imports, PATHS, settings, the run and the result check."""
-    lines = [
-        "",
-        "import argparse",
-        "import pathlib",
-        "import shutil",
-        "import sys",
-        "",
-        "from pyfds_evac.core import load_scenario, run_scenario",
-        "from pyfds_evac.core.manifest import manifest_path_for",
-        "from pyfds_evac.core.run_config import build_run_kwargs",
-        "",
-        "# PATHS: from the computer that ran the GUI. Edit them on another machine.",
-        f"SCENARIO = {_literal('scenario', paths['scenario'])}",
-        f"FDS_DIR = {_literal('fds_dir', paths['fds_dir'])}",
-        f"VIS_CACHE = {_literal('vis_cache', paths['vis_cache'])}",
-        "# A new folder: the script never overwrites the GUI run's files.",
-        f"OUTPUT_DIR = pathlib.Path({_literal('output_dir', output_dir)})",
-        "",
-        "# Settings: the resolved configuration the GUI passes to build_run_kwargs.",
-        "OPTIONS = {",
-    ]
-    for key, value in options.items():
-        comment = seed_comment if key == "seed" else ""
-        lines.append(f"    {_literal(key, key)}: {_literal(key, value)},{comment}")
-    lines += [
-        "}",
-        "",
-        "opts = argparse.Namespace(",
-        "    **OPTIONS,",
-        "    scenario=SCENARIO,",
-        "    fds_dir=FDS_DIR,",
-        "    vis_cache=VIS_CACHE,",
-        ")",
-        "",
-        "scenario = load_scenario(SCENARIO)",
-        "run_kwargs = build_run_kwargs(scenario, opts, log=print)",
-        "result = run_scenario(scenario, **run_kwargs)",
-        "",
-        "# The summary and exit status of run.py: a run the time limit stops with",
-        "# agents inside or flow agents not yet spawned is incomplete (exit 2).",
-        "if result.success:",
-        "    print(",
-        '        f"Simulation finished in {result.evacuation_time:.2f} s "',
-        '        f"({result.agents_evacuated}/{result.total_agents} evacuated)."',
-        "    )",
-        "else:",
-        "    not_spawned = (",
-        '        f", {result.agents_not_spawned} not spawned"',
-        "        if result.agents_not_spawned",
-        '        else ""',
-        "    )",
-        "    print(",
-        '        "Simulation incomplete: time limit reached after "',
-        '        f"{result.evacuation_time:.2f} s "',
-        '        f"({result.agents_evacuated}/{result.total_agents} evacuated, "',
-        '        f"{result.agents_remaining} remaining{not_spawned})."',
-        "    )",
-        "",
-        "OUTPUT_DIR.mkdir(parents=True, exist_ok=True)",
-        "if result.sqlite_file:",
-        '    trajectory = OUTPUT_DIR / "trajectory.sqlite"',
-        "    shutil.copy2(result.sqlite_file, trajectory)",
-        '    print(f"Trajectory SQLite: {trajectory.resolve()}")',
-        "    if result.manifest_file:",
-        "        shutil.copy2(result.manifest_file, manifest_path_for(trajectory))",
-        "result.cleanup()  # remove the temporary copies run_scenario wrote",
-        "if not result.success:",
-        "    sys.exit(2)",
-        "",
-    ]
-    return lines
 
 
 def _render(

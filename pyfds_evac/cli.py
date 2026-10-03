@@ -12,18 +12,9 @@ from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
 
+from pyfds_evac.config.parameters import _u_factor as _u_factor  # noqa: F401
+from pyfds_evac.config.parameters import add_arguments
 from pyfds_evac.core.agent_scalars import write_agent_scalars
-from pyfds_evac.core.fed import (
-    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
-    DEFAULT_HEAT_EMISSIVITY,
-    DEFAULT_HEAT_SKIN_TEMPERATURE_C,
-    HEAT_CLOTHING,
-    HEAT_ENDPOINTS,
-    HEAT_FED_METHODS,
-    HEAT_FLUX_REGIMES,
-    HEAT_RADIANT_SOURCES,
-    HEAT_U_FACTOR_RANGE,
-)
 from pyfds_evac.core.manifest import manifest_path_for
 
 if TYPE_CHECKING:
@@ -56,18 +47,6 @@ def __getattr__(name: str):
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
     _load_run_stack()
     return globals()[name]
-
-
-def _u_factor(text: str) -> float:
-    """Parse --heat-u-factor: a finite number in [0.25, 1]."""
-    low, high = HEAT_U_FACTOR_RANGE
-    try:
-        value = float(text)
-    except ValueError as exc:
-        raise argparse.ArgumentTypeError(f"not a number: {text!r}") from exc
-    if not low <= value <= high:  # also rejects nan
-        raise argparse.ArgumentTypeError(f"must be in [{low}, {high}], got {text}")
-    return value
 
 
 _DESCRIPTION = """\
@@ -116,421 +95,7 @@ def _build_parser() -> argparse.ArgumentParser:
         epilog=_EPILOG,
         formatter_class=_HelpFormatter,
     )
-    run = parser.add_argument_group("Scenario & run")
-    outputs = parser.add_argument_group("Outputs", "Files the run writes and keeps.")
-    fds = parser.add_argument_group(
-        "FDS input & smoke", "Where the fire data comes from and how it is sampled."
-    )
-    gas = parser.add_argument_group(
-        "Toxic gas (FED/FIC)",
-        "Fractional effective dose of the FDS gas slices and the irritant rule.",
-    )
-    heat = parser.add_argument_group(
-        "Heat",
-        "Heat dose, off unless --enable-heat-fed is given; the other options here "
-        "need it.",
-    )
-    routing = parser.add_argument_group("Routing")
-    sight = parser.add_argument_group(
-        "Visibility & signs", "What agents can see of the route graph and signs."
-    )
-    aset = parser.add_argument_group(
-        "ASET/RSET tools",
-        "Uncoupled and speed-only runs for comparing egress with and without fire.",
-    )
-    run.add_argument(
-        "--scenario", required=True, help="Scenario JSON, ZIP, or directory"
-    )
-    run.add_argument(
-        "--seed",
-        type=int,
-        default=None,
-        help="Random seed; overrides the scenario's seed",
-    )
-    run.add_argument(
-        "--print-summary",
-        action="store_true",
-        help="Print the loaded scenario summary before running",
-    )
-    run.add_argument(
-        "--debug",
-        action="store_true",
-        help="Print debug messages, such as the rerouting trace",
-    )
-    outputs.add_argument(
-        "--output-sqlite",
-        help="Copy the generated trajectory SQLite file to this location",
-    )
-    outputs.add_argument(
-        "--cleanup",
-        action="store_true",
-        help="Delete the temporary trajectory SQLite file after the run",
-    )
-    outputs.add_argument(
-        "--export-app-bundle",
-        help="Write config.json and geometry.wkt to this directory",
-    )
-    outputs.add_argument(
-        "--export-only",
-        action="store_true",
-        help="Export the scenario bundle without running the simulation",
-    )
-    fds.add_argument(
-        "--fds-dir",
-        help="FDS output directory (the one with the .smv file); smoke, gas and "
-        "heat are sampled from it",
-    )
-    fds.add_argument(
-        "--constant-extinction",
-        type=float,
-        help="Use a constant extinction coefficient K [1/m] instead of FDS input. "
-        "Without it, an FDS case with no SOOT EXTINCTION COEFFICIENT slice "
-        "runs with no smoke speed reduction (a warning is logged).",
-    )
-    fds.add_argument(
-        "--smoke-update-interval",
-        type=float,
-        default=1.0,
-        help="Time between smoke-speed updates [s] (default: 1.0)",
-    )
-    fds.add_argument(
-        "--smoke-slice-height",
-        type=float,
-        default=1.6,
-        help="FDS slice height [m] for smoke and heat sampling "
-        "(default: 1.6, FDS+Evac HUMAN_SMOKE_HEIGHT; pass 2.0 for the "
-        "previous pyFDS-Evac default)",
-    )
-    fds.add_argument(
-        "--allow-fds-horizon-hold",
-        action="store_true",
-        help="Hold the last FDS frame when the run outlasts the FDS output "
-        "(one warning per quantity). Without it, a max_simulation_time past "
-        "the FDS end time is an error at setup, and so is any sample past it.",
-    )
-    fds.add_argument(
-        "--require-fds-coverage",
-        action="store_true",
-        help="Treat the FDS domain as required: the run stops at setup when "
-        "the walkable area, an exit, checkpoint, spawn area, sign or route "
-        "edge lies outside the FDS slices, and at any smoke, FED, heat or "
-        "sign-visibility sample outside them. Without it, those places read "
-        "ambient air and clear sight, as in FDS+Evac, with a warning at setup "
-        "and in_fds_domain = False in the histories.",
-    )
-    outputs.add_argument(
-        "--output-smoke-history",
-        help="Write smoke speed/extinction history to CSV",
-    )
-    outputs.add_argument(
-        "--output-fed-history",
-        help="Write FED history to CSV",
-    )
-    fds.add_argument(
-        "--inspect-fds",
-        action="store_true",
-        help="Inspect available FDS quantities with fdsreader and exit",
-    )
-    routing.add_argument(
-        "--enable-rerouting",
-        action=argparse.BooleanOptionalAction,
-        default=True,
-        help="Dynamic smoke/congestion-based route reevaluation "
-        "(default: on; use --no-enable-rerouting to disable)",
-    )
-    routing.add_argument(
-        "--reroute-interval",
-        type=float,
-        default=1.0,
-        help="Time between route reevaluations per agent [s] (default: 1)",
-    )
-    outputs.add_argument(
-        "--output-route-history",
-        help="Write route switch history to CSV",
-    )
-    outputs.add_argument(
-        "--output-route-cost-history",
-        help="Write ranked route cost snapshots to CSV",
-    )
-    outputs.add_argument(
-        "--output-exit-history",
-        help="Write each path agent's exit (agent_id, origin, spawn_index, "
-        "exit_id) to CSV: the exit it left through, or the one it was heading "
-        "for at the end",
-    )
-    aset.add_argument(
-        "--smoke-blind",
-        action="store_true",
-        help="Sample the fire for the smoke and FED histories only: agents walk, "
-        "choose exits and see signs as in clear air, rerouting and tenability "
-        "are off, and FED still accumulates",
-    )
-    aset.add_argument(
-        "--replay-exits",
-        help="Exit history CSV of an earlier run (--output-exit-history); the "
-        "agent spawned n-th from an origin is sent to the exit the n-th agent "
-        "from that origin took there, by clear-air costs on the agent's map. "
-        "Needs the same scenario and seed",
-    )
-    sight.add_argument(
-        "--vis-cache",
-        help="Path to vismap .npz cache for sight gating, which decides which "
-        "graph nodes enter an agent's cognitive map; route choice does not read "
-        "it. "
-        "Requires rerouting enabled (on by default; do not pass "
-        "--no-enable-rerouting). With --fds-dir the cache holds the smoke-aware "
-        "vismap, without it the clear-air one. Created if missing, loaded if "
-        "present.",
-    )
-    sight.add_argument(
-        "--clear-air-visibility",
-        action="store_true",
-        help="Force clear-air sight gating even on a deck whose agents all "
-        "start fully familiar. Such agents never consult it to learn the graph, "
-        "and route choice does not read it either (the gate uses the optical "
-        "depth K_ave * L of the route polyline), so on such a deck it changes "
-        "nothing. Decks with discovery agents get it without asking.",
-    )
-    sight.add_argument(
-        "--no-visibility",
-        action="store_true",
-        help="Turn sight gating off entirely. Agents then learn every "
-        "neighbour of each node they reach, by contact rather than by seeing "
-        "it -- faster, and not a fire scenario.",
-    )
-    sight.add_argument(
-        "--vis-cell-size",
-        type=float,
-        default=0.25,
-        help="Cell size of the clear-air visibility grid [m]. A wall "
-        "thinner than one cell stops occluding, so keep it below the thinnest "
-        "wall that must block sight (default: 0.25)",
-    )
-    sight.add_argument(
-        "--max-sign-distance",
-        type=float,
-        default=30.0,
-        help="Farthest distance [m] from which a sign can be read, even "
-        "in clear air. A sign's own 'max_distance' overrides it (default: 30, "
-        "as in fdsvismap)",
-    )
-    gas.add_argument(
-        "--disable-tenability",
-        action="store_true",
-        help="Run without a tenability config: disables the FIC speed-reduction "
-        "rule, toxic FED incapacitation and heat FED incapacitation. FED is "
-        "still accumulated and reported (default: incapacitation active when a "
-        "FED or heat FED model is loaded; the FIC rule only with "
-        "--enable-fic-speed)",
-    )
-    gas.add_argument(
-        "--enable-fic-speed",
-        action="store_true",
-        help="Slow agents by the irritant (FIC) rule max(fic-min-factor, "
-        "1 - fic-alpha * FIC) on top of the smoke-speed law. Off by default, "
-        "as FDS+Evac has no irritant slowdown; before this became opt-in it "
-        "was on whenever a FED model was loaded",
-    )
-    gas.add_argument(
-        "--fic-alpha",
-        type=float,
-        default=0.7,
-        help="Slope of the FIC speed-reduction rule, a pyFDS-Evac "
-        "assumption, source unknown (#147); needs --enable-fic-speed "
-        "(default: 0.7)",
-    )
-    gas.add_argument(
-        "--fic-min-factor",
-        type=float,
-        default=0.3,
-        help="Lower bound on the FIC speed factor; needs --enable-fic-speed "
-        "(default: 0.3)",
-    )
-    gas.add_argument(
-        "--fed-threshold",
-        type=float,
-        default=1.0,
-        help="Cumulative FED at which an agent is incapacitated; the median "
-        "in probabilistic mode (default: 1.0 per ISO 13571 / Korhonen 2021)",
-    )
-    gas.add_argument(
-        "--o2-threshold-percent",
-        type=float,
-        default=20.0,
-        help="O2 volume percent at or above which the hypoxia term of the gas "
-        "FED is zero (default: 20.0, as FDS/FDS+Evac; 19.5 was the previous "
-        "pyFDS-Evac default, the OSHA limit used by Pathfinder)",
-    )
-    gas.add_argument(
-        "--incapacitation-mode",
-        choices=("probabilistic", "deterministic"),
-        default="deterministic",
-        help="deterministic: every agent uses fed-threshold, as FDS+Evac "
-        "(default); probabilistic: per-agent threshold ~ "
-        "lognormal(median=fed-threshold, susceptibility-sigma), fit to NIST "
-        "TN 1797 population bands",
-    )
-    gas.add_argument(
-        "--susceptibility-sigma",
-        type=float,
-        default=0.94,
-        help="Log-normal sigma of the per-agent incapacitation threshold in "
-        "probabilistic mode (default: 0.94 -> ~10/50/88%% at FED 0.3/1/3)",
-    )
-    heat.add_argument(
-        "--enable-heat-fed",
-        action="store_true",
-        help="Accumulate the convective heat FED (ISO 13571:2012 Eq. (9), "
-        "fully clothed, or the law of --heat-clothing, --heat-endpoint or "
-        "--heat-fed-method) from "
-        "the FDS TEMPERATURE slice and incapacitate on it. Off by default, as "
-        "FDS+Evac has no heat dose; before this became opt-in it was on "
-        "whenever the case had a TEMPERATURE slice",
-    )
-    heat.add_argument(
-        "--heat-clothing",
-        choices=HEAT_CLOTHING,
-        default=None,
-        help="Convective law of ISO 13571:2012 (8.3) for the heat FED; needs "
-        "--enable-heat-fed. clothed (default): Eq. (9), t = 4.1e8 T^-3.61 min, "
-        "fully clothed. unclothed: Eq. (10), t = 5e7 T^-3.4 min, unclothed or "
-        "lightly clothed, the same law as SFPE Handbook Eq. 63.44 and the "
-        "default before the ISO law. No effect with --heat-endpoint or "
-        "--heat-fed-method total-flux",
-    )
-    heat.add_argument(
-        "--heat-endpoint",
-        choices=tuple(HEAT_ENDPOINTS),
-        default=None,
-        help="Heat endpoint of SFPE Handbook Ch. 63: tolerance (Eq. 63.45), "
-        "injury (Eq. 63.46) or fatal (Eq. 63.47) convective law, so that heat "
-        "FED = 1 is that endpoint; needs --enable-heat-fed. Samples above "
-        "205 C (an assumed limit) or non-finite are flagged. Default: none, the "
-        "ISO law of --heat-clothing. "
-        "With --heat-fed-method total-flux it selects the dose D of Eq. 63.43 "
-        "(default there: fatal)",
-    )
-    heat.add_argument(
-        "--heat-fed-method",
-        choices=HEAT_FED_METHODS,
-        default="convective",
-        help="Heat dose law; needs --enable-heat-fed. convective (default): "
-        "the ISO law of --heat-clothing or the law of --heat-endpoint. "
-        "total-flux: heat flux to the "
-        "skin from Eq. 63.49 (both terms in W/m2, divided by 1000 together), "
-        "rate q^1.33/D (Eq. 63.43), the radiant term (net or excess, not "
-        "incident) counted as zero below 2.5 kW/m2 (ISO 13571:2012 8.2, 8.4); "
-        "D of "
-        "--heat-endpoint, fatal (16.7) without it",
-    )
-    heat.add_argument(
-        "--heat-emissivity",
-        type=float,
-        default=DEFAULT_HEAT_EMISSIVITY,
-        help="Emissivity of the gas at the head for --heat-fed-method "
-        f"total-flux (default: {DEFAULT_HEAT_EMISSIVITY}, an assumption: SFPE "
-        "p. 2384 gives 'perhaps 0.5 for smoke', 0.05 for a gas)",
-    )
-    heat.add_argument(
-        "--heat-convective-coefficient",
-        type=float,
-        default=DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
-        help="Convective heat transfer coefficient h [W/m2/K] for "
-        "--heat-fed-method total-flux (default: "
-        f"{DEFAULT_HEAT_CONVECTIVE_COEFFICIENT}, an assumption: SFPE p. 2384 "
-        "gives 5-8 for slow-moving air)",
-    )
-    heat.add_argument(
-        "--heat-skin-temperature",
-        type=float,
-        default=DEFAULT_HEAT_SKIN_TEMPERATURE_C,
-        help="Fixed skin temperature [C] for --heat-fed-method total-flux "
-        f"(default: {DEFAULT_HEAT_SKIN_TEMPERATURE_C}, an assumption: not given "
-        "by the Handbook for Eq. 63.49)",
-    )
-    heat.add_argument(
-        "--heat-radiant-source",
-        choices=HEAT_RADIANT_SOURCES,
-        default="gas",
-        help="Radiant term of --heat-fed-method total-flux. gas (default): "
-        "eps sigma (T_g^4 - T_s^4) of Eq. 63.49. integrated-intensity: the "
-        "excess f*(U - 4 sigma T_s^4) over an isotropic field at the skin "
-        "temperature, from the FDS INTEGRATED INTENSITY slice at the slice "
-        "height, replacing the gas term (and the layer term of --heat-regime "
-        "layer); needs --heat-u-factor",
-    )
-    heat.add_argument(
-        "--heat-u-factor",
-        type=_u_factor,
-        default=None,
-        help="Factor f in [0.25, 1] for --heat-radiant-source "
-        "integrated-intensity: the incident radiant flux is f*U, from U/4 "
-        "(sphere, or a plate in isotropic radiation) to U (one small source "
-        "seen face-on); the dose uses the excess f*(U - 4 sigma T_s^4). No default: "
-        "required with that source",
-    )
-    heat.add_argument(
-        "--heat-regime",
-        choices=HEAT_FLUX_REGIMES,
-        default="smoke",
-        help="Where the head is, for --heat-fed-method total-flux; a user "
-        "choice, no automatic rule. smoke (default): head in smoke, Eq. 63.49 "
-        "at the head. layer: head in clear air below a hot layer, convection at "
-        "the head plus the net layer flux phi*eps_L*sigma*(T_L^4 - T_s^4) from "
-        "a TEMPERATURE slice at --heat-layer-height, with no radiant term of "
-        "the gas at the head; needs --heat-layer-height, --heat-view-factor and "
-        "--heat-layer-emissivity. With --heat-radiant-source "
-        "integrated-intensity, U supplies the radiant term instead and the "
-        "layer term is not added (one warning)",
-    )
-    heat.add_argument(
-        "--heat-layer-height",
-        type=float,
-        default=None,
-        help="Height [m] of the TEMPERATURE slice read as the hot layer for "
-        "--heat-regime layer (no default: it depends on the ceiling height)",
-    )
-    heat.add_argument(
-        "--heat-view-factor",
-        type=float,
-        default=None,
-        help="View factor phi in [0, 1] from the skin to the layer for "
-        "--heat-regime layer (no default: about 1 for the crown, about 0.5 "
-        "for the face, spec 016, unsourced)",
-    )
-    heat.add_argument(
-        "--heat-layer-emissivity",
-        type=float,
-        default=None,
-        help="Layer emissivity eps_L in [0, 1] for --heat-regime layer (no "
-        "default: no sourced value)",
-    )
-    heat.add_argument(
-        "--heat-fed-threshold",
-        type=float,
-        default=None,
-        help="Median cumulative heat FED at which an agent is thermally "
-        "incapacitated; needs --enable-heat-fed. Default: none, the value of "
-        "--fed-threshold, as ISO 13571:2012 uses one threshold for FED and FEC "
-        "(5.4) and sets the heat threshold in the same manner (8.5). Setting it departs from ISO; the run logs a warning "
-        "and the manifest records heat_fed_threshold_override",
-    )
-    heat.add_argument(
-        "--heat-incapacitation-mode",
-        choices=("probabilistic", "deterministic"),
-        default="deterministic",
-        help="Same semantics as --incapacitation-mode, applied to the "
-        "independent heat FED track (default: deterministic, as no "
-        "population spread for heat is published)",
-    )
-    heat.add_argument(
-        "--heat-susceptibility-sigma",
-        type=float,
-        default=0.94,
-        help="Log-normal sigma for the heat incapacitation threshold in "
-        "probabilistic mode (default: 0.94, reused from the gas value as a "
-        "starting assumption -- no independent literature support for heat)",
-    )
+    add_arguments(parser)
     return parser
 
 
@@ -699,14 +264,44 @@ def _maybe_write_agent_scalars(output_path, fed_history) -> None:
     write_agent_scalars(pathlib.Path(output_path).resolve(), fed_history)
 
 
-def _copy_manifest(result, output_path: pathlib.Path) -> pathlib.Path | None:
-    """Copy the run manifest beside the copied trajectory, if there is one."""
+def _copy_manifest(
+    result, output_path: pathlib.Path, configuration: dict | None = None
+) -> pathlib.Path | None:
+    """Copy the run manifest beside the copied trajectory, if there is one.
+
+    *configuration*, the effective configuration of the run, is added to
+    the copy under ``configuration``.
+    """
     manifest_file = getattr(result, "manifest_file", None)
     if not manifest_file or not pathlib.Path(manifest_file).is_file():
         return None
     destination = manifest_path_for(output_path)
     shutil.copy2(manifest_file, destination)
+    if configuration is not None:
+        manifest = json.loads(destination.read_text())
+        manifest["configuration"] = configuration
+        destination.write_text(json.dumps(manifest, indent=2) + "\n")
     return destination
+
+
+def _configuration_record(scenario, opts, result) -> dict | None:
+    """The configuration the run used, for the manifest, or None if it fails.
+
+    Checked against what ``run_scenario`` reports it used
+    (``result.run_settings``); see ``pyfds_evac.config.effective.run_record``.
+    """
+    from pyfds_evac.config.effective import effective_configuration, run_record
+
+    try:
+        configuration = effective_configuration(opts, scenario)
+        used = getattr(result, "run_settings", None)
+        return run_record(configuration, used, opts, scenario)
+    except (OSError, ValueError, TypeError) as exc:
+        logging.getLogger(__name__).warning(
+            "Could not record the effective configuration in the manifest: %s",
+            exc,
+        )
+        return None
 
 
 # Exit status of a run that reached max_simulation_time with agents inside or
@@ -778,6 +373,15 @@ def _summary_line(result) -> str:
     )
 
 
+def _show_config(scenario, args) -> int:
+    """Print the effective configuration; 1 if the run would stop at setup."""
+    from pyfds_evac.config import effective_configuration
+
+    configuration = effective_configuration(args, scenario)
+    print(configuration.format_text())
+    return 0 if configuration.ok else 1
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     parser = _build_parser()
@@ -803,6 +407,9 @@ def main() -> int:
         inventory = inspect_fds_quantities(args.fds_dir)
         print(json.dumps(inventory.__dict__, indent=2, sort_keys=True))
         return 0
+
+    if args.show_config:
+        return _show_config(scenario, args)
 
     run_kwargs = build_run_kwargs(scenario, args, log=print)
 
@@ -863,7 +470,9 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         output_path.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(result.sqlite_file, output_path)
         artifacts.append(f"Trajectory SQLite: {output_path}")
-        manifest_path = _copy_manifest(result, output_path)
+        manifest_path = _copy_manifest(
+            result, output_path, _configuration_record(scenario, opts, result)
+        )
         if manifest_path is not None:
             artifacts.append(f"Run manifest: {manifest_path}")
         _maybe_write_agent_scalars(output_path, result.fed_history)

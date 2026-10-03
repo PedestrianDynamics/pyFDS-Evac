@@ -491,6 +491,16 @@
   "required": false,
   "type": "int"
  },
+ "--show-config": {
+  "action": "_StoreTrueAction",
+  "choices": null,
+  "const": true,
+  "default": false,
+  "dest": "show_config",
+  "nargs": 0,
+  "required": false,
+  "type": null
+ },
  "--smoke-blind": {
   "action": "_StoreTrueAction",
   "choices": null,

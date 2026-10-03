@@ -15,19 +15,25 @@ from __future__ import annotations
 
 import csv
 import logging
-import math
 import pathlib
 from collections.abc import Callable
 from typing import Any
 
-from .cognitive_map import familiarity_probability
+from pyfds_evac.config import messages
+from pyfds_evac.config.parameters import option, parameter
+from pyfds_evac.config.rules import (
+    GAS_SLICES,
+    check_options,
+    has_discovery_agents,
+    inactive_settings,
+    is_set,
+    predict_mechanisms,
+)
+
 from .fds_inventory import inspect_fds_quantities
 from .fds_sampling import fds_output_horizon
 from .fed import (
     DEFAULT_HEAT_CLOTHING,
-    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
-    DEFAULT_HEAT_EMISSIVITY,
-    DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     DefaultFedConfig,
     DefaultFedModel,
     DefaultHeatFedModel,
@@ -42,11 +48,7 @@ from .smoke_speed import (
     SmokeSpeedConfig,
     SmokeSpeedModel,
 )
-from .visibility import (
-    DEFAULT_MAX_SIGN_DISTANCE_M,
-    VisibilityModel,
-    extract_sign_descriptors,
-)
+from .visibility import VisibilityModel, extract_sign_descriptors
 
 Logger = Callable[[str], None]
 
@@ -73,12 +75,7 @@ def _build_smoke_model(opts: Any, log: Logger):
         # Not an error, same reasoning as _build_fed_model: a heat-only case
         # carries no soot, and the run continues -- but agents then walk at
         # clear-air speed, which should not pass unnoticed.
-        _logger.warning(
-            "Smoke speed reduction is disabled for %s: it has no SOOT "
-            "EXTINCTION COEFFICIENT slice, so agents walk at clear-air speed. "
-            "Pass --constant-extinction to set a uniform extinction instead.",
-            opts.fds_dir,
-        )
+        _logger.warning(messages.smoke_without_extinction(opts.fds_dir))
         field = None
     elif opts.fds_dir:
         field = ExtinctionField.from_fds(
@@ -96,12 +93,12 @@ def _build_smoke_model(opts: Any, log: Logger):
 
 def _allow_hold(opts: Any) -> bool:
     """Return whether sampling may hold the last FDS frame (#340)."""
-    return bool(getattr(opts, "allow_fds_horizon_hold", False))
+    return bool(option(opts, "allow_fds_horizon_hold"))
 
 
 def _require_coverage(opts: Any) -> bool:
     """Return whether a sample outside the FDS slices is an error (#426)."""
-    return bool(getattr(opts, "require_fds_coverage", False))
+    return bool(option(opts, "require_fds_coverage"))
 
 
 def _check_fds_horizon(scenario: Any, opts: Any, log: Logger = _noop) -> None:
@@ -115,12 +112,9 @@ def _check_fds_horizon(scenario: Any, opts: Any, log: Logger = _noop) -> None:
     if overrun is None:
         return
     if _allow_hold(opts):
-        log(f"Warning: {overrun}; holding the last frame from there on.")
+        log(messages.horizon_hold(overrun))
         return
-    raise ValueError(
-        f"{overrun}. Lower max_simulation_time, extend T_END in the FDS run, "
-        "or pass --allow-fds-horizon-hold to hold the last frame."
-    )
+    raise ValueError(messages.horizon_error(overrun))
 
 
 def _fds_horizon_overrun(scenario: Any, opts: Any) -> str | None:
@@ -134,11 +128,7 @@ def _fds_horizon_overrun(scenario: Any, opts: Any) -> str | None:
     last, interval = horizon
     if float(max_time) <= last + interval:
         return None
-    return (
-        f"max_simulation_time={float(max_time):.1f} s runs past the FDS output "
-        f"of {opts.fds_dir}, which ends at t={last:.1f} s (output interval "
-        f"{interval:.1f} s)"
-    )
+    return messages.horizon_overrun(max_time, opts.fds_dir, last, interval)
 
 
 def _has_extinction_slice(fds_dir: str) -> bool:
@@ -158,25 +148,15 @@ def _build_fed_model(opts: Any, log: Logger):
         # exactly like a survivable fire. Say so rather than letting the user
         # infer tenability from a model that never ran.
         present = sorted(inventory.canonical_slice_names())
-        missing = sorted({"co", "co2", "o2"}.difference(present))
-        named = ", ".join(m.upper() for m in missing)
-        _logger.warning(
-            "FED is disabled for %s: it has no %s %s, and all three of CO, CO2 "
-            "and O2 are needed. Results will report zero dose and no "
-            "incapacitation. FDS only writes these species when the &REAC line "
-            "asks for them (CO needs CO_YIELD); see "
-            "docs/fds-case-requirements.md.",
-            opts.fds_dir,
-            named,
-            "slice" if len(missing) == 1 else "slices",
-        )
+        missing = sorted(set(GAS_SLICES).difference(present))
+        _logger.warning(messages.fed_without_gases(opts.fds_dir, missing))
         return None
     log("Configuring FED calculation.")
     fed_config = DefaultFedConfig(
         fds_dir=opts.fds_dir,
         update_interval_s=opts.smoke_update_interval,
         slice_height_m=opts.smoke_slice_height,
-        o2_threshold_percent=getattr(opts, "o2_threshold_percent", 20.0),
+        o2_threshold_percent=option(opts, "o2_threshold_percent"),
     )
     return DefaultFedModel(
         FdsFedField.from_fds(
@@ -202,22 +182,12 @@ def _build_heat_fed_model(opts: Any, log: Logger):
     """
     if not opts.fds_dir:
         return None
-    if not getattr(opts, "enable_heat_fed", False):
+    if not option(opts, "enable_heat_fed"):
         log("Heat FED is off; pass --enable-heat-fed to accumulate it.")
-        if getattr(opts, "heat_endpoint", None) is not None:
-            _logger.warning("--heat-endpoint has no effect without --enable-heat-fed.")
-        if getattr(opts, "heat_clothing", None) is not None:
-            _logger.warning("--heat-clothing has no effect without --enable-heat-fed.")
-        if getattr(opts, "heat_fed_method", "convective") != "convective":
-            _logger.warning(
-                "--heat-fed-method has no effect without --enable-heat-fed."
-            )
-        if getattr(opts, "heat_radiant_source", "gas") != "gas":
-            _logger.warning(
-                "--heat-radiant-source has no effect without --enable-heat-fed."
-            )
-        if getattr(opts, "heat_regime", "smoke") != "smoke":
-            _logger.warning("--heat-regime has no effect without --enable-heat-fed.")
+        for dest in _HEAT_LAW_FLAGS:
+            if is_set(opts, dest):
+                flag = parameter(dest).flag
+                _logger.warning(messages.heat_option_without_enable(flag))
         return None
     inventory = inspect_fds_quantities(opts.fds_dir)
     if not inventory.supports_heat_fed():
@@ -225,21 +195,15 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         # carry no TEMPERATURE slice, and the run continues without heat FED
         # -- but every heat FED column then reads zero, which looks exactly
         # like a thermally survivable fire. Say so.
-        _logger.warning(
-            "Heat FED is disabled for %s: it has no TEMPERATURE slice. "
-            "Results will report zero heat dose and no thermal "
-            "incapacitation. Add `&SLCF QUANTITY='TEMPERATURE'` to the FDS "
-            "deck; see docs/fds-case-requirements.md.",
-            opts.fds_dir,
-        )
+        _logger.warning(messages.heat_without_temperature(opts.fds_dir))
         return None
-    endpoint = getattr(opts, "heat_endpoint", None)
-    method = getattr(opts, "heat_fed_method", "convective")
+    endpoint = option(opts, "heat_endpoint")
+    method = option(opts, "heat_fed_method")
     clothing = _heat_clothing(opts, endpoint, method)
     law = _ISO_LAW_NAMES[clothing] if endpoint is None else f"{endpoint} endpoint"
     if method == "total-flux":
         law = f"total flux, {endpoint or 'fatal'} dose"
-    if method == "total-flux" and getattr(opts, "heat_regime", "smoke") == "layer":
+    if method == "total-flux" and option(opts, "heat_regime") == "layer":
         law += f", hot layer at {opts.heat_layer_height} m"
     log(f"Configuring heat FED calculation ({law}).")
     heat_fed_config = DefaultFedConfig(
@@ -247,7 +211,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         update_interval_s=opts.smoke_update_interval,
         slice_height_m=opts.smoke_slice_height,
     )
-    radiant_source = getattr(opts, "heat_radiant_source", "gas")
+    radiant_source = option(opts, "heat_radiant_source")
     field_kwargs = {
         "slice_height_m": opts.smoke_slice_height,
         "allow_horizon_hold": _allow_hold(opts),
@@ -263,18 +227,24 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         endpoint=endpoint,
         method=method,
         clothing=clothing,
-        emissivity=getattr(opts, "heat_emissivity", DEFAULT_HEAT_EMISSIVITY),
-        convective_coefficient=getattr(
-            opts, "heat_convective_coefficient", DEFAULT_HEAT_CONVECTIVE_COEFFICIENT
-        ),
-        skin_temperature_celsius=getattr(
-            opts, "heat_skin_temperature", DEFAULT_HEAT_SKIN_TEMPERATURE_C
-        ),
+        emissivity=option(opts, "heat_emissivity"),
+        convective_coefficient=option(opts, "heat_convective_coefficient"),
+        skin_temperature_celsius=option(opts, "heat_skin_temperature"),
         radiant_source=radiant_source,
-        u_factor=getattr(opts, "heat_u_factor", None),
+        u_factor=option(opts, "heat_u_factor"),
         **_heat_layer_kwargs(opts),
     )
 
+
+# Heat law options that warn when given with --fds-dir but no
+# --enable-heat-fed (D13).
+_HEAT_LAW_FLAGS = (
+    "heat_endpoint",
+    "heat_clothing",
+    "heat_fed_method",
+    "heat_radiant_source",
+    "heat_regime",
+)
 
 _ISO_LAW_NAMES = {
     "clothed": "ISO 13571:2012 Eq. (9), clothed",
@@ -284,14 +254,11 @@ _ISO_LAW_NAMES = {
 
 def _heat_clothing(opts: Any, endpoint: str | None, method: str) -> str:
     """Return the clothing of the ISO law; warn when another law is in use."""
-    clothing = getattr(opts, "heat_clothing", None)
+    clothing = option(opts, "heat_clothing")
     if clothing is None:
         return DEFAULT_HEAT_CLOTHING
     if endpoint is not None or method != "convective":
-        _logger.warning(
-            "--heat-clothing has no effect with --heat-endpoint or "
-            "--heat-fed-method total-flux."
-        )
+        _logger.warning(messages.HEAT_CLOTHING_OVERRIDDEN)
     return clothing
 
 
@@ -302,20 +269,11 @@ def _check_integrated_intensity_source(opts: Any, method: str, inventory) -> Non
     as a case with no radiation.
     """
     if method != "total-flux":
-        raise ValueError(
-            "--heat-radiant-source integrated-intensity needs "
-            "--heat-fed-method total-flux."
-        )
-    if getattr(opts, "heat_u_factor", None) is None:
-        raise ValueError(
-            "--heat-radiant-source integrated-intensity needs --heat-u-factor "
-            "in [0.25, 1]; there is no default."
-        )
+        raise ValueError(messages.INTEGRATED_INTENSITY_NEEDS_TOTAL_FLUX)
+    if option(opts, "heat_u_factor") is None:
+        raise ValueError(messages.INTEGRATED_INTENSITY_NEEDS_U)
     if "integrated_intensity" not in inventory.canonical_slice_names():
-        raise ValueError(
-            f"{opts.fds_dir} has no INTEGRATED INTENSITY slice. Add "
-            "`&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height."
-        )
+        raise ValueError(messages.integrated_intensity_slice_missing(opts.fds_dir))
 
 
 def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
@@ -324,7 +282,7 @@ def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
     The layer regime loads a second TEMPERATURE slice at
     ``opts.heat_layer_height``; the smoke regime needs none.
     """
-    regime = getattr(opts, "heat_regime", "smoke")
+    regime = option(opts, "heat_regime")
     if regime != "layer":
         return {"regime": regime}
     return {
@@ -341,27 +299,11 @@ def _heat_layer_kwargs(opts: Any) -> dict[str, Any]:
     }
 
 
-def _validate_heat_layer_opts(opts: Any) -> None:
-    """Reject a layer heat regime that cannot be built (#222)."""
-    if not getattr(opts, "enable_heat_fed", False):
-        return
-    if getattr(opts, "heat_regime", "smoke") != "layer":
-        return
-    if getattr(opts, "heat_fed_method", "convective") != "total-flux":
-        raise ValueError("--heat-regime layer needs --heat-fed-method total-flux")
-    for option in ("heat_layer_height", "heat_view_factor", "heat_layer_emissivity"):
-        if getattr(opts, option, None) is None:
-            flag = "--" + option.replace("_", "-")
-            raise ValueError(f"--heat-regime layer needs {flag}")
-    if not math.isfinite(opts.heat_layer_height):
-        raise ValueError("--heat-layer-height must be finite")
-
-
 def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     """Build the rerouting configuration from scenario routing parameters."""
     if not opts.enable_rerouting:
         return None
-    if getattr(opts, "smoke_blind", False):
+    if option(opts, "smoke_blind"):
         log("Smoke-blind: rerouting is off.")
         return None
     cost_config = RouteCostConfig.from_routing_params(scenario.raw.get("routing", {}))
@@ -380,18 +322,9 @@ def validate_opts(opts: Any) -> None:
     attribute comparisons, and reporting them from a background thread would
     bury a plain user mistake in a run log instead of answering the request.
     """
-    if opts.vis_cache and not opts.enable_rerouting:
-        raise ValueError("--vis-cache requires --enable-rerouting")
-    if getattr(opts, "clear_air_visibility", False) and opts.fds_dir:
-        raise ValueError(
-            "--clear-air-visibility contradicts --fds-dir: the deck has a fire, "
-            "so its smoke is what decides what an agent can see"
-        )
-    if getattr(opts, "no_visibility", False) and getattr(
-        opts, "clear_air_visibility", False
-    ):
-        raise ValueError("--no-visibility and --clear-air-visibility conflict")
-    _validate_heat_layer_opts(opts)
+    issues = check_options(opts)
+    if issues:
+        raise ValueError(issues[0].message)
 
 
 def _has_discovery_agents(scenario: Any) -> bool:
@@ -402,16 +335,7 @@ def _has_discovery_agents(scenario: Any) -> bool:
     nothing. Route choice does not consult it either: the gate uses the optical
     depth K_ave * L of the route polyline, which needs only the extinction field.
     """
-    for dist in scenario.raw.get("distributions", {}).values():
-        value = dist.get("parameters", {}).get("familiarity", "full")
-        if value is None:
-            continue
-        try:
-            if familiarity_probability(value) < 1.0:
-                return True
-        except ValueError:
-            continue  # the engine reports the bad value with better context
-    return False
+    return has_discovery_agents(scenario.raw)
 
 
 def _build_vis_model(scenario: Any, opts: Any, log: Logger):
@@ -424,30 +348,25 @@ def _build_vis_model(scenario: Any, opts: Any, log: Logger):
     an agent learns every neighbour of each node it reaches by contact, is now
     something you ask for with ``--no-visibility``.
     """
-    if getattr(opts, "no_visibility", False):
+    if option(opts, "no_visibility"):
         return None
-    forced = getattr(opts, "clear_air_visibility", False)
+    forced = option(opts, "clear_air_visibility")
     if not forced and not opts.vis_cache and not _has_discovery_agents(scenario):
         return None
     sign_descriptors = extract_sign_descriptors(scenario.raw)
     if not sign_descriptors:
-        log("Warning: visibility gating requested but the config has no signs.")
+        log(messages.NO_SIGNS)
         return None
-    max_distance = getattr(opts, "max_sign_distance", DEFAULT_MAX_SIGN_DISTANCE_M)
+    max_distance = option(opts, "max_sign_distance")
     n_signs = len(sign_descriptors)
     plural = "" if n_signs == 1 else "s"
     # A smoke-blind run sees what a run without the fire would see.
-    blind = getattr(opts, "smoke_blind", False)
+    blind = option(opts, "smoke_blind")
     smoky = bool(opts.fds_dir) and not blind and _has_extinction_slice(opts.fds_dir)
     if opts.fds_dir and not blind and not smoky:
-        _logger.warning(
-            "Visibility falls back to clear air for %s: it has no SOOT "
-            "EXTINCTION COEFFICIENT slice, so smoke hides no sign; geometry "
-            "and sign facing still do.",
-            opts.fds_dir,
-        )
+        _logger.warning(messages.visibility_without_extinction(opts.fds_dir))
     if not smoky:
-        cell = getattr(opts, "vis_cell_size", 0.25)
+        cell = option(opts, "vis_cell_size")
         log(
             f"Configuring clear-air visibility ({n_signs} sign{plural}, {cell} m grid)."
         )
@@ -480,23 +399,18 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     """
     if (fed_model is None and heat_fed_model is None) or opts.disable_tenability:
         return None
-    if getattr(opts, "smoke_blind", False):
+    if option(opts, "smoke_blind"):
         # Dose still accumulates into the FED history; it stops or slows nobody.
         log("Smoke-blind: FED is recorded, incapacitation and FIC slowdown off.")
         return None
-    mode = getattr(opts, "incapacitation_mode", "deterministic")
-    sigma = getattr(opts, "susceptibility_sigma", 0.94)
-    heat_threshold = getattr(opts, "heat_fed_threshold", None)
+    mode = option(opts, "incapacitation_mode")
+    sigma = option(opts, "susceptibility_sigma")
+    heat_threshold = option(opts, "heat_fed_threshold")
     if heat_threshold is not None and heat_fed_model is not None:
-        _logger.warning(
-            "--heat-fed-threshold %s departs from ISO 13571:2012, which uses one "
-            "threshold for FED and FEC (5.4) and treats heat in the same manner "
-            "(8.5); the manifest records it.",
-            heat_threshold,
-        )
-    heat_mode = getattr(opts, "heat_incapacitation_mode", "deterministic")
-    heat_sigma = getattr(opts, "heat_susceptibility_sigma", 0.94)
-    fic_speed = fed_model is not None and getattr(opts, "enable_fic_speed", False)
+        _logger.warning(messages.heat_threshold_departs(heat_threshold))
+    heat_mode = option(opts, "heat_incapacitation_mode")
+    heat_sigma = option(opts, "heat_susceptibility_sigma")
+    fic_speed = fed_model is not None and option(opts, "enable_fic_speed")
     log(
         "Configuring tenability "
         f"(FIC slowdown={'on' if fic_speed else 'off'}, "
@@ -559,17 +473,56 @@ def _replay_row(path, line: int, row: dict[str, str]) -> tuple[tuple[str, int], 
 
 def _build_replay_exits(opts: Any, log: Logger) -> dict[tuple[str, int], str] | None:
     """Load ``--replay-exits`` and warn when rerouting may undo it."""
-    path = getattr(opts, "replay_exits", None)
+    path = option(opts, "replay_exits")
     if not path:
         return None
     exits = load_replay_exits(path)
     log(f"Replaying the exits of {len(exits)} agents from {path}.")
-    if opts.enable_rerouting and not getattr(opts, "smoke_blind", False):
-        _logger.warning(
-            "--replay-exits with rerouting on: agents start at the replayed exit "
-            "but may switch. Pass --no-enable-rerouting to keep every exit."
-        )
+    if opts.enable_rerouting and not option(opts, "smoke_blind"):
+        _logger.warning(messages.REPLAY_WITH_REROUTING)
     return exits
+
+
+class _BuiltFacts:
+    """What the built models tell about the FDS case (``FdsFacts.has``).
+
+    The gas, extinction and temperature slices follow from which models
+    were built; anything else is read from the inventory on demand.
+    """
+
+    def __init__(self, opts: Any, smoke_speed_model, fed_model, heat_fed_model):
+        self._opts = opts
+        self._smoke = smoke_speed_model
+        self._fed = fed_model
+        self._heat = heat_fed_model
+        self._slices: set[str] | None = None
+
+    def has(self, quantity: str) -> bool:
+        if quantity in GAS_SLICES:
+            return self._fed is not None
+        constant = option(self._opts, "constant_extinction") is not None
+        if quantity == "extinction" and not constant:
+            return self._smoke is not None
+        if quantity == "temperature" and option(self._opts, "enable_heat_fed"):
+            return self._heat is not None
+        if self._slices is None:
+            inventory = inspect_fds_quantities(self._opts.fds_dir)
+            self._slices = set(inventory.canonical_slice_names())
+        return quantity in self._slices
+
+
+def _warn_inactive(scenario: Any, opts: Any, facts: _BuiltFacts) -> None:
+    """Warn once for each option set away from its default that does nothing.
+
+    Options an earlier warning already names (D12, D13, D15, D27) are left
+    out. The effective configuration lists the same options with the same
+    reasons (``pyfds_evac.config.rules.inactive_settings``).
+    """
+    raw = getattr(scenario, "raw", None) or {}
+    mechanisms = predict_mechanisms(opts, raw, facts)
+    for setting in inactive_settings(opts, mechanisms):
+        if not setting.warned:
+            _logger.warning(setting.message)
 
 
 def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str, Any]:
@@ -590,6 +543,11 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     vis_model = _build_vis_model(scenario, opts, log)
     tenability_config = _build_tenability_config(opts, fed_model, heat_fed_model, log)
     replay_exits = _build_replay_exits(opts, log)
+    _warn_inactive(
+        scenario,
+        opts,
+        _BuiltFacts(opts, smoke_speed_model, fed_model, heat_fed_model),
+    )
 
     collect_route_cost_history = bool(
         getattr(opts, "output_route_cost_history", None)
@@ -607,7 +565,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
         # Cheap (a size check per agent per timestep) and the GUI's cognitive
         # map growth plot needs it, so there is no reason to gate it.
         "collect_cognitive_map_history": True,
-        "smoke_blind": bool(getattr(opts, "smoke_blind", False)),
+        "smoke_blind": bool(option(opts, "smoke_blind")),
         "replay_exits": replay_exits,
         "require_fds_coverage": _require_coverage(opts),
     }

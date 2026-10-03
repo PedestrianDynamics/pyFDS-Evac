@@ -1498,6 +1498,8 @@ _GUI_FIXED = {
     "output_route_cost_history",
     "export_app_bundle",
     "collect_route_cost_history",
+    # A CLI action, not a run option: the form never posts it (#484).
+    "show_config",
 }
 
 
