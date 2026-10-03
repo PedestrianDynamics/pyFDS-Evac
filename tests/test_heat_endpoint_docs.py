@@ -17,6 +17,7 @@ Three things the heat pages must state:
 import ast
 import importlib.util
 import re
+import shutil
 import subprocess
 import sys
 from functools import lru_cache
@@ -79,24 +80,57 @@ def _pages() -> list[Path]:
     ]
 
 
-@lru_cache(maxsize=1)
-def _repo_sources() -> tuple[Path, ...]:
-    """Python files git sees in the checkout: tracked or untracked, not ignored.
+def _git_listed(root: Path) -> list[str] | None:
+    """Python files git sees under *root*: tracked or untracked, not ignored.
 
-    Asking git, not walking the tree, leaves out nested git worktrees and
-    clones (e.g. ``.worktrees/``), whose copies of a file would match too.
+    ``None`` when git is missing or *root* is not the top of a work tree
+    (a tarball, an sdist, or a directory inside some other repository).
     """
+    try:
+        top = subprocess.run(
+            ["git", "rev-parse", "--show-toplevel"],
+            cwd=root,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        return None
+    if top.returncode != 0 or Path(top.stdout.strip()).resolve() != root.resolve():
+        return None
     listed = subprocess.run(
         ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard"],
-        cwd=ROOT,
+        cwd=root,
         capture_output=True,
         text=True,
     )
-    assert listed.returncode == 0, f"git ls-files in {ROOT}: {listed.stderr}"
-    rel = sorted({r for r in listed.stdout.split("\0") if r.endswith(".py")})
+    assert listed.returncode == 0, f"git ls-files in {root}: {listed.stderr}"
+    return [r for r in listed.stdout.split("\0") if r.endswith(".py")]
+
+
+def _walked(root: Path) -> list[str]:
+    """Python files under *root*, outside any nested repository or worktree."""
+    nested = {g.parent for g in root.rglob(".git") if g.parent != root}
+    return [
+        p.relative_to(root).as_posix()
+        for p in root.rglob("*.py")
+        if not nested & set(p.parents)
+    ]
+
+
+@lru_cache(maxsize=1)
+def _repo_sources() -> tuple[Path, ...]:
+    """Python files of the checkout, without nested worktrees and clones.
+
+    A git worktree inside the checkout (e.g. ``.worktrees/``) holds a second
+    copy of every file, which would match a citation too. Git leaves those
+    out; without git the tree walk skips every directory with a ``.git``.
+    """
+    rel = _git_listed(ROOT)
+    if rel is None:
+        rel = _walked(ROOT)
     return tuple(
         ROOT / r
-        for r in rel
+        for r in sorted(set(rel))
         if not _NOT_SOURCE & set(Path(r).parts[:-1]) and (ROOT / r).is_file()
     )
 
@@ -201,6 +235,7 @@ def _git(*args: str, cwd: Path) -> None:
     )
 
 
+@pytest.mark.skipif(shutil.which("git") is None, reason="git not installed")
 def test_resolve_ignores_nested_git_worktree(tmp_path, monkeypatch):
     """A worktree inside the checkout does not add a second match (#304)."""
     _git("init", "-q", cwd=tmp_path)
@@ -218,6 +253,31 @@ def test_resolve_ignores_nested_git_worktree(tmp_path, monkeypatch):
         assert _resolve("untracked.py") == tmp_path / "untracked.py"
     finally:
         _repo_sources.cache_clear()
+
+
+def test_resolve_without_git_skips_nested_repositories(tmp_path, monkeypatch):
+    """Outside a git work tree (tarball, sdist) or without git, the tree walk
+    resolves citations and still leaves out a nested checkout (#304)."""
+    (tmp_path / "run.py").write_text("def _build_parser():\n    pass\n")
+    nested = tmp_path / ".worktrees" / "feat"
+    nested.mkdir(parents=True)
+    (nested / ".git").write_text("gitdir: elsewhere\n")
+    (nested / "run.py").write_text("def _build_parser():\n    pass\n")
+
+    def no_git(*args, **kwargs):
+        raise FileNotFoundError("git")
+
+    monkeypatch.setattr(sys.modules[__name__], "ROOT", tmp_path)
+    monkeypatch.setattr(subprocess, "run", no_git)
+    _repo_sources.cache_clear()
+    try:
+        assert _resolve("run.py") == tmp_path / "run.py"
+    finally:
+        _repo_sources.cache_clear()
+    monkeypatch.undo()
+    # With git installed, a directory that is not the top of a work tree
+    # (an unpacked tarball or sdist) also falls back to the walk.
+    assert _git_listed(tmp_path) is None
 
 
 def test_citation_check_finds_citations():
