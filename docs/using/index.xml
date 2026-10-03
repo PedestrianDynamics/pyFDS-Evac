@@ -853,6 +853,10 @@ scenarios and scripts of a source checkout; with pip, replace
 &lt;td>Print debug messages, such as the &lt;code>Reroute debug&lt;/code> trace of the rerouting pass. From Python, &lt;code>logging.getLogger(&amp;quot;pyfds_evac&amp;quot;).setLevel(logging.DEBUG)&lt;/code> with a handler does the same.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--show-config&lt;/code>&lt;/td>
+&lt;td>Print the effective configuration and exit without running; see &lt;a href="#checking-a-configuration-before-the-run">Checking a configuration before the run&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--output-sqlite PATH&lt;/code>&lt;/td>
 &lt;td>Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as &lt;code>&amp;lt;stem&amp;gt;.manifest.json&lt;/code>. When FED is computed, also writes an optional &lt;code>agent_scalars(frame, id, fed, heat_fed, speed)&lt;/code> side table (base JuPedSim schema untouched) so &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a> can colour agents by FED or speed.&lt;/td>
 &lt;/tr>
@@ -894,7 +898,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--constant-extinction K&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>Use a constant &lt;code>K&lt;/code> [1/m] for walking speed instead of the FDS extinction slice. Speed only: FED, heat FED and sign legibility still read &lt;code>--fds-dir&lt;/code> when it is given.&lt;/td>
+&lt;td>Use a constant &lt;code>K&lt;/code> [1/m] instead of the FDS extinction slice for walking speed and for route pricing (the optical depth &lt;code>K·L&lt;/code> of the route gate). FED, heat FED and sign legibility still read &lt;code>--fds-dir&lt;/code> when it is given; without &lt;code>--fds-dir&lt;/code>, sign legibility stays clear air, so a constant &lt;code>K&lt;/code> hides no sign.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--smoke-update-interval S&lt;/code>&lt;/td>
@@ -1254,7 +1258,14 @@ each flag sets.&lt;/p>
 &lt;a href="#seed-and-precedence" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
 &lt;li>&lt;code>--seed N&lt;/code> overrides the scenario&amp;rsquo;s &lt;code>baseSeed&lt;/code>; a scenario without one uses 42.&lt;/li>
 &lt;li>&lt;code>--constant-extinction&lt;/code> takes precedence over the FDS extinction slice for
-walking speed only.&lt;/li>
+walking speed and route pricing. Sign legibility reads the FDS extinction
+slice, or clear air without &lt;code>--fds-dir&lt;/code>; it never reads the constant &lt;code>K&lt;/code>.&lt;/li>
+&lt;li>A sign&amp;rsquo;s own &lt;code>max_distance&lt;/code> in the scenario JSON takes precedence over
+&lt;code>--max-sign-distance&lt;/code>.&lt;/li>
+&lt;li>&lt;code>--heat-fed-threshold&lt;/code> takes precedence over &lt;code>--fed-threshold&lt;/code> for the heat
+track.&lt;/li>
+&lt;li>&lt;code>--smoke-blind&lt;/code> turns rerouting and tenability off, whatever
+&lt;code>--enable-rerouting&lt;/code> and &lt;code>--disable-tenability&lt;/code> say.&lt;/li>
 &lt;/ul>
 &lt;h3>Python API and command line&lt;span class="hx-absolute -hx-mt-20" id="python-api-and-command-line">&lt;/span>
 &lt;a href="#python-api-and-command-line" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>run.py&lt;/code> and the web GUI build their models with &lt;code>build_run_kwargs&lt;/code>.
@@ -1273,6 +1284,11 @@ scenario can behave differently:&lt;/p>
 &lt;td>Rerouting&lt;/td>
 &lt;td>on, every 1 s (&lt;code>--reroute-interval&lt;/code>)&lt;/td>
 &lt;td>off; &lt;code>RerouteConfig()&lt;/code> defaults to 10 s&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Route costs&lt;/td>
+&lt;td>the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block, for the first exit choice and for rerouting&lt;/td>
+&lt;td>the &lt;code>routing&lt;/code> block for the first exit choice. A &lt;code>RerouteConfig()&lt;/code> built by hand carries the code defaults of &lt;code>RouteCostConfig&lt;/code> and ignores the &lt;code>routing&lt;/code> block, for the first choice as well; pass &lt;code>cost_config=RouteCostConfig.from_routing_params(scenario.raw.get(&amp;quot;routing&amp;quot;))&lt;/code> to keep it&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Smoke speed&lt;/td>
@@ -1328,6 +1344,59 @@ and its FDS output are tracked there. It prints &lt;code>FED max: 1.170&lt;/code
 can change without notice
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).&lt;/p>
 &lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> does this end to end.&lt;/p>
+&lt;h3>Checking a configuration before the run&lt;span class="hx-absolute -hx-mt-20" id="checking-a-configuration-before-the-run">&lt;/span>
+&lt;a href="#checking-a-configuration-before-the-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>--show-config&lt;/code> prints the effective configuration and exits without
+running: which models are on or off and why, every option with its unit and
+whether it is the default or departs from FDS+Evac, the scenario&amp;rsquo;s &lt;code>routing&lt;/code>
+values, options that have no effect, the setup warnings and errors the run
+would report, and the shortest equivalent command, with absolute paths.
+Errors include the value checks made when a model is built (for example
+&lt;code>--vis-cell-size 0&lt;/code> or &lt;code>--heat-emissivity 2&lt;/code>); warnings logged while a model
+is built, such as signs outside the FDS extinction slice, are not listed. With &lt;code>--fds-dir&lt;/code> it reads
+the FDS inventory (slices and output end time), not the slice data. It exits
+with status 1 when the configuration has an error, else 0.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config_discovery.json &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --constant-extinction 0.5 --enable-fic-speed --show-config&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Options with no effect:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> --enable-fic-speed on: without --fds-dir
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Setup warnings:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> --enable-fic-speed has no effect without --fds-dir.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>A run with such an option logs the same warning at setup. Options left at
+their default are never reported. The run manifest written with
+&lt;code>--output-sqlite&lt;/code> records the configuration under &lt;code>configuration&lt;/code>, checked
+against the seed, the models and the model parameters the run used
+(thresholds, FIC slope, incapacitation modes, heat law and parameters,
+reroute interval and route costs, visibility grid and reading distance,
+sampling interval and slice height): &lt;code>source&lt;/code> is &lt;code>run&lt;/code> when they agree.
+When &lt;code>run_scenario&lt;/code> was given other models or parameters than the options
+imply, &lt;code>source&lt;/code> is &lt;code>run, options differ&lt;/code>: only the run&amp;rsquo;s settings (&lt;code>run&lt;/code>)
+are recorded as facts, and the configuration of the options is kept apart
+under &lt;code>predicted_from_options&lt;/code>, with the differing settings in
+&lt;code>mismatches&lt;/code> (e.g. &lt;code>tenability.fic_alpha&lt;/code>).
+From Python, &lt;code>pyfds_evac.config.effective_configuration(opts, scenario)&lt;/code>
+returns it; &lt;code>pyfds_evac.config&lt;/code> is provisional public API in 0.3.0 and can
+change in 0.3.x.&lt;/p>
 &lt;h3>Agent visualisation&lt;span class="hx-absolute -hx-mt-20" id="agent-visualisation">&lt;/span>
 &lt;a href="#agent-visualisation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Agent 3-D visualisation is handled by
 &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>, which
@@ -3875,7 +3944,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1868861348b9ff8a78ddac4f46c986a44730a376">&lt;code>1868861&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a1ef3941beb8bcedf802a7abc0854ef74d3c9413">&lt;code>a1ef394&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3899,7 +3968,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f1ff74a6955c1d0dafa9660b058b7ed7f8ca244b4f3d536f69551e9d7bb117b1&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2eb8662f6fcc50b0eb9e607b4f85549bec028934165e5c97f9492362874ead22&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
