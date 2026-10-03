@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--show-config` prints the effective configuration and exits without
   running; exit status 1 when the configuration has an error (#484).
 - The run manifest written with `--output-sqlite` records the effective
-  configuration under `configuration` (#484).
+  configuration under `configuration`, checked against the seed and models
+  the run used (`ScenarioResult.run_settings`, provisional) (#484).
 - `ProgressEvent` counts incapacitated agents and flow agents not yet
   spawned (`incapacitated`, `not_spawned`; provisional) (#484).
 

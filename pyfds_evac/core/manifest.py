@@ -110,6 +110,53 @@ def sha256_of(path: pathlib.Path | None) -> str | None:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def run_settings(
+    *,
+    seed: int | None,
+    smoke_speed_model: Any = None,
+    fed_model: Any = None,
+    heat_fed_model: Any = None,
+    tenability_config: Any = None,
+    reroute_config: Any = None,
+    vis_model: Any = None,
+    smoke_blind: bool = False,
+    replay_exits: Any = None,
+    require_fds_coverage: bool = False,
+) -> dict[str, Any]:
+    """What a run used: the seed and the models it was given (provisional).
+
+    Plain values only, from the objects ``run_scenario`` received, so a
+    record of the run never depends on the options that produced them.
+    """
+    from .smoke_speed import ConstantExtinctionField  # numpy: not on --help
+
+    field = getattr(smoke_speed_model, "field", None)
+    if smoke_speed_model is None:
+        smoke = None
+    elif isinstance(field, ConstantExtinctionField):
+        smoke = "constant"
+    else:
+        smoke = "fds"
+    if vis_model is None:
+        visibility = None
+    else:
+        visibility = "smoky" if getattr(vis_model, "from_fds", False) else "clear-air"
+    return {
+        "seed": seed,
+        "smoke_speed": smoke,
+        "gas_fed": fed_model is not None,
+        "heat_fed": heat_fed_model is not None,
+        "tenability": tenability_config is not None,
+        "fic": bool(getattr(tenability_config, "enable_fic_speed", False)),
+        "rerouting": reroute_config is not None,
+        "reroute_interval_s": getattr(reroute_config, "reevaluation_interval_s", None),
+        "visibility": visibility,
+        "smoke_blind": bool(smoke_blind),
+        "replay_exits": replay_exits is not None,
+        "require_fds_coverage": bool(require_fds_coverage),
+    }
+
+
 def fds_dir_from_models(*models: Any) -> str | None:
     """Return the first FDS directory any of *models* reads, or None.
 

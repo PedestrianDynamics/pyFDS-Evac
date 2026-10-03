@@ -632,6 +632,11 @@ class VisibilityModel:
         }
         self._check_signs_in_grid()
 
+    @property
+    def from_fds(self) -> bool:
+        """True for a model built from an FDS run, False for clear air."""
+        return self._horizon is not None
+
     def signs_outside_grid(self) -> dict[str, float]:
         """Return {node_id: distance to the grid [m]} of signs off the vismap grid.
 

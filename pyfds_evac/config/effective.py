@@ -683,3 +683,78 @@ def _format_text(cfg: EffectiveConfiguration) -> str:
     lines += [f"  {e.message}" for e in cfg.errors] or ["  none"]
     lines += ["", "Equivalent command:", f"  {cfg.command}"]
     return "\n".join(lines)
+
+
+# --- the manifest record ---------------------------------------------------
+
+# Settings compared between the run and the configuration its options imply.
+_COMPARED = (
+    "seed",
+    "smoke_speed",
+    "gas_fed",
+    "heat_fed",
+    "tenability",
+    "fic",
+    "rerouting",
+    "visibility",
+    "smoke_blind",
+    "replay_exits",
+)
+
+
+def _predicted_settings(cfg: EffectiveConfiguration) -> dict[str, Any]:
+    m = cfg._mechanisms
+    if m is None:
+        raise ValueError("effective configuration without mechanisms")
+    on = {mech.name: mech.on for mech in cfg.mechanisms}
+    return {
+        "seed": cfg.inputs["seed"],
+        "smoke_speed": m.smoke,
+        "gas_fed": m.gas_fed,
+        "heat_fed": m.heat_fed,
+        "tenability": m.tenability,
+        "fic": m.fic,
+        "rerouting": m.rerouting,
+        "visibility": m.visibility,
+        "smoke_blind": on["smoke_blind"],
+        "replay_exits": on["replay_exits"],
+    }
+
+
+def run_record(
+    cfg: EffectiveConfiguration, used: Mapping[str, Any] | None
+) -> dict[str, Any]:
+    """The manifest's ``configuration``: what the run used, then the options.
+
+    *used* is ``ScenarioResult.run_settings``, what ``run_scenario`` was
+    given. ``source`` says where the record comes from:
+
+    - ``"run"``: the run used what the options imply; the whole effective
+      configuration describes it, with the seed and models of the run.
+    - ``"run, options differ"``: the options do not describe the run (e.g.
+      ``run_scenario`` called with other models). Only ``run`` and the
+      seed are recorded as facts; the configuration the options imply is
+      kept apart under ``predicted_from_options`` with the ``mismatches``.
+    - ``"predicted from options"``: the run's settings are not known; every
+      field is a prediction from the options.
+    """
+    record = cfg.to_dict()
+    if used is None:
+        record["source"] = "predicted from options"
+        return record
+    run = _json_safe(dict(used))
+    predicted = _predicted_settings(cfg)
+    mismatches = [key for key in _COMPARED if predicted[key] != used.get(key)]
+    if not mismatches:
+        record["source"] = "run"
+        record["run"] = run
+        return record
+    return {
+        "schema": SCHEMA_VERSION,
+        "provisional": True,
+        "source": "run, options differ",
+        "run": run,
+        "inputs": {"seed": used.get("seed"), "seed_origin": "run"},
+        "mismatches": mismatches,
+        "predicted_from_options": record,
+    }

@@ -93,7 +93,7 @@ from .fed import (
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
-from .manifest import fds_dir_from_models, write_manifest
+from .manifest import fds_dir_from_models, run_settings, write_manifest
 from .route_graph import (
     AgentRouteState,
     RerouteConfig,
@@ -866,6 +866,9 @@ class ScenarioResult:
     cognitive_map_history: list[dict[str, Any]] | None = None
     manifest_file: str | None = None
     exit_history: list[dict[str, Any]] | None = None
+    # What the run used (seed, models built); provisional, see
+    # manifest.run_settings.
+    run_settings: dict[str, Any] | None = None
 
     @property
     def success(self) -> bool:
@@ -3176,6 +3179,18 @@ def run_scenario(
                 for agent_id, (origin, index) in spawn_keys.items()
                 if agent_id in agent_exits
             ],
+            run_settings=run_settings(
+                seed=seed,
+                smoke_speed_model=smoke_speed_model,
+                fed_model=fed_model,
+                heat_fed_model=heat_fed_model,
+                tenability_config=tenability_config,
+                reroute_config=reroute_config,
+                vis_model=vis_model,
+                smoke_blind=smoke_blind,
+                replay_exits=replay_exits,
+                require_fds_coverage=require_fds_coverage,
+            ),
         )
     finally:
         try:

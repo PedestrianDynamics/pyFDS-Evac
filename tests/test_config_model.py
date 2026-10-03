@@ -583,6 +583,8 @@ def test_manifest_records_the_configuration(tmp_path):
     section = written.pop("configuration")
     assert written == original
     assert section["schema"] == 1 and section["provisional"] is True
+    # The fake result does not say what the run used.
+    assert section["source"] == "predicted from options"
     assert section["mechanisms"]["visibility"]["on"] is True
     assert section["command"].startswith("pyfds-evac --scenario ")
 
@@ -727,3 +729,72 @@ def test_show_config_exits_1_on_a_build_error():
     )
     assert proc.returncode == 1
     assert "cell_size_m must be positive, got 0.0" in proc.stdout
+
+
+def _output_opts(path: Path, **extra) -> argparse.Namespace:
+    """The options apply_outputs reads, writing only the trajectory."""
+    fields = dict(
+        output_sqlite=str(path),
+        output_smoke_history=None,
+        output_fed_history=None,
+        output_route_history=None,
+        output_route_cost_history=None,
+    )
+    return argparse.Namespace(**{**fields, **extra})
+
+
+def _copied_configuration(tmp_path: Path, scenario, result, opts) -> dict:
+    cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
+    result.cleanup()
+    manifest = json.loads((tmp_path / "r.manifest.json").read_text())
+    return manifest, manifest["configuration"]
+
+
+def test_manifest_records_what_a_direct_run_used(tmp_path):
+    """I2: run_scenario(seed=7) with no models, then minimal options.
+
+    The options imply seed 420, rerouting and a clear-air visibility
+    model; the run had none of them. The record states the run's seed and
+    models and keeps the options' prediction apart.
+    """
+    from pyfds_evac.core import run_scenario
+
+    scenario = _load(DISCOVERY)
+    result = run_scenario(scenario, seed=7)
+    manifest, section = _copied_configuration(
+        tmp_path, scenario, result, _output_opts(tmp_path / "r.sqlite")
+    )
+    assert manifest["seed"] == 7
+    assert section["source"] == "run, options differ"
+    assert section["inputs"] == {"seed": 7, "seed_origin": "run"}
+    assert section["run"]["seed"] == 7
+    assert section["run"]["rerouting"] is False
+    assert section["run"]["visibility"] is None
+    assert {"seed", "rerouting", "visibility"} <= set(section["mismatches"])
+    # Nothing outside predicted_from_options claims a model or a command.
+    assert set(section) == {
+        "schema",
+        "provisional",
+        "source",
+        "run",
+        "inputs",
+        "mismatches",
+        "predicted_from_options",
+    }
+    assert section["predicted_from_options"]["inputs"]["seed"] == 420
+
+
+def test_manifest_of_a_cli_run_is_the_run(tmp_path):
+    """Options and run agree: the full configuration, marked as the run."""
+    from pyfds_evac.core import run_scenario
+
+    scenario = _load(DISCOVERY)
+    opts = _parse(
+        "--scenario", DISCOVERY, "--output-sqlite", str(tmp_path / "r.sqlite")
+    )
+    result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
+    _, section = _copied_configuration(tmp_path, scenario, result, opts)
+    assert section["source"] == "run"
+    assert section["run"]["rerouting"] and section["run"]["visibility"] == "clear-air"
+    assert section["inputs"]["seed"] == section["run"]["seed"] == 420
+    assert section["mechanisms"]["visibility"]["on"] is True

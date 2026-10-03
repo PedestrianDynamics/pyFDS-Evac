@@ -284,12 +284,17 @@ def _copy_manifest(
     return destination
 
 
-def _configuration_record(scenario, opts) -> dict | None:
-    """The effective configuration for the manifest, or None if it fails."""
-    from pyfds_evac.config import effective_configuration
+def _configuration_record(scenario, opts, result) -> dict | None:
+    """The configuration the run used, for the manifest, or None if it fails.
+
+    Checked against what ``run_scenario`` reports it used
+    (``result.run_settings``); see ``pyfds_evac.config.effective.run_record``.
+    """
+    from pyfds_evac.config.effective import effective_configuration, run_record
 
     try:
-        return effective_configuration(opts, scenario).to_dict()
+        configuration = effective_configuration(opts, scenario)
+        return run_record(configuration, getattr(result, "run_settings", None))
     except (OSError, ValueError, TypeError) as exc:
         logging.getLogger(__name__).warning(
             "Could not record the effective configuration in the manifest: %s",
@@ -465,7 +470,7 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         shutil.copy2(result.sqlite_file, output_path)
         artifacts.append(f"Trajectory SQLite: {output_path}")
         manifest_path = _copy_manifest(
-            result, output_path, _configuration_record(scenario, opts)
+            result, output_path, _configuration_record(scenario, opts, result)
         )
         if manifest_path is not None:
             artifacts.append(f"Run manifest: {manifest_path}")
