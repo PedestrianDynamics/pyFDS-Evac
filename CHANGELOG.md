@@ -70,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that is kept. Before, `1,5` applied as 1 (#493).
 - The GUI's results-only view lists the run manifest under "Output
   files", as the finished view does (#494).
+- GUI and TUI runs write the exit history CSV
+  (`<run>_exit_history.csv`, as `--output-exit-history`) to the run's
+  folder, and the GUI lists it with the other output files. Before, no
+  front end set the option, so the file was never written (#547).
 
 ## [0.2.4] - 2026-10-03
 
