@@ -1116,8 +1116,23 @@ def test_snapshot_results(workdir, snap_compare):
 
 
 @pytest.mark.slow
-def test_a20_tui_run_equals_cli(tmp_path):
+def test_a20_tui_run_equals_cli(tmp_path, monkeypatch):
     from pyfds_evac.tui.runner import ProcessRunner
+
+    # A temp root of its own: other runs sharing the system temp dir
+    # (parallel suites, a TUI) do not affect the clean-up check (#551).
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    monkeypatch.setenv("TMPDIR", str(tmp))
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp))
+    made: list[str] = []
+    mkdtemp = tempfile.mkdtemp
+
+    def recording_mkdtemp(*args, **kwargs):
+        made.append(mkdtemp(*args, **kwargs))
+        return made[-1]
+
+    monkeypatch.setattr(tempfile, "mkdtemp", recording_mkdtemp)
 
     form = model.Form()
     form.scenario = model.read_scenario(ASSETS / "ISO-table21")
@@ -1125,7 +1140,6 @@ def test_a20_tui_run_equals_cli(tmp_path):
     base = form.run_folder("TUI", tmp_path)
     ns = form.namespace(form.output_paths(base))
     got: list = []
-    before_tmp = sorted(Path(tempfile.gettempdir()).glob("pyfds-evac-run-*"))
     runner = ProcessRunner()
     runner.start(vars(ns), base, got.append)
     assert runner.join(300)
@@ -1149,13 +1163,21 @@ def test_a20_tui_run_equals_cli(tmp_path):
             ).fetchall()
 
     assert rows(ns.output_sqlite) == rows(cli_ns.output_sqlite)
-    for dest in ("output_smoke_history", "output_fed_history", "output_route_history"):
+    for dest in (
+        "output_smoke_history",
+        "output_fed_history",
+        "output_route_history",
+        "output_route_cost_history",
+    ):
         tui_file, cli_file = Path(getattr(ns, dest)), Path(getattr(cli_ns, dest))
         assert tui_file.exists() == cli_file.exists()
         if tui_file.exists():
             assert tui_file.read_bytes() == cli_file.read_bytes()
-    # The child's private temporary folder is gone (#331).
-    assert sorted(Path(tempfile.gettempdir()).glob("pyfds-evac-run-*")) == before_tmp
+    # The child's private temporary folder was made here and is gone (#331).
+    run_tmp = [Path(p) for p in made if Path(p).name.startswith("pyfds-evac-run-")]
+    assert len(run_tmp) == 1 and run_tmp[0].parent == tmp, made
+    assert not run_tmp[0].exists()
+    assert list(tmp.glob("pyfds-evac-run-*")) == []
     assert (Path(base) / "child.log").exists()
 
 
