@@ -548,8 +548,9 @@ by #170).
 
 ## Relation to FDS+Evac
 
-From `materials/evac.f90` (FDS commit c9da70d7a, FDS 6.7.6); line numbers
-refer to that file. The detailed account of FDS+Evac door choice is on
+From `materials/evac.f90` (FDS commit c9da70d7a, `FDS6.7.6-404-gc9da70d7a`,
+Evac 2.6.0, the version the 2021 guide describes); line numbers refer to
+that file. The detailed account of FDS+Evac door choice is on
 [model comparison](/docs/model-comparison.md).
 
 | Concept | FDS+Evac | pyFDS-Evac |
@@ -558,7 +559,7 @@ refer to that file. The detailed account of FDS+Evac door choice is on
 | **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group) and `entrance`, then learned from legible signs; never downgraded |
 | **Visible counts as known** | for the current target in `imode == 1` calls (`:16533–16535`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
-| **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹ | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
+| **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹. Evac 2.6.1 (FDS 6.7.7) tests \(\bar K d\) < 0.003 instead ([Evac 2.6.1 door test](/docs/model-comparison.md#evac-261-door-criterion)) | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
 | **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
 | **Smoke memory** | lone agents mark the previous target negative or zero | none |
 | **Default** | agent type 2, `KNOWN_DOOR = .FALSE.` | `familiarity = "full"` |
