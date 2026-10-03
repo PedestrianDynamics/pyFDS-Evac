@@ -1,119 +1,47 @@
 # Contributing to pyFDS-Evac
 
-pyFDS-Evac is developed at Forschungszentrum Jülich (IAS-7); its maintainers
-are listed in [CODEOWNERS](.github/CODEOWNERS). It is research software, provided
-without warranty, and not intended for regulatory or design use (see
-[LICENSE](LICENSE) and [docs/limitations.md](docs/limitations.md)). There is no
-release policy yet, so behaviour and defaults can change between commits.
+Everyone is welcome to contribute. Code contributions include new features and
+bug fixes. Documentation and website contributions include new pages,
+corrections, examples and figures. Documentation matters as much as code.
 
-By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).
-Security problems go through [SECURITY.md](SECURITY.md), not public issues.
+pyFDS-Evac is research software developed at Forschungszentrum Jülich (IAS-7),
+provided without warranty and not intended for regulatory or design use; see
+[LICENSE](LICENSE) and [Limitations](docs/limitations.md). The maintainers are
+listed in [CODEOWNERS](.github/CODEOWNERS). Versions follow Semantic
+Versioning, and notable changes are listed in [CHANGELOG.md](CHANGELOG.md).
 
-## Reporting bugs and proposing features
+## How to contribute
 
-Open an [issue](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/new/choose)
-and pick a template:
+1. [Open an issue](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/new/choose)
+   with the bug report, feature request or documentation template.
+2. [Fork the repository](https://github.com/PedestrianDynamics/pyFDS-Evac/fork)
+   and make your change on a branch.
+3. Open a pull request that links the issue (`Fixes #123` or `Refs #123`) and
+   work through the checklist in the
+   [pull request template](.github/pull_request_template.md).
 
-- **Bug report:** the commit, the exact command, the scenario and, if an FDS
-  run is involved, the FDS version. A report that can be rerun is much
-  easier to fix.
-- **Feature request:** what you want to model and why. Features that do not
-  exist yet are tracked as issues, not described in the docs.
-- **Documentation:** a wrong or unclear page. For a scientific claim, cite the
-  primary source.
-
-## Development setup
-
-The project uses [uv](https://github.com/astral-sh/uv) and supports Python
-3.12, 3.13 and 3.14; CI tests all three, and lint and docs run on 3.14:
+## Before you open a pull request
 
 ```bash
-git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
-cd pyFDS-Evac
-uv sync --all-groups     # add --all-extras for the web GUI
-```
-
-## Tests, lint and docs build
-
-```bash
-uv run ruff check .
-uv run ruff format --check .
+uv sync --all-groups
+uv run ruff check . && uv run ruff format --check .
 uv run pytest -q
 ```
 
-CI runs the whole suite with the `gui` extra and deselects the tests marked
-`external_data`, which need FDS output from the external data store; see
-[`.github/workflows/tests.yml`](.github/workflows/tests.yml).
+For changes to the website, build it as described in
+[Development](docs/development.md#build-the-documentation).
 
-CI also measures line and branch coverage and reports it on
-[Codecov](https://app.codecov.io/gh/PedestrianDynamics/pyFDS-Evac). To see the
-report locally:
+## Questions, conduct and security
 
-```bash
-uv run --python 3.14 pytest -q --cov --cov-report=term
-```
-
-Measure coverage under Python 3.14, as above and as in CI. Coverage measures
-branches (`branch = true`), and coverage.py measures branches with the fast
-`sys.monitoring` core only from Python 3.14 on. On 3.12 and 3.13 it falls back
-to its trace function, which is slow on `run_scenario`, one very long function:
-on 3.12 the suite with coverage reached 8 % in 20 minutes, while on 3.14 the
-whole suite with coverage takes about as long as without it.
-
-The docs are a Hugo site (hextra theme) in `site/`, with the reference pages in
-`docs/` mounted into it. The strict build needs Hugo extended (CI uses 0.144)
-and Go:
-
-```bash
-uv run pytest tests/test_docs_defaults.py tests/test_examples.py -q
-uv run python scripts/docs/bundle_examples.py
-cd site && hugo --minify --panicOnWarning -e production
-```
-
-`bundle_examples.py` builds the example downloads that
-`site/data/examples.toml` lists; Hugo fails without them. Delete
-`site/public` afterwards; it is not committed, and neither are the zips.
-
-## Commits and pull requests
-
-- **Tests first for fixes.** Add a test that fails on `main`, then fix it.
-- **Small PRs.** One change per PR; link the issue (`Fixes #123` or
-  `Refs #123`).
-- **Commit messages** in kernel style: an imperative subject of at most
-  50 characters with an optional `area:` prefix (`visibility:`,
-  `route_graph:`, `docs:`, `tests:`), no trailing period, a blank line, and a
-  body wrapped at 72 columns that says what changed and why.
-
-## Versioning
-
-pyFDS-Evac follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
-
-- Versions are `MAJOR.MINOR.PATCH`, and release tags are `vX.Y.Z`
-  (`v0.2.0`).
-- While MAJOR is 0, a breaking change bumps MINOR and a fix bumps PATCH.
-  Breaking changes include removed or renamed CLI flags, changed output
-  columns, changed defaults, changed exit codes and changes to the public
-  API.
-- A released version is never retagged or reused. A fix ships as a new
-  version.
-- The tag `v0.1` predates this convention; it is release 0.1.0.
-
-## Documentation
-
-- The docs describe what the code does now. A feature that does not exist yet
-  goes into an issue, not onto a page.
-- Pages that quote code defaults or embed code from `examples/` are checked by
-  `tests/test_docs_defaults.py` and `tests/test_examples.py`; update the page
-  when you change the code.
-- Figures are made by the scripts in [`scripts/figures/`](scripts/figures/).
-  Change the script, rerun it, and commit the image; CI reruns every script on
-  each docs build and fails if one no longer runs.
-- Do not add FDS output to the repository; point to the case instead. The
-  small verification fixtures already committed (e.g.
-  `assets/iso_table21_coupled`) stay.
+Ask questions in an [issue](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/new/choose).
+By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md). Report
+security problems privately as described in [SECURITY.md](SECURITY.md).
 
 ## Licence
 
 pyFDS-Evac is released under the [MIT License](LICENSE). By submitting a
 contribution you agree that it is licensed under the same terms. There is no
 contributor licence agreement.
+
+Development setup, CI details, docs build, commit style and versioning:
+[Development](docs/development.md).

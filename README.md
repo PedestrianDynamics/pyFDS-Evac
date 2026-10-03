@@ -87,6 +87,10 @@ environment; `source .venv/bin/activate` activates it for the shell).
 scripts, and the `scripts/run_and_plot.sh` driver that runs a simulation and
 produces every plot in one go.
 
+Tests, the docs build and pull requests: see
+[Development](https://pedestriandynamics.org/pyFDS-Evac/docs/development/)
+and [CONTRIBUTING.md](CONTRIBUTING.md).
+
 **Bringing your own FDS case?** Read
 [what your FDS case must provide](https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/)
 first. pyFDS-Evac does not run FDS, it samples the output of a finished run,
