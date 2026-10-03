@@ -275,7 +275,8 @@ PARAMETERS: tuple[Parameter, ...] = (
         "cleanup",
         ("--cleanup",),
         GROUP_OUTPUTS,
-        "Delete the temporary trajectory SQLite file after the run",
+        "Kept for compatibility: the temporary trajectory SQLite file and its "
+        "manifest are always removed after the run",
         action="store_true",
         default=False,
         python="ScenarioResult.cleanup()",

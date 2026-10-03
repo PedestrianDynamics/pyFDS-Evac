@@ -165,6 +165,7 @@ def stream_run(
 
     clock = _Clock()
     files: tuple[str, ...] = ()
+    result: Any = None
     recorder: FrameRecorder | None = None
 
     def check_cancel() -> None:
@@ -228,6 +229,10 @@ def stream_run(
     finally:
         for logger in loggers:
             logger.removeHandler(handler)
+        # The result is not returned: remove its temporary trajectory (#524).
+        if result is not None:
+            with contextlib.suppress(OSError):
+                result.cleanup()
     emit(events.PhaseEvent(events.PHASE_DONE))
     emit(outcome)
     return outcome

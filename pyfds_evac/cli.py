@@ -1,6 +1,7 @@
 """The ``pyfds-evac`` command: run a scenario, optionally with FDS fire data."""
 
 import argparse
+import contextlib
 import importlib
 import json
 from typing import TYPE_CHECKING
@@ -173,17 +174,23 @@ def main() -> int:
     print("Simulation started.")
 
     result = run_scenario(scenario, **run_kwargs)
-    print(_summary_line(result))
+    # The temporary trajectory is unreachable once main returns: remove it
+    # after the outputs are written, or when writing them fails (#524).
+    try:
+        print(_summary_line(result))
 
-    outside = result.metrics.get("fds_outside")
-    if outside and outside["rows"]:
-        print(
-            f"Outside the FDS domain: {outside['agents']} agent(s), "
-            f"{outside['rows']} sample(s), about {outside['agent_seconds']:.1f} "
-            "agent-seconds of ambient air and clear sight."
-        )
+        outside = result.metrics.get("fds_outside")
+        if outside and outside["rows"]:
+            print(
+                f"Outside the FDS domain: {outside['agents']} agent(s), "
+                f"{outside['rows']} sample(s), about {outside['agent_seconds']:.1f} "
+                "agent-seconds of ambient air and clear sight."
+            )
 
-    apply_outputs(result, scenario, args, log=print)
+        apply_outputs(result, scenario, args, log=print)
+    finally:
+        with contextlib.suppress(OSError):
+            result.cleanup()
     return 0 if result.success else EXIT_INCOMPLETE
 
 
