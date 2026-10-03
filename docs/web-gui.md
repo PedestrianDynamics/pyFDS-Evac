@@ -70,7 +70,8 @@ pyfds-evac-gui
 
 The picker then lists `ISO-table21`. You can also upload a scenario (its
 config JSON and geometry WKT, or a `.zip`) in the **Core** group; it is saved
-under `./uploads`. The fire examples ship the FDS deck only; run FDS yourself
+under `./uploads`. To make one, see
+[Create a scenario](howto-create-scenario.md). The fire examples ship the FDS deck only; run FDS yourself
 before the GUI has smoke to read.
 
 ## Run a scenario
@@ -91,7 +92,8 @@ it at full size.
 In **Core**, choose `iso_table21_coupled` in the scenario picker (1). Leave
 the seed blank to use the scenario's own `baseSeed`. To use your own
 scenario, drop its config JSON and geometry WKT, or a `.zip` bundle, on the
-upload box and click **Add to list**.
+upload box and click **Add to list**. To make one, see
+[Create a scenario](howto-create-scenario.md).
 
 ### Set the options
 

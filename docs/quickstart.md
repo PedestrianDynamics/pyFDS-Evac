@@ -275,6 +275,8 @@ Also:
 
 - [A crowd in a fire](first-fds-case.md): 150 agents in a 2 MW FDS fire,
   with figures for every step.
+- [Create a scenario](howto-create-scenario.md): your own geometry, exits
+  and agents, drawn in JuPedSim Web or copied from an example.
 - [What your FDS case must provide](fds-case-requirements.md), before you
   point the tool at your own FDS output.
 - [Outputs](outputs.md): every file a run writes and how to read it.

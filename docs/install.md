@@ -119,4 +119,6 @@ The same corridor and the same result as the pip check.
 ## Next steps
 
 - [Quickstart](quickstart.md): one run with smoke, and what the numbers mean.
+- [Create a scenario](howto-create-scenario.md): make the `config.json` and
+  `geometry.wkt` of your own scenario.
 - [Troubleshooting](troubleshooting.md): if a command on this site fails.
