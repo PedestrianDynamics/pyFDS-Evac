@@ -21,7 +21,7 @@ from __future__ import annotations
 import math
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, NamedTuple
 
 from . import messages
 from .parameters import is_set_value, option, parameter
@@ -598,3 +598,120 @@ def visibility_value_issue(
     except ValueError as exc:
         return ConfigIssue("B", None, str(exc), "S")
     return None
+
+
+# --- whether an option applies, at any value (#485 R1) ---------------------
+
+
+class Applicability(NamedTuple):
+    """Whether an option changes the run, and why not.
+
+    ``active`` False comes with the rule (``D…``) and the reason, worded as
+    in the "has no effect" warnings ("without --fds-dir"). ``active`` True
+    means no rule says the option is inert; an option without rules (the
+    seed, output paths) is always active.
+    """
+
+    active: bool
+    rule: str | None = None
+    reason: str | None = None
+
+
+_ACTIVE = Applicability(True)
+
+
+class _Probe:
+    """*opts* with one option replaced, for asking "what if it were on"."""
+
+    def __init__(self, opts: Any, dest: str, value: Any) -> None:
+        self._opts = opts
+        self._dest = dest
+        self._value = value
+
+    def __getattr__(self, name: str) -> Any:
+        if name == self._dest:
+            return self._value
+        return option(self._opts, name)
+
+
+# Switches that build a model. At their default the question is whether
+# switching them on would do anything, so they are probed in the on state.
+_SWITCH_ON: dict[str, Any] = {
+    "enable_heat_fed": True,
+    "clear_air_visibility": True,
+    "vis_cache": "vis-cache",
+}
+
+
+def _switch_reason(opts: Any, dest: str, raw: Mapping[str, Any], fds: Any) -> _Reason:
+    """Why switching *dest* on would change nothing, or would be refused."""
+    probe = _Probe(opts, dest, _SWITCH_ON[dest])
+    for issue in check_options(probe):
+        if issue.option == dest:
+            text = _CONFLICTS.get((issue.rule, dest), issue.message)
+            return (issue.rule, text, False)
+    return _reason(probe, dest, predict_mechanisms(probe, raw, fds))
+
+
+_CONFLICTS = {
+    ("D25", "vis_cache"): "with --no-enable-rerouting (they conflict)",
+    ("D26", "clear_air_visibility"): "with --fds-dir (they conflict)",
+}
+
+
+def _default_reason(opts: Any, dest: str, m: Mechanisms) -> _Reason:
+    """Rules for an option at its default that a set value never needs.
+
+    Kept out of :func:`inactive_settings`, so the run logs no new warning.
+    """
+    if dest == "enable_rerouting" and option(opts, "smoke_blind"):
+        return ("D24", "with --smoke-blind", False)
+    return None
+
+
+def applies(
+    dest: str,
+    opts: Any,
+    raw: Mapping[str, Any],
+    fds: Any = UNKNOWN_FDS,
+    *,
+    mechanisms: Mechanisms | None = None,
+) -> Applicability:
+    """Whether the option *dest* changes the run, at the value *opts* holds.
+
+    Unlike :func:`inactive_settings`, also for an option at its default:
+    the heat options while heat FED is off report D13 "without
+    --enable-heat-fed". A switch at its default (``--enable-heat-fed``,
+    ``--clear-air-visibility``, ``--vis-cache``) is active when switching it
+    on would build its model. For an option set away from its default the
+    answer is the one :func:`inactive_settings` gives. *mechanisms* is
+    ``predict_mechanisms(opts, raw, fds)``, passed to skip recomputing it.
+    """
+    parameter(dest)  # KeyError naming an unknown option
+    if mechanisms is None:
+        mechanisms = predict_mechanisms(opts, raw, fds)
+    at_default = not is_set(opts, dest)
+    if at_default and dest in _SWITCH_ON:
+        reason = _switch_reason(opts, dest, raw, fds)
+    else:
+        reason = _reason(opts, dest, mechanisms)
+    if reason is None and at_default:
+        reason = _default_reason(opts, dest, mechanisms)
+    if reason is None:
+        return _ACTIVE
+    rule, text, _warned = reason
+    return Applicability(False, rule, text)
+
+
+def applicability(
+    opts: Any, raw: Mapping[str, Any], fds: Any = UNKNOWN_FDS
+) -> dict[str, Applicability]:
+    """:func:`applies` for every run option, by ``dest``, in flag order."""
+    from .parameters import PARAMETERS
+
+    mechanisms = predict_mechanisms(opts, raw, fds)
+    return {
+        p.dest: applies(p.dest, opts, raw, fds, mechanisms=mechanisms)
+        for p in PARAMETERS
+        if p.run_option
+    }
