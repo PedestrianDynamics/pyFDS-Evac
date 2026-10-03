@@ -24,6 +24,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   provisional) (#484).
 - `ProgressEvent` counts incapacitated agents and flow agents not yet
   spawned (`incapacitated`, `not_spawned`; provisional) (#484).
+- For the terminal UI (#485), provisional:
+  - `pyfds_evac.config.rules.applies` / `applicability`: whether each
+    option changes the run, also at its default, with the rule and reason
+    of the "has no effect" warnings; `Parameter.tier` (`common` for the
+    GUI's sections, else `advanced`).
+  - `pyfds_evac.core.run_stream.stream_run`: runs the options as
+    `pyfds-evac` does and sends status events instead of printing:
+    phases, log lines, warnings (with the simulated time), progress, a
+    `PlanEvent` (walkable outline, exits and their openings, signs, spawn
+    areas, smoke mode, the FDS slice height read), throttled `FrameEvent`s
+    (agent positions and states, agents per exit, a coarse float16
+    extinction grid) and a `ResultEvent` with the outcome (evacuated,
+    total, remaining, incapacitated, not spawned, end time, seed, files).
+    Frames are off unless asked for; results are the same with them.
+  - `ScenarioResult.agents_incapacitated`.
 
 ### Changed
 

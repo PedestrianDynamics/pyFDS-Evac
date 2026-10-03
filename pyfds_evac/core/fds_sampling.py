@@ -208,6 +208,15 @@ class SliceFieldSampler:
         return axes
 
     @property
+    def z_m(self) -> float:
+        """Height of the slice [m]: the mid z of its extent."""
+        return _slice_z_mid(self._slice)
+
+    def grid(self, x_centres, y_centres) -> SliceGrid:
+        """A reader of this slice on a regular grid; see :class:`SliceGrid`."""
+        return SliceGrid(self, x_centres, y_centres)
+
+    @property
     def end_time_s(self) -> float:
         """Return the time of the last slice frame [s]."""
         return float(self._slice.times[-1])
@@ -259,6 +268,58 @@ class SliceFieldSampler:
         i_index = self._nearest_index(xs, float(x))
         j_index = self._nearest_index(ys, float(y))
         return float(subslice.data[t_index, i_index, j_index])
+
+
+class SliceGrid:
+    """Values of a slice at grid cell centres, without touching the sampler.
+
+    Reads ``subslice.data`` directly, nearest value as in
+    :meth:`SliceFieldSampler.sample`, and leaves the sampler's caches and
+    one-time warnings alone, so reading the grid never changes what a run
+    samples or logs. A cell covered by two subslices takes the first one; a
+    cell outside the slice is NaN. Past the last frame the last one is read.
+    """
+
+    def __init__(self, sampler: SliceFieldSampler, x_centres, y_centres):
+        self._sampler = sampler
+        xs = np.asarray(x_centres, dtype=float)
+        ys = np.asarray(y_centres, dtype=float)
+        self.shape = (len(ys), len(xs))
+        gx, gy = np.meshgrid(xs, ys)
+        free = np.ones(self.shape, dtype=bool)
+        self._parts = []
+        for subslice in sampler._subslices:
+            ext = subslice.extent
+            inside = (
+                free
+                & (gx >= ext.x_start)
+                & (gx <= ext.x_end)
+                & (gy >= ext.y_start)
+                & (gy <= ext.y_end)
+            )
+            if not inside.any():
+                continue
+            free &= ~inside
+            ax, ay = sampler._axes(subslice)
+            cells = np.flatnonzero(inside)
+            i = np.array([sampler._nearest_index(ax, v) for v in gx.flat[cells]])
+            j = np.array([sampler._nearest_index(ay, v) for v in gy.flat[cells]])
+            self._parts.append((subslice, cells, i, j))
+
+    def time_index(self, time_s: float) -> int:
+        """Index of the slice frame nearest *time_s*."""
+        return int(self._sampler._slice.get_nearest_timestep(float(time_s)))
+
+    def frame_time_s(self, index: int) -> float:
+        """Time of slice frame *index* [s]."""
+        return float(self._sampler._slice.times[index])
+
+    def values(self, index: int) -> np.ndarray:
+        """The grid at slice frame *index*, shape ``(ny, nx)``, NaN outside."""
+        out = np.full(self.shape[0] * self.shape[1], np.nan, dtype=np.float32)
+        for subslice, cells, i, j in self._parts:
+            out[cells] = subslice.data[index][i, j]
+        return out.reshape(self.shape)
 
 
 def _is_horizontal(slice_obj) -> bool:
