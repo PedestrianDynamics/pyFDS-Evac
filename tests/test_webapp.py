@@ -928,12 +928,17 @@ def test_results_only_run_skips_viewer_but_writes_files(client, tmp_path):
     assert "Viewer skipped" in html
     assert "<canvas" not in html  # the trajectory animator was never built
     assert "Trajectory SQLite" in html
+    assert "Run manifest" in html  # #494
+    assert "ISO-table21.manifest.json" in html
+    assert "Exit history CSV" in html  # #547
 
     # The artifacts really landed, and the bundle path is a directory now that
     # export_app_bundle is a path field rather than a checkbox.
     # A typed folder gets one start-time folder per run inside it (#319).
     (run_dir,) = out.iterdir()
     assert (run_dir / "ISO-table21.sqlite").exists()
+    assert (run_dir / "ISO-table21.manifest.json").exists()
+    assert (run_dir / "ISO-table21_exit_history.csv").exists()
     assert (run_dir / "bundle" / "config.json").exists()
     assert (run_dir / "bundle" / "geometry.wkt").exists()
     _drop_temp_trajectory()
@@ -1500,6 +1505,7 @@ _GUI_FIXED = {
     "output_fed_history",
     "output_route_history",
     "output_route_cost_history",
+    "output_exit_history",
     "export_app_bundle",
     "collect_route_cost_history",
     # A CLI action, not a run option: the form never posts it (#484).

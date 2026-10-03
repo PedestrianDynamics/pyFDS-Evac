@@ -190,7 +190,7 @@ means clothed, ISO 13571 Eq. (9), and a blank `heat_fed_threshold` follows
 | FED & Tenability | `disable_tenability`, `incapacitation_mode`, `susceptibility_sigma`, `enable_fic_speed`, `fic_alpha`, `fic_min_factor`, `fed_threshold`, `o2_threshold_percent`, `enable_heat_fed`, `heat_incapacitation_mode`, `heat_susceptibility_sigma`, `heat_clothing`, `heat_fed_threshold` |
 | Rerouting | `enable_rerouting`, `reroute_interval` |
 | Visibility | `vis_cache`; blank means no cache |
-| Output files | **Output folder**; the SQLite, the four CSVs and the scenario bundle (`<run folder>/bundle`) are written to the run's folder (see [Output folders](#output-folders)) |
+| Output files | **Output folder**; the SQLite with its run manifest, the five CSVs and the scenario bundle (`<run folder>/bundle`) are written to the run's folder (see [Output folders](#output-folders)) |
 | Other (collapsed) | every remaining option: `clear_air_visibility`, `no_visibility`, `vis_cell_size`, `max_sign_distance`, and the heat options `heat_endpoint`, `heat_fed_method`, `heat_emissivity`, `heat_convective_coefficient`, `heat_skin_temperature`, `heat_radiant_source`, `heat_u_factor`, `heat_regime`, `heat_layer_height`, `heat_view_factor`, `heat_layer_emissivity` |
 
 Four `run.py` options have no field: `--print-summary`, `--export-only`,
@@ -503,11 +503,12 @@ scenario sets none ([Usage](usage.md)).
 {{< /details >}}
 
 {{< details title="What the script leaves out, and why" closed="true" >}}
-- **The GUI's CSV histories and app bundle.** The smoke, FED, route and
-  route-cost histories and the bundle are written by `apply_outputs` in
+- **The GUI's CSV histories and app bundle.** The smoke, FED, route,
+  route-cost and exit histories and the bundle are written by `apply_outputs` in
   `pyfds_evac.cli`, which the exported script does not call yet. Their keys
   (`output_smoke_history`, `output_fed_history`, `output_route_history`,
-  `output_route_cost_history`, `output_sqlite`, `export_app_bundle`) are set
+  `output_route_cost_history`, `output_exit_history`, `output_sqlite`,
+  `export_app_bundle`) are set
   to `None`
   ([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
   Route-cost history collection stays on (`collect_route_cost_history`), as

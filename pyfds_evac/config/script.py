@@ -38,6 +38,7 @@ OMITTED_OUTPUT_KEYS = (
     "output_fed_history",
     "output_route_history",
     "output_route_cost_history",
+    "output_exit_history",
     "export_app_bundle",
 )
 
