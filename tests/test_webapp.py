@@ -945,6 +945,8 @@ def test_normal_run_still_builds_the_viewer(client):
     assert r.status_code == 200
     assert manager.results_only is False
     _stream_until_terminal(client)
+    # The viewer's custom speed is a text input, not type=number (#493).
+    assert 'id="traj-speed-custom" type="text"' in client.get("/panel").text
     _drop_temp_trajectory()
 
 
