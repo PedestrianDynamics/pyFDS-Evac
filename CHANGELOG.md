@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `pyfds-evac --help` and argument errors return at once, also on the
+  first call after an install: JuPedSim, fdsreader, fdsvismap and
+  matplotlib now load when a run starts, not when the command starts.
+  The first run after an install still builds matplotlib's font cache.
+  Flags, defaults and outputs are unchanged (#496).
+
 ## [0.2.2] - 2026-10-02
 
 ### Changed

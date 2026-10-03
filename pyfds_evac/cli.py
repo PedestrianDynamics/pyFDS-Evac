@@ -2,19 +2,16 @@
 
 import argparse
 import csv
+import importlib
 import json
 import logging
 import pathlib
 import shutil
 import sys
+from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
 
-from pyfds_evac.core import (
-    inspect_fds_quantities,
-    load_scenario,
-    run_scenario,
-)
 from pyfds_evac.core.agent_scalars import write_agent_scalars
 from pyfds_evac.core.fed import (
     DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
@@ -28,7 +25,37 @@ from pyfds_evac.core.fed import (
     HEAT_U_FACTOR_RANGE,
 )
 from pyfds_evac.core.manifest import manifest_path_for
-from pyfds_evac.core.run_config import build_run_kwargs
+
+if TYPE_CHECKING:
+    from pyfds_evac.core.fds_inventory import inspect_fds_quantities
+    from pyfds_evac.core.run_config import build_run_kwargs
+    from pyfds_evac.core.scenario import load_scenario, run_scenario
+
+# The simulation stack (JuPedSim, fdsreader, fdsvismap, matplotlib) loads
+# only when a run starts, so --help and argument errors return at once.
+# The names stay attributes of this module (``run.load_scenario`` through
+# the run.py shim, monkeypatching in tests).
+_RUN_STACK = {
+    "inspect_fds_quantities": "pyfds_evac.core.fds_inventory",
+    "build_run_kwargs": "pyfds_evac.core.run_config",
+    "load_scenario": "pyfds_evac.core.scenario",
+    "run_scenario": "pyfds_evac.core.scenario",
+}
+
+
+def _load_run_stack() -> None:
+    """Import the simulation stack; names already set (patched) are kept."""
+    namespace = globals()
+    for name, module_name in _RUN_STACK.items():
+        if name not in namespace:
+            namespace[name] = getattr(importlib.import_module(module_name), name)
+
+
+def __getattr__(name: str):
+    if name not in _RUN_STACK:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    _load_run_stack()
+    return globals()[name]
 
 
 def _u_factor(text: str) -> float:
@@ -756,6 +783,7 @@ def main() -> int:
     parser = _build_parser()
     args = parser.parse_args()
     _configure_logging(args.debug)
+    _load_run_stack()
 
     scenario = load_scenario(args.scenario)
     print("Initialization started.")
