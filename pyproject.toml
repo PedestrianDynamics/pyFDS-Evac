@@ -1,6 +1,6 @@
 [project]
 name = "pyfds-evac"
-version = "0.2.2"
+version = "0.2.3"
 description = "Fire Dynamics Simulator (FDS) evacuation modeling with visibility analysis"
 readme = "README.md"
 license = "MIT"
