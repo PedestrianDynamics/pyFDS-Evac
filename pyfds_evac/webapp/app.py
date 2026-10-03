@@ -2590,8 +2590,17 @@ async def progress(run: int | None = None):
     return EventStream(gen())
 
 
-if __name__ == "__main__":
+def _main(argv: list[str] | None = None) -> None:
+    """``python -m pyfds_evac.webapp.app``: serve on 127.0.0.1 unless --host."""
+    from .launch import _build_parser, warn_if_exposed
+
+    args = _build_parser(prog="python -m pyfds_evac.webapp.app").parse_args(argv)
+    warn_if_exposed(args.host, args.port)
     # Named explicitly: by default serve() imports the module named after this
     # file ("app") from the working directory, which under
     # ``python -m pyfds_evac.webapp.app`` is not this module.
-    serve(appname="pyfds_evac.webapp.app")
+    serve(appname="pyfds_evac.webapp.app", host=args.host, port=args.port)
+
+
+if __name__ == "__main__":
+    _main()
