@@ -19,10 +19,11 @@
 #              pyproject.toml that satisfy requires-python)
 #
 # Gates, in this order:
+#   wheel build    uv build --wheel of HEAD, for the install gate
 #   bundles build  scripts/docs/bundle_examples.py, on the clean checkout
 #   tests          pytest -q -rs per Python version, external_data included;
 #                  a skipped external_data test fails the gate
-#   install        uv build --wheel; per Python version a fresh venv and a
+#   install        per Python version a fresh venv and a
 #                  plain pip install <wheel>[gui]: pip check, the first
 #                  pyfds-evac --help and pyfds-evac-gui --help (cold, FAIL
 #                  above 1.0 s), an argument error, python -m pyfds_evac,
