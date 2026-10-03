@@ -12,6 +12,8 @@ folder, post)``, ``cancel()``, ``stop()`` and ``running``) and
 
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import os
 import time
 from collections.abc import Callable, Iterable
@@ -442,6 +444,8 @@ class EvacTui(App[None]):
         self._gen = 0
         self._cfg_timer: Any = None
         self.warned_confirmed = False
+        self._ui_loop: asyncio.AbstractEventLoop | None = None
+        self._render_timer: Any = None
         super().__init__()
 
     # --- set-up --------------------------------------------------------------
@@ -459,6 +463,7 @@ class EvacTui(App[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        self._ui_loop = asyncio.get_running_loop()
         self.register_theme(EVAC_DARK)
         self.theme = self.start_theme
         self._fill_recent()
@@ -473,6 +478,12 @@ class EvacTui(App[None]):
             self.query_one(focus).focus()
         self.update_chrome()
         self._check_size()
+
+    def on_unmount(self) -> None:
+        """Let the reader thread remove the run's temporary folder."""
+        join = getattr(self.runner, "join", None)
+        if join is not None:
+            join(10.0)
 
     def get_system_commands(self, screen: Screen) -> Iterable[SystemCommand]:
         for command in super().get_system_commands(screen):
@@ -1324,11 +1335,12 @@ class EvacTui(App[None]):
         self.runner.start(dict(snapshot.values), base, self._post)
 
     def _post(self, event: Any) -> None:
-        """From the runner's reader thread."""
-        try:
-            self.call_from_thread(self.on_run_event, event)
-        except RuntimeError:  # the app has ended
-            pass
+        """From the runner's reader thread: queue *event*, never wait."""
+        loop = self._ui_loop
+        if loop is None or loop.is_closed():
+            return
+        with contextlib.suppress(RuntimeError):  # the app has ended
+            loop.call_soon_threadsafe(self.on_run_event, event)
 
     def on_run_event(self, event: Any) -> None:
         run = self.current_run
@@ -1360,7 +1372,13 @@ class EvacTui(App[None]):
         elif isinstance(event, ChildExited):
             run.exited = event
             self._finish_run()
-        if not run.done:
+        if not run.done and self._render_timer is None:
+            self._render_timer = self.set_timer(0.1, self._render_tick)
+
+    def _render_tick(self) -> None:
+        """Redraw the Run step at most ten times per second."""
+        self._render_timer = None
+        if self.current_run is not None and not self.current_run.done:
             self.render_run()
 
     def _finish_run(self) -> None:

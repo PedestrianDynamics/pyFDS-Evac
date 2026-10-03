@@ -849,7 +849,7 @@ def test_a21_warning_in_log_and_counter(workdir):
         async with app.run_test(size=(100, 30)) as pilot:
             await _started(pilot, app, workdir)
             app.on_run_event(events.WarningEvent("Smoke slice missing", sim_time=3.0))
-            await pilot.pause()
+            await pilot.pause(0.2)  # the Run step redraws at most every 0.1 s
             log = "\n".join(s.text for s in app.query_one("#run-log").lines)
             assert "WARNING Smoke slice missing" in log
             assert "! 1 warning" in text_of(app, "#run-status")
@@ -876,7 +876,7 @@ def test_a22_plan_fallbacks(workdir, monkeypatch):
             assert "plan not available" in str(view.render())
             app.on_run_event(tiny_plan())
             app.on_run_event(tiny_frame(5.0, 0))
-            await pilot.pause()
+            await pilot.pause(0.2)
             drawn = str(view.render())
             assert "east 0" in drawn and "•" in drawn and "x" in drawn
             monkeypatch.setenv("TERM", "dumb")
@@ -1023,6 +1023,8 @@ def test_snapshot_run_with_plan(workdir, snap_compare, monkeypatch, theme):
         await pilot.pause()
         replay(app)
         app.current_run.started = time.monotonic()
+        await pilot.pause(0.2)
+        app.render_run()
         await pilot.pause()
 
     app = _snap_app(workdir, "evac-dark" if theme == "NO_COLOR" else theme)
@@ -1090,3 +1092,14 @@ def test_a20_tui_run_equals_cli(tmp_path):
     # The child's private temporary folder is gone (#331).
     assert sorted(Path(tempfile.gettempdir()).glob("pyfds-evac-run-*")) == before_tmp
     assert (Path(base) / "child.log").exists()
+
+
+def test_missing_extra_gives_the_install_hint():
+    code = (
+        "import sys; sys.modules['textual'] = None\n"
+        "from pyfds_evac.tui.launch import main\n"
+        "main([])\n"
+    )
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
+    assert out.returncode == 1
+    assert "pip install 'pyfds-evac[tui]'" in out.stderr

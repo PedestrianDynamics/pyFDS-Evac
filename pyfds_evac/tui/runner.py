@@ -225,7 +225,11 @@ class ProcessRunner:
             name="pyfds-evac-run",
             daemon=True,
         )
-        self._proc.start()
+        try:
+            self._proc.start()
+        except BaseException:
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+            raise
         self._thread = threading.Thread(
             target=self._read,
             args=(self._proc, event_queue, post, Path(log_path), tmp_dir),
