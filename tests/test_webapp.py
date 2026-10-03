@@ -2459,9 +2459,13 @@ def test_trajectory_custom_speed_is_a_decimal_text_input():
     assert "inputmode" not in html
     # parseFloat("1,5") is 1; Number("1,5") is NaN and is not applied.
     assert "parseFloat(customInput.value)" not in trajviz._JS
-    assert "var v = Number(raw);" in trajviz._JS
+    assert r'pattern="[0-9]*\.?[0-9]+"' in html
+    pattern = re.compile(r"^(?:[0-9]*\.?[0-9]+)$")
+    assert all(pattern.match(v) for v in ("1.5", ".5", "2", "0.05"))
+    assert not any(pattern.match(v) for v in ("1,5", "2x", "-1", "0x10", "1e3"))
+    assert "customInput.pattern" in trajviz._JS
     # A value that is not applied says so in text, not by colour alone.
     assert 'id="traj-speed-msg"' in trajviz._SPEED_MSG
     assert 'aria-live="polite"' in trajviz._SPEED_MSG
     assert "setAttribute('aria-invalid', 'true')" in trajviz._JS
-    assert "v < SPEED_MIN" in trajviz._JS and "SPEED_MIN = 0.05" in trajviz._JS
+    assert "v >= SPEED_MIN" in trajviz._JS and "SPEED_MIN = 0.05" in trajviz._JS

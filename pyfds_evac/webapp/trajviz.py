@@ -690,10 +690,12 @@ _JS = """
     };
     var applyCustomSpeed = function () {
       var raw = customInput.value.trim();
-      // Number(), not parseFloat(): "1,5" must not apply as 1.
-      var v = Number(raw);
       if (!raw) { markSpeed(''); return; }
-      if (!isFinite(v) || v < SPEED_MIN) {
+      // The field's own pattern: digits with an optional point, so "1,5",
+      // "2x", "-1" and "0x10" are refused rather than read as 1, 2 or 16.
+      var ok = new RegExp('^(?:' + customInput.pattern + ')$').test(raw);
+      var v = ok ? Number(raw) : NaN;
+      if (!(v >= SPEED_MIN)) {
         markSpeed('\u26a0 Not applied: enter a number of at least ' + SPEED_MIN +
           ' with a point, e.g. 1.5. Speed stays ' + speedMult + '\u00d7.');
         return;
@@ -927,6 +929,7 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
 _SPEED_CUSTOM_INPUT = (
     '<input id="traj-speed-custom" type="text" '
     'autocomplete="off" spellcheck="false" '
+    r'pattern="[0-9]*\.?[0-9]+" '
     'placeholder="custom" class="speed-custom" '
     'title="Custom speed multiplier, at least 0.05; use a point, e.g. 1.5" '
     'aria-label="Custom speed multiplier">'
