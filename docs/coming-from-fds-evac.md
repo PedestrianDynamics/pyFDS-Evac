@@ -6,10 +6,11 @@ aliases: [/docs/coming-from-fds-evac/]
 
 This page is for engineers who have an [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) input file and want to run the
 same case in pyFDS-Evac. It maps each FDS+Evac input to its place here, and it
-lists what has no equivalent. FDS+Evac was removed from FDS in 2021 (FDS
-commit `6a1d48aa5e`); the link above and every `evac.f90:NNNN` reference in
-these docs point to its last version before removal, FDS
-`6.7.6-404-gc9da70d7a`, which the 2021 guide describes. Read
+lists what has no equivalent. FDS+Evac was removed from FDS in December 2021
+(FDS commit `6a1d48aa5e`). The last FDS release that contains it is FDS 6.7.7
+(November 2021, Evac 2.6.1). The link above and every `evac.f90:NNNN`
+reference in these docs point to FDS `6.7.6-404-gc9da70d7a` (August 2021,
+Evac 2.6.0), the version the 2021 guide describes. Read
 [Limitations](limitations.md) before you rely on a result.
 
 pyFDS-Evac is research software, provided without warranty. It is not intended
