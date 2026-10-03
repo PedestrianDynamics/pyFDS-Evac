@@ -1116,7 +1116,10 @@ against a soot-dose or FED-equivalent limit.&lt;/strong> That is open work.&lt;/
 &lt;p>Under FDS+Evac&amp;rsquo;s &lt;em>primary&lt;/em> rule the criterion is different again — minimise time
 among doors satisfying &lt;code>K_ave_Door &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code> = 0.03 /m
 (&lt;code>evac.f90:16601&lt;/code>, &lt;code>:16608&lt;/code>; &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> at
-&lt;code>:5496&lt;/code>). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
+&lt;code>:5496&lt;/code>). These are the Evac 2.6.0 values; Evac 2.6.1 (FDS 6.7.7) tests
+&lt;code>K_ave_Door * d &amp;lt; 0.003&lt;/code> instead
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#evac-261-door-criterion">model-comparison.md&lt;/a>).
+pyFDS-Evac ships the 2.6.0 absolute criterion as the opt-in clean-exit tier
 below. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#the-smoke-criteria-on-a-door">model-comparison.md&lt;/a>.&lt;/p>
 &lt;h3>The diversion is a departure from FDS+Evac, not a reproduction of it&lt;span class="hx-absolute -hx-mt-20" id="the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it">&lt;/span>
 &lt;a href="#the-diversion-is-a-departure-from-fdsevac-not-a-reproduction-of-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The threshold is borrowed; &lt;strong>the place the quantity is used is not&lt;/strong>, and that
@@ -1280,8 +1283,8 @@ smokiest &lt;em>leg&lt;/em> stays at or below the threshold is &lt;code>clean&lt
 outrank smoky ones outright however far they are; among routes of the same tier,
 optical depth then time decides. The sort key is
 &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code>.&lt;/p>
-&lt;p>This is FDS+Evac&amp;rsquo;s primary door rule (&lt;code>evac.f90:16601&lt;/code>, &lt;code>:16608&lt;/code>), and its
-threshold is not a new constant: &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> =
+&lt;p>This is FDS+Evac&amp;rsquo;s primary door rule in Evac 2.6.0 (&lt;code>evac.f90:16601&lt;/code>,
+&lt;code>:16608&lt;/code>), and its threshold is not a new constant: &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> =
 0.03 /m at &lt;code>:5496&lt;/code>, which is Jin&amp;rsquo;s &lt;code>S = 3/K&lt;/code> at a 100 m sighting distance. Two
 differences from the reference implementation are worth stating:&lt;/p>
 &lt;ul>
@@ -1634,7 +1637,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>clean_extinction_threshold&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.0&lt;/code> (off)&lt;/td>
-&lt;td>Extinction at or below which a route&amp;rsquo;s smokiest leg makes the exit &lt;code>clean&lt;/code>; clean exits outrank smoky ones. FDS+Evac&amp;rsquo;s value is &lt;code>0.03&lt;/code>.&lt;/td>
+&lt;td>Extinction at or below which a route&amp;rsquo;s smokiest leg makes the exit &lt;code>clean&lt;/code>; clean exits outrank smoky ones. FDS+Evac 2.6.0&amp;rsquo;s value is &lt;code>0.03&lt;/code>.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>inert&lt;/td>
 &lt;/tr>

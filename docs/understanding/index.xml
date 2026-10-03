@@ -697,7 +697,9 @@ documents. The guide&amp;rsquo;s title page shows &lt;code>FDS6.7.6-404-gc9da70d
 its body text names &lt;code>FDS6.7.6-336-gf2e836c15&lt;/code>, whose &lt;code>evac.f90&lt;/code> equals
 the &lt;code>FDS6.7.6&lt;/code> tag&amp;rsquo;s. This copy differs from the tag only by the
 &lt;code>HR_SPEED&lt;/code>/&lt;code>TPRE&lt;/code> initialisation (:11023–11024) and one &lt;code>EVALUATE_RAMP&lt;/code>
-call (:13256), with no behaviour change.&lt;/p>
+call (:13256), with no behaviour change. The note on Evac 2.6.1 in
+&lt;a href="#evac-261-door-criterion">the smoke criteria on a door&lt;/a> cites tag
+&lt;code>FDS6.7.7&lt;/code> instead, with linked line numbers.&lt;/p>
 &lt;/blockquote>&lt;hr>
 &lt;h2>1. Movement model&lt;span class="hx-absolute -hx-mt-20" id="1-movement-model">&lt;/span>
 &lt;a href="#1-movement-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
@@ -848,6 +850,38 @@ is converted to an extinction coefficient by Jin&amp;rsquo;s relation,
 is 0.03 /m. &lt;code>K_ave_Door&lt;/code> is assigned from &lt;code>See_door&lt;/code> at evac.f90:16497,
 and the tier-1 test that reads it is at evac.f90:16601 and :16608. Among
 the doors that pass, the agent minimises the time &lt;code>T&lt;/code> above.&lt;/p>
+&lt;p>&lt;a id="evac-261-door-criterion">&lt;/a>&lt;strong>Evac 2.6.1 changed this test.&lt;/strong> The
+0.03 /m above is the Evac 2.6.0 default, in the code at c9da70d7a that
+the 2021 guide describes. Commit
+&lt;a href="https://github.com/firemodels/fds/commit/0c6ae0ec13734b82909a9fa84a268ff0bf7d38df" target="_blank" rel="noopener">&lt;code>0c6ae0ec13&lt;/code>&lt;/a>
+(October 2021) changed it for Evac 2.6.1, the version in FDS 6.7.7, the
+last FDS release with FDS+Evac:&lt;/p>
+&lt;ul>
+&lt;li>The default became &lt;code>FED_DOOR_CRIT = -1000.0&lt;/code>, a visibility of 1000 m
+(&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L1525" target="_blank" rel="noopener">&lt;code>FDS6.7.7&lt;/code> evac.f90 line 1525&lt;/a>), so
+&lt;code>ABS(FED_DOOR_CRIT)&lt;/code> = 3/1000 = 0.003 after the conversion
+(&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L5512" target="_blank" rel="noopener">line 5512&lt;/a>).&lt;/li>
+&lt;li>The smoke-free test multiplies the mean extinction by the distance to
+the door: &lt;code>K_ave_Door(i)*SQRT((x1_old-x_o)**2 + (y1_old-y_o)**2) &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code> in tiers 1 and 3 (&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16312" target="_blank" rel="noopener">line 16312&lt;/a>,
+&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16455" target="_blank" rel="noopener">line 16455&lt;/a>); tier 2, for doors without a line of sight,
+uses the L1 distance &lt;code>ABS(x1_old-x_o) + ABS(y1_old-y_o)&lt;/code>
+(&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16406" target="_blank" rel="noopener">line 16406&lt;/a>). The tested quantity is an optical depth,
+so the 2.6.1 threshold 0.003 has no unit. The smoke mark on the
+previous target uses the same product (&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16347" target="_blank" rel="noopener">line 16347&lt;/a>).&lt;/li>
+&lt;li>The floor &lt;code>0.5 * ABS(FED_DOOR_CRIT)&lt;/code> on &lt;code>K_ave_Door&lt;/code> is gone. Each
+call of &lt;code>Change_Target_Door&lt;/code> resets every entry to
+&lt;code>1.0E-7 * ABS(FED_DOOR_CRIT)&lt;/code> = 3 × 10⁻¹⁰ /m
+(&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L15891" target="_blank" rel="noopener">line 15891&lt;/a>), and a visible door then takes
+&lt;code>MAX(ave_K, K_ave_Door(i))&lt;/code> (&lt;a href="https://github.com/firemodels/fds/blob/FDS6.7.7/Source/evac.f90#L16220" target="_blank" rel="noopener">line 16220&lt;/a>), so the floor
+is now 3 × 10⁻¹⁰ /m instead of 0.015 /m.&lt;/li>
+&lt;/ul>
+&lt;p>The commit message says the new test equals the old one for an agent
+10 m from the door. With the coded default it does not: at 10 m a door
+is smoke-free below &lt;code>K_ave&lt;/code> = 3 × 10⁻⁴ /m, a hundred times below
+2.6.0&amp;rsquo;s 0.03 /m; the two tests agree at 0.1 m. The FDS+Evac guide
+shipped with FDS 6.7.7 still gives the default as −100. The tier-4 formula
+below is the same in both versions. pyFDS-Evac&amp;rsquo;s opt-in
+&lt;code>clean_extinction_threshold&lt;/code> follows the 2.6.0 form, an absolute &lt;em>K&lt;/em>.&lt;/p>
 &lt;p>&lt;strong>That test is a hard filter.&lt;/strong> &lt;code>IF (T_tmp &amp;lt; L2_min .AND. L2_tmp &amp;lt; ABS(FED_DOOR_CRIT))&lt;/code> sets the chosen door &lt;code>i_tmp&lt;/code> only for a door that
 qualifies; when none qualifies the tier selects nothing and the search
 moves to the next tier of doors, not to a time-only ranking. pyFDS-Evac&amp;rsquo;s
