@@ -35,6 +35,15 @@ except ImportError:
         from fasthtml.core import to_xml
 
 from pyfds_evac.cli import _build_parser
+from pyfds_evac.config.parameters import (
+    GUI_HIDDEN,
+    GUI_SECTIONS,
+    GUI_UNIT_LABELS,
+    PARAMETERS,
+    RUN_OPTIONS,
+    default,
+    parameter,
+)
 from pyfds_evac.core.manifest import find_project_root
 
 from .runner import run_stamp, utc_now
@@ -71,55 +80,11 @@ _MONO = "font-family:'JetBrains Mono',monospace"
 
 _GROUP_ACCENT = ["#F4C430", "#FF8A3D", "#E01E37", "#C81D4E", "#F4C430", "#FFB020"]
 
-FIELD_GROUPS: list[tuple] = [
-    ("Core", ["scenario", "seed"]),
-    (
-        "Smoke",
-        [
-            "fds_dir",
-            "constant_extinction",
-            "smoke_update_interval",
-            "smoke_slice_height",
-            "allow_fds_horizon_hold",
-            "require_fds_coverage",
-            "smoke_blind",
-        ],
-    ),
-    (
-        "FED & Tenability",
-        [
-            "disable_tenability",
-            "incapacitation_mode",
-            "susceptibility_sigma",
-            "enable_fic_speed",
-            "fic_alpha",
-            "fic_min_factor",
-            "fed_threshold",
-            "o2_threshold_percent",
-            "enable_heat_fed",
-            "heat_incapacitation_mode",
-            "heat_susceptibility_sigma",
-            "heat_clothing",
-            "heat_fed_threshold",
-        ],
-    ),
-    ("Rerouting", ["enable_rerouting", "reroute_interval", "replay_exits"]),
-    ("Visibility", ["vis_cache"]),
-    (
-        "Output files",
-        [
-            "output_sqlite",
-            "output_smoke_history",
-            "output_fed_history",
-            "output_route_history",
-            "output_route_cost_history",
-            "output_exit_history",
-            "export_app_bundle",
-        ],
-    ),
-]
+# Sections, hidden flags, units and help come from the configuration model;
+# the form keeps no option metadata of its own.
+FIELD_GROUPS: list[tuple] = [(title, list(dests)) for title, dests in GUI_SECTIONS]
 
-_HIDDEN = {"help", "print_summary", "export_only", "inspect_fds", "cleanup"}
+_HIDDEN = set(GUI_HIDDEN)
 
 
 def _load_parser() -> argparse.ArgumentParser:
@@ -264,66 +229,7 @@ def _browse_button(target_id: str, mode: str) -> Any:
 # Curated, friendly explanations shown in the ? badge next to each field.
 # Preferred over argparse's terse help text; keyed by the field's dest.
 _HELP_TEXT: dict[str, str] = {
-    "scenario": "Which building + agent setup to run. Each option under assets/ pairs "
-    "a floor plan (geometry) with an exits/agents config.",
-    "seed": "Random seed. Leave blank to use the scenario's own baseSeed, as run.py "
-    "does. The same seed reproduces the same run; change it to get a different "
-    "random spawn layout and variation.",
-    "fds_dir": "Folder of precomputed FDS fire results. Supplies the smoke and "
-    "toxic-gas fields agents react to. Leave blank to run with no fire.",
-    "constant_extinction": "Skip FDS and apply one uniform smoke density K (1/m) everywhere — a "
-    "quick way to test smoke slowdown without a full fire run.",
-    "smoke_update_interval": "How often (sim seconds) the smoke each agent feels is refreshed. "
-    "Smaller is smoother but costs more compute.",
-    "smoke_slice_height": "Height (m) of the horizontal FDS slice sampled for smoke — roughly "
-    "head height of a standing person. 1.6 by default, as FDS+Evac.",
-    "allow_fds_horizon_hold": "Let the run outlast the FDS results by holding their last "
-    "frame (logged as a warning). Off by default: a run longer than the FDS "
-    "results stops with an error at setup.",
-    "require_fds_coverage": "Stop the run with an error when an agent, sign, exit or "
-    "route edge is sampled outside the FDS slices. Off by default, as FDS+Evac: "
-    "places outside the FDS domain read clear, ambient air, with a warning at "
-    "setup.",
-    "disable_tenability": "Turn off smoke's effect on people: no slowing from irritants and no "
-    "collapse from toxic dose. Agents just walk at normal speed.",
-    "incapacitation_mode": "Deterministic (default, as FDS+Evac): every agent shares the same "
-    "threshold. Probabilistic: each agent draws its own tolerance from a "
-    "population curve (some collapse early, some late).",
-    "susceptibility_sigma": "Spread of how differently people tolerate toxic smoke, used only in "
-    "probabilistic mode. Higher = more variation between agents in when "
-    "they're overcome.",
-    "enable_fic_speed": "Let irritant gases slow agents on top of smoke. Off by default, "
-    "as in FDS+Evac, which has no irritant slowdown.",
-    "fic_alpha": "How strongly irritant gases slow an agent. Higher = agents slow down "
-    "more in irritating smoke.",
-    "fic_min_factor": "Floor on irritant slowdown — an agent never drops below this fraction "
-    "of its speed from irritants alone.",
-    "fed_threshold": "Toxic dose (FED) at which a typical person is incapacitated. 1.0 is the "
-    "standard 'untenable' dose (ISO 13571). Lower = agents succumb sooner.",
-    "o2_threshold_percent": "Oxygen level (vol %) below which low oxygen adds to the toxic "
-    "dose. 20.0 as in FDS+Evac; 19.5 is the OSHA limit Pathfinder uses.",
-    "enable_heat_fed": "Accumulate a heat dose from the FDS temperature slice and let it "
-    "incapacitate. Off by default, as FDS+Evac has no heat dose.",
-    "heat_incapacitation_mode": "Same idea as toxic-dose mode, but for heat: deterministic (default) "
-    "gives everyone the same tolerance, probabilistic draws one per agent. "
-    "Independent of the toxic-gas track.",
-    "heat_susceptibility_sigma": "Spread of how differently people tolerate heat exposure, used "
-    "only in probabilistic heat mode. Reuses the toxic-gas default as an "
-    "assumption — there's no published population data for heat.",
-    "heat_clothing": "clothed (default) or unclothed. Picks the ISO 13571:2012 law for hot "
-    "air: fully clothed people tolerate it about three times longer than "
-    "unclothed ones. unclothed gives the SFPE Handbook law used before.",
-    "heat_fed_threshold": "Heat dose at which a person is thermally incapacitated. Leave blank "
-    "to use the toxic-dose threshold, as ISO 13571:2012 uses one threshold for "
-    "FED and FEC and treats heat in the same manner; a value here departs from ISO and is recorded in the run manifest.",
-    "enable_rerouting": "Let agents rethink their route mid-evacuation as smoke and crowding "
-    "change, instead of blindly following their first assigned route.",
-    "reroute_interval": "How often (sim seconds) each agent rethinks its route. 1 = very "
-    "responsive; larger values make agents commit longer before "
-    "reconsidering.",
-    "vis_cache": "Optional file (.npz) that caches the sign-visibility map between "
-    "runs. Blank = no cache. Needs rerouting enabled; without an FDS dir it "
-    "holds the clear-air map.",
+    **{p.dest: p.gui_help for p in PARAMETERS if p.gui_help},
     "output_base": "Folder the run writes into. Leave it blank to use the derived path "
     "shown greyed out: a new folder per run, named by scenario, mode, the seed "
     "used and the start time (UTC). Type a folder to use instead of that "
@@ -346,11 +252,7 @@ def _help_text(dest: str, action: argparse.Action | None = None) -> str:
 
 # Units stated by each field's own help text, shown in its label.
 _UNITS: dict[str, str] = {
-    "constant_extinction": "1/m",
-    "smoke_update_interval": "s",
-    "smoke_slice_height": "m",
-    "reroute_interval": "s",
-    "o2_threshold_percent": "vol %",
+    dest: unit for dest in GUI_UNIT_LABELS if (unit := parameter(dest).unit)
 }
 
 
@@ -490,7 +392,7 @@ def _incap_toggle() -> Any:
             type="hidden",
             id="incapacitation_mode",
             name="incapacitation_mode",
-            value="deterministic",
+            value=default("incapacitation_mode"),
         ),
         NotStr(
             '<div id="incap-dist" style="display:none;margin-top:10px;border-radius:9px;overflow:hidden;background:var(--surface-panel)">'
@@ -646,7 +548,7 @@ def _field(action: argparse.Action) -> Any:
         return _incap_toggle()
 
     if dest == "susceptibility_sigma":
-        val = str(action.default if action.default is not None else 0.94)
+        val = str(action.default)
         return Div(
             Div(
                 _lbl("Susceptibility σ", "susceptibility_sigma", action),
@@ -944,7 +846,7 @@ def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:
     return _unique_run_folder(
         results_root()
         / run_name(scenario)
-        / str(mode or "deterministic")
+        / str(mode or default("incapacitation_mode"))
         / f"seed{seed if seed is not None else 'default'}",
         stamp,
     )
@@ -996,7 +898,7 @@ def form_to_opts(
     opts: dict[str, Any] = {}
     for action in parser._actions:
         dest = action.dest
-        if dest == "help":
+        if dest not in RUN_OPTIONS:
             continue
         if _is_bool(action):
             # Absent means the flag's own default (rerouting is on by default);
@@ -1025,7 +927,7 @@ def form_to_opts(
     # filled in, so a run submitted before its next poll wrote to the previous
     # scenario's folder (#330).
     sc = run_name(opts.get("scenario"))
-    mode = str(opts.get("incapacitation_mode") or "deterministic")
+    mode = str(opts.get("incapacitation_mode") or default("incapacitation_mode"))
     stamp = stamp or run_stamp(utc_now())
     typed = str(form.get("output_base") or "").strip().replace("\\", "/").rstrip("/")
     base = (

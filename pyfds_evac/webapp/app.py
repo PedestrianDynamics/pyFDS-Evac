@@ -44,6 +44,7 @@ from fasthtml.common import (
 from starlette.requests import Request
 
 from pyfds_evac.cli import apply_outputs
+from pyfds_evac.config.parameters import default
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 
@@ -541,7 +542,7 @@ function drawIncapDist() {
   if (!canvas || !dist || dist.style.display === 'none') return;
 
   var sigmaEl = document.getElementById('susceptibility_sigma');
-  var sigma = sigmaEl ? (parseFloat(sigmaEl.value) || 0.94) : 0.94;
+  var sigma = sigmaEl ? (parseFloat(sigmaEl.value) || __SIGMA__) : __SIGMA__;
   var mu = Math.log(0.3);  // median incapacitation at FED = 0.3
 
   var dpr = window.devicePixelRatio || 1;
@@ -670,7 +671,7 @@ document.addEventListener('DOMContentLoaded', function () {
   if (el) setTenabilityMode(el.value || 'deterministic');
 });
 setTimeout(drawIncapDist, 150);
-"""
+""".replace("__SIGMA__", repr(default("susceptibility_sigma")))
 
 _MATH_JS = """
 window._renderMath = function () {

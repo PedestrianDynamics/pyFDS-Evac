@@ -71,7 +71,9 @@ def _rows(sqlite: Path) -> dict[str, list[tuple]]:
 
 
 def _manifest(out: Path) -> dict:
-    data = json.loads((out / "run.manifest.json").read_text())
+    # The configuration section (#484) names the output paths.
+    text = (out / "run.manifest.json").read_text().replace(str(out), "OUT")
+    data = json.loads(text)
     data.pop("created_utc")  # wall-clock time of the run
     return data
 
