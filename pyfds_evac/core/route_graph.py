@@ -753,7 +753,7 @@ class RouteCostConfig:
     # for why it does not survive contact with either reference deck.
     clean_extinction_threshold: float = 0.0
     # Hysteresis on tier membership for the exit the agent already heads for,
-    # from FDS+Evac's FAC_DOOR_OLD = 0.1 (evac.f90:1506).
+    # from FDS+Evac's FAC_DOOR_OLD = 0.1 (evac.f90:1571).
     clean_exit_margin: float = 0.1
     # The route the agent will accept, as an optical depth: tau = K_ave * L,
     # the soot column it walks through. Refused above this.
