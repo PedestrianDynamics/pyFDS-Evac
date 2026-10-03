@@ -121,6 +121,7 @@ class Parameter:
     that only steer the command (``--show-config``); they never reach
     ``build_run_kwargs`` and front ends do not show them. ``gui_help`` is the
     GUI's own wording of the help; None falls back to ``help``.
+    :attr:`tier` is ``"common"`` or ``"advanced"`` (see :data:`TIERS`).
     """
 
     dest: str
@@ -144,6 +145,15 @@ class Parameter:
     def flag(self) -> str:
         """The first (long) option string."""
         return self.flags[0]
+
+    @property
+    def tier(self) -> str:
+        """``"common"`` for an option of a GUI section, else ``"advanced"``.
+
+        The advanced tier is the GUI's "Other" section plus the command-only
+        flags the GUI hides (:data:`GUI_HIDDEN`).
+        """
+        return TIER_COMMON if self.dest in _COMMON else TIER_ADVANCED
 
     @property
     def kind(self) -> str:
@@ -975,6 +985,15 @@ GUI_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "export_app_bundle",
         ),
     ),
+)
+
+TIER_COMMON = "common"
+TIER_ADVANCED = "advanced"
+#: The tiers of :attr:`Parameter.tier`: common options follow the GUI's
+#: sections, advanced ones are the rest (maintainer decision, #485).
+TIERS: tuple[str, ...] = (TIER_COMMON, TIER_ADVANCED)
+_COMMON: frozenset[str] = frozenset(
+    dest for _title, dests in GUI_SECTIONS for dest in dests
 )
 
 #: Flags the GUI form does not show.

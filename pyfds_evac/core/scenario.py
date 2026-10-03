@@ -26,7 +26,7 @@ import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 try:
     import jupedsim as jps
@@ -35,6 +35,9 @@ except ModuleNotFoundError:
 import numpy as np
 from shapely import wkt
 from shapely.geometry import Polygon
+
+if TYPE_CHECKING:
+    from .plan_view import FrameRecorder
 
 from .agent_seed import (
     INITIAL_ORIGIN,
@@ -829,6 +832,11 @@ class Scenario:
         self.stages[checkpoint_id]["waiting_time"] = waiting_time
 
 
+def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
+    """Flow agents still to enter."""
+    return max(0, sum(numbers) - sum(counters)) if has_flow else 0
+
+
 @dataclass(frozen=True)
 class ProgressEvent:
     """A single progress sample emitted while a scenario runs.
@@ -869,6 +877,8 @@ class ScenarioResult:
     # What the run used (seed, models built); provisional, see
     # manifest.run_settings.
     run_settings: dict[str, Any] | None = None
+    # Agents incapacitated during the run (gas or heat); provisional.
+    agents_incapacitated: int = 0
 
     @property
     def success(self) -> bool:
@@ -1465,6 +1475,7 @@ def run_scenario(
     smoke_blind: bool = False,
     replay_exits: Mapping[SpawnKey, str] | None = None,
     require_fds_coverage: bool = False,
+    frame_recorder: "FrameRecorder | None" = None,
 ) -> ScenarioResult:
     """Run a scenario with the same shared setup/runtime semantics as the web app.
 
@@ -1485,6 +1496,10 @@ def run_scenario(
     ``require_fds_coverage`` it is an error instead; the fields and the
     visibility model must then be built with the same flag so that a sample
     outside also raises. Smoke and FED history rows carry ``in_fds_domain``.
+
+    ``frame_recorder`` (a :class:`~pyfds_evac.core.plan_view.FrameRecorder`)
+    is called after every step to send plan-view frames; it only reads, so
+    the results are the same without it.
     """
     _require_jupedsim()
     from .simulation_init import (
@@ -1815,6 +1830,13 @@ def run_scenario(
         import time as _time
 
         _wall_start = _time.monotonic()
+        if frame_recorder is not None:
+            frame_recorder.start(
+                spawning_info.get("stage_map", {}),
+                (scenario.raw.get("exits") or {}).keys(),
+                smoke_speed_model,
+                tuple(scenario.walkable_polygon.bounds),
+            )
         last_progress_time = -1.0
         last_progress_agents = simulation.agent_count()
 
@@ -2952,6 +2974,11 @@ def run_scenario(
                                     _logger.warning(
                                         "Failed to remove agent %s: %s", agent_id, e
                                     )
+                                else:
+                                    if frame_recorder is not None:
+                                        frame_recorder.leaves(
+                                            agent_id, current_target_stage
+                                        )
                                 wait_info["state"] = "done"
                                 continue
 
@@ -3033,7 +3060,25 @@ def run_scenario(
                     )
 
             simulation.iterate()
+            if frame_recorder is not None:
+                frame_recorder.after_step(
+                    simulation,
+                    incapacitated=incapacitated_agents,
+                    not_spawned=_not_spawned(
+                        has_flow_spawning,
+                        num_agents_per_source,
+                        agent_counter_per_source,
+                    ),
+                )
 
+        if frame_recorder is not None:
+            frame_recorder.finish(
+                simulation,
+                incapacitated=incapacitated_agents,
+                not_spawned=_not_spawned(
+                    has_flow_spawning, num_agents_per_source, agent_counter_per_source
+                ),
+            )
         final_total_agents = initial_agent_count
         if has_flow_spawning:
             final_total_agents += sum(agent_counter_per_source)
@@ -3191,6 +3236,7 @@ def run_scenario(
                 replay_exits=replay_exits,
                 require_fds_coverage=require_fds_coverage,
             ),
+            agents_incapacitated=len(incapacitated_agents),
         )
     finally:
         try:
