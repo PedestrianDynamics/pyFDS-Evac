@@ -11,8 +11,8 @@
 #   --full     re-run the studies' evacuations as well (about 1 h more)
 #   --report   Markdown report (default: release-check-<commit>.md in the
 #              current folder); the step logs go to <report>.logs/
-#   --gates    comma-separated subset of tests,bundles,docs,site
-#              (default: all four)
+#   --gates    comma-separated subset of tests,install,bundles,docs,site
+#              (default: all five)
 #   --only     restrict the docs and bundles gates to these pages (names
 #              from scripts/release_check.toml or site/data/examples.toml)
 #   PYTHON_VERSION  the versions to test (default: the Python classifiers of
@@ -22,6 +22,12 @@
 #   bundles build  scripts/docs/bundle_examples.py, on the clean checkout
 #   tests          pytest -q -rs per Python version, external_data included;
 #                  a skipped external_data test fails the gate
+#   install        uv build --wheel; per Python version a fresh venv and a
+#                  plain pip install <wheel>[gui]: pip check, the first
+#                  pyfds-evac --help and pyfds-evac-gui --help (cold, FAIL
+#                  above 1.0 s), an argument error, python -m pyfds_evac,
+#                  the GUI page and a small scenario outside the repository;
+#                  without the extra, the install hint of pyfds-evac-gui
 #   bundles        each download zip: install requirements.txt, follow
 #                  README.txt up to the FDS step
 #   docs           the documented commands of scripts/release_check.toml
@@ -36,7 +42,7 @@ set -uo pipefail
 
 MODE=quick
 REPORT=
-GATES=tests,bundles,docs,site
+GATES=tests,install,bundles,docs,site
 ONLY=()
 VERSIONS=()
 while [ $# -gt 0 ]; do
@@ -46,7 +52,7 @@ while [ $# -gt 0 ]; do
     --report) REPORT=$2; shift ;;
     --gates) GATES=$2; shift ;;
     --only) shift; while [ $# -gt 0 ] && [ "${1#--}" = "$1" ] && ! [[ $1 =~ ^3\.[0-9]+$ ]]; do ONLY+=("$1"); shift; done; continue ;;
-    -h|--help) sed -n '2,32p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,/^set -uo/p' "$0" | sed '$d'; exit 0 ;;
     3.*) VERSIONS+=("$1") ;;
     *) echo "unknown argument: $1" >&2; exit 64 ;;
   esac
@@ -85,6 +91,16 @@ echo "release check of $SHA ($MODE), Python ${VERSIONS[*]}, data: $FDS_EVAC_DATA
 git -C "$SRC" worktree add --detach --quiet "$REPO" HEAD || exit 1
 cd "$REPO" || exit 1
 
+# The wheel of HEAD, built before any gate rewrites files of the checkout.
+if has_gate install; then
+  start=$SECONDS
+  if uv build --wheel --out-dir "$TMP/dist" > "$LOGS/uv_build.log" 2>&1; then
+    row install wheel "uv build --wheel" PASS $((SECONDS - start)) "$(basename "$TMP"/dist/*.whl)"
+  else
+    row install wheel "uv build --wheel" FAIL $((SECONDS - start)) "see $LOGS/uv_build.log"
+  fi
+fi
+
 # One uv environment per Python version, outside the checkout.
 sync_env() {  # version
   export UV_PROJECT_ENVIRONMENT=$TMP/venv-$1
@@ -119,6 +135,13 @@ if has_gate tests; then
       --ids "$LOGS/external_ids_$v.txt" --python "$v" --pytest-rc $rc \
       --seconds $((SECONDS - start)) --results "$RESULTS"
   done
+fi
+
+# --- install ---------------------------------------------------------------
+if has_gate install && [ -n "$(ls "$TMP"/dist/*.whl 2>/dev/null)" ]; then
+  "${HELPER[@]}" install --wheel "$TMP"/dist/*.whl --repo "$REPO" \
+    --work "$TMP/work" --logs "$LOGS" --results "$RESULTS" \
+    --python "${VERSIONS[@]}"
 fi
 
 # --- bundles ---------------------------------------------------------------

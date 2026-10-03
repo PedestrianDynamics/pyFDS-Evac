@@ -52,3 +52,33 @@ jobs:
           disable_search: true
           use_oidc: ${{ !github.event.pull_request.head.repo.fork }}
           fail_ci_if_error: false
+
+  # The release gate's install check on one Python version: build the
+  # wheel, pip install it with [gui] into a fresh venv, time the first
+  # pyfds-evac --help and pyfds-evac-gui --help, and run a small scenario
+  # outside the checkout (scripts/release_check.py install, #478). The
+  # limit is 3 s here, not the release gate's 1 s: shared runners vary in
+  # speed, and 3 s still catches the 15-28 s first --help of 0.2.1/0.2.2.
+  wheel-install:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install --upgrade uv
+      - name: Build the wheel
+        run: uv build --wheel --out-dir dist
+      - name: Install the wheel in a fresh venv and time the first --help
+        run: >
+          python scripts/release_check.py install --wheel dist/*.whl
+          --python 3.12 --limit 3.0
+          --work "$RUNNER_TEMP/install" --logs "$RUNNER_TEMP/install-logs"
+          --results "$RUNNER_TEMP/install.tsv"
+      - name: Upload the logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-install-logs
+          path: ${{ runner.temp }}/install-logs

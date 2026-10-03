@@ -12,6 +12,12 @@ Standard library only (Python 3.11 or newer, for ``tomllib``). Subcommands:
 ``docs``
     Run the steps of ``scripts/release_check.toml``, page by page, and check
     the exit codes and expected output lines.
+``install``
+    Install the wheel with ``pip install <wheel>[gui]`` into a fresh venv
+    per Python version, time the first ``pyfds-evac --help`` and
+    ``pyfds-evac-gui --help`` (cold, empty matplotlib cache), check the
+    commands, the GUI page and one small scenario from a folder outside
+    the repository, and the install hint of a venv without the extra.
 ``bundles``
     Unpack each download bundle of ``site/data/examples.toml``, install its
     ``requirements.txt`` and follow its ``README.txt`` up to the FDS step.
@@ -31,10 +37,13 @@ import os
 import re
 import shutil
 import signal
+import socket
 import subprocess
 import sys
 import time
 import tomllib
+import urllib.error
+import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 from pathlib import Path
@@ -456,6 +465,205 @@ def _uv_cache_dir() -> str:
     return out.stdout.strip()
 
 
+# --- install ----------------------------------------------------------------
+
+# Small scenario of the install page: no FDS output, one agent, about 3 s.
+# The evacuation time is the docs gate's business; here the run must finish.
+SCENARIO = "ISO-table21"
+SCENARIO_EXPECT = ["Simulation finished in", "(1/1 evacuated)."]
+GUI_HINT = "pip install 'pyfds-evac[gui]'"
+# Environment variables that would point pip, Python or uv at something
+# other than the fresh venv and the published index configuration.
+_LEAKY = ("PYTHONDONTWRITEBYTECODE", "PYTHONPATH", "PYTHONHOME", "VIRTUAL_ENV")
+
+
+def _install_env(home: Path) -> dict:
+    """Environment of a first-time user: empty home, caches and pip config."""
+    env = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in _LEAKY and not k.startswith(("UV_", "PIP_", "MPL"))
+    }
+    for name in ("mpl", "cache", "config"):
+        (home / name).mkdir(parents=True, exist_ok=True)
+    env.update(
+        {
+            "HOME": str(home),
+            "MPLCONFIGDIR": str(home / "mpl"),
+            "XDG_CACHE_HOME": str(home / "cache"),
+            "XDG_CONFIG_HOME": str(home / "config"),
+            "PIP_CONFIG_FILE": os.devnull,
+            "PIP_NO_CACHE_DIR": "1",
+            "PIP_DISABLE_PIP_VERSION_CHECK": "1",
+            "PYTHONNOUSERSITE": "1",
+        }
+    )
+    return env
+
+
+def _fresh_venv(venv: Path, python: str, spec: str, env: dict, log: Path):
+    """``uv venv --seed``, then a plain ``pip install`` of ``spec``."""
+    script = (
+        f"uv venv -q --seed --python {python} {venv} && "
+        f"{venv}/bin/python -m pip install -q --no-cache-dir '{spec}'"
+    )
+    return run_shell(script, venv.parent, env, 1800, log)
+
+
+def _timed(page: str, cmd: str, cwd, env, args) -> None:
+    """Time the first call of ``cmd`` after the install; FAIL above the limit."""
+    step, limit = f"first {cmd}", args.limit
+    log = args.logs / f"install_{page}__{re.sub(r'[^A-Za-z0-9]+', '_', step)}.log"
+    rc, output, secs = run_shell(cmd, cwd, env, 300, log)
+    timing = f"{secs:.2f} s (limit {limit:.1f} s, cold)"
+    if rc != 0:
+        status, detail = "FAIL", f"exit {rc}: {_last_line(output)}; {timing}"
+    else:
+        status, detail = ("FAIL" if secs > limit else "PASS"), timing
+    record(args.results, "install", page, step, status, secs, detail)
+
+
+def _check(page: str, step: dict, cwd, env, args) -> str:
+    log = (
+        args.logs / f"install_{page}__{re.sub(r'[^A-Za-z0-9]+', '_', step['name'])}.log"
+    )
+    timeout = float(step.get("timeout", 300))
+    rc, output, secs = run_shell(step["run"], cwd, env, timeout, log)
+    status, detail = judge(step, rc, output, secs, timeout)
+    record(args.results, "install", page, step["name"], status, secs, detail)
+    return status
+
+
+def _free_port() -> int:
+    with socket.socket() as sock:
+        sock.bind(("127.0.0.1", 0))
+        return sock.getsockname()[1]
+
+
+def _http_status(url: str) -> int | None:
+    """Status of ``GET url``; None while nothing listens."""
+    try:
+        with urllib.request.urlopen(url, timeout=5) as response:
+            return response.status
+    except urllib.error.HTTPError as exc:
+        return exc.code
+    except OSError:
+        return None
+
+
+def _wait_for_page(proc: subprocess.Popen, url: str, timeout: float):
+    """Poll ``url`` until it answers or ``proc`` exits; return (status, detail)."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline and proc.poll() is None:
+        code = _http_status(url)
+        if code is not None:
+            return ("PASS" if code == 200 else "FAIL"), f"GET / returned {code}"
+        time.sleep(0.5)
+    if proc.poll() is not None:
+        return "FAIL", f"exited {proc.returncode} before serving"
+    return "FAIL", f"no answer on GET / within {timeout:.0f} s"
+
+
+def _gui_serves(page: str, bin_dir: Path, cwd: Path, env: dict, args) -> None:
+    """Start ``pyfds-evac-gui``, wait for ``GET /`` to return 200, stop it."""
+    port = _free_port()
+    log = args.logs / f"install_{page}__gui_serve.log"
+    start = time.monotonic()
+    with log.open("w") as out:
+        proc = subprocess.Popen(
+            [str(bin_dir / "pyfds-evac-gui"), "--port", str(port)],
+            cwd=cwd,
+            env=env,
+            stdout=out,
+            stderr=subprocess.STDOUT,
+            stdin=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        try:
+            status, detail = _wait_for_page(proc, f"http://127.0.0.1:{port}/", 120)
+        finally:
+            if proc.poll() is None:
+                _kill_group(proc)
+    secs = time.monotonic() - start
+    record(
+        args.results, "install", page, "pyfds-evac-gui serves /", status, secs, detail
+    )
+
+
+def install_one(python: str, args, with_gui: bool) -> None:
+    """Fresh venv for ``python``; install the wheel and check the commands."""
+    page = f"Python {python}" if with_gui else f"Python {python}, no gui extra"
+    work = args.work / ("install-" + re.sub(r"[^A-Za-z0-9.]+", "-", page))
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir(parents=True)
+    env = _install_env(work / "home")
+    venv = work / "venv"
+    spec = f"{args.wheel}[gui]" if with_gui else str(args.wheel)
+    label = "pip install wheel[gui]" if with_gui else "pip install wheel"
+    log = args.logs / f"install_{page.replace(' ', '_').replace(',', '')}__pip.log"
+    rc, output, secs = _fresh_venv(venv, python, spec, env, log)
+    if rc != 0:
+        detail = f"exit {rc}: {_last_line(output)}"
+        record(args.results, "install", page, label, "FAIL", secs, detail)
+        return
+    record(args.results, "install", page, label, "PASS", secs, args.wheel.name)
+    bin_dir = venv / "bin"
+    env["PATH"] = f"{bin_dir}{os.pathsep}{env.get('PATH', '')}"
+    cwd = work / "run"
+    cwd.mkdir()
+    name = page.replace(" ", "_").replace(",", "")
+    if not with_gui:
+        step = {
+            "name": "pyfds-evac-gui without the extra",
+            "run": "pyfds-evac-gui",
+            "exit_ok": [1],
+            "expect": [GUI_HINT],
+        }
+        _check(name, step, cwd, env, args)
+        return
+    # The first calls after the install, before anything else imports the
+    # package: these are the times a new user waits.
+    for command in ("pyfds-evac --help", "pyfds-evac-gui --help"):
+        _timed(name, command, cwd, env, args)
+    steps = [
+        {"name": "pip check", "run": "python -m pip check"},
+        {
+            "name": "pyfds-evac argument error",
+            "run": "pyfds-evac --no-such-flag",
+            "exit_ok": [2],
+            "expect": ["pyfds-evac: error:"],
+        },
+        {
+            "name": "python -m pyfds_evac --help",
+            "run": "python -m pyfds_evac --help",
+            "expect": ["usage: pyfds-evac --scenario PATH"],
+        },
+    ]
+    for step in steps:
+        _check(name, step, cwd, env, args)
+    shutil.copytree(args.repo / "assets" / SCENARIO, cwd / "assets" / SCENARIO)
+    scenario = {
+        "name": f"pyfds-evac --scenario assets/{SCENARIO}",
+        "run": f"pyfds-evac --scenario assets/{SCENARIO} --cleanup",
+        "expect": SCENARIO_EXPECT,
+        "timeout": 900,
+    }
+    _check(name, scenario, cwd, env, args)
+    _gui_serves(name, bin_dir, cwd, env, args)
+
+
+def cmd_install(args) -> int:
+    args.wheel = args.wheel.resolve()
+    if not args.wheel.is_file():
+        record(args.results, "install", "wheel", "exists", "FAIL", 0, str(args.wheel))
+        return 1
+    for python in args.python:
+        install_one(python, args, with_gui=True)
+    install_one(args.python[0], args, with_gui=False)
+    failed = [r for r in _rows(args.results) if r[0] == "install" and r[3] == "FAIL"]
+    return 1 if failed else 0
+
+
 # --- report -----------------------------------------------------------------
 
 
@@ -525,6 +733,20 @@ def main() -> int:
         p.add_argument("--python", default="3.12")
         p.add_argument("--only", nargs="*", default=[])
 
+    p = sub.add_parser("install")
+    p.add_argument("--wheel", type=Path, required=True)
+    p.add_argument("--repo", type=Path, default=ROOT)
+    p.add_argument("--work", type=Path, required=True)
+    p.add_argument("--logs", type=Path, required=True)
+    p.add_argument("--results", type=Path, required=True)
+    p.add_argument("--python", nargs="+", default=["3.12"])
+    p.add_argument(
+        "--limit",
+        type=float,
+        default=1.0,
+        help="seconds the first --help of each command may take (default: 1.0)",
+    )
+
     p = sub.add_parser("report")
     p.add_argument("--results", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
@@ -536,6 +758,7 @@ def main() -> int:
         "external-skips": cmd_external_skips,
         "docs": cmd_docs,
         "bundles": cmd_bundles,
+        "install": cmd_install,
         "report": cmd_report,
     }
     return commands[args.command](args)
