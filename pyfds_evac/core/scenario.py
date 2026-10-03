@@ -836,6 +836,8 @@ class ProgressEvent:
     ``evacuated``/``total`` are agent counts, ``sim_time`` is the simulated
     clock in seconds, ``wall_time`` is real elapsed seconds since the run
     started, and ``pct`` is the integer evacuation percentage.
+    ``incapacitated`` counts agents incapacitated so far and ``not_spawned``
+    flow agents still to enter (provisional fields, 0.3.0).
     """
 
     evacuated: int
@@ -843,6 +845,8 @@ class ProgressEvent:
     sim_time: float
     wall_time: float
     pct: int
+    incapacitated: int = 0
+    not_spawned: int = 0
 
 
 # Called for each progress sample when supplied to ``run_scenario``.
@@ -1848,6 +1852,13 @@ def run_scenario(
                             sim_time=current_time,
                             wall_time=wall_elapsed,
                             pct=pct,
+                            incapacitated=len(incapacitated_agents),
+                            not_spawned=(
+                                sum(num_agents_per_source)
+                                - sum(agent_counter_per_source)
+                                if has_flow_spawning
+                                else 0
+                            ),
                         )
                     )
                 last_progress_time = current_time
