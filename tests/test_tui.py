@@ -1059,9 +1059,30 @@ def _snap_app(workdir, theme="evac-dark"):
     return make_app(workdir, theme=theme)
 
 
+def steady(before=None):
+    """Run *before*, then stop the cursors blinking (#553).
+
+    A focused Input toggles its cursor every 0.5 s, so on a slow runner
+    the capture can fall into the hidden phase. A cursor that does not
+    blink stays visible.
+    """
+
+    async def run(pilot):
+        if before is not None:
+            await before(pilot)
+        for widget in pilot.app.screen.query("*"):
+            if hasattr(widget, "cursor_blink"):
+                widget.cursor_blink = False
+        await pilot.pause()
+
+    return run
+
+
 @pytest.mark.parametrize("theme", ["evac-dark", "solarized-light"])
 def test_snapshot_scenario(workdir, snap_compare, theme):
-    assert snap_compare(_snap_app(workdir, theme), terminal_size=(80, 24))
+    assert snap_compare(
+        _snap_app(workdir, theme), terminal_size=(80, 24), run_before=steady()
+    )
 
 
 @pytest.mark.parametrize("theme", ["evac-dark", "solarized-light"])
@@ -1070,7 +1091,7 @@ def test_snapshot_configure(workdir, snap_compare, theme):
         await to_configure(pilot, pilot.app, workdir / "assets" / "ISO-table21", None)
 
     assert snap_compare(
-        _snap_app(workdir, theme), terminal_size=(80, 24), run_before=before
+        _snap_app(workdir, theme), terminal_size=(80, 24), run_before=steady(before)
     )
 
 
@@ -1093,7 +1114,7 @@ def test_snapshot_run_with_plan(workdir, snap_compare, monkeypatch, theme):
         await pilot.pause()
 
     app = _snap_app(workdir, "evac-dark" if theme == "NO_COLOR" else theme)
-    assert snap_compare(app, terminal_size=(120, 35), run_before=before)
+    assert snap_compare(app, terminal_size=(120, 35), run_before=steady(before))
 
 
 def test_snapshot_results(workdir, snap_compare):
@@ -1109,7 +1130,9 @@ def test_snapshot_results(workdir, snap_compare):
         app.render_results()
         await pilot.pause()
 
-    assert snap_compare(_snap_app(workdir), terminal_size=(80, 24), run_before=before)
+    assert snap_compare(
+        _snap_app(workdir), terminal_size=(80, 24), run_before=steady(before)
+    )
 
 
 # --- A20 CLI <-> TUI equivalence (slow, real child process) -----------------------------------
