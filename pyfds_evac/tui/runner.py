@@ -27,6 +27,7 @@ import multiprocessing
 import os
 import queue
 import shutil
+import signal
 import sys
 import tempfile
 import threading
@@ -114,6 +115,25 @@ def _tail(path: Path, lines: int = 20) -> str:
     return ""
 
 
+class _Stop:
+    """The child's cancel flag: the TUI asked, or the TUI is gone.
+
+    A hang-up (the terminal closed) or a parent that no longer exists
+    (killed) stops the run at the next progress sample, as a cancel does.
+    """
+
+    def __init__(self, cancel_event: Any) -> None:
+        self._event = cancel_event
+        self._parent = os.getppid()
+        self.hung_up = False
+
+    def orphaned(self) -> bool:
+        return self.hung_up or os.getppid() != self._parent
+
+    def is_set(self) -> bool:
+        return self._event.is_set() or self.orphaned()
+
+
 def child_entry(
     values: Mapping[str, Any],
     event_queue: Any,
@@ -128,10 +148,45 @@ def child_entry(
     os.dup2(log.fileno(), 2)
     os.environ["TMPDIR"] = tmp_dir
     tempfile.tempdir = tmp_dir
+    stop = _Stop(cancel_event)
+    if hasattr(signal, "SIGHUP"):
+        signal.signal(signal.SIGHUP, lambda *_: setattr(stop, "hung_up", True))
     from pyfds_evac.core.run_stream import child_main
 
-    child_main(values, _PlainQueue(event_queue), cancel_event, **stream_options)
-    sys.stdout.flush()
+    try:
+        child_main(values, _PlainQueue(event_queue), stop, **stream_options)
+    finally:
+        sys.stdout.flush()
+        if stop.orphaned():  # nobody else will remove it
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+
+TMP_PREFIX = "pyfds-evac-run-"
+
+
+def _alive(pid: int) -> bool:
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True  # exists, owned by someone else
+    return True
+
+
+def sweep_temp_dirs(root: str | None = None) -> list[str]:
+    """Remove run folders of TUI processes that no longer exist.
+
+    Each folder is named ``pyfds-evac-run-<TUI pid>-…``; a TUI that was
+    killed could not remove its own. Returns the folders removed.
+    """
+    removed = []
+    for path in Path(root or tempfile.gettempdir()).glob(f"{TMP_PREFIX}*"):
+        owner = path.name[len(TMP_PREFIX) :].split("-", 1)[0]
+        if owner.isdigit() and int(owner) != os.getpid() and not _alive(int(owner)):
+            shutil.rmtree(path, ignore_errors=True)
+            removed.append(str(path))
+    return removed
 
 
 def prepare_processes() -> None:
@@ -209,7 +264,8 @@ class ProcessRunner:
         ctx = multiprocessing.get_context("spawn")
         Path(folder).mkdir(parents=True, exist_ok=True)
         log_path = str(Path(folder) / CHILD_LOG)
-        tmp_dir = tempfile.mkdtemp(prefix="pyfds-evac-run-")
+        sweep_temp_dirs()
+        tmp_dir = tempfile.mkdtemp(prefix=f"{TMP_PREFIX}{os.getpid()}-")
         event_queue = ctx.Queue()
         self._cancel = ctx.Event()
         self._cancel_at = None

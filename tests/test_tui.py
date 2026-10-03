@@ -1076,7 +1076,7 @@ def test_snapshot_run_with_plan(workdir, snap_compare, monkeypatch, theme):
         await pilot.press("ctrl+r")
         await pilot.pause()
         replay(app)
-        app.current_run.started = time.monotonic()
+        app.current_run.ended = app.current_run.started + 44  # fixed wall time
         await pilot.pause(0.2)
         app.render_run()
         await pilot.pause()
@@ -1157,3 +1157,60 @@ def test_missing_extra_gives_the_install_hint():
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True)
     assert out.returncode == 1
     assert "pip install 'pyfds-evac[tui]'" in out.stderr
+
+
+def test_sweep_removes_folders_of_dead_tui_processes(tmp_path):
+    from pyfds_evac.tui.runner import TMP_PREFIX, sweep_temp_dirs
+
+    dead = subprocess.run(
+        [sys.executable, "-c", "import os; print(os.getpid())"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    stale = tmp_path / f"{TMP_PREFIX}{dead}-abc"
+    mine = tmp_path / f"{TMP_PREFIX}{os.getpid()}-abc"
+    other = tmp_path / f"{TMP_PREFIX}xyz"
+    for folder in (stale, mine, other):
+        folder.mkdir()
+    assert sweep_temp_dirs(str(tmp_path)) == [str(stale)]
+    assert mine.exists() and other.exists()
+
+
+@pytest.mark.slow
+def test_child_stops_and_cleans_up_when_the_tui_is_killed(tmp_path):
+    """A killed TUI (SIGKILL, terminal gone) leaves no run or temp folder."""
+    import signal
+
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    form = model.Form()
+    form.scenario = model.read_scenario(ASSETS / "t_junction")
+    base = form.run_folder("KILL", tmp_path)
+    values = vars(form.namespace(form.output_paths(base)))
+    parent = f"""
+import os, sys, time
+from pyfds_evac.tui.runner import ProcessRunner
+runner = ProcessRunner()
+runner.start({dict(values)!r}, {base!r}, lambda e: None)
+print(runner._proc.pid, flush=True)
+time.sleep(600)
+"""
+    env = {**os.environ, "TMPDIR": str(tmp)}
+    proc = subprocess.Popen(
+        [sys.executable, "-c", parent], stdout=subprocess.PIPE, text=True, env=env
+    )
+    child = int(proc.stdout.readline())
+    time.sleep(4)  # inside the run
+    proc.send_signal(signal.SIGKILL)
+    proc.wait()
+    for _ in range(100):
+        try:
+            os.kill(child, 0)
+        except ProcessLookupError:
+            break
+        time.sleep(0.2)
+    else:
+        os.kill(child, signal.SIGKILL)
+        raise AssertionError("the child kept running after the TUI was killed")
+    assert list(tmp.glob("pyfds-evac-run-*")) == []
