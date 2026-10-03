@@ -20,6 +20,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   matplotlib cache and fail above 1 s. CI runs the same check on Python
   3.12 with a 3 s limit (#478).
 
+### Fixed
+
+- `pyfds-evac --help` and argument errors no longer load numpy. The
+  heat options of the parser read their constants from `core.fed`,
+  which loaded the FDS slice sampler and numpy with it; the sampler now
+  loads when FDS data is read. On macOS the first numpy import after an
+  install took up to 1.2 s and made the 1 s limit of the install gate
+  fail now and then (#503).
+
 ## [0.2.3] - 2026-10-03
 
 ### Fixed
