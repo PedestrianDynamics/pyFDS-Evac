@@ -33,10 +33,21 @@ check the result.
   "checkpoints":   { "<id>": {…} },
   "waypoints":     { "<id>": {…} },
   "zones":         { "<id>": {…} },
-  "journeys":      […],
+  "journeys":      [ { "id": …, "stages": […] } ],
+  "transitions":   [ { "from": …, "to": …, "journey_id": … } ],
+  "journeys_v2":   [ { "id": …, "sequence": […] } ],
+  "waypoint_routing": {…},
   "routing":       {…}
 }
 ```
+
+`journeys` and `transitions` are the stage graph that set-up builds on; a
+journey needs its `transitions`
+([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504)).
+`journeys_v2`, as JuPedSim Web writes it, is converted into them only when
+`journeys` is empty; see
+[Create a scenario](howto-create-scenario.md#add-the-pyfds-evac-keys-last).
+`waypoints` carry signs only.
 
 ## Simulation settings
 
@@ -144,6 +155,35 @@ The legibility rule is on [Models › Wayfinding](/models/wayfinding.md).
 | `waiting_time` | checkpoint | 0 s | Time agents wait at the checkpoint. |
 | `waiting_time_distribution`, `waiting_time_std` | checkpoint | constant, 1.0 s | `"gaussian"` draws the wait per agent. |
 | `enable_throughput_throttling`, `max_throughput` | checkpoint | `false`, 1.0 | Cap the flow through the checkpoint. |
+
+## Journey splits: `waypoint_routing`
+
+A journey in which a checkpoint has more than one outgoing transition needs
+the shares of agents that take each branch:
+
+```text
+"waypoint_routing": {
+  "<checkpoint id>": {
+    "<journey id>": {
+      "destinations": [ { "target": "<stage id>", "percentage": 60 }, … ]
+    }
+  }
+}
+```
+
+| Key | Default | Effect |
+|---|---|---|
+| `destinations[].target` | required | A stage the journey's transitions lead to from this checkpoint. Every such stage must be listed. |
+| `destinations[].percentage` | 0 | Share of the agents sent to `target`. The sum must be greater than 0. |
+
+Without it, or with a target missing, the set-up stops with `Explicit
+routing required for <checkpoint> in <journey>` or `Explicit routing for
+<checkpoint> in <journey> is incomplete` (`_create_journeys_with_percentages`
+in `simulation_init.py`). The shares set the authored journey only. With
+rerouting on, the default of `run.py`, the route-cost model picks each
+agent's exit: in `assets/t_junction` with 40 agents, shares of 99/1 and 1/99
+both sent all 40 to the nearer east exit, while with `--no-enable-rerouting`
+99/1 sent all 40 west. JuPedSim Web does not write this key.
 
 ## Route choice: `routing`
 
