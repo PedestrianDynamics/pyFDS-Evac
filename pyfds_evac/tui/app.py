@@ -19,7 +19,7 @@ import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 from textual import on, work
 from textual.app import App, ComposeResult, SystemCommand
@@ -152,6 +152,10 @@ class RunState:
 class Step(Vertical):
     """A step of the flow; :meth:`enter` runs when it becomes current."""
 
+    @property
+    def tui(self) -> EvacTui:
+        return cast("EvacTui", self.app)
+
     def enter(self) -> None:
         """Focus the step's first control."""
 
@@ -170,7 +174,7 @@ class ScenarioStep(Step):
                 yield Input(
                     placeholder="path to a .json, .zip or folder", id="open-path"
                 )
-                yield DirectoryTree(str(self.app.cwd), id="open-tree")
+                yield DirectoryTree(str(self.tui.cwd), id="open-tree")
         yield Static(id="sc-info")
         yield Static(id="sc-error")
 
@@ -201,7 +205,7 @@ class ConfigureStep(Step):
     ]
 
     def compose(self) -> ComposeResult:
-        form = self.app.form
+        form = self.tui.form
         with VerticalScroll(id="cfg-scroll"):
             for index, section in enumerate(model.SECTIONS):
                 params = model.fields(section)
@@ -229,7 +233,7 @@ class ConfigureStep(Step):
         with Horizontal(classes="plain-row"):
             yield Static("Output folder", classes="label")
             yield Input(
-                self.app.form.output_folder,
+                self.tui.form.output_folder,
                 placeholder="derived (results/<scenario>/…)",
                 id="output-folder",
                 compact=True,
@@ -338,7 +342,7 @@ class PlanScreen(Screen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
-        self.app.refresh_plans()
+        cast("EvacTui", self.app).refresh_plans()
 
     def action_close(self) -> None:
         self.app.pop_screen()
@@ -403,7 +407,7 @@ class EvacTui(App[None]):
     BINDINGS = [
         Binding("ctrl+q", "quit", "quit", priority=True),
         Binding("ctrl+r", "run", "run", show=False),
-        Binding("escape", "back", "back", show=False),
+        Binding("escape", "step_back", "back", show=False),
         Binding("question_mark", "field_help", "help", show=False),
     ]
 
@@ -573,7 +577,7 @@ class EvacTui(App[None]):
         elif self.step == 2:
             self.goto(3)
 
-    def action_back(self) -> None:
+    def action_step_back(self) -> None:
         if self.step in (1, 2, 3):
             self.goto(self.step - 1)
         elif self.step == 4:
@@ -665,7 +669,8 @@ class EvacTui(App[None]):
     @on(OptionList.OptionHighlighted, "#examples")
     def _example_highlighted(self, event: OptionList.OptionHighlighted) -> None:
         if event.option.id:
-            self._show_info(self.examples[int(event.option.id[3:])].path)
+            examples = self.examples or []
+            self._show_info(examples[int(event.option.id[3:])].path)
 
     @on(OptionList.OptionSelected, "#examples")
     def _example_selected(self, event: OptionList.OptionSelected) -> None:
@@ -1314,6 +1319,7 @@ class EvacTui(App[None]):
             self.planned_base = None
             self.config_now()
             base = self.planned()
+        assert self.form.scenario is not None
         ns = self.namespace()
         self.run_count += 1
         facts = self.facts if self.facts_for == self.form.fds_dir else None
@@ -1383,6 +1389,7 @@ class EvacTui(App[None]):
 
     def _finish_run(self) -> None:
         run = self.current_run
+        assert run is not None
         run.ended = time.monotonic()
         status = status_word(run)
         snap = run.snapshot
@@ -1462,7 +1469,7 @@ class EvacTui(App[None]):
         )
         self.query_one("#run-status", Static).update(status)
         width = 22 if self.has_class("-wide") else max(20, self.size.width - 24)
-        frac_e = 0.0 if not total else (p.evacuated / total)
+        frac_e = 0.0 if p is None or not total else (p.evacuated / total)
         frac_t = 0.0 if snap.max_time <= 0 else min(1.0, sim / snap.max_time)
         bars = Content.assemble(
             m("[b]Evacuated[/]\n"),
@@ -1659,6 +1666,7 @@ class EvacTui(App[None]):
 
     def run_script(self) -> str:
         run = self.current_run
+        assert run is not None
         snap = run.snapshot
         ns = snap.namespace()
         lines = [
@@ -1939,7 +1947,7 @@ def evacuated_series(run: RunState) -> list[float]:
 def _size(path: str) -> str:
     try:
         p = Path(path)
-        size = (
+        size: float = (
             p.stat().st_size
             if p.is_file()
             else sum(f.stat().st_size for f in p.rglob("*") if f.is_file())

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from textual import on
 from textual.app import ComposeResult
@@ -151,7 +151,7 @@ class FieldRow(Vertical):
             return
         dest = enabling_option(self.reason)
         if dest is not None:
-            self.app.focus_field(dest)
+            cast(Any, self.app).focus_field(dest)
         else:
             self.app.notify(f"{model.label(self.param)}: {self.reason}", markup=False)
 
@@ -366,7 +366,7 @@ class TooSmall(ModalScreen[None]):
         yield Static(id="notice")
 
     def on_resize(self, event: Any) -> None:
-        self.app._check_size(event.size)
+        cast(Any, self.app)._check_size(event.size)
 
     def show(self, width: int, height: int) -> None:
         self.query_one("#notice", Static).update(
