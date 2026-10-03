@@ -25,8 +25,9 @@ than 900 px, such as a phone, the form sits above the results instead of
 beside them.
 
 `pyfds-evac-gui` listens on 127.0.0.1, so only this computer can open it.
-`--host 0.0.0.0` makes it reachable from other computers on the network, and
-`--port` sets the port (default: the `PORT` environment variable, else 5001).
+`--host 0.0.0.0` makes it reachable from other computers on the network, with
+a warning that says so, and `--port` sets the port (default: the `PORT`
+environment variable, else 5001).
 Without the extra, the command stops with:
 
 ```text
@@ -41,9 +42,9 @@ uv sync --extra gui
 uv run app.py
 ```
 
-`uv run app.py` listens on all interfaces (0.0.0.0), port 5001, and reloads
-when the code changes. `uv run pyfds-evac-gui` also works in a checkout: it
-listens on 127.0.0.1 and does not reload.
+`uv run app.py` listens on 127.0.0.1, port 5001, and reloads when the code
+changes; it takes `--host` and `--port` like `pyfds-evac-gui`.
+`uv run pyfds-evac-gui` also works in a checkout: it does not reload.
 
 ### Where the GUI reads and writes
 
