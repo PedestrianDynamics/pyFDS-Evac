@@ -303,7 +303,7 @@ steps = [
     "cp assets/iso_table22_coupled/iso_table22_a.fds assets/iso_table22_coupled/fds/a/",
     "(cd assets/iso_table22_coupled/fds/a && fds iso_table22_a.fds)",
   ]],
-  ["Run the example (about 10 s); it also writes site/static/images/howto/egress_exit_curve.png", [
+  ["Run the example (about 10 s); it also writes the figure into a temporary directory and prints its path", [
     "python examples/rset_ensemble.py",
   ]],
 ]
