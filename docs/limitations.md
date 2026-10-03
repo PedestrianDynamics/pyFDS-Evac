@@ -10,8 +10,15 @@ pyFDS-Evac is research software, provided without warranty. It is not intended
 for regulatory or design use. It is developed at Forschungszentrum Jülich
 (IAS-7); its maintainers are listed in
 [CODEOWNERS](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/.github/CODEOWNERS).
-It has no release policy yet, so behaviour
-and defaults can change between commits. A result from pyFDS-Evac is a
+Releases follow
+[Semantic Versioning](https://semver.org/spec/v2.0.0.html): they are tagged
+`vX.Y.Z` and published on
+[GitHub](https://github.com/PedestrianDynamics/pyFDS-Evac/releases) and
+[PyPI](https://pypi.org/project/pyfds-evac/). While the major version is 0, a
+change to CLI flags, output columns, defaults, exit codes or the public API
+bumps the minor version. The
+[changelog](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md)
+lists every notable change. A result from pyFDS-Evac is a
 research result. It is not an assessment of a building.
 
 The evidence that exists is listed on the
