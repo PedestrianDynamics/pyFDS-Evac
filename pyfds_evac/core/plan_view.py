@@ -227,9 +227,18 @@ class FrameRecorder:
     """Send :class:`~pyfds_evac.config.events.FrameEvent`\\ s from a run.
 
     *emit* receives each event. A frame goes out when at least
-    ``1 / max_hz`` wall seconds have passed since the last one, and the
-    smoke grid with it when ``1 / smoke_hz`` have passed since the last
-    grid and the FDS frame has changed. *clock* returns wall seconds.
+    ``1 / max_hz`` wall seconds have passed since the last one, or, with
+    *min_sim_s*, at least *min_sim_s* simulated seconds (so a fast run
+    still gives a frame per *min_sim_s*). The smoke grid goes with a frame
+    when ``1 / smoke_hz`` wall seconds have passed since the last grid and
+    the FDS frame has changed; the final frame may carry one sooner.
+    *clock* returns wall seconds.
+
+    Memory of a front end that keeps every frame: about
+    ``duration / min_sim_s`` frames (agents: 9 bytes each), and at most
+    one grid per FDS output frame, each ``nx * ny * 2`` bytes with
+    ``nx * ny <= 200 * 120`` (48 KB). A 600-frame FDS case thus adds at
+    most about 29 MB of grids.
 
     ``run_scenario`` calls :meth:`start` once before the first step,
     :meth:`leaves` when it removes an agent at an exit, :meth:`after_step`
@@ -250,6 +259,7 @@ class FrameRecorder:
         *,
         max_hz: float = DEFAULT_MAX_HZ,
         smoke_hz: float = DEFAULT_SMOKE_HZ,
+        min_sim_s: float | None = None,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         if not max_hz > 0 or not smoke_hz >= 0:
@@ -257,6 +267,12 @@ class FrameRecorder:
                 "frame rates must be positive (smoke_hz may be 0 for no grid), "
                 f"got max_hz={max_hz}, smoke_hz={smoke_hz}"
             )
+        if min_sim_s is not None and not 0 < min_sim_s < math.inf:
+            raise ValueError(
+                f"min_sim_s must be None or a positive finite number, got {min_sim_s}"
+            )
+        self._min_sim = min_sim_s
+        self._last_sim: float | None = None
         self._emit = emit
         self._period = 1.0 / max_hz
         self._smoke_period = None if smoke_hz == 0 else 1.0 / smoke_hz
@@ -327,9 +343,17 @@ class FrameRecorder:
         """Count the agents that left in this step; send a frame when due."""
         self._count_left(simulation)
         now = self._clock()
-        if self._last is not None and now - self._last < self._period:
+        if not self._due(now, simulation):
             return
         self._send(simulation, now, incapacitated, not_spawned, final=False)
+
+    def _due(self, now: float, simulation: Any) -> bool:
+        """Whether a frame is due by wall time or by simulated time."""
+        if self._last is None or now - self._last >= self._period:
+            return True
+        if self._min_sim is None or self._last_sim is None:
+            return False
+        return float(simulation.elapsed_time()) - self._last_sim >= self._min_sim
 
     def finish(
         self, simulation: Any, *, incapacitated: set[int], not_spawned: int
@@ -348,6 +372,7 @@ class FrameRecorder:
     ) -> None:
         self._last = now
         sim_time = float(simulation.elapsed_time())
+        self._last_sim = sim_time
         agents = list(simulation.agents())
         ids = np.fromiter((a.id for a in agents), dtype=np.int64, count=len(agents))
         xy = np.array([a.position for a in agents], dtype=float).reshape(-1, 2)

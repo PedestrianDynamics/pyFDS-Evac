@@ -1516,7 +1516,7 @@ class EvacTui(App[None]):
             m("   [dim]$d[/]", d=run.phase_detail) if run.phase_detail else m(""),
         )
         self.query_one("#run-status", Static).update(status)
-        width = 22 if self.has_class("-wide") else max(20, self.size.width - 24)
+        width = 16 if self.has_class("-wide") else max(20, self.size.width - 30)
         frac_e = 0.0 if p is None or not total else (p.evacuated / total)
         frac_t = 0.0 if snap.max_time <= 0 else min(1.0, sim / snap.max_time)
         bars = Content.assemble(

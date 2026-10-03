@@ -40,6 +40,10 @@ from typing import Any
 from pyfds_evac.config import events
 
 CANCEL_GRACE_S = 10.0
+#: At least one plan-view frame per this many simulated seconds.
+FRAME_SIM_S = 1.0
+#: High enough that every change of the FDS frame sends its grid.
+SMOKE_HZ = 1000.0
 KILL_AFTER_S = 3.0
 CHILD_LOG = "child.log"
 _POLL_S = 0.2
@@ -106,6 +110,26 @@ def frame_rate() -> float:
     if os.environ.get("SSH_CONNECTION"):
         return 2.0
     return 5.0
+
+
+def stream_options(frames: bool, max_hz: float) -> dict[str, Any]:
+    """Keyword arguments of ``stream_run`` for a TUI run.
+
+    Frames come at least once per :data:`FRAME_SIM_S` simulated seconds,
+    and the smoke grid with every frame whose FDS frame has changed
+    (:data:`SMOKE_HZ`; the number of grids is then bounded by the FDS
+    output frames, not by wall time). With wall-time throttling alone a fast run
+    covers 90 s of simulated time in its first wall second, so the plan
+    stayed on the grid at t = 0 and showed no smoke (#526). Reading a grid
+    costs no measurable wall time next to the simulation.
+    """
+    return {
+        "frames": frames,
+        "max_hz": max_hz,
+        "smoke_hz": SMOKE_HZ,
+        "min_sim_s": FRAME_SIM_S,
+        "send_traceback": True,
+    }
 
 
 def _tail(path: Path, lines: int = 20) -> str:
@@ -270,11 +294,7 @@ class ProcessRunner:
         self._cancel = ctx.Event()
         self._cancel_at = None
         self._phase = None
-        options = {
-            "frames": self.frames,
-            "max_hz": self.max_hz or frame_rate(),
-            "send_traceback": True,
-        }
+        options = stream_options(self.frames, self.max_hz or frame_rate())
         self._proc = ctx.Process(
             target=child_entry,
             args=(dict(values), event_queue, self._cancel, log_path, tmp_dir, options),
