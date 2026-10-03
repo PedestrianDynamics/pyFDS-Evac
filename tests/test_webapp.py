@@ -2441,3 +2441,18 @@ def test_webapp_sources_compile_without_escape_warnings():
             compile(path.read_text(encoding="utf-8"), str(path), "exec")
     # The emitted regex for an absolute output folder is unchanged.
     assert r"!/^([\/~]|[A-Za-z]:\/)/.test(typed)" in _AUTOFILL_JS
+
+
+def test_trajectory_custom_speed_is_a_decimal_text_input():
+    """The custom speed shows a point, not the OS region's comma (#493)."""
+    from pyfds_evac.webapp import trajviz
+
+    html = trajviz._SPEED_CUSTOM_INPUT
+    assert 'id="traj-speed-custom"' in html
+    assert 'type="text"' in html
+    assert 'type="number"' not in html
+    assert 'inputmode="decimal"' in html
+    assert 'pattern="[^,]*"' in html
+    # parseFloat("1,5") is 1; Number("1,5") is NaN and is not applied.
+    assert "parseFloat(customInput.value)" not in trajviz._JS
+    assert "Number(customInput.value.trim())" in trajviz._JS

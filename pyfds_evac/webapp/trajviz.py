@@ -675,7 +675,8 @@ _JS = """
   });
   if (customInput) {
     var applyCustomSpeed = function () {
-      var v = parseFloat(customInput.value);
+      // Number(), not parseFloat(): "1,5" must not apply as 1.
+      var v = Number(customInput.value.trim());
       if (!isFinite(v) || v <= 0) return;
       speedMult = v;
       document.querySelectorAll('.speed-btn').forEach(function (b) { b.classList.remove('active'); });
@@ -898,6 +899,18 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
     )
 
 
+# A text input, not type=number: Chromium on macOS shows a number input's
+# value with the OS region's decimal comma. The pattern flags a comma,
+# which Number() rejects in applyCustomSpeed.
+_SPEED_CUSTOM_INPUT = (
+    '<input id="traj-speed-custom" type="text" inputmode="decimal" '
+    'autocomplete="off" spellcheck="false" pattern="[^,]*" '
+    'placeholder="custom" class="speed-custom" '
+    'title="Custom speed multiplier; use a point as decimal separator, e.g. 1.5" '
+    'aria-label="Custom speed multiplier">'
+)
+
+
 def trajectory_component(
     result: Any,
     scenario: Any,
@@ -959,9 +972,8 @@ def trajectory_component(
         '<button type="button" class="cmode speed-btn" data-speed="5">5&times;</button>'
         '<button type="button" class="cmode speed-btn" data-speed="10">10&times;</button>'
         '<button type="button" class="cmode speed-btn" data-speed="50">50&times;</button>'
-        '<input id="traj-speed-custom" type="number" step="0.1" min="0.05" '
-        'placeholder="custom" class="speed-custom" title="Custom speed multiplier">'
-        "</div>"
+        + _SPEED_CUSTOM_INPUT
+        + "</div>"
         + toggle
         + "</div>"
         + (_fed_panel(fed_threshold, fed_mode) if payload["hasFed"] else "")

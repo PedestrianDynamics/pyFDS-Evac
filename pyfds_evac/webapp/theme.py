@@ -719,7 +719,7 @@ html[data-theme="light"] .cmode.active { color: #b54708; }
   background: var(--surface-input); color: hsl(var(--foreground));
 }
 .speed-custom.active { border-color: var(--ember); box-shadow: 0 0 0 1px var(--ember) inset; }
-.speed-custom::-webkit-inner-spin-button, .speed-custom::-webkit-outer-spin-button { margin-left: .2rem; }
+.speed-custom:invalid { border-color: var(--danger-ink); }
 
 /* ---- console ---- */
 .console-box {
