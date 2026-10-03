@@ -19,10 +19,14 @@ import logging
 import sys
 import threading
 from collections.abc import Callable, Iterator, Mapping
-from datetime import datetime, timezone
 from types import MappingProxyType
 from typing import Any
 
+from pyfds_evac.config.frontend import Outcome as Outcome
+from pyfds_evac.config.frontend import agents_label as agents_label
+from pyfds_evac.config.frontend import run_outcome as run_outcome
+from pyfds_evac.config.frontend import run_stamp as run_stamp
+from pyfds_evac.config.frontend import utc_now
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
 from pyfds_evac.core.manifest import find_project_root, git_state, package_versions
 
@@ -81,21 +85,6 @@ class RunSpec:
     def namespace(self) -> argparse.Namespace:
         """A fresh, independent Namespace of the recorded options."""
         return argparse.Namespace(**copy.deepcopy(dict(self.opts)))
-
-
-def utc_now() -> str:
-    """The current UTC time as a run's ``started_at``, to the second."""
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
-
-
-def run_stamp(started_at: str) -> str:
-    """A filesystem-safe stamp of *started_at*, e.g. ``20260929T142301Z``.
-
-    It names a run's derived output folder and its exported script, so both
-    stay distinct across GUI sessions, where run numbers restart at 1.
-    """
-    stamp = datetime.fromisoformat(started_at).astimezone(timezone.utc)
-    return stamp.strftime("%Y%m%dT%H%M%SZ")
 
 
 def discard_result(result: Any) -> None:
@@ -169,44 +158,6 @@ def _finished_spec(
             evacuation_time=result.evacuation_time,
         )
     return dataclasses.replace(spec, **fields)
-
-
-@dataclasses.dataclass(frozen=True)
-class Outcome:
-    """How a finished run ended, worded for the results view.
-
-    Taken from the run's own ``status`` metric (``completed`` or
-    ``incomplete``), the same field ``success`` and run.py's exit status
-    follow. A run is incomplete when the time limit stops it with agents
-    inside or flow agents not yet spawned (#139, #444). Why agents remain
-    (incapacitated or still walking) is not reported by the engine yet
-    (#141), so it is not claimed.
-    """
-
-    complete: bool | None
-    label: str
-    time_label: str
-
-
-def agents_label(count: int | None) -> str:
-    """``"1 agent"`` or ``"<count> agents"``."""
-    return f"{count} agent" if count == 1 else f"{count} agents"
-
-
-def run_outcome(
-    status: str | None,
-    remaining: int | None,
-    not_spawned: int | None,
-) -> Outcome:
-    """The :class:`Outcome` of a run from the values it reported."""
-    if status is None:
-        return Outcome(None, "Outcome not reported", "Simulated time")
-    if status == "completed":
-        return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
-    label = f"Incomplete: time limit reached, {agents_label(remaining)} inside"
-    if not_spawned:
-        label += f", {not_spawned} not spawned"
-    return Outcome(False, label, "Simulated time (limit reached)")
 
 
 class _WarningCapture(logging.Handler):
