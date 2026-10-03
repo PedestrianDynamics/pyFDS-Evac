@@ -2426,3 +2426,18 @@ def test_mode_button_check_mark_css_escape():
 
     assert 'content: "\\2713\\00a0"' in _CSS
     assert "\x00" not in _CSS
+
+
+def test_webapp_sources_compile_without_escape_warnings():
+    """Inline JavaScript must not hold invalid Python escapes (#476)."""
+    import warnings
+
+    from pyfds_evac import webapp
+    from pyfds_evac.webapp.app import _AUTOFILL_JS
+
+    for path in sorted(pathlib.Path(webapp.__file__).parent.glob("*.py")):
+        with warnings.catch_warnings():
+            warnings.simplefilter("error")
+            compile(path.read_text(encoding="utf-8"), str(path), "exec")
+    # The emitted regex for an absolute output folder is unchanged.
+    assert r"!/^([\/~]|[A-Za-z]:\/)/.test(typed)" in _AUTOFILL_JS

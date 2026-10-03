@@ -421,7 +421,7 @@ _AUTOFILL_JS = """
     // A typed folder still gets one start-time folder per run inside it.
     // A relative one is taken under the results root, as on the server.
     var typed = outputBase(), note = document.getElementById('output-run-note');
-    if (typed && !/^([\/~]|[A-Za-z]:\/)/.test(typed)) typed = root + '/' + typed;
+    if (typed && !/^([\\/~]|[A-Za-z]:\\/)/.test(typed)) typed = root + '/' + typed;
     if (note) {
       note.style.display = typed ? 'flex' : 'none';
       note.textContent = typed ? 'Each run writes into ' + typed + '/<start time>/' : '';

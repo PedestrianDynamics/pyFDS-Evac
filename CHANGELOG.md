@@ -58,6 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `uv.lock` takes the security fixes of pillow, starlette, anyio, idna,
   soupsieve and oauthlib (#525).
 
+### Fixed
+
+- The GUI no longer prints a `SyntaxWarning: invalid escape sequence`
+  on its first import: a regular expression in its inline JavaScript was
+  not escaped for Python. The page sends the same JavaScript (#476).
+
 ## [0.2.4] - 2026-10-03
 
 ### Added
