@@ -55,6 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An option set away from its default that changes nothing in the run now
   logs a warning at setup, e.g. `--enable-fic-speed has no effect without
   --fds-dir.` Runs with default options log nothing new (#484).
+- `uv.lock` takes the security fixes of pillow, starlette, anyio, idna,
+  soupsieve and oauthlib (#525).
 
 ## [0.2.4] - 2026-10-03
 
