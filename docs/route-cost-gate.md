@@ -206,7 +206,10 @@ against a soot-dose or FED-equivalent limit.** That is open work.
 Under FDS+Evac's *primary* rule the criterion is different again — minimise time
 among doors satisfying `K_ave_Door < ABS(FED_DOOR_CRIT)` = 0.03 /m
 (`evac.f90:16601`, `:16608`; `FED_DOOR_CRIT = -100` becomes `3.0/100` at
-`:5496`). pyFDS-Evac ships that absolute criterion as the opt-in clean-exit tier
+`:5496`). These are the Evac 2.6.0 values; Evac 2.6.1 (FDS 6.7.7) tests
+`K_ave_Door * d < 0.003` instead
+([model-comparison.md](model-comparison.md#evac-261-door-criterion)).
+pyFDS-Evac ships the 2.6.0 absolute criterion as the opt-in clean-exit tier
 below. See [model-comparison.md](model-comparison.md#the-smoke-criteria-on-a-door).
 
 ### The diversion is a departure from FDS+Evac, not a reproduction of it
@@ -359,8 +362,8 @@ outrank smoky ones outright however far they are; among routes of the same tier,
 optical depth then time decides. The sort key is
 `(rejected, tier, tau, rank_cost, hops)`.
 
-This is FDS+Evac's primary door rule (`evac.f90:16601`, `:16608`), and its
-threshold is not a new constant: `FED_DOOR_CRIT = -100` becomes `3.0/100` =
+This is FDS+Evac's primary door rule in Evac 2.6.0 (`evac.f90:16601`,
+`:16608`), and its threshold is not a new constant: `FED_DOOR_CRIT = -100` becomes `3.0/100` =
 0.03 /m at `:5496`, which is Jin's `S = 3/K` at a 100 m sighting distance. Two
 differences from the reference implementation are worth stating:
 
@@ -638,7 +641,7 @@ Every key below is read from the scenario's `routing` block by
 | `tau_return_margin` | `0.8` | Factor a *rival* exit's budget is multiplied by, so switching needs a cleaner route than staying. | active | inert |
 | `current_exit_discount` | `0.9` | Factor the current exit's `tau` is scaled by in the sort key. FDS+Evac's `FAC_DOOR_OLD2` is 0.9. | active | inert |
 | `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16799` tests the raw value. | active | inert |
-| `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac's value is `0.03`. | active | inert |
+| `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac 2.6.0's value is `0.03`. | active | inert |
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
