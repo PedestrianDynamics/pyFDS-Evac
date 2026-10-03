@@ -946,7 +946,9 @@ def test_normal_run_still_builds_the_viewer(client):
     assert manager.results_only is False
     _stream_until_terminal(client)
     # The viewer's custom speed is a text input, not type=number (#493).
-    assert 'id="traj-speed-custom" type="text"' in client.get("/panel").text
+    panel = client.get("/panel").text
+    assert 'id="traj-speed-custom" type="text"' in panel
+    assert 'id="traj-speed-msg"' in panel
     _drop_temp_trajectory()
 
 
@@ -2453,8 +2455,13 @@ def test_trajectory_custom_speed_is_a_decimal_text_input():
     assert 'id="traj-speed-custom"' in html
     assert 'type="text"' in html
     assert 'type="number"' not in html
-    assert 'inputmode="decimal"' in html
-    assert 'pattern="[^,]*"' in html
+    # A comma-region decimal keypad may have no point key.
+    assert "inputmode" not in html
     # parseFloat("1,5") is 1; Number("1,5") is NaN and is not applied.
     assert "parseFloat(customInput.value)" not in trajviz._JS
-    assert "Number(customInput.value.trim())" in trajviz._JS
+    assert "var v = Number(raw);" in trajviz._JS
+    # A value that is not applied says so in text, not by colour alone.
+    assert 'id="traj-speed-msg"' in trajviz._SPEED_MSG
+    assert 'aria-live="polite"' in trajviz._SPEED_MSG
+    assert "setAttribute('aria-invalid', 'true')" in trajviz._JS
+    assert "v < SPEED_MIN" in trajviz._JS and "SPEED_MIN = 0.05" in trajviz._JS

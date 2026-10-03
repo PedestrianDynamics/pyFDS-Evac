@@ -664,6 +664,7 @@ _JS = """
     simT = t0 + (parseFloat(slider.value) / 1000) * span;
   });
   var customInput = document.getElementById('traj-speed-custom');
+  var SPEED_MIN = 0.05;
   document.querySelectorAll('.speed-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       speedMult = parseFloat(this.dataset.speed);
@@ -671,13 +672,33 @@ _JS = """
         b.classList.toggle('active', b === btn);
       });
       if (customInput) customInput.classList.remove('active');
+      if (markSpeed) markSpeed('');  // a preset replaces the rejected value's note
     });
   });
   if (customInput) {
+    var speedMsg = document.getElementById('traj-speed-msg');
+    // One check decides both: apply the speed, or say why it was not.
+    var markSpeed = function (text) {
+      if (speedMsg) speedMsg.textContent = text;
+      if (text) {
+        customInput.setAttribute('aria-invalid', 'true');
+        customInput.setAttribute('aria-describedby', 'traj-speed-msg');
+      } else {
+        customInput.removeAttribute('aria-invalid');
+        customInput.removeAttribute('aria-describedby');
+      }
+    };
     var applyCustomSpeed = function () {
+      var raw = customInput.value.trim();
       // Number(), not parseFloat(): "1,5" must not apply as 1.
-      var v = Number(customInput.value.trim());
-      if (!isFinite(v) || v <= 0) return;
+      var v = Number(raw);
+      if (!raw) { markSpeed(''); return; }
+      if (!isFinite(v) || v < SPEED_MIN) {
+        markSpeed('\u26a0 Not applied: enter a number of at least ' + SPEED_MIN +
+          ' with a point, e.g. 1.5. Speed stays ' + speedMult + '\u00d7.');
+        return;
+      }
+      markSpeed('');
       speedMult = v;
       document.querySelectorAll('.speed-btn').forEach(function (b) { b.classList.remove('active'); });
       customInput.classList.add('active');
@@ -900,15 +921,17 @@ def _fed_panel(threshold: Any, mode: Any) -> str:
 
 
 # A text input, not type=number: Chromium on macOS shows a number input's
-# value with the OS region's decimal comma. The pattern flags a comma,
-# which Number() rejects in applyCustomSpeed.
+# value with the OS region's decimal comma. applyCustomSpeed accepts only a
+# point and says in #traj-speed-msg why a value was not applied. No
+# inputmode=decimal: a comma-region keypad may offer no point.
 _SPEED_CUSTOM_INPUT = (
-    '<input id="traj-speed-custom" type="text" inputmode="decimal" '
-    'autocomplete="off" spellcheck="false" pattern="[^,]*" '
+    '<input id="traj-speed-custom" type="text" '
+    'autocomplete="off" spellcheck="false" '
     'placeholder="custom" class="speed-custom" '
-    'title="Custom speed multiplier; use a point as decimal separator, e.g. 1.5" '
+    'title="Custom speed multiplier, at least 0.05; use a point, e.g. 1.5" '
     'aria-label="Custom speed multiplier">'
 )
+_SPEED_MSG = '<span id="traj-speed-msg" class="speed-msg" aria-live="polite"></span>'
 
 
 def trajectory_component(
@@ -974,6 +997,7 @@ def trajectory_component(
         '<button type="button" class="cmode speed-btn" data-speed="50">50&times;</button>'
         + _SPEED_CUSTOM_INPUT
         + "</div>"
+        + _SPEED_MSG
         + toggle
         + "</div>"
         + (_fed_panel(fed_threshold, fed_mode) if payload["hasFed"] else "")
