@@ -121,8 +121,7 @@ def stream_options(frames: bool, max_hz: float) -> dict[str, Any]:
     output frames, not by wall time). With wall-time throttling alone a fast run
     covers 90 s of simulated time in its first wall second, so the plan
     stayed on the grid at t = 0 and showed no smoke (#526). Reading a grid
-    costs no measurable time (t_junction fire: 10.8 s wall with 11 grids,
-    11.0 s with 260).
+    costs no measurable wall time next to the simulation.
     """
     return {
         "frames": frames,

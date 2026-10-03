@@ -621,7 +621,7 @@ def test_frame_cadence_by_wall_and_sim_time(wall_step, sim_step, min_sim_s, expe
     assert [f.sim_time for f in frames] == pytest.approx(expected)
 
 
-@pytest.mark.parametrize("bad", [0.0, -1.0, float("nan")])
+@pytest.mark.parametrize("bad", [0.0, -1.0, float("nan"), float("inf")])
 def test_min_sim_s_must_be_positive(bad):
     from pyfds_evac.core.plan_view import FrameRecorder
 

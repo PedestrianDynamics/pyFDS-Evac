@@ -323,7 +323,8 @@ def scrubber(
 ) -> Text:
     """``plan at 120.0 s ━━╋┊── 300 s limit``: the time of the frame drawn.
 
-    Frames are throttled by wall time, so the plan can lag the status line.
+    Frames come by wall time and at least once per simulated second, so
+    the plan can lag the status line by up to about a second.
     """
     lead = f" plan at {t:5.1f} s "
     tail = f" {limit:g} s limit"

@@ -267,8 +267,10 @@ class FrameRecorder:
                 "frame rates must be positive (smoke_hz may be 0 for no grid), "
                 f"got max_hz={max_hz}, smoke_hz={smoke_hz}"
             )
-        if min_sim_s is not None and not min_sim_s > 0:
-            raise ValueError(f"min_sim_s must be None or positive, got {min_sim_s}")
+        if min_sim_s is not None and not 0 < min_sim_s < math.inf:
+            raise ValueError(
+                f"min_sim_s must be None or a positive finite number, got {min_sim_s}"
+            )
         self._min_sim = min_sim_s
         self._last_sim: float | None = None
         self._emit = emit
