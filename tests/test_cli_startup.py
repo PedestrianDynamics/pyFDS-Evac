@@ -2,7 +2,9 @@
 
 The first ``pyfds-evac --help`` after an install took 15 s: the CLI imported
 JuPedSim, fdsreader, fdsvismap and matplotlib (with its font cache) before
-argparse ran. They now load only when a run starts.
+argparse ran. They now load only when a run starts. numpy, which the heat
+constants of the parser pulled in through ``core.fed``, loads with them
+(#503): its first load after an install takes up to 1 s on macOS.
 """
 
 from __future__ import annotations
@@ -22,6 +24,9 @@ HEAVY = (
     "pedpy",
     "shapely",
     "pyfds_evac.core.scenario",
+    "numpy",
+    "pyfds_evac.core.fds_sampling",
+    "pyfds_evac.core.smoke_speed",
 )
 
 _PROBE = """\

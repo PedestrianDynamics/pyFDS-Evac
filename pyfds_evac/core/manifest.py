@@ -14,7 +14,6 @@ from importlib import metadata
 from typing import Any
 
 from .fed import heat_endpoint_validity
-from .smoke_speed import ConstantExtinctionField
 
 MANIFEST_SUFFIX = ".manifest.json"
 
@@ -119,6 +118,8 @@ def fds_dir_from_models(*models: Any) -> str | None:
     ``ConstantExtinctionField`` reads no FDS output, so its ``fds_dir``
     (possibly a placeholder such as ``"."``) is skipped.
     """
+    from .smoke_speed import ConstantExtinctionField
+
     for model in models:
         field = getattr(model, "field", None)
         if isinstance(field, ConstantExtinctionField):

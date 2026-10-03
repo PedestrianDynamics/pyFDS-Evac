@@ -3,16 +3,12 @@
 import logging
 import math
 from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING
 
-from .fds_sampling import (
-    FdsDomainError,
-    FdsHorizonError,
-    SliceFieldSampler,
-    _slice_z_mid,
-    domain_error_message,
-    load_slice_sampler,
-    sampler_quantity,
-)
+# fds_sampling loads numpy; it is imported where a sampler is used, so the
+# heat constants of this module reach the CLI parser without numpy (#503).
+if TYPE_CHECKING:
+    from .fds_sampling import SliceFieldSampler
 
 _logger = logging.getLogger(__name__)
 
@@ -879,12 +875,12 @@ class FdsFedField:
 
     def __init__(
         self,
-        co_sampler: SliceFieldSampler,
-        co2_sampler: SliceFieldSampler,
-        o2_sampler: SliceFieldSampler,
+        co_sampler: "SliceFieldSampler",
+        co2_sampler: "SliceFieldSampler",
+        o2_sampler: "SliceFieldSampler",
         *,
         require_fds_coverage: bool = False,
-        **optional_samplers: SliceFieldSampler,
+        **optional_samplers: "SliceFieldSampler",
     ):
         """Store one sampler per gas quantity used by the FED model."""
         self._require_fds_coverage = require_fds_coverage
@@ -943,6 +939,8 @@ class FdsFedField:
                 ) from exc
             sim = _Sim(str(fds_dir))
 
+        from .fds_sampling import load_slice_sampler
+
         def sampler(quantity):
             return load_slice_sampler(
                 fds_dir,
@@ -965,7 +963,7 @@ class FdsFedField:
         field.fds_dir = str(fds_dir)
         return field
 
-    def samplers(self) -> list[SliceFieldSampler]:
+    def samplers(self) -> list["SliceFieldSampler"]:
         """Return every loaded gas slice sampler, required ones first."""
         optional = [getattr(self, attr, None) for attr, _ in self._OPTIONAL_SPECIES]
         return [self._co, self._co2, self._o2] + [s for s in optional if s is not None]
@@ -975,7 +973,7 @@ class FdsFedField:
         return all(sampler.covers(x, y) for sampler in self.samplers())
 
     def _sample_optional_ppm(
-        self, sampler: SliceFieldSampler | None, time_s: float, x: float, y: float
+        self, sampler: "SliceFieldSampler | None", time_s: float, x: float, y: float
     ) -> float:
         """Sample an optional species in ppm; 0 if its slice is absent.
 
@@ -986,9 +984,12 @@ class FdsFedField:
             return 0.0
         try:
             return 1e6 * sampler.sample(time_s, x, y)
-        except FdsHorizonError:
-            raise
-        except ValueError:
+        except ValueError as exc:
+            # Imported on the error path only: this runs per agent and step.
+            from .fds_sampling import FdsHorizonError, sampler_quantity
+
+            if isinstance(exc, FdsHorizonError):
+                raise
             raise ValueError(
                 _partial_gas_message(time_s, x, y, [sampler_quantity(sampler)])
             ) from None
@@ -1001,6 +1002,8 @@ class FdsFedField:
         """
         optional = self.samplers()[3:]
         if any(_covers(s, x, y) for s in optional):
+            from .fds_sampling import sampler_quantity
+
             required = (self._co, self._co2, self._o2)
             missing = [sampler_quantity(s) for s in required]
             raise ValueError(_partial_gas_message(time_s, x, y, missing))
@@ -1015,6 +1018,8 @@ class FdsFedField:
         if co is None and co2 is None and o2 is None:
             return self._outside_inputs(time_s, x, y)
         if co is None or co2 is None or o2 is None:
+            from .fds_sampling import sampler_quantity
+
             pairs = ((self._co, co), (self._co2, co2), (self._o2, o2))
             missing = [sampler_quantity(s) for s, value in pairs if value is None]
             raise ValueError(_partial_gas_message(time_s, x, y, missing))
@@ -1146,8 +1151,8 @@ class FdsHeatField:
 
     def __init__(
         self,
-        sampler: SliceFieldSampler,
-        intensity_sampler: SliceFieldSampler | None = None,
+        sampler: "SliceFieldSampler",
+        intensity_sampler: "SliceFieldSampler | None" = None,
         *,
         require_fds_coverage: bool = False,
     ):
@@ -1164,7 +1169,7 @@ class FdsHeatField:
         """Raise ``FdsDomainError`` for a point outside, in strict mode."""
         _raise_outside(self._require_fds_coverage, self._sampler, time_s, x, y)
 
-    def samplers(self) -> list[SliceFieldSampler]:
+    def samplers(self) -> list["SliceFieldSampler"]:
         """Return the TEMPERATURE and any INTEGRATED INTENSITY sampler."""
         if self._intensity_sampler is None:
             return [self._sampler]
@@ -1190,6 +1195,8 @@ class FdsHeatField:
         With *integrated_intensity* also the INTEGRATED INTENSITY slice
         (#221), at the same height.
         """
+        from .fds_sampling import load_slice_sampler
+
         sampler = load_slice_sampler(
             fds_dir,
             "TEMPERATURE",
@@ -1243,6 +1250,8 @@ class FdsHeatField:
 def _raise_outside(require_fds_coverage: bool, sampler, time_s: float, x, y) -> None:
     """Raise ``FdsDomainError`` for a point outside the slice in strict mode."""
     if require_fds_coverage:
+        from .fds_sampling import FdsDomainError, domain_error_message, sampler_quantity
+
         quantity = sampler_quantity(sampler)
         raise FdsDomainError(domain_error_message(quantity, time_s, x, y))
 
@@ -1264,13 +1273,16 @@ def _partial_gas_message(time_s: float, x, y, missing: list[str]) -> str:
     )
 
 
-def _sample_or_none(sampler: SliceFieldSampler, time_s: float, x, y) -> float | None:
+def _sample_or_none(sampler: "SliceFieldSampler", time_s: float, x, y) -> float | None:
     """Return the sampled value, or None outside the slice."""
     try:
         return sampler.sample(time_s, x, y)
-    except FdsHorizonError:
-        raise
-    except ValueError:
+    except ValueError as exc:
+        # Imported on the error path only: this runs per agent and step.
+        from .fds_sampling import FdsHorizonError
+
+        if isinstance(exc, FdsHorizonError):
+            raise
         return None
 
 
@@ -1292,13 +1304,15 @@ def _check_same_coverage(temperature: float | None, intensity: float | None, x, 
 
 
 def _check_same_slice_height(
-    temperature: SliceFieldSampler, intensity: SliceFieldSampler, fds_dir: str
+    temperature: "SliceFieldSampler", intensity: "SliceFieldSampler", fds_dir: str
 ) -> None:
     """Raise ValueError unless both slices lie at the same z.
 
     Each slice is chosen as the one nearest the requested height, so the two
     can differ; radiation and convection must come from one height.
     """
+    from .fds_sampling import _slice_z_mid
+
     z_t = _slice_z_mid(temperature._slice)
     z_u = _slice_z_mid(intensity._slice)
     if abs(z_t - z_u) <= HEAT_SLICE_Z_TOLERANCE_M:
