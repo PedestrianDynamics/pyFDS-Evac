@@ -86,6 +86,7 @@ the [Install](docs/getting-started/install/) page.
 ```bash
 pip install pyfds-evac            # the pyfds-evac command
 pip install "pyfds-evac[gui]"     # adds what pyfds-evac-gui needs
+pip install "pyfds-evac[tui]"     # adds what pyfds-evac-tui needs
 pyfds-evac --help
 ```
 

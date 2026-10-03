@@ -28,6 +28,7 @@ Command-line errors start with the name of the command you ran:
 | `ValueError: DIR has no INTEGRATED INTENSITY slice. …` | The deck writes no `INTEGRATED INTENSITY` slice. | Add `&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height and rerun FDS. |
 | `pyfds-evac: error: argument --heat-u-factor: must be in [0.25, 1.0], got …` | *f* outside its range. | Use a value in [0.25, 1]. |
 | `pyfds-evac-gui needs the GUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[gui]'` | `pyfds-evac-gui` without the `gui` extra. | Run `pip install "pyfds-evac[gui]"`, or `uv sync --extra gui` in a source checkout. |
+| `pyfds-evac-tui needs the TUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[tui]'` | `pyfds-evac-tui` without the `tui` extra. | Run `pip install "pyfds-evac[tui]"`, or `uv sync --extra tui` in a source checkout. |
 | `IndexError: No slice with quantity '…' found in DIR` | A direct library call (`FdsFedField.from_fds`, `ExtinctionField.from_fds`, `load_slice_sampler`) on a case without that slice. `run.py` warns instead. | Add the slice to the deck, or check the case with `--inspect-fds` first. |
 
 ## Warnings that change the result

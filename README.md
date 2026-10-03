@@ -98,6 +98,16 @@ and your deck has to dump specific slices for that to work. That page also
 covers the `&REAC` yields those slices depend on, and two failure modes that
 stay silent otherwise.
 
+## Terminal UI
+
+For remote machines and SSH, a terminal UI configures, runs and inspects a
+scenario with the same options as `pyfds-evac`:
+
+```bash
+pip install "pyfds-evac[tui]"
+pyfds-evac-tui
+```
+
 ## Web GUI
 
 An optional local web app runs the same model behind a form:

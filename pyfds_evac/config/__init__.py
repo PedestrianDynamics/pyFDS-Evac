@@ -7,7 +7,9 @@
 - :mod:`.effective`: the effective configuration and the equivalent command;
 - :mod:`.script`: the equivalent Python script;
 - :mod:`.events`: status events of a run, for a front end that runs it in a
-  separate process.
+  separate process;
+- :mod:`.frontend`: the run folders and outcome wording the GUI and the TUI
+  share.
 
 Importing this package loads no simulation stack (JuPedSim, fdsreader,
 fdsvismap, matplotlib). Provisional public API in 0.3.0: names may change in

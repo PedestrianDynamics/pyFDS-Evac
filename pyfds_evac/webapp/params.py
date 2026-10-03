@@ -7,8 +7,6 @@ HTML rendering uses plain FastHTML + inline styles (no MonsterUI).
 from __future__ import annotations
 
 import argparse
-import os
-import re
 from argparse import Namespace
 from pathlib import Path
 from typing import Any
@@ -35,6 +33,10 @@ except ImportError:
         from fasthtml.core import to_xml
 
 from pyfds_evac.cli import _build_parser
+from pyfds_evac.config import frontend
+from pyfds_evac.config.frontend import RESULTS_ENV as RESULTS_ENV
+from pyfds_evac.config.frontend import output_paths, run_stamp, utc_now
+from pyfds_evac.config.frontend import run_name as run_name
 from pyfds_evac.config.parameters import (
     GUI_HIDDEN,
     GUI_SECTIONS,
@@ -45,8 +47,6 @@ from pyfds_evac.config.parameters import (
     parameter,
 )
 from pyfds_evac.core.manifest import find_project_root
-
-from .runner import run_stamp, utc_now
 
 # Root of the GUI's scenario, upload and result folders: the source checkout
 # the package runs from, else the directory the server started in. An
@@ -59,9 +59,8 @@ _ASSET_ROOT = _WORK_ROOT / "assets"
 _UPLOAD_ROOT = _WORK_ROOT / "uploads"
 # Picker values for uploads carry this prefix; bundled scenarios carry none.
 UPLOAD_PREFIX = "uploads/"
-# Derived output folders go under this root: PYFDS_EVAC_RESULTS_DIR when set,
-# else results/ under the root above (see _WORK_ROOT).
-RESULTS_ENV = "PYFDS_EVAC_RESULTS_DIR"
+# Derived output folders go under RESULTS_ENV when set, else results/ under
+# the root above (see _WORK_ROOT).
 
 _INPUT = (
     "background:var(--surface-input);border:1px solid var(--hairline);"
@@ -819,60 +818,19 @@ def build_form(post_url: str) -> Any:
     )
 
 
-def run_name(scenario: Any) -> str:
-    """Filename stem for a scenario's artifacts.
-
-    ``clean()`` in the sidebar's preview script mirrors this, so the file
-    names the sidebar shows are the ones a run writes.
-    """
-    name = str(scenario or "")
-    return name.replace(".json", "").replace("/", "_") if name else "run"
-
-
 def results_root() -> Path:
     """Root of the derived output folders (see ``RESULTS_ENV``)."""
-    configured = os.environ.get(RESULTS_ENV, "").strip()
-    return Path(configured).expanduser() if configured else _WORK_ROOT / "results"
+    return frontend.results_root(_WORK_ROOT)
 
 
 def default_output_base(scenario: Any, mode: Any, seed: Any, stamp: str) -> str:
-    """Derived output folder of one run.
-
-    ``<results root>/<scenario>/<mode>/seed<seed>/<stamp>``: *seed* is the one
-    the run uses, and *stamp* the run's start time, so no two runs share a
-    folder, within a GUI session or across sessions. When the folder exists
-    anyway, a numeric suffix is added.
-    """
-    return _unique_run_folder(
-        results_root()
-        / run_name(scenario)
-        / str(mode or default("incapacitation_mode"))
-        / f"seed{seed if seed is not None else 'default'}",
-        stamp,
-    )
+    """Derived output folder of one run (``frontend.default_output_base``)."""
+    return frontend.default_output_base(scenario, mode, seed, stamp, results_root())
 
 
 def typed_output_base(typed: str, stamp: str) -> str:
-    """Run folder under a typed "Output folder": ``<typed>/<stamp>``.
-
-    Each run gets its own start-time folder under the typed one, as under
-    the derived path, so a second run never overwrites the first. A relative
-    path is taken under the results root, not the server's working folder.
-    """
-    base = Path(typed).expanduser()
-    if not (base.is_absolute() or re.match(r"[A-Za-z]:/", typed)):
-        base = results_root() / typed
-    return _unique_run_folder(base, stamp)
-
-
-def _unique_run_folder(parent: Path, stamp: str) -> str:
-    """``parent/stamp``, or ``parent/stamp-N`` when that folder exists."""
-    folder = parent / stamp
-    candidate, n = folder, 2
-    while candidate.exists():
-        candidate = folder.with_name(f"{stamp}-{n}")
-        n += 1
-    return candidate.as_posix()
+    """Run folder under a typed "Output folder" (``frontend.typed_output_base``)."""
+    return frontend.typed_output_base(typed, stamp, results_root())
 
 
 def _convert(action: argparse.Action, raw: Any) -> Any:
@@ -940,13 +898,6 @@ def form_to_opts(
             stamp,
         )
     )
-    opts.update(
-        output_sqlite=f"{base}/{sc}.sqlite",
-        output_smoke_history=f"{base}/{sc}_smoke_history.csv",
-        output_fed_history=f"{base}/{sc}_fed_history.csv",
-        output_route_history=f"{base}/{sc}_route_history.csv",
-        output_route_cost_history=f"{base}/{sc}_route_cost_history.csv",
-        export_app_bundle=f"{base}/bundle",
-    )
+    opts.update(output_paths(base, sc))
 
     return Namespace(**opts)
