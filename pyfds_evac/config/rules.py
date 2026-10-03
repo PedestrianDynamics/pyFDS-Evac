@@ -527,3 +527,74 @@ def inactive_settings(opts: Any, mechanisms: Mechanisms) -> list[Inactive]:
             )
         )
     return found
+
+
+# --- values checked when a model is built (B) ------------------------------
+
+_HEAT_VALUE_OPTIONS = (
+    ("emissivity", "heat_emissivity"),
+    ("convective coefficient", "heat_convective_coefficient"),
+    ("Skin temperature", "heat_skin_temperature"),
+    ("view factor", "heat_view_factor"),
+    ("layer emissivity", "heat_layer_emissivity"),
+)
+
+
+def heat_value_issue(opts: Any) -> ConfigIssue | None:
+    """The value checks of ``DefaultHeatFedModel``, run without FDS data.
+
+    Calls the same checks the constructor calls, in its order, so the
+    message is the one the run raises. Only meaningful when a heat model
+    is built (after D17 and the layer field passed).
+    """
+    from pyfds_evac.core import fed
+
+    method = option(opts, "heat_fed_method")
+    regime = option(opts, "heat_regime")
+    try:
+        fed._check_heat_flux_parameters(
+            method,
+            option(opts, "heat_emissivity"),
+            option(opts, "heat_convective_coefficient"),
+            option(opts, "heat_skin_temperature"),
+        )
+        fed._check_radiant_source(
+            option(opts, "heat_radiant_source"), method, option(opts, "heat_u_factor")
+        )
+        # run_config passes the layer values only in the layer regime.
+        layer = regime == "layer"
+        fed._check_layer_parameters(
+            regime,
+            method,
+            object() if layer else None,
+            option(opts, "heat_view_factor") if layer else None,
+            option(opts, "heat_layer_emissivity") if layer else None,
+        )
+    except ValueError as exc:
+        message = str(exc)
+        dest = next((d for key, d in _HEAT_VALUE_OPTIONS if key in message), None)
+        return ConfigIssue("B", dest, message, "B")
+    return None
+
+
+def visibility_value_issue(
+    opts: Any, raw: Mapping[str, Any], mechanisms: Mechanisms
+) -> ConfigIssue | None:
+    """The value checks of ``VisibilityModel``, run without building the map."""
+    if mechanisms.visibility is None:
+        return None
+    from pyfds_evac.core import visibility
+
+    cell = option(opts, "vis_cell_size")
+    if mechanisms.visibility == "clear-air" and cell <= 0:
+        message = f"cell_size_m must be positive, got {cell}"
+        return ConfigIssue("B", "vis_cell_size", message, "B")
+    try:
+        visibility._check_max_sign_distance(option(opts, "max_sign_distance"))
+    except ValueError as exc:
+        return ConfigIssue("B", "max_sign_distance", str(exc), "B")
+    try:
+        visibility._sign_caps(visibility.extract_sign_descriptors(dict(raw)))
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None

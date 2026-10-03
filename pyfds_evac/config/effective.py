@@ -21,6 +21,7 @@ in 0.3.x.
 
 from __future__ import annotations
 
+import os
 import pathlib
 import shlex
 from collections.abc import Mapping
@@ -43,10 +44,12 @@ from .rules import (
     Inactive,
     Mechanisms,
     check_options,
+    heat_value_issue,
     horizon_overrun,
     inactive_settings,
     integrated_intensity_issue,
     predict_mechanisms,
+    visibility_value_issue,
 )
 
 SCHEMA_VERSION = 1
@@ -111,57 +114,76 @@ class EffectiveConfiguration:
         return not self.errors
 
     def to_dict(self) -> dict[str, Any]:
-        """A JSON-serialisable form, as the run manifest records it."""
-        return {
-            "schema": SCHEMA_VERSION,
-            "provisional": True,
-            "level": self.level,
-            "inputs": self.inputs,
-            "fds_slices": None if self.fds_slices is None else list(self.fds_slices),
-            "mechanisms": {
-                m.name: {"on": m.on, "detail": m.detail, "rule": m.rule}
-                for m in self.mechanisms
-            },
-            "options": {
-                o.option: {
-                    "value": o.value,
-                    "default": o.default,
-                    "unit": o.unit,
-                    "overridden": o.overridden,
-                    "departs_from_fds_evac": o.departs_from_fds_evac,
-                    "active": o.active,
-                }
-                for o in self.options
-            },
-            "resolved": self.resolved,
-            "routing": {
-                r.key: {
-                    "value": r.value,
-                    "default": r.default,
-                    "overridden": r.overridden,
-                }
-                for r in self.routing
-            },
-            "inactive": [
-                {
-                    "option": i.option,
-                    "value": i.value,
-                    "rule": i.rule,
-                    "reason": i.reason,
-                }
-                for i in self.inactive
-            ],
-            "warnings": list(self.warnings),
-            "errors": [
-                {"rule": e.rule, "option": e.option, "message": e.message}
-                for e in self.errors
-            ],
-            "command": self.command,
-        }
+        """A JSON-serialisable form, as the run manifest records it.
+
+        Path options given as ``pathlib.Path`` are written as text.
+        """
+        record: dict[str, Any] = _json_safe(
+            {
+                "schema": SCHEMA_VERSION,
+                "provisional": True,
+                "level": self.level,
+                "inputs": self.inputs,
+                "fds_slices": None
+                if self.fds_slices is None
+                else list(self.fds_slices),
+                "mechanisms": {
+                    m.name: {"on": m.on, "detail": m.detail, "rule": m.rule}
+                    for m in self.mechanisms
+                },
+                "options": {
+                    o.option: {
+                        "value": o.value,
+                        "default": o.default,
+                        "unit": o.unit,
+                        "overridden": o.overridden,
+                        "departs_from_fds_evac": o.departs_from_fds_evac,
+                        "active": o.active,
+                    }
+                    for o in self.options
+                },
+                "resolved": self.resolved,
+                "routing": {
+                    r.key: {
+                        "value": r.value,
+                        "default": r.default,
+                        "overridden": r.overridden,
+                    }
+                    for r in self.routing
+                },
+                "inactive": [
+                    {
+                        "option": i.option,
+                        "value": i.value,
+                        "rule": i.rule,
+                        "reason": i.reason,
+                    }
+                    for i in self.inactive
+                ],
+                "warnings": list(self.warnings),
+                "errors": [
+                    {"rule": e.rule, "option": e.option, "message": e.message}
+                    for e in self.errors
+                ],
+                "command": self.command,
+            }
+        )
+        return record
 
     def format_text(self) -> str:
         """The report ``pyfds-evac --show-config`` prints."""
         return _format_text(self)
+
+
+def _json_safe(value: Any) -> Any:
+    """*value* with path objects as text, for ``json.dumps``."""
+    if isinstance(value, os.PathLike):
+        return os.fspath(value)
+    if isinstance(value, Mapping):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return value
 
 
 def effective_configuration(
@@ -190,9 +212,11 @@ def effective_configuration(
     max_time = _max_simulation_time(scenario, raw)
 
     mech = predict_mechanisms(opts, raw, known)
-    inactive = inactive_settings(opts, mech)
+    errors = _errors(opts, mech, known, max_time, raw)
+    invalid = {e.option for e in errors}
+    # An option whose value stops the run is an error, never "no effect".
+    inactive = [i for i in inactive_settings(opts, mech) if i.option not in invalid]
     inert = {i.option for i in inactive}
-    errors = _errors(opts, mech, known, max_time)
     warnings = _warnings(opts, mech, known, max_time, inactive)
     return EffectiveConfiguration(
         level=level,
@@ -461,7 +485,9 @@ def _routing(raw: Mapping[str, Any]) -> tuple[RoutingValue, ...]:
     return tuple(rows)
 
 
-def _errors(opts: Any, m: Mechanisms, fds: Any, max_time: float) -> list[ConfigIssue]:
+def _errors(
+    opts: Any, m: Mechanisms, fds: Any, max_time: float, raw: Mapping[str, Any]
+) -> list[ConfigIssue]:
     """The F, I and B errors the run would stop on at setup, in check order."""
     errors = list(check_options(opts))
     overrun = horizon_overrun(opts, max_time, fds)
@@ -470,9 +496,12 @@ def _errors(opts: Any, m: Mechanisms, fds: Any, max_time: float) -> list[ConfigI
             ConfigIssue("D32", "fds_dir", messages.horizon_error(overrun), "I")
         )
     if m.heat_fed:
-        issue = integrated_intensity_issue(opts, fds)
+        issue = integrated_intensity_issue(opts, fds) or heat_value_issue(opts)
         if issue is not None:
             errors.append(issue)
+    issue = visibility_value_issue(opts, raw, m)
+    if issue is not None:
+        errors.append(issue)
     return errors
 
 
@@ -557,7 +586,7 @@ def cli_command(
     as ``collect_route_cost_history``) are left out.
     """
     scenario = scenario_path if scenario_path is not None else option(opts, "scenario")
-    parts = [prog, "--scenario", _cli_value(scenario)]
+    parts = [prog, "--scenario", _cli_value(_absolute(scenario))]
     for param in PARAMETERS:
         if param.dest == "scenario" or not param.run_option:
             continue
@@ -568,7 +597,14 @@ def cli_command(
     return " ".join(parts)
 
 
+def _absolute(path: Any) -> str:
+    """*path* as an absolute path, so the command runs from any directory."""
+    return os.path.abspath(os.path.expanduser(str(os.fspath(path))))
+
+
 def _flag_words(param: Any, value: Any) -> list[str]:
+    if param.kind == "text":  # every text option is a path
+        return [param.flag, _cli_value(_absolute(value))]
     if param.action == "store_true":
         return [param.flag] if value else []
     if param.action == "boolean_optional":

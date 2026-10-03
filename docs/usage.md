@@ -251,7 +251,10 @@ can change without notice
 running: which models are on or off and why, every option with its unit and
 whether it is the default or departs from FDS+Evac, the scenario's `routing`
 values, options that have no effect, the setup warnings and errors the run
-would report, and the shortest equivalent command. With `--fds-dir` it reads
+would report, and the shortest equivalent command, with absolute paths.
+Errors include the value checks made when a model is built (for example
+`--vis-cell-size 0` or `--heat-emissivity 2`); warnings logged while a model
+is built, such as signs outside the FDS extinction slice, are not listed. With `--fds-dir` it reads
 the FDS inventory (slices and output end time), not the slice data. It exits
 with status 1 when the configuration has an error, else 0.
 

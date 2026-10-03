@@ -16,6 +16,7 @@ import argparse
 import inspect
 import json
 import logging
+import os
 import pickle
 import shlex
 import subprocess
@@ -461,8 +462,14 @@ def test_new_warnings_are_logged_once(caplog):
 # --- equivalent command and script (T8b) -----------------------------------
 
 
-def _run_options(opts) -> dict:
-    return {dest: getattr(opts, dest) for dest in RUN_OPTIONS}
+def _run_options(opts, absolute: bool = False) -> dict:
+    """The run options; with *absolute*, path options as absolute paths."""
+    values = {dest: getattr(opts, dest) for dest in RUN_OPTIONS}
+    if absolute:
+        for dest, value in values.items():
+            if parameter(dest).kind == "text" and value is not None:
+                values[dest] = os.path.abspath(value)
+    return values
 
 
 @pytest.mark.parametrize(
@@ -479,7 +486,16 @@ def test_cli_command_parses_back_to_the_options(argv):
     command = cli_command(opts)
     words = shlex.split(command)
     assert words[0] == "pyfds-evac"
-    assert _run_options(_parse(*words[1:])) == _run_options(opts)
+    assert _run_options(_parse(*words[1:])) == _run_options(opts, absolute=True)
+
+
+def test_cli_command_paths_are_absolute(tmp_path, monkeypatch):
+    """I3: the recorded command runs from any directory."""
+    opts = _parse("--scenario", "s.json", "--fds-dir", "case", "--vis-cache", "v.npz")
+    monkeypatch.chdir(tmp_path)
+    words = shlex.split(cli_command(opts))
+    for flag in ("--scenario", "--fds-dir", "--vis-cache"):
+        assert Path(words[words.index(flag) + 1]).is_absolute(), flag
 
 
 def test_gui_form_command_runs_the_same_options():
@@ -492,7 +508,7 @@ def test_gui_form_command_runs_the_same_options():
     back = _parse(*shlex.split(command)[1:])
     assert Path(back.scenario).exists()
     assert back.scenario == scenario.source_path
-    expected = {**_run_options(opts), "scenario": scenario.source_path}
+    expected = {**_run_options(opts, absolute=True), "scenario": scenario.source_path}
     assert _run_options(back) == expected
 
 
@@ -599,3 +615,115 @@ def test_progress_events_count_incapacitated_agents(iso22_scenario):
     assert len(incapacitated) == 1  # the occupant of R2p, at 982 s
     assert seen[-1].incapacitated == 1
     assert all(e.not_spawned == 0 for e in seen)
+
+
+def test_manifest_accepts_path_options(tmp_path):
+    """B1: options given as pathlib.Path, as main accepts them."""
+    scenario = _load(DISCOVERY)
+    source = tmp_path / "run.sqlite"
+    source.write_bytes(b"")
+    manifest = tmp_path / "run.manifest.json"
+    manifest.write_text(json.dumps({"seed": 420}))
+
+    class Result:
+        sqlite_file = str(source)
+        manifest_file = str(manifest)
+        smoke_history = fed_history = route_history = None
+        route_cost_history = exit_history = None
+        cleaned = False
+
+        def cleanup(self):
+            self.cleaned = True
+
+    opts = _parse("--scenario", DISCOVERY, "--cleanup")
+    opts.scenario = Path(DISCOVERY)
+    opts.output_sqlite = tmp_path / "o" / "r.sqlite"
+    opts.vis_cache = tmp_path / "cache.npz"
+    result = Result()
+    artifacts = cli.apply_outputs(result, scenario, opts, log=lambda _m: None)
+    written = json.loads((tmp_path / "o" / "r.manifest.json").read_text())
+    section = written["configuration"]
+    assert section["options"]["output_sqlite"]["value"] == str(opts.output_sqlite)
+    assert section["inputs"]["scenario"] == str(scenario.source_path)
+    assert any(a.startswith("Run manifest:") for a in artifacts)
+    assert result.cleaned
+
+
+@pytest.mark.parametrize(
+    ("argv", "option"),
+    [
+        (["--clear-air-visibility", "--vis-cell-size", "0"], "vis_cell_size"),
+        (["--max-sign-distance", "-1"], "max_sign_distance"),
+    ],
+)
+def test_visibility_value_errors_are_predicted(argv, option):
+    """I1: errors raised when the visibility model is built."""
+    scenario = _load(DISCOVERY)
+    opts = _parse("--scenario", DISCOVERY, *argv)
+    with pytest.raises(ValueError) as raised:
+        build_run_kwargs(scenario, opts)
+    cfg = effective_configuration(opts, scenario)
+    assert [(e.option, e.message) for e in cfg.errors] == [(option, str(raised.value))]
+    assert option not in {i.option for i in cfg.inactive}
+
+
+@pytest.mark.parametrize(
+    ("argv", "option"),
+    [
+        (["--heat-emissivity", "2"], "heat_emissivity"),
+        (["--heat-convective-coefficient", "-1"], "heat_convective_coefficient"),
+        (["--heat-skin-temperature", "nan"], "heat_skin_temperature"),
+        (
+            [
+                "--heat-fed-method",
+                "total-flux",
+                "--heat-regime",
+                "layer",
+                "--heat-layer-height",
+                "2",
+                "--heat-view-factor",
+                "2",
+                "--heat-layer-emissivity",
+                "1",
+            ],
+            "heat_view_factor",
+        ),
+    ],
+)
+def test_heat_value_errors_are_predicted(heat_scenario, argv, option):
+    """I1: checked when the heat model is built, whatever the method."""
+    opts = _parse(
+        "--scenario",
+        "x",
+        "--fds-dir",
+        HEAT_ONLY_FDS,
+        "--enable-heat-fed",
+        "--allow-fds-horizon-hold",
+        "--no-visibility",
+        *argv,
+    )
+    with pytest.raises(ValueError) as raised:
+        build_run_kwargs(heat_scenario, opts)
+    cfg = effective_configuration(opts, heat_scenario)
+    assert [(e.option, e.message) for e in cfg.errors] == [(option, str(raised.value))]
+    assert option not in {i.option for i in cfg.inactive}
+    assert not any(option.replace("_", "-") in w for w in cfg.warnings)
+
+
+def test_layer_value_outside_the_layer_regime_has_no_effect():
+    """The run passes the layer values only in the layer regime (D19)."""
+    found = _inactive("--fds-dir", "c", "--enable-heat-fed", "--heat-view-factor", "2")
+    assert "heat_view_factor" in found
+
+
+def test_show_config_exits_1_on_a_build_error():
+    proc = _cli(
+        "--scenario",
+        DISCOVERY,
+        "--clear-air-visibility",
+        "--vis-cell-size",
+        "0",
+        "--show-config",
+    )
+    assert proc.returncode == 1
+    assert "cell_size_m must be positive, got 0.0" in proc.stdout
