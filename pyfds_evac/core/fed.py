@@ -935,12 +935,12 @@ class FdsFedField:
         if simulation is not None:
             sim = simulation
         else:
-            from .fds_sampling import Simulation as _Sim
-
-            if _Sim is None:
+            try:
+                from fdsreader import Simulation as _Sim
+            except ModuleNotFoundError as exc:
                 raise ModuleNotFoundError(
                     "fdsreader is required to load FED fields from FDS data."
-                )
+                ) from exc
             sim = _Sim(str(fds_dir))
 
         def sampler(quantity):

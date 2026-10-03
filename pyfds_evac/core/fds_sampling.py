@@ -11,13 +11,19 @@ import logging
 
 import numpy as np
 
-try:
-    from fdsreader import Simulation
-except ModuleNotFoundError:
-    Simulation = None
-
-
 _logger = logging.getLogger(__name__)
+
+
+def _open_simulation(fds_dir):
+    """Parse an FDS case with fdsreader, imported here to keep imports cheap."""
+    try:
+        from fdsreader import Simulation
+    except ModuleNotFoundError as exc:
+        raise ModuleNotFoundError(
+            "fdsreader is required to load FDS slice data."
+        ) from exc
+    return Simulation(str(fds_dir))
+
 
 # How far the selected slice may sit from the requested height before the
 # mismatch is worth reporting.  A slice this far off samples a different part
@@ -336,12 +342,7 @@ def load_slice_sampler(
     Raises ModuleNotFoundError if fdsreader is not installed, or
     IndexError if none of the requested quantities are found in the FDS case.
     """
-    if simulation is not None:
-        sim = simulation
-    else:
-        if Simulation is None:
-            raise ModuleNotFoundError("fdsreader is required to load FDS slice data.")
-        sim = Simulation(str(fds_dir))
+    sim = simulation if simulation is not None else _open_simulation(fds_dir)
     candidates = (quantity,) if isinstance(quantity, str) else tuple(quantity)
     matches = []
     for name in candidates:
@@ -363,7 +364,7 @@ def fds_output_horizon(fds_dir: str, *, simulation=None) -> tuple[float, float] 
     has no interval and is skipped (its sampler still raises if read).  None
     when the case has no slice with two frames.
     """
-    sim = simulation if simulation is not None else Simulation(str(fds_dir))
+    sim = simulation if simulation is not None else _open_simulation(fds_dir)
     ends = [
         (float(s.times[-1]), _output_interval(s.times))
         for s in sim.slices
