@@ -69,6 +69,12 @@ from .widgets import (
     m,
 )
 
+RECENT_GLYPHS = {
+    "complete": "✓ ",
+    "incomplete": "◐ ",
+    "failed": "✗ ",
+    "cancelled": "■ ",
+}
 STEPS = ("scenario", "fds", "configure", "review", "run", "results")
 MIN_SIZE = (80, 24)
 SECTION_LEAD = {GROUP_HEAT: "enable_heat_fed"}
@@ -127,6 +133,7 @@ class RunState:
     cancelling: bool = False
     stopping: str | None = None
     ended: float | None = None
+    output_folder: str = ""
 
     @property
     def done(self) -> bool:
@@ -297,7 +304,8 @@ class ResultsStep(Step):
         Binding("e", "app.change_settings", "change"),
         Binding("n", "app.new_scenario", "new"),
         Binding("c", "app.run_command", "command"),
-        Binding("s", "app.save_run", "save", show=False),
+        Binding("s", "app.save_run", "save"),
+        Binding("w", "app.warnings", "warnings", show=False),
         Binding("t", "app.traceback", "traceback", show=False),
         Binding("v", "app.plan", "plan"),
         Binding("left", "app.scrub(-1)", "−1 s", show=False),
@@ -332,6 +340,8 @@ class PlanScreen(Screen[None]):
         Binding("escape", "close", "back"),
         Binding("left", "app.scrub(-1)", "−1 s"),
         Binding("right", "app.scrub(1)", "+1 s"),
+        Binding("shift+left", "app.scrub(-10)", "−10 s", show=False),
+        Binding("shift+right", "app.scrub(10)", "+10 s", show=False),
     ]
 
     def compose(self) -> ComposeResult:
@@ -401,13 +411,14 @@ class EvacTui(App[None]):
     EvacTui.-wide #res-plan { display: block; height: 16; }
     EvacTui.-wide #res-side { width: 38; }
     #run-scrubber, #res-scrubber, #full-scrubber { height: 1; }
-    #run-legend, #res-legend, #full-legend { height: 2; }
+    #run-legend { height: 2; }
+    #res-legend, #full-legend { height: auto; max-height: 3; }
     #full-head { height: 1; background: $panel; padding: 0 1; }
     """
     BINDINGS = [
-        Binding("ctrl+q", "quit", "quit", priority=True),
+        Binding("ctrl+q", "quit", "quit", priority=True, show=False),
         Binding("ctrl+r", "run", "run", show=False),
-        Binding("escape", "step_back", "back", show=False),
+        Binding("escape", "step_back", "back"),
         Binding("question_mark", "field_help", "help", show=False),
     ]
 
@@ -441,7 +452,6 @@ class EvacTui(App[None]):
         self.planned_base: str | None = None
         self.run_count = 0
         self.current_run: RunState | None = None
-        self.settings_changed = False
         self.scrub_index: int | None = None
         self.examples: list[model.Example] | None = None
         self.suggestions: list[Path] = []
@@ -609,7 +619,8 @@ class EvacTui(App[None]):
                 "$n  [dim]$f[/]  $s  [dim]$d$x[/]",
                 n=model.scenario_name(path) if path.exists() else path.name,
                 f=_short(fds or "no FDS", 30),
-                s=entry.get("status", ""),
+                s=RECENT_GLYPHS.get(str(entry.get("status")), "")
+                + str(entry.get("status", "")),
                 d=str(entry.get("date", ""))[:16],
                 x="  missing" if missing else "",
             )
@@ -807,8 +818,9 @@ class EvacTui(App[None]):
         self._apply_fds_choice(event.option.id)
 
     def _accept_fds_choice(self) -> None:
-        if self.focused is self.query_one("#fds-path"):
-            self._fds_typed(self.query_one("#fds-path", Input).value)
+        typed = self.query_one("#fds-path", Input).value
+        if self.focused is self.query_one("#fds-path") and typed.strip():
+            self._fds_typed(typed)
             return
         choices = self.query_one("#fds-choices", OptionList)
         if choices.highlighted is None:
@@ -829,8 +841,10 @@ class EvacTui(App[None]):
 
     def _fds_typed(self, text: str) -> None:
         if not text.strip():
-            self.set_fds_dir(None)
-            self.goto(2)
+            self.query_one("#fds-panel", Static).update(
+                m("Choose a folder or [b]No FDS (clear air)[/] in the list.")
+            )
+            self.query_one("#fds-choices").focus()
             return
         error, details = model.check_fds_dir(text)
         if error is not None:
@@ -884,7 +898,8 @@ class EvacTui(App[None]):
             deck = self.form.scenario is not None and not self.suggestions
             panel.update(
                 m(
-                    "No FDS folder: the run has no fire input.$x",
+                    "Not chosen yet: Enter on a suggestion, type a path, or choose "
+                    "No FDS (clear air).$x",
                     x="\nThis example ships the FDS deck only. Run FDS first, or "
                     f"continue without fire: {model.FDS_DOCS}"
                     if deck
@@ -945,8 +960,6 @@ class EvacTui(App[None]):
         """Any edit: the plan of the next run and the review are stale."""
         self.planned_base = None
         self.warned_confirmed = False
-        if self.current_run is not None and self.current_run.done:
-            self.settings_changed = True
         self.schedule_config()
         self.update_chrome()
 
@@ -1049,7 +1062,7 @@ class EvacTui(App[None]):
         typed = self.form.output_folder.strip()
         self.query_one("#output-preview", Static).update(
             m(
-                "$o  [dim]$k; each run gets its own start-time folder[/]",
+                "$o  [dim]$k; fixed until you change a setting[/]",
                 o=_short(base, 52),
                 k="typed" if typed else "derived",
             )
@@ -1070,6 +1083,20 @@ class EvacTui(App[None]):
             n += len(self.cfg.errors)
         return n
 
+    @property
+    def settings_changed(self) -> bool:
+        """Whether the form differs from the last run's snapshot.
+
+        Output paths are left out: they follow the start time.
+        """
+        run = self.current_run
+        if run is None or self.form.scenario is None:
+            return False
+        skip = set(frontend.output_paths("", ""))
+        now = {k: v for k, v in vars(self.form.namespace()).items() if k not in skip}
+        then = {k: v for k, v in run.snapshot.values.items() if k not in skip}
+        return now != then or self.form.output_folder.strip() != run.output_folder
+
     def update_chrome(self) -> None:
         if not self.query("#stepbar"):
             return  # resize before the first compose
@@ -1087,7 +1114,9 @@ class EvacTui(App[None]):
         if self.current_run is not None:
             marks[5] = "⟳" if not self.current_run.done else "✓"
             if self.current_run.done:
-                marks[6] = "✎" if self.settings_changed else "✓"
+                marks[6] = (
+                    "✎" if self.settings_changed else outcome_glyph(self.current_run)
+                )
         width = self.size.width or 80
         self.query_one("#stepbar", StepBar).show(self.step + 1, marks, width)
         summary = self.query_one("#summary", Static)
@@ -1172,7 +1201,13 @@ class EvacTui(App[None]):
             )
         errors.display = errors.option_count > 0
         n = self.invalid_count()
-        if n:
+        running = self.current_run is not None and not self.current_run.done
+        if running:
+            outcome = m(
+                "[b $primary]⟳ Run #$r in progress[/]",
+                r=self.current_run.snapshot.run_id if self.current_run else "",
+            )
+        elif n:
             outcome = m(
                 "[b $error]✗ $n error$s, the run cannot start[/]",
                 n=n,
@@ -1250,8 +1285,11 @@ class EvacTui(App[None]):
         name = self.form.scenario.name if self.form.scenario else "scenario"
         return model.python_for(
             self.namespace(),
-            ["Preview of the current settings, not a run.", f"Scenario: {name}"],
-            output_dir=f"pyfds_evac_{frontend.run_name(name)}_preview_output",
+            [
+                "Current settings and the planned run folder; not started.",
+                f"Scenario: {name}",
+            ],
+            output_dir=f"{self.planned()}/python_output",
         )
 
     def action_show_python(self) -> None:
@@ -1331,8 +1369,9 @@ class EvacTui(App[None]):
             started_at=frontend.utc_now(),
             fds_facts=facts,
         )
-        self.current_run = RunState(snapshot)
-        self.settings_changed = False
+        self.current_run = RunState(
+            snapshot, output_folder=self.form.output_folder.strip()
+        )
         self.scrub_index = None
         self.planned_base = None
         self.query_one("#run-log", RichLog).clear()
@@ -1429,7 +1468,12 @@ class EvacTui(App[None]):
             phases.append(
                 m("[b u]$w[/]" if phase == run.phase else "[dim]$w[/]", w=word)
             )
-        stepper = Content(" › ").join(phases)
+        if (self.size.width or 80) < 100:
+            index = events.PHASES.index(run.phase) + 1 if run.phase else 0
+            word = PHASE_WORDS.get(run.phase or "", "starting")
+            stepper = m("· $w ($i/$n)", w=word, i=index, n=len(events.PHASES))
+        else:
+            stepper = Content(" › ").join(phases)
         sim = 0.0 if p is None else p.sim_time
         total = None if p is None else p.total
         counts = (
@@ -1487,7 +1531,7 @@ class EvacTui(App[None]):
         self.query_one("#run-spark", Sparkline).data = evacuated_series(run) or [0]
         self.query_one("#run-note", Static).update(
             m(
-                "[dim]The run stops if this terminal closes; use tmux or screen for long runs.  v plan  x cancel[/]"
+                "[dim]The run stops if this terminal closes; use tmux or screen for long runs.[/]"
             )
         )
         self.refresh_plans()
@@ -1517,9 +1561,10 @@ class EvacTui(App[None]):
             root.query_one(f"#{prefix}-scrubber", Static).update(
                 scrubber(t, run.snapshot.max_time, ticks, width, self.current_theme)
             )
-            root.query_one(f"#{prefix}-legend", Static).update(
-                legend(run.plan, self.current_theme, smoke)
-            )
+            key = legend(run.plan, self.current_theme, smoke)
+            if prefix != "run" and run.done and run.frames:
+                key.append("\n ←/→ 1 s · shift+←/→ 10 s: replay the frames", "dim")
+            root.query_one(f"#{prefix}-legend", Static).update(key)
         if isinstance(self.screen, PlanScreen):
             self.screen.query_one("#full-head", Static).update(
                 m(
@@ -1573,6 +1618,12 @@ class EvacTui(App[None]):
     def action_cancel(self) -> None:
         if self.current_run is None or self.current_run.done:
             return
+        if self.current_run.cancelling:
+            self.push_screen(
+                ConfirmScreen("Stop the process now?", "y Stop now   n Keep waiting"),
+                self._confirmed_stop,
+            )
+            return
         self.push_screen(
             ConfirmScreen(
                 "Cancel run? Files already written are kept.",
@@ -1585,6 +1636,12 @@ class EvacTui(App[None]):
         if yes and self.current_run is not None and not self.current_run.done:
             self.current_run.cancelling = True
             self.runner.cancel()
+            self.render_run()
+
+    def _confirmed_stop(self, yes: bool | None) -> None:
+        if yes and self.current_run is not None and not self.current_run.done:
+            self.current_run.stopping = "stopping"
+            self.runner.stop()
             self.render_run()
 
     async def action_quit(self) -> None:
@@ -1623,7 +1680,17 @@ class EvacTui(App[None]):
         )
         self.query_one("#res-outcome", Static).update(results_text(run))
         exits = run.result.exit_counts if run.result is not None else None
-        parts = [m("[b]Per exit[/]")]
+        parts = []
+        if run.warnings:
+            n = len(run.warnings)
+            parts.append(
+                m(
+                    "[$warning]! $n warning$s[/]  [dim]w list[/]\n",
+                    n=n,
+                    s="s" if n != 1 else "",
+                )
+            )
+        parts.append(m("[b]Per exit (end of run)[/]"))
         for exit_id, count in sorted((exits or {}).items()):
             parts.append(
                 m("\n[$success]█[/] $e  $c", e=f"{exit_id:<16}", c=f"{count:>5}")
@@ -1633,7 +1700,12 @@ class EvacTui(App[None]):
         self.query_one("#res-exits", Static).update(Content.assemble(*parts))
         spark = self.query_one("#res-spark", Sparkline)
         spark.data = evacuated_series(run) or [0]
-        spark.display = bool(run.frames)
+        spark.display = bool(run.frames) and self.has_class("-wide")
+        if spark.display:
+            parts.append(
+                m("\n[dim]Evacuated over sim time, 0–$t s ↓[/]", t=f"{snap.max_time:g}")
+            )
+            self.query_one("#res-exits", Static).update(Content.assemble(*parts))
         files = self.query_one("#res-files", OptionList)
         files.clear_options()
         if not result_files(run):
@@ -1841,6 +1913,15 @@ def review_text(cfg: Any) -> Content:
     return Content.assemble(*parts)
 
 
+def outcome_glyph(run: RunState) -> str:
+    """The glyph of a finished run's state (spec §6)."""
+    return {
+        events.STATUS_SUCCESS: "✓",
+        events.STATUS_INCOMPLETE: "◐",
+        events.STATUS_CANCELLED: "■",
+    }.get(run.status, "✗")
+
+
 def status_word(run: RunState) -> str:
     return {
         events.STATUS_SUCCESS: "complete",
@@ -1911,7 +1992,7 @@ def results_text(run: RunState) -> Content:
         how = "; the process was stopped" if run.exited is not None else ""
         return Content.assemble(
             m(
-                "[b]■ Cancelled at sim $s s$h[/]   [dim]no exit code · files already written are kept[/]\n",
+                "[b]■ Cancelled at sim $s s$h[/]   [dim]no exit code[/]\n",
                 s=f"{sim:.1f}",
                 h=how,
             ),

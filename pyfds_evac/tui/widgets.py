@@ -46,6 +46,13 @@ def enabling_option(reason: str | None) -> str | None:
     return None
 
 
+def _target_name(dest: str) -> str:
+    """Where Enter on a disabled row goes, in words."""
+    if dest == "fds_dir":
+        return "FDS output folder (step 2)"
+    return model.label(parameter(dest))
+
+
 class StepBar(Static):
     """`` 1 Scenario › 2 FDS › … `` with the state of each step."""
 
@@ -220,9 +227,9 @@ class FieldRow(Vertical):
         if error is not None:
             return m("[$error]$e[/]  [dim]$f[/]", e=error, f=flag)
         if not active:
-            return m(
-                "– $r  [dim]$f · Enter: go to the setting[/]", r=self.reason, f=flag
-            )
+            target = enabling_option(self.reason)
+            where = "" if target is None else f" · Enter: go to {_target_name(target)}"
+            return m("– $r  [dim]$f$w[/]", r=self.reason, f=flag, w=where)
         text = model.help_text(self.param)
         default = self.param.default
         tail = "" if default is None else f" · default {default}"
@@ -286,8 +293,7 @@ class TextScreen(ModalScreen[None]):
         with Vertical():
             yield Static(m("[b]$t[/]", t=self.title_text))
             yield TextArea(self.text, read_only=True, soft_wrap=True, id="text")
-            if self.note:
-                yield Static(m("[dim]$n[/]", n=self.note))
+            yield Static(m("[dim]$n[/]", n=self.note or "c copy · Esc close"))
 
     def action_close(self) -> None:
         self.dismiss(None)

@@ -705,6 +705,60 @@ def test_a16_settings_changed_banner(workdir):
     run(go())
 
 
+def test_a16b_edit_during_a_run_marks_results_stale(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            app.goto(2)
+            app.query_one("#f-seed").value = "99"
+            await settle(pilot, app)
+            replay(app, result_event(events.STATUS_INCOMPLETE))
+            await pilot.pause()
+            assert app.query_one("#res-banner").display
+            assert "6 Results✎" in text_of(app, "#stepbar")
+            app.goto(2)
+            app.query_one("#f-seed").value = ""  # back to the run's settings
+            await settle(pilot, app)
+            app.goto(5)
+            await pilot.pause()
+            assert not app.query_one("#res-banner").display
+            assert "6 Results◐" in text_of(app, "#stepbar")
+
+    run(go())
+
+
+def test_review_while_running_says_so(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            app.goto(3)
+            await pilot.pause()
+            assert "⟳ Run #1 in progress" in text_of(app, "#rv-outcome")
+
+    run(go())
+
+
+def test_save_writes_a_script_for_the_planned_folder(workdir):
+    scenario = workdir / "assets" / "ISO-table21"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("s")
+            await pilot.pause()
+            folder = app.planned()
+            script = (Path(folder) / "run.py").read_text()
+            assert f"{folder}/python_output" in script
+            assert "not started" in script
+
+    run(go())
+
+
 def test_run_script_uses_the_seed_the_run_used(workdir):
     async def go():
         app = make_app(workdir)
