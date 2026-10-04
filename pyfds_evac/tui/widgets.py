@@ -276,8 +276,10 @@ class BrowseList(OptionList):
     """The list a path box browses: typing here goes to the box, as in fzf.
 
     The list keeps the focus, so Up/Down/Enter still pick an entry while the
-    typed text narrows the list.
+    typed text narrows the list; Tab completes the box's text.
     """
+
+    BINDINGS = [Binding("tab", "app.complete_path", "complete", show=False)]
 
     def __init__(self, box_id: str, **kwargs: Any) -> None:
         super().__init__(**kwargs)

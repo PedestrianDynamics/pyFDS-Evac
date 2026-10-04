@@ -252,8 +252,8 @@ At the bottom is the `pyfds-evac` command for these settings.
 ### 5 Run
 
 {{< terminal-figure src="images/tui/tui-run.svg"
-  alt="The Run step at 120 by 35 characters during the fire run. The phase line reads Running, with the phases initialising, FDS inspection, visibility, running, writing outputs, done. The status line reads sim 59.0 of 300 s, wall 0:02, evacuated 12 of 200 planned (6 %), incapacitated 0, not spawned 170; one warning. On the left, the plan view of the T-junction: walls, the exits A_left with 10 and B_right with 2 evacuated, three signs as diamonds, agents as dots. On the right, the Evacuated and Simulated time bars and the evacuated sparkline. Below the plan, the time scrubber, the smoke legend with bins 0.1, 0.5, 1, 3 and 10 per metre, FDS slice z = 2.0 m, frame t = 59 s, the glyph legend, and the note The run stops if this terminal closes; use tmux or screen for long runs. The run log fills the bottom."
-  caption="The Run step about 59 s into the `fire_2MW_PVC` run (seed 42), wide layout." >}}
+  alt="The Run step at 120 by 35 characters during the fire run. The phase line reads Running, with the phases initialising, FDS inspection, visibility, running, writing outputs, done. The status line reads sim 56.0 of 300 s, wall 0:03, evacuated 12 of 200 planned (6 %), incapacitated 0, not spawned 171; one warning. On the left, the plan view of the T-junction: walls, the exits A_left with 10 and B_right with 2 evacuated, three signs as diamonds, agents as dots. On the right, the Evacuated and Simulated time bars and the evacuated sparkline. Below the plan, the time scrubber, the smoke legend with bins 0.1, 0.5, 1, 3 and 10 per metre, FDS slice z = 2.0 m, frame t = 56 s, the glyph legend, and the note The run stops if this terminal closes; use tmux or screen for long runs. The run log fills the bottom."
+  caption="The Run step about 56 s into the `fire_2MW_PVC` run (seed 42), wide layout." >}}
 
 The run happens in a separate process. You can move between steps; the run
 goes on. Only one run happens at a time: `ctrl+r` during a run says "A run is
@@ -276,7 +276,7 @@ in progress (run #*N*)".
 ### 6 Results
 
 {{< terminal-figure src="images/tui/tui-results.svg"
-  alt="The Results step at 120 by 35 characters after the fire run. The first line reads Incomplete: time limit reached, 80 agents inside, 50 not spawned, exit 2. Then: Simulated time (limit reached) 300.0 s, Evacuated 70 of 150 that entered, Incapacitated 0; a bar for 70 of 150; the summary line; run 1, t_junction, seed 42, wall 0:11. On the left, the plan replayed at 60 s with its scrubber. On the right, one warning, the per-exit counts at the end of the run, exit_A_left 10 and exit_B_right 60, and the evacuated-over-time sparkline. At the bottom, the output files with their sizes: bundle, the smoke, FED, route, route-cost and exit history CSVs, t_junction.sqlite, t_junction.manifest.json and child.log."
+  alt="The Results step at 120 by 35 characters after the fire run. The first line reads Incomplete: time limit reached, 80 agents inside, 50 not spawned, exit 2. Then: Simulated time (limit reached) 300.0 s, Evacuated 70 of 150 that entered, Incapacitated 0; a bar for 70 of 150; the summary line; run 1, t_junction, seed 42, wall 0:13. On the left, the plan replayed at 60 s with its scrubber. On the right, one warning, the per-exit counts at the end of the run, exit_A_left 10 and exit_B_right 60, and the evacuated-over-time sparkline. At the bottom, the output files with their sizes: bundle, the smoke, FED, route, route-cost and exit history CSVs, t_junction.sqlite, t_junction.manifest.json and child.log."
   caption="Results of the `fire_2MW_PVC` run, with the plan replayed at 60 s." >}}
 
 The outcome comes first, in the same words as the Web GUI:

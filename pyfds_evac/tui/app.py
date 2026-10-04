@@ -280,6 +280,8 @@ class ReviewStep(Step):
     BINDINGS = [
         Binding("ctrl+r", "app.run", "run"),
         Binding("ctrl+p", "app.step_back", "configure"),
+        # Shown only while a run is in progress: the way back to it.
+        Binding("ctrl+n", "app.to_run", "back to run"),
         Binding("c", "app.copy_command", "copy"),
         Binding("s", "app.save", "save"),
         Binding("p", "app.show_python", "python"),
@@ -649,6 +651,9 @@ class EvacTui(App[None]):
         elif self.step == 2:
             self.goto(3)
 
+    def action_to_run(self) -> None:
+        self.goto(4)
+
     def action_step_back(self) -> None:
         if self.step in (1, 2, 3):
             self.goto(self.step - 1)
@@ -675,6 +680,8 @@ class EvacTui(App[None]):
             return not any(s.expanded for s in self.screen.query(Select))
         if action == "run":
             return self.step in (2, 3, 5)
+        if action == "to_run":
+            return self.current_run is not None and not self.current_run.done
         if action == "field_help":
             # In a dialog, ``?`` and F1 go to the dialog (the find box types it).
             return not isinstance(self.screen, ModalScreen)
@@ -819,7 +826,7 @@ class EvacTui(App[None]):
                     disabled=True,
                 )
             )
-        listing.highlighted = 0
+        listing.highlighted = _first_entry(listing, "e-")
 
     @on(OptionList.OptionSelected, "#open-list")
     def _open_choice(self, event: OptionList.OptionSelected) -> None:
@@ -997,7 +1004,7 @@ class EvacTui(App[None]):
         choices.add_option(
             Option(m("No FDS (clear air)  [dim]no fire input[/]"), id="no-fds")
         )
-        choices.highlighted = 0
+        choices.highlighted = _first_entry(choices, "dir-")
 
     def _go_into(self, folder: Path, box_id: str = "#fds-path") -> None:
         box = self.query_one(box_id, Input)
@@ -1011,7 +1018,9 @@ class EvacTui(App[None]):
     }
 
     def action_complete_path(self) -> None:
-        box = self.focused
+        focused = self.focused
+        in_list = isinstance(focused, BrowseList)
+        box = self.query_one(focused.box_id, Input) if in_list else focused
         if not isinstance(box, Input) or box.id not in self.PATH_BOXES:
             return
         complete, listing = self.PATH_BOXES[box.id]
@@ -1019,6 +1028,8 @@ class EvacTui(App[None]):
         if completed != box.value:
             box.value = completed
             box.cursor_position = len(completed)
+        elif in_list:
+            box.focus()
         else:
             self.query_one(listing).focus()
 
@@ -2288,6 +2299,15 @@ def evacuated_series(run: RunState) -> list[float]:
 
 PREVIEW_LINES = 40
 PREVIEW_WIDTH = 200
+
+
+def _first_entry(options: OptionList, prefix: str) -> int:
+    """Index of the first listed entry (not ``..``), so Enter picks the best
+    match after typing; 0 when nothing matched."""
+    for index in range(options.option_count):
+        if (options.get_option_at_index(index).id or "").startswith(prefix):
+            return index
+    return 0
 
 
 def file_preview(path: str) -> str:

@@ -2370,8 +2370,51 @@ def test_typing_in_the_browse_list_narrows_it(workdir):
             names = [p.name for p, _ in app.open_found]
             assert names and len(names) < before
             assert all(model.match_rank("iso21", n) is not None for n in names)
+            # Enter picks the best match, not "..".
+            highlighted = listing.get_option_at_index(listing.highlighted).id
+            assert highlighted == "e-0"
             await pilot.press("backspace")
             await settle(pilot, app)
             assert box.value == f"{assets}{os.sep}iso2"
+
+    run(go())
+
+
+def test_tab_in_the_fds_list_completes_the_path(workdir, tmp_path):
+    root = _fds_tree(tmp_path / "t")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.select_scenario(workdir / "assets" / "ISO-table21")
+            await settle(pilot, app)
+            assert app.step == 1
+            choices = app.query_one("#fds-choices")
+            assert app.focused is choices  # the step opens on the list
+            box = app.query_one("#fds-path")
+            box.value = f"{root}/b"
+            await settle(pilot, app)
+            await pilot.press("tab")
+            await settle(pilot, app)
+            assert box.value == f"{root}/beta/"
+            assert app.focused is choices
+
+    run(go())
+
+
+def test_review_offers_the_way_back_to_a_running_run(workdir):
+    from textual.widgets._footer import FooterKey
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _started(pilot, app, workdir)
+            app.goto(3)
+            await pilot.pause()
+            labels = [k.description for k in app.screen.query(FooterKey)]
+            assert "back to run" in labels
+            await pilot.press("ctrl+n")
+            await pilot.pause()
+            assert app.step == 4
 
     run(go())
