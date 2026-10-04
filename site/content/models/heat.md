@@ -128,7 +128,9 @@ is not sampled, so its status is reported as unknown rather than flagged.
 
 `--heat-fed-method total-flux` (opt-in, with `--enable-heat-fed`; default
 `convective`, the laws above) replaces the convective laws with the
-total-flux form of [spec 016](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/specs/016-heat-fed/SPEC.md). The heat flux to
+total-flux form of [spec 016](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/specs/016-heat-fed/SPEC.md),
+which builds on a draft by Ruggiero Lovreglio, reviewed by David Purser.
+The heat flux to
 the skin is Eq. 63.49 (p. 2383, symbols on p. 2384), `total_heat_flux_kw_m2`:
 
 $$
