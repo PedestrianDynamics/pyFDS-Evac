@@ -104,6 +104,9 @@ class ResultEvent:
     complete run, the time limit of an incomplete one. ``seed`` is the seed
     the run used. ``exit_counts`` is the agents per exit of the frame
     stream (see :class:`FrameEvent`), None without frames.
+    ``incapacitation_modelled`` says whether the run could incapacitate
+    anyone (:func:`~pyfds_evac.config.frontend.incapacitation_modelled`);
+    ``incapacitated`` is meaningful only when it is True.
     """
 
     status: str
@@ -121,6 +124,7 @@ class ResultEvent:
     end_time_s: float | None = None
     seed: int | None = None
     exit_counts: dict[str, int] | None = None
+    incapacitation_modelled: bool | None = None
 
 
 @dataclass(frozen=True)
@@ -168,7 +172,9 @@ class PlanEvent:
     ``smoke_mode`` is one of :data:`SMOKE_MODES`. ``smoke_k`` is the
     constant K [1/m] of the constant mode (also under smoke-blind).
     ``smoke_z_m`` is the height of the FDS extinction slice the run reads,
-    not the one requested, or None without one.
+    not the one requested, or None without one. ``incapacitation_modelled``
+    says whether the run about to start can incapacitate anyone, None when
+    not stated.
     """
 
     extent: tuple[float, float, float, float]
@@ -182,6 +188,7 @@ class PlanEvent:
     smoke_z_m: float | None = None
     max_time_s: float | None = None
     tolerance_m: float = 0.0
+    incapacitation_modelled: bool | None = None
 
 
 @dataclass(frozen=True)

@@ -85,20 +85,45 @@ def _agent_exit_map(
     return last["current_exit"].to_dict()
 
 
-def smoke_figure(result: Any) -> go.Figure:
-    """Mean speed factor and extinction over time."""
-    rows = result.smoke_history
-    if not rows:
-        return _empty("No smoke history (provide --fds-dir or --constant-extinction).")
-    df = pd.DataFrame(rows)
-    agg = (
-        df.groupby("time_s")
+#: What the smoke chart's means are taken over: ``smoke_history`` holds a row
+#: only for agents in the simulation and not incapacitated (#321).
+SMOKE_CAPTION = (
+    "Mean over the agents still in the simulation and not incapacitated, "
+    "at each smoke update."
+)
+# Lowest top of the K axis [1/m], so a near-clear field is not magnified.
+_K_AXIS_FLOOR = 1.0
+
+
+def _smoke_means(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """Mean speed factor and K per smoke update time."""
+    return (
+        pd.DataFrame(rows)
+        .groupby("time_s")
         .agg(
             speed_factor=("speed_factor", "mean"),
             extinction=("extinction_per_m", "mean"),
         )
         .reset_index()
     )
+
+
+def _end_time(result: Any) -> float | None:
+    end = getattr(result, "evacuation_time", None)
+    return float(end) if end else None
+
+
+def smoke_figure(result: Any) -> go.Figure:
+    """Mean speed factor and extinction over time, on fixed axes.
+
+    Speed factor 0-1; K from 0 to max(1.1 x the highest mean, 1 1/m); time
+    from 0 to the run's simulated end, so a series that stops early shows
+    as stopping and a constant field reads as constant.
+    """
+    rows = result.smoke_history
+    if not rows:
+        return _empty("No smoke history (provide --fds-dir or --constant-extinction).")
+    agg = _smoke_means(rows)
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
@@ -113,16 +138,55 @@ def smoke_figure(result: Any) -> go.Figure:
             x=agg["time_s"],
             y=agg["extinction"],
             mode="lines",
-            name="mean K [1/m]",
+            name="mean K",
+            line=dict(dash="dash"),
             yaxis="y2",
         )
     )
+    k_top = max(1.1 * float(agg["extinction"].max()), _K_AXIS_FLOOR)
+    end = _end_time(result) or float(agg["time_s"].max())
     fig.update_layout(
-        xaxis_title="time (s)",
-        yaxis_title="speed factor",
-        yaxis2=dict(title="extinction K [1/m]", overlaying="y", side="right"),
+        xaxis=dict(title="Simulated time (s)", range=[0.0, end]),
+        yaxis=dict(title="Speed factor (–)", range=[0.0, 1.0]),
+        yaxis2=dict(
+            title="Extinction coefficient K (1/m)",
+            overlaying="y",
+            side="right",
+            range=[0.0, k_top],
+        ),
     )
     return fig
+
+
+def smoke_summary(result: Any, update_interval_s: float | None) -> list[str]:
+    """Numbers behind the smoke chart, also its text alternative.
+
+    Plain statistics of the plotted means: their ranges and time span, a
+    note when the series ends before the run, and the samples read outside
+    the FDS domain (ambient air), which are in the mean (#594).
+    """
+    rows = result.smoke_history
+    if not rows:
+        return []
+    agg = _smoke_means(rows)
+    t0, t1 = float(agg["time_s"].min()), float(agg["time_s"].max())
+    sf, k = agg["speed_factor"], agg["extinction"]
+    lines = [
+        f"Mean speed factor: {sf.min():.3f} to {sf.max():.3f} · "
+        f"Mean K: {k.min():.3g} to {k.max():.3g} 1/m · "
+        f"from {t0:.1f} s to {t1:.1f} s, {len(agg)} smoke updates"
+    ]
+    end = _end_time(result)
+    if end is not None and t1 < end - (update_interval_s or 0.0):
+        lines.append(
+            f"No agent in the simulation and not incapacitated after {t1:.1f} s."
+        )
+    outside = sum(1 for r in rows if r.get("in_fds_domain") is False)
+    if outside:
+        lines.append(
+            f"Includes {outside} samples outside the FDS domain (ambient air)."
+        )
+    return lines
 
 
 def cognitive_map_grew(result: Any) -> bool:

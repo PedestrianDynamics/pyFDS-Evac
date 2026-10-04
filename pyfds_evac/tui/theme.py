@@ -12,6 +12,8 @@ import os
 
 from textual.theme import Theme
 
+from ..config.frontend import SMOKE_K_EDGES
+
 EVAC_DARK = Theme(
     name="evac-dark",
     dark=True,
@@ -34,7 +36,7 @@ THEME_NAMES: dict[str, str] = {
 }
 
 #: Fixed extinction bin edges [1/m], the same for every run (design §2.3).
-K_EDGES = (0.1, 0.5, 1.0, 3.0, 10.0)
+K_EDGES = SMOKE_K_EDGES
 RAMP_LIGHT = ("#F8E3A1", "#F7C04A", "#EC8A2E", "#A52C60", "#4A0C6B")
 RAMP_DARK = ("#3D1659", "#7E2367", "#D2552F", "#F5A524", "#FCE68A")
 INK = "#1A1A1A"

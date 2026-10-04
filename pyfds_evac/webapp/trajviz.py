@@ -10,12 +10,16 @@ from __future__ import annotations
 
 import base64
 import bisect
+import html
 import json
 import math
 from pathlib import Path
 from typing import Any
 
 from fasthtml.common import H3, Div, NotStr
+
+from pyfds_evac.config.frontend import SMOKE_K_EDGES
+from pyfds_evac.config.parameters import default
 
 from .plots import _PALETTE, _agent_exit_map
 
@@ -63,43 +67,71 @@ _EXTINCTION_QUANTITIES = ("SOOT EXTINCTION COEFFICIENT",)
 _SMOKE_MAX_CELLS = 70
 
 
-def _smoke_payload(
-    fds_dir: str | None, times: list[float], slice_height_m: float = 1.6
-) -> dict | None:
-    """Sample the FDS extinction slice onto a coarse grid for each render time.
+# Why the smoke layer is not drawn, worded for the line under the replay.
+SMOKE_NO_HORIZONTAL = (
+    "Smoke layer: not drawn \u2013 no horizontal extinction slice in the FDS output"
+)
+SMOKE_UNREADABLE = (
+    "Smoke layer: not drawn \u2013 the FDS extinction slice could not be read"
+)
 
-    Returns a dict with the grid dimensions, world extent, per-frame extinction
-    packed as base64 uint8 (scaled to ``kmax``), and ``kmax`` itself — or
-    ``None`` when no FDS directory / extinction slice is available. Any failure
-    is swallowed so the trajectory viewer never breaks on smoke rendering.
+
+def smoke_constant_note(k: Any) -> str:
+    """The smoke-layer line of a constant-extinction run."""
+    return f"Smoke layer: uniform K = {float(k):g} 1/m (constant), no field to draw"
+
+
+def _smoke_payload(
+    fds_dir: str | None, times: list[float], slice_height_m: float | None = None
+) -> dict | None:
+    """The FDS extinction slice the engine reads, binned for each render time.
+
+    The slice is chosen by ``fds_sampling.select_horizontal_slice`` at the
+    run's ``smoke_slice_height`` (default when None), the one rule the
+    engine samples by, so the layer never shows another height or a
+    vertical slice. Each cell holds its bin of
+    :data:`~pyfds_evac.config.frontend.SMOKE_K_EDGES` (0 clear, 1-5), the
+    fixed scale the TUI draws too; frames are packed as base64 uint8.
+    ``z`` is the slice's z mid [m], ``setting`` the requested height and
+    ``ft`` the FDS time drawn for each render time.
+
+    Returns None without an FDS directory, or ``{"missing": <line>}`` when
+    there is no horizontal slice or it cannot be read; the viewer never
+    breaks on smoke rendering.
     """
     if not fds_dir or not Path(fds_dir).exists():
         return None
+    if slice_height_m is None:
+        slice_height_m = default("smoke_slice_height")
     try:
         import numpy as np
         from fdsreader import Simulation
 
+        from pyfds_evac.core.fds_sampling import select_horizontal_slice
+
         sim = Simulation(str(fds_dir))
         matches: list = []
+        quantity = _EXTINCTION_QUANTITIES[0]
         for quantity in _EXTINCTION_QUANTITIES:
             matches = list(sim.slices.filter_by_quantity(quantity))
             if matches:
                 break
         if not matches:
-            return None
-
-        # Horizontal slice nearest the sampling height (agents' breathing zone).
-        def _zmid(s: Any) -> float:
-            return (s.extent.z_start + s.extent.z_end) / 2.0
-
-        sl = min(matches, key=lambda s: abs(_zmid(s) - slice_height_m))
+            return {"missing": SMOKE_NO_HORIZONTAL}
+        try:
+            sl = select_horizontal_slice(
+                matches, float(slice_height_m), quantity, fds_dir
+            )
+        except IndexError:
+            return {"missing": SMOKE_NO_HORIZONTAL}
+        z_mid = (sl.extent.z_start + sl.extent.z_end) / 2.0
         grid, coords = sl.to_global(masked=True, return_coordinates=True)
         grid = np.nan_to_num(np.asarray(grid, dtype=float), nan=0.0)  # (T, X, Y)
         slice_times = np.asarray(sl.times, dtype=float)
         xs = np.asarray(coords["x"], dtype=float)
         ys = np.asarray(coords["y"], dtype=float)
         if grid.ndim != 3 or xs.size < 2 or ys.size < 2:
-            return None
+            return {"missing": SMOKE_UNREADABLE}
 
         n_x, n_y = grid.shape[1], grid.shape[2]
         step = max(1, int(np.ceil(max(n_x, n_y) / _SMOKE_MAX_CELLS)))
@@ -108,18 +140,16 @@ def _smoke_payload(
         ys = ys[::step]
         w, h = grid.shape[1], grid.shape[2]
 
-        kmax = float(grid.max())
-        if kmax <= 0.0:
-            kmax = 1.0  # uniform-clear field: keep a valid scale, layer is blank
-
         # One uint8 frame per render time, using the nearest FDS timestep.
         # Bytes are row-major over (x, y): index = ix * h + iy.
+        edges = np.asarray(SMOKE_K_EDGES, dtype=float)
         buf = bytearray()
+        frame_times = []
         for t in times:
             ti = int(np.argmin(np.abs(slice_times - float(t))))
-            frame = grid[ti]
-            u8 = np.clip(frame / kmax * 255.0, 0, 255).astype(np.uint8)
-            buf += u8.tobytes()
+            frame_times.append(round(float(slice_times[ti]), 1))
+            bins = np.searchsorted(edges, grid[ti], side="right").astype(np.uint8)
+            buf += bins.tobytes()
 
         # xs/ys are cell-CENTRE coords, but the drawn image maps its pixel
         # EDGES to the extent rectangle. Expand by half a (downsampled) cell so
@@ -136,11 +166,14 @@ def _smoke_payload(
                 float(xs[-1] + csx / 2.0),
                 float(ys[-1] + csy / 2.0),
             ],
-            "kmax": kmax,
+            "nbins": len(SMOKE_K_EDGES),
+            "z": round(float(z_mid), 2),
+            "setting": float(slice_height_m),
+            "ft": frame_times,
             "b64": base64.b64encode(bytes(buf)).decode("ascii"),
         }
     except Exception:
-        return None
+        return {"missing": SMOKE_UNREADABLE}
 
 
 def _interior_walls(*polys) -> list[list[list[float]]]:
@@ -213,7 +246,12 @@ def _agent_radius_m(scenario: Any) -> float:
     return sum(radii) / len(radii) if radii else _DEFAULT_AGENT_RADIUS_M
 
 
-def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | None:
+def _payload(
+    result: Any,
+    scenario: Any,
+    fds_dir: str | None = None,
+    slice_height_m: float | None = None,
+) -> dict | None:
     if not result.sqlite_file or not Path(result.sqlite_file).exists():
         return None
 
@@ -360,7 +398,7 @@ def _payload(result: Any, scenario: Any, fds_dir: str | None = None) -> dict | N
         "exits": exits,
         "agentR": round(_agent_radius_m(scenario), 3),
         "bounds": _bounds(walkable, data),
-        "smoke": _smoke_payload(fds_dir, times),
+        "smoke": _smoke_payload(fds_dir, times, slice_height_m),
     }
 
 
@@ -433,7 +471,8 @@ _JS = """
 
   // Smoke field: decode base64 uint8 frames into an offscreen canvas we can
   // scale onto the main canvas under the agents. Each frame is W*H bytes,
-  // row-major over (x, y): byte at ix*H + iy holds K scaled to 0..255 of kmax.
+  // row-major over (x, y): byte at ix*H + iy holds the cell's K bin, 0 for
+  // clear air and 1..nbins for the fixed SMOKE_K_EDGES bins.
   var SM = D.smoke, smBytes = null, smCanvas = null, smCtx = null;
   var showSmoke = !!SM;
   if (SM) {
@@ -444,16 +483,29 @@ _JS = """
     smCanvas.width = SM.W; smCanvas.height = SM.H;
     smCtx = smCanvas.getContext('2d');
   }
+  // Opacity per bin, the same steps as the legend swatches.
+  function binAlpha(b) { return b <= 0 ? 0 : Math.min(0.85, 0.17 * b); }
+  function paintSmokeLegend() {
+    var sw = document.querySelectorAll('.smoke-legend .sw');
+    for (var i = 0; i < sw.length; i++) {
+      sw[i].style.background = 'rgba(' + TH.smokeRGB.join(',') + ',' + binAlpha(i + 1) + ')';
+    }
+  }
+  function smokeCaption(fi) {
+    var el = document.getElementById('smoke-caption');
+    if (!el || !SM) return;
+    el.textContent = 'FDS slice z = ' + SM.z.toFixed(1) + ' m (setting ' +
+      SM.setting.toFixed(1) + ' m) \u00b7 frame t = ' + SM.ft[fi].toFixed(1) + ' s';
+  }
   function drawSmoke(fi, p) {
+    smokeCaption(fi);
     if (!SM || !showSmoke || !smBytes) return;
-    var W = SM.W, H = SM.H, off = fi * W * H, kmax = SM.kmax;
+    var W = SM.W, H = SM.H, off = fi * W * H;
     var id = smCtx.createImageData(W, H);
     var d = id.data;
     for (var ix = 0; ix < W; ix++) {
       for (var iy = 0; iy < H; iy++) {
-        var K = (smBytes[off + ix * H + iy] / 255) * kmax;
-        var a = 1 - Math.exp(-K * 0.6);      // Beer-Lambert-ish opacity
-        if (a > 0.9) a = 0.9;                 // keep agents visible through it
+        var a = binAlpha(smBytes[off + ix * H + iy]);  // agents stay visible
         var pi = ((H - 1 - iy) * W + ix) * 4; // flip y: world +y is screen up
         d[pi] = TH.smokeRGB[0]; d[pi + 1] = TH.smokeRGB[1]; d[pi + 2] = TH.smokeRGB[2];
         d[pi + 3] = Math.round(a * 255);
@@ -812,6 +864,8 @@ _JS = """
     smBtn.addEventListener('click', function () {
       showSmoke = !showSmoke;
       smBtn.classList.toggle('active', showSmoke);
+      smBtn.setAttribute('aria-pressed', showSmoke ? 'true' : 'false');
+      smBtn.textContent = showSmoke ? 'on' : 'off';
       draw();
     });
   }
@@ -832,10 +886,12 @@ _JS = """
   // into a canvas with literal colours, so they need an explicit repaint.
   window.trajRepaint = function () {
     readTheme();
+    paintSmokeLegend();
     draw();
     if (typeof drawFedPanel === 'function') drawFedPanel();
   };
 
+  paintSmokeLegend();
   draw();
   requestAnimationFrame(loop);
 })();
@@ -937,19 +993,42 @@ _SPEED_CUSTOM_INPUT = (
 _SPEED_MSG = '<span id="traj-speed-msg" class="speed-msg" aria-live="polite"></span>'
 
 
+def _smoke_legend() -> str:
+    """Fixed K bins with their numbers on the swatches, and the caption.
+
+    The swatch colours are painted by the replay script from the theme's
+    smoke colour; the numbers carry the scale without relying on colour.
+    """
+    labels = [f"{e:g}" for e in SMOKE_K_EDGES]
+    labels[-1] = f"\u2265{labels[-1]}"
+    swatches = "".join(f'<span class="sw">{lab}</span>' for lab in labels)
+    return (
+        '<div class="smoke-legend" role="group" aria-label="Smoke K scale">'
+        f"<span>Smoke K (1/m)</span>{swatches}"
+        '<span id="smoke-caption" aria-live="off"></span>'
+        "</div>"
+    )
+
+
 def trajectory_component(
     result: Any,
     scenario: Any,
     fds_dir: str | None = None,
     fed_threshold: Any = None,
     fed_mode: Any = None,
+    smoke_slice_height: float | None = None,
+    constant_extinction: float | None = None,
 ) -> Any:
     """A Card with a canvas trajectory animation (smooth interpolated playback).
 
     ``fed_threshold`` and ``fed_mode`` come from the run's snapshot and place
-    the threshold marker on the FED scale.
+    the threshold marker on the FED scale; ``smoke_slice_height`` and
+    ``constant_extinction`` too, and choose the smoke layer.
     """
-    payload = _payload(result, scenario, fds_dir)
+    constant = constant_extinction is not None
+    payload = _payload(
+        result, scenario, None if constant else fds_dir, smoke_slice_height
+    )
     if payload is None:
         return Div(
             H3(
@@ -972,13 +1051,25 @@ def trajectory_component(
             '<button id="traj-mode-exit" type="button" class="cmode">exit</button>'
             "</div>"
         )
+    smoke_line = ""
+    smoke = payload.get("smoke")
+    if constant:
+        smoke_line = smoke_constant_note(constant_extinction)
+    elif smoke and "missing" in smoke:
+        smoke_line = smoke["missing"]
+        payload["smoke"] = None
+    smoke_legend = ""
     if payload.get("smoke"):
         toggle += (
             '<div class="traj-color">'
-            '<span class="traj-color-lbl">smoke</span>'
-            '<button id="traj-smoke" type="button" class="cmode active">on</button>'
+            '<span class="traj-color-lbl">Smoke layer</span>'
+            '<button id="traj-smoke" type="button" class="cmode active" '
+            'aria-pressed="true">on</button>'
             "</div>"
         )
+        smoke_legend = _smoke_legend()
+    elif smoke_line:
+        smoke_legend = f'<p class="smoke-note">{html.escape(smoke_line)}</p>'
     markup = (
         '<div class="traj-wrap">'
         '<div class="traj-canvas-shell">'
@@ -1003,6 +1094,7 @@ def trajectory_component(
         + _SPEED_MSG
         + toggle
         + "</div>"
+        + smoke_legend
         + (_fed_panel(fed_threshold, fed_mode) if payload["hasFed"] else "")
         + "</div>"
     )

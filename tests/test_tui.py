@@ -161,6 +161,7 @@ def tiny_plan(mode: str = events.SMOKE_FDS) -> events.PlanEvent:
         smoke_k=1.0 if mode == events.SMOKE_CONSTANT else None,
         smoke_z_m=1.6 if mode in (events.SMOKE_FDS, events.SMOKE_BLIND) else None,
         max_time_s=60.0,
+        incapacitation_modelled=True,
     )
 
 
@@ -224,6 +225,7 @@ def result_event(status: str, **kwargs) -> events.ResultEvent:
             end_time_s=60.0,
             seed=7,
             summary="Simulation incomplete.",
+            incapacitation_modelled=True,
         ),
         events.STATUS_FAILED: dict(error="ValueError: boom", traceback="Traceback …"),
         events.STATUS_CANCELLED: {},
@@ -1714,5 +1716,85 @@ def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
             app.action_save()
             folder = Path(app.planned())
             assert cli_options((folder / "command.sh").read_text())["seed"] == 11
+
+    run(go())
+
+
+# --- #321: result labels -------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("result", "width", "words", "never"),
+    [
+        # No dose model: the 0 the engine reports is not a measured zero.
+        (
+            result_event(events.STATUS_SUCCESS),
+            120,
+            "Evacuated 6 of 6 agents   Incapacitated: not modelled in this run",
+            "Incapacitated 0",
+        ),
+        (
+            result_event(events.STATUS_INCOMPLETE),
+            120,
+            "Evacuated 2 of 6 that entered   Incapacitated 1",
+            "not modelled",
+        ),
+        # Below 100 columns the incapacitated figure has its own line.
+        (
+            result_event(events.STATUS_INCOMPLETE),
+            80,
+            "Evacuated 2 of 6 that entered\n  Incapacitated 1",
+            "entered   Incapacitated",
+        ),
+    ],
+)
+def test_321_results_incapacitated_and_denominator(
+    workdir, result, width, words, never
+):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(width, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            replay(app, result)
+            await pilot.pause()
+            text = text_of(app, "#res-outcome")
+            assert words in text
+            assert never not in text
+
+    run(go())
+
+
+@pytest.mark.parametrize(("modelled", "shown"), [(True, True), (False, False)])
+def test_321_live_line_shows_incapacitated_only_when_modelled(workdir, modelled, shown):
+    import dataclasses
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _started(pilot, app, workdir)
+            send = app.on_run_event
+            send(dataclasses.replace(tiny_plan(), incapacitation_modelled=modelled))
+            send(events.PhaseEvent(events.PHASE_RUNNING))
+            send(Progress(1, 6, 10.0, 1.0, 16, 1, 0))
+            await pilot.pause()
+            app.render_run()
+            await pilot.pause()
+            text = text_of(app, "#run-status")
+            assert "evacuated 1 of 6 planned" in text
+            assert ("incapacitated 1" in text) is shown
+
+    run(go())
+
+
+def test_321_cancel_before_the_first_sample_is_not_sim_zero(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            app.on_run_event(result_event(events.STATUS_CANCELLED))
+            await pilot.pause()
+            text = text_of(app, "#res-outcome")
+            assert "■ Cancelled before the first progress sample" in text
+            assert "at sim 0.0 s" not in text
 
     run(go())

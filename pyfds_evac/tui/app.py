@@ -1480,9 +1480,13 @@ class EvacTui(App[None]):
             stepper = Content(" › ").join(phases)
         sim = 0.0 if p is None else p.sim_time
         total = None if p is None else p.total
+        # Incapacitated only once the plan says the run can incapacitate.
+        modelled = run.plan is not None and bool(run.plan.incapacitation_modelled)
         counts = (
             m(
-                "evacuated $e of $t planned ($c %)   incapacitated $i   not spawned $n",
+                "evacuated $e of $t planned ($c %)"
+                + ("   incapacitated $i" if modelled else "")
+                + "   not spawned $n",
                 e=p.evacuated,
                 t=p.total,
                 c=p.pct,
@@ -1683,7 +1687,9 @@ class EvacTui(App[None]):
                 r=snap.run_id,
             )
         )
-        self.query_one("#res-outcome", Static).update(results_text(run))
+        self.query_one("#res-outcome", Static).update(
+            results_text(run, self.size.width or 80)
+        )
         exits = run.result.exit_counts if run.result is not None else None
         parts = []
         if run.warnings:
@@ -1936,8 +1942,11 @@ def status_word(run: RunState) -> str:
     }.get(run.status, "failed")
 
 
-def results_text(run: RunState) -> Content:
-    """The outcome first (spec §2.6), worded as the GUI words it."""
+def results_text(run: RunState, width: int = 120) -> Content:
+    """The outcome first (spec §2.6), worded as the GUI words it.
+
+    Below 100 columns the incapacitated figure goes on its own line.
+    """
     snap, r = run.snapshot, run.result
     head = m(
         "[dim]run #$i · $n · seed $s · wall $w[/]",
@@ -1956,19 +1965,29 @@ def results_text(run: RunState) -> Content:
             l=outcome.label,
             x=r.exit_code,
         )
+        evacuated = frontend.evacuated_text(
+            r.evacuated or 0, r.total or 0, r.not_spawned
+        )
+        modelled = bool(r.incapacitation_modelled)
+        incap = (
+            f"Incapacitated {r.incapacitated}"
+            if modelled and r.incapacitated is not None
+            else f"Incapacitated: {frontend.INCAPACITATION_NOT_MODELLED}"
+        )
+        sep = "\n  " if width < 100 else "   "
         nums = m(
-            "  $t $e s   Evacuated $v of $a that entered   Incapacitated $i\n",
+            "  $t $e s   Evacuated $v$s$i\n",
             t=outcome.time_label,
             e=f"{r.end_time_s:.1f}",
-            v=r.evacuated,
-            a=r.total,
-            i=r.incapacitated,
+            v=evacuated,
+            s=sep,
+            i=incap,
         )
         frac = (r.evacuated or 0) / r.total if r.total else 0.0
         bar = Content.assemble(
             m("  "),
             _bar(frac, 40),
-            m("  $e of $t that entered\n", e=r.evacuated, t=r.total),
+            m("  $v\n", v=evacuated),
         )
         extra = m("")
         if r.fds_outside and r.fds_outside.get("rows"):
@@ -1995,12 +2014,12 @@ def results_text(run: RunState) -> Content:
             head,
         )
     if run.status == events.STATUS_CANCELLED:
-        sim = run.progress.sim_time if run.progress else 0.0
+        sim = run.progress.sim_time if run.progress else None
         how = "; the process was stopped" if run.exited is not None else ""
         return Content.assemble(
             m(
-                "[b]■ Cancelled at sim $s s$h[/]   [dim]no exit code[/]\n",
-                s=f"{sim:.1f}",
+                "[b]■ $c$h[/]   [dim]no exit code[/]\n",
+                c=frontend.cancelled_text(sim),
                 h=how,
             ),
             head,

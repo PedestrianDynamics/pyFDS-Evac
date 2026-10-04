@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import os
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -120,9 +121,10 @@ class Outcome:
     Taken from the run's own ``status`` metric (``completed`` or
     ``incomplete``), the same field ``success`` and run.py's exit status
     follow. A run is incomplete when the time limit stops it with agents
-    inside or flow agents not yet spawned (#139, #444). Why agents remain
-    (incapacitated or still walking) is not reported by the engine yet
-    (#141), so it is not claimed.
+    inside or flow agents not yet spawned (#139, #444). The outcome does not
+    say why agents remain: the incapacitated count is shown on its own
+    (:func:`incapacitated_text`), because the engine does not guarantee that
+    incapacitated agents are among those inside (#593).
     """
 
     complete: bool | None
@@ -149,3 +151,58 @@ def run_outcome(
     if not_spawned:
         label += f", {not_spawned} not spawned"
     return Outcome(False, label, "Simulated time (limit reached)")
+
+
+#: Extinction-coefficient bin edges K [1/m] of the smoke layers: below the
+#: first edge is clear air, the last bin is open-ended. Shared by the GUI
+#: replay and the TUI plan view so both draw smoke on one fixed scale.
+SMOKE_K_EDGES = (0.1, 0.5, 1.0, 3.0, 10.0)
+
+#: Shown instead of an incapacitated count when the run modelled none.
+INCAPACITATION_NOT_MODELLED = "not modelled in this run"
+
+
+def incapacitation_modelled(run_settings: Mapping[str, Any] | None) -> bool:
+    """Whether a run could incapacitate agents, from its ``run_settings``.
+
+    True when tenability was configured with gas incapacitation and a gas
+    FED model, or heat incapacitation and a heat FED model. False without a
+    dose model, with FED disabled for missing species, and under
+    ``disable_tenability`` or ``smoke_blind``, where a dose may still be
+    recorded but stops nobody. ``run_settings`` is provisional (0.3.0);
+    #141 asks the engine to report this itself.
+    """
+    if not run_settings:
+        return False
+    tenability = run_settings.get("tenability")
+    if not tenability:
+        return False
+    gas = bool(tenability.get("enable_incapacitation")) and (
+        run_settings.get("gas_fed") is not None
+    )
+    heat = bool(tenability.get("enable_heat_incapacitation")) and (
+        run_settings.get("heat_fed") is not None
+    )
+    return gas or heat
+
+
+def incapacitated_text(count: int | None, modelled: bool) -> str:
+    """The incapacitated figure of a finished run: ``"j agents"`` or why not."""
+    if not modelled or count is None:
+        return INCAPACITATION_NOT_MODELLED
+    return agents_label(count)
+
+
+def evacuated_text(evacuated: int, total: int, not_spawned: int | None) -> str:
+    """``"e of n agents"``, or ``"e of n that entered"`` when flow agents
+    were cut off, so the denominator never reads as the planned count."""
+    if not_spawned:
+        return f"{evacuated} of {total} that entered"
+    return f"{evacuated} of {total} agents"
+
+
+def cancelled_text(sim_time: float | None) -> str:
+    """Where a cancelled run stopped, from its last progress sample."""
+    if sim_time is None:
+        return "Cancelled before the first progress sample"
+    return f"Cancelled at sim {sim_time:.1f} s"

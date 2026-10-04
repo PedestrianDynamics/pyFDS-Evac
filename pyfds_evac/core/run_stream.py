@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import contextlib
+import dataclasses
 import io
 import logging
 import traceback
@@ -25,7 +26,7 @@ from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
 
-from pyfds_evac.config import events
+from pyfds_evac.config import events, frontend
 from pyfds_evac.config.parameters import DEFAULTS
 
 from .plan_view import DEFAULT_MAX_HZ, DEFAULT_SMOKE_HZ, FrameRecorder, plan_event
@@ -115,6 +116,20 @@ def _files(artifacts: list[str]) -> tuple[str, ...]:
     )
 
 
+def _modelled(run_kwargs: Mapping[str, Any]) -> bool:
+    """Whether the run built from *run_kwargs* can incapacitate anyone."""
+    from .manifest import run_settings
+
+    return frontend.incapacitation_modelled(
+        run_settings(
+            seed=None,
+            fed_model=run_kwargs.get("fed_model"),
+            heat_fed_model=run_kwargs.get("heat_fed_model"),
+            tenability_config=run_kwargs.get("tenability_config"),
+        )
+    )
+
+
 def _result_event(
     result: Any, files: tuple[str, ...], exit_counts: dict[str, int] | None
 ) -> events.ResultEvent:
@@ -134,6 +149,7 @@ def _result_event(
         end_time_s=float(metrics["evacuation_time"]),
         seed=metrics.get("seed"),
         exit_counts=exit_counts,
+        incapacitation_modelled=frontend.incapacitation_modelled(result.run_settings),
     )
 
 
@@ -192,12 +208,13 @@ def stream_run(
             scenario = load_scenario(str(opts.scenario))
             run_kwargs = build_run_kwargs(scenario, opts, log=log)
             check_cancel()
+            plan = plan_event(
+                scenario,
+                smoke_speed_model=run_kwargs.get("smoke_speed_model"),
+                smoke_blind=bool(run_kwargs.get("smoke_blind")),
+            )
             emit(
-                plan_event(
-                    scenario,
-                    smoke_speed_model=run_kwargs.get("smoke_speed_model"),
-                    smoke_blind=bool(run_kwargs.get("smoke_blind")),
-                )
+                dataclasses.replace(plan, incapacitation_modelled=_modelled(run_kwargs))
             )
             if frames:
                 recorder = FrameRecorder(

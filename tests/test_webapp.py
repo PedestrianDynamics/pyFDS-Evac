@@ -348,7 +348,7 @@ class TestCancelLifecycle:
         mgr.cancel()
         gate["build"].set()  # the worker unwinds within /cancel's wait
         r = client.post("/cancel")
-        assert "was cancelled. No results were produced" in r.text
+        assert "No results were produced" in r.text
         assert 'hx-post="/clear"' in r.text
         assert mgr.status == "cancelled"
         r = client.post("/clear")
@@ -397,7 +397,7 @@ class TestCancelLifecycle:
         with client.stream("GET", "/progress") as s:
             body = "".join(s.iter_text())
         assert "event: done" in body
-        assert "was cancelled. No results were produced" in body
+        assert "No results were produced" in body
         assert 'hx-post="/clear"' in body
 
     def test_progress_stream_does_not_follow_a_later_run(self, rm):
@@ -1461,7 +1461,7 @@ def test_plots_without_data_for_the_run_are_listed_not_drawn():
     from pyfds_evac.webapp import plots
     from pyfds_evac.webapp.app import _plot_cards
 
-    def card(title, fig, div_id):
+    def card(title, fig, div_id, **_):
         return title
 
     no_growth = SimpleNamespace(
@@ -1921,7 +1921,7 @@ class TestRunOutcome:
         assert "Simulated time (limit reached)" in html
         assert "Evacuation time" not in html
         assert "Not spawned" not in html
-        assert "0 / 100 agents" in html
+        assert "0 of 100 agents" in html
 
     def test_tiles_flow_cut_off_is_not_complete(self, monkeypatch):
         """#444: a flow run stopped with nobody inside showed as complete."""
@@ -1947,7 +1947,7 @@ class TestRunOutcome:
         assert "outcome-line is-incomplete" in html
         assert "Incomplete: time limit reached, 0 agents inside, 50 not spawned" in html
         assert "Not spawned" in html and "50 agents" in html
-        assert "150 / 150 spawned agents" in html
+        assert "150 of 150 that entered" in html
         assert "Evacuation time" not in html
 
     def test_run_status_uses_the_snapshot(self):
@@ -1976,14 +1976,15 @@ class TestRunOutcome:
             evacuation_time=300.0,
         )
         assert run_status(spec) == (
-            "Incomplete: time limit reached, 60 agents inside, simulated time 300.00 s"
+            "Incomplete: time limit reached, 60 agents inside, simulated time "
+            "300.00 s, incapacitation not modelled"
         )
         cut_off = dataclasses.replace(
             spec, agents_evacuated=150, agents_remaining=0, agents_not_spawned=50
         )
         assert run_status(cut_off) == (
             "Incomplete: time limit reached, 0 agents inside, 50 not spawned, "
-            "simulated time 300.00 s"
+            "simulated time 300.00 s, incapacitation not modelled"
         )
         done = dataclasses.replace(
             spec,
@@ -1993,7 +1994,8 @@ class TestRunOutcome:
             evacuation_time=212.4,
         )
         assert run_status(done) == (
-            "Complete: all agents evacuated (150/150), evacuation time 212.40 s"
+            "Complete: all agents evacuated (150/150), evacuation time 212.40 s, "
+            "incapacitation not modelled"
         )
 
     @pytest.mark.parametrize(
@@ -2335,8 +2337,10 @@ class TestResultSummary:
         html = to_xml(_kpi_tiles(self._result(fed_max=0.4213)))
         assert "Peak gas FED" in html and "0.421" in html
         assert "Peak heat FED" not in html
-        assert "Incapacitated" in html and "not reported by this version" in html
-        assert "threshold" not in html
+        assert "not reported by this version" not in html
+        # No threshold claim on the doses (the Incapacitated tile help may
+        # name the threshold).
+        assert "threshold" not in html.split('class="dose-card"', 1)[1]
         both = to_xml(_kpi_tiles(self._result(fed_max=0.1, heat_fed_max=1.2)))
         assert "Peak heat FED" in both and "1.200" in both
 
@@ -2718,3 +2722,294 @@ class TestRoundTrip:
         lit = _script_literals(_code_of(_preview(client, **form)))
         assert lit["FDS_DIR"] is None and lit["VIS_CACHE"] is None
         assert lit.get("REPLAY_EXITS", lit["OPTIONS"].get("replay_exits")) is None
+
+
+# --- #321: result labels -------------------------------------------------------
+
+
+def _settings(gas=False, heat=False, tenability=True):
+    """A run_settings dict as ``core.manifest.run_settings`` writes it."""
+    return {
+        "gas_fed": {"slice_height_m": 1.6} if gas else None,
+        "heat_fed": {"method": "convective"} if heat else None,
+        "tenability": (
+            {"enable_incapacitation": gas, "enable_heat_incapacitation": heat}
+            if tenability and (gas or heat)
+            else None
+        ),
+    }
+
+
+class TestIncapacitated321:
+    """(a) the count when modelled, "not modelled in this run" otherwise."""
+
+    @staticmethod
+    def _result(run_settings, incapacitated=0, **metrics):
+        return SimpleNamespace(
+            metrics={"status": "incomplete", "seed": 1, **metrics},
+            agents_remaining=100,
+            agents_evacuated=0,
+            total_agents=100,
+            evacuation_time=1000.0,
+            agents_incapacitated=incapacitated,
+            run_settings=run_settings,
+        )
+
+    @pytest.fixture(autouse=True)
+    def no_spec(self, monkeypatch):
+        monkeypatch.setattr(manager, "spec", None)
+
+    @staticmethod
+    def _incap_tile(result) -> str:
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        html = to_xml(_kpi_tiles(result))
+        assert "not reported by this version" not in html
+        tile = html.split('<div class="kpi-label">Incapacitated</div>', 1)[1]
+        return tile.split('class="kpi-tile"', 1)[0]
+
+    def test_count_shown_when_gas_incapacitation_ran(self):
+        """The CO room run: all 100 agents incapacitated by gas."""
+        tile = self._incap_tile(self._result(_settings(gas=True), 100, fed_max=1.27))
+        assert '<div class="kpi-value">100 agents</div>' in tile
+
+    def test_heat_only_counts_as_modelled(self):
+        tile = self._incap_tile(self._result(_settings(heat=True), 0))
+        assert '<div class="kpi-value">0 agents</div>' in tile
+
+    @pytest.mark.parametrize(
+        "settings",
+        [
+            None,  # no run settings recorded
+            _settings(),  # no dose model (no smoke, or FED off for species)
+            # disable_tenability / smoke_blind: dose recorded, nobody stopped
+            _settings(gas=True, tenability=False),
+        ],
+    )
+    def test_not_modelled_is_never_a_zero(self, settings):
+        tile = self._incap_tile(self._result(settings, 0, fed_max=0.4))
+        assert "not modelled in this run" in tile and "is-note" in tile
+        assert "0 agents" not in tile
+
+    def test_count_is_its_own_tile_not_part_of_inside(self):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        html = to_xml(_kpi_tiles(self._result(_settings(gas=True), 100)))
+        assert "Incomplete: time limit reached, 100 agents inside<" in html
+        assert "incapacitated)" not in html
+
+    def test_snapshot_and_export_state_the_count(self):
+        from pyfds_evac.webapp.pyexport import run_status
+        from pyfds_evac.webapp.runner import _finished_spec, make_run_spec
+
+        opts = SimpleNamespace(seed=1)
+        spec = make_run_spec(opts, SimpleNamespace(seed=1), "co", "co")
+        done = _finished_spec(
+            spec, "done", self._result(_settings(gas=True), 100), None
+        )
+        assert done.agents_incapacitated == 100
+        assert done.incapacitation_modelled is True
+        assert run_status(done).endswith(", 100 incapacitated")
+        blind = _finished_spec(
+            spec, "done", self._result(_settings(gas=True, tenability=False)), None
+        )
+        assert run_status(blind).endswith(", incapacitation not modelled")
+
+
+class _FakeExtent:
+    def __init__(self, z0, z1):
+        self.z_start, self.z_end = z0, z1
+
+
+class _FakeSlice:
+    """A two-frame 4 x 2 extinction slice at one height and orientation."""
+
+    def __init__(self, z, orientation=3, values=(0.05, 0.2, 2.0, 20.0)):
+        import numpy as np
+
+        self.orientation = orientation
+        self.extent = _FakeExtent(*((z, z) if orientation == 3 else (0.0, 2 * z)))
+        self.times = [0.0, 10.0]
+        frame = np.array([values, values]).T  # (X=4, Y=2)
+        self._grid = np.stack([frame, frame])
+        self.z = z
+
+    def to_global(self, masked=True, return_coordinates=True):
+        import numpy as np
+
+        coords = {"x": np.arange(4.0), "y": np.arange(2.0)}
+        return self._grid, coords
+
+
+class _FakeSim:
+    def __init__(self, slices):
+        self.slices = SimpleNamespace(filter_by_quantity=lambda q: list(slices))
+
+
+class TestSmokeOverlay321:
+    """(b) the engine's slice rule at the run's height, fixed K bins."""
+
+    @pytest.fixture
+    def fds(self, tmp_path, monkeypatch):
+        import fdsreader
+
+        def use(*slices):
+            monkeypatch.setattr(fdsreader, "Simulation", lambda p: _FakeSim(slices))
+            return str(tmp_path)
+
+        return use
+
+    def test_vertical_slice_is_never_drawn_as_a_floor_plan(self, fds):
+        """familiarity_test: PBX/PBY mid z 1.5 m was nearer 1.6 m than PBZ 2.0."""
+        from pyfds_evac.webapp.trajviz import _smoke_payload
+
+        d = fds(_FakeSlice(2.0), _FakeSlice(1.0), _FakeSlice(0.75, orientation=1))
+        payload = _smoke_payload(d, [0.0, 10.0], 1.6)
+        assert payload["z"] == 2.0 and payload["setting"] == 1.6
+
+    def test_overlay_follows_the_run_slice_height(self, fds):
+        """iso_table21_coupled at 2.0 m: the engine read 2.0, the overlay 1.5."""
+        from pyfds_evac.webapp.trajviz import _smoke_payload
+
+        d = fds(_FakeSlice(2.0), _FakeSlice(1.5))
+        assert _smoke_payload(d, [0.0], 2.0)["z"] == 2.0
+        assert _smoke_payload(d, [0.0], 1.6)["z"] == 1.5
+
+    def test_cells_hold_fixed_k_bins_and_fds_frame_times(self, fds):
+        import base64
+
+        from pyfds_evac.webapp.trajviz import _smoke_payload
+
+        payload = _smoke_payload(fds(_FakeSlice(1.6)), [0.0, 9.0], 1.6)
+        frame = base64.b64decode(payload["b64"])[: payload["W"] * payload["H"]]
+        # K 0.05 clear, 0.2 bin 1, 2.0 bin 3, 20 bin 5 (>= 10), per y row.
+        assert list(frame) == [0, 0, 1, 1, 3, 3, 5, 5]
+        assert payload["ft"] == [0.0, 10.0] and "kmax" not in payload
+
+    def test_no_horizontal_slice_says_so(self, fds):
+        from pyfds_evac.webapp.trajviz import SMOKE_NO_HORIZONTAL, _smoke_payload
+
+        payload = _smoke_payload(fds(_FakeSlice(1.5, orientation=2)), [0.0], 1.6)
+        assert payload == {"missing": SMOKE_NO_HORIZONTAL}
+
+    def test_legend_toggle_and_constant_note(self):
+        from pyfds_evac.webapp.trajviz import _smoke_legend, smoke_constant_note
+
+        legend = _smoke_legend()
+        assert "Smoke K (1/m)" in legend and "≥10" in legend and ">0.1<" in legend
+        assert 'id="smoke-caption"' in legend
+        assert smoke_constant_note(0.5) == (
+            "Smoke layer: uniform K = 0.5 1/m (constant), no field to draw"
+        )
+
+
+class TestSmokeChart321:
+    """(c) fixed axes and a defined mean, so the 8th digit is not magnified."""
+
+    @staticmethod
+    def _co_room(end=1000.0, outside=False):
+        rows = [
+            {
+                "time_s": float(t),
+                "agent_id": a,
+                "speed_factor": 0.91932104 + 1e-8 * (t % 3),
+                "extinction_per_m": 0.9992855 + 1e-6 * (a % 2),
+                "in_fds_domain": not (outside and a == 0),
+            }
+            for t in range(0, 787)
+            for a in range(3)
+        ]
+        return SimpleNamespace(smoke_history=rows, evacuation_time=end)
+
+    def test_axes_are_fixed(self):
+        from pyfds_evac.webapp import plots
+
+        fig = plots.smoke_figure(self._co_room())
+        assert tuple(fig.layout.yaxis.range) == (0.0, 1.0)
+        assert fig.layout.yaxis2.range[0] == 0.0
+        assert fig.layout.yaxis2.range[1] == pytest.approx(1.1 * 0.9992865, rel=1e-6)
+        assert tuple(fig.layout.xaxis.range) == (0.0, 1000.0)
+        assert fig.data[1].line.dash == "dash"
+        clear = SimpleNamespace(
+            smoke_history=[
+                {"time_s": 0.0, "speed_factor": 1.0, "extinction_per_m": 0.01}
+            ],
+            evacuation_time=5.0,
+        )
+        assert plots.smoke_figure(clear).layout.yaxis2.range[1] == 1.0
+
+    def test_summary_defines_the_mean_and_the_early_end(self):
+        from pyfds_evac.webapp import plots
+
+        assert plots.SMOKE_CAPTION == (
+            "Mean over the agents still in the simulation and not incapacitated, "
+            "at each smoke update."
+        )
+        lines = plots.smoke_summary(self._co_room(outside=True), 1.0)
+        assert lines[0] == (
+            "Mean speed factor: 0.919 to 0.919 · Mean K: 0.999 to 0.999 1/m · "
+            "from 0.0 s to 786.0 s, 787 smoke updates"
+        )
+        assert lines[1] == (
+            "No agent in the simulation and not incapacitated after 786.0 s."
+        )
+        assert lines[2] == "Includes 787 samples outside the FDS domain (ambient air)."
+        assert len(plots.smoke_summary(self._co_room(end=786.5), 1.0)) == 1
+
+
+class TestCountsAndCancel321:
+    """(d) planned vs entered, and where a cancelled run stopped."""
+
+    def test_live_card_counts_planned_agents(self, monkeypatch):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _running_card
+
+        ev = SimpleNamespace(
+            evacuated=12,
+            total=200,
+            sim_time=56.0,
+            wall_time=2.4,
+            pct=6,
+            not_spawned=171,
+        )
+        html = to_xml(_running_card(ev, cancelling=False))
+        assert (
+            "evacuated 12 of 200 planned · sim 56.0 s · wall 2 s · 6% · not spawned 171"
+        ) in html
+
+    def test_finished_tile_counts_entered_agents(self, monkeypatch):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        monkeypatch.setattr(manager, "spec", None)
+        result = SimpleNamespace(
+            metrics={"status": "incomplete", "agents_not_spawned": 50},
+            agents_remaining=6,
+            agents_evacuated=144,
+            total_agents=150,
+            evacuation_time=300.0,
+        )
+        html = to_xml(_kpi_tiles(result))
+        assert "144 of 150 that entered" in html and " / " not in html
+
+    @pytest.mark.parametrize(
+        ("last", "words"),
+        [
+            (SimpleNamespace(sim_time=78.5), "was cancelled at sim 78.5 s."),
+            (None, "was cancelled before the first progress sample."),
+        ],
+    )
+    def test_cancelled_view_says_where_it_stopped(self, monkeypatch, last, words):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _cancelled_view
+
+        monkeypatch.setattr(manager, "last_event", last)
+        html = to_xml(_cancelled_view())
+        assert words in html and "No results were produced" in html

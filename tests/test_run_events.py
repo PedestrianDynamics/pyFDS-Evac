@@ -484,6 +484,10 @@ def test_frames_do_not_change_a_fire_run_with_incapacitation(tmp_path):
     values = {"scenario": config, "fds_dir": fds, "seed": 7}
     result = stream_run(options(values), sent.append)
     assert result.incapacitated == 1
+    # #321: the count is meaningful here, and the plan says so before the run.
+    assert result.incapacitation_modelled is True
+    plan = next(e for e in sent if isinstance(e, events.PlanEvent))
+    assert plan.incapacitation_modelled is True
     assert result.remaining == result.total - result.evacuated
     assert not any(isinstance(e, events.FrameEvent) for e in sent)  # off by default
 
@@ -737,6 +741,10 @@ def test_result_event_is_the_run_outcome(tmp_path):
     assert result.total == result.evacuated + result.remaining
     assert result.not_spawned > 0 and result.end_time_s == 300.0
     assert result.seed == 3 and result.incapacitated == 0
+    # #321: no dose model, so that 0 is "not modelled", not a measured zero.
+    assert result.incapacitation_modelled is False
+    plan = next(e for e in sent if isinstance(e, events.PlanEvent))
+    assert plan.incapacitation_modelled is False
     assert set(result.files) == {
         str(sqlite.resolve()),
         str((tmp_path / "exits.csv").resolve()),
