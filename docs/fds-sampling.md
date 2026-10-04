@@ -193,12 +193,22 @@ sampler = load_slice_sampler(
 If only one slice matches the quantity, `slice_height_m` has no effect.
 Without `slice_height_m`, `load_slice_sampler` takes the first horizontal
 slice in declaration order. The model factories (`ExtinctionField.from_fds`,
-`FdsFedField.from_fds`, `FdsHeatField.from_fds`) default to 1.6 m.
+`FdsFedField.from_fds`, `FdsHeatField.from_fds`) and the command-line option
+`--smoke-slice-height` default to 1.6 m.
 
 The rule lives in `select_horizontal_slice`: vertical slices are
 skipped, the slice whose z is nearest `slice_height_m` wins, and a
 warning is logged when it is more than 0.5 m away. The visibility model
 applies the same function to the extinction slice it hands to fdsvismap.
+
+The height is an absolute z in the FDS domain, so it equals the height
+above the floor where the floor is at z = 0. C/VM2 and the Engineers
+Australia note evaluate tenability at 2.0 m
+([ASET and RSET](/fundamentals/aset-rset.md)). For a check against them,
+run with `--smoke-slice-height 2.0` and write the slices at that
+height in the FDS deck (`&SLCF PBZ=2.0`); otherwise the run reads the
+nearest slice by the rule above
+([Silent failure modes](/docs/fds-case-requirements.md#silent-failure-modes)).
 
 ### Sharing a `Simulation` instance
 

@@ -46,8 +46,9 @@ equations differ: the gas FED follows FDS+Evac, not the ISO 13571 form that
 C/VM2 names; the heat dose needs `--enable-heat-fed`, is convective only by
 default, and gains a radiant term with `--heat-fed-method total-flux` (an
 SFPE form, not ISO 13571's). See
-[ASET and RSET](/fundamentals/aset-rset.md) for the C/VM2 criteria and for
-running at 2.0 m, and [Fractional effective dose](/models/fed.md) for the
+[ASET and RSET](/fundamentals/aset-rset.md) for the C/VM2 criteria,
+[Selecting a slice height](/docs/fds-sampling.md#selecting-a-slice-height)
+for running at 2.0 m, and [Fractional effective dose](/models/fed.md) for the
 equations.
 
 A case therefore has three parts: the FDS output directory, a scenario JSON,

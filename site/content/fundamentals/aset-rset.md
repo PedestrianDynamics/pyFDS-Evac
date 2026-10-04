@@ -200,15 +200,8 @@ difference as maps. Each agent carries
 its own dose along its path; see
 [Fractional effective dose](/models/fed.md).
 
-C/VM2 and the Engineers Australia note evaluate at 2.0 m. pyFDS-Evac reads
-the slices nearest `--smoke-slice-height`, 1.6 m by default (the FDS+Evac
-`HUMAN_SMOKE_HEIGHT`). For a check against C/VM2, run with
-`--smoke-slice-height 2.0` and write the slices at that height in the FDS
-deck (`&SLCF PBZ=2.0`): the run uses the nearest slice and warns only when
-it is more than 0.5 m away
-([Silent failure modes](/docs/fds-case-requirements.md#silent-failure-modes)).
-The value is an absolute z in the FDS domain, so it equals the height above
-the floor where the floor is at z = 0.
+For the height pyFDS-Evac samples and how to check a run against C/VM2, see
+[Selecting a slice height](/docs/fds-sampling.md#selecting-a-slice-height).
 
 RSET from a run without the fire against a coupled run:
 [Evacuation with and without the fire](/docs/howto-with-without-fire.md).
