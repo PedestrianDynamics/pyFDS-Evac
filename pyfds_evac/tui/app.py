@@ -34,7 +34,6 @@ from textual.screen import ModalScreen, Screen
 from textual.widgets import (
     Collapsible,
     ContentSwitcher,
-    DirectoryTree,
     Input,
     OptionList,
     RichLog,
@@ -188,10 +187,12 @@ class ScenarioStep(Step):
                 yield TextBox(placeholder="type to filter", id="ex-filter")
                 yield OptionList(id="examples")
             with TabPane("Open file", id="tab-open"):
-                yield TextBox(
-                    placeholder="path to a .json, .zip or folder", id="open-path"
+                yield PathBox(
+                    placeholder="path to a .json, .zip or folder (Tab completes, "
+                    "~ is home)",
+                    id="open-path",
                 )
-                yield DirectoryTree(str(self.tui.cwd), id="open-tree")
+                yield OptionList(id="open-list")
         yield Static(id="sc-info")
         yield Static(id="sc-error")
 
@@ -405,7 +406,7 @@ class EvacTui(App[None]):
     #sc-info, #sc-error { height: auto; padding: 0 1; }
     #sc-error { color: $error; }
     #examples, #recent { height: 1fr; }
-    #open-tree { height: 1fr; }
+    #open-list { height: 1fr; }
     #fds-choices { height: auto; max-height: 10; }
     #fds-panel { height: auto; padding: 0 1; }
     .plain-row { height: auto; padding: 0 0 0 1; }
@@ -492,6 +493,9 @@ class EvacTui(App[None]):
         # The folder the FDS path box browses, and its listed subfolders.
         self.browse_folder: Path | None = None
         self.browsed: list[tuple[Path, bool]] = []
+        # The same for the Open file box of the Scenario step.
+        self.open_folder: Path | None = None
+        self.open_found: list[tuple[Path, bool]] = []
         self._gen = 0
         self._cfg_timer: Any = None
         self.warned_confirmed = False
@@ -523,6 +527,7 @@ class EvacTui(App[None]):
         self.theme = self.start_theme
         self._fill_recent()
         self._fill_examples("")
+        self._browse_open(f"{self.cwd}{os.sep}")
         tabs = self.query_one("#sc-tabs", TabbedContent)
         if self.recent.runs:
             tabs.active = "tab-recent"
@@ -775,17 +780,59 @@ class EvacTui(App[None]):
     def _open_path(self, event: Input.Submitted) -> None:
         self.select_scenario(Path(event.value))
 
-    @on(DirectoryTree.FileSelected, "#open-tree")
-    def _tree_file(self, event: DirectoryTree.FileSelected) -> None:
-        self.query_one("#open-path", Input).value = str(event.path)
-        if event.path.suffix.lower() in (".json", ".zip"):
-            self.select_scenario(event.path)
+    # --- browsing scenarios from the Open file box (dired-like) -----------------
 
-    @on(DirectoryTree.DirectorySelected, "#open-tree")
-    def _tree_dir(self, event: DirectoryTree.DirectorySelected) -> None:
-        self.query_one("#open-path", Input).value = str(event.path)
-        if model._json_and_wkt(event.path)[0]:
-            self.select_scenario(event.path)
+    @on(Input.Changed, "#open-path")
+    def _open_path_changed(self, event: Input.Changed) -> None:
+        self._browse_open(event.value or f"{self.cwd}{os.sep}")
+
+    @work(thread=True, exclusive=True, group="browse-open")
+    def _browse_open(self, text: str) -> None:
+        folder, found = model.browse_scenarios(text)
+        self.call_from_thread(self._show_open, text, folder, found)
+
+    def _show_open(
+        self, text: str, folder: Path | None, found: list[tuple[Path, bool]]
+    ) -> None:
+        typed = self.query_one("#open-path", Input).value
+        if text != (typed or f"{self.cwd}{os.sep}") or folder is None:
+            return
+        self.open_folder, self.open_found = folder, found
+        listing = self.query_one("#open-list", OptionList)
+        listing.clear_options()
+        if folder.parent != folder:
+            listing.add_option(
+                Option(m("..  [dim]up to $p[/]", p=_short(folder.parent, 60)), id="up")
+            )
+        for i, (path, scenario) in enumerate(found):
+            name = path.name + (os.sep if path.is_dir() else "")
+            tag = "  [$success]scenario[/]" if scenario else ""
+            listing.add_option(Option(m(f"$n{tag}", n=name), id=f"e-{i}"))
+        if not found:
+            listing.add_option(
+                Option(
+                    m(
+                        "[dim]No folder, .json or .zip here: $p[/]",
+                        p=_short(folder, 60),
+                    ),
+                    disabled=True,
+                )
+            )
+        listing.highlighted = 0
+
+    @on(OptionList.OptionSelected, "#open-list")
+    def _open_choice(self, event: OptionList.OptionSelected) -> None:
+        folder, ident = self.open_folder, event.option.id or ""
+        if folder is None:
+            return
+        if ident == "up":
+            self._go_into(folder.parent, "#open-path")
+            return
+        path, scenario = self.open_found[int(ident[2:])]
+        if scenario:
+            self.select_scenario(path)
+        else:
+            self._go_into(path, "#open-path")
 
     def _accept_scenario_tab(self) -> None:
         tab = self.query_one("#sc-tabs", TabbedContent).active
@@ -951,22 +998,33 @@ class EvacTui(App[None]):
         )
         choices.highlighted = 0
 
-    def _go_into(self, folder: Path) -> None:
-        box = self.query_one("#fds-path", Input)
+    def _go_into(self, folder: Path, box_id: str = "#fds-path") -> None:
+        box = self.query_one(box_id, Input)
         box.value = str(folder) + os.sep
         box.cursor_position = len(box.value)
 
+    # The path boxes and the lists they browse; Tab completes, Down goes down.
+    PATH_BOXES = {
+        "fds-path": (model.complete_dir, "#fds-choices"),
+        "open-path": (model.complete_scenario, "#open-list"),
+    }
+
     def action_complete_path(self) -> None:
-        box = self.query_one("#fds-path", Input)
-        completed = model.complete_dir(box.value)
+        box = self.focused
+        if not isinstance(box, Input) or box.id not in self.PATH_BOXES:
+            return
+        complete, listing = self.PATH_BOXES[box.id]
+        completed = complete(box.value)
         if completed != box.value:
             box.value = completed
             box.cursor_position = len(completed)
         else:
-            self.query_one("#fds-choices").focus()
+            self.query_one(listing).focus()
 
     def action_focus_choices(self) -> None:
-        self.query_one("#fds-choices").focus()
+        box = self.focused
+        if isinstance(box, Input) and box.id in self.PATH_BOXES:
+            self.query_one(self.PATH_BOXES[box.id][1]).focus()
 
     def _accept_fds_choice(self) -> None:
         typed = self.query_one("#fds-path", Input).value

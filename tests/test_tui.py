@@ -2286,3 +2286,57 @@ def test_fds_path_box_browses_and_enters_folders(workdir, tmp_path):
             assert app.step == 2
 
     run(go())
+
+
+def test_browse_scenarios_marks_scenarios(tmp_path):
+    root = tmp_path / "s"
+    (root / "case").mkdir(parents=True)
+    (root / "case" / "config.json").write_text("{}")
+    (root / "case" / "geometry.wkt").write_text("")
+    (root / "other").mkdir()
+    (root / "run.zip").write_text("")
+    (root / "notes.txt").write_text("")
+    folder, found = model.browse_scenarios(f"{root}/")
+    assert folder == root
+    assert [(p.name, s) for p, s in found] == [
+        ("case", True),
+        ("other", False),
+        ("run.zip", True),
+    ]
+    assert model.complete_scenario(f"{root}/ru") == f"{root}/run.zip"
+
+
+def test_open_file_browses_to_a_scenario(workdir):
+    assets = workdir / "assets"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.query_one("#sc-tabs").active = "tab-open"
+            await settle(pilot, app)
+            listing = app.query_one("#open-list")
+            ids = [
+                listing.get_option_at_index(i).id for i in range(listing.option_count)
+            ]
+            names = [p.name for p, _ in app.open_found]
+            assert app.open_folder == workdir and "assets" in names
+            listing.focus()
+            listing.highlighted = ids.index(f"e-{names.index('assets')}")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.query_one("#open-path").value == f"{assets}{os.sep}"
+            names = [p.name for p, _ in app.open_found]
+            assert app.open_folder == assets and "ISO-table21" in names
+            i = names.index("ISO-table21")
+            assert app.open_found[i][1]  # marked as a scenario
+            ids = [
+                listing.get_option_at_index(k).id for k in range(listing.option_count)
+            ]
+            listing.highlighted = ids.index(f"e-{i}")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.scenario is not None
+            assert app.form.scenario.path == (assets / "ISO-table21").resolve()
+            assert app.step == 1
+
+    run(go())

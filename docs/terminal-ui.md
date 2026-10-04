@@ -163,7 +163,12 @@ Three tabs choose the scenario:
   its `config_*.json` variants, and a filter box. Each row says "FDS output
   found" or "deck only".
 - **Open file** takes a `.json`, a `.zip`, or a folder with `config.json`.
-  Type the path or pick it in a directory tree.
+  It browses as the FDS step does, starting in the folder you started the
+  terminal UI in: the list shows the folders and the `.json` and `.zip`
+  files, marks scenarios as **scenario** (a `.json` or `.zip` file, or a
+  folder with a JSON and a WKT file), and offers `..` to go up. `Enter` or a
+  click on a scenario opens it; on any other folder it goes into it. Typing
+  a path filters the list; `Tab` completes and `↓` goes to the list.
 
 The info line shows the number of agents and exits, the maximum time and the
 seed.

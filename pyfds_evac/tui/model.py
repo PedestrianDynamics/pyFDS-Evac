@@ -21,7 +21,7 @@ import functools
 import json
 import os
 import zipfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
@@ -338,13 +338,15 @@ def has_smv(path: Path) -> bool:
         return False
 
 
-def browse_dirs(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
-    """The folder that *text* points into and its matching subfolders.
+def _browse(
+    text: str, keep: Callable[[os.DirEntry[str]], bool | None]
+) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """The folder that *text* points into and its entries that *keep* accepts.
 
-    ``"/a/b/"`` lists all of ``/a/b``; ``"/a/b/fd"`` lists the folders of
-    ``/a/b`` whose names start with ``fd`` (case-insensitive). Hidden folders
-    show only when the typed name starts with a dot. Each entry is
-    ``(path, holds a .smv file)``; at most :data:`BROWSE_LIMIT` entries.
+    ``"/a/b/"`` lists all of ``/a/b``; ``"/a/b/fd"`` the entries of ``/a/b``
+    whose names start with ``fd`` (case-insensitive). Hidden entries show
+    only when the typed name starts with a dot. *keep* returns None to drop
+    an entry, else the flag stored with it. At most :data:`BROWSE_LIMIT`.
     """
     raw = os.path.expanduser(text.strip())
     if not raw:
@@ -364,11 +366,46 @@ def browse_dirs(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
         if not name.lower().startswith(prefix.lower()):
             continue
         with contextlib.suppress(OSError):
-            if entry.is_dir():
-                found.append((Path(entry.path), has_smv(Path(entry.path))))
+            flag = keep(entry)
+            if flag is not None:
+                found.append((Path(entry.path), flag))
         if len(found) >= BROWSE_LIMIT:
             break
     return folder, found
+
+
+def browse_dirs(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """The subfolders *text* points at, each with whether it holds a ``.smv``."""
+    return _browse(text, lambda e: has_smv(Path(e.path)) if e.is_dir() else None)
+
+
+def _scenario_entry(entry: os.DirEntry[str]) -> bool | None:
+    if entry.is_dir():
+        jsons, wkts = _json_and_wkt(Path(entry.path))
+        return bool(jsons and wkts)
+    if Path(entry.name).suffix.lower() in (".json", ".zip"):
+        return True
+    return None
+
+
+def browse_scenarios(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """Folders and ``.json``/``.zip`` files *text* points at, each with
+    whether it is a scenario (a file, or a folder with a JSON and a WKT)."""
+    return _browse(text, _scenario_entry)
+
+
+def _complete(text: str, browsed: tuple[Path | None, list[tuple[Path, bool]]]) -> str:
+    folder, found = browsed
+    if folder is None or not found:
+        return text
+    if len(found) == 1:
+        path = found[0][0]
+        return str(path) + os.sep if path.is_dir() else str(path)
+    common = os.path.commonprefix([p.name for p, _flag in found])
+    typed = os.path.split(os.path.expanduser(text.strip()))[1]
+    if len(common) <= len(typed):
+        return text
+    return str(folder / common)
 
 
 def complete_dir(text: str) -> str:
@@ -377,17 +414,12 @@ def complete_dir(text: str) -> str:
     One match completes to ``<folder>/``; several to their common prefix;
     none leaves *text* unchanged.
     """
-    folder, found = browse_dirs(text)
-    if folder is None or not found:
-        return text
-    names = [p.name for p, _smv in found]
-    if len(names) == 1:
-        return str(folder / names[0]) + os.sep
-    common = os.path.commonprefix(names)
-    typed = os.path.split(os.path.expanduser(text.strip()))[1]
-    if len(common) <= len(typed):
-        return text
-    return str(folder / common)
+    return _complete(text, browse_dirs(text))
+
+
+def complete_scenario(text: str) -> str:
+    """*text* completed over folders and ``.json``/``.zip`` files."""
+    return _complete(text, browse_scenarios(text))
 
 
 def check_fds_dir(text: str) -> tuple[str | None, str]:
