@@ -648,6 +648,13 @@ they do not affect a run.
   occupants from smoke, toxic gases, and heat. In *SFPE Handbook of Fire
   Protection Engineering* (5th ed., Ch. 63). Springer.
   doi:10.1007/978-1-4939-2565-0_63
+- Purser, D. A., & McAllister, J. L. (2026). Assessment of hazards to
+  occupants from smoke, toxic gases, and heat. In Society of Fire
+  Protection Engineers (Ed.), *SFPE Handbook of Fire Protection
+  Engineering* (6th ed., Ch. 70, pp. 2271–2352). Springer.
+  doi:10.1007/978-3-031-59212-6_70
+- Lovreglio, R. *FED Heat v3*. Unpublished draft, which cites the 6th ed.,
+  Ch. 70. Reviewed by D. Purser (personal communication, 2026).
 - McGrattan, K., et al. (2025). *Fire Dynamics Simulator User's Guide*,
   FDS 6.10.1. NIST Special Publication 1019. Table 22.4 (p. 403) and
   Eq. 22.35 (p. 381).
