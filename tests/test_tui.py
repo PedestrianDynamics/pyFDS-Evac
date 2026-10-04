@@ -1519,3 +1519,200 @@ def test_child_output_goes_to_child_log_not_the_terminal(tmp_path, monkeypatch, 
     out, err = capfd.readouterr()
     assert (out, err) == ("", "")
     assert "Reroute debug" in (Path(base) / "child.log").read_text()
+
+
+# --- #532 round trip of every setting ----------------------------------------------
+# The same values as the GUI half (tests/_round_trip.py). Paths: the form ->
+# Review "Save" (command.sh, run.py) and a run's frozen snapshot -> its
+# command, run script and saved files. Values must be equal; the format may
+# differ. Recent stays a scenario shortcut (#534), so it is not tested here.
+
+
+def _rt_profile(workdir, index: int) -> tuple[dict, Path | None]:
+    """Profile *index* and the FDS folder it needs (profile B reads FDS)."""
+    from _round_trip import PROFILE_A, PROFILE_B
+
+    if index == 0:
+        return dict(PROFILE_A), None
+    return dict(PROFILE_B), workdir / "assets" / "iso_table21_coupled" / "fds"
+
+
+async def _rt_configure(pilot, app, workdir, index: int) -> dict:
+    profile, fds = _rt_profile(workdir, index)
+    await to_configure(pilot, app, workdir / "assets" / "t_junction", fds)
+    for dest, value in profile.items():
+        if value in ("on", "off"):
+            app.form.switch[dest] = value == "on"
+        else:
+            app.form.text[dest] = value
+        row(app, dest).sync_control()
+    app.form_changed()
+    await settle(pilot, app)
+    assert app.invalid_count() == 0, app.parse_errors or app.cfg.errors
+    return profile
+
+
+def _rt_check_command(command: str, ns: argparse.Namespace) -> None:
+    """*command* parses back to the values of *ns*."""
+    from _round_trip import same_path
+
+    from pyfds_evac.config.parameters import RUN_OPTIONS, parameter
+
+    got = cli_options(command)
+    for key in RUN_OPTIONS:
+        want = getattr(ns, key)
+        if parameter(key).kind == "text" and want is not None:
+            assert same_path(got[key], want), key
+        else:
+            assert got[key] == want, key
+
+
+def _rt_check_script(code: str, ns: argparse.Namespace, seed) -> None:
+    """run.py's PATHS and OPTIONS against *ns*; *seed* is the one expected."""
+    from _round_trip import PATHS, hidden, same_path, script_literals
+
+    from pyfds_evac.config.parameters import default
+    from pyfds_evac.config.script import _PATH_KEYS, OMITTED_OUTPUT_KEYS
+
+    lit = script_literals(code)
+    rebuilt = dict(lit["OPTIONS"])
+    rebuilt.update({key: lit[key.upper()] for key in _PATH_KEYS})
+    expected = vars(ns)
+    assert set(rebuilt) == set(expected)
+    got = rebuilt.pop("seed")
+    assert got == seed and (got is None) == (seed is None)  # 0 is not None
+    for key, value in rebuilt.items():
+        if key in OMITTED_OUTPUT_KEYS:
+            assert value is None, key
+        elif key in (*PATHS, "scenario") and value is not None:
+            assert same_path(value, expected[key]), key
+        else:
+            assert value == expected[key], key
+    for key in hidden():
+        assert rebuilt[key] == default(key), key
+
+
+def test_rt_fields_cover_every_shown_option():
+    from _round_trip import PROFILE_A, PROFILE_B, hidden, shown
+
+    assert {p.dest for p in model.all_fields()} | {"fds_dir"} == shown()
+    assert set(PROFILE_A) | set(PROFILE_B) | {"fds_dir"} == shown()
+    assert model.UNSUPPORTED == hidden()
+
+
+@pytest.mark.parametrize("index", [0, 1], ids=["profile_a", "profile_b"])
+def test_rt_review_save_keeps_every_option(workdir, index):
+    from _round_trip import ZERO, argv
+
+    from pyfds_evac.config.parameters import default
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            profile = await _rt_configure(pilot, app, workdir, index)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("s")
+            await pilot.pause()
+            ns = app.namespace()
+            # The form maps each value as pyfds-evac parses it.
+            words = ["--scenario", "x", *argv(profile)]
+            api = cli_options("pyfds-evac " + shlex.join(words))
+            for key in profile:
+                assert getattr(ns, key) == api[key] != default(key), key
+            for key in set(ZERO) & set(profile):
+                assert getattr(ns, key) is not None and getattr(ns, key) == 0
+            folder = Path(app.planned())
+            _rt_check_command((folder / "command.sh").read_text(), ns)
+            _rt_check_script((folder / "run.py").read_text(), ns, ns.seed)
+
+    run(go())
+
+
+@pytest.mark.parametrize("confirmed", [True, False], ids=["confirmed", "other"])
+@pytest.mark.parametrize("index", [0, 1], ids=["profile_a", "profile_b"])
+def test_rt_run_snapshot_keeps_every_option(workdir, index, confirmed):
+    async def go():
+        runner = FakeRunner()
+        app = make_app(workdir, runner=runner)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _rt_configure(pilot, app, workdir, index)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            snap = app.current_run.snapshot
+            values = copy.deepcopy(dict(snap.values))
+            assert runner.started[0][0] == values
+            # A later edit never reaches the snapshot.
+            app.form.text["fic_alpha"] = "0.9"
+            app.form.switch["smoke_blind"] = not app.form.switch["smoke_blind"]
+            app.form_changed()
+            await settle(pilot, app)
+            assert dict(snap.values) == values
+            _rt_check_command(snap.command, snap.namespace())
+            reported = snap.expected_seed if confirmed else 99
+            replay(app, result_event(events.STATUS_SUCCESS, seed=reported))
+            await pilot.pause()
+            # A blank Seed becomes the seed the run used; an explicit 0 stays.
+            seed = values["seed"]
+            if seed is None and confirmed:
+                seed = reported
+            _rt_check_script(app.run_script(), snap.namespace(), seed)
+            app.action_save_run()
+            folder = Path(snap.base)
+            _rt_check_command((folder / "command.sh").read_text(), snap.namespace())
+            _rt_check_script((folder / "run.py").read_text(), snap.namespace(), seed)
+
+    run(go())
+
+
+def test_rt_blank_paths_resolve_to_none(workdir):
+    """A blank path field is None, never "" (#557 needs "")."""
+    from _round_trip import PATHS, script_literals
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.set_fds_dir("")
+            app.form.text["replay_exits"] = "  "
+            app.form.text["vis_cache"] = ""
+            app.form_changed()
+            await settle(pilot, app)
+            ns = app.namespace()
+            for key in PATHS:
+                assert getattr(ns, key) is None, key
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("s")
+            await pilot.pause()
+            folder = Path(app.planned())
+            assert "--fds-dir" not in (folder / "command.sh").read_text()
+            lit = script_literals((folder / "run.py").read_text())
+            assert lit["FDS_DIR"] is None and lit["VIS_CACHE"] is None
+
+    run(go())
+
+
+@pytest.mark.xfail(strict=True, reason="#559: Save writes a stale command.sh")
+def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
+    async def go():
+        app = EvacTui(
+            cwd=workdir,
+            runner=FakeRunner(),
+            inspector=lambda path: FACTS,
+            debounce=30.0,
+        )
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.config_now()
+            app.goto(3)
+            await pilot.pause()
+            app.form.text["seed"] = "11"
+            app.form_changed()  # the configuration is due in 30 s
+            app.action_save()
+            folder = Path(app.planned())
+            assert cli_options((folder / "command.sh").read_text())["seed"] == 11
+
+    run(go())
