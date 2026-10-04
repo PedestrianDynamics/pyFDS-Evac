@@ -200,6 +200,16 @@ skipped, the slice whose z is nearest `slice_height_m` wins, and a
 warning is logged when it is more than 0.5 m away. The visibility model
 applies the same function to the extinction slice it hands to fdsvismap.
 
+From the command line the height is `--smoke-slice-height`, 1.6 m by
+default (the FDS+Evac `HUMAN_SMOKE_HEIGHT`). The value is an absolute z in
+the FDS domain, so it equals the height above the floor where the floor is
+at z = 0. C/VM2 and the Engineers Australia note evaluate tenability at
+2.0 m ([ASET and RSET](/fundamentals/aset-rset.md)). For a check against
+them, run with `--smoke-slice-height 2.0` and write the slices at that
+height in the FDS deck (`&SLCF PBZ=2.0`); otherwise the run reads the
+nearest slice and warns only when it is more than 0.5 m away
+([Silent failure modes](fds-case-requirements.md#silent-failure-modes)).
+
 ### Sharing a `Simulation` instance
 
 Parsing an FDS case directory is expensive. When you need both
