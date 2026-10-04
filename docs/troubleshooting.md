@@ -27,9 +27,18 @@ Command-line errors start with the name of the command you ran:
 | `ValueError: --heat-radiant-source integrated-intensity needs --heat-u-factor in [0.25, 1]; there is no default.` | *f* has no default. | Set `--heat-u-factor`. |
 | `ValueError: DIR has no INTEGRATED INTENSITY slice. …` | The deck writes no `INTEGRATED INTENSITY` slice. | Add `&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height and rerun FDS. |
 | `pyfds-evac: error: argument --heat-u-factor: must be in [0.25, 1.0], got …` | *f* outside its range. | Use a value in [0.25, 1]. |
+| `ValueError: Unknown routing cost_model '…'; expected one of ('gate', 'additive')` | `routing.cost_model` in the scenario JSON is not one of the two names. The match is exact and case-sensitive: `"Gate"` fails. Raised with rerouting on or off. | Write `"gate"` or `"additive"`, or drop the key for `"gate"`; see [Scenario JSON](scenario-json.md#route-choice-routing). |
+| `ValueError: Distribution '…' sets desired_speed=… and v0=…; desired_speed is an alias of v0, set one of them` (or the same for `desired_speed_distribution` and `v0_distribution`, `desired_speed_std` and `v0_std`) | A spawn area sets an alias and its `v0*` key to different values. | Set one of the two, or give both the same value; see [Scenario JSON](scenario-json.md#spawn-areas-distributionsidparameters). |
+| `ValueError: Unknown speed_law '…'; expected one of ('lund', 'fridolf')` | Python only: a `SmokeSpeedConfig` built with another `speed_law`. No command-line option or JSON key sets it. | Use `"lund"` or `"fridolf"`, in lower case. |
 | `pyfds-evac-gui needs the GUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[gui]'` | `pyfds-evac-gui` without the `gui` extra. | Run `pip install "pyfds-evac[gui]"`, or `uv sync --extra gui` in a source checkout. |
 | `pyfds-evac-tui needs the TUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[tui]'` | `pyfds-evac-tui` without the `tui` extra. | Run `pip install "pyfds-evac[tui]"`, or `uv sync --extra tui` in a source checkout. |
 | `IndexError: No slice with quantity '…' found in DIR` | A direct library call (`FdsFedField.from_fds`, `ExtinctionField.from_fds`, `load_slice_sampler`) on a case without that slice. `run.py` warns instead. | Add the slice to the deck, or check the case with `--inspect-fds` first. |
+
+The `cost_model` and alias errors appear when the run starts, after the FDS
+output is read. `--show-config` does not report them yet: it prints
+`Errors: none` for such a deck
+([#571](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571) for
+`cost_model`).
 
 ## Warnings that change the result
 

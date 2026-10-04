@@ -636,7 +636,7 @@ Every key below is read from the scenario's `routing` block by
 
 | JSON key | Default | Effect | Under `"gate"` | Under `"additive"` |
 |---|---|---|---|---|
-| `cost_model` | `"gate"` | Selects the model. Unvalidated: any other string behaves as `"additive"`. | — | — |
+| `cost_model` | `"gate"` | Selects the model. `"gate"` or `"additive"`, matched exactly; any other value raises `ValueError`. | — | — |
 | `tau_max` | `6.0` | Optical depth `K_ave * L` a route may carry before it is refused. Also orders the feasible routes. | active | inert |
 | `tau_return_margin` | `0.8` | Factor a *rival* exit's budget is multiplied by, so switching needs a cleaner route than staying. | active | inert |
 | `current_exit_discount` | `0.9` | Factor the current exit's `tau` is scaled by in the sort key. FDS+Evac's `FAC_DOOR_OLD2` is 0.9. | active | inert |
@@ -759,8 +759,6 @@ prediction from `evac.f90`, not a measured run of it.
   now orders by `tau` and weights edges by `tau`; the last equivalence runs
   predate both. In clear air every `tau` is zero and the argument still holds by
   construction, but it is an argument, not a measurement.
-- **`cost_model` is an unvalidated free string.** A typo silently yields the
-  additive model.
 - **FIC does not participate in routing under either model.** It drives the
   Purser slowdown and incapacitation only. FIC and the optical-depth gate are
   driven by the same smoke, so routing on both would double-count.
