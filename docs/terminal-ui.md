@@ -109,12 +109,16 @@ agent walks a corridor 100 m long to the exit.
    Results when the run ends.
 
 {{< checkpoint title="The run finished" >}}
-Results starts with these lines:
+At 80 columns, Results starts with these lines:
 
 ```text
 ✓ Complete: all agents evacuated   exit 0
-  Evacuation time 79.2 s   Evacuated 1 of 1 that entered   Incapacitated 0
+  Evacuation time 79.2 s   Evacuated 1 of 1 agents
+  Incapacitated: not modelled in this run
 ```
+
+This run has no dose model, so incapacitation is not modelled. From 100
+columns on, the last line joins the line above it.
 
 The run folder is `results/ISO-table21/deterministic/seed420/<UTC start>`. It
 holds `ISO-table21.sqlite`, `ISO-table21.manifest.json`, the route, route-cost
@@ -242,8 +246,9 @@ in progress (run #*N*)".
 - The phase line shows initialising → FDS inspection → visibility → running →
   writing outputs → done.
 - The status line shows the simulated time against the limit, the wall time,
-  "evacuated *e* of *t* planned", the incapacitated agents, the agents not yet
-  spawned, and the number of warnings (`w` lists them).
+  "evacuated *e* of *t* planned", the incapacitated agents (only when the
+  run models incapacitation), the agents not yet spawned, and the number of
+  warnings (`w` lists them).
 - During the run, *t* counts the **planned** agents, including flow agents that
   have not spawned yet. Results counts the agents **that entered**. In the
   screenshots, the run shows "of 200 planned" and Results "of 150 that
@@ -265,15 +270,20 @@ The outcome comes first, in the same words as the Web GUI:
 | "Complete: all agents evacuated" | 0 |
 | "Incomplete: time limit reached, *k* agents inside[, *m* not spawned]" | 2 |
 | "Run failed: …"; "(during setup; the run was not started)" when the run failed before it started | 1 |
-| "Cancelled at sim *t* s" | none |
+| "Cancelled at sim *t* s", or "Cancelled before the first progress sample" | none |
 | "The run stopped without a result (process exit *N*)" | none |
 
 The exit statuses are those of `pyfds-evac`; see
-[Exit status](usage.md#exit-status). Then follow the time, "Evacuated *e* of
-*n* that entered", the incapacitated agents, the run line (run number,
-scenario, seed used, wall time), the warnings, the per-exit counts at the end
-of the run, the evacuated-over-time sparkline (wide layout only), and the
-output files with their sizes.
+[Exit status](usage.md#exit-status). Then follow the time, "Evacuated *e*
+of *n* agents" ("… that entered" when flow agents had not spawned), and
+"Incapacitated *j*" when the run models incapacitation or "Incapacitated:
+not modelled in this run" when it does not. Below 100 columns the
+incapacitated part goes on a line of its own. When a run models
+incapacitation is stated under [Results](web-gui.md#results) on the Web GUI
+page. After that come the run line (run number, scenario, seed used, wall
+time), the warnings, the per-exit counts at the end of the run, the
+evacuated-over-time sparkline (wide layout only), and the output files with
+their sizes.
 
 - `←` and `→` replay the stored plan frames 1 s at a time, `shift+←` and
   `shift+→` 10 s at a time. Replay works only after the run has ended.
@@ -390,14 +400,15 @@ CSV files are the results. It draws:
 - walls, and the exits with their evacuated counts;
 - signs (`◆`), agents (`•`; `●` for two or more in a cell; `x` incapacitated);
 - the smoke as the extinction coefficient K in fixed bins at 0.1, 0.5, 1, 3
-  and 10 1/m, the same for every run.
+  and 10 1/m, the same for every run. The Web GUI replay uses the same bins
+  and the same slice rule, so the two front ends show the same smoke.
 
 The legend states the FDS slice height and the FDS frame time the run read.
 That height is the slice actually read, the one nearest to the smoke slice
 height: in the screenshots the slice is at 2.0 m, while the setting is the
 default 1.6 m. See [Selecting a slice height](fds-sampling.md#selecting-a-slice-height).
-The run manifest does not record the slice height yet; see
-[Run manifest](outputs.md#run-manifest).
+The run manifest does not record the slice height yet
+([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592)); see [Run manifest](outputs.md#run-manifest).
 
 Without plan data, or with `TERM=dumb`, the region reads "plan not available".
 
@@ -455,7 +466,8 @@ at once, **also** during "writing outputs", and so does `ctrl+q` with "Quit and
 cancel". Both can leave a partial file.
 
 A cancelled run has no exit code. Results reads "■ Cancelled at sim *t* s",
-with "; the process was stopped" when it was terminated. A run cancelled
+or "■ Cancelled before the first progress sample" when no progress sample
+had arrived, with "; the process was stopped" when it was terminated. A run cancelled
 before the writing phase writes no trajectory and no CSV files: only
 `child.log` remains, and `command.sh` and `run.py` if you saved them.
 

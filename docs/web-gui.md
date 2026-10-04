@@ -112,8 +112,10 @@ under [The form](#the-form).
 
 Click **Run scenario** (3). The results area (4) turns into a progress card
 and a console with the model's log. The card names the scenario and the run
-number and shows agents evacuated, simulated time, wall-clock time and
-percent done. **Cancel run** stops the run at its next step.
+number and shows "evacuated *e* of *t* planned", where *t* counts every
+planned agent, flow agents included, then the simulated time, the
+wall-clock time and the percent done. While flow agents are still to enter,
+"not spawned *m*" follows. **Cancel run** stops the run at its next step.
 
 If a value is invalid, the run does not start. An alert above the results
 area says "The run was not started." with the error, and your settings and
@@ -122,7 +124,7 @@ the error comes from that field's value, for example `Seed: …`; otherwise
 the message is shown as it is, with the exception type under
 **Technical details**.
 
-[![A progress card titled "Running: Haspel" with the subtitle "run #2 · coupled FDS × JuPedSim step loop", at 25 percent, with a progress bar, the line "evacuated 75/300 · sim 105.3s · wall 44s · 25%" and a Cancel run button. Below it, the console lists the model's setup and rerouting log lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger Haspel scenario of the repository.")](images/web-gui/running.png)
+[![A progress card titled "Running: Haspel" with the subtitle "run #2 · coupled FDS × JuPedSim step loop" and 25% at the right. Below it a progress bar a quarter full, the line "evacuated 75 of 300 planned · sim 98.7 s · wall 44 s · 25%" and a Cancel run button. Below the card, the console starts with "Configuring rerouting." and three "Added DirectSteeringStage" lines](/images/web-gui/running.png "A run in progress. The corridor case finishes in about a second, so this shows the larger Haspel scenario of the repository.")](images/web-gui/running.png)
 
 ### Look at the results
 
@@ -130,29 +132,58 @@ When the run ends, the results replace the progress card. A header names
 the run (**Results**, the run number, scenario and start time) and holds
 **Show Python for this run** and **Clear results**. Below it, the outcome
 is stated in words, "Complete: all agents evacuated" here, followed by
-tiles for the evacuation time, agents evacuated, agents remaining and the
-seed used, and any warnings from the run.
+tiles for the evacuation time, agents evacuated, agents remaining, agents
+incapacitated and the seed used, and any warnings from the run.
 
-[![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-09-29T18:14:06+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", four tiles reading Evacuation time 85.0 s, Evacuated 1 / 1 agents, Remaining 0 agents and Seed used 420, and a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
-
-The screenshots of this run predate the exit rule of
-[#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349); the run
-now ends after 85.3 s, as in the steps below
-([#389](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/389)).
+[![The top of the results. A header reads "Results  run #1 · iso_table21_coupled · 2026-10-04T10:32:40+00:00" with the buttons Show Python for this run and Clear results, and the line "Starting a new run replaces these results in this view; the files on disk are kept." Below it, a check mark and "Complete: all agents evacuated", then five tiles: Evacuation time 85.3 s, Evacuated 1 of 1 agents, Remaining 0 agents, Incapacitated "not modelled in this run" with the help line "Agents that reached the incapacitation threshold (gas or heat FED). Counted separately from Remaining." and a Gas FED link, and Seed used 420. Below the tiles, a Warning box, "1 warning for run #1", saying that FED is disabled for assets/iso_table21_coupled/fds because it has no CO, CO2 or O2 slices](/images/web-gui/results_header.png "The results header, the outcome and the FED warning of the corridor run.")](images/web-gui/results_header.png)
 
 Further down, press play in
 **Trajectories** to replay the run, or drag the time slider. Scroll over the
 plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,
-the extinction slice is drawn under the agents as a grey smoke layer;
-**Smoke** switches it off.
+the smoke layer is drawn under the agents: the horizontal extinction slice
+nearest the run's smoke slice height, picked by the rule the engine samples
+by (see [Selecting a slice height](fds-sampling.md#selecting-a-slice-height)).
+The result does not record the engine's slice height yet, so the replay
+selects the slice again with the same rule
+([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592)). **Smoke layer** switches the layer on and off.
 
-[![The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is drawn in grey, the FDS smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, a custom speed field, and the smoke toggle set to on](/images/web-gui/replay.png "The trajectory replay with the FDS smoke layer on, zoomed in on the agent.")](images/web-gui/replay.png)
+Cells are shaded in fixed bins of the extinction coefficient *K*, the same
+for every run and the same as in the [terminal UI](terminal-ui.md#the-plan-view).
+The legend "Smoke K (1/m)" labels each swatch with its lower edge: "0.1"
+means 0.1 ≤ *K* < 0.5 1/m, and so on up to "≥10". Cells below 0.1 1/m are
+clear. Next to the legend, "FDS slice z = *z* m (setting *h* m) · frame
+t = *t* s" gives the height *z* of the slice drawn, the run's smoke slice
+height *h*, and the FDS output time *t* nearest the replay frame. *t* stops
+advancing when the run outlasts the FDS output.
 
-The **Smoke** chart below the replay plots the mean speed factor and the mean
-extinction coefficient *K* over time. Other charts, such as Cognitive map
-growth, stay empty for this one-agent corridor.
+{{< details title="When the smoke layer is not drawn" closed="true" >}}
+One muted line takes the place of the layer:
 
-[![A Plotly chart titled Smoke, with time from 0 to 85 s on the horizontal axis, the speed factor on the left axis between 0.9196262 and 0.9196266, and the extinction coefficient K on the right axis between 0.995502 and 0.995507 per metre. Both lines are flat until about 50 s and then vary in their last digits](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so the axes zoom in on changes in the sixth and seventh decimal places.")](images/web-gui/smoke_chart.png)
+- constant extinction: "Smoke layer: uniform K = *x* 1/m (constant), no
+  field to draw";
+- no horizontal extinction slice: "Smoke layer: not drawn – no horizontal
+  extinction slice in the FDS output";
+- a slice that cannot be read: "Smoke layer: not drawn – the FDS extinction
+  slice could not be read".
+
+A run without a smoke source shows no line.
+{{< /details >}}
+
+[![The Trajectories panel at t = 41 s, zoomed in on the corridor. The corridor is one flat grey band, the smoke layer, with one yellow agent in it. Below the plan: a play button, the time slider, a reset-view button, speed buttons 1×, 2×, 5×, 10× and 50×, and a custom speed field. Under them, the Smoke layer button set to on, and the legend "Smoke K (1/m)" with swatches 0.1, 0.5, 1, 3 and ≥10 from light to dark grey, followed by "FDS slice z = 1.5 m (setting 1.6 m) · frame t = 0.0 s"](/images/web-gui/replay.png "The replay at 41 s with the smoke layer on, zoomed in on the agent. Every cell lies in the 0.5 bin (0.5 ≤ K < 1 1/m). The FDS slice has output at 0 s and 100 s only, so the frame time reads 0.0 s until the replay passes 50 s.")](images/web-gui/replay.png)
+
+The **Smoke** chart below the replay plots, against simulated time from 0 to
+the end of the run, the mean speed factor (solid, left axis, 0 to 1) and the
+mean extinction coefficient *K* (dashed, right axis, from 0 to 1.1 times the
+highest mean *K*, and at least to 1 1/m). The mean is over the agents still
+in the simulation and not incapacitated, at each smoke update, so the
+series ends when no such agent is left. The line under the chart gives both
+ranges, the time span and the number of smoke updates. It adds a sentence
+when the series ends more than one update before the run, and when samples
+outside the FDS domain, taken as ambient air, enter the mean
+([#594](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/594)). Cognitive map growth is listed under **Not shown**:
+no agent's cognitive map grows in this one-agent corridor.
+
+[![A chart titled Smoke with the caption "Mean over the agents still in the simulation and not incapacitated, at each smoke update." Simulated time (s) runs from 0 to about 85 s. The left axis, Speed factor (–), runs from 0 to 1; the right axis, Extinction coefficient K (1/m), from 0 to just above 1. The solid mean speed factor line is flat at about 0.92 and the dashed mean K line is flat just below 1. Under the chart: "Mean speed factor: 0.920 to 0.920 · Mean K: 0.996 to 0.996 1/m · from 0.0 s to 85.0 s, 86 smoke updates"](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so both lines are flat.")](images/web-gui/smoke_chart.png)
 
 {{< checkpoint title="The run finished" >}}
 The agent leaves the corridor after 85.3 s, and the run reports 1 of 1
@@ -226,7 +257,7 @@ that names the run and its own buttons:
 |---|---|---|
 | Results | the run finished and its results are displayed | **Show Python for this run**, **Clear results** |
 | Failed | the run raised an error; the message comes first | **Show configuration of this run**, **Clear** |
-| Cancelled | you cancelled the run; no results were produced | **Show configuration of this run**, **Clear** |
+| Cancelled | you cancelled the run; no results were produced. The message gives the simulated time of the last progress sample, "Run #N was cancelled at sim *t* s.", or says that the run was cancelled before the first progress sample | **Show configuration of this run**, **Clear** |
 | Results not displayed | the run finished, but its results view could not be built | **Show Python for this run**, **Clear** |
 | Ended | another run started, possibly in another window | **Show current run** |
 
@@ -242,7 +273,9 @@ raised an error. It reads "Complete: all agents evacuated" when every agent
 has entered and left, and "Incomplete: time limit reached, *k* agents
 inside" when the time limit stopped the run first. When flow agents were
 still to enter, it adds ", *m* not spawned", a Not spawned tile appears, and
-the Evacuated tile counts spawned agents only.
+the Evacuated tile reads "*e* of *n* that entered", where *n* counts the
+agents that entered ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)). The Incapacitated tile is shown on
+every finished run; see [Results](#results).
 
 ### Settings changed
 
@@ -274,17 +307,29 @@ already exists, `-2`, `-3`, … is added to its name.
 
 ## Results
 
-- **Summary**: the outcome in words, tiles for time, evacuated, remaining
-  and seed used, the peak gas and heat FED when the run reported them (with
-  "Incapacitated: not reported by this version"), and the run's warnings.
+- **Summary**: the outcome in words; tiles for time, evacuated, remaining,
+  incapacitated, not spawned (only when flow agents were still to enter)
+  and seed used; the peak gas and heat FED, each when that model ran; and
+  the run's warnings.
+- **Incapacitated**: the number of agents that reached the incapacitation
+  threshold of gas or heat FED ("0 agents" included) when the run modelled
+  incapacitation, and "not modelled in this run" otherwise. A run models it
+  when tenability is on with gas incapacitation and a gas FED model, or with
+  heat incapacitation and a heat FED model. It does not without a dose
+  model, when FED was disabled because CO, CO₂ or O₂ is missing, with
+  **Disable tenability**, or with **Smoke blind**. In the last two cases the
+  peak FED can still be shown although no agent is stopped. The count is
+  shown on its own, not as part of Remaining
+  ([#593](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/593)).
 - **Charts**: smoke over time and the growth of the cognitive maps. FED is
   shown live during a run.
 - **Trajectory replay**: agents move between the stored trajectory samples,
   coloured by cumulative gas FED or by assigned exit, with play, pause, a
   scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
-  scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the FDS
-  extinction slice is drawn under the agents as a smoke layer that can be
-  switched off. Without a FED model, for example when the FDS output has no
+  scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the
+  horizontal extinction slice the engine samples is drawn under the agents
+  in fixed *K* bins, as a smoke layer that can be switched off; see
+  [Look at the results](#look-at-the-results). Without a FED model, for example when the FDS output has no
   CO, CO₂ or O₂ slices, agents are coloured by exit and the FED/exit
   switch is not shown. The replay colours by gas FED only, not by heat FED
   ([#232](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232)).
@@ -315,12 +360,7 @@ Two buttons open the code:
 
 Both open a dialog with **Copy** and **Download .py**.
 
-[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: Complete: all agents evacuated (30/30), evacuation time 55.14 s", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
-
-The screenshot predates the per-distribution seeds of
-[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360); the
-same run now ends as described in the steps below
-([#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384)).
+[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: Incomplete: time limit reached, 2 agents inside, simulated time 300.0 s, incapacitation not modelled", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details: what the GUI adds or leaves out" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
 
 ### Save a run and run it again
 
@@ -330,7 +370,7 @@ same run now ends as described in the steps below
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
    reports "Status: Incomplete: time limit reached, 2 agents inside,
-   simulated time 300.00 s".
+   simulated time 300.0 s, incapacitation not modelled".
 3. Click **Download .py**. The file is named after the scenario, the run
    number and the run's UTC start time, for example
    `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py`.
@@ -387,10 +427,16 @@ with a **Details** disclosure, and no code; **Copy** and **Download .py** are
 disabled. The file is named `pyfds_evac_<scenario>_preview.py`.
 
 **Run code.** It is built only from the run's frozen snapshot, never from the
-live form. The status line uses the wording of the results view:
-"Complete: all agents evacuated (*n*/*N*), evacuation time *t* s",
-"Incomplete: time limit reached, *k* agents inside[, *m* not spawned],
-simulated time *t* s", failed, cancelled, or not recorded. The file is named
+live form. The status line uses the wording of the results view, with
+times to one decimal:
+
+- "Complete: all agents evacuated (*e* of *n*), evacuation time *t* s, …";
+- "Incomplete: time limit reached, *k* agents inside[, *m* not spawned],
+  simulated time *t* s, …";
+- failed, cancelled, or not recorded.
+
+In the first two, "…" is "*j* incapacitated" when the run modelled
+incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.
 
