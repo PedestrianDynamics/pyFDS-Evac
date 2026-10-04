@@ -50,6 +50,7 @@ def _tui_env(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
     monkeypatch.setenv(frontend.RESULTS_ENV, str(tmp_path / "results"))
     monkeypatch.setenv("TERM", "xterm-256color")
+    monkeypatch.setenv("COLORTERM", "truecolor")
     for name in ("NO_COLOR", "PYFDS_EVAC_TUI_THEME", "SSH_CONNECTION"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(frontend, "utc_now", lambda: FIXED_NOW)
@@ -354,7 +355,13 @@ def test_a5_fds_suggested_not_set_and_checked(workdir, tmp_path):
             await pilot.pause()
             assert "No .smv file in" in text_of(app, "#fds-panel")
             assert app.form.fds_dir is None
-            app.query_one("#fds-choices").focus()
+            choices = app.query_one("#fds-choices")
+            choices.focus()
+            # Typing a path lists its folders first; the suggestion follows.
+            ids = [
+                choices.get_option_at_index(i).id for i in range(choices.option_count)
+            ]
+            choices.highlighted = ids.index("fds-0")
             await pilot.press("enter")
             await settle(pilot, app)
             assert app.form.fds_dir == str(fds)
@@ -1040,6 +1047,174 @@ def test_fds_search_is_bounded(tmp_path):
     (tmp_path / "d1" / "case.smv").write_text("")
     assert model.find_fds_dirs([tmp_path]) == [(tmp_path / "d1").resolve()]
     assert model.find_fds_dirs([tmp_path], max_entries=10) == []
+
+
+# --- #598 the footer always shows quit and keys ---------------------------------------
+
+
+def fixed_keys(app) -> dict[str, object]:
+    """The footer's fixed group of *app*'s current screen: label -> FooterKey."""
+    from textual.widgets._footer import FooterKey
+
+    group = app.screen.query_one("#fixed-keys")
+    return {k.description: k for k in group.query(FooterKey)}
+
+
+def assert_quit_and_keys(app) -> None:
+    keys = fixed_keys(app)
+    assert list(keys) == ["quit", "keys", "palette"]
+    assert [k.key for k in keys.values()] == ["ctrl+q", "question_mark", "ctrl+k"]
+    width = app.screen.size.width
+    for key in keys.values():
+        assert key.region.width > 0
+        assert key.region.right <= width
+
+
+async def _at_step(pilot, app, workdir, step: int) -> None:
+    if step == 0:
+        return
+    scenario = workdir / "assets" / "ISO-table21"
+    if step == 1:
+        app.select_scenario(scenario)
+        await settle(pilot, app)
+        return
+    await to_configure(pilot, app, scenario, None)
+    if step == 2:
+        return
+    app.goto(3)
+    await pilot.pause()
+    if step == 3:
+        return
+    await pilot.press("ctrl+r")
+    await pilot.pause()
+    replay(app, result_event(events.STATUS_INCOMPLETE) if step == 5 else None)
+    await pilot.pause(0.2)  # let the Run step's 0.1 s redraw timer fire
+
+
+@pytest.mark.parametrize("step", range(6))
+def test_598_footer_shows_quit_and_keys_on_every_step(workdir, step):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, step)
+            await pilot.pause()
+            assert app.step == step
+            assert_quit_and_keys(app)
+
+    run(go())
+
+
+def test_598_footer_on_the_full_plan(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 5)
+            await pilot.press("v")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "PlanScreen"
+            assert_quit_and_keys(app)
+
+    run(go())
+
+
+@pytest.mark.parametrize("step", [4, 5])
+def test_598_at_80_columns_the_step_keys_give_way(workdir, step):
+    """Run and Results have the most step keys; the fixed group stays whole."""
+    from textual.widgets._footer import FooterKey
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _at_step(pilot, app, workdir, step)
+            await pilot.pause()
+            assert_quit_and_keys(app)
+            group = app.screen.query_one("#fixed-keys")
+            fixed = set(fixed_keys(app).values())
+            y = group.region.y
+            # The fixed group is drawn on top of the step keys, every cell of it.
+            for x in range(group.region.x, group.region.right):
+                top, _ = app.screen.get_widget_at(x, y)
+                assert top is group or top in fixed
+            # The step keys start at the left and are what gets cut.
+            first, _ = app.screen.get_widget_at(0, y)
+            assert isinstance(first, FooterKey) and first not in fixed
+            assert group.region.x > 40
+
+    run(go())
+
+
+def test_598_question_mark_opens_the_keys_from_a_text_box(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            assert app.focused is app.query_one("#ex-filter")
+            await pilot.press("question_mark")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "TextScreen"
+            assert "ctrl+q" in app.screen.text
+            assert app.query_one("#ex-filter").value == ""
+
+    run(go())
+
+
+def test_598_f1_works_outside_configure(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 1)
+            await pilot.press("f1")
+            await pilot.pause()
+            assert app.screen.title_text == "Keys"
+
+    run(go())
+
+
+def test_598_field_help_also_lists_the_keys(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 2)
+            assert app.focused is not None
+            await pilot.press("question_mark")
+            await pilot.pause()
+            assert "Flag: --" in app.screen.text
+            assert "ctrl+q            quit" in app.screen.text
+
+    run(go())
+
+
+def test_598_question_mark_types_in_the_find_box(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 2)
+            await pilot.press("ctrl+f")
+            await pilot.pause()
+            await pilot.press("question_mark")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "FindScreen"
+            assert app.screen.query_one("#find").value == "?"
+
+    run(go())
+
+
+def test_598_quit_during_a_run_still_asks(workdir):
+    runner = FakeRunner()
+
+    async def go():
+        app = make_app(workdir, runner)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _at_step(pilot, app, workdir, 4)
+            assert_quit_and_keys(app)
+            await pilot.press("ctrl+q")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "ConfirmScreen"
+            await pilot.press("n")
+            await pilot.pause()
+            assert runner.stopped == 0
+            assert app.is_running
+
+    run(go())
 
 
 # --- snapshots (SVGs also serve the docs) ---
@@ -1801,5 +1976,469 @@ def test_321_cancel_before_the_first_sample_is_not_sim_zero(workdir):
             text = text_of(app, "#res-outcome")
             assert "■ Cancelled before the first progress sample" in text
             assert "at sim 0.0 s" not in text
+
+    run(go())
+
+
+# --- #599: colour system notice --------------------------------------------------
+
+
+def _colour_notices(workdir) -> list[str]:
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            return [n.message for n in app._notifications if "colours" in n.message]
+
+    return run(go())
+
+
+def test_599_256_colours_say_theme_is_approximate(workdir, monkeypatch):
+    monkeypatch.delenv("COLORTERM")
+    notices = _colour_notices(workdir)
+    assert len(notices) == 1
+    assert "shows 256 colours" in notices[0]
+    assert "COLORTERM=truecolor" in notices[0]
+
+
+def test_599_truecolor_shows_no_notice(workdir):
+    assert _colour_notices(workdir) == []
+
+
+def test_599_no_color_shows_no_notice(workdir, monkeypatch):
+    monkeypatch.delenv("COLORTERM")
+    monkeypatch.setenv("NO_COLOR", "1")
+    assert _colour_notices(workdir) == []
+
+
+# --- ctrl+n / ctrl+p next / previous step; ctrl+k palette ---------------------------
+
+
+def test_ctrl_p_goes_back_one_step_and_names_it(workdir):
+    from textual.screen import ModalScreen
+    from textual.widgets._footer import FooterKey
+
+    scenario = workdir / "assets" / "iso_table21_coupled"
+
+    def back_label(app) -> str | None:
+        for key in app.screen.query(FooterKey):
+            if key.key == "ctrl+p":
+                return key.description
+        return None
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            assert back_label(app) is None
+            await pilot.press("ctrl+p")
+            await pilot.pause()
+            assert app.step == 0
+            assert not isinstance(app.screen, ModalScreen)
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            app.goto(3)
+            await pilot.pause()
+            for label, before in (("configure", 2), ("fds", 1), ("scenario", 0)):
+                assert back_label(app) == label
+                await pilot.press("ctrl+p")
+                await pilot.pause()
+                assert app.step == before
+
+    run(go())
+
+
+def test_ctrl_k_opens_the_command_palette(workdir):
+    from textual.command import CommandPalette
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.press("ctrl+k")
+            await pilot.pause()
+            assert isinstance(app.screen, CommandPalette)
+
+    run(go())
+
+
+def test_results_arrow_keys_replay_with_the_file_list_focused(workdir):
+    """←/→ scrub the plan on Results, not the focused file list."""
+    from textual.widgets._footer import FooterKey
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            replay(app, result_event(events.STATUS_SUCCESS))
+            app.render_results()
+            await pilot.pause()
+            assert app.step == 5
+            assert app.focused is app.query_one("#res-files")
+            labels = {k.description: k.key_display for k in app.screen.query(FooterKey)}
+            assert labels.get("replay") == "←/→"
+            assert labels.get("fullscreen") == "v"
+            await pilot.press("left")
+            await pilot.pause()
+            assert app.scrub_index == 0
+            await pilot.press("right")
+            await pilot.pause()
+            assert app.scrub_index == 1
+
+    run(go())
+
+
+# --- Enter on an output file: preview, copy path, open ------------------------------
+
+
+def test_file_preview_text_sqlite_and_folder(tmp_path):
+    import sqlite3
+
+    from pyfds_evac.tui.app import PREVIEW_LINES, file_preview
+
+    csv = tmp_path / "a.csv"
+    csv.write_text("".join(f"{i},x\n" for i in range(PREVIEW_LINES + 5)))
+    text = file_preview(str(csv))
+    assert text.splitlines()[0] == "0,x"
+    assert text.splitlines()[-1] == f"… first {PREVIEW_LINES} lines shown"
+
+    db = tmp_path / "run.sqlite"
+    with sqlite3.connect(db) as con:
+        con.execute("CREATE TABLE frames (t REAL)")
+        con.executemany("INSERT INTO frames VALUES (?)", [(1.0,), (2.0,)])
+    assert file_preview(str(db)) == "SQLite database, 1 tables:\n  frames: 2 rows"
+
+    folder = tmp_path / "bundle"
+    (folder / "sub").mkdir(parents=True)
+    (folder / "sub" / "b.txt").write_text("b")
+    assert file_preview(str(folder)) == "Folder, 1 files:\nsub/b.txt"
+
+
+def test_file_opener_is_off_over_ssh(monkeypatch):
+    from pyfds_evac.tui.app import file_opener
+
+    monkeypatch.setenv("SSH_CONNECTION", "1.2.3.4 5 6.7.8.9 22")
+    assert file_opener() is None
+
+
+def test_enter_on_an_output_file_opens_its_preview(workdir, tmp_path):
+    from pyfds_evac.tui.widgets import FileScreen
+
+    out = tmp_path / "exit_history.csv"
+    out.write_text("time,exit\n79.2,jps-exits_0\n")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            replay(app, result_event(events.STATUS_SUCCESS, files=[str(out)]))
+            app.render_results()
+            await pilot.pause()
+            assert app.focused is app.query_one("#res-files")
+            await pilot.press("enter")
+            await pilot.pause()
+            assert isinstance(app.screen, FileScreen)
+            assert app.screen.path == str(out)
+            assert "79.2,jps-exits_0" in app.screen.text
+            await pilot.press("escape")
+            await pilot.pause()
+            assert not isinstance(app.screen, FileScreen)
+
+    run(go())
+
+
+# --- Configure: up/down between options, Enter flips a switch, click shows why ----
+
+
+def test_configure_up_down_moves_between_options_and_enter_flips(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.focus_field("constant_extinction")
+            await pilot.pause()
+            assert app.focused is row(app, "constant_extinction").control
+            await pilot.press("down")
+            await pilot.pause()
+            # Without FDS output the option is inactive: the row takes focus.
+            assert app.focused in (
+                row(app, "smoke_update_interval"),
+                row(app, "smoke_update_interval").control,
+            )
+            await pilot.press("up")
+            await pilot.pause()
+            assert app.focused is row(app, "constant_extinction").control
+            app.focus_field("enable_rerouting")
+            await pilot.pause()
+            before = app.form.switch["enable_rerouting"]
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.switch["enable_rerouting"] is (not before)
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.switch["enable_rerouting"] is before
+
+    run(go())
+
+
+def test_click_on_an_inactive_switch_shows_why(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            hold = row(app, "allow_fds_horizon_hold")
+            assert hold.control.disabled
+            await pilot.click(hold.control)
+            await pilot.pause()
+            assert app.focused is hold
+            assert "inactive" in str(hold.query_one(".marker").render()) or hold.reason
+
+    run(go())
+
+
+def test_results_chart_label_spans_the_frames(workdir):
+    """The evacuated chart covers the plan frames (to 20 s), not the 300 s limit."""
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            replay(app, result_event(events.STATUS_SUCCESS))
+            app.render_results()
+            await pilot.pause()
+            text = text_of(app, "#res-exits")
+            assert "Evacuated over sim time, 0–20 s" in text
+            assert "0–300 s" not in text
+
+    run(go())
+
+
+# --- FDS step: browse folders from the path box (dired-like) --------------------
+
+
+def _fds_tree(root: Path) -> Path:
+    """root/{alpha/, beta/case/run.smv, .hidden/}."""
+    (root / "alpha").mkdir(parents=True)
+    (root / "beta" / "case").mkdir(parents=True)
+    (root / "beta" / "case" / "run.smv").write_text("")
+    (root / ".hidden").mkdir()
+    return root
+
+
+def test_browse_dirs_lists_matching_folders_and_marks_fds_output(tmp_path):
+    root = _fds_tree(tmp_path / "t")
+    folder, found = model.browse_dirs(f"{root}/")
+    assert folder == root
+    assert [(p.name, smv) for p, smv in found] == [("alpha", False), ("beta", False)]
+    _, found = model.browse_dirs(f"{root}/b")
+    assert [p.name for p, _ in found] == ["beta"]
+    _, found = model.browse_dirs(f"{root}/beta/")
+    assert [(p.name, smv) for p, smv in found] == [("case", True)]
+    _, found = model.browse_dirs(f"{root}/.")
+    assert [p.name for p, _ in found] == [".hidden"]
+
+
+def test_complete_dir_completes_like_a_shell(tmp_path):
+    root = _fds_tree(tmp_path / "t")
+    assert model.complete_dir(f"{root}/al") == f"{root}/alpha/"
+    assert model.complete_dir(f"{root}/zz") == f"{root}/zz"
+    (root / "alps").mkdir()
+    assert model.complete_dir(f"{root}/a") == f"{root}/alp"
+
+
+def test_fds_path_box_browses_and_enters_folders(workdir, tmp_path):
+    root = _fds_tree(tmp_path / "t")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.select_scenario(workdir / "assets" / "ISO-table21")
+            await settle(pilot, app)
+            app.goto(1)
+            await settle(pilot, app)
+            box = app.query_one("#fds-path")
+            box.focus()
+            box.value = f"{root}/b"
+            await pilot.press("tab")
+            await settle(pilot, app)
+            assert box.value == f"{root}/beta/"
+            await pilot.press("down")
+            await settle(pilot, app)
+            choices = app.query_one("#fds-choices")
+            assert app.focused is choices
+            ids = [
+                choices.get_option_at_index(i).id for i in range(choices.option_count)
+            ]
+            assert ids[:2] == ["up", "dir-0"]
+            choices.highlighted = 1
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.fds_dir == str((root / "beta" / "case").resolve())
+            assert app.step == 2
+
+    run(go())
+
+
+def test_browse_scenarios_marks_scenarios(tmp_path):
+    root = tmp_path / "s"
+    (root / "case").mkdir(parents=True)
+    (root / "case" / "config.json").write_text("{}")
+    (root / "case" / "geometry.wkt").write_text("")
+    (root / "other").mkdir()
+    (root / "run.zip").write_text("")
+    (root / "notes.txt").write_text("")
+    folder, found = model.browse_scenarios(f"{root}/")
+    assert folder == root
+    assert [(p.name, s) for p, s in found] == [
+        ("case", True),
+        ("other", False),
+        ("run.zip", True),
+    ]
+    assert model.complete_scenario(f"{root}/ru") == f"{root}/run.zip"
+
+
+def test_open_file_browses_to_a_scenario(workdir):
+    assets = workdir / "assets"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.query_one("#sc-tabs").active = "tab-open"
+            await settle(pilot, app)
+            listing = app.query_one("#open-list")
+            ids = [
+                listing.get_option_at_index(i).id for i in range(listing.option_count)
+            ]
+            names = [p.name for p, _ in app.open_found]
+            assert app.open_folder == workdir and "assets" in names
+            listing.focus()
+            listing.highlighted = ids.index(f"e-{names.index('assets')}")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.query_one("#open-path").value == f"{assets}{os.sep}"
+            names = [p.name for p, _ in app.open_found]
+            assert app.open_folder == assets and "ISO-table21" in names
+            i = names.index("ISO-table21")
+            assert app.open_found[i][1]  # marked as a scenario
+            ids = [
+                listing.get_option_at_index(k).id for k in range(listing.option_count)
+            ]
+            listing.highlighted = ids.index(f"e-{i}")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.scenario is not None
+            assert app.form.scenario.path == (assets / "ISO-table21").resolve()
+            assert app.step == 1
+
+    run(go())
+
+
+def test_match_rank_is_fzf_like():
+    assert model.match_rank("fic", "fic_vs_fed_speed") == 0
+    assert model.match_rank("vs", "fic_vs_fed_speed") == 1
+    assert model.match_rank("fvs", "fic_vs_fed_speed") == 2
+    assert model.match_rank("zz", "fic_vs_fed_speed") is None
+
+
+def test_typing_in_the_browse_list_narrows_it(workdir):
+    assets = workdir / "assets"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.query_one("#sc-tabs").active = "tab-open"
+            box = app.query_one("#open-path")
+            box.value = f"{assets}{os.sep}"
+            await settle(pilot, app)
+            listing = app.query_one("#open-list")
+            listing.focus()
+            before = len(app.open_found)
+            for key in "iso21":
+                await pilot.press(key)
+            await settle(pilot, app)
+            assert app.focused is listing
+            assert box.value == f"{assets}{os.sep}iso21"
+            names = [p.name for p, _ in app.open_found]
+            assert names and len(names) < before
+            assert all(model.match_rank("iso21", n) is not None for n in names)
+            # Enter picks the best match, not "..".
+            highlighted = listing.get_option_at_index(listing.highlighted).id
+            assert highlighted == "e-0"
+            await pilot.press("backspace")
+            await settle(pilot, app)
+            assert box.value == f"{assets}{os.sep}iso2"
+
+    run(go())
+
+
+def test_tab_in_the_fds_list_completes_the_path(workdir, tmp_path):
+    root = _fds_tree(tmp_path / "t")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.select_scenario(workdir / "assets" / "ISO-table21")
+            await settle(pilot, app)
+            assert app.step == 1
+            choices = app.query_one("#fds-choices")
+            assert app.focused is choices  # the step opens on the list
+            box = app.query_one("#fds-path")
+            box.value = f"{root}/b"
+            await settle(pilot, app)
+            await pilot.press("tab")
+            await settle(pilot, app)
+            assert box.value == f"{root}/beta/"
+            assert app.focused is choices
+
+    run(go())
+
+
+def test_review_offers_the_way_back_to_a_running_run(workdir):
+    from textual.widgets._footer import FooterKey
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _started(pilot, app, workdir)
+            app.goto(3)
+            await pilot.pause()
+            labels = [k.description for k in app.screen.query(FooterKey)]
+            assert "back to run" in labels
+            await pilot.press("ctrl+n")
+            await pilot.pause()
+            assert app.step == 4
+
+    run(go())
+
+
+def test_enter_after_tab_chooses_an_fds_folder_with_subfolders(workdir, tmp_path):
+    """A trailing / (what Tab leaves) keeps "Use this folder" highlighted."""
+    root = _fds_tree(tmp_path / "t")
+    case = root / "beta" / "case"
+    (case / "sub").mkdir()
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.select_scenario(workdir / "assets" / "ISO-table21")
+            await settle(pilot, app)
+            box = app.query_one("#fds-path")
+            box.value = f"{case}{os.sep}"
+            await settle(pilot, app)
+            choices = app.query_one("#fds-choices")
+            choices.focus()
+            assert choices.get_option_at_index(choices.highlighted).id == "use"
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.fds_dir == str(case.resolve())
 
     run(go())

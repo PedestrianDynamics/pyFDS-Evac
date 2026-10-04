@@ -3,18 +3,29 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from collections.abc import Callable
 from typing import Any, cast
 
-from textual import on
+from textual import events, on
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, HorizontalGroup, Vertical, VerticalScroll
 from textual.content import Content
 from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widget import Widget
-from textual.widgets import Input, Label, OptionList, Select, Static, Switch, TextArea
+from textual.widgets import (
+    Footer,
+    Input,
+    Label,
+    OptionList,
+    Select,
+    Static,
+    Switch,
+    TextArea,
+)
+from textual.widgets._footer import FooterKey
 from textual.widgets.option_list import Option
 
 from pyfds_evac.config.parameters import Parameter, parameter
@@ -89,8 +100,12 @@ class FieldRow(Vertical):
     FieldRow:focus-within .help, FieldRow:focus .help { display: block; }
     FieldRow.-inactive .label, FieldRow.-inactive .marker { text-style: dim; }
     FieldRow.-invalid .marker { color: $error; }
-    FieldRow:focus { background: $boost; }
-    FieldRow:focus .label { text-style: reverse; }
+    /* As the command palette: a hover band, and the cursor band on top. */
+    FieldRow:hover { background: $block-hover-background; }
+    FieldRow:focus, FieldRow:focus-within {
+        background: $block-cursor-blurred-background;
+    }
+    FieldRow:focus .label, FieldRow:focus-within .label { text-style: bold; }
     """
 
     BINDINGS = [Binding("enter", "enable", "go to the setting", show=False)]
@@ -134,7 +149,7 @@ class FieldRow(Vertical):
                 compact=True,
             )
         placeholder = "not set" if p.default is None else ""
-        return Input(
+        return TextBox(
             self.form.text[p.dest], placeholder=placeholder, id=ident, compact=True
         )
 
@@ -151,6 +166,11 @@ class FieldRow(Vertical):
             control.value = self.form.text[dest] or Select.NULL
         elif isinstance(control, Input):
             control.value = self.form.text[dest]
+
+    def on_click(self) -> None:
+        """A click on an inactive row focuses it, so its reason shows."""
+        if self.reason is not None:
+            self.focus()
 
     def action_enable(self) -> None:
         """Enter on a disabled row: go to the control that enables it."""
@@ -236,6 +256,83 @@ class FieldRow(Vertical):
         return m("$h  [dim]$f$t · F1 more[/]", h=text, f=flag, t=tail)
 
 
+class TextBox(Input):
+    """An Input that leaves ``?`` to the app, so the footer's ``? keys`` holds."""
+
+    def check_consume_key(self, key: str, character: str | None) -> bool:
+        return character != "?" and super().check_consume_key(key, character)
+
+
+class PathBox(TextBox):
+    """A folder path box: Tab completes the name, Down goes to the list below."""
+
+    BINDINGS = [
+        Binding("tab", "app.complete_path", "complete", show=False),
+        Binding("down", "app.focus_choices", "list", show=False),
+    ]
+
+
+class BrowseList(OptionList):
+    """The list a path box browses: typing here goes to the box, as in fzf.
+
+    The list keeps the focus, so Up/Down/Enter still pick an entry while the
+    typed text narrows the list; Tab completes the box's text.
+    """
+
+    BINDINGS = [Binding("tab", "app.complete_path", "complete", show=False)]
+
+    def __init__(self, box_id: str, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.box_id = box_id
+
+    def on_key(self, event: events.Key) -> None:
+        box = self.screen.query_one(self.box_id, Input)
+        if event.key == "backspace":
+            box.value = box.value[:-1]
+        elif event.is_printable and event.character:
+            box.value += event.character
+        else:
+            return
+        box.cursor_position = len(box.value)
+        event.stop()
+        event.prevent_default()
+
+
+# The keys every footer shows on the right, whatever the step (#598).
+FIXED_KEYS = (("ctrl+q", "quit", "quit"), ("question_mark", "field_help", "keys"))
+
+
+class EvacFooter(Footer):
+    """The footer: the step's keys, then a fixed group ``^q quit ? keys ^k palette``.
+
+    The group is docked right, so on a narrow terminal the step keys are
+    cut first and the way out and the key list stay visible.
+    """
+
+    DEFAULT_CSS = """
+    EvacFooter { overflow-x: hidden; }
+    EvacFooter #fixed-keys {
+        dock: right;
+        width: auto;
+        border-left: vkey $foreground 20%;
+    }
+    EvacFooter #fixed-keys FooterKey:last-child { padding-right: 1; }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(show_command_palette=False)
+
+    def compose(self) -> ComposeResult:
+        yield from super().compose()
+        palette = (self.app.COMMAND_PALETTE_BINDING, "command_palette", "palette")
+        with HorizontalGroup(id="fixed-keys"):
+            for key, action, label in (*FIXED_KEYS, palette):
+                display = self.app.get_key_display(Binding(key, action, label))
+                yield FooterKey(key, display, label, action).data_bind(
+                    compact=Footer.compact
+                )
+
+
 class ConfirmScreen(ModalScreen[bool]):
     """A yes/no question; *yes* and *no* name the keys and actions."""
 
@@ -303,6 +400,45 @@ class TextScreen(ModalScreen[None]):
         self.app.notify(
             "Sent to clipboard (OSC 52). If nothing was copied, select the text."
         )
+
+
+class FileScreen(TextScreen):
+    """An output file: its path, a preview, and keys to copy the path or open it."""
+
+    BINDINGS = [
+        Binding("escape", "close", "close"),
+        Binding("y", "copy_path", "copy path"),
+        Binding("o", "open", "open"),
+    ]
+
+    def __init__(self, path: str, preview: str, opener: list[str] | None) -> None:
+        keys = (
+            "y copy path · o open · Esc close" if opener else "y copy path · Esc close"
+        )
+        super().__init__(path, preview, keys)
+        self.path = path
+        self.opener = opener
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "open":
+            return self.opener is not None
+        return True
+
+    def action_copy_path(self) -> None:
+        self.app.copy_to_clipboard(self.path)
+        self.app.notify(f"Sent to clipboard (OSC 52): {self.path}", markup=False)
+
+    def action_open(self) -> None:
+        if self.opener is None:
+            return
+        subprocess.Popen(
+            [*self.opener, self.path],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        self.app.notify(f"Opening {self.path}", markup=False)
 
 
 class FindScreen(ModalScreen[str | None]):

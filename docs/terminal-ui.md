@@ -87,7 +87,7 @@ order:
 
 An invalid `PYFDS_EVAC_TUI_THEME` stops the start with
 `PYFDS_EVAC_TUI_THEME='x' is not a theme; choose from evac-dark, solarized-light`.
-To switch while the terminal UI runs, open the command palette (`ctrl+p`) and
+To switch while the terminal UI runs, open the command palette (`ctrl+k`) and
 choose "Theme: evac dark" or "Theme: Solarized Light". The choice is
 remembered.
 {{< /details >}}
@@ -163,7 +163,12 @@ Three tabs choose the scenario:
   its `config_*.json` variants, and a filter box. Each row says "FDS output
   found" or "deck only".
 - **Open file** takes a `.json`, a `.zip`, or a folder with `config.json`.
-  Type the path or pick it in a directory tree.
+  It browses as the FDS step does, starting in the folder you started the
+  terminal UI in: the list shows the folders and the `.json` and `.zip`
+  files, marks scenarios as **scenario** (a `.json` or `.zip` file, or a
+  folder with a JSON and a WKT file), and offers `..` to go up. `Enter` or a
+  click on a scenario opens it; on any other folder it goes into it. Typing
+  a path filters the list; `Tab` completes and `↓` goes to the list.
 
 The info line shows the number of agents and exits, the maximum time and the
 seed.
@@ -177,6 +182,16 @@ seed.
 - The step suggests the folders with a `.smv` file up to 2 levels below the
   scenario and below the start folder. You can also type a path, or choose
   **No FDS (clear air)**.
+- Typing a path browses folders, as Emacs `dired` does. The list shows the
+  subfolders of the typed folder that match the typed name as `fzf` does
+  (`fvs` finds `fic_vs_fed_speed`; names that start with it come first),
+  marks those
+  with a `.smv` file as **FDS output**, and offers `..` to go up. `Enter` (or
+  a click) on an FDS output folder chooses it; on any other folder it goes
+  into it. `Tab` completes the name as far as it is unique, as a shell does;
+  `↓` goes to the list; `~` is the home folder. Hidden folders show when the
+  typed name starts with a dot. Typing while the list has the focus goes to
+  the path box, so the list narrows and `↑`/`↓`/`Enter` still pick.
 - Choosing a folder reads its inventory in a separate process. The step shows
   ✓ or ✗ for extinction, CO, CO2, O2, temperature and integrated intensity,
   and the end time of the FDS output against the scenario's time limit.
@@ -204,9 +219,10 @@ signs, ASET/RSET tools, and Outputs.
   [Outputs and folders](#outputs-and-folders).
 - An option that has no effect with the current settings is greyed out, with
   the reason. `Enter` on it goes to the setting that enables it.
-- `F1` or `?` shows the option's help, its flag, its default, its Python API
-  default, its FDS+Evac counterpart, its unit and a link to its docs page.
-- `ctrl+f` finds a setting. The palette (`ctrl+p`) has "Reset all settings",
+- `?` or `F1` shows the option's help, its flag, its default, its Python API
+  default, its FDS+Evac counterpart, its unit and a link to its docs page,
+  followed by the list of keys.
+- `ctrl+f` finds a setting. The palette (`ctrl+k`) has "Reset all settings",
   which asks first, and "Toggle advanced in all sections".
 - The summary line at the bottom shows the review level, the active models,
   and "✓ valid" or the number of errors.
@@ -236,7 +252,7 @@ At the bottom is the `pyfds-evac` command for these settings.
 ### 5 Run
 
 {{< terminal-figure src="images/tui/tui-run.svg"
-  alt="The Run step at 120 by 35 characters during the fire run. The phase line reads Running, with the phases initialising, FDS inspection, visibility, running, writing outputs, done. The status line reads sim 56.0 of 300 s, wall 0:02, evacuated 12 of 200 planned (6 %), incapacitated 0, not spawned 171; one warning. On the left, the plan view of the T-junction: walls, the exits A_left with 10 and B_right with 2 evacuated, three signs as diamonds, agents as dots. On the right, the Evacuated and Simulated time bars and the evacuated sparkline. Below the plan, the time scrubber, the smoke legend with bins 0.1, 0.5, 1, 3 and 10 per metre, FDS slice z = 2.0 m, frame t = 56 s, the glyph legend, and the note The run stops if this terminal closes; use tmux or screen for long runs. The run log fills the bottom."
+  alt="The Run step at 120 by 35 characters during the fire run. The phase line reads Running, with the phases initialising, FDS inspection, visibility, running, writing outputs, done. The status line reads sim 56.0 of 300 s, wall 0:03, evacuated 12 of 200 planned (6 %), incapacitated 0, not spawned 171; one warning. On the left, the plan view of the T-junction: walls, the exits A_left with 10 and B_right with 2 evacuated, three signs as diamonds, agents as dots. On the right, the Evacuated and Simulated time bars and the evacuated sparkline. Below the plan, the time scrubber, the smoke legend with bins 0.1, 0.5, 1, 3 and 10 per metre, FDS slice z = 2.0 m, frame t = 56 s, the glyph legend, and the note The run stops if this terminal closes; use tmux or screen for long runs. The run log fills the bottom."
   caption="The Run step about 56 s into the `fire_2MW_PVC` run (seed 42), wide layout." >}}
 
 The run happens in a separate process. You can move between steps; the run
@@ -260,7 +276,7 @@ in progress (run #*N*)".
 ### 6 Results
 
 {{< terminal-figure src="images/tui/tui-results.svg"
-  alt="The Results step at 120 by 35 characters after the fire run. The first line reads Incomplete: time limit reached, 80 agents inside, 50 not spawned, exit 2. Then: Simulated time (limit reached) 300.0 s, Evacuated 70 of 150 that entered, Incapacitated 0; a bar for 70 of 150; the summary line; run 1, t_junction, seed 42, wall 0:11. On the left, the plan replayed at 60 s with its scrubber. On the right, one warning, the per-exit counts at the end of the run, exit_A_left 10 and exit_B_right 60, and the evacuated-over-time sparkline. At the bottom, the output files with their sizes: bundle, the smoke, FED, route, route-cost and exit history CSVs, t_junction.sqlite, t_junction.manifest.json and child.log."
+  alt="The Results step at 120 by 35 characters after the fire run. The first line reads Incomplete: time limit reached, 80 agents inside, 50 not spawned, exit 2. Then: Simulated time (limit reached) 300.0 s, Evacuated 70 of 150 that entered, Incapacitated 0; a bar for 70 of 150; the summary line; run 1, t_junction, seed 42, wall 0:13. On the left, the plan replayed at 60 s with its scrubber. On the right, one warning, the per-exit counts at the end of the run, exit_A_left 10 and exit_B_right 60, and the evacuated-over-time sparkline. At the bottom, the output files with their sizes: bundle, the smoke, FED, route, route-cost and exit history CSVs, t_junction.sqlite, t_junction.manifest.json and child.log."
   caption="Results of the `fire_2MW_PVC` run, with the plan replayed at 60 s." >}}
 
 The outcome comes first, in the same words as the Web GUI:
@@ -304,29 +320,39 @@ output folder is included. The idea is the same as in the Web GUI; see
 
 | Where | Key | Action |
 |---|---|---|
-| everywhere | `ctrl+p` | command palette: themes, go to step, Inspect FDS folder, Copy command, Save command and script, Show Python, Reset all settings, Toggle advanced, Open docs page |
+| everywhere | `ctrl+k` | command palette: themes, go to step, Inspect FDS folder, Copy command, Save command and script, Show Python, Reset all settings, Toggle advanced, Open docs page |
 | everywhere | `ctrl+q` | quit; during a run it asks "A run is in progress. Quit and cancel it?" |
-| everywhere | `Esc` | back one step, keeping all values. From Run it goes to Review and the run continues; from Results it goes to Configure |
-| everywhere | `?` | help for the focused field, else the list of keys |
+| FDS to Results | `ctrl+p` | previous step, keeping all values; the footer names it. From Run it goes to Review and the run continues; from Results it goes to Configure. `Esc` does the same, but tmux's `escape-time` can delay it |
+| everywhere | `?` or `F1` | the list of keys; on a Configure field, the field's help first. `?` is never typed into a text box |
 | Scenario, FDS, Configure | `ctrl+n` | next step (from Configure: to Review) |
 | Configure, Review, Results | `ctrl+r` | run. With warnings, outside Review, it asks "r Run anyway / Esc Review"; on Review it runs at once |
-| Configure | `F1` | help for the focused field |
+| Configure | `↑` / `↓` | previous / next option, also out of a text box or a closed dropdown; `Enter` flips a switch, opens a dropdown or a section, and on an inactive option goes to the setting that enables it |
 | Configure | `ctrl+f` | find a setting |
 | Review | `c` | copy the command to the clipboard (OSC 52) |
 | Review | `s` | write `command.sh` and `run.py` into the planned run folder, before any run |
 | Review | `p` | show the equivalent Python of the current settings |
+| Review, during a run | `ctrl+n` | back to the Run step |
 | Run | `x` or `ctrl+c` | cancel, after a confirmation |
 | Run | `v` / `w` / `l` | full-screen plan / warnings / log |
 | Results | `c` | open "Command and Python for run #*N*", built from the run's settings; `c` in the dialog copies |
 | Results | `s` | write `command.sh` and `run.py` of the run into the run folder, replacing a save from Review |
+| Results | `Enter` | preview the highlighted output file: the first 40 lines of a text file, the tables and row counts of a SQLite file, the files of a folder. In the dialog `y` copies the path and `o` opens the file in the system app (macOS `open`, Linux `xdg-open`; not over SSH) |
 | Results | `y` | copy the path of the highlighted output file |
 | Results | `e` / `n` / `t` / `w` | change settings (Configure) / new scenario / traceback or end of `child.log` / warnings |
 | Results, full plan | `←` / `→`, `shift+←` / `shift+→` | replay the plan frames by 1 s / 10 s, after the run has ended |
 | Run, Results | `v` | full-screen plan (`Esc` back) |
 
 The keys avoid common terminal conflicts: there is no `ctrl+s` (XOFF) and no
-`ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes). `?` and the palette
-duplicate `F1` on Configure.
+`ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes). `ctrl+n` and `ctrl+p`
+are next and previous, as in Emacs and tmux. The palette is on `ctrl+k`,
+not Textual's default `ctrl+p`, so in a text box `ctrl+k` does not delete to
+the end of the line.
+
+The footer shows the keys of the current step on the left and, on every
+step and in the full-screen plan, a fixed group on the right:
+`^q quit  ? keys  ^k palette`. On a narrow terminal the step keys are cut
+first; the fixed group stays visible at 80 columns. The labels are words, so
+they read the same with `NO_COLOR` or `TERM=dumb`.
 
 ## Outputs and folders
 
@@ -500,6 +526,18 @@ only at the end of a run, so a closed terminal or a dropped SSH session leaves
   reliable ways are the command shown on Review and the files that `s` writes.
 - **Over SSH** (`SSH_CONNECTION` set), the wall-time rule for plan frames
   drops to 2 per second. The screen still redraws up to 10 times per second.
+- **Colours.** The themes need a truecolor terminal. With 256 or 16 colours,
+  each theme colour is rounded to the nearest one the terminal has, so
+  `solarized-light` turns yellow, grey and pink. The terminal UI then says at
+  start "This terminal shows 256 colours, so the theme colours are
+  approximate." It decides from `COLORTERM` and `TERM`, as
+  [Rich](https://rich.readthedocs.io/en/stable/console.html#color-systems)
+  does. To get truecolor:
+  - set `COLORTERM=truecolor` when the terminal supports it. SSH does not
+    forward `COLORTERM`, so set it on the server, for example in `~/.bashrc`;
+  - in `tmux` 3.2 or later, add `set -g default-terminal "tmux-256color"` and
+    `set -as terminal-features ",*:RGB"` to `~/.tmux.conf`, then restart the
+    tmux server (`tmux kill-server`).
 - **`NO_COLOR`** (any non-empty value) gives Textual's monochrome rendering.
   The plan then draws the smoke bins with the shade glyphs `░ ▒ ▓ █`, and
   agents and states keep their glyphs. `NO_COLOR` is the only way to get the

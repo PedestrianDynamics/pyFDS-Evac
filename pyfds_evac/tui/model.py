@@ -21,7 +21,7 @@ import functools
 import json
 import os
 import zipfile
-from collections.abc import Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from types import MappingProxyType
@@ -325,6 +325,119 @@ def find_fds_dirs(
                 if entry.is_dir(follow_symlinks=False):
                     queue.append((Path(entry.path), depth + 1))
     return found
+
+
+BROWSE_LIMIT = 200
+
+
+def has_smv(path: Path) -> bool:
+    """Whether *path* is a folder that holds a ``.smv`` file."""
+    try:
+        return any(e.is_file() and e.name.endswith(".smv") for e in os.scandir(path))
+    except OSError:
+        return False
+
+
+def _browse(
+    text: str, keep: Callable[[os.DirEntry[str]], bool | None]
+) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """The folder that *text* points into and its entries that *keep* accepts.
+
+    ``"/a/b/"`` lists all of ``/a/b``; ``"/a/b/fd"`` the entries of ``/a/b``
+    that match ``fd`` as fzf does (case-insensitive): names that start with
+    it first, then names that contain it, then names that hold its letters
+    in order. Hidden entries show only when the typed name starts with a
+    dot. *keep* returns None to drop an entry, else the flag stored with it.
+    At most :data:`BROWSE_LIMIT`.
+    """
+    raw = os.path.expanduser(text.strip())
+    if not raw:
+        return None, []
+    # Split the text itself: Path() would turn "a/." into "a".
+    head, prefix = os.path.split(raw)
+    folder = Path(head or ".")
+    try:
+        entries = sorted(os.scandir(folder), key=lambda e: e.name.lower())
+    except OSError:
+        return folder, []
+    ranked: list[tuple[int, str, Path, bool]] = []
+    for entry in entries:
+        name = entry.name
+        if name.startswith(".") and not prefix.startswith("."):
+            continue
+        rank = match_rank(prefix, name)
+        if rank is None:
+            continue
+        with contextlib.suppress(OSError):
+            flag = keep(entry)
+            if flag is not None:
+                ranked.append((rank, name.lower(), Path(entry.path), flag))
+    ranked.sort(key=lambda r: (r[0], r[1]))
+    return folder, [(path, flag) for _r, _n, path, flag in ranked[:BROWSE_LIMIT]]
+
+
+def match_rank(typed: str, name: str) -> int | None:
+    """0 if *name* starts with *typed*, 1 if it contains it, 2 if it holds its
+    letters in order, else None; case-insensitive (fzf-like)."""
+    typed, name = typed.lower(), name.lower()
+    if name.startswith(typed):
+        return 0
+    if typed in name:
+        return 1
+    letters = iter(name)
+    return 2 if all(c in letters for c in typed) else None
+
+
+def browse_dirs(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """The subfolders *text* points at, each with whether it holds a ``.smv``."""
+    return _browse(text, lambda e: has_smv(Path(e.path)) if e.is_dir() else None)
+
+
+def _scenario_entry(entry: os.DirEntry[str]) -> bool | None:
+    if entry.is_dir():
+        jsons, wkts = _json_and_wkt(Path(entry.path))
+        return bool(jsons and wkts)
+    if Path(entry.name).suffix.lower() in (".json", ".zip"):
+        return True
+    return None
+
+
+def browse_scenarios(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """Folders and ``.json``/``.zip`` files *text* points at, each with
+    whether it is a scenario (a file, or a folder with a JSON and a WKT)."""
+    return _browse(text, _scenario_entry)
+
+
+def _complete(text: str, browsed: tuple[Path | None, list[tuple[Path, bool]]]) -> str:
+    folder, found = browsed
+    if folder is None or not found:
+        return text
+    typed = os.path.split(os.path.expanduser(text.strip()))[1]
+    # Complete over the names that start with the text, as a shell does; a
+    # single fuzzy match also completes.
+    starting = [e for e in found if match_rank(typed, e[0].name) == 0]
+    found = starting or found
+    if len(found) == 1:
+        path = found[0][0]
+        return str(path) + os.sep if path.is_dir() else str(path)
+    common = os.path.commonprefix([p.name for p, _flag in found])
+    if len(common) <= len(typed):
+        return text
+    return str(folder / common)
+
+
+def complete_dir(text: str) -> str:
+    """*text* completed as far as its matching folder names agree, as a shell does.
+
+    One match completes to ``<folder>/``; several to their common prefix;
+    none leaves *text* unchanged.
+    """
+    return _complete(text, browse_dirs(text))
+
+
+def complete_scenario(text: str) -> str:
+    """*text* completed over folders and ``.json``/``.zip`` files."""
+    return _complete(text, browse_scenarios(text))
 
 
 def check_fds_dir(text: str) -> tuple[str | None, str]:

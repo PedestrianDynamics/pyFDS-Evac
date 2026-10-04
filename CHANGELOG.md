@@ -16,7 +16,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   separate process with a live plan view of walls, exits, agents and
   smoke, and inspect the outcome and output files. Runs write to the GUI's
   folder layout under `./results`; the same options give the same files as
-  `pyfds-evac` (#485).
+  `pyfds-evac` (#485). Keys and navigation:
+  - every footer shows `^q quit  ? keys  ^k palette`; `?` and `F1` open the
+    key list on every step (#598, #583);
+  - `ctrl+n` / `ctrl+p` go to the next / previous step, and the footer names
+    the target; `Esc` also goes back; the command palette is on `ctrl+k`;
+  - on Configure, `↑`/`↓` move between options and the focused option's row
+    is highlighted as in the palette; a click on an inactive option shows
+    why it is inactive;
+  - the FDS folder box and the Open file tab browse folders as Emacs `dired`
+    does, with fzf-like filtering, `Tab` completion and `..`; FDS output
+    folders and scenarios are marked;
+  - on Results, `←`/`→` replay the plan frames, `v` opens it full screen, and
+    `Enter` on an output file previews it (text lines, SQLite tables, folder
+    contents) with `y` copy path and `o` open (not over SSH);
+  - in a terminal with 256 or 16 colours, a notice says the theme colours
+    are approximate and how to get truecolor (#599).
 - `pyfds_evac.config.frontend`: the run folders and outcome wording the GUI
   and the TUI share (provisional) (#485).
 - `pyfds_evac.config`: one model of the run options (name, type, unit,

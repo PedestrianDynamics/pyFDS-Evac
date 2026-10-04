@@ -16,6 +16,9 @@ import asyncio
 import contextlib
 import contextvars
 import os
+import shutil
+import sqlite3
+import sys
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -27,15 +30,14 @@ from textual.app import App, ComposeResult, SystemCommand
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.content import Content
-from textual.screen import Screen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import (
     Collapsible,
     ContentSwitcher,
-    DirectoryTree,
-    Footer,
     Input,
     OptionList,
     RichLog,
+    Select,
     Sparkline,
     Static,
     TabbedContent,
@@ -60,11 +62,16 @@ from .runner import (
 from .theme import EVAC_DARK, THEME_NAMES
 from .widgets import (
     STEP_TITLES,
+    BrowseList,
     ConfirmScreen,
+    EvacFooter,
     FieldRow,
+    FileScreen,
     FindScreen,
+    PathBox,
     ScrollText,
     StepBar,
+    TextBox,
     TextScreen,
     TooSmall,
     m,
@@ -77,6 +84,8 @@ RECENT_GLYPHS = {
     "cancelled": "■ ",
 }
 STEPS = ("scenario", "fds", "configure", "review", "run", "results")
+# Rich colour systems below truecolor, with the number of colours they show.
+COLOR_SYSTEM_COLOURS = {"256": "256", "standard": "16", "windows": "16"}
 MIN_SIZE = (80, 24)
 SECTION_LEAD = {GROUP_HEAT: "enable_heat_fed"}
 PHASE_WORDS = {
@@ -176,13 +185,15 @@ class ScenarioStep(Step):
             with TabPane("Recent", id="tab-recent"):
                 yield OptionList(id="recent")
             with TabPane("Examples", id="tab-examples"):
-                yield Input(placeholder="type to filter", id="ex-filter")
+                yield TextBox(placeholder="type to filter", id="ex-filter")
                 yield OptionList(id="examples")
             with TabPane("Open file", id="tab-open"):
-                yield Input(
-                    placeholder="path to a .json, .zip or folder", id="open-path"
+                yield PathBox(
+                    placeholder="path to a .json, .zip or folder (Tab completes, "
+                    "~ is home)",
+                    id="open-path",
                 )
-                yield DirectoryTree(str(self.tui.cwd), id="open-tree")
+                yield BrowseList("#open-path", id="open-list")
         yield Static(id="sc-info")
         yield Static(id="sc-error")
 
@@ -193,12 +204,18 @@ class ScenarioStep(Step):
 
 
 class FdsStep(Step):
-    BINDINGS = [Binding("ctrl+n", "app.next_step", "next")]
+    BINDINGS = [
+        Binding("ctrl+n", "app.next_step", "next"),
+        Binding("ctrl+p", "app.step_back", "scenario"),
+    ]
 
     def compose(self) -> ComposeResult:
         yield Static(m("[b]FDS output folder[/]"))
-        yield Input(placeholder="folder that holds the .smv file", id="fds-path")
-        yield OptionList(id="fds-choices")
+        yield PathBox(
+            placeholder="folder that holds the .smv file (Tab completes, ~ is home)",
+            id="fds-path",
+        )
+        yield BrowseList("#fds-path", id="fds-choices")
         yield Static(id="fds-panel")
 
     def enter(self) -> None:
@@ -208,8 +225,14 @@ class FdsStep(Step):
 class ConfigureStep(Step):
     BINDINGS = [
         Binding("ctrl+n", "app.next_step", "review"),
+        Binding("ctrl+p", "app.step_back", "fds"),
         Binding("ctrl+f", "app.find", "find"),
-        Binding("f1", "app.field_help", "help"),
+        # Up/down move between the options, also out of a text box or a
+        # closed dropdown (which would otherwise open on them).
+        Binding("down", "app.move_field(1)", "next option", show=False, priority=True),
+        Binding(
+            "up", "app.move_field(-1)", "previous option", show=False, priority=True
+        ),
     ]
 
     def compose(self) -> ComposeResult:
@@ -240,7 +263,7 @@ class ConfigureStep(Step):
     def _run_rows(self) -> Iterable[Any]:
         with Horizontal(classes="plain-row"):
             yield Static("Output folder", classes="label")
-            yield Input(
+            yield TextBox(
                 self.tui.form.output_folder,
                 placeholder="derived (results/<scenario>/…)",
                 id="output-folder",
@@ -256,6 +279,9 @@ class ConfigureStep(Step):
 class ReviewStep(Step):
     BINDINGS = [
         Binding("ctrl+r", "app.run", "run"),
+        Binding("ctrl+p", "app.step_back", "configure"),
+        # Shown only while a run is in progress: the way back to it.
+        Binding("ctrl+n", "app.to_run", "back to run"),
         Binding("c", "app.copy_command", "copy"),
         Binding("s", "app.save", "save"),
         Binding("p", "app.show_python", "python"),
@@ -276,8 +302,9 @@ class ReviewStep(Step):
 class RunStep(Step):
     BINDINGS = [
         Binding("x", "app.cancel", "cancel"),
+        Binding("ctrl+p", "app.step_back", "review"),
         Binding("ctrl+c", "app.cancel", "cancel", show=False, priority=True),
-        Binding("v", "app.plan", "plan"),
+        Binding("v", "app.plan", "fullscreen"),
         Binding("w", "app.warnings", "warnings"),
         Binding("l", "app.log", "log"),
     ]
@@ -302,17 +329,20 @@ class RunStep(Step):
 class ResultsStep(Step):
     BINDINGS = [
         Binding("ctrl+r", "app.run", "run again"),
+        Binding("ctrl+p", "app.step_back", "configure"),
+        # One footer entry for the four replay keys. Priority, so the focused
+        # file list does not take ←/→ for scrolling.
+        Binding("left", "app.scrub(-1)", "replay", key_display="←/→", priority=True),
         Binding("e", "app.change_settings", "change"),
         Binding("n", "app.new_scenario", "new"),
         Binding("c", "app.run_command", "command"),
         Binding("s", "app.save_run", "save"),
         Binding("w", "app.warnings", "warnings", show=False),
         Binding("t", "app.traceback", "traceback", show=False),
-        Binding("v", "app.plan", "plan"),
-        Binding("left", "app.scrub(-1)", "−1 s", show=False),
-        Binding("right", "app.scrub(1)", "+1 s", show=False),
-        Binding("shift+left", "app.scrub(-10)", "−10 s", show=False),
-        Binding("shift+right", "app.scrub(10)", "+10 s", show=False),
+        Binding("v", "app.plan", "fullscreen"),
+        Binding("right", "app.scrub(1)", "+1 s", show=False, priority=True),
+        Binding("shift+left", "app.scrub(-10)", "−10 s", show=False, priority=True),
+        Binding("shift+right", "app.scrub(10)", "+10 s", show=False, priority=True),
         Binding("y", "app.copy_path", "copy path", show=False),
     ]
 
@@ -350,7 +380,7 @@ class PlanScreen(Screen[None]):
         yield PlanView(id="full-planview")
         yield Static(id="full-scrubber")
         yield Static(id="full-legend")
-        yield Footer()
+        yield EvacFooter()
 
     def on_mount(self) -> None:
         cast("EvacTui", self.app).refresh_plans()
@@ -367,6 +397,8 @@ class EvacTui(App[None]):
 
     TITLE = "pyFDS-Evac"
     ENABLE_COMMAND_PALETTE = True
+    # ``ctrl+p`` is "previous step", paired with ``ctrl+n``.
+    COMMAND_PALETTE_BINDING = "ctrl+k"
     CSS = """
     Screen { layout: vertical; }
     #stepbar { height: 1; background: $panel; padding: 0 1; }
@@ -377,7 +409,7 @@ class EvacTui(App[None]):
     #sc-info, #sc-error { height: auto; padding: 0 1; }
     #sc-error { color: $error; }
     #examples, #recent { height: 1fr; }
-    #open-tree { height: 1fr; }
+    #open-list { height: 1fr; }
     #fds-choices { height: auto; max-height: 10; }
     #fds-panel { height: auto; padding: 0 1; }
     .plain-row { height: auto; padding: 0 0 0 1; }
@@ -419,8 +451,13 @@ class EvacTui(App[None]):
     BINDINGS = [
         Binding("ctrl+q", "quit", "quit", priority=True, show=False),
         Binding("ctrl+r", "run", "run", show=False),
-        Binding("escape", "step_back", "back"),
-        Binding("question_mark", "field_help", "help", show=False),
+        # ``ctrl+p`` on each step is the advertised way back; Esc stays as a
+        # fallback (tmux's escape-time can delay it).
+        Binding("escape", "step_back", "back", show=False),
+        # Priority, so ``?`` opens the keys also from a text box (#598);
+        # the footer shows both quit and ``?`` on its own (EvacFooter).
+        Binding("question_mark", "field_help", "keys", priority=True, show=False),
+        Binding("f1", "field_help", "help", show=False),
     ]
 
     def __init__(
@@ -456,6 +493,12 @@ class EvacTui(App[None]):
         self.scrub_index: int | None = None
         self.examples: list[model.Example] | None = None
         self.suggestions: list[Path] = []
+        # The folder the FDS path box browses, and its listed subfolders.
+        self.browse_folder: Path | None = None
+        self.browsed: list[tuple[Path, bool]] = []
+        # The same for the Open file box of the Scenario step.
+        self.open_folder: Path | None = None
+        self.open_found: list[tuple[Path, bool]] = []
         self._gen = 0
         self._cfg_timer: Any = None
         self.warned_confirmed = False
@@ -477,7 +520,7 @@ class EvacTui(App[None]):
             yield RunStep(id="step-run")
             yield ResultsStep(id="step-results")
         yield Static(id="summary")
-        yield Footer()
+        yield EvacFooter()
 
     def on_mount(self) -> None:
         self._ui_loop = asyncio.get_running_loop()
@@ -487,6 +530,7 @@ class EvacTui(App[None]):
         self.theme = self.start_theme
         self._fill_recent()
         self._fill_examples("")
+        self._browse_open(f"{self.cwd}{os.sep}")
         tabs = self.query_one("#sc-tabs", TabbedContent)
         if self.recent.runs:
             tabs.active = "tab-recent"
@@ -497,6 +541,20 @@ class EvacTui(App[None]):
             self.query_one(focus).focus()
         self.update_chrome()
         self._check_size()
+        self._warn_color_system()
+
+    def _warn_color_system(self) -> None:
+        """Say when the terminal shows fewer colours than the theme needs (#599)."""
+        colours = COLOR_SYSTEM_COLOURS.get(str(self.console.color_system))
+        if self.no_color or colours is None:
+            return
+        self.notify(
+            f"This terminal shows {colours} colours, so the theme colours are "
+            "approximate. If it supports truecolor, set COLORTERM=truecolor "
+            '(in tmux, enable RGB); see "Colours" on the Terminal UI docs page.',
+            timeout=15,
+            markup=False,
+        )
 
     def on_unmount(self) -> None:
         """Let the reader thread remove the run's temporary folder."""
@@ -593,6 +651,9 @@ class EvacTui(App[None]):
         elif self.step == 2:
             self.goto(3)
 
+    def action_to_run(self) -> None:
+        self.goto(4)
+
     def action_step_back(self) -> None:
         if self.step in (1, 2, 3):
             self.goto(self.step - 1)
@@ -607,9 +668,23 @@ class EvacTui(App[None]):
     def action_new_scenario(self) -> None:
         self.goto(0)
 
+    def action_move_field(self, delta: int) -> None:
+        if delta > 0:
+            self.screen.focus_next()
+        else:
+            self.screen.focus_previous()
+
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "move_field":
+            # An open dropdown keeps up/down for its own list.
+            return not any(s.expanded for s in self.screen.query(Select))
         if action == "run":
             return self.step in (2, 3, 5)
+        if action == "to_run":
+            return self.current_run is not None and not self.current_run.done
+        if action == "field_help":
+            # In a dialog, ``?`` and F1 go to the dialog (the find box types it).
+            return not isinstance(self.screen, ModalScreen)
         return True
 
     # --- scenario step ---------------------------------------------------------
@@ -713,17 +788,59 @@ class EvacTui(App[None]):
     def _open_path(self, event: Input.Submitted) -> None:
         self.select_scenario(Path(event.value))
 
-    @on(DirectoryTree.FileSelected, "#open-tree")
-    def _tree_file(self, event: DirectoryTree.FileSelected) -> None:
-        self.query_one("#open-path", Input).value = str(event.path)
-        if event.path.suffix.lower() in (".json", ".zip"):
-            self.select_scenario(event.path)
+    # --- browsing scenarios from the Open file box (dired-like) -----------------
 
-    @on(DirectoryTree.DirectorySelected, "#open-tree")
-    def _tree_dir(self, event: DirectoryTree.DirectorySelected) -> None:
-        self.query_one("#open-path", Input).value = str(event.path)
-        if model._json_and_wkt(event.path)[0]:
-            self.select_scenario(event.path)
+    @on(Input.Changed, "#open-path")
+    def _open_path_changed(self, event: Input.Changed) -> None:
+        self._browse_open(event.value or f"{self.cwd}{os.sep}")
+
+    @work(thread=True, exclusive=True, group="browse-open")
+    def _browse_open(self, text: str) -> None:
+        folder, found = model.browse_scenarios(text)
+        self.call_from_thread(self._show_open, text, folder, found)
+
+    def _show_open(
+        self, text: str, folder: Path | None, found: list[tuple[Path, bool]]
+    ) -> None:
+        typed = self.query_one("#open-path", Input).value
+        if text != (typed or f"{self.cwd}{os.sep}") or folder is None:
+            return
+        self.open_folder, self.open_found = folder, found
+        listing = self.query_one("#open-list", OptionList)
+        listing.clear_options()
+        if folder.parent != folder:
+            listing.add_option(
+                Option(m("..  [dim]up to $p[/]", p=_short(folder.parent, 60)), id="up")
+            )
+        for i, (path, scenario) in enumerate(found):
+            name = path.name + (os.sep if path.is_dir() else "")
+            tag = "  [$success]scenario[/]" if scenario else ""
+            listing.add_option(Option(m(f"$n{tag}", n=name), id=f"e-{i}"))
+        if not found:
+            listing.add_option(
+                Option(
+                    m(
+                        "[dim]No folder, .json or .zip here: $p[/]",
+                        p=_short(folder, 60),
+                    ),
+                    disabled=True,
+                )
+            )
+        listing.highlighted = _first_entry(listing, "e-", text)
+
+    @on(OptionList.OptionSelected, "#open-list")
+    def _open_choice(self, event: OptionList.OptionSelected) -> None:
+        folder, ident = self.open_folder, event.option.id or ""
+        if folder is None:
+            return
+        if ident == "up":
+            self._go_into(folder.parent, "#open-path")
+            return
+        path, scenario = self.open_found[int(ident[2:])]
+        if scenario:
+            self.select_scenario(path)
+        else:
+            self._go_into(path, "#open-path")
 
     def _accept_scenario_tab(self) -> None:
         tab = self.query_one("#sc-tabs", TabbedContent).active
@@ -823,6 +940,104 @@ class EvacTui(App[None]):
     def _fds_choice(self, event: OptionList.OptionSelected) -> None:
         self._apply_fds_choice(event.option.id)
 
+    # --- browsing folders from the path box (dired-like) -------------------------
+
+    @on(Input.Changed, "#fds-path")
+    def _fds_path_changed(self, event: Input.Changed) -> None:
+        text = event.value
+        if not text.strip() or text == (self.form.fds_dir or ""):
+            self.browse_folder = None
+            self._show_suggestions(self.suggestions)
+            return
+        self._browse(text)
+
+    @work(thread=True, exclusive=True, group="browse")
+    def _browse(self, text: str) -> None:
+        folder, found = model.browse_dirs(text)
+        usable = folder is not None and model.has_smv(folder)
+        self.call_from_thread(self._show_browse, text, folder, found, usable)
+
+    def _show_browse(
+        self,
+        text: str,
+        folder: Path | None,
+        found: list[tuple[Path, bool]],
+        usable: bool,
+    ) -> None:
+        if text != self.query_one("#fds-path", Input).value or folder is None:
+            return
+        self.browse_folder, self.browsed = folder, found
+        choices = self.query_one("#fds-choices", OptionList)
+        choices.clear_options()
+        if usable:
+            choices.add_option(
+                Option(
+                    m(
+                        "[$success]Use this folder[/]  $p  [dim]FDS output[/]",
+                        p=_short(folder, 60),
+                    ),
+                    id="use",
+                )
+            )
+        if folder.parent != folder:
+            choices.add_option(
+                Option(m("..  [dim]up to $p[/]", p=_short(folder.parent, 60)), id="up")
+            )
+        for i, (path, smv) in enumerate(found):
+            tag = "  [$success]FDS output[/]" if smv else ""
+            choices.add_option(Option(m(f"$n/{tag}", n=path.name), id=f"dir-{i}"))
+        if not found:
+            choices.add_option(
+                Option(
+                    m("[dim]No matching folder in $p[/]", p=_short(folder, 60)),
+                    disabled=True,
+                )
+            )
+        # The suggestions stay below the browsed folders.
+        for i, path in enumerate(self.suggestions):
+            choices.add_option(
+                Option(
+                    m("[$success]Found FDS output[/]  $p", p=_short(path, 60)),
+                    id=f"fds-{i}",
+                )
+            )
+        choices.add_option(
+            Option(m("No FDS (clear air)  [dim]no fire input[/]"), id="no-fds")
+        )
+        choices.highlighted = _first_entry(choices, "dir-", text)
+
+    def _go_into(self, folder: Path, box_id: str = "#fds-path") -> None:
+        box = self.query_one(box_id, Input)
+        box.value = str(folder) + os.sep
+        box.cursor_position = len(box.value)
+
+    # The path boxes and the lists they browse; Tab completes, Down goes down.
+    PATH_BOXES = {
+        "fds-path": (model.complete_dir, "#fds-choices"),
+        "open-path": (model.complete_scenario, "#open-list"),
+    }
+
+    def action_complete_path(self) -> None:
+        focused = self.focused
+        in_list = isinstance(focused, BrowseList)
+        box = self.query_one(focused.box_id, Input) if in_list else focused
+        if not isinstance(box, Input) or box.id not in self.PATH_BOXES:
+            return
+        complete, listing = self.PATH_BOXES[box.id]
+        completed = complete(box.value)
+        if completed != box.value:
+            box.value = completed
+            box.cursor_position = len(completed)
+        elif in_list:
+            box.focus()
+        else:
+            self.query_one(listing).focus()
+
+    def action_focus_choices(self) -> None:
+        box = self.focused
+        if isinstance(box, Input) and box.id in self.PATH_BOXES:
+            self.query_one(self.PATH_BOXES[box.id][1]).focus()
+
     def _accept_fds_choice(self) -> None:
         typed = self.query_one("#fds-path", Input).value
         if self.focused is self.query_one("#fds-path") and typed.strip():
@@ -835,11 +1050,28 @@ class EvacTui(App[None]):
         self._apply_fds_choice(choices.get_option_at_index(choices.highlighted).id)
 
     def _apply_fds_choice(self, ident: str | None) -> None:
+        browsing = ident in ("use", "up") or (ident or "").startswith("dir-")
+        if browsing and self.browse_folder is not None:
+            self._browse_choice(cast(str, ident))
+            return
         if ident == "no-fds":
             self.set_fds_dir(None)
         elif ident:
             self.set_fds_dir(str(self.suggestions[int(ident[4:])]))
         self.goto(2)
+
+    def _browse_choice(self, ident: str) -> None:
+        folder = cast(Path, self.browse_folder)
+        if ident == "up":
+            self._go_into(folder.parent)
+            return
+        target = folder if ident == "use" else self.browsed[int(ident[4:])][0]
+        if ident == "use" or self.browsed[int(ident[4:])][1]:
+            self.browse_folder = None
+            self.set_fds_dir(str(target.resolve()))
+            self.goto(2)
+            return
+        self._go_into(target)
 
     @on(Input.Submitted, "#fds-path")
     def _fds_submitted(self, event: Input.Submitted) -> None:
@@ -1276,7 +1508,8 @@ class EvacTui(App[None]):
         if row is None:
             self.push_screen(TextScreen("Keys", keys_text()))
             return
-        self.push_screen(TextScreen(model.label(row.param), field_help(row.param)))
+        text = f"{field_help(row.param)}\n\nKeys\n{keys_text()}"
+        self.push_screen(TextScreen(model.label(row.param), text))
 
     def action_copy_command(self) -> None:
         if self.cfg is None:
@@ -1713,9 +1946,10 @@ class EvacTui(App[None]):
         spark.data = evacuated_series(run) or [0]
         spark.display = bool(run.frames) and self.has_class("-wide")
         if spark.display:
-            parts.append(
-                m("\n[dim]Evacuated over sim time, 0–$t s ↓[/]", t=f"{snap.max_time:g}")
-            )
+            # The series has one point per plan frame, so it spans the frames,
+            # not the scenario's time limit.
+            end = run.frames[-1][0].sim_time
+            parts.append(m("\n[dim]Evacuated over sim time, 0–$t s ↓[/]", t=f"{end:g}"))
             self.query_one("#res-exits", Static).update(Content.assemble(*parts))
         files = self.query_one("#res-files", OptionList)
         files.clear_options()
@@ -1734,10 +1968,22 @@ class EvacTui(App[None]):
                     id=f"file-{i}",
                 )
             )
+        if result_files(run):
+            files.highlighted = 0
         self.query_one("#res-files-title", Static).update(
-            m("[b]Output files[/]  [dim]in $b  · y copy path[/]", b=_short(base, 70))
+            m(
+                "[b]Output files[/]  [dim]in $b  · Enter preview · y copy path[/]",
+                b=_short(base, 70),
+            )
         )
         self.refresh_plans()
+
+    @on(OptionList.OptionSelected, "#res-files")
+    def _file_selected(self, event: OptionList.OptionSelected) -> None:
+        if self.current_run is None:
+            return
+        path = result_files(self.current_run)[event.option_index]
+        self.push_screen(FileScreen(path, file_preview(path), file_opener()))
 
     def action_copy_path(self) -> None:
         files = self.query_one("#res-files", OptionList)
@@ -2051,6 +2297,64 @@ def evacuated_series(run: RunState) -> list[float]:
     return [float(frame.evacuated) for frame, _smoke in run.frames]
 
 
+PREVIEW_LINES = 40
+PREVIEW_WIDTH = 200
+
+
+def _first_entry(options: OptionList, prefix: str, text: str) -> int:
+    """The row to highlight: after a typed name, the first match (not ``..``
+    or "Use this folder"), so Enter picks it; else row 0."""
+    if not os.path.split(text)[1]:
+        return 0
+    for index in range(options.option_count):
+        if (options.get_option_at_index(index).id or "").startswith(prefix):
+            return index
+    return 0
+
+
+def file_preview(path: str) -> str:
+    """What the file dialog shows: text lines, SQLite tables or a folder's files."""
+    p = Path(path)
+    try:
+        if p.is_dir():
+            names = sorted(str(f.relative_to(p)) for f in p.rglob("*") if f.is_file())
+            return "\n".join([f"Folder, {len(names)} files:", *names])
+        if p.suffix == ".sqlite":
+            return _sqlite_preview(p)
+        with p.open(encoding="utf-8", errors="replace") as fh:
+            lines = [
+                line.rstrip("\n")[:PREVIEW_WIDTH]
+                for _, line in zip(range(PREVIEW_LINES + 1), fh)
+            ]
+    except (OSError, sqlite3.Error) as exc:
+        return f"Cannot read the file: {exc}"
+    if len(lines) > PREVIEW_LINES:
+        lines = [*lines[:PREVIEW_LINES], f"… first {PREVIEW_LINES} lines shown"]
+    return "\n".join(lines) or "(empty file)"
+
+
+def _sqlite_preview(path: Path) -> str:
+    uri = f"{path.resolve().as_uri()}?mode=ro"
+    lines = []
+    with contextlib.closing(sqlite3.connect(uri, uri=True)) as db:
+        query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        for (name,) in db.execute(query).fetchall():
+            count = db.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
+            lines.append(f"  {name}: {count} rows")
+    return "\n".join([f"SQLite database, {len(lines)} tables:", *lines])
+
+
+def file_opener() -> list[str] | None:
+    """The command that opens a file in the system app; None over SSH or if absent."""
+    if os.environ.get("SSH_CONNECTION"):
+        return None
+    if sys.platform == "darwin":
+        return ["open"]
+    if sys.platform.startswith("linux") and shutil.which("xdg-open"):
+        return ["xdg-open"]
+    return None
+
+
 def _size(path: str) -> str:
     try:
         p = Path(path)
@@ -2094,14 +2398,13 @@ def keys_text() -> str:
         [
             "Tab / Shift+Tab   next / previous control",
             "Enter             activate; on a disabled row, go to the setting that enables it",
-            "Esc               back one step (keeps all values)",
-            "ctrl+n            next step",
+            "ctrl+n / ctrl+p   next / previous step (keeps all values; Esc also goes back)",
             "ctrl+r            run (Configure, Review, Results)",
             "ctrl+f            find a setting (Configure)",
-            "F1 or ?           help for the focused field",
-            "ctrl+p            command palette (themes, steps, save, reset)",
+            "? or F1           this list; on a field, its help first",
+            "ctrl+k            command palette (themes, steps, save, reset)",
             "ctrl+q            quit (asks during a run)",
-            "Run: x or ctrl+c cancel · v plan · w warnings · l log",
+            "Run: x or ctrl+c cancel · v fullscreen plan · w warnings · l log",
             "Results: e change · n new · c command · s save · ←/→ scrub the plan",
         ]
     )
