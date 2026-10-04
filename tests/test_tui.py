@@ -387,9 +387,10 @@ def test_a6_heat_path_reaches_the_runner(workdir):
             row(app, "heat_regime").sync_control()
             app.form_changed()
             await settle(pilot, app)
-            # D19 from the options, then the heat model's own value check.
-            assert app.invalid_count() == len(app.cfg.errors) >= 1
+            # D19 alone: the heat model's value check skips what D19 owns.
+            assert app.invalid_count() == len(app.cfg.errors) == 1
             assert app.cfg.errors[0].rule == "D19"
+            assert app.cfg.errors[0].option == "heat_layer_height"
             assert f"✗ {app.invalid_count()} error" in str(app.summary_line())
             for dest, value in (
                 ("heat_layer_height", "2.5"),
