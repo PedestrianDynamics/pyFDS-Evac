@@ -1235,6 +1235,46 @@ def test_sweep_removes_folders_of_dead_tui_processes(tmp_path):
     assert mine.exists() and other.exists()
 
 
+def _child_entry_with(parent: str, tmp_path: Path) -> tuple[Path, str]:
+    """Run ``child_entry`` with a stub run and *parent* as the TUI's pid."""
+    run_tmp = tmp_path / "run-tmp"
+    run_tmp.mkdir()
+    log = tmp_path / "child.log"
+    code = f"""
+import os, sys, types
+stub = types.ModuleType("pyfds_evac.core.run_stream")
+def child_main(values, queue, stop, **options):
+    print("stopped" if stop.is_set() else "running", flush=True)
+stub.child_main = child_main
+sys.modules["pyfds_evac.core.run_stream"] = stub
+import multiprocessing
+from pyfds_evac.tui.runner import child_entry
+child_entry({{}}, None, multiprocessing.Event(), {str(log)!r}, {str(run_tmp)!r},
+            {{}}, {parent})
+"""
+    subprocess.run([sys.executable, "-c", code], check=True)
+    return run_tmp, log.read_text() if log.exists() else ""
+
+
+def test_child_started_after_the_tui_died_stops_and_cleans_up(tmp_path):
+    """The TUI's pid comes from the TUI, not from the reparented child (#555)."""
+    dead = subprocess.run(
+        [sys.executable, "-c", "import os; print(os.getpid())"],
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
+    run_tmp, log = _child_entry_with(dead, tmp_path)
+    assert "running" not in log
+    assert not run_tmp.exists()
+
+
+def test_child_of_a_live_tui_runs_and_leaves_the_folder_to_it(tmp_path):
+    run_tmp, log = _child_entry_with("os.getppid()", tmp_path)
+    assert log.strip() == "running"
+    assert run_tmp.exists()
+
+
 @pytest.mark.slow
 def test_child_stops_and_cleans_up_when_the_tui_is_killed(tmp_path):
     """A killed TUI (SIGKILL, terminal gone) leaves no run or temp folder."""

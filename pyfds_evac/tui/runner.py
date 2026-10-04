@@ -144,11 +144,17 @@ class _Stop:
 
     A hang-up (the terminal closed) or a parent that no longer exists
     (killed) stops the run at the next progress sample, as a cancel does.
+
+    *parent_pid* is the TUI's pid, taken by the TUI before the start: a
+    child that started after the TUI died is already reparented, so its
+    own ``os.getppid()`` at start would not tell (#555). The ``spawn``
+    start method makes the TUI the direct parent. A reused pid cannot
+    become this process's parent again, and a subreaper has another pid.
     """
 
-    def __init__(self, cancel_event: Any) -> None:
+    def __init__(self, cancel_event: Any, parent_pid: int) -> None:
         self._event = cancel_event
-        self._parent = os.getppid()
+        self._parent = parent_pid
         self.hung_up = False
 
     def orphaned(self) -> bool:
@@ -165,6 +171,7 @@ def child_entry(
     log_path: str,
     tmp_dir: str,
     stream_options: Mapping[str, Any],
+    parent_pid: int,
 ) -> None:
     """Body of the child process (see the module docstring)."""
     log = open(log_path, "ab", buffering=0)  # noqa: SIM115 (lives with the process)
@@ -172,9 +179,12 @@ def child_entry(
     os.dup2(log.fileno(), 2)
     os.environ["TMPDIR"] = tmp_dir
     tempfile.tempdir = tmp_dir
-    stop = _Stop(cancel_event)
+    stop = _Stop(cancel_event, parent_pid)
     if hasattr(signal, "SIGHUP"):
         signal.signal(signal.SIGHUP, lambda *_: setattr(stop, "hung_up", True))
+    if stop.orphaned():  # the TUI died while this process was starting
+        shutil.rmtree(tmp_dir, ignore_errors=True)
+        return
     from pyfds_evac.core.run_stream import child_main
 
     try:
@@ -295,9 +305,10 @@ class ProcessRunner:
         self._cancel_at = None
         self._phase = None
         options = stream_options(self.frames, self.max_hz or frame_rate())
+        args = (dict(values), event_queue, self._cancel, log_path, tmp_dir, options)
         self._proc = ctx.Process(
             target=child_entry,
-            args=(dict(values), event_queue, self._cancel, log_path, tmp_dir, options),
+            args=(*args, os.getpid()),
             name="pyfds-evac-run",
             daemon=True,
         )
