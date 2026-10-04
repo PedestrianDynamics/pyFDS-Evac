@@ -297,9 +297,10 @@ output folder is included. The idea is the same as in the Web GUI; see
 | everywhere | `ctrl+p` | command palette: themes, go to step, Inspect FDS folder, Copy command, Save command and script, Show Python, Reset all settings, Toggle advanced, Open docs page |
 | everywhere | `ctrl+q` | quit; during a run it asks "A run is in progress. Quit and cancel it?" |
 | everywhere | `Esc` | back one step, keeping all values. From Run it goes to Review and the run continues; from Results it goes to Configure |
-| everywhere | `F1` / `?` | help for the focused field, else the list of keys |
+| everywhere | `?` | help for the focused field, else the list of keys |
 | Scenario, FDS, Configure | `ctrl+n` | next step (from Configure: to Review) |
 | Configure, Review, Results | `ctrl+r` | run. With warnings, outside Review, it asks "r Run anyway / Esc Review"; on Review it runs at once |
+| Configure | `F1` | help for the focused field |
 | Configure | `ctrl+f` | find a setting |
 | Review | `c` | copy the command to the clipboard (OSC 52) |
 | Review | `s` | write `command.sh` and `run.py` into the planned run folder, before any run |
@@ -315,7 +316,7 @@ output folder is included. The idea is the same as in the Web GUI; see
 
 The keys avoid common terminal conflicts: there is no `ctrl+s` (XOFF) and no
 `ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes). `?` and the palette
-duplicate `F1`.
+duplicate `F1` on Configure.
 
 ## Outputs and folders
 
