@@ -35,10 +35,8 @@ Command-line errors start with the name of the command you ran:
 | `IndexError: No slice with quantity '…' found in DIR` | A direct library call (`FdsFedField.from_fds`, `ExtinctionField.from_fds`, `load_slice_sampler`) on a case without that slice. `run.py` warns instead. | Add the slice to the deck, or check the case with `--inspect-fds` first. |
 
 The `cost_model` and alias errors appear when the run starts, after the FDS
-output is read. `--show-config` does not report them yet: it prints
-`Errors: none` for such a deck
-([#571](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571) for
-`cost_model`).
+output is read. `--show-config` prints `Errors: none` for such a deck
+([#571](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571)).
 
 ## Warnings that change the result
 

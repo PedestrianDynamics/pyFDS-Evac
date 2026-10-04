@@ -257,7 +257,8 @@ and its FDS output are tracked there. It prints `FED max: 1.170`, as
 for example `"reroute_interval": 10.0`. Start from the full `DEFAULTS`:
 `build_run_kwargs` reads about 20 options, such as `fds_dir`,
 `reroute_interval`, `fed_threshold` and the `heat_*` options, as plain
-attributes, so a namespace with only some of them fails. `pyfds_evac.config`
+attributes, so a namespace that lacks an option a built model reads raises
+`AttributeError`; start from the full `DEFAULTS`. `pyfds_evac.config`
 and `DEFAULTS` are provisional public API in 0.3.x: names may change.
 
 **Show equivalent Python** in the [web GUI](web-gui.md#show-the-run-as-python)
@@ -277,9 +278,10 @@ Errors include the value checks made when a model is built (for example
 `--vis-cell-size 0` or `--heat-emissivity 2`); warnings logged while a model
 is built, such as signs outside the FDS extinction slice, are not listed. With `--fds-dir` it reads
 the FDS inventory (slices and output end time), not the slice data. It exits
-with status 1 when the configuration has an error, else 0. An unknown `routing.cost_model` and
-an alias that contradicts its `v0*` key are not checked yet; the run reports
-them ([Troubleshooting](troubleshooting.md#errors)).
+with status 1 when the configuration has an error, else 0. It does not check
+an unknown `routing.cost_model` or an alias that contradicts its `v0*` key;
+the run reports them ([Troubleshooting](troubleshooting.md#errors),
+[#571](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571)).
 
 ```bash
 uv run python run.py --scenario assets/t_junction/config_discovery.json \
