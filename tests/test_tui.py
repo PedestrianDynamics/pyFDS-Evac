@@ -1057,7 +1057,7 @@ def fixed_keys(app) -> dict[str, object]:
 def assert_quit_and_keys(app) -> None:
     keys = fixed_keys(app)
     assert list(keys) == ["quit", "keys", "palette"]
-    assert [k.key for k in keys.values()] == ["ctrl+q", "question_mark", "ctrl+p"]
+    assert [k.key for k in keys.values()] == ["ctrl+q", "question_mark", "ctrl+k"]
     width = app.screen.size.width
     for key in keys.values():
         assert key.region.width > 0
@@ -2003,3 +2003,51 @@ def test_599_no_color_shows_no_notice(workdir, monkeypatch):
     monkeypatch.delenv("COLORTERM")
     monkeypatch.setenv("NO_COLOR", "1")
     assert _colour_notices(workdir) == []
+
+
+# --- ctrl+n / ctrl+p next / previous step; ctrl+k palette ---------------------------
+
+
+def test_ctrl_p_goes_back_one_step_and_names_it(workdir):
+    from textual.screen import ModalScreen
+    from textual.widgets._footer import FooterKey
+
+    scenario = workdir / "assets" / "iso_table21_coupled"
+
+    def back_label(app) -> str | None:
+        for key in app.screen.query(FooterKey):
+            if key.key == "ctrl+p":
+                return key.description
+        return None
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            assert back_label(app) is None
+            await pilot.press("ctrl+p")
+            await pilot.pause()
+            assert app.step == 0
+            assert not isinstance(app.screen, ModalScreen)
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            app.goto(3)
+            await pilot.pause()
+            for label, before in (("configure", 2), ("fds", 1), ("scenario", 0)):
+                assert back_label(app) == label
+                await pilot.press("ctrl+p")
+                await pilot.pause()
+                assert app.step == before
+
+    run(go())
+
+
+def test_ctrl_k_opens_the_command_palette(workdir):
+    from textual.command import CommandPalette
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.press("ctrl+k")
+            await pilot.pause()
+            assert isinstance(app.screen, CommandPalette)
+
+    run(go())

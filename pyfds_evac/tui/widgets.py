@@ -258,7 +258,7 @@ FIXED_KEYS = (("ctrl+q", "quit", "quit"), ("question_mark", "field_help", "keys"
 
 
 class EvacFooter(Footer):
-    """The footer: the step's keys, then a fixed group ``^q quit ? keys ^p palette``.
+    """The footer: the step's keys, then a fixed group ``^q quit ? keys ^k palette``.
 
     The group is docked right, so on a narrow terminal the step keys are
     cut first and the way out and the key list stay visible.

@@ -196,7 +196,10 @@ class ScenarioStep(Step):
 
 
 class FdsStep(Step):
-    BINDINGS = [Binding("ctrl+n", "app.next_step", "next")]
+    BINDINGS = [
+        Binding("ctrl+n", "app.next_step", "next"),
+        Binding("ctrl+p", "app.step_back", "scenario"),
+    ]
 
     def compose(self) -> ComposeResult:
         yield Static(m("[b]FDS output folder[/]"))
@@ -211,6 +214,7 @@ class FdsStep(Step):
 class ConfigureStep(Step):
     BINDINGS = [
         Binding("ctrl+n", "app.next_step", "review"),
+        Binding("ctrl+p", "app.step_back", "fds"),
         Binding("ctrl+f", "app.find", "find"),
     ]
 
@@ -258,6 +262,7 @@ class ConfigureStep(Step):
 class ReviewStep(Step):
     BINDINGS = [
         Binding("ctrl+r", "app.run", "run"),
+        Binding("ctrl+p", "app.step_back", "configure"),
         Binding("c", "app.copy_command", "copy"),
         Binding("s", "app.save", "save"),
         Binding("p", "app.show_python", "python"),
@@ -278,6 +283,7 @@ class ReviewStep(Step):
 class RunStep(Step):
     BINDINGS = [
         Binding("x", "app.cancel", "cancel"),
+        Binding("ctrl+p", "app.step_back", "review"),
         Binding("ctrl+c", "app.cancel", "cancel", show=False, priority=True),
         Binding("v", "app.plan", "plan"),
         Binding("w", "app.warnings", "warnings"),
@@ -304,6 +310,7 @@ class RunStep(Step):
 class ResultsStep(Step):
     BINDINGS = [
         Binding("ctrl+r", "app.run", "run again"),
+        Binding("ctrl+p", "app.step_back", "configure"),
         Binding("e", "app.change_settings", "change"),
         Binding("n", "app.new_scenario", "new"),
         Binding("c", "app.run_command", "command"),
@@ -369,6 +376,8 @@ class EvacTui(App[None]):
 
     TITLE = "pyFDS-Evac"
     ENABLE_COMMAND_PALETTE = True
+    # ``ctrl+p`` is "previous step", paired with ``ctrl+n``.
+    COMMAND_PALETTE_BINDING = "ctrl+k"
     CSS = """
     Screen { layout: vertical; }
     #stepbar { height: 1; background: $panel; padding: 0 1; }
@@ -421,7 +430,9 @@ class EvacTui(App[None]):
     BINDINGS = [
         Binding("ctrl+q", "quit", "quit", priority=True, show=False),
         Binding("ctrl+r", "run", "run", show=False),
-        Binding("escape", "step_back", "back"),
+        # ``ctrl+p`` on each step is the advertised way back; Esc stays as a
+        # fallback (tmux's escape-time can delay it).
+        Binding("escape", "step_back", "back", show=False),
         # Priority, so ``?`` opens the keys also from a text box (#598);
         # the footer shows both quit and ``?`` on its own (EvacFooter).
         Binding("question_mark", "field_help", "keys", priority=True, show=False),
@@ -2117,12 +2128,11 @@ def keys_text() -> str:
         [
             "Tab / Shift+Tab   next / previous control",
             "Enter             activate; on a disabled row, go to the setting that enables it",
-            "Esc               back one step (keeps all values)",
-            "ctrl+n            next step",
+            "ctrl+n / ctrl+p   next / previous step (keeps all values; Esc also goes back)",
             "ctrl+r            run (Configure, Review, Results)",
             "ctrl+f            find a setting (Configure)",
             "? or F1           this list; on a field, its help first",
-            "ctrl+p            command palette (themes, steps, save, reset)",
+            "ctrl+k            command palette (themes, steps, save, reset)",
             "ctrl+q            quit (asks during a run)",
             "Run: x or ctrl+c cancel · v plan · w warnings · l log",
             "Results: e change · n new · c command · s save · ←/→ scrub the plan",

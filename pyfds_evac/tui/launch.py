@@ -25,7 +25,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "terminal. Examples are read from ./assets; runs are written under "
         "./results (or $PYFDS_EVAC_RESULTS_DIR). Each run executes the same "
         "code as the pyfds-evac command, in a separate process.",
-        epilog="Keys: ctrl+q quit, ? keys, ctrl+p command palette. A run stops "
+        epilog="Keys: ctrl+q quit, ? keys, ctrl+n / ctrl+p next / previous step, ctrl+k command palette. A run stops "
         "when the terminal closes; use tmux or screen for long runs.",
     )
     parser.add_argument(

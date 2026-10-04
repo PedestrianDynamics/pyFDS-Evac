@@ -87,7 +87,7 @@ order:
 
 An invalid `PYFDS_EVAC_TUI_THEME` stops the start with
 `PYFDS_EVAC_TUI_THEME='x' is not a theme; choose from evac-dark, solarized-light`.
-To switch while the terminal UI runs, open the command palette (`ctrl+p`) and
+To switch while the terminal UI runs, open the command palette (`ctrl+k`) and
 choose "Theme: evac dark" or "Theme: Solarized Light". The choice is
 remembered.
 {{< /details >}}
@@ -207,7 +207,7 @@ signs, ASET/RSET tools, and Outputs.
 - `?` or `F1` shows the option's help, its flag, its default, its Python API
   default, its FDS+Evac counterpart, its unit and a link to its docs page,
   followed by the list of keys.
-- `ctrl+f` finds a setting. The palette (`ctrl+p`) has "Reset all settings",
+- `ctrl+f` finds a setting. The palette (`ctrl+k`) has "Reset all settings",
   which asks first, and "Toggle advanced in all sections".
 - The summary line at the bottom shows the review level, the active models,
   and "✓ valid" or the number of errors.
@@ -305,9 +305,9 @@ output folder is included. The idea is the same as in the Web GUI; see
 
 | Where | Key | Action |
 |---|---|---|
-| everywhere | `ctrl+p` | command palette: themes, go to step, Inspect FDS folder, Copy command, Save command and script, Show Python, Reset all settings, Toggle advanced, Open docs page |
+| everywhere | `ctrl+k` | command palette: themes, go to step, Inspect FDS folder, Copy command, Save command and script, Show Python, Reset all settings, Toggle advanced, Open docs page |
 | everywhere | `ctrl+q` | quit; during a run it asks "A run is in progress. Quit and cancel it?" |
-| everywhere | `Esc` | back one step, keeping all values. From Run it goes to Review and the run continues; from Results it goes to Configure |
+| FDS to Results | `ctrl+p` | previous step, keeping all values; the footer names it. From Run it goes to Review and the run continues; from Results it goes to Configure. `Esc` does the same, but tmux's `escape-time` can delay it |
 | everywhere | `?` or `F1` | the list of keys; on a Configure field, the field's help first. `?` is never typed into a text box |
 | Scenario, FDS, Configure | `ctrl+n` | next step (from Configure: to Review) |
 | Configure, Review, Results | `ctrl+r` | run. With warnings, outside Review, it asks "r Run anyway / Esc Review"; on Review it runs at once |
@@ -325,11 +325,14 @@ output folder is included. The idea is the same as in the Web GUI; see
 | Run, Results | `v` | full-screen plan (`Esc` back) |
 
 The keys avoid common terminal conflicts: there is no `ctrl+s` (XOFF) and no
-`ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes).
+`ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes). `ctrl+n` and `ctrl+p`
+are next and previous, as in Emacs and tmux. The palette is on `ctrl+k`,
+not Textual's default `ctrl+p`, so in a text box `ctrl+k` does not delete to
+the end of the line.
 
 The footer shows the keys of the current step on the left and, on every
 step and in the full-screen plan, a fixed group on the right:
-`^q quit  ? keys  ^p palette`. On a narrow terminal the step keys are cut
+`^q quit  ? keys  ^k palette`. On a narrow terminal the step keys are cut
 first; the fixed group stays visible at 80 columns. The labels are words, so
 they read the same with `NO_COLOR` or `TERM=dumb`.
 
