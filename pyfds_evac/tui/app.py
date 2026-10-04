@@ -78,6 +78,8 @@ RECENT_GLYPHS = {
     "cancelled": "■ ",
 }
 STEPS = ("scenario", "fds", "configure", "review", "run", "results")
+# Rich colour systems below truecolor, with the number of colours they show.
+COLOR_SYSTEM_COLOURS = {"256": "256", "standard": "16", "windows": "16"}
 MIN_SIZE = (80, 24)
 SECTION_LEAD = {GROUP_HEAT: "enable_heat_fed"}
 PHASE_WORDS = {
@@ -500,6 +502,20 @@ class EvacTui(App[None]):
             self.query_one(focus).focus()
         self.update_chrome()
         self._check_size()
+        self._warn_color_system()
+
+    def _warn_color_system(self) -> None:
+        """Say when the terminal shows fewer colours than the theme needs (#599)."""
+        colours = COLOR_SYSTEM_COLOURS.get(str(self.console.color_system))
+        if self.no_color or colours is None:
+            return
+        self.notify(
+            f"This terminal shows {colours} colours, so the theme colours are "
+            "approximate. If it supports truecolor, set COLORTERM=truecolor "
+            '(in tmux, enable RGB); see "Colours" on the Terminal UI docs page.',
+            timeout=15,
+            markup=False,
+        )
 
     def on_unmount(self) -> None:
         """Let the reader thread remove the run's temporary folder."""

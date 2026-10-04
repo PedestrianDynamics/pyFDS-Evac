@@ -50,6 +50,7 @@ def _tui_env(tmp_path, monkeypatch):
     monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg"))
     monkeypatch.setenv(frontend.RESULTS_ENV, str(tmp_path / "results"))
     monkeypatch.setenv("TERM", "xterm-256color")
+    monkeypatch.setenv("COLORTERM", "truecolor")
     for name in ("NO_COLOR", "PYFDS_EVAC_TUI_THEME", "SSH_CONNECTION"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setattr(frontend, "utc_now", lambda: FIXED_NOW)
@@ -1971,3 +1972,34 @@ def test_321_cancel_before_the_first_sample_is_not_sim_zero(workdir):
             assert "at sim 0.0 s" not in text
 
     run(go())
+
+
+# --- #599: colour system notice --------------------------------------------------
+
+
+def _colour_notices(workdir) -> list[str]:
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            return [n.message for n in app._notifications if "colours" in n.message]
+
+    return run(go())
+
+
+def test_599_256_colours_say_theme_is_approximate(workdir, monkeypatch):
+    monkeypatch.delenv("COLORTERM")
+    notices = _colour_notices(workdir)
+    assert len(notices) == 1
+    assert "shows 256 colours" in notices[0]
+    assert "COLORTERM=truecolor" in notices[0]
+
+
+def test_599_truecolor_shows_no_notice(workdir):
+    assert _colour_notices(workdir) == []
+
+
+def test_599_no_color_shows_no_notice(workdir, monkeypatch):
+    monkeypatch.delenv("COLORTERM")
+    monkeypatch.setenv("NO_COLOR", "1")
+    assert _colour_notices(workdir) == []

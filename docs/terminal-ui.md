@@ -505,6 +505,18 @@ only at the end of a run, so a closed terminal or a dropped SSH session leaves
   reliable ways are the command shown on Review and the files that `s` writes.
 - **Over SSH** (`SSH_CONNECTION` set), the wall-time rule for plan frames
   drops to 2 per second. The screen still redraws up to 10 times per second.
+- **Colours.** The themes need a truecolor terminal. With 256 or 16 colours,
+  each theme colour is rounded to the nearest one the terminal has, so
+  `solarized-light` turns yellow, grey and pink. The terminal UI then says at
+  start "This terminal shows 256 colours, so the theme colours are
+  approximate." It decides from `COLORTERM` and `TERM`, as
+  [Rich](https://rich.readthedocs.io/en/stable/console.html#color-systems)
+  does. To get truecolor:
+  - set `COLORTERM=truecolor` when the terminal supports it. SSH does not
+    forward `COLORTERM`, so set it on the server, for example in `~/.bashrc`;
+  - in `tmux` 3.2 or later, add `set -g default-terminal "tmux-256color"` and
+    `set -as terminal-features ",*:RGB"` to `~/.tmux.conf`, then restart the
+    tmux server (`tmux kill-server`).
 - **`NO_COLOR`** (any non-empty value) gives Textual's monochrome rendering.
   The plan then draws the smoke bins with the shade glyphs `░ ▒ ▓ █`, and
   agents and states keep their glyphs. `NO_COLOR` is the only way to get the
