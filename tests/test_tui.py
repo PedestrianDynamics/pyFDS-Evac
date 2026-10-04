@@ -2340,3 +2340,38 @@ def test_open_file_browses_to_a_scenario(workdir):
             assert app.step == 1
 
     run(go())
+
+
+def test_match_rank_is_fzf_like():
+    assert model.match_rank("fic", "fic_vs_fed_speed") == 0
+    assert model.match_rank("vs", "fic_vs_fed_speed") == 1
+    assert model.match_rank("fvs", "fic_vs_fed_speed") == 2
+    assert model.match_rank("zz", "fic_vs_fed_speed") is None
+
+
+def test_typing_in_the_browse_list_narrows_it(workdir):
+    assets = workdir / "assets"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.query_one("#sc-tabs").active = "tab-open"
+            box = app.query_one("#open-path")
+            box.value = f"{assets}{os.sep}"
+            await settle(pilot, app)
+            listing = app.query_one("#open-list")
+            listing.focus()
+            before = len(app.open_found)
+            for key in "iso21":
+                await pilot.press(key)
+            await settle(pilot, app)
+            assert app.focused is listing
+            assert box.value == f"{assets}{os.sep}iso21"
+            names = [p.name for p, _ in app.open_found]
+            assert names and len(names) < before
+            assert all(model.match_rank("iso21", n) is not None for n in names)
+            await pilot.press("backspace")
+            await settle(pilot, app)
+            assert box.value == f"{assets}{os.sep}iso2"
+
+    run(go())

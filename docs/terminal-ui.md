@@ -183,12 +183,15 @@ seed.
   scenario and below the start folder. You can also type a path, or choose
   **No FDS (clear air)**.
 - Typing a path browses folders, as Emacs `dired` does. The list shows the
-  subfolders of the typed folder that start with the typed name, marks those
+  subfolders of the typed folder that match the typed name as `fzf` does
+  (`fvs` finds `fic_vs_fed_speed`; names that start with it come first),
+  marks those
   with a `.smv` file as **FDS output**, and offers `..` to go up. `Enter` (or
   a click) on an FDS output folder chooses it; on any other folder it goes
   into it. `Tab` completes the name as far as it is unique, as a shell does;
   `↓` goes to the list; `~` is the home folder. Hidden folders show when the
-  typed name starts with a dot.
+  typed name starts with a dot. Typing while the list has the focus goes to
+  the path box, so the list narrows and `↑`/`↓`/`Enter` still pick.
 - Choosing a folder reads its inventory in a separate process. The step shows
   ✓ or ✗ for extinction, CO, CO2, O2, temperature and integrated intensity,
   and the end time of the FDS output against the scenario's time limit.

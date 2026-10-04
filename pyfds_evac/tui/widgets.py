@@ -7,7 +7,7 @@ import subprocess
 from collections.abc import Callable
 from typing import Any, cast
 
-from textual import on
+from textual import events, on
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.containers import Horizontal, HorizontalGroup, Vertical, VerticalScroll
@@ -270,6 +270,30 @@ class PathBox(TextBox):
         Binding("tab", "app.complete_path", "complete", show=False),
         Binding("down", "app.focus_choices", "list", show=False),
     ]
+
+
+class BrowseList(OptionList):
+    """The list a path box browses: typing here goes to the box, as in fzf.
+
+    The list keeps the focus, so Up/Down/Enter still pick an entry while the
+    typed text narrows the list.
+    """
+
+    def __init__(self, box_id: str, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
+        self.box_id = box_id
+
+    def on_key(self, event: events.Key) -> None:
+        box = self.screen.query_one(self.box_id, Input)
+        if event.key == "backspace":
+            box.value = box.value[:-1]
+        elif event.is_printable and event.character:
+            box.value += event.character
+        else:
+            return
+        box.cursor_position = len(box.value)
+        event.stop()
+        event.prevent_default()
 
 
 # The keys every footer shows on the right, whatever the step (#598).

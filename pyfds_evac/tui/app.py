@@ -62,6 +62,7 @@ from .runner import (
 from .theme import EVAC_DARK, THEME_NAMES
 from .widgets import (
     STEP_TITLES,
+    BrowseList,
     ConfirmScreen,
     EvacFooter,
     FieldRow,
@@ -192,7 +193,7 @@ class ScenarioStep(Step):
                     "~ is home)",
                     id="open-path",
                 )
-                yield OptionList(id="open-list")
+                yield BrowseList("#open-path", id="open-list")
         yield Static(id="sc-info")
         yield Static(id="sc-error")
 
@@ -214,7 +215,7 @@ class FdsStep(Step):
             placeholder="folder that holds the .smv file (Tab completes, ~ is home)",
             id="fds-path",
         )
-        yield OptionList(id="fds-choices")
+        yield BrowseList("#fds-path", id="fds-choices")
         yield Static(id="fds-panel")
 
     def enter(self) -> None:
