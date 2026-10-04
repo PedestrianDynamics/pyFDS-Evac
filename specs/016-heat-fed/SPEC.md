@@ -61,8 +61,8 @@ from one `TEMPERATURE` slice at head height. It has four gaps:
   pp. 2375–2385.
 - R. Lovreglio, the draft `FED Heat v3.docx` (pyFDS-Evac-paper), which
   cites the 6th ed., Ch. 70 (doi:10.1007/978-3-031-59212-6_70). Its numbers
-  appear to be the 5th ed.'s minus 2
-  (70.41 ↔ 63.43, … 70.47 ↔ 63.49); unverified.
+  are the 5th ed.'s minus 2
+  (70.41 ↔ 63.43, … 70.47 ↔ 63.49).
 - D. Purser, personal communication (2026): review of the draft.
 - FDS User's Guide 6.10.1: §§14.2, 15.4, 18.1, 22.10.12, 22.10.18, Table 22.4.
 

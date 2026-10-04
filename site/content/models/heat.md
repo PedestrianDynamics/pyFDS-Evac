@@ -181,7 +181,7 @@ defaults are assumptions (`HEAT_FLUX_ASSUMED_PARAMETERS`):
 |---|---|---|---|
 | ε | `0.5` | `--heat-emissivity` | **Assumption.** p. 2384: 0.05 for a gas, "perhaps 0.5 for smoke" |
 | h [W m⁻² K⁻¹] | `5.0` | `--heat-convective-coefficient` | **Assumption.** p. 2384: "approximately 5–8 for slow-moving air", no unit; 5 is the value of the spec 016 convection check |
-| \(T_s\) [°C] | `35.0` | `--heat-skin-temperature` | **Assumption.** Not given for Eq. 63.49; 35 °C is the draft's value, held fixed |
+| \(T_s\) [°C] | `35.0` | `--heat-skin-temperature` | **Assumption.** Not given for Eq. 63.49; 35 °C is the value in Lovreglio's draft, held fixed |
 
 Invalid values (ε outside [0, 1], h < 0, or non-finite) are rejected.
 `--heat-fed-method` without `--enable-heat-fed` logs a warning and leaves
@@ -625,7 +625,7 @@ result; none is a Handbook tolerance.
 | Parameter | Value | CLI flag / config key | Where used | Why this value | What would source it |
 |---|---|---|---|---|---|
 | Convective coefficient h | 5 W/(m²·K) | `--heat-convective-coefficient` / `convective_coefficient` (`DEFAULT_HEAT_CONVECTIVE_COEFFICIENT`) | Total-flux *q*, every regime and radiant source | Low end of "approximately 5–8 for slow-moving air" (p. 2384, printed without a unit); the value of the spec 016 convection check | h measured for a walking, clothed person in hot air or smoke |
-| Skin temperature \(T_s\) | 35 °C, fixed | `--heat-skin-temperature` / `skin_temperature_celsius` (`DEFAULT_HEAT_SKIN_TEMPERATURE_C`) | Total-flux convective and radiant terms, and 4σ\(T_s^4\) of the excess `INTEGRATED INTENSITY` term | The draft's value; the Handbook gives none for Eq. 63.49 | Skin temperature data under heat exposure, including its rise (spec 016, open question 2) |
+| Skin temperature \(T_s\) | 35 °C, fixed | `--heat-skin-temperature` / `skin_temperature_celsius` (`DEFAULT_HEAT_SKIN_TEMPERATURE_C`) | Total-flux convective and radiant terms, and 4σ\(T_s^4\) of the excess `INTEGRATED INTENSITY` term | The value in Lovreglio's draft; the Handbook gives none for Eq. 63.49 | Skin temperature data under heat exposure, including its rise (spec 016, open question 2) |
 | Gas emissivity ε | 0.5 | `--heat-emissivity` / `emissivity` (`DEFAULT_HEAT_EMISSIVITY`) | Total-flux gas term at the head (`--heat-regime smoke`, `--heat-radiant-source gas`) | "perhaps 0.5 for smoke" (p. 2384); treats every head as in smoke. Below about 285 °C it does not change the dose (radiant threshold) | ε per agent from FDS absorption and path length ([#274](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/274), [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)) |
 | Temperature fallback | 20 °C | none (`HeatFedInputs.temperature_celsius`) | Temperature at the head outside the `TEMPERATURE` slice; layer temperature where the layer slice has no value ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)) | A room ambient; below \(T_s\) it gives a small negative layer flux, which counts as zero in the dose and shows only in `heat_flux_kw_m2` | The case's ambient `TMPA` |
 | Convective validity limit | 205 °C | none (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) | `heat_outside_validity` flag with `--heat-endpoint` (Eqs. 63.45–63.47, [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)); does not clip the rate | Highest dry-air tolerance point of Table 63.17 (Veghte, 4 min, p. 2375); the Handbook gives no upper temperature | The temperature range of the data Purser fitted Eqs. 63.45–63.47 to |
