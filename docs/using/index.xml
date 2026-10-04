@@ -3119,8 +3119,9 @@ title="Copy code"
 than 900 px, such as a phone, the form sits above the results instead of
 beside them.&lt;/p>
 &lt;p>&lt;code>pyfds-evac-gui&lt;/code> listens on 127.0.0.1, so only this computer can open it.
-&lt;code>--host 0.0.0.0&lt;/code> makes it reachable from other computers on the network, and
-&lt;code>--port&lt;/code> sets the port (default: the &lt;code>PORT&lt;/code> environment variable, else 5001).
+&lt;code>--host 0.0.0.0&lt;/code> makes it reachable from other computers on the network, with
+a warning that says so, and &lt;code>--port&lt;/code> sets the port (default: the &lt;code>PORT&lt;/code>
+environment variable, else 5001).
 Without the extra, the command stops with:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>pyfds-evac-gui needs the GUI extra, which is not installed (missing module &amp;#39;fasthtml&amp;#39;). Install it with: pip install &amp;#39;pyfds-evac[gui]&amp;#39;&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -3147,9 +3148,9 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>uv run app.py&lt;/code> listens on all interfaces (0.0.0.0), port 5001, and reloads
-when the code changes. &lt;code>uv run pyfds-evac-gui&lt;/code> also works in a checkout: it
-listens on 127.0.0.1 and does not reload.&lt;/p>
+&lt;p>&lt;code>uv run app.py&lt;/code> listens on 127.0.0.1, port 5001, and reloads when the code
+changes; it takes &lt;code>--host&lt;/code> and &lt;code>--port&lt;/code> like &lt;code>pyfds-evac-gui&lt;/code>.
+&lt;code>uv run pyfds-evac-gui&lt;/code> also works in a checkout: it does not reload.&lt;/p>
 &lt;h3>Where the GUI reads and writes&lt;span class="hx-absolute -hx-mt-20" id="where-the-gui-reads-and-writes">&lt;/span>
 &lt;a href="#where-the-gui-reads-and-writes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
 &lt;thead>
@@ -3948,7 +3949,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/bf3542bd834d28978fe37e27268cfa6a1a42e620">&lt;code>bf3542b&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/64cdba222f0c95f0962b03507d3493227e1cf592">&lt;code>64cdba2&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3972,7 +3973,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b99e10bb50da55787700f671bc76c38a03cda873ed8a23eb7ec39e3fff858806&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4fb4edbe9d329a220b470373851657c99c2a97e4d5092317ff737c9f86b9e5b7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
