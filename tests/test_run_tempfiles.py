@@ -189,6 +189,37 @@ def test_stream_run_leaves_no_temp_files(tmp_root, tmp_path, monkeypatch):
     assert _left(tmp_root) == []
 
 
+def _failing_cleanup(_result) -> None:
+    raise OSError("permission denied removing the temp trajectory")
+
+
+def test_cli_cleanup_error_keeps_the_exit_status(tmp_root, tmp_path, monkeypatch):
+    """A cleanup OSError neither raises nor changes the exit status."""
+    monkeypatch.setattr(scenario_module.ScenarioResult, "cleanup", _failing_cleanup)
+    copy = tmp_path / "out" / "run.sqlite"
+    assert _cli_main(monkeypatch, "--output-sqlite", str(copy)) == 0
+    assert copy.is_file() and manifest_path_for(copy).is_file()
+
+
+def test_stream_run_cleanup_error_keeps_the_outcome(tmp_root, tmp_path, monkeypatch):
+    """A cleanup OSError changes neither the streamed outcome nor its files."""
+    monkeypatch.setattr(scenario_module.ScenarioResult, "cleanup", _failing_cleanup)
+    monkeypatch.setattr(
+        scenario_module, "load_scenario", lambda _path: _scenario(ENOUGH_S)
+    )
+    copy = tmp_path / "out" / "run.sqlite"
+    sent: list = []
+    outcome = stream_run(
+        options({"scenario": "unused", "output_sqlite": str(copy)}), sent.append
+    )
+    assert outcome.status == events.STATUS_SUCCESS, outcome.error
+    assert outcome.files == (
+        str(copy.resolve()),
+        str(manifest_path_for(copy.resolve())),
+    )
+    assert sent[-1] == outcome
+
+
 def test_cancelled_stream_run_leaves_no_temp_files(tmp_root, monkeypatch):
     """A cancelled streamed run is reported as cancelled and leaves nothing."""
     monkeypatch.setattr(
