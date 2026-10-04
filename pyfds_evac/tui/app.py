@@ -1769,9 +1769,10 @@ class EvacTui(App[None]):
         spark.data = evacuated_series(run) or [0]
         spark.display = bool(run.frames) and self.has_class("-wide")
         if spark.display:
-            parts.append(
-                m("\n[dim]Evacuated over sim time, 0–$t s ↓[/]", t=f"{snap.max_time:g}")
-            )
+            # The series has one point per plan frame, so it spans the frames,
+            # not the scenario's time limit.
+            end = run.frames[-1][0].sim_time
+            parts.append(m("\n[dim]Evacuated over sim time, 0–$t s ↓[/]", t=f"{end:g}"))
             self.query_one("#res-exits", Static).update(Content.assemble(*parts))
         files = self.query_one("#res-files", OptionList)
         files.clear_options()

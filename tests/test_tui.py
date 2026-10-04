@@ -2193,3 +2193,24 @@ def test_click_on_an_inactive_switch_shows_why(workdir):
             assert "inactive" in str(hold.query_one(".marker").render()) or hold.reason
 
     run(go())
+
+
+def test_results_chart_label_spans_the_frames(workdir):
+    """The evacuated chart covers the plan frames (to 20 s), not the 300 s limit."""
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            replay(app, result_event(events.STATUS_SUCCESS))
+            app.render_results()
+            await pilot.pause()
+            text = text_of(app, "#res-exits")
+            assert "Evacuated over sim time, 0–20 s" in text
+            assert "0–300 s" not in text
+
+    run(go())
