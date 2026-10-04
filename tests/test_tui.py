@@ -1494,3 +1494,28 @@ def test_coupled_run_sends_grids_after_the_first_fds_frame(tmp_path):
     assert frames and max(gaps) <= 1.0 + 0.1
     grids = [f.smoke for f in frames if f.smoke is not None]
     assert any(g.fds_time_s > 0 for g in grids)
+
+
+@pytest.mark.slow
+def test_child_output_goes_to_child_log_not_the_terminal(tmp_path, monkeypatch, capfd):
+    """Debug lines and warnings of the run never reach the TUI's terminal (#519)."""
+    from pyfds_evac.tui.runner import ProcessRunner
+
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    monkeypatch.setenv("TMPDIR", str(tmp))
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp))
+    form = model.Form()
+    form.scenario = model.read_scenario(ASSETS / "iso_table21_coupled")
+    form.fds_dir = str(ASSETS / "iso_table21_coupled" / "fds")
+    base = form.run_folder("LOG", tmp_path)
+    values = {**vars(form.namespace(form.output_paths(base))), "debug": True}
+    got: list = []
+    runner = ProcessRunner(frames=False)
+    capfd.readouterr()
+    runner.start(values, base, got.append)
+    assert runner.join(300)
+    assert isinstance(got[-1], events.ResultEvent), got[-3:]
+    out, err = capfd.readouterr()
+    assert (out, err) == ("", "")
+    assert "Reroute debug" in (Path(base) / "child.log").read_text()
