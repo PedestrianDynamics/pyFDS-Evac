@@ -2418,3 +2418,27 @@ def test_review_offers_the_way_back_to_a_running_run(workdir):
             assert app.step == 4
 
     run(go())
+
+
+def test_enter_after_tab_chooses_an_fds_folder_with_subfolders(workdir, tmp_path):
+    """A trailing / (what Tab leaves) keeps "Use this folder" highlighted."""
+    root = _fds_tree(tmp_path / "t")
+    case = root / "beta" / "case"
+    (case / "sub").mkdir()
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.select_scenario(workdir / "assets" / "ISO-table21")
+            await settle(pilot, app)
+            box = app.query_one("#fds-path")
+            box.value = f"{case}{os.sep}"
+            await settle(pilot, app)
+            choices = app.query_one("#fds-choices")
+            choices.focus()
+            assert choices.get_option_at_index(choices.highlighted).id == "use"
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.fds_dir == str(case.resolve())
+
+    run(go())

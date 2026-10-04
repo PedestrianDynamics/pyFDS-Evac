@@ -826,7 +826,7 @@ class EvacTui(App[None]):
                     disabled=True,
                 )
             )
-        listing.highlighted = _first_entry(listing, "e-")
+        listing.highlighted = _first_entry(listing, "e-", text)
 
     @on(OptionList.OptionSelected, "#open-list")
     def _open_choice(self, event: OptionList.OptionSelected) -> None:
@@ -1004,7 +1004,7 @@ class EvacTui(App[None]):
         choices.add_option(
             Option(m("No FDS (clear air)  [dim]no fire input[/]"), id="no-fds")
         )
-        choices.highlighted = _first_entry(choices, "dir-")
+        choices.highlighted = _first_entry(choices, "dir-", text)
 
     def _go_into(self, folder: Path, box_id: str = "#fds-path") -> None:
         box = self.query_one(box_id, Input)
@@ -2301,9 +2301,11 @@ PREVIEW_LINES = 40
 PREVIEW_WIDTH = 200
 
 
-def _first_entry(options: OptionList, prefix: str) -> int:
-    """Index of the first listed entry (not ``..``), so Enter picks the best
-    match after typing; 0 when nothing matched."""
+def _first_entry(options: OptionList, prefix: str, text: str) -> int:
+    """The row to highlight: after a typed name, the first match (not ``..``
+    or "Use this folder"), so Enter picks it; else row 0."""
+    if not os.path.split(text)[1]:
+        return 0
     for index in range(options.option_count):
         if (options.get_option_at_index(index).id or "").startswith(prefix):
             return index

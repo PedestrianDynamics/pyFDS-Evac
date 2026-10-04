@@ -331,6 +331,7 @@ output folder is included. The idea is the same as in the Web GUI; see
 | Review | `c` | copy the command to the clipboard (OSC 52) |
 | Review | `s` | write `command.sh` and `run.py` into the planned run folder, before any run |
 | Review | `p` | show the equivalent Python of the current settings |
+| Review, during a run | `ctrl+n` | back to the Run step |
 | Run | `x` or `ctrl+c` | cancel, after a confirmation |
 | Run | `v` / `w` / `l` | full-screen plan / warnings / log |
 | Results | `c` | open "Command and Python for run #*N*", built from the run's settings; `c` in the dialog copies |
