@@ -143,9 +143,7 @@ plan to zoom and drag to pan; **↺** resets the view. With an FDS folder set,
 the smoke layer is drawn under the agents: the horizontal extinction slice
 nearest the run's smoke slice height, picked by the rule the engine samples
 by (see [Selecting a slice height](fds-sampling.md#selecting-a-slice-height)).
-The result does not record the engine's slice height yet, so the replay
-selects the slice again with the same rule
-([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592)). **Smoke layer** switches the layer on and off.
+**Smoke layer** switches the layer on and off.
 
 Cells are shaded in fixed bins of the extinction coefficient *K*, the same
 for every run and the same as in the [terminal UI](terminal-ui.md#the-plan-view).
@@ -180,8 +178,9 @@ series ends when no such agent is left. The line under the chart gives both
 ranges, the time span and the number of smoke updates. It adds a sentence
 when the series ends more than one update before the run, and when samples
 outside the FDS domain, taken as ambient air, enter the mean
-([#594](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/594)). Cognitive map growth is listed under **Not shown**:
-no agent's cognitive map grows in this one-agent corridor.
+([#594](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/594)).
+Cognitive map growth is listed under **Not shown**: no agent's cognitive
+map grows in this one-agent corridor.
 
 [![A chart titled Smoke with the caption "Mean over the agents still in the simulation and not incapacitated, at each smoke update." Simulated time (s) runs from 0 to about 85 s. The left axis, Speed factor (–), runs from 0 to 1; the right axis, Extinction coefficient K (1/m), from 0 to just above 1. The solid mean speed factor line is flat at about 0.92 and the dashed mean K line is flat just below 1. Under the chart: "Mean speed factor: 0.920 to 0.920 · Mean K: 0.996 to 0.996 1/m · from 0.0 s to 85.0 s, 86 smoke updates"](/images/web-gui/smoke_chart.png "The Smoke chart of the same run. K is uniform at about 1 1/m, so both lines are flat.")](images/web-gui/smoke_chart.png)
 
@@ -257,9 +256,13 @@ that names the run and its own buttons:
 |---|---|---|
 | Results | the run finished and its results are displayed | **Show Python for this run**, **Clear results** |
 | Failed | the run raised an error; the message comes first | **Show configuration of this run**, **Clear** |
-| Cancelled | you cancelled the run; no results were produced. The message gives the simulated time of the last progress sample, "Run #N was cancelled at sim *t* s.", or says that the run was cancelled before the first progress sample | **Show configuration of this run**, **Clear** |
+| Cancelled | you cancelled the run; no results were produced | **Show configuration of this run**, **Clear** |
 | Results not displayed | the run finished, but its results view could not be built | **Show Python for this run**, **Clear** |
 | Ended | another run started, possibly in another window | **Show current run** |
+
+A cancelled run's message gives the simulated time of the last progress
+sample, "Run #N was cancelled at sim *t* s.", or says that the run was
+cancelled before the first progress sample.
 
 **Clear results** asks for confirmation first: "Clear the results of run #N
 from this view? The files on disk are kept." **Clear** on a failed or
@@ -274,8 +277,10 @@ has entered and left, and "Incomplete: time limit reached, *k* agents
 inside" when the time limit stopped the run first. When flow agents were
 still to enter, it adds ", *m* not spawned", a Not spawned tile appears, and
 the Evacuated tile reads "*e* of *n* that entered", where *n* counts the
-agents that entered ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)). The Incapacitated tile is shown on
-every finished run; see [Results](#results).
+agents that entered
+([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
+The Incapacitated tile is shown on every finished run; see
+[Results](#results).
 
 ### Settings changed
 
@@ -321,16 +326,21 @@ already exists, `-2`, `-3`, … is added to its name.
   peak FED can still be shown although no agent is stopped. The count is
   shown on its own, not as part of Remaining
   ([#593](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/593)).
-- **Charts**: smoke over time and the growth of the cognitive maps. FED is
-  shown live during a run.
+- **Charts**: smoke over time and the growth of the cognitive maps. Charts
+  without data are listed under **Not shown**. FED is shown live during a
+  run.
 - **Trajectory replay**: agents move between the stored trajectory samples,
   coloured by cumulative gas FED or by assigned exit, with play, pause, a
   scrub bar, speeds of 1×, 2×, 5×, 10× and 50× or a custom speed, and
   scroll-to-zoom and drag-to-pan. When the run has an `fds_dir`, the
   horizontal extinction slice the engine samples is drawn under the agents
   in fixed *K* bins, as a smoke layer that can be switched off; see
-  [Look at the results](#look-at-the-results). Without a FED model, for example when the FDS output has no
-  CO, CO₂ or O₂ slices, agents are coloured by exit and the FED/exit
+  [Look at the results](#look-at-the-results). The result does not record
+  the engine's slice height yet, so the replay selects the slice again
+  with the same rule
+  ([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592)).
+  Without a FED model, for example when the FDS output has no CO, CO₂ or O₂
+  slices, agents are coloured by exit and the FED/exit
   switch is not shown. The replay colours by gas FED only, not by heat FED
   ([#232](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/232)).
 - **FED panel**: under the replay, when the run has a FED model. It shows

@@ -278,12 +278,12 @@ The exit statuses are those of `pyfds-evac`; see
 of *n* agents" ("… that entered" when flow agents had not spawned), and
 "Incapacitated *j*" when the run models incapacitation or "Incapacitated:
 not modelled in this run" when it does not. Below 100 columns the
-incapacitated part goes on a line of its own. When a run models
-incapacitation is stated under [Results](web-gui.md#results) on the Web GUI
-page. After that come the run line (run number, scenario, seed used, wall
-time), the warnings, the per-exit counts at the end of the run, the
-evacuated-over-time sparkline (wide layout only), and the output files with
-their sizes.
+incapacitated part goes on a line of its own.
+[Results](web-gui.md#results) on the Web GUI page says when a run models
+incapacitation. After that come the run line (run number, scenario, seed
+used, wall time), the warnings, the per-exit counts at the end of the run,
+the evacuated-over-time sparkline (wide layout only), and the output files
+with their sizes.
 
 - `←` and `→` replay the stored plan frames 1 s at a time, `shift+←` and
   `shift+→` 10 s at a time. Replay works only after the run has ended.
@@ -401,14 +401,15 @@ CSV files are the results. It draws:
 - signs (`◆`), agents (`•`; `●` for two or more in a cell; `x` incapacitated);
 - the smoke as the extinction coefficient K in fixed bins at 0.1, 0.5, 1, 3
   and 10 1/m, the same for every run. The Web GUI replay uses the same bins
-  and the same slice rule, so the two front ends show the same smoke.
+  and the same slice rule, so the two front ends draw smoke by the same rule.
 
 The legend states the FDS slice height and the FDS frame time the run read.
 That height is the slice actually read, the one nearest to the smoke slice
 height: in the screenshots the slice is at 2.0 m, while the setting is the
 default 1.6 m. See [Selecting a slice height](fds-sampling.md#selecting-a-slice-height).
 The run manifest does not record the slice height yet
-([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592)); see [Run manifest](outputs.md#run-manifest).
+([#592](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/592));
+see [Run manifest](outputs.md#run-manifest).
 
 Without plan data, or with `TERM=dumb`, the region reads "plan not available".
 
