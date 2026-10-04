@@ -2475,3 +2475,324 @@ def test_trajectory_custom_speed_is_a_decimal_text_input():
     assert 'aria-live="polite"' in trajviz._SPEED_MSG
     assert "setAttribute('aria-invalid', 'true')" in trajviz._JS
     assert "v >= SPEED_MIN" in trajviz._JS and "SPEED_MIN = 0.05" in trajviz._JS
+
+
+# ── Round trip of every GUI setting (#532) ────────────────────────────────────
+# One non-default value the parser accepts for each option the form shows,
+# posted as the browser posts it ("on"/"off" for a switch). No single form
+# passes validate_opts with all of them (--vis-cache requires rerouting), so
+# they are split into two valid profiles. The None-default options get an
+# explicit 0 where the parser accepts it, so 0 stays apart from "unset".
+_RT_ZERO = (
+    "seed",
+    "constant_extinction",
+    "heat_layer_height",
+    "heat_view_factor",
+    "heat_layer_emissivity",
+    "heat_fed_threshold",
+)
+_RT_A = {
+    "seed": "0",
+    "constant_extinction": "0",
+    "smoke_update_interval": "2.5",
+    "smoke_slice_height": "1.8",
+    "allow_fds_horizon_hold": "on",
+    "require_fds_coverage": "on",
+    "debug": "on",
+    "enable_rerouting": "off",
+    "disable_tenability": "on",
+    "clear_air_visibility": "on",
+    "vis_cell_size": "0.5",
+    "max_sign_distance": "20.0",
+    "incapacitation_mode": "probabilistic",
+    "susceptibility_sigma": "0.5",
+    "fed_threshold": "0.3",
+    "o2_threshold_percent": "15.0",
+    "enable_fic_speed": "on",
+    "fic_alpha": "0.5",
+    "fic_min_factor": "0.2",
+}
+_RT_B = {
+    "smoke_blind": "on",
+    "replay_exits": "exits/replay.csv",
+    "vis_cache": "cache/vis.npz",
+    "reroute_interval": "3.0",
+    "no_visibility": "on",
+    "enable_heat_fed": "on",
+    "heat_clothing": "unclothed",
+    "heat_endpoint": "injury",
+    "heat_fed_method": "total-flux",
+    "heat_emissivity": "0.9",
+    "heat_convective_coefficient": "8.0",
+    "heat_skin_temperature": "34.0",
+    "heat_radiant_source": "integrated-intensity",
+    "heat_u_factor": "0.5",
+    "heat_regime": "layer",
+    "heat_layer_height": "0",
+    "heat_view_factor": "0",
+    "heat_layer_emissivity": "0",
+    "heat_fed_threshold": "0",
+    "heat_incapacitation_mode": "probabilistic",
+    "heat_susceptibility_sigma": "0.5",
+}
+_ASSETS = pathlib.Path(__file__).resolve().parents[1] / "assets"
+# Path options the script resolves (PATHS block) or should resolve (#558).
+_RT_PATHS = ("fds_dir", "vis_cache", "replay_exits")
+
+
+def _rt_profiles(fds_dir):
+    """The two profiles; fds_dir must name a folder for _resolve_form."""
+    return (
+        {"scenario": "t_junction", **_RT_A},
+        {"scenario": "t_junction", "fds_dir": str(fds_dir), **_RT_B},
+    )
+
+
+def _rt_shown():
+    """Run options the form shows and the user sets (not output paths)."""
+    from pyfds_evac.config.parameters import GUI_HIDDEN, RUN_OPTIONS
+    from pyfds_evac.webapp.pyexport import OMITTED_OUTPUT_KEYS
+
+    return set(RUN_OPTIONS) - GUI_HIDDEN - set(OMITTED_OUTPUT_KEYS) - {"scenario"}
+
+
+def _rt_hidden():
+    """Run options the form does not show; they must stay at the default."""
+    from pyfds_evac.config.parameters import GUI_HIDDEN, RUN_OPTIONS
+
+    return set(RUN_OPTIONS) & GUI_HIDDEN
+
+
+def _rt_browser(form):
+    """*form* as the browser posts it: a checked switch sends "off", "on"."""
+    return {k: ["off", "on"] if v == "on" else v for k, v in form.items()}
+
+
+def _rt_argv(form):
+    """The pyfds-evac arguments that set what *form* sets."""
+    import run as cli
+
+    actions = {a.dest: a for a in cli._build_parser()._actions}
+    argv = []
+    for dest, value in form.items():
+        flags = actions[dest].option_strings
+        if value == "on":
+            argv.append(flags[0])
+        elif value == "off":
+            argv.append(next(f for f in flags if f.startswith("--no-")))
+        else:
+            argv += [flags[0], value]
+    return argv
+
+
+def _rt_same_path(a, b):
+    from pathlib import Path
+
+    return Path(a).resolve() == Path(b).resolve()
+
+
+def _rt_check_script(lit, expected, seed):
+    """The script's PATHS and OPTIONS against the resolved options."""
+    from pyfds_evac.config.parameters import default
+    from pyfds_evac.webapp.pyexport import OMITTED_OUTPUT_KEYS
+
+    rebuilt = dict(lit["OPTIONS"])
+    rebuilt.update(fds_dir=lit["FDS_DIR"], vis_cache=lit["VIS_CACHE"])
+    assert set(rebuilt) | {"scenario"} == set(expected)
+    got = rebuilt.pop("seed")
+    assert got == seed and (got is None) == (seed is None)  # 0 is not None
+    for key, value in rebuilt.items():
+        if key in OMITTED_OUTPUT_KEYS:
+            assert value is None, key
+        elif key in _RT_PATHS and value is not None:
+            assert _rt_same_path(value, expected[key]), key
+        else:
+            assert value == expected[key], key
+    assert rebuilt["collect_route_cost_history"] is True  # fixed by the GUI
+    for key in _rt_hidden():
+        assert rebuilt[key] == default(key), key
+
+
+class TestRoundTrip:
+    """#532: every setting the form shows survives each GUI serialisation.
+
+    Paths: form -> form_to_opts / _resolve_form -> RunSpec snapshot ->
+    "Show equivalent Python" (preview and run) and the run manifest's
+    configuration record (options and CLI command). Values must be equal;
+    the format may differ. Output paths and hidden flags are checked to stay
+    fixed, not round-tripped. The GUI has no reload of a run's settings
+    (#534), so there is no reload path to test.
+    """
+
+    def test_profiles_cover_every_shown_option(self, tmp_path):
+        covered = set().union(*(set(p) for p in _rt_profiles(tmp_path)))
+        assert covered - {"scenario"} == _rt_shown()
+        for key in _RT_ZERO:
+            assert any(p.get(key) == "0" for p in _rt_profiles(tmp_path)), key
+
+    def test_form_maps_every_option_as_the_cli_parses_it(self, tmp_path):
+        import run as cli
+        from pyfds_evac.config.parameters import default
+        from pyfds_evac.webapp.params import form_to_opts
+
+        parser = cli._build_parser()
+        for form in _rt_profiles(tmp_path):
+            gui = vars(form_to_opts(form))
+            api = vars(parser.parse_args(_rt_argv(form)))
+            for key in set(form) - {"scenario"}:
+                assert gui[key] == api[key], key
+                assert gui[key] != default(key), key
+            for key in set(_RT_ZERO) & set(form):
+                assert gui[key] is not None and gui[key] == 0, key
+
+    def test_preview_keeps_every_option(self, client, tmp_path):
+        from pyfds_evac.webapp.app import _resolve_form
+
+        for form in _rt_profiles(tmp_path):
+            code = _code_of(_preview(client, **_rt_browser(form)))
+            _scenario, opts = _resolve_form(dict(form))
+            expected = vars(opts)
+            _rt_check_script(_script_literals(code), expected, expected["seed"])
+
+    @pytest.mark.parametrize(
+        ("reported", "confirmed"), [("expected", True), (5, False)]
+    )
+    def test_run_export_keeps_every_option(self, tmp_path, reported, confirmed):
+        from pyfds_evac.webapp.app import _resolve_form
+        from pyfds_evac.webapp.params import scenario_path
+        from pyfds_evac.webapp.pyexport import run_script
+        from pyfds_evac.webapp.runner import _finished_spec, make_run_spec
+
+        for form in _rt_profiles(tmp_path):
+            scenario, opts = _resolve_form(dict(form))
+            spec = make_run_spec(
+                opts, scenario, "t_junction", str(scenario_path("t_junction"))
+            )
+            seed = spec.expected_seed if reported == "expected" else reported
+            result = SimpleNamespace(
+                metrics={"seed": seed, "status": "completed"},
+                total_agents=1,
+                agents_evacuated=1,
+                agents_remaining=0,
+                evacuation_time=1.0,
+            )
+            done = _finished_spec(spec, "done", result, None)
+            assert done.seed_used == (seed if confirmed else None)
+            # A blank Seed becomes the seed the run used; an explicit 0 stays 0.
+            want = done.seed_used if confirmed else spec.opts["seed"]
+            lit = _script_literals(run_script(done).code)
+            _rt_check_script(lit, dict(spec.opts), want)
+
+    def test_manifest_record_keeps_every_option(self, tmp_path):
+        import json
+        import shlex
+
+        import run as cli
+        from pyfds_evac.config.parameters import RUN_OPTIONS, parameter
+        from pyfds_evac.core.run_outputs import _configuration_record
+        from pyfds_evac.webapp.app import _resolve_form
+        from pyfds_evac.webapp.params import scenario_path
+        from pyfds_evac.webapp.runner import make_run_spec
+
+        parser = cli._build_parser()
+        # The record reads the FDS inventory, so fds_dir needs FDS output; a
+        # copy keeps fdsreader's cache files out of assets/.
+        fds_dir = tmp_path / "fds"
+        shutil.copytree(_ASSETS / "iso_table21_coupled" / "fds", fds_dir)
+        for form in _rt_profiles(fds_dir):
+            scenario, opts = _resolve_form(dict(form))
+            spec = make_run_spec(
+                opts, scenario, "t_junction", str(scenario_path("t_junction"))
+            )
+            record = _configuration_record(
+                scenario, spec.namespace(), SimpleNamespace(run_settings=None)
+            )
+            assert record is not None
+            record = json.loads(json.dumps(record))
+            words = shlex.split(record["command"])
+            command = vars(parser.parse_args(words[1:]))
+            # The picker name is the scenario option; the command has its path.
+            assert _rt_same_path(command.pop("scenario"), spec.scenario_path)
+            for key in set(RUN_OPTIONS) - {"scenario"}:
+                assert record["options"][key]["value"] == spec.opts[key], key
+                text = parameter(key).kind == "text"
+                if text and spec.opts[key] is not None:
+                    assert _rt_same_path(command[key], spec.opts[key]), key
+                else:
+                    assert command[key] == spec.opts[key], key
+
+    def test_changing_any_option_marks_the_run_export_stale(self, tmp_path):
+        from pyfds_evac.webapp.app import _form_vs_run, _resolve_form
+        from pyfds_evac.webapp.params import scenario_path
+        from pyfds_evac.webapp.runner import make_run_spec
+
+        for form in _rt_profiles(tmp_path):
+            scenario, opts = _resolve_form(dict(form))
+            spec = make_run_spec(
+                opts, scenario, "t_junction", str(scenario_path("t_junction"))
+            )
+            assert _form_vs_run(dict(form), spec) == (False, None)
+            for key in set(form) - {"scenario"}:
+                reverted = {k: v for k, v in form.items() if k != key}
+                assert _form_vs_run(reverted, spec)[0] is True, key
+
+    def test_hidden_flags_have_no_field_and_stay_default(self, client, tmp_path):
+        from pyfds_evac.config.parameters import default
+        from pyfds_evac.webapp.params import form_to_opts
+
+        html = client.get("/").text
+        for form in _rt_profiles(tmp_path):
+            opts = vars(form_to_opts(form))
+            for key in _rt_hidden():
+                assert f'name="{key}"' not in html, key
+                assert opts[key] == default(key), key
+
+    @pytest.mark.xfail(
+        strict=True,
+        reason="form_to_opts applies a posted hidden flag (export_only, "
+        "print_summary, cleanup, inspect_fds) the form never shows",
+    )
+    def test_a_posted_hidden_flag_is_not_applied(self):
+        from pyfds_evac.config.parameters import default
+        from pyfds_evac.webapp.params import form_to_opts
+
+        posted = {key: "on" for key in _rt_hidden()}
+        try:
+            opts = vars(form_to_opts({"scenario": "t_junction", **posted}))
+        except ValueError:
+            return  # rejecting the post is as good as ignoring it
+        for key in _rt_hidden():
+            assert opts[key] == default(key), key
+
+    @pytest.mark.xfail(strict=True, reason="#558: replay_exits stays relative")
+    def test_run_export_resolves_replay_exits(self, tmp_path):
+        from pathlib import Path
+
+        from pyfds_evac.webapp.app import _resolve_form
+        from pyfds_evac.webapp.params import scenario_path
+        from pyfds_evac.webapp.pyexport import run_script
+        from pyfds_evac.webapp.runner import make_run_spec
+
+        scenario, opts = _resolve_form(dict(_rt_profiles(tmp_path)[1]))
+        spec = make_run_spec(
+            opts, scenario, "t_junction", str(scenario_path("t_junction"))
+        )
+        lit = _script_literals(run_script(spec).code)
+        assert Path(lit["OPTIONS"]["replay_exits"]).is_absolute()
+
+    def test_blank_paths_resolve_to_none(self, client):
+        """A blank path field is None, never "" (#557 needs "")."""
+        from pyfds_evac.webapp.app import _resolve_form
+
+        form = {
+            "scenario": "t_junction",
+            "fds_dir": "",
+            "replay_exits": "  ",
+            "vis_cache": "",
+        }
+        _scenario, opts = _resolve_form(dict(form))
+        for key in _RT_PATHS:
+            assert getattr(opts, key) is None, key
+        lit = _script_literals(_code_of(_preview(client, **form)))
+        assert lit["FDS_DIR"] is None and lit["VIS_CACHE"] is None
+        assert lit["OPTIONS"]["replay_exits"] is None
