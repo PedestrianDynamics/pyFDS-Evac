@@ -200,8 +200,7 @@ difference as maps. Each agent carries
 its own dose along its path; see
 [Fractional effective dose](/models/fed.md).
 
-C/VM2 and the Engineers Australia note evaluate at 2.0 m. For the height
-pyFDS-Evac samples and how to check a run against C/VM2, see
+For the height pyFDS-Evac samples and how to check a run against C/VM2, see
 [Selecting a slice height](/docs/fds-sampling.md#selecting-a-slice-height).
 
 RSET from a run without the fire against a coupled run:
