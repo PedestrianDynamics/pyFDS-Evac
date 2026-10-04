@@ -13,7 +13,9 @@ from pyfds_evac.webapp.launch import warn_if_exposed
 REPO = Path(__file__).resolve().parents[1]
 
 
-@pytest.mark.parametrize("host", ["127.0.0.1", "127.0.1.1", "::1", "localhost"])
+@pytest.mark.parametrize(
+    "host", ["127.0.0.1", "127.0.1.1", "::1", "localhost", "LocalHost"]
+)
 def test_no_warning_on_loopback(host, capsys):
     warn_if_exposed(host, 5001)
     assert capsys.readouterr().err == ""
@@ -49,13 +51,14 @@ def test_repo_app_py_binds_loopback_by_default(argv, host, monkeypatch, capsys):
 @pytest.mark.parametrize(
     ("argv", "host"), [([], "127.0.0.1"), (["--host", "0.0.0.0"], "0.0.0.0")]
 )
-def test_module_main_binds_loopback_by_default(argv, host, monkeypatch):
+def test_module_main_binds_loopback_by_default(argv, host, monkeypatch, capsys):
     pytest.importorskip("fasthtml")
     import pyfds_evac.webapp.app as app_module
 
     calls = _record_serve(monkeypatch, "pyfds_evac.webapp.app.serve")
     app_module._main(argv)
     assert calls == [{"appname": "pyfds_evac.webapp.app", "host": host, "port": 5001}]
+    assert ("Warning" in capsys.readouterr().err) is (host != "127.0.0.1")
 
 
 @pytest.mark.parametrize(
