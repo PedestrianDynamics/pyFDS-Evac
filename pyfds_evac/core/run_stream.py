@@ -29,6 +29,7 @@ from pyfds_evac.config import events
 from pyfds_evac.config.parameters import DEFAULTS
 
 from .plan_view import DEFAULT_MAX_HZ, DEFAULT_SMOKE_HZ, FrameRecorder, plan_event
+from .run_outputs import apply_outputs, configure_logging, summary_line
 
 Emit = Callable[[Any], None]
 
@@ -117,14 +118,12 @@ def _files(artifacts: list[str]) -> tuple[str, ...]:
 def _result_event(
     result: Any, files: tuple[str, ...], exit_counts: dict[str, int] | None
 ) -> events.ResultEvent:
-    from pyfds_evac.cli import _summary_line
-
     status = events.result_status(result.success)
     metrics = result.metrics
     return events.ResultEvent(
         status=status,
         exit_code=events.EXIT_CODES[status],
-        summary=_summary_line(result),
+        summary=summary_line(result),
         fds_outside=metrics.get("fds_outside"),
         files=files,
         evacuated=int(metrics["agents_evacuated"]),
@@ -161,13 +160,12 @@ def stream_run(
     *cancel* is polled at each progress sample and between phases.
     Warnings carry the simulated time of the last progress sample.
     """
-    from pyfds_evac.cli import _configure_logging, apply_outputs
-
     from .run_config import build_run_kwargs
     from .scenario import load_scenario, run_scenario
 
     clock = _Clock()
     files: tuple[str, ...] = ()
+    result: Any = None
     recorder: FrameRecorder | None = None
 
     def check_cancel() -> None:
@@ -179,7 +177,7 @@ def stream_run(
         emit(event)
         check_cancel()
 
-    _configure_logging(bool(getattr(opts, "debug", False)))
+    configure_logging(bool(getattr(opts, "debug", False)))
     handler = _WarningEvents(emit, clock)
     root = logging.getLogger()
     # With --debug the model logger does not propagate to the root.
@@ -231,6 +229,10 @@ def stream_run(
     finally:
         for logger in loggers:
             logger.removeHandler(handler)
+        # The result is not returned: remove its temporary trajectory (#524).
+        if result is not None:
+            with contextlib.suppress(OSError):
+                result.cleanup()
     emit(events.PhaseEvent(events.PHASE_DONE))
     emit(outcome)
     return outcome
