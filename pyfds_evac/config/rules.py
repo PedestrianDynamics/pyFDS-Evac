@@ -567,6 +567,9 @@ def heat_value_issue(opts: Any) -> ConfigIssue | None:
         # run_config passes the layer values only in the layer regime.
         layer = regime == "layer"
         # A non-layer regime runs only the range checks of the layer values.
+        # Passing "smoke" relies on fed._check_layer_parameters running the
+        # range checks before its regime return; fed's own tests pin that
+        # order (test_smoke_regime_still_checks_the_layer_ranges).
         owned_by_d19 = _check_heat_layer(opts) is not None
         fed._check_layer_parameters(
             "smoke" if owned_by_d19 else regime,
