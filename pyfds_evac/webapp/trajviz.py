@@ -459,7 +459,7 @@ _JS = """
     TH.noData     = light ? '#6f665e'              : '#9aa0a6';
     // Smoke is drawn as raw RGBA bytes: pale grey reads on the dark ground,
     // but on paper it has to darken instead or it vanishes.
-    TH.smokeRGB   = light ? [90, 88, 100] : [205, 203, 214];
+    TH.smokeRGB   = light ? __SMOKE_LIGHT__ : __SMOKE_DARK__;
   }
   readTheme();
 
@@ -483,14 +483,9 @@ _JS = """
     smCanvas.width = SM.W; smCanvas.height = SM.H;
     smCtx = smCanvas.getContext('2d');
   }
-  // Opacity per bin, the same steps as the legend swatches.
-  function binAlpha(b) { return b <= 0 ? 0 : Math.min(0.85, 0.17 * b); }
-  function paintSmokeLegend() {
-    var sw = document.querySelectorAll('.smoke-legend .sw');
-    for (var i = 0; i < sw.length; i++) {
-      sw[i].style.background = 'rgba(' + TH.smokeRGB.join(',') + ',' + binAlpha(i + 1) + ')';
-    }
-  }
+  // Opacity per bin, the same steps as the legend swatches (SMOKE_ALPHA).
+  var SMOKE_ALPHA = __SMOKE_ALPHA__;
+  function binAlpha(b) { return b <= 0 ? 0 : SMOKE_ALPHA[Math.min(b, SMOKE_ALPHA.length) - 1]; }
   function smokeCaption(fi) {
     var el = document.getElementById('smoke-caption');
     if (!el || !SM) return;
@@ -886,16 +881,24 @@ _JS = """
   // into a canvas with literal colours, so they need an explicit repaint.
   window.trajRepaint = function () {
     readTheme();
-    paintSmokeLegend();
     draw();
     if (typeof drawFedPanel === 'function') drawFedPanel();
   };
 
-  paintSmokeLegend();
   draw();
   requestAnimationFrame(loop);
 })();
 """
+
+
+def _js(data_json: str) -> str:
+    """The replay script with its data and the smoke colours filled in."""
+    return (
+        _JS.replace("__DATA__", data_json)
+        .replace("__SMOKE_LIGHT__", json.dumps(list(SMOKE_RGB["light"])))
+        .replace("__SMOKE_DARK__", json.dumps(list(SMOKE_RGB["dark"])))
+        .replace("__SMOKE_ALPHA__", json.dumps(list(SMOKE_ALPHA)))
+    )
 
 
 def fed_scale(threshold: Any) -> float:
@@ -993,15 +996,67 @@ _SPEED_CUSTOM_INPUT = (
 _SPEED_MSG = '<span id="traj-speed-msg" class="speed-msg" aria-live="polite"></span>'
 
 
+# Smoke colour of the replay per theme, and its opacity per K bin (1-5).
+# The canvas and the legend swatches use the same values.
+SMOKE_RGB = {"dark": (205, 203, 214), "light": (90, 88, 100)}
+SMOKE_ALPHA = (0.17, 0.34, 0.51, 0.68, 0.85)
+# The card the legend sits on (theme.py --surface-card).
+_LEGEND_GROUND = {"dark": (0x2A, 0x26, 0x2A), "light": (0xFF, 0xFD, 0xFA)}
+_INK_DARK, _INK_LIGHT = (0x00, 0x00, 0x00), (0xFF, 0xFF, 0xFF)
+
+
+def _luminance(rgb: tuple[int, ...]) -> float:
+    """WCAG relative luminance of an sRGB colour."""
+
+    def lin(c: float) -> float:
+        c /= 255.0
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (lin(c) for c in rgb)
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(a: tuple[int, ...], b: tuple[int, ...]) -> float:
+    """WCAG contrast ratio of two sRGB colours."""
+    la, lb = sorted((_luminance(a), _luminance(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def smoke_swatches(theme: str) -> list[tuple[tuple[int, ...], tuple[int, ...]]]:
+    """``(background, text)`` of each legend swatch in *theme*.
+
+    The background is the smoke colour at the bin's opacity over the card;
+    the text is dark or white ink, whichever contrasts more with it.
+    """
+    smoke, ground = SMOKE_RGB[theme], _LEGEND_GROUND[theme]
+    out = []
+    for a in SMOKE_ALPHA:
+        bg = tuple(round(a * s + (1 - a) * g) for s, g in zip(smoke, ground))
+        ink = max((_INK_DARK, _INK_LIGHT), key=lambda c: contrast(bg, c))
+        out.append((bg, ink))
+    return out
+
+
+def _hex(rgb: tuple[int, ...]) -> str:
+    return "#{:02x}{:02x}{:02x}".format(*rgb)
+
+
 def _smoke_legend() -> str:
     """Fixed K bins with their numbers on the swatches, and the caption.
 
-    The swatch colours are painted by the replay script from the theme's
-    smoke colour; the numbers carry the scale without relying on colour.
+    Each swatch carries its colours for both themes as CSS variables
+    (``.smoke-legend .sw`` picks the pair); the numbers carry the scale
+    without relying on colour.
     """
     labels = [f"{e:g}" for e in SMOKE_K_EDGES]
     labels[-1] = f"\u2265{labels[-1]}"
-    swatches = "".join(f'<span class="sw">{lab}</span>' for lab in labels)
+    dark, light = smoke_swatches("dark"), smoke_swatches("light")
+    swatches = "".join(
+        f'<span class="sw" style="--sw-bg-d:{_hex(dark[i][0])};'
+        f"--sw-fg-d:{_hex(dark[i][1])};--sw-bg-l:{_hex(light[i][0])};"
+        f'--sw-fg-l:{_hex(light[i][1])}">{lab}</span>'
+        for i, lab in enumerate(labels)
+    )
     return (
         '<div class="smoke-legend" role="group" aria-label="Smoke K scale">'
         f"<span>Smoke K (1/m)</span>{swatches}"
@@ -1064,7 +1119,7 @@ def trajectory_component(
             '<div class="traj-color">'
             '<span class="traj-color-lbl">Smoke layer</span>'
             '<button id="traj-smoke" type="button" class="cmode active" '
-            'aria-pressed="true">on</button>'
+            'aria-label="Smoke layer" aria-pressed="true">on</button>'
             "</div>"
         )
         smoke_legend = _smoke_legend()
@@ -1098,7 +1153,7 @@ def trajectory_component(
         + (_fed_panel(fed_threshold, fed_mode) if payload["hasFed"] else "")
         + "</div>"
     )
-    script = "<script>" + _JS.replace("__DATA__", data_json) + "</script>"
+    script = "<script>" + _js(data_json) + "</script>"
     return Div(
         Div(
             H3(

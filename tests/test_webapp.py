@@ -1748,7 +1748,7 @@ class TestEquivalentPython:
         code = _code_of(r.text)
         assert f"# Run #{run_id}, started" in code
         assert f"'seed': 11,  # seed used by run #{run_id}" in code
-        assert "Status: Complete: all agents evacuated (1/1)" in r.text
+        assert "Status: Complete: all agents evacuated (1 of 1)" in r.text
         assert "The form has changed" not in r.text
         changed = client.post(
             f"/export/run?run={run_id}",
@@ -1977,14 +1977,14 @@ class TestRunOutcome:
         )
         assert run_status(spec) == (
             "Incomplete: time limit reached, 60 agents inside, simulated time "
-            "300.00 s, incapacitation not modelled"
+            "300.0 s, incapacitation not modelled"
         )
         cut_off = dataclasses.replace(
             spec, agents_evacuated=150, agents_remaining=0, agents_not_spawned=50
         )
         assert run_status(cut_off) == (
             "Incomplete: time limit reached, 0 agents inside, 50 not spawned, "
-            "simulated time 300.00 s, incapacitation not modelled"
+            "simulated time 300.0 s, incapacitation not modelled"
         )
         done = dataclasses.replace(
             spec,
@@ -1994,7 +1994,7 @@ class TestRunOutcome:
             evacuation_time=212.4,
         )
         assert run_status(done) == (
-            "Complete: all agents evacuated (150/150), evacuation time 212.40 s, "
+            "Complete: all agents evacuated (150 of 150), evacuation time 212.4 s, "
             "incapacitation not modelled"
         )
 
@@ -2773,11 +2773,11 @@ class TestIncapacitated321:
     def test_count_shown_when_gas_incapacitation_ran(self):
         """The CO room run: all 100 agents incapacitated by gas."""
         tile = self._incap_tile(self._result(_settings(gas=True), 100, fed_max=1.27))
-        assert '<div class="kpi-value">100 agents</div>' in tile
+        assert '<div aria-describedby="incap-help" class="kpi-value">100 agents' in tile
 
     def test_heat_only_counts_as_modelled(self):
         tile = self._incap_tile(self._result(_settings(heat=True), 0))
-        assert '<div class="kpi-value">0 agents</div>' in tile
+        assert '<div aria-describedby="incap-help" class="kpi-value">0 agents' in tile
 
     @pytest.mark.parametrize(
         "settings",
@@ -3013,3 +3013,87 @@ class TestCountsAndCancel321:
         monkeypatch.setattr(manager, "last_event", last)
         html = to_xml(_cancelled_view())
         assert words in html and "No results were produced" in html
+
+
+class TestQaFixes595:
+    """QA on #595: legend contrast, toggle name, help link, K digits."""
+
+    @pytest.mark.parametrize("theme", ["dark", "light"])
+    def test_every_legend_number_has_aa_contrast(self, theme):
+        from pyfds_evac.webapp.trajviz import contrast, smoke_swatches
+
+        ratios = [contrast(bg, ink) for bg, ink in smoke_swatches(theme)]
+        assert len(ratios) == 5 and min(ratios) >= 4.5, ratios
+
+    def test_legend_colours_follow_the_theme_and_the_canvas(self):
+        import re
+
+        from pyfds_evac.webapp import theme as css
+        from pyfds_evac.webapp import trajviz
+
+        # The swatches are composited over the card the legend sits on.
+        cards = re.findall(r"--surface-card:\s*#([0-9a-fA-F]{6})", css._CSS)
+        grounds = [tuple(int(h[i : i + 2], 16) for i in (0, 2, 4)) for h in cards]
+        assert grounds[:2] == [
+            trajviz._LEGEND_GROUND["dark"],
+            trajviz._LEGEND_GROUND["light"],
+        ]
+        # The canvas draws smoke in the same colours and opacities.
+        js = trajviz._js("{}")
+        assert "[90, 88, 100]" in js and "[205, 203, 214]" in js
+        assert "[0.17, 0.34, 0.51, 0.68, 0.85]" in js
+        legend = trajviz._smoke_legend()
+        bg, ink = trajviz.smoke_swatches("dark")[4]
+        assert f"--sw-bg-d:{trajviz._hex(bg)};--sw-fg-d:{trajviz._hex(ink)}" in legend
+
+    def test_toggle_name_is_fixed(self, monkeypatch):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp import trajviz
+
+        smoke = {
+            "W": 1,
+            "H": 1,
+            "ext": [0, 0, 1, 1],
+            "nbins": 5,
+            "z": 1.6,
+            "setting": 1.6,
+            "ft": [0.0],
+            "b64": "AA==",
+        }
+        monkeypatch.setattr(
+            trajviz, "_payload", lambda *a, **k: {"hasFed": False, "smoke": smoke}
+        )
+        html = to_xml(trajviz.trajectory_component(None, None, fds_dir="x"))
+        assert 'aria-label="Smoke layer" aria-pressed="true">on</button>' in html
+        assert "smoke-legend" in html
+
+    def test_incapacitated_help_is_linked(self, monkeypatch):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        monkeypatch.setattr(manager, "spec", None)
+        result = TestIncapacitated321._result(None)
+        html = to_xml(_kpi_tiles(result))
+        assert 'aria-describedby="incap-help"' in html and 'id="incap-help"' in html
+
+    def test_k_keeps_three_significant_digits(self):
+        from pyfds_evac.webapp import plots
+
+        rows = [
+            {
+                "time_s": 0.0,
+                "agent_id": 1,
+                "speed_factor": 1.0,
+                "extinction_per_m": 0.0,
+            },
+            {
+                "time_s": 1.0,
+                "agent_id": 1,
+                "speed_factor": 0.5,
+                "extinction_per_m": 5.0,
+            },
+        ]
+        result = SimpleNamespace(smoke_history=rows, evacuation_time=1.0)
+        assert "Mean K: 0.00 to 5.00 1/m" in plots.smoke_summary(result, 1.0)[0]

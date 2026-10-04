@@ -1782,6 +1782,11 @@ def test_321_live_line_shows_incapacitated_only_when_modelled(workdir, modelled,
             text = text_of(app, "#run-status")
             assert "evacuated 1 of 6 planned" in text
             assert ("incapacitated 1" in text) is shown
+            # The run never finishes here: stop the pending redraw so it
+            # cannot fire while the app tears down.
+            if app._render_timer is not None:
+                app._render_timer.stop()
+                app._render_timer = None
 
     run(go())
 

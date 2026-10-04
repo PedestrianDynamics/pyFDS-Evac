@@ -576,7 +576,8 @@ details > summary { cursor: pointer; }
 .smoke-caption { font-size: .78rem; color: var(--ink-dim); margin: -4px 0 8px; }
 .smoke-summary { font-family: var(--font-mono); font-size: .74rem; color: var(--ink-dim); margin: 8px 0 0; }
 .smoke-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-family: var(--font-mono); font-size: .66rem; color: var(--ink-dim); }
-.smoke-legend .sw { min-width: 2.1rem; padding: 1px 4px; border-radius: 4px; border: 1px solid var(--hairline-strong); text-align: center; color: var(--ink); }
+.smoke-legend .sw { min-width: 2.1rem; padding: 1px 4px; border-radius: 4px; border: 1px solid var(--hairline-strong); text-align: center; background: var(--sw-bg-d); color: var(--sw-fg-d); }
+html[data-theme="light"] .smoke-legend .sw { background: var(--sw-bg-l); color: var(--sw-fg-l); }
 .smoke-note { font-size: .74rem; color: var(--ink-dim); margin: 6px 0 0; }
 .dose-card {
   display: flex; flex-direction: column; gap: 6px;

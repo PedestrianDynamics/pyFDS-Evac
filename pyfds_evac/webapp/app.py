@@ -2036,11 +2036,20 @@ _OUTCOME_GLYPH = {True: "\u2713", False: "\u26a0", None: "?"}
 _OUTCOME_TONE = {True: "is-complete", False: "is-incomplete", None: ""}
 
 
-def _tile(label: str, value: str, accent: str, *extra, note: bool = False) -> Div:
-    """A headline tile; *note* sets a non-number value in the muted note style."""
+def _tile(
+    label: str,
+    value: str,
+    accent: str,
+    *extra,
+    note: bool = False,
+    describedby: str | None = None,
+) -> Div:
+    """A headline tile; *note* sets a non-number value in the muted note style,
+    *describedby* names the element that explains the value."""
+    described = {"aria_describedby": describedby} if describedby else {}
     return Div(
         Div(label, cls="kpi-label"),
-        Div(value, cls="kpi-value is-note" if note else "kpi-value"),
+        Div(value, cls="kpi-value is-note" if note else "kpi-value", **described),
         *extra,
         cls="kpi-tile",
         style=f"border-top-color:{accent}",
@@ -2072,6 +2081,7 @@ def _incapacitated_tile(result) -> Div:
             cls="kpi-help",
         ),
         note=not (modelled and count is not None),
+        describedby="incap-help",
     )
 
 

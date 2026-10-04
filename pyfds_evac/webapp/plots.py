@@ -173,7 +173,7 @@ def smoke_summary(result: Any, update_interval_s: float | None) -> list[str]:
     sf, k = agg["speed_factor"], agg["extinction"]
     lines = [
         f"Mean speed factor: {sf.min():.3f} to {sf.max():.3f} · "
-        f"Mean K: {k.min():.3g} to {k.max():.3g} 1/m · "
+        f"Mean K: {k.min():#.3g} to {k.max():#.3g} 1/m · "
         f"from {t0:.1f} s to {t1:.1f} s, {len(agg)} smoke updates"
     ]
     end = _end_time(result)
