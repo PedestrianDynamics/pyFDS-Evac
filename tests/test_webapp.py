@@ -1592,13 +1592,16 @@ def _script_literals(code):
     """PATHS and OPTIONS of a generated script, read without running it."""
     import ast
 
+    from pyfds_evac.webapp.pyexport import _PATH_KEYS
+
+    names = {"OPTIONS", *(key.upper() for key in _PATH_KEYS)}
     tree = ast.parse(code)
     found = {}
     for node in tree.body:
         if not isinstance(node, ast.Assign) or len(node.targets) != 1:
             continue
         name = getattr(node.targets[0], "id", None)
-        if name in ("SCENARIO", "FDS_DIR", "VIS_CACHE", "OPTIONS"):
+        if name in names:
             found[name] = ast.literal_eval(node.value)
     return found
 
@@ -2538,6 +2541,14 @@ _RT_B = {
 _ASSETS = pathlib.Path(__file__).resolve().parents[1] / "assets"
 # Path options the script resolves (PATHS block) or should resolve (#558).
 _RT_PATHS = ("fds_dir", "vis_cache", "replay_exits")
+# Options the layer regime needs: the stale-note test changes their value
+# instead of removing them, since the form would no longer resolve.
+_RT_ALT = {
+    "heat_layer_height": "1.0",
+    "heat_view_factor": "0.5",
+    "heat_layer_emissivity": "0.5",
+}
+_RT_LAYER = ("heat_regime", *_RT_ALT)
 
 
 def _rt_profiles(fds_dir):
@@ -2594,10 +2605,10 @@ def _rt_same_path(a, b):
 def _rt_check_script(lit, expected, seed):
     """The script's PATHS and OPTIONS against the resolved options."""
     from pyfds_evac.config.parameters import default
-    from pyfds_evac.webapp.pyexport import OMITTED_OUTPUT_KEYS
+    from pyfds_evac.webapp.pyexport import _PATH_KEYS, OMITTED_OUTPUT_KEYS
 
     rebuilt = dict(lit["OPTIONS"])
-    rebuilt.update(fds_dir=lit["FDS_DIR"], vis_cache=lit["VIS_CACHE"])
+    rebuilt.update({k: lit[k.upper()] for k in _PATH_KEYS if k != "scenario"})
     assert set(rebuilt) | {"scenario"} == set(expected)
     got = rebuilt.pop("seed")
     assert got == seed and (got is None) == (seed is None)  # 0 is not None
@@ -2726,15 +2737,27 @@ class TestRoundTrip:
         from pyfds_evac.webapp.params import scenario_path
         from pyfds_evac.webapp.runner import make_run_spec
 
-        for form in _rt_profiles(tmp_path):
+        def spec_of(form):
             scenario, opts = _resolve_form(dict(form))
-            spec = make_run_spec(
-                opts, scenario, "t_junction", str(scenario_path("t_junction"))
-            )
-            assert _form_vs_run(dict(form), spec) == (False, None)
+            path = str(scenario_path("t_junction"))
+            return make_run_spec(opts, scenario, "t_junction", path)
+
+        def without(form, *keys):
+            return {k: v for k, v in form.items() if k not in keys}
+
+        for form in _rt_profiles(tmp_path):
+            assert _form_vs_run(dict(form), spec_of(form)) == (False, None)
             for key in set(form) - {"scenario"}:
-                reverted = {k: v for k, v in form.items() if k != key}
-                assert _form_vs_run(reverted, spec)[0] is True, key
+                base = form
+                if key in _RT_ALT:
+                    changed = {**form, key: _RT_ALT[key]}
+                elif key == "heat_fed_method":  # the layer regime needs it
+                    base = without(form, *_RT_LAYER)
+                    changed = without(base, key)
+                else:
+                    changed = without(form, key)
+                # The changed form resolves, so the note is about a change.
+                assert _form_vs_run(changed, spec_of(base)) == (True, None), key
 
     def test_hidden_flags_have_no_field_and_stay_default(self, client, tmp_path):
         from pyfds_evac.config.parameters import default
@@ -2778,7 +2801,8 @@ class TestRoundTrip:
             opts, scenario, "t_junction", str(scenario_path("t_junction"))
         )
         lit = _script_literals(run_script(spec).code)
-        assert Path(lit["OPTIONS"]["replay_exits"]).is_absolute()
+        value = lit.get("REPLAY_EXITS", lit["OPTIONS"].get("replay_exits"))
+        assert Path(value).is_absolute()
 
     def test_blank_paths_resolve_to_none(self, client):
         """A blank path field is None, never "" (#557 needs "")."""
@@ -2795,4 +2819,4 @@ class TestRoundTrip:
             assert getattr(opts, key) is None, key
         lit = _script_literals(_code_of(_preview(client, **form)))
         assert lit["FDS_DIR"] is None and lit["VIS_CACHE"] is None
-        assert lit["OPTIONS"]["replay_exits"] is None
+        assert lit.get("REPLAY_EXITS", lit["OPTIONS"].get("replay_exits")) is None
