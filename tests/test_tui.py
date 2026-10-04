@@ -1042,6 +1042,174 @@ def test_fds_search_is_bounded(tmp_path):
     assert model.find_fds_dirs([tmp_path], max_entries=10) == []
 
 
+# --- #598 the footer always shows quit and keys ---------------------------------------
+
+
+def fixed_keys(app) -> dict[str, object]:
+    """The footer's fixed group of *app*'s current screen: label -> FooterKey."""
+    from textual.widgets._footer import FooterKey
+
+    group = app.screen.query_one("#fixed-keys")
+    return {k.description: k for k in group.query(FooterKey)}
+
+
+def assert_quit_and_keys(app) -> None:
+    keys = fixed_keys(app)
+    assert list(keys) == ["quit", "keys", "palette"]
+    assert [k.key for k in keys.values()] == ["ctrl+q", "question_mark", "ctrl+p"]
+    width = app.screen.size.width
+    for key in keys.values():
+        assert key.region.width > 0
+        assert key.region.right <= width
+
+
+async def _at_step(pilot, app, workdir, step: int) -> None:
+    if step == 0:
+        return
+    scenario = workdir / "assets" / "ISO-table21"
+    if step == 1:
+        app.select_scenario(scenario)
+        await settle(pilot, app)
+        return
+    await to_configure(pilot, app, scenario, None)
+    if step == 2:
+        return
+    app.goto(3)
+    await pilot.pause()
+    if step == 3:
+        return
+    await pilot.press("ctrl+r")
+    await pilot.pause()
+    replay(app, result_event(events.STATUS_INCOMPLETE) if step == 5 else None)
+    await pilot.pause(0.2)  # let the Run step's 0.1 s redraw timer fire
+
+
+@pytest.mark.parametrize("step", range(6))
+def test_598_footer_shows_quit_and_keys_on_every_step(workdir, step):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, step)
+            await pilot.pause()
+            assert app.step == step
+            assert_quit_and_keys(app)
+
+    run(go())
+
+
+def test_598_footer_on_the_full_plan(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 5)
+            await pilot.press("v")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "PlanScreen"
+            assert_quit_and_keys(app)
+
+    run(go())
+
+
+@pytest.mark.parametrize("step", [4, 5])
+def test_598_at_80_columns_the_step_keys_give_way(workdir, step):
+    """Run and Results have the most step keys; the fixed group stays whole."""
+    from textual.widgets._footer import FooterKey
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _at_step(pilot, app, workdir, step)
+            await pilot.pause()
+            assert_quit_and_keys(app)
+            group = app.screen.query_one("#fixed-keys")
+            fixed = set(fixed_keys(app).values())
+            y = group.region.y
+            # The fixed group is drawn on top of the step keys, every cell of it.
+            for x in range(group.region.x, group.region.right):
+                top, _ = app.screen.get_widget_at(x, y)
+                assert top is group or top in fixed
+            # The step keys start at the left and are what gets cut.
+            first, _ = app.screen.get_widget_at(0, y)
+            assert isinstance(first, FooterKey) and first not in fixed
+            assert group.region.x > 40
+
+    run(go())
+
+
+def test_598_question_mark_opens_the_keys_from_a_text_box(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            assert app.focused is app.query_one("#ex-filter")
+            await pilot.press("question_mark")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "TextScreen"
+            assert "ctrl+q" in app.screen.text
+            assert app.query_one("#ex-filter").value == ""
+
+    run(go())
+
+
+def test_598_f1_works_outside_configure(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 1)
+            await pilot.press("f1")
+            await pilot.pause()
+            assert app.screen.title_text == "Keys"
+
+    run(go())
+
+
+def test_598_field_help_also_lists_the_keys(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 2)
+            assert app.focused is not None
+            await pilot.press("question_mark")
+            await pilot.pause()
+            assert "Flag: --" in app.screen.text
+            assert "ctrl+q            quit" in app.screen.text
+
+    run(go())
+
+
+def test_598_question_mark_types_in_the_find_box(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _at_step(pilot, app, workdir, 2)
+            await pilot.press("ctrl+f")
+            await pilot.pause()
+            await pilot.press("question_mark")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "FindScreen"
+            assert app.screen.query_one("#find").value == "?"
+
+    run(go())
+
+
+def test_598_quit_during_a_run_still_asks(workdir):
+    runner = FakeRunner()
+
+    async def go():
+        app = make_app(workdir, runner)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await _at_step(pilot, app, workdir, 4)
+            assert_quit_and_keys(app)
+            await pilot.press("ctrl+q")
+            await pilot.pause()
+            assert type(app.screen).__name__ == "ConfirmScreen"
+            await pilot.press("n")
+            await pilot.pause()
+            assert runner.stopped == 0
+            assert app.is_running
+
+    run(go())
+
+
 # --- snapshots (SVGs also serve the docs) ---
 # The Review screen is not snapshotted: its command holds absolute paths.
 # --------------------------------------------------

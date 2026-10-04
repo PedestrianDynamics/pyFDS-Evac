@@ -204,8 +204,9 @@ signs, ASET/RSET tools, and Outputs.
   [Outputs and folders](#outputs-and-folders).
 - An option that has no effect with the current settings is greyed out, with
   the reason. `Enter` on it goes to the setting that enables it.
-- `F1` or `?` shows the option's help, its flag, its default, its Python API
-  default, its FDS+Evac counterpart, its unit and a link to its docs page.
+- `?` or `F1` shows the option's help, its flag, its default, its Python API
+  default, its FDS+Evac counterpart, its unit and a link to its docs page,
+  followed by the list of keys.
 - `ctrl+f` finds a setting. The palette (`ctrl+p`) has "Reset all settings",
   which asks first, and "Toggle advanced in all sections".
 - The summary line at the bottom shows the review level, the active models,
@@ -236,8 +237,8 @@ At the bottom is the `pyfds-evac` command for these settings.
 ### 5 Run
 
 {{< terminal-figure src="images/tui/tui-run.svg"
-  alt="The Run step at 120 by 35 characters during the fire run. The phase line reads Running, with the phases initialising, FDS inspection, visibility, running, writing outputs, done. The status line reads sim 56.0 of 300 s, wall 0:02, evacuated 12 of 200 planned (6 %), incapacitated 0, not spawned 171; one warning. On the left, the plan view of the T-junction: walls, the exits A_left with 10 and B_right with 2 evacuated, three signs as diamonds, agents as dots. On the right, the Evacuated and Simulated time bars and the evacuated sparkline. Below the plan, the time scrubber, the smoke legend with bins 0.1, 0.5, 1, 3 and 10 per metre, FDS slice z = 2.0 m, frame t = 56 s, the glyph legend, and the note The run stops if this terminal closes; use tmux or screen for long runs. The run log fills the bottom."
-  caption="The Run step about 56 s into the `fire_2MW_PVC` run (seed 42), wide layout." >}}
+  alt="The Run step at 120 by 35 characters during the fire run. The phase line reads Running, with the phases initialising, FDS inspection, visibility, running, writing outputs, done. The status line reads sim 59.0 of 300 s, wall 0:02, evacuated 12 of 200 planned (6 %), incapacitated 0, not spawned 170; one warning. On the left, the plan view of the T-junction: walls, the exits A_left with 10 and B_right with 2 evacuated, three signs as diamonds, agents as dots. On the right, the Evacuated and Simulated time bars and the evacuated sparkline. Below the plan, the time scrubber, the smoke legend with bins 0.1, 0.5, 1, 3 and 10 per metre, FDS slice z = 2.0 m, frame t = 59 s, the glyph legend, and the note The run stops if this terminal closes; use tmux or screen for long runs. The run log fills the bottom."
+  caption="The Run step about 59 s into the `fire_2MW_PVC` run (seed 42), wide layout." >}}
 
 The run happens in a separate process. You can move between steps; the run
 goes on. Only one run happens at a time: `ctrl+r` during a run says "A run is
@@ -307,10 +308,9 @@ output folder is included. The idea is the same as in the Web GUI; see
 | everywhere | `ctrl+p` | command palette: themes, go to step, Inspect FDS folder, Copy command, Save command and script, Show Python, Reset all settings, Toggle advanced, Open docs page |
 | everywhere | `ctrl+q` | quit; during a run it asks "A run is in progress. Quit and cancel it?" |
 | everywhere | `Esc` | back one step, keeping all values. From Run it goes to Review and the run continues; from Results it goes to Configure |
-| everywhere | `?` | help for the focused field, else the list of keys |
+| everywhere | `?` or `F1` | the list of keys; on a Configure field, the field's help first. `?` is never typed into a text box |
 | Scenario, FDS, Configure | `ctrl+n` | next step (from Configure: to Review) |
 | Configure, Review, Results | `ctrl+r` | run. With warnings, outside Review, it asks "r Run anyway / Esc Review"; on Review it runs at once |
-| Configure | `F1` | help for the focused field |
 | Configure | `ctrl+f` | find a setting |
 | Review | `c` | copy the command to the clipboard (OSC 52) |
 | Review | `s` | write `command.sh` and `run.py` into the planned run folder, before any run |
@@ -325,8 +325,13 @@ output folder is included. The idea is the same as in the Web GUI; see
 | Run, Results | `v` | full-screen plan (`Esc` back) |
 
 The keys avoid common terminal conflicts: there is no `ctrl+s` (XOFF) and no
-`ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes). `?` and the palette
-duplicate `F1` on Configure.
+`ctrl+a` or `ctrl+b` (the `screen` and `tmux` prefixes).
+
+The footer shows the keys of the current step on the left and, on every
+step and in the full-screen plan, a fixed group on the right:
+`^q quit  ? keys  ^p palette`. On a narrow terminal the step keys are cut
+first; the fixed group stays visible at 80 columns. The labels are words, so
+they read the same with `NO_COLOR` or `TERM=dumb`.
 
 ## Outputs and folders
 

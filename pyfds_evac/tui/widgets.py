@@ -9,12 +9,22 @@ from typing import Any, cast
 from textual import on
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.containers import Horizontal, Vertical, VerticalScroll
+from textual.containers import Horizontal, HorizontalGroup, Vertical, VerticalScroll
 from textual.content import Content
 from textual.message import Message
 from textual.screen import ModalScreen
 from textual.widget import Widget
-from textual.widgets import Input, Label, OptionList, Select, Static, Switch, TextArea
+from textual.widgets import (
+    Footer,
+    Input,
+    Label,
+    OptionList,
+    Select,
+    Static,
+    Switch,
+    TextArea,
+)
+from textual.widgets._footer import FooterKey
 from textual.widgets.option_list import Option
 
 from pyfds_evac.config.parameters import Parameter, parameter
@@ -134,7 +144,7 @@ class FieldRow(Vertical):
                 compact=True,
             )
         placeholder = "not set" if p.default is None else ""
-        return Input(
+        return TextBox(
             self.form.text[p.dest], placeholder=placeholder, id=ident, compact=True
         )
 
@@ -234,6 +244,48 @@ class FieldRow(Vertical):
         default = self.param.default
         tail = "" if default is None else f" · default {default}"
         return m("$h  [dim]$f$t · F1 more[/]", h=text, f=flag, t=tail)
+
+
+class TextBox(Input):
+    """An Input that leaves ``?`` to the app, so the footer's ``? keys`` holds."""
+
+    def check_consume_key(self, key: str, character: str | None) -> bool:
+        return character != "?" and super().check_consume_key(key, character)
+
+
+# The keys every footer shows on the right, whatever the step (#598).
+FIXED_KEYS = (("ctrl+q", "quit", "quit"), ("question_mark", "field_help", "keys"))
+
+
+class EvacFooter(Footer):
+    """The footer: the step's keys, then a fixed group ``^q quit ? keys ^p palette``.
+
+    The group is docked right, so on a narrow terminal the step keys are
+    cut first and the way out and the key list stay visible.
+    """
+
+    DEFAULT_CSS = """
+    EvacFooter { overflow-x: hidden; }
+    EvacFooter #fixed-keys {
+        dock: right;
+        width: auto;
+        border-left: vkey $foreground 20%;
+    }
+    EvacFooter #fixed-keys FooterKey:last-child { padding-right: 1; }
+    """
+
+    def __init__(self) -> None:
+        super().__init__(show_command_palette=False)
+
+    def compose(self) -> ComposeResult:
+        yield from super().compose()
+        palette = (self.app.COMMAND_PALETTE_BINDING, "command_palette", "palette")
+        with HorizontalGroup(id="fixed-keys"):
+            for key, action, label in (*FIXED_KEYS, palette):
+                display = self.app.get_key_display(Binding(key, action, label))
+                yield FooterKey(key, display, label, action).data_bind(
+                    compact=Footer.compact
+                )
 
 
 class ConfirmScreen(ModalScreen[bool]):

@@ -27,12 +27,11 @@ from textual.app import App, ComposeResult, SystemCommand
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.content import Content
-from textual.screen import Screen
+from textual.screen import ModalScreen, Screen
 from textual.widgets import (
     Collapsible,
     ContentSwitcher,
     DirectoryTree,
-    Footer,
     Input,
     OptionList,
     RichLog,
@@ -61,10 +60,12 @@ from .theme import EVAC_DARK, THEME_NAMES
 from .widgets import (
     STEP_TITLES,
     ConfirmScreen,
+    EvacFooter,
     FieldRow,
     FindScreen,
     ScrollText,
     StepBar,
+    TextBox,
     TextScreen,
     TooSmall,
     m,
@@ -176,10 +177,10 @@ class ScenarioStep(Step):
             with TabPane("Recent", id="tab-recent"):
                 yield OptionList(id="recent")
             with TabPane("Examples", id="tab-examples"):
-                yield Input(placeholder="type to filter", id="ex-filter")
+                yield TextBox(placeholder="type to filter", id="ex-filter")
                 yield OptionList(id="examples")
             with TabPane("Open file", id="tab-open"):
-                yield Input(
+                yield TextBox(
                     placeholder="path to a .json, .zip or folder", id="open-path"
                 )
                 yield DirectoryTree(str(self.tui.cwd), id="open-tree")
@@ -197,7 +198,7 @@ class FdsStep(Step):
 
     def compose(self) -> ComposeResult:
         yield Static(m("[b]FDS output folder[/]"))
-        yield Input(placeholder="folder that holds the .smv file", id="fds-path")
+        yield TextBox(placeholder="folder that holds the .smv file", id="fds-path")
         yield OptionList(id="fds-choices")
         yield Static(id="fds-panel")
 
@@ -209,7 +210,6 @@ class ConfigureStep(Step):
     BINDINGS = [
         Binding("ctrl+n", "app.next_step", "review"),
         Binding("ctrl+f", "app.find", "find"),
-        Binding("f1", "app.field_help", "help"),
     ]
 
     def compose(self) -> ComposeResult:
@@ -240,7 +240,7 @@ class ConfigureStep(Step):
     def _run_rows(self) -> Iterable[Any]:
         with Horizontal(classes="plain-row"):
             yield Static("Output folder", classes="label")
-            yield Input(
+            yield TextBox(
                 self.tui.form.output_folder,
                 placeholder="derived (results/<scenario>/…)",
                 id="output-folder",
@@ -350,7 +350,7 @@ class PlanScreen(Screen[None]):
         yield PlanView(id="full-planview")
         yield Static(id="full-scrubber")
         yield Static(id="full-legend")
-        yield Footer()
+        yield EvacFooter()
 
     def on_mount(self) -> None:
         cast("EvacTui", self.app).refresh_plans()
@@ -420,7 +420,10 @@ class EvacTui(App[None]):
         Binding("ctrl+q", "quit", "quit", priority=True, show=False),
         Binding("ctrl+r", "run", "run", show=False),
         Binding("escape", "step_back", "back"),
-        Binding("question_mark", "field_help", "help", show=False),
+        # Priority, so ``?`` opens the keys also from a text box (#598);
+        # the footer shows both quit and ``?`` on its own (EvacFooter).
+        Binding("question_mark", "field_help", "keys", priority=True, show=False),
+        Binding("f1", "field_help", "help", show=False),
     ]
 
     def __init__(
@@ -477,7 +480,7 @@ class EvacTui(App[None]):
             yield RunStep(id="step-run")
             yield ResultsStep(id="step-results")
         yield Static(id="summary")
-        yield Footer()
+        yield EvacFooter()
 
     def on_mount(self) -> None:
         self._ui_loop = asyncio.get_running_loop()
@@ -610,6 +613,9 @@ class EvacTui(App[None]):
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
         if action == "run":
             return self.step in (2, 3, 5)
+        if action == "field_help":
+            # In a dialog, ``?`` and F1 go to the dialog (the find box types it).
+            return not isinstance(self.screen, ModalScreen)
         return True
 
     # --- scenario step ---------------------------------------------------------
@@ -1276,7 +1282,8 @@ class EvacTui(App[None]):
         if row is None:
             self.push_screen(TextScreen("Keys", keys_text()))
             return
-        self.push_screen(TextScreen(model.label(row.param), field_help(row.param)))
+        text = f"{field_help(row.param)}\n\nKeys\n{keys_text()}"
+        self.push_screen(TextScreen(model.label(row.param), text))
 
     def action_copy_command(self) -> None:
         if self.cfg is None:
@@ -2098,7 +2105,7 @@ def keys_text() -> str:
             "ctrl+n            next step",
             "ctrl+r            run (Configure, Review, Results)",
             "ctrl+f            find a setting (Configure)",
-            "F1 or ?           help for the focused field",
+            "? or F1           this list; on a field, its help first",
             "ctrl+p            command palette (themes, steps, save, reset)",
             "ctrl+q            quit (asks during a run)",
             "Run: x or ctrl+c cancel · v plan · w warnings · l log",
