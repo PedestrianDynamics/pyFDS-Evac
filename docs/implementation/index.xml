@@ -947,11 +947,20 @@ title="Copy code"
 &lt;p>If only one slice matches the quantity, &lt;code>slice_height_m&lt;/code> has no effect.
 Without &lt;code>slice_height_m&lt;/code>, &lt;code>load_slice_sampler&lt;/code> takes the first horizontal
 slice in declaration order. The model factories (&lt;code>ExtinctionField.from_fds&lt;/code>,
-&lt;code>FdsFedField.from_fds&lt;/code>, &lt;code>FdsHeatField.from_fds&lt;/code>) default to 1.6 m.&lt;/p>
+&lt;code>FdsFedField.from_fds&lt;/code>, &lt;code>FdsHeatField.from_fds&lt;/code>) and the command-line option
+&lt;code>--smoke-slice-height&lt;/code> default to 1.6 m.&lt;/p>
 &lt;p>The rule lives in &lt;code>select_horizontal_slice&lt;/code>: vertical slices are
 skipped, the slice whose z is nearest &lt;code>slice_height_m&lt;/code> wins, and a
 warning is logged when it is more than 0.5 m away. The visibility model
 applies the same function to the extinction slice it hands to fdsvismap.&lt;/p>
+&lt;p>The height is an absolute z in the FDS domain, so it equals the height
+above the floor where the floor is at z = 0. C/VM2 and the Engineers
+Australia note evaluate tenability at 2.0 m
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>). For a check against them,
+run with &lt;code>--smoke-slice-height 2.0&lt;/code> and write the slices at that
+height in the FDS deck (&lt;code>&amp;amp;SLCF PBZ=2.0&lt;/code>); otherwise the run reads the
+nearest slice by the rule above
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/#silent-failure-modes">Silent failure modes&lt;/a>).&lt;/p>
 &lt;h3>Sharing a &lt;code>Simulation&lt;/code> instance&lt;span class="hx-absolute -hx-mt-20" id="sharing-a-simulation-instance">&lt;/span>
 &lt;a href="#sharing-a-simulation-instance" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Parsing an FDS case directory is expensive. When you need both
 extinction and FED fields from the same case, load the &lt;code>Simulation&lt;/code>
