@@ -58,8 +58,8 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
 
 ## Parameters
 
-Fields of `SmokeSpeedConfig`, with the defaults in the code. `run.py` and the
-web GUI set only the last two (`--smoke-update-interval`,
+Fields of `SmokeSpeedConfig`, with the defaults in the code. `run.py`, the
+web GUI and the terminal UI set only the last two (`--smoke-update-interval`,
 `--smoke-slice-height`); the speed law and its coefficients need a
 `SmokeSpeedConfig` built in Python (see the
 [parameter split](/docs/concepts.md#the-parameter-split)).

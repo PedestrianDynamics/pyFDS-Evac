@@ -8,6 +8,7 @@ command (`run.py`) behind a form: pick a scenario, set the options, run it,
 watch the progress, and look at the results. It is for exploring a scenario;
 for studies, scripts and the command line are easier to reproduce. To turn
 a GUI run into a script, see [Show the run as Python](#show-the-run-as-python).
+For a terminal or an SSH session, see [Terminal UI](terminal-ui.md).
 
 ## Install and launch
 

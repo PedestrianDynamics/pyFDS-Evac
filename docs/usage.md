@@ -208,7 +208,8 @@ each flag sets.
 
 ### Python API and command line
 
-`run.py` and the web GUI build their models with `build_run_kwargs`.
+`run.py`, the web GUI and the terminal UI build their models with
+`build_run_kwargs`.
 `run_scenario()` called directly builds nothing you do not pass, so the same
 scenario can behave differently:
 

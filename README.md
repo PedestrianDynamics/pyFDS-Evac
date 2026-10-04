@@ -108,6 +108,10 @@ pip install "pyfds-evac[tui]"
 pyfds-evac-tui
 ```
 
+The run stops when the terminal closes; use `tmux` or `screen` for long runs.
+Documentation:
+[Terminal UI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/).
+
 ## Web GUI
 
 An optional local web app runs the same model behind a form:

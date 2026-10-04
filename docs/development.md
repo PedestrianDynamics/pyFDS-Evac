@@ -33,7 +33,7 @@ The project uses [uv](https://github.com/astral-sh/uv) and supports Python
 ```bash
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
 cd pyFDS-Evac
-uv sync --all-groups     # add --all-extras for the web GUI
+uv sync --all-groups     # add --all-extras for the web GUI and the terminal UI
 ```
 
 ## Test and lint

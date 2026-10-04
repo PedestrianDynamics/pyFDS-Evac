@@ -565,6 +565,9 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   ([Web GUI](/docs/web-gui.md);
   [#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270),
   [#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311)).
+- **Terminal UI.** The terminal UI offers every heat option in its Heat
+  section: the common ones first, the other 11 under "Advanced"
+  ([Terminal UI](/docs/terminal-ui.md)).
 - **Falling exposure and recovery.** The summed dose assumes exposure that is
   steady or rising (Eq. 63.48; ISO 13571:2012 §8.4 states it for the
   temperature experienced by the occupant); a fleeing agent's exposure falls, and no
