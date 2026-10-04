@@ -78,7 +78,7 @@ the repository, clone it and use [uv](https://github.com/astral-sh/uv):
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
 cd pyFDS-Evac
 uv sync
-uv run run.py --scenario assets/ISO-table21 --cleanup
+uv run run.py --scenario assets/ISO-table21
 ```
 
 `run.py` is the same command line as `pyfds-evac` (`uv run` uses the project

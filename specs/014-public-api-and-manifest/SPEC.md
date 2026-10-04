@@ -60,8 +60,8 @@ Four gaps block it:
    Writing the manifest never fails a finished run: an `OSError` or
    `ValueError` is logged as a warning and `manifest_file` is `None`.
    `run.py --output-sqlite` copies the manifest to
-   `<output stem>.manifest.json` beside the copied trajectory, before
-   `--cleanup` deletes the temporary one.
+   `<output stem>.manifest.json` beside the copied trajectory, before the
+   temporary one is removed.
 
    The name carries the trajectory stem because the default trajectory
    is a temporary file in a shared directory. A fixed `manifest.json`
@@ -84,8 +84,9 @@ Four gaps block it:
   manifest fields; a 2 s `run_scenario` on `assets/ISO-table21` with a
   constant field, which writes the manifest and removes it on cleanup; a
   failing `write_manifest` (`OSError`, `ValueError`) that still returns
-  the run; `run.py` copying the manifest beside `--output-sqlite` under
-  `--cleanup`.
+  the run; `run.py` copying the manifest beside `--output-sqlite`, with
+  `--cleanup` (kept for compatibility; the temporary files are always
+  removed).
 
 ## Non-goals
 

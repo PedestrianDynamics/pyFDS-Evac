@@ -99,7 +99,7 @@ FDS output, clone the repository and use
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
 cd pyFDS-Evac
 uv sync
-uv run python run.py --scenario assets/ISO-table21 --cleanup
+uv run python run.py --scenario assets/ISO-table21
 ```
 
 ## Where to start

@@ -67,7 +67,7 @@ command from inside it:
 
 ```bash
 cd pyfds-evac-quickstart
-pyfds-evac --scenario assets/ISO-table21 --cleanup
+pyfds-evac --scenario assets/ISO-table21
 ```
 
 {{< checkpoint title="Install works" >}}
@@ -110,7 +110,7 @@ uv sync --extra tui
 ### Check the checkout
 
 ```bash
-uv run python run.py --scenario assets/ISO-table21 --cleanup
+uv run python run.py --scenario assets/ISO-table21
 ```
 
 {{< checkpoint title="Install works" >}}

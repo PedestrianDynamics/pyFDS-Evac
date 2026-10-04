@@ -171,7 +171,7 @@ files and load the ZIP in the app. The GUI writes the same bundle to
 `<run folder>/bundle`.
 
 {{< details title="What the bundle holds" closed="true" >}}
-`_export_app_bundle` in `pyfds_evac/cli.py` writes the scenario JSON as
+`_export_app_bundle` in `pyfds_evac/core/run_outputs.py` writes the scenario JSON as
 loaded and the walkable area as WKT. The command-line options, such as
 `--seed`, are not written. Loading adds two things:
 
