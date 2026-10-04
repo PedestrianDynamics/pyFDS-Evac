@@ -2051,3 +2051,33 @@ def test_ctrl_k_opens_the_command_palette(workdir):
             assert isinstance(app.screen, CommandPalette)
 
     run(go())
+
+
+def test_results_arrow_keys_replay_with_the_file_list_focused(workdir):
+    """←/→ scrub the plan on Results, not the focused file list."""
+    from textual.widgets._footer import FooterKey
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            replay(app, result_event(events.STATUS_SUCCESS))
+            app.render_results()
+            await pilot.pause()
+            assert app.step == 5
+            assert app.focused is app.query_one("#res-files")
+            labels = {k.description: k.key_display for k in app.screen.query(FooterKey)}
+            assert labels.get("replay") == "←/→"
+            assert labels.get("fullscreen") == "v"
+            await pilot.press("left")
+            await pilot.pause()
+            assert app.scrub_index == 0
+            await pilot.press("right")
+            await pilot.pause()
+            assert app.scrub_index == 1
+
+    run(go())

@@ -285,7 +285,7 @@ class RunStep(Step):
         Binding("x", "app.cancel", "cancel"),
         Binding("ctrl+p", "app.step_back", "review"),
         Binding("ctrl+c", "app.cancel", "cancel", show=False, priority=True),
-        Binding("v", "app.plan", "plan"),
+        Binding("v", "app.plan", "fullscreen"),
         Binding("w", "app.warnings", "warnings"),
         Binding("l", "app.log", "log"),
     ]
@@ -311,17 +311,19 @@ class ResultsStep(Step):
     BINDINGS = [
         Binding("ctrl+r", "app.run", "run again"),
         Binding("ctrl+p", "app.step_back", "configure"),
+        # One footer entry for the four replay keys. Priority, so the focused
+        # file list does not take ←/→ for scrolling.
+        Binding("left", "app.scrub(-1)", "replay", key_display="←/→", priority=True),
         Binding("e", "app.change_settings", "change"),
         Binding("n", "app.new_scenario", "new"),
         Binding("c", "app.run_command", "command"),
         Binding("s", "app.save_run", "save"),
         Binding("w", "app.warnings", "warnings", show=False),
         Binding("t", "app.traceback", "traceback", show=False),
-        Binding("v", "app.plan", "plan"),
-        Binding("left", "app.scrub(-1)", "−1 s", show=False),
-        Binding("right", "app.scrub(1)", "+1 s", show=False),
-        Binding("shift+left", "app.scrub(-10)", "−10 s", show=False),
-        Binding("shift+right", "app.scrub(10)", "+10 s", show=False),
+        Binding("v", "app.plan", "fullscreen"),
+        Binding("right", "app.scrub(1)", "+1 s", show=False, priority=True),
+        Binding("shift+left", "app.scrub(-10)", "−10 s", show=False, priority=True),
+        Binding("shift+right", "app.scrub(10)", "+10 s", show=False, priority=True),
         Binding("y", "app.copy_path", "copy path", show=False),
     ]
 
@@ -2134,7 +2136,7 @@ def keys_text() -> str:
             "? or F1           this list; on a field, its help first",
             "ctrl+k            command palette (themes, steps, save, reset)",
             "ctrl+q            quit (asks during a run)",
-            "Run: x or ctrl+c cancel · v plan · w warnings · l log",
+            "Run: x or ctrl+c cancel · v fullscreen plan · w warnings · l log",
             "Results: e change · n new · c command · s save · ←/→ scrub the plan",
         ]
     )
