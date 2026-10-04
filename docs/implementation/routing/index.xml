@@ -1602,7 +1602,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>cost_model&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;gate&amp;quot;&lt;/code>&lt;/td>
-&lt;td>Selects the model. Unvalidated: any other string behaves as &lt;code>&amp;quot;additive&amp;quot;&lt;/code>.&lt;/td>
+&lt;td>Selects the model. &lt;code>&amp;quot;gate&amp;quot;&lt;/code> or &lt;code>&amp;quot;additive&amp;quot;&lt;/code>, matched exactly; any other value raises &lt;code>ValueError&lt;/code>.&lt;/td>
 &lt;td>—&lt;/td>
 &lt;td>—&lt;/td>
 &lt;/tr>
@@ -1844,8 +1844,6 @@ not fitted to observed behaviour. Two have FDS+Evac values behind them:
 now orders by &lt;code>tau&lt;/code> and weights edges by &lt;code>tau&lt;/code>; the last equivalence runs
 predate both. In clear air every &lt;code>tau&lt;/code> is zero and the argument still holds by
 construction, but it is an argument, not a measurement.&lt;/li>
-&lt;li>&lt;strong>&lt;code>cost_model&lt;/code> is an unvalidated free string.&lt;/strong> A typo silently yields the
-additive model.&lt;/li>
 &lt;li>&lt;strong>FIC does not participate in routing under either model.&lt;/strong> It drives the
 Purser slowdown and incapacitation only. FIC and the optical-depth gate are
 driven by the same smoke, so routing on both would double-count.&lt;/li>

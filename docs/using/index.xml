@@ -1268,10 +1268,11 @@ track.&lt;/li>
 &lt;code>--enable-rerouting&lt;/code> and &lt;code>--disable-tenability&lt;/code> say.&lt;/li>
 &lt;/ul>
 &lt;h3>Python API and command line&lt;span class="hx-absolute -hx-mt-20" id="python-api-and-command-line">&lt;/span>
-&lt;a href="#python-api-and-command-line" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>run.py&lt;/code>, the web GUI and the terminal UI build their models with
-&lt;code>build_run_kwargs&lt;/code>.
-&lt;code>run_scenario()&lt;/code> called directly builds nothing you do not pass, so the same
-scenario can behave differently:&lt;/p>
+&lt;a href="#python-api-and-command-line" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>run.py&lt;/code>, the web GUI, the terminal UI and their equivalent Python scripts
+build their models with &lt;code>build_run_kwargs&lt;/code> (&lt;code>pyfds_evac/core/run_config.py&lt;/code>)
+and use the command-line defaults. &lt;code>run_scenario()&lt;/code> called directly uses the
+Python defaults: it builds nothing you do not pass. Both sets are intended,
+but the same scenario can behave differently:&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -1283,8 +1284,13 @@ scenario can behave differently:&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>Rerouting&lt;/td>
-&lt;td>on, every 1 s (&lt;code>--reroute-interval&lt;/code>)&lt;/td>
-&lt;td>off; &lt;code>RerouteConfig()&lt;/code> defaults to 10 s&lt;/td>
+&lt;td>on (&lt;code>--enable-rerouting&lt;/code>)&lt;/td>
+&lt;td>off: &lt;code>reroute_config=None&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Re-decision interval&lt;/td>
+&lt;td>1.0 s (&lt;code>--reroute-interval&lt;/code>)&lt;/td>
+&lt;td>10.0 s: &lt;code>RerouteConfig.reevaluation_interval_s&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Route costs&lt;/td>
@@ -1303,13 +1309,23 @@ scenario can behave differently:&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>Incapacitation&lt;/td>
-&lt;td>&lt;code>TenabilityConfig&lt;/code> whenever a FED track runs&lt;/td>
-&lt;td>none: a &lt;code>fed_model&lt;/code> without &lt;code>tenability_config&lt;/code> accumulates dose but never incapacitates&lt;/td>
+&lt;td>&lt;code>TenabilityConfig&lt;/code> whenever a FED track runs, unless &lt;code>--disable-tenability&lt;/code>&lt;/td>
+&lt;td>none: &lt;code>tenability_config=None&lt;/code>; a &lt;code>fed_model&lt;/code> without &lt;code>tenability_config&lt;/code> accumulates dose but never incapacitates&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Visibility model&lt;/td>
-&lt;td>built for discovery agents, &lt;code>--vis-cache&lt;/code> or &lt;code>--clear-air-visibility&lt;/code>&lt;/td>
-&lt;td>none&lt;/td>
+&lt;td>built for discovery agents, &lt;code>--vis-cache&lt;/code> or &lt;code>--clear-air-visibility&lt;/code>, unless &lt;code>--no-visibility&lt;/code>&lt;/td>
+&lt;td>none: &lt;code>vis_model=None&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Visibility time step&lt;/td>
+&lt;td>= &lt;code>--reroute-interval&lt;/code>, 1.0 s&lt;/td>
+&lt;td>10.0 s: &lt;code>VisibilityModel(time_step_s=)&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Clear-air grid&lt;/td>
+&lt;td>0.25 m (&lt;code>--vis-cell-size&lt;/code>)&lt;/td>
+&lt;td>0.5 m: &lt;code>VisibilityModel.clear_air(cell_size_m=)&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Smoke-blind, exit replay&lt;/td>
@@ -1318,14 +1334,22 @@ scenario can behave differently:&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>For a run identical to the command line, parse the same flags and build the
-keywords the same way:&lt;/p>
+&lt;p>A Python user who copies &lt;code>run_scenario(scenario)&lt;/code> therefore gets no
+rerouting, no sight gating and no incapacitation. In
+&lt;code>assets/familiarity_test_discovery&lt;/code> (discovery agents, no FDS), all 20
+agents leave in 86.40 s with &lt;code>run.py&lt;/code> and in 36.94 s with
+&lt;code>run_scenario(scenario)&lt;/code>: without a visibility model the agents learn
+neighbours by contact.&lt;/p>
+&lt;p>For a run with the command-line defaults, start from &lt;code>DEFAULTS&lt;/code>, set the
+paths and build the keywords as &lt;code>run.py&lt;/code> does:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac &lt;span style="color:#f92672">import&lt;/span> build_run_kwargs, cli, load_scenario, run_scenario
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> argparse
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac &lt;span style="color:#f92672">import&lt;/span> build_run_kwargs, load_scenario, run_scenario
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.config &lt;span style="color:#f92672">import&lt;/span> DEFAULTS
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>args &lt;span style="color:#f92672">=&lt;/span> [&lt;span style="color:#e6db74">&amp;#34;--scenario&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;--fds-dir&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/fds/a&amp;#34;&lt;/span>]
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> cli&lt;span style="color:#f92672">.&lt;/span>_build_parser()&lt;span style="color:#f92672">.&lt;/span>parse_args(args)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> argparse&lt;span style="color:#f92672">.&lt;/span>Namespace(&lt;span style="color:#f92672">**&lt;/span>{&lt;span style="color:#f92672">**&lt;/span>DEFAULTS,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;scenario&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">&amp;#34;fds_dir&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/fds/a&amp;#34;&lt;/span>})
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>scenario &lt;span style="color:#f92672">=&lt;/span> load_scenario(opts&lt;span style="color:#f92672">.&lt;/span>scenario)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, &lt;span style="color:#f92672">**&lt;/span>build_run_kwargs(scenario, opts))
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;FED max: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>result&lt;span style="color:#f92672">.&lt;/span>metrics[&lt;span style="color:#e6db74">&amp;#39;fed_max&amp;#39;&lt;/span>]&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.3f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)
@@ -1340,11 +1364,19 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Run it from the repository root with &lt;code>uv run python script.py&lt;/code>; the scenario
-and its FDS output are tracked there. It prints &lt;code>FED max: 1.170&lt;/code>.
-&lt;code>_build_parser&lt;/code> is a private name of &lt;code>pyfds_evac.cli&lt;/code>, not public API, and
-can change without notice
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328" target="_blank" rel="noopener">#328&lt;/a>).&lt;/p>
-&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> does this end to end.&lt;/p>
+and its FDS output are tracked there. It prints &lt;code>FED max: 1.170&lt;/code>, as
+&lt;code>run.py&lt;/code> with the same two paths. To change a setting, add it to the dict,
+for example &lt;code>&amp;quot;reroute_interval&amp;quot;: 10.0&lt;/code>. Start from the full &lt;code>DEFAULTS&lt;/code>:
+&lt;code>build_run_kwargs&lt;/code> reads about 20 options, such as &lt;code>fds_dir&lt;/code>,
+&lt;code>reroute_interval&lt;/code>, &lt;code>fed_threshold&lt;/code> and the &lt;code>heat_*&lt;/code> options, as plain
+attributes, so a namespace that lacks an option a built model reads raises
+&lt;code>AttributeError&lt;/code>; start from the full &lt;code>DEFAULTS&lt;/code>. &lt;code>pyfds_evac.config&lt;/code>
+and &lt;code>DEFAULTS&lt;/code> are provisional public API in 0.3.x: names may change.&lt;/p>
+&lt;p>&lt;strong>Show equivalent Python&lt;/strong> in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/#show-the-run-as-python">web GUI&lt;/a>
+and &lt;code>p&lt;/code> in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/#reproduce-a-run">terminal UI&lt;/a> write this
+pattern with every option set; the script reproduces the run of the front end.
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> runs a coupled case from Python end to
+end.&lt;/p>
 &lt;h3>Checking a configuration before the run&lt;span class="hx-absolute -hx-mt-20" id="checking-a-configuration-before-the-run">&lt;/span>
 &lt;a href="#checking-a-configuration-before-the-run" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>--show-config&lt;/code> prints the effective configuration and exits without
 running: which models are on or off and why, every option with its unit and
@@ -1355,7 +1387,10 @@ Errors include the value checks made when a model is built (for example
 &lt;code>--vis-cell-size 0&lt;/code> or &lt;code>--heat-emissivity 2&lt;/code>); warnings logged while a model
 is built, such as signs outside the FDS extinction slice, are not listed. With &lt;code>--fds-dir&lt;/code> it reads
 the FDS inventory (slices and output end time), not the slice data. It exits
-with status 1 when the configuration has an error, else 0.&lt;/p>
+with status 1 when the configuration has an error, else 0. It does not check
+an unknown &lt;code>routing.cost_model&lt;/code> or an alias that contradicts its &lt;code>v0*&lt;/code> key;
+the run reports them (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/#errors">Troubleshooting&lt;/a>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571" target="_blank" rel="noopener">#571&lt;/a>).&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction/config_discovery.json &lt;span style="color:#ae81ff">\
 &lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --constant-extinction 0.5 --enable-fic-speed --show-config&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -2876,10 +2911,15 @@ trajectory is written every tenth step (10 frames/s).&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The run reads only the &lt;code>v0*&lt;/code> keys. &lt;code>desired_speed&lt;/code>, &lt;code>desired_speed_distribution&lt;/code>
-and &lt;code>desired_speed_std&lt;/code> are accepted by &lt;code>Scenario.set_agent_params()&lt;/code> in
-Python, but in a scenario JSON they are ignored without a warning
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/143" target="_blank" rel="noopener">#143&lt;/a>).&lt;/p>
+&lt;p>&lt;code>desired_speed&lt;/code>, &lt;code>desired_speed_distribution&lt;/code> and &lt;code>desired_speed_std&lt;/code> are
+aliases of &lt;code>v0&lt;/code>, &lt;code>v0_distribution&lt;/code> and &lt;code>v0_std&lt;/code>. An alias set alone is used
+as its &lt;code>v0*&lt;/code> key. An alias and its &lt;code>v0*&lt;/code> key with the same value are
+accepted; with different values the run stops at the start with a
+&lt;code>ValueError&lt;/code> that names the distribution and both keys
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/#errors">Troubleshooting&lt;/a>). This check applies to the
+scenario JSON; &lt;code>Scenario.set_agent_params()&lt;/code> in Python lets &lt;code>desired_speed&lt;/code>
+win instead
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/586" target="_blank" rel="noopener">#586&lt;/a>).&lt;/p>
 &lt;p>While an agent waits out its pre-movement time, the smoke update skips it, so
 it starts at its full clear-air speed. An agent that reaches its FED threshold
 while still waiting walks off when its pre-movement ends
@@ -3080,9 +3120,11 @@ both sent all 40 to the nearer east exit, while with &lt;code>--no-enable-rerout
 &lt;h2>Route choice: &lt;code>routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-choice-routing">&lt;/span>
 &lt;a href="#route-choice-routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The &lt;code>routing&lt;/code> block sets the route-cost model. Its keys, defaults and the
 constants that no key can set are listed in one place,
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>. An unknown
-&lt;code>cost_model&lt;/code> value currently falls back to the additive model without a
-warning (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305" target="_blank" rel="noopener">#305&lt;/a>).&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>.
+&lt;code>cost_model&lt;/code> must be exactly &lt;code>&amp;quot;gate&amp;quot;&lt;/code> or &lt;code>&amp;quot;additive&amp;quot;&lt;/code> (lower case); without
+the key it is &lt;code>&amp;quot;gate&amp;quot;&lt;/code>. Any other value stops the run with a &lt;code>ValueError&lt;/code>
+that lists the two names, also with &lt;code>--no-enable-rerouting&lt;/code>, since the first
+exit choice uses the cost model too.&lt;/p>
 &lt;p>The &lt;code>routing&lt;/code> keys &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code> and
 &lt;code>base_speed_m_per_s&lt;/code> only estimate travel time when a route is priced. They
 do not change how fast agents walk.&lt;/p>
@@ -5957,6 +5999,21 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;td>Use a value in [0.25, 1].&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>ValueError: Unknown routing cost_model '…'; expected one of ('gate', 'additive')&lt;/code>&lt;/td>
+&lt;td>&lt;code>routing.cost_model&lt;/code> in the scenario JSON is not one of the two names. The match is exact and case-sensitive: &lt;code>&amp;quot;Gate&amp;quot;&lt;/code> fails. Raised with rerouting on or off.&lt;/td>
+&lt;td>Write &lt;code>&amp;quot;gate&amp;quot;&lt;/code> or &lt;code>&amp;quot;additive&amp;quot;&lt;/code>, or drop the key for &lt;code>&amp;quot;gate&amp;quot;&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#route-choice-routing">Scenario JSON&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: Distribution '…' sets desired_speed=… and v0=…; desired_speed is an alias of v0, set one of them&lt;/code> (or the same for &lt;code>desired_speed_distribution&lt;/code> and &lt;code>v0_distribution&lt;/code>, &lt;code>desired_speed_std&lt;/code> and &lt;code>v0_std&lt;/code>)&lt;/td>
+&lt;td>A spawn area sets an alias and its &lt;code>v0*&lt;/code> key to different values.&lt;/td>
+&lt;td>Set one of the two, or give both the same value; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#spawn-areas-distributionsidparameters">Scenario JSON&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: Unknown speed_law '…'; expected one of ('lund', 'fridolf')&lt;/code>&lt;/td>
+&lt;td>Python only: a &lt;code>SmokeSpeedConfig&lt;/code> built with another &lt;code>speed_law&lt;/code>. No command-line option or JSON key sets it.&lt;/td>
+&lt;td>Use &lt;code>&amp;quot;lund&amp;quot;&lt;/code> or &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>, in lower case.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>pyfds-evac-gui needs the GUI extra, which is not installed (missing module '…'). Install it with: pip install 'pyfds-evac[gui]'&lt;/code>&lt;/td>
 &lt;td>&lt;code>pyfds-evac-gui&lt;/code> without the &lt;code>gui&lt;/code> extra.&lt;/td>
 &lt;td>Run &lt;code>pip install &amp;quot;pyfds-evac[gui]&amp;quot;&lt;/code>, or &lt;code>uv sync --extra gui&lt;/code> in a source checkout.&lt;/td>
@@ -5973,6 +6030,9 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>The &lt;code>cost_model&lt;/code> and alias errors appear when the run starts, after the FDS
+output is read. &lt;code>--show-config&lt;/code> prints &lt;code>Errors: none&lt;/code> for such a deck
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571" target="_blank" rel="noopener">#571&lt;/a>).&lt;/p>
 &lt;h2>Warnings that change the result&lt;span class="hx-absolute -hx-mt-20" id="warnings-that-change-the-result">&lt;/span>
 &lt;a href="#warnings-that-change-the-result" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -6141,7 +6201,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5af1388cbe92adf7bdb56760e871b5a180534a53">&lt;code>5af1388&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0cc78aa130f7cf778af1158d83bda865485e5bc8">&lt;code>0cc78aa&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6165,7 +6225,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ce2a0e8f5e220cf58f8f957fed387716b0f81605fbef7ead8ce2ed3270692461&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0f428f717b6dc7633fbde5c74314087e81be7970dba27905c2d8e1a0fa22962d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
