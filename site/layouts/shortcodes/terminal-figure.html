@@ -1,0 +1,27 @@
+{{- /* Inline a terminal screenshot: an SVG that Textual saves (Rich's export),
+     read from assets/. The TUI snapshot tests' SVGs are mounted at
+     assets/tui-snapshots, so a page can show the screens the tests check.
+     A terminal keeps its own colours, so the drawing does not follow the
+     site's light/dark toggle. Rich's <title> is only the app name: alt
+     describes the screen for screen readers. The panel scrolls sideways on
+     a narrow screen so the terminal text stays legible.
+     Usage: {{< terminal-figure src="images/tui/tui-run.svg"
+                alt="What the screen shows" caption="Markdown caption" >}}
+     min-width (default 60rem, for 120 columns) is the narrowest the drawing
+     gets; max-width (default none) the widest. Use 40rem and 46rem for an
+     80-column screen. */ -}}
+{{- $src := .Get "src" }}
+{{- $alt := .Get "alt" }}
+{{- if not $alt }}{{ errorf "terminal-figure %q needs alt text: %s" $src .Position }}{{ end }}
+{{- $res := resources.Get $src }}
+{{- if not $res }}{{ errorf "terminal-figure: %q not found under assets/: %s" $src .Position }}{{ end }}
+{{- $mw := .Get "min-width" | default "60rem" }}
+{{- $xw := .Get "max-width" | default "none" }}
+<figure class="terminal-figure">
+  <div class="terminal-figure__panel" style="{{ printf "--svg-min-width: %s; max-width: %s" $mw $xw | safeCSS }}" tabindex="0" role="region" aria-label="Terminal screenshot; scroll sideways on narrow screens">
+    <div role="img" aria-label="{{ $alt }}">{{ $res.Content | safeHTML }}</div>
+  </div>
+  {{- with .Get "caption" }}
+  <figcaption>{{ . | markdownify }}</figcaption>
+  {{- end }}
+</figure>

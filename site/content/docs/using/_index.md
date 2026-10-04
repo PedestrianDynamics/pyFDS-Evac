@@ -12,6 +12,7 @@ Bringing your own FDS case, running simulations, and reading the results.
   {{< card link="scenario-json" title="Scenario JSON" subtitle="The keys a scenario reads, with their defaults." >}}
   {{< card link="outputs" title="Outputs" subtitle="Every file a run writes, column by column." >}}
   {{< card link="web-gui" title="Web GUI" subtitle="The optional local form: install, fields and result views." >}}
+  {{< card link="terminal-ui" title="Terminal UI" subtitle="The optional terminal front end: install, keys, runs over SSH, outputs." >}}
   {{< card link="troubleshooting" title="Troubleshooting" subtitle="Error messages and warnings, with their cause and fix." >}}
   {{< card link="howto-rset-ensemble" title="How-to: egress time from an ensemble" subtitle="How to get RSET with its spread from runs over several seeds." >}}
 {{< /cards >}}
