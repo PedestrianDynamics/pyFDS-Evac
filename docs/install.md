@@ -29,7 +29,7 @@ pip install pyfds-evac
 ```
 
 For the optional [web GUI](web-gui.md), install the `gui` extra; for the
-optional terminal UI, the `tui` extra:
+optional [terminal UI](terminal-ui.md), the `tui` extra:
 
 ```bash
 pip install "pyfds-evac[gui]"
@@ -43,9 +43,10 @@ You can then run:
 | `pyfds-evac` | Runs a scenario. Same flags, defaults, outputs and exit codes as `run.py` in the repository ([Usage](usage.md)). |
 | `python -m pyfds_evac` | The same command, run through the Python interpreter. |
 | `pyfds-evac-gui` | Starts the [web GUI](web-gui.md) on <http://127.0.0.1:5001>. Needs the `gui` extra. |
-| `pyfds-evac-tui` | Starts the terminal UI, for example on a remote machine over SSH. Reads examples from `./assets` and writes runs under `./results`. Needs the `tui` extra. |
+| `pyfds-evac-tui` | Starts the [terminal UI](terminal-ui.md), for example on a remote machine over SSH. Reads examples from `./assets` and writes runs under `./results`. Needs the `tui` extra. |
 
-The package contains the `pyfds_evac` library with its command line and GUI.
+The package contains the `pyfds_evac` library with its command line, web GUI
+and terminal UI.
 It contains no scenarios, examples or scripts: `assets/`, `examples/` and
 `scripts/` stay in the repository. Get them from the example zip of a page,
 such as the [Quickstart](quickstart.md), or from a
@@ -66,7 +67,7 @@ command from inside it:
 
 ```bash
 cd pyfds-evac-quickstart
-pyfds-evac --scenario assets/ISO-table21 --cleanup
+pyfds-evac --scenario assets/ISO-table21
 ```
 
 {{< checkpoint title="Install works" >}}
@@ -93,20 +94,23 @@ cd pyFDS-Evac
 uv sync
 ```
 
-For the optional [web GUI](web-gui.md), add its extra:
+For the optional [web GUI](web-gui.md) and [terminal UI](terminal-ui.md), add
+their extras:
 
 ```bash
 uv sync --extra gui
+uv sync --extra tui
 ```
 
-`uv sync` installs pyFDS-Evac in editable mode, so the `pyfds-evac` and
-`pyfds-evac-gui` commands are also available with `uv run`. `run.py` and
+`uv sync` installs pyFDS-Evac in editable mode, so the `pyfds-evac`,
+`pyfds-evac-gui` and `pyfds-evac-tui` commands are also available with
+`uv run`. `run.py` and
 `app.py` at the repository root run the same command line and GUI.
 
 ### Check the checkout
 
 ```bash
-uv run python run.py --scenario assets/ISO-table21 --cleanup
+uv run python run.py --scenario assets/ISO-table21
 ```
 
 {{< checkpoint title="Install works" >}}

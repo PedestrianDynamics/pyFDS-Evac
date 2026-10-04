@@ -41,7 +41,7 @@ scenarios and scripts of a source checkout; with pip, replace
 | `--debug` | Print debug messages, such as the `Reroute debug` trace of the rerouting pass. From Python, `logging.getLogger("pyfds_evac").setLevel(logging.DEBUG)` with a handler does the same. |
 | `--show-config` | Print the effective configuration and exit without running; see [Checking a configuration before the run](#checking-a-configuration-before-the-run). |
 | `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as `<stem>.manifest.json`. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, heat_fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
-| `--cleanup` | Delete the temp SQLite after the run. |
+| `--cleanup` | Kept for compatibility: the temporary trajectory SQLite and its manifest are always removed after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` [for the app](howto-create-scenario.md#open-a-scenario-in-the-app-again). |
 | `--export-only` | Export the bundle without running the simulation. |
 
@@ -208,7 +208,8 @@ each flag sets.
 
 ### Python API and command line
 
-`run.py` and the web GUI build their models with `build_run_kwargs`.
+`run.py`, the web GUI and the terminal UI build their models with
+`build_run_kwargs`.
 `run_scenario()` called directly builds nothing you do not pass, so the same
 scenario can behave differently:
 
@@ -298,7 +299,7 @@ its optional `agent_scalars` table for FED/speed colouring).
 
 ```bash
 # Bare JuPedSim run, no smoke coupling
-uv run python run.py --scenario assets/t_junction/config.json --cleanup
+uv run python run.py --scenario assets/t_junction/config.json
 ```
 
 ```text

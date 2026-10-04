@@ -1,6 +1,6 @@
 ---
 title: "Troubleshooting"
-weight: 10
+weight: 11
 ---
 
 Find the message you see, then its cause and fix. Errors stop the run;
@@ -54,6 +54,21 @@ Command-line errors start with the name of the command you ran:
   `--debug`.
 - `Heat FED is off; pass --enable-heat-fed to accumulate it.`: the heat dose is
   off by default, as in FDS+Evac.
+
+## Terminal UI
+
+Messages of `pyfds-evac-tui`. How the terminal UI works is on
+[Terminal UI](terminal-ui.md).
+
+| Message | Cause | Fix |
+|---|---|---|
+| `PYFDS_EVAC_TUI_THEME='…' is not a theme; choose from evac-dark, solarized-light` | The environment variable names a theme that does not exist. | Unset it, or set it to one of the two themes. |
+| "Terminal is W×H; the TUI needs 80×24." | The terminal is smaller than 80 × 24 characters. | Resize the window or zoom out. A run continues meanwhile. |
+| "No assets/ folder here. Start the TUI in a folder that holds one …" | The terminal UI started in a folder without `assets/`. | `cd` into the unpacked example zip of the [Quickstart](quickstart.md) and start again, or use the **Open file** tab. |
+| "This example ships the FDS deck only. Run FDS first, or continue without fire" | The example has no FDS output. | Run FDS on the deck, or choose **No FDS (clear air)**; see [What your FDS case must provide](fds-case-requirements.md). |
+| "Could not inspect the FDS folder: … The run is still allowed; Review shows Level 1." | The folder could not be read as FDS output. | Check that the folder holds the `.smv` file; then choose "Inspect FDS folder" in the palette (`ctrl+p`). |
+| "The run stopped without a result (process exit N)." | The run's process crashed or was killed. | `t` shows the end of `child.log`; the full log is in the run folder. |
+| Nothing was copied after `c` or `y` (the message reads "Sent to clipboard (OSC 52). If nothing was copied, …") | The terminal does not support OSC 52: macOS Terminal, or `tmux` without `set -g set-clipboard on`. | Select the command shown on Review, or press `s` to write `command.sh` and `run.py`. |
 
 ## Known pitfalls
 

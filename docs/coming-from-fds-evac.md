@@ -74,7 +74,7 @@ used other defaults for eight mechanisms
 | Convective heat dose | None (Guide §1.2) | On whenever the output has a `TEMPERATURE` slice | `--enable-heat-fed`; `opts.enable_heat_fed = True` |
 | Gas incapacitation threshold | Every agent stops at FED = 1 (Guide §3.4) | Per-agent log-normal draw, median `--fed-threshold`, σ = 0.94 | `--incapacitation-mode probabilistic`; `opts.incapacitation_mode = "probabilistic"`, or `TenabilityConfig(incapacitation_mode="probabilistic")` ([#235](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/235)) |
 
-The CLI flags that change a result are also fields of the [web GUI](web-gui.md), and the `opts` attributes are
+The CLI flags that change a result are also fields of the [web GUI](web-gui.md) and the [terminal UI](terminal-ui.md), and the `opts` attributes are
 what `build_run_kwargs` reads, so a script that builds its own options sets
 them the same way. The [changelog](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md)
 lists the same changes.
@@ -227,8 +227,8 @@ FED activity level is the same as in FDS+Evac 6.7.6: light work only
 Some parameters cannot be set from the CLI or the scenario JSON. The
 smoke-speed parameters are the main case. `speed_law` (`"lund"` or
 `"fridolf"`), `alpha`, `beta`, `min_speed_factor`, `visibility_factor_c` and
-the `fridolf_*` constants are fields of `SmokeSpeedConfig`, and `run.py` and the web GUI build that
-object with its defaults. A run started from either one uses the
+the `fridolf_*` constants are fields of `SmokeSpeedConfig`, and `run.py`, the web GUI and the terminal UI build that
+object with its defaults. A run started from any of them uses the
 Frantzich–Nilsson law with the defaults listed on the [smoke-speed model](/models/smoke-speed.md#parameters) page.
 
 To change them, build a `SmokeSpeedModel` yourself and pass it to

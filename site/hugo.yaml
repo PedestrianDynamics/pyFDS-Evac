@@ -53,6 +53,7 @@ module:
         - "outputs.md"
         - "scenario-json.md"
         - "web-gui.md"
+        - "terminal-ui.md"
         - "troubleshooting.md"
         - "howto-rset-ensemble.md"
         - "assets.md"
@@ -86,6 +87,7 @@ module:
         - "outputs.md"
         - "scenario-json.md"
         - "web-gui.md"
+        - "terminal-ui.md"
         - "troubleshooting.md"
         - "howto-rset-ensemble.md"
     - source: ../docs
@@ -120,6 +122,13 @@ module:
       target: static/t_junction
     - source: static
       target: static
+    # The TUI snapshot tests' SVGs, inlined by the terminal-figure shortcode,
+    # so the Terminal UI page shows the screens the tests check. A mount for
+    # assets replaces the default one, so assets/ is listed too.
+    - source: ../tests/__snapshots__/test_tui
+      target: assets/tui-snapshots
+    - source: assets
+      target: assets
 
 menu:
   main:

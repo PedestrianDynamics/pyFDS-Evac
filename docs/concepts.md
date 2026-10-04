@@ -320,8 +320,8 @@ side exit is nearer and ranks first. Script: `scripts/figures/map_memory.py`.*
 Some parameters with the same name live in two places, and they do different
 things. The walking-speed parameters (`speed_law`, `alpha`, `beta`,
 `min_speed_factor` and `visibility_factor_c`) are fields of `SmokeSpeedConfig`.
-`run.py` and the web GUI build that object with its defaults, so every run they
-start uses the Frantzich–Nilsson law with the FDS+Evac constants. Another law
+`run.py`, the web GUI and the terminal UI build that object with its defaults,
+so every run they start uses the Frantzich–Nilsson law with the FDS+Evac constants. Another law
 or other coefficients require building the model in Python and passing it to
 `run_scenario()`.
 

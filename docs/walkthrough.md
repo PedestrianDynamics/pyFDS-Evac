@@ -266,7 +266,7 @@ The message names the missing quantity and the directory (the temporary path
 differs on your machine).
 
 **If you go through `build_run_kwargs`, the run continues without FED.**
-`build_run_kwargs` is what `run.py` and the web GUI call. It turns their
+`build_run_kwargs` is what `run.py`, the web GUI and the terminal UI call. It turns their
 options into `run_scenario` keywords:
 
 ```python

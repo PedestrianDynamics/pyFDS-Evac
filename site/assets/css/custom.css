@@ -241,6 +241,14 @@
 .svg-figure__panel--scroll svg { min-width: var(--svg-min-width); }
 .svg-figure__panel--scroll:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
 
+/* Terminal screenshots inlined by the terminal-figure shortcode. They keep
+   the terminal's own colours in both site themes. */
+.terminal-figure { margin: 1.5rem 0 1rem; }
+.terminal-figure__panel { overflow-x: auto; margin-inline: auto; }
+.terminal-figure__panel svg { display: block; width: 100%; height: auto; min-width: var(--svg-min-width); }
+.terminal-figure__panel:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.terminal-figure figcaption { margin-top: 0.5rem; font-size: 0.875rem; }
+
 /* Wide equations scroll inside their own box on narrow screens instead of
    widening the page (#299). KaTeX's hidden MathML copy is absolutely
    positioned; anchoring it to its .katex keeps it inside a table's scroll

@@ -4,8 +4,9 @@ weight: 7
 ---
 
 What a run writes, when each file is missing, and how to read the results
-without being misled. Every file below is written by `run.py` (and the web
-GUI) only when you ask for it with its flag. From Python, the same data are
+without being misled. Every file below is written by `run.py` only when you
+ask for it with its flag. The web GUI and the terminal UI ask for all of them,
+in the run's folder. From Python, the same data are
 fields of the `ScenarioResult` that `run_scenario()` returns.
 
 | File | Flag | Written when | Rows |
@@ -18,6 +19,10 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | Route history | `--output-route-history CSV` | rerouting is on (the default) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
 | Route cost history | `--output-route-cost-history CSV` | rerouting is on | one per candidate route per agent per evaluation |
 | Exit history | `--output-exit-history CSV` | always | one per agent that walks the stage graph |
+
+A run of the terminal UI also leaves `child.log` (the run's own messages) in
+its folder, and `command.sh` and `run.py` when you save them. They are not
+model outputs; see [Terminal UI](terminal-ui.md#outputs-and-folders).
 
 The run command, flags and defaults are on [Usage](usage.md). The example
 columns below come from

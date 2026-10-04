@@ -78,7 +78,7 @@ the repository, clone it and use [uv](https://github.com/astral-sh/uv):
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
 cd pyFDS-Evac
 uv sync
-uv run run.py --scenario assets/ISO-table21 --cleanup
+uv run run.py --scenario assets/ISO-table21
 ```
 
 `run.py` is the same command line as `pyfds-evac` (`uv run` uses the project
@@ -107,6 +107,10 @@ scenario with the same options as `pyfds-evac`:
 pip install "pyfds-evac[tui]"
 pyfds-evac-tui
 ```
+
+The run stops when the terminal closes; use `tmux` or `screen` for long runs.
+Documentation:
+[Terminal UI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/).
 
 ## Web GUI
 

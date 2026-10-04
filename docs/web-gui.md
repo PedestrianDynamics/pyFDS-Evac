@@ -8,6 +8,7 @@ command (`run.py`) behind a form: pick a scenario, set the options, run it,
 watch the progress, and look at the results. It is for exploring a scenario;
 for studies, scripts and the command line are easier to reproduce. To turn
 a GUI run into a script, see [Show the run as Python](#show-the-run-as-python).
+For a terminal or an SSH session, see [Terminal UI](terminal-ui.md).
 
 ## Install and launch
 
@@ -506,7 +507,7 @@ scenario sets none ([Usage](usage.md)).
 {{< details title="What the script leaves out, and why" closed="true" >}}
 - **The GUI's CSV histories and app bundle.** The smoke, FED, route,
   route-cost and exit histories and the bundle are written by `apply_outputs` in
-  `pyfds_evac.cli`, which the exported script does not call yet. Their keys
+  `pyfds_evac.core.run_outputs`, which the exported script does not call yet. Their keys
   (`output_smoke_history`, `output_fed_history`, `output_route_history`,
   `output_route_cost_history`, `output_exit_history`, `output_sqlite`,
   `export_app_bundle`) are set

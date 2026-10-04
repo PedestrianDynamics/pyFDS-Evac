@@ -70,7 +70,7 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
   >}}
   {{< hextra/feature-card
     title="One entry point"
-    subtitle="Script, test, command line, and the optional web GUI all call the same run_scenario(); the pyfds-evac command (run.py) and the GUI also build the same models for it. Results are a JuPedSim trajectory file plus per-agent CSV histories."
+    subtitle="Script, test, command line, and the optional web GUI and terminal UI all call the same run_scenario(); the pyfds-evac command (run.py) and both front ends also build the same models for it. Results are a JuPedSim trajectory file plus per-agent CSV histories."
     link="docs/using/usage/"
   >}}
 {{< /hextra/feature-grid >}}
@@ -99,7 +99,7 @@ FDS output, clone the repository and use
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
 cd pyFDS-Evac
 uv sync
-uv run python run.py --scenario assets/ISO-table21 --cleanup
+uv run python run.py --scenario assets/ISO-table21
 ```
 
 ## Where to start
