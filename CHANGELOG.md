@@ -57,6 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   --fds-dir.` Runs with default options log nothing new (#484).
 - `uv.lock` takes the security fixes of pillow, starlette, anyio, idna,
   soupsieve and oauthlib (#525).
+- `uv run app.py` and `python -m pyfds_evac.webapp.app` listen on
+  127.0.0.1 instead of all interfaces, as `pyfds-evac-gui` does; `--host`
+  and `--port` work as for `pyfds-evac-gui`. All three print a warning
+  when `--host` makes the GUI reachable from other computers (#477).
 
 ### Fixed
 

@@ -121,7 +121,7 @@ Then open <http://127.0.0.1:5001>. The GUI listens on this computer only;
 `--host` and `--port` change that. It lists the scenarios in `./assets` and
 writes `./uploads` and `./results` under the folder it starts in. In a source
 checkout, `uv sync --extra gui` and `uv run app.py` start it with the
-checkout's folders, listening on all interfaces with auto-reload. The form
+checkout's folders, on 127.0.0.1 with auto-reload. The form
 groups, the options it does not offer, the result views and how to export a
 run as a Python script are on the
 [Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/) page.
