@@ -66,7 +66,7 @@ web GUI and the terminal UI set only the last two (`--smoke-update-interval`,
 
 | Field | Default | Unit | Meaning |
 |---|---|---|---|
-| `speed_law` | `"lund"` | - | `"lund"` or `"fridolf"` |
+| `speed_law` | `"lund"` | - | `"lund"` or `"fridolf"`, matched exactly; any other value raises `ValueError` when `SmokeSpeedConfig` is built |
 | `alpha` | `0.706` | m/s | \(\alpha\), `lund` only |
 | `beta` | `-0.057` | m²/s | \(\beta\), `lund` only |
 | `min_speed_factor` | `0.1` | - | \(f_{\min}\), `lund` only |
@@ -96,9 +96,7 @@ the agent walks at full speed there, as in FDS+Evac (`smoke_speed.py`,
 such sample, marks each smoke-history row outside with
 `in_fds_domain = False` and counts the samples outside at the end. With
 `--require-fds-coverage` a sample outside stops the run. Details on
-[FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices). An unknown `speed_law` string currently
-runs `lund` without a warning
-([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)).
+[FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices).
 
 ![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8](/images/concepts/speed_laws.png)
 

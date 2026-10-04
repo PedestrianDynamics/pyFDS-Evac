@@ -207,7 +207,8 @@ K = 0.23 1/m. No flux is measured.
   does not offer.
 - **Four arms, seeds 1–10 each:** no fire; smoke-blind (`--smoke-blind`);
   `gate`; `additive` with `w_smoke` 1.0, the engine default. The cost model
-  is set explicitly in each scenario
+  is set explicitly in each scenario; at the time a misspelt name selected
+  the additive model
   ([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)).
 - **Routing settings:** `anticipate: true`, `foresight_horizon_s` at its
   default (no limit), `base_speed_m_per_s` 1.0. Routes are re-evaluated
@@ -596,8 +597,6 @@ runs used `FDS-6.10.1-0-g12efa16-release`.
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 - Anticipation horizon
   ([#356](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/356)).
-- The cost model must be set explicitly
-  ([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)).
 
 **Open design questions.**
 

@@ -208,30 +208,43 @@ each flag sets.
 
 ### Python API and command line
 
-`run.py`, the web GUI and the terminal UI build their models with
-`build_run_kwargs`.
-`run_scenario()` called directly builds nothing you do not pass, so the same
-scenario can behave differently:
+`run.py`, the web GUI, the terminal UI and their equivalent Python scripts
+build their models with `build_run_kwargs` (`pyfds_evac/core/run_config.py`)
+and use the command-line defaults. `run_scenario()` called directly uses the
+Python defaults: it builds nothing you do not pass. Both sets are intended,
+but the same scenario can behave differently:
 
 | What | `run.py` | `run_scenario()` without that argument |
 |------|----------|----------------------------------------|
-| Rerouting | on, every 1 s (`--reroute-interval`) | off; `RerouteConfig()` defaults to 10 s |
+| Rerouting | on (`--enable-rerouting`) | off: `reroute_config=None` |
+| Re-decision interval | 1.0 s (`--reroute-interval`) | 10.0 s: `RerouteConfig.reevaluation_interval_s` |
 | Route costs | the scenario's `routing` block, for the first exit choice and for rerouting | the `routing` block for the first exit choice. A `RerouteConfig()` built by hand carries the code defaults of `RouteCostConfig` and ignores the `routing` block, for the first choice as well; pass `cost_config=RouteCostConfig.from_routing_params(scenario.raw.get("routing"))` to keep it |
 | Smoke speed | from `--fds-dir`, or `--constant-extinction` | none |
 | Gas FED, heat FED | from `--fds-dir` (heat with `--enable-heat-fed`) | none |
-| Incapacitation | `TenabilityConfig` whenever a FED track runs | none: a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
-| Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility` | none |
+| Incapacitation | `TenabilityConfig` whenever a FED track runs, unless `--disable-tenability` | none: `tenability_config=None`; a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
+| Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility`, unless `--no-visibility` | none: `vis_model=None` |
+| Visibility time step | = `--reroute-interval`, 1.0 s | 10.0 s: `VisibilityModel(time_step_s=)` |
+| Clear-air grid | 0.25 m (`--vis-cell-size`) | 0.5 m: `VisibilityModel.clear_air(cell_size_m=)` |
 | Smoke-blind, exit replay | `--smoke-blind`, `--replay-exits` | off: `smoke_blind=False`, `replay_exits=None` (a dict of `(origin, spawn_index)` to exit) |
 
-For a run identical to the command line, parse the same flags and build the
-keywords the same way:
+A Python user who copies `run_scenario(scenario)` therefore gets no
+rerouting, no sight gating and no incapacitation. In
+`assets/familiarity_test_discovery` (discovery agents, no FDS), all 20
+agents leave in 86.40 s with `run.py` and in 36.94 s with
+`run_scenario(scenario)`: without a visibility model the agents learn
+neighbours by contact.
+
+For a run with the command-line defaults, start from `DEFAULTS`, set the
+paths and build the keywords as `run.py` does:
 
 ```python
-from pyfds_evac import build_run_kwargs, cli, load_scenario, run_scenario
+import argparse
+from pyfds_evac import build_run_kwargs, load_scenario, run_scenario
+from pyfds_evac.config import DEFAULTS
 
-args = ["--scenario", "assets/iso_table22_coupled/config_a.json",
-        "--fds-dir", "assets/iso_table22_coupled/fds/a"]
-opts = cli._build_parser().parse_args(args)
+opts = argparse.Namespace(**{**DEFAULTS,
+    "scenario": "assets/iso_table22_coupled/config_a.json",
+    "fds_dir": "assets/iso_table22_coupled/fds/a"})
 scenario = load_scenario(opts.scenario)
 result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
 print(f"FED max: {result.metrics['fed_max']:.3f}")
@@ -239,12 +252,20 @@ result.cleanup()
 ```
 
 Run it from the repository root with `uv run python script.py`; the scenario
-and its FDS output are tracked there. It prints `FED max: 1.170`.
-`_build_parser` is a private name of `pyfds_evac.cli`, not public API, and
-can change without notice
-([#328](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/328)).
+and its FDS output are tracked there. It prints `FED max: 1.170`, as
+`run.py` with the same two paths. To change a setting, add it to the dict,
+for example `"reroute_interval": 10.0`. Start from the full `DEFAULTS`:
+`build_run_kwargs` reads about 20 options, such as `fds_dir`,
+`reroute_interval`, `fed_threshold` and the `heat_*` options, as plain
+attributes, so a namespace that lacks an option a built model reads raises
+`AttributeError`; start from the full `DEFAULTS`. `pyfds_evac.config`
+and `DEFAULTS` are provisional public API in 0.3.x: names may change.
 
-[A crowd in a fire](first-fds-case.md) does this end to end.
+**Show equivalent Python** in the [web GUI](web-gui.md#show-the-run-as-python)
+and `p` in the [terminal UI](terminal-ui.md#reproduce-a-run) write this
+pattern with every option set; the script reproduces the run of the front end.
+[A crowd in a fire](first-fds-case.md) runs a coupled case from Python end to
+end.
 
 ### Checking a configuration before the run
 
@@ -257,7 +278,10 @@ Errors include the value checks made when a model is built (for example
 `--vis-cell-size 0` or `--heat-emissivity 2`); warnings logged while a model
 is built, such as signs outside the FDS extinction slice, are not listed. With `--fds-dir` it reads
 the FDS inventory (slices and output end time), not the slice data. It exits
-with status 1 when the configuration has an error, else 0.
+with status 1 when the configuration has an error, else 0. It does not check
+an unknown `routing.cost_model` or an alias that contradicts its `v0*` key;
+the run reports them ([Troubleshooting](troubleshooting.md#errors),
+[#571](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571)).
 
 ```bash
 uv run python run.py --scenario assets/t_junction/config_discovery.json \

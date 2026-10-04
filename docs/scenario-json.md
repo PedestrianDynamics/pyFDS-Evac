@@ -83,10 +83,15 @@ trajectory is written every tenth step (10 frames/s).
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |
 | `entrance` | none | an exit id | One exit, reachable from the spawn area, that the agents know from the start. |
 
-The run reads only the `v0*` keys. `desired_speed`, `desired_speed_distribution`
-and `desired_speed_std` are accepted by `Scenario.set_agent_params()` in
-Python, but in a scenario JSON they are ignored without a warning
-([#143](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/143)).
+`desired_speed`, `desired_speed_distribution` and `desired_speed_std` are
+aliases of `v0`, `v0_distribution` and `v0_std`. An alias set alone is used
+as its `v0*` key. An alias and its `v0*` key with the same value are
+accepted; with different values the run stops at the start with a
+`ValueError` that names the distribution and both keys
+([Troubleshooting](troubleshooting.md#errors)). This check applies to the
+scenario JSON; `Scenario.set_agent_params()` in Python lets `desired_speed`
+win instead
+([#586](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/586)).
 
 While an agent waits out its pre-movement time, the smoke update skips it, so
 it starts at its full clear-air speed. An agent that reaches its FED threshold
@@ -189,9 +194,11 @@ both sent all 40 to the nearer east exit, while with `--no-enable-rerouting`
 
 The `routing` block sets the route-cost model. Its keys, defaults and the
 constants that no key can set are listed in one place,
-[Models › Routing › Parameters](/models/routing.md#parameters). An unknown
-`cost_model` value currently falls back to the additive model without a
-warning ([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)).
+[Models › Routing › Parameters](/models/routing.md#parameters).
+`cost_model` must be exactly `"gate"` or `"additive"` (lower case); without
+the key it is `"gate"`. Any other value stops the run with a `ValueError`
+that lists the two names, also with `--no-enable-rerouting`, since the first
+exit choice uses the cost model too.
 
 The `routing` keys `alpha`, `beta`, `min_speed_factor` and
 `base_speed_m_per_s` only estimate travel time when a route is priced. They

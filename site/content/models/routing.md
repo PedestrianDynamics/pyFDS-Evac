@@ -190,7 +190,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 
 | `routing` key | Default | Meaning |
 |---|---|---|
-| `cost_model` | `"gate"` | `"gate"` or `"additive"`; any other string currently selects `"additive"` without a warning ([#305](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/305)) |
+| `cost_model` | `"gate"` | `"gate"` or `"additive"`, matched exactly; any other value raises `ValueError` |
 | `tau_max` | `6.0` | Budget \(\tau_{\max}\) on the optical depth of a route |
 | `tau_return_margin` | `0.8` | A rival exit must come in under `tau_max` times this |
 | `current_exit_discount` | `0.9` | Factor on the current exit's `tau` in the sort |
@@ -229,6 +229,9 @@ the agents walk with. Each agent re-decides every
 |---|---|
 | `RerouteConfig()` built in Python | `10.0` s |
 | `run.py --reroute-interval` | `1.0` s |
+
+The other defaults that differ between `run_scenario()` and `run.py` are
+listed in [Python API and command line](/docs/usage.md#python-api-and-command-line).
 
 ### Assumptions
 
