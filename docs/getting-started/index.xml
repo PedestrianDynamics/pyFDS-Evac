@@ -30,7 +30,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/755f2d63ad838254e3720a6a1452eb58dc233c99">&lt;code>755f2d6&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5af1388cbe92adf7bdb56760e871b5a180534a53">&lt;code>5af1388&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -49,7 +49,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b548404016dfa0491a2175d5859d174aaa6703efe939588974bf456ff67485ac&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3a0e239104c9aa65c24fa11a7db74f286a698d6a87cd7648f7882dc8ccf64623&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -512,7 +512,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/755f2d63ad838254e3720a6a1452eb58dc233c99">&lt;code>755f2d6&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5af1388cbe92adf7bdb56760e871b5a180534a53">&lt;code>5af1388&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -537,7 +537,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">76780d699563622a6db6a38b9eb33dcd49b872c724dbc3109a692bfdb3d03ca5&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0a9699ece1e6565e99f381a2c1a4c63c0d68936d86adabfec3a689ec6d106993&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -841,7 +841,7 @@ title="Copy code"
 &lt;p>The message names the missing quantity and the directory (the temporary path
 differs on your machine).&lt;/p>
 &lt;p>&lt;strong>If you go through &lt;code>build_run_kwargs&lt;/code>, the run continues without FED.&lt;/strong>
-&lt;code>build_run_kwargs&lt;/code> is what &lt;code>run.py&lt;/code> and the web GUI call. It turns their
+&lt;code>build_run_kwargs&lt;/code> is what &lt;code>run.py&lt;/code>, the web GUI and the terminal UI call. It turns their
 options into &lt;code>run_scenario&lt;/code> keywords:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>opts &lt;span style="color:#f92672">=&lt;/span> SimpleNamespace(
@@ -982,7 +982,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/755f2d63ad838254e3720a6a1452eb58dc233c99">&lt;code>755f2d6&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5af1388cbe92adf7bdb56760e871b5a180534a53">&lt;code>5af1388&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 70/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.37&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;smoke_reroute&amp;#39;: 10, &amp;#39;wander&amp;#39;: 170}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>5cdbd02e&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1003,7 +1003,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8eee34e4fd9d2989b23906c360eefac14f1e45c9c12322708327d23fea33c2b3&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b6c8c45332620cd31697918c5a38a2231bd0ebeb421660f318347a0d87573fbe&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -1964,7 +1964,7 @@ used other defaults for eight mechanisms
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The CLI flags that change a result are also fields of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, and the &lt;code>opts&lt;/code> attributes are
+&lt;p>The CLI flags that change a result are also fields of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a> and the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/">terminal UI&lt;/a>, and the &lt;code>opts&lt;/code> attributes are
 what &lt;code>build_run_kwargs&lt;/code> reads, so a script that builds its own options sets
 them the same way. The &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/CHANGELOG.md" target="_blank" rel="noopener">changelog&lt;/a>
 lists the same changes.&lt;/p>
@@ -2242,8 +2242,8 @@ FED activity level is the same as in FDS+Evac 6.7.6: light work only
 &lt;a href="#what-needs-python" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters cannot be set from the CLI or the scenario JSON. The
 smoke-speed parameters are the main case. &lt;code>speed_law&lt;/code> (&lt;code>&amp;quot;lund&amp;quot;&lt;/code> or
 &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>), &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code>, &lt;code>visibility_factor_c&lt;/code> and
-the &lt;code>fridolf_*&lt;/code> constants are fields of &lt;code>SmokeSpeedConfig&lt;/code>, and &lt;code>run.py&lt;/code> and the web GUI build that
-object with its defaults. A run started from either one uses the
+the &lt;code>fridolf_*&lt;/code> constants are fields of &lt;code>SmokeSpeedConfig&lt;/code>, and &lt;code>run.py&lt;/code>, the web GUI and the terminal UI build that
+object with its defaults. A run started from any of them uses the
 Frantzich–Nilsson law with the defaults listed on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page.&lt;/p>
 &lt;p>To change them, build a &lt;code>SmokeSpeedModel&lt;/code> yourself and pass it to
 &lt;code>run_scenario()&lt;/code> from Python.&lt;/p>
@@ -2350,7 +2350,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, install the &lt;code>gui&lt;/code> extra; for the
-optional terminal UI, the &lt;code>tui&lt;/code> extra:&lt;/p>
+optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/">terminal UI&lt;/a>, the &lt;code>tui&lt;/code> extra:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pip install &lt;span style="color:#e6db74">&amp;#34;pyfds-evac[gui]&amp;#34;&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pip install &lt;span style="color:#e6db74">&amp;#34;pyfds-evac[tui]&amp;#34;&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -2386,11 +2386,12 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>pyfds-evac-tui&lt;/code>&lt;/td>
-&lt;td>Starts the terminal UI, for example on a remote machine over SSH. Reads examples from &lt;code>./assets&lt;/code> and writes runs under &lt;code>./results&lt;/code>. Needs the &lt;code>tui&lt;/code> extra.&lt;/td>
+&lt;td>Starts the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/">terminal UI&lt;/a>, for example on a remote machine over SSH. Reads examples from &lt;code>./assets&lt;/code> and writes runs under &lt;code>./results&lt;/code>. Needs the &lt;code>tui&lt;/code> extra.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The package contains the &lt;code>pyfds_evac&lt;/code> library with its command line and GUI.
+&lt;p>The package contains the &lt;code>pyfds_evac&lt;/code> library with its command line, web GUI
+and terminal UI.
 It contains no scenarios, examples or scripts: &lt;code>assets/&lt;/code>, &lt;code>examples/&lt;/code> and
 &lt;code>scripts/&lt;/code> stay in the repository. Get them from the example zip of a page,
 such as the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>, or from a
@@ -2414,7 +2415,7 @@ them. The zip unpacks into a folder named &lt;code>pyfds-evac-quickstart&lt;/cod
 command from inside it:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cd pyfds-evac-quickstart
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario assets/ISO-table21 --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario assets/ISO-table21&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2461,9 +2462,11 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a>, add its extra:&lt;/p>
+&lt;p>For the optional &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/web-gui/">web GUI&lt;/a> and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/">terminal UI&lt;/a>, add
+their extras:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv sync --extra gui
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv sync --extra tui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2473,12 +2476,13 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>uv sync&lt;/code> installs pyFDS-Evac in editable mode, so the &lt;code>pyfds-evac&lt;/code> and
-&lt;code>pyfds-evac-gui&lt;/code> commands are also available with &lt;code>uv run&lt;/code>. &lt;code>run.py&lt;/code> and
+&lt;p>&lt;code>uv sync&lt;/code> installs pyFDS-Evac in editable mode, so the &lt;code>pyfds-evac&lt;/code>,
+&lt;code>pyfds-evac-gui&lt;/code> and &lt;code>pyfds-evac-tui&lt;/code> commands are also available with
+&lt;code>uv run&lt;/code>. &lt;code>run.py&lt;/code> and
 &lt;code>app.py&lt;/code> at the repository root run the same command line and GUI.&lt;/p>
 &lt;h3>Check the checkout&lt;span class="hx-absolute -hx-mt-20" id="check-the-checkout">&lt;/span>
 &lt;a href="#check-the-checkout" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/ISO-table21 --cleanup&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/ISO-table21&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"

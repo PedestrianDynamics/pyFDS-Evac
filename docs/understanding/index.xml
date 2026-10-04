@@ -266,8 +266,8 @@ side exit is nearer and ranks first. Script: &lt;code>scripts/figures/map_memory
 &lt;a href="#the-parameter-split" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Some parameters with the same name live in two places, and they do different
 things. The walking-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>,
 &lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>) are fields of &lt;code>SmokeSpeedConfig&lt;/code>.
-&lt;code>run.py&lt;/code> and the web GUI build that object with its defaults, so every run they
-start uses the Frantzich–Nilsson law with the FDS+Evac constants. Another law
+&lt;code>run.py&lt;/code>, the web GUI and the terminal UI build that object with its defaults,
+so every run they start uses the Frantzich–Nilsson law with the FDS+Evac constants. Another law
 or other coefficients require building the model in Python and passing it to
 &lt;code>run_scenario()&lt;/code>.&lt;/p>
 &lt;p>The &lt;code>routing&lt;/code> block of the scenario JSON accepts &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and
@@ -451,8 +451,8 @@ validation (the equations describe how people behave).&lt;/p>
 &lt;a href="#some-parameters-are-library-level" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Not every model parameter is reachable from the command line or the scenario
 JSON. The smoke-speed parameters (&lt;code>speed_law&lt;/code>, &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>,
 &lt;code>min_speed_factor&lt;/code> and &lt;code>visibility_factor_c&lt;/code>) are fields of
-&lt;code>SmokeSpeedConfig&lt;/code>. &lt;code>run.py&lt;/code> and the web GUI build that object with its
-defaults, so every run they start uses the Frantzich–Nilsson law (the &lt;code>lund&lt;/code>
+&lt;code>SmokeSpeedConfig&lt;/code>. &lt;code>run.py&lt;/code>, the web GUI and the terminal UI build that object
+with its defaults, so every run they start uses the Frantzich–Nilsson law (the &lt;code>lund&lt;/code>
 option; the linear &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> law) with the defaults listed on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">smoke-speed model&lt;/a> page. Another law or
 other coefficients require building the model in Python and passing it to
