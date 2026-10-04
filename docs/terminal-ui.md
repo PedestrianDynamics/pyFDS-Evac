@@ -97,8 +97,10 @@ remembered.
 The first run uses `ISO-table21` from the Quickstart zip, in clear air: one
 agent walks a corridor 100 m long to the exit.
 
-1. **Scenario.** The **Examples** tab is open with `ISO-table21` first.
-   Press `Enter`. The terminal UI moves to the FDS step.
+1. **Scenario.** On a first start the **Examples** tab is open, with
+   `ISO-table21` first. Press `Enter`. The terminal UI moves to the FDS step.
+   After earlier runs the **Recent** tab opens instead: press `shift+tab`,
+   `→` and `tab` to reach Examples, then `Enter`.
 2. **FDS.** `ISO-table21` has no fire. Press `Enter` on **No FDS (clear
    air)**. The terminal UI moves to Configure.
 3. **Configure.** Leave the defaults. Press `ctrl+n` to go to Review.
@@ -418,9 +420,10 @@ memory. Tests show that recording the frames does not change the results.
 Each run is a separate `spawn` child process that runs the same code as
 `pyfds-evac`. A test runs the same scenario through the terminal UI and
 through `pyfds-evac` with the command the terminal UI shows. The two give
-identical `trajectory_data` rows, byte-identical smoke, FED, route, route-cost
-and exit history CSVs, and the same exit status. The test uses `ISO-table21`
-with seed 7; it does not cover a fire scenario.
+identical `trajectory_data` rows, the same set of CSV files with
+byte-identical contents, and the same exit status. The test uses `ISO-table21`
+with seed 7, without fire, so it compares the route, route-cost and exit
+histories; it does not cover a fire scenario.
 
 - **`child.log`.** The child's standard output and error go to
   `<run folder>/child.log`: Python warnings, output of the native libraries,

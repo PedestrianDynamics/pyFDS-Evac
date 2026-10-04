@@ -33,6 +33,8 @@ on:
       - "tests/test_example_downloads.py"
       - "LICENSE"
       - "tests/test_docs_defaults.py"
+      - "tests/__snapshots__/test_tui/**"
+      - "scripts/docs/tui_screens.py"
       - "tests/test_examples.py"
       - "tests/test_smoke_speed_widget.py"
       - "scripts/docs/smoke_speed_widget_data.py"

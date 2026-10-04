@@ -110,9 +110,17 @@ async def capture(demo: Path, size: tuple[int, int], theme: str, names: dict) ->
             await shot(pilot, app, names["plan"])
 
 
+MARKER = ".tui_screens"
+
+
 def build_demo(demo: Path, data: Path) -> None:
-    if demo.exists():
+    """Make *demo* afresh; only a folder this script made is removed."""
+    if demo.exists() and any(demo.iterdir()):
+        if not (demo / MARKER).exists():
+            raise SystemExit(f"{demo} exists and was not made by this script")
         shutil.rmtree(demo)
+    demo.mkdir(parents=True, exist_ok=True)
+    (demo / MARKER).touch()
     target = demo / "assets" / "t_junction"
     shutil.copytree(ROOT / "assets" / "t_junction", target)
     shutil.copytree(data, target / "fire_2MW_PVC")

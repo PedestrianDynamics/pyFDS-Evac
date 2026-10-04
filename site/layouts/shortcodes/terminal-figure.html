@@ -7,7 +7,7 @@
      a narrow screen so the terminal text stays legible.
      Usage: {{< terminal-figure src="images/tui/tui-run.svg"
                 alt="What the screen shows" caption="Markdown caption" >}}
-     min-width (default 60rem, for 120 columns) is the narrowest the drawing
+     min-width (default 48rem, for 120 columns) is the narrowest the drawing
      gets; max-width (default none) the widest. Use 40rem and 46rem for an
      80-column screen. */ -}}
 {{- $src := .Get "src" }}
@@ -15,7 +15,7 @@
 {{- if not $alt }}{{ errorf "terminal-figure %q needs alt text: %s" $src .Position }}{{ end }}
 {{- $res := resources.Get $src }}
 {{- if not $res }}{{ errorf "terminal-figure: %q not found under assets/: %s" $src .Position }}{{ end }}
-{{- $mw := .Get "min-width" | default "60rem" }}
+{{- $mw := .Get "min-width" | default "48rem" }}
 {{- $xw := .Get "max-width" | default "none" }}
 <figure class="terminal-figure">
   <div class="terminal-figure__panel" style="{{ printf "--svg-min-width: %s; max-width: %s" $mw $xw | safeCSS }}" tabindex="0" role="region" aria-label="Terminal screenshot; scroll sideways on narrow screens">
