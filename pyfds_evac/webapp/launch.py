@@ -42,7 +42,7 @@ def _build_parser(prog: str = "pyfds-evac-gui") -> argparse.ArgumentParser:
 
 
 def _is_loopback(host: str) -> bool:
-    if host == "localhost":
+    if host.lower() == "localhost":
         return True
     try:
         return ipaddress.ip_address(host).is_loopback

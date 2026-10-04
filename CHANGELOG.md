@@ -60,7 +60,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `uv run app.py` and `python -m pyfds_evac.webapp.app` listen on
   127.0.0.1 instead of all interfaces, as `pyfds-evac-gui` does; `--host`
   and `--port` work as for `pyfds-evac-gui`. All three print a warning
-  when `--host` makes the GUI reachable from other computers (#477).
+  when `--host` makes the GUI reachable from other computers. `app.py` and
+  `python -m pyfds_evac.webapp.app` now stop with a usage error on
+  arguments other than `--host` and `--port` (#477).
 
 ### Fixed
 

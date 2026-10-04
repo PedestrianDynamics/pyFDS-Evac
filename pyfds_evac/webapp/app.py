@@ -43,11 +43,11 @@ from fasthtml.common import (
 )
 from starlette.requests import Request
 
-from pyfds_evac.cli import apply_outputs
 from pyfds_evac.config.parameters import default
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
+from pyfds_evac.core.run_outputs import apply_outputs
 
 from . import docs, params, plots, pyexport, theme, trajviz
 from .runner import (
