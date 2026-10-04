@@ -100,8 +100,12 @@ class FieldRow(Vertical):
     FieldRow:focus-within .help, FieldRow:focus .help { display: block; }
     FieldRow.-inactive .label, FieldRow.-inactive .marker { text-style: dim; }
     FieldRow.-invalid .marker { color: $error; }
-    FieldRow:focus, FieldRow:focus-within { background: $foreground 10%; }
-    FieldRow:focus .label { text-style: reverse; }
+    /* As the command palette: a hover band, and the cursor band on top. */
+    FieldRow:hover { background: $block-hover-background; }
+    FieldRow:focus, FieldRow:focus-within {
+        background: $block-cursor-blurred-background;
+    }
+    FieldRow:focus .label, FieldRow:focus-within .label { text-style: bold; }
     """
 
     BINDINGS = [Binding("enter", "enable", "go to the setting", show=False)]
