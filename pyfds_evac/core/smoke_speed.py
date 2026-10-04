@@ -78,6 +78,14 @@ from .fds_sampling import (
 _logger = logging.getLogger(__name__)
 
 
+SPEED_LAWS = ("lund", "fridolf")
+
+
+def _unknown_speed_law(speed_law: object) -> ValueError:
+    """The error for a speed_law that names no smoke-speed law."""
+    return ValueError(f"Unknown speed_law {speed_law!r}; expected one of {SPEED_LAWS}")
+
+
 @dataclass
 class SmokeSpeedConfig:
     """Store coefficients and sampling settings for the smoke-speed model.
@@ -90,6 +98,8 @@ class SmokeSpeedConfig:
         ``"fridolf"``: additive Fridolf et al. (2018) law
         ``w = min(w_free, max(0.2, w_free - 0.34 (3 - V)))`` where
         ``V = C / K``; the speed factor is ``w / w_free``.
+
+        Matched exactly; any other value raises ``ValueError``.
 
     visibility_factor_c
         Visibility factor C in the Jin (1970-1978) relation V = C / K.
@@ -114,6 +124,11 @@ class SmokeSpeedConfig:
     fridolf_slope: float = 0.34
     fridolf_visibility_threshold_m: float = 3.0
     fridolf_min_speed_m_per_s: float = 0.2
+
+    def __post_init__(self) -> None:
+        """Reject a speed_law that is not exactly one of SPEED_LAWS."""
+        if self.speed_law not in SPEED_LAWS:
+            raise _unknown_speed_law(self.speed_law)
 
 
 class ExtinctionField:
@@ -383,13 +398,15 @@ class SmokeSpeedModel:
                 visibility_threshold_m=self.config.fridolf_visibility_threshold_m,
                 min_speed_m_per_s=self.config.fridolf_min_speed_m_per_s,
             )
-        else:
+        elif self.config.speed_law == "lund":
             factor = speed_factor_from_extinction(
                 extinction,
                 alpha=self.config.alpha,
                 beta=self.config.beta,
                 min_speed_factor=self.config.min_speed_factor,
             )
+        else:
+            raise _unknown_speed_law(self.config.speed_law)
         return extinction, factor
 
     def speed_factor(

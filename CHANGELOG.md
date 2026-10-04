@@ -78,6 +78,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`<run>_exit_history.csv`, as `--output-exit-history`) to the run's
   folder, and the GUI lists it with the other output files. Before, no
   front end set the option, so the file was never written (#547).
+- An unknown routing `cost_model` or smoke `speed_law` raises
+  `ValueError` and names the allowed values. Before, any `cost_model`
+  other than `"gate"` ran the additive model and any `speed_law` other
+  than `"fridolf"` ran lund, so `"Gate"` or `"Fridolf"` silently gave the
+  other model. Names are matched exactly (`"gate"`, `"additive"`,
+  `"lund"`, `"fridolf"`); an absent key still means `"gate"` and
+  `"lund"`. Valid inputs give the same results (#305).
 
 ## [0.2.4] - 2026-10-03
 

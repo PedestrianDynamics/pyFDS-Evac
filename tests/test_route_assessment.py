@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from dataclasses import fields, replace
 
+import pytest
 import test_rerouting_golden as golden
 
 from pyfds_evac.core.route_graph import (
@@ -16,6 +17,7 @@ from pyfds_evac.core.route_graph import (
     GatePolicy,
     RouteAssessment,
     RouteCost,
+    RouteCostConfig,
     RouteFeasibility,
     RouteMeasurements,
     RouteViolation,
@@ -207,11 +209,44 @@ def test_rival_limits_carry_their_margins():
         assert _project_route_cost(assessment) == rc
 
 
-def test_policy_for_picks_gate_only_for_gate():
+def test_policy_for_picks_the_named_policy():
     assert isinstance(policy_for(golden._gate()), GatePolicy)
-    for model in ("additive", "weird", "Gate"):
-        policy = policy_for(replace(golden._gate(), cost_model=model))
-        assert isinstance(policy, AdditivePolicy)
+    assert isinstance(policy_for(golden._additive()), AdditivePolicy)
+
+
+_BAD_COST_MODELS = ("Gate", "gates", "", " gate", None, 1)
+
+
+@pytest.mark.parametrize("model", _BAD_COST_MODELS)
+def test_unknown_cost_model_is_rejected(model):
+    """An unknown cost_model raises instead of running the additive model (#305)."""
+    with pytest.raises(ValueError, match=r"Unknown routing cost_model"):
+        RouteCostConfig(cost_model=model)
+    with pytest.raises(ValueError, match=r"Unknown routing cost_model"):
+        RouteCostConfig.from_routing_params({"cost_model": model})
+    with pytest.raises(ValueError, match=r"Unknown routing cost_model"):
+        replace(golden._gate(), cost_model=model)
+
+
+@pytest.mark.parametrize("model", ("gate", "additive"))
+def test_known_cost_model_is_accepted(model):
+    assert RouteCostConfig(cost_model=model).cost_model == model
+    assert RouteCostConfig.from_routing_params({"cost_model": model}) == (
+        RouteCostConfig(cost_model=model)
+    )
+
+
+def test_absent_cost_model_means_gate():
+    assert RouteCostConfig.from_routing_params({}).cost_model == "gate"
+    assert RouteCostConfig.from_routing_params(None).cost_model == "gate"
+
+
+def test_policy_for_rejects_a_bypassed_cost_model():
+    """No dispatch maps an unknown name to a policy, even past validation."""
+    config = golden._gate()
+    object.__setattr__(config, "cost_model", "Gate")
+    with pytest.raises(ValueError, match=r"Unknown routing cost_model 'Gate'"):
+        policy_for(config)
 
 
 def test_kvis_rejection_keeps_route_feasible():

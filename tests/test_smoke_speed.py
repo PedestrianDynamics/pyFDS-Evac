@@ -190,6 +190,24 @@ class TestSmokeSpeedModelFridolf:
         assert model.speed_factor(0.0, 0.0, 0.0) == 0.5
         assert model.speed_factor(0.0, 0.0, 0.0, free_speed_m_per_s=1.19) == 0.5
 
+    @pytest.mark.parametrize("law", ["Fridolf", "LUND", "", " lund", None])
+    def test_unknown_speed_law_is_rejected(self, law):
+        """An unknown speed_law raises instead of running lund (#305)."""
+        with pytest.raises(ValueError, match=r"Unknown speed_law"):
+            SmokeSpeedConfig(fds_dir=".", speed_law=law)
+
+    @pytest.mark.parametrize("law", ["lund", "fridolf"])
+    def test_known_speed_law_is_accepted(self, law):
+        assert SmokeSpeedConfig(fds_dir=".", speed_law=law).speed_law == law
+
+    def test_sample_rejects_a_mutated_speed_law(self):
+        """The issue's case: 'Fridolf' gave the lund 0.8385, not 0.592."""
+        cfg = SmokeSpeedConfig(fds_dir=".")
+        cfg.speed_law = "Fridolf"
+        model = SmokeSpeedModel(ConstantExtinctionField(2.0), cfg)
+        with pytest.raises(ValueError, match=r"Unknown speed_law 'Fridolf'"):
+            model.sample(0.0, 0.0, 0.0, free_speed_m_per_s=1.25)
+
     def test_lund_law_used_by_default(self):
         field = ConstantExtinctionField(0.0)
         cfg = SmokeSpeedConfig(fds_dir=".")
