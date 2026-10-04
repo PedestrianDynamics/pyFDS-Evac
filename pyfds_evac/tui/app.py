@@ -16,6 +16,9 @@ import asyncio
 import contextlib
 import contextvars
 import os
+import shutil
+import sqlite3
+import sys
 import time
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
@@ -62,6 +65,7 @@ from .widgets import (
     ConfirmScreen,
     EvacFooter,
     FieldRow,
+    FileScreen,
     FindScreen,
     ScrollText,
     StepBar,
@@ -1770,10 +1774,22 @@ class EvacTui(App[None]):
                     id=f"file-{i}",
                 )
             )
+        if result_files(run):
+            files.highlighted = 0
         self.query_one("#res-files-title", Static).update(
-            m("[b]Output files[/]  [dim]in $b  · y copy path[/]", b=_short(base, 70))
+            m(
+                "[b]Output files[/]  [dim]in $b  · Enter preview · y copy path[/]",
+                b=_short(base, 70),
+            )
         )
         self.refresh_plans()
+
+    @on(OptionList.OptionSelected, "#res-files")
+    def _file_selected(self, event: OptionList.OptionSelected) -> None:
+        if self.current_run is None:
+            return
+        path = result_files(self.current_run)[event.option_index]
+        self.push_screen(FileScreen(path, file_preview(path), file_opener()))
 
     def action_copy_path(self) -> None:
         files = self.query_one("#res-files", OptionList)
@@ -2085,6 +2101,53 @@ def result_files(run: RunState) -> list[str]:
 def evacuated_series(run: RunState) -> list[float]:
     """Evacuated agents per frame, for the sparkline (frames only)."""
     return [float(frame.evacuated) for frame, _smoke in run.frames]
+
+
+PREVIEW_LINES = 40
+PREVIEW_WIDTH = 200
+
+
+def file_preview(path: str) -> str:
+    """What the file dialog shows: text lines, SQLite tables or a folder's files."""
+    p = Path(path)
+    try:
+        if p.is_dir():
+            names = sorted(str(f.relative_to(p)) for f in p.rglob("*") if f.is_file())
+            return "\n".join([f"Folder, {len(names)} files:", *names])
+        if p.suffix == ".sqlite":
+            return _sqlite_preview(p)
+        with p.open(encoding="utf-8", errors="replace") as fh:
+            lines = [
+                line.rstrip("\n")[:PREVIEW_WIDTH]
+                for _, line in zip(range(PREVIEW_LINES + 1), fh)
+            ]
+    except (OSError, sqlite3.Error) as exc:
+        return f"Cannot read the file: {exc}"
+    if len(lines) > PREVIEW_LINES:
+        lines = [*lines[:PREVIEW_LINES], f"… first {PREVIEW_LINES} lines shown"]
+    return "\n".join(lines) or "(empty file)"
+
+
+def _sqlite_preview(path: Path) -> str:
+    uri = f"{path.resolve().as_uri()}?mode=ro"
+    lines = []
+    with contextlib.closing(sqlite3.connect(uri, uri=True)) as db:
+        query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        for (name,) in db.execute(query).fetchall():
+            count = db.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
+            lines.append(f"  {name}: {count} rows")
+    return "\n".join([f"SQLite database, {len(lines)} tables:", *lines])
+
+
+def file_opener() -> list[str] | None:
+    """The command that opens a file in the system app; None over SSH or if absent."""
+    if os.environ.get("SSH_CONNECTION"):
+        return None
+    if sys.platform == "darwin":
+        return ["open"]
+    if sys.platform.startswith("linux") and shutil.which("xdg-open"):
+        return ["xdg-open"]
+    return None
 
 
 def _size(path: str) -> str:

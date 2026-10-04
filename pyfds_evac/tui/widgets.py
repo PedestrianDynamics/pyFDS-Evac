@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import subprocess
 from collections.abc import Callable
 from typing import Any, cast
 
@@ -355,6 +356,45 @@ class TextScreen(ModalScreen[None]):
         self.app.notify(
             "Sent to clipboard (OSC 52). If nothing was copied, select the text."
         )
+
+
+class FileScreen(TextScreen):
+    """An output file: its path, a preview, and keys to copy the path or open it."""
+
+    BINDINGS = [
+        Binding("escape", "close", "close"),
+        Binding("y", "copy_path", "copy path"),
+        Binding("o", "open", "open"),
+    ]
+
+    def __init__(self, path: str, preview: str, opener: list[str] | None) -> None:
+        keys = (
+            "y copy path · o open · Esc close" if opener else "y copy path · Esc close"
+        )
+        super().__init__(path, preview, keys)
+        self.path = path
+        self.opener = opener
+
+    def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "open":
+            return self.opener is not None
+        return True
+
+    def action_copy_path(self) -> None:
+        self.app.copy_to_clipboard(self.path)
+        self.app.notify(f"Sent to clipboard (OSC 52): {self.path}", markup=False)
+
+    def action_open(self) -> None:
+        if self.opener is None:
+            return
+        subprocess.Popen(
+            [*self.opener, self.path],
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True,
+        )
+        self.app.notify(f"Opening {self.path}", markup=False)
 
 
 class FindScreen(ModalScreen[str | None]):

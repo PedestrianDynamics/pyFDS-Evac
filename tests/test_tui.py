@@ -2081,3 +2081,66 @@ def test_results_arrow_keys_replay_with_the_file_list_focused(workdir):
             assert app.scrub_index == 1
 
     run(go())
+
+
+# --- Enter on an output file: preview, copy path, open ------------------------------
+
+
+def test_file_preview_text_sqlite_and_folder(tmp_path):
+    import sqlite3
+
+    from pyfds_evac.tui.app import PREVIEW_LINES, file_preview
+
+    csv = tmp_path / "a.csv"
+    csv.write_text("".join(f"{i},x\n" for i in range(PREVIEW_LINES + 5)))
+    text = file_preview(str(csv))
+    assert text.splitlines()[0] == "0,x"
+    assert text.splitlines()[-1] == f"… first {PREVIEW_LINES} lines shown"
+
+    db = tmp_path / "run.sqlite"
+    with sqlite3.connect(db) as con:
+        con.execute("CREATE TABLE frames (t REAL)")
+        con.executemany("INSERT INTO frames VALUES (?)", [(1.0,), (2.0,)])
+    assert file_preview(str(db)) == "SQLite database, 1 tables:\n  frames: 2 rows"
+
+    folder = tmp_path / "bundle"
+    (folder / "sub").mkdir(parents=True)
+    (folder / "sub" / "b.txt").write_text("b")
+    assert file_preview(str(folder)) == "Folder, 1 files:\nsub/b.txt"
+
+
+def test_file_opener_is_off_over_ssh(monkeypatch):
+    from pyfds_evac.tui.app import file_opener
+
+    monkeypatch.setenv("SSH_CONNECTION", "1.2.3.4 5 6.7.8.9 22")
+    assert file_opener() is None
+
+
+def test_enter_on_an_output_file_opens_its_preview(workdir, tmp_path):
+    from pyfds_evac.tui.widgets import FileScreen
+
+    out = tmp_path / "exit_history.csv"
+    out.write_text("time,exit\n79.2,jps-exits_0\n")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.goto(3)
+            await pilot.pause()
+            await pilot.press("ctrl+r")
+            await pilot.pause()
+            replay(app, result_event(events.STATUS_SUCCESS, files=[str(out)]))
+            app.render_results()
+            await pilot.pause()
+            assert app.focused is app.query_one("#res-files")
+            await pilot.press("enter")
+            await pilot.pause()
+            assert isinstance(app.screen, FileScreen)
+            assert app.screen.path == str(out)
+            assert "79.2,jps-exits_0" in app.screen.text
+            await pilot.press("escape")
+            await pilot.pause()
+            assert not isinstance(app.screen, FileScreen)
+
+    run(go())

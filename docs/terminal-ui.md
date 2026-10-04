@@ -319,6 +319,7 @@ output folder is included. The idea is the same as in the Web GUI; see
 | Run | `v` / `w` / `l` | full-screen plan / warnings / log |
 | Results | `c` | open "Command and Python for run #*N*", built from the run's settings; `c` in the dialog copies |
 | Results | `s` | write `command.sh` and `run.py` of the run into the run folder, replacing a save from Review |
+| Results | `Enter` | preview the highlighted output file: the first 40 lines of a text file, the tables and row counts of a SQLite file, the files of a folder. In the dialog `y` copies the path and `o` opens the file in the system app (macOS `open`, Linux `xdg-open`; not over SSH) |
 | Results | `y` | copy the path of the highlighted output file |
 | Results | `e` / `n` / `t` / `w` | change settings (Configure) / new scenario / traceback or end of `child.log` / warnings |
 | Results, full plan | `←` / `→`, `shift+←` / `shift+→` | replay the plan frames by 1 s / 10 s, after the run has ended |
