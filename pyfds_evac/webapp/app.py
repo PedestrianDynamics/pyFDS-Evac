@@ -43,6 +43,12 @@ from fasthtml.common import (
 )
 from starlette.requests import Request
 
+from pyfds_evac.config.frontend import (
+    cancelled_text,
+    evacuated_text,
+    incapacitated_text,
+    incapacitation_modelled,
+)
 from pyfds_evac.config.parameters import default
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.manifest import manifest_path_for
@@ -1762,6 +1768,13 @@ def _run_log() -> Details | str:
     )
 
 
+def _cancelled_where() -> str:
+    """``cancelled at sim t s`` from the last progress sample, or before one."""
+    ev = manager.last_event
+    text = cancelled_text(None if ev is None else ev.sim_time)
+    return text[0].lower() + text[1:]
+
+
 def _cancelled_view() -> Div:
     """Terminal panel of a cancelled run: nothing to show but its settings."""
     return Div(
@@ -1773,8 +1786,8 @@ def _cancelled_view() -> Div:
             tone="is-cancelled",
         ),
         P(
-            f"Run #{_run_number()} was cancelled. No results were produced; "
-            "files it had already written stay on disk.",
+            f"Run #{_run_number()} was {_cancelled_where()}. No results were "
+            "produced; files it had already written stay on disk.",
             cls="state-msg",
         ),
         style=_PANEL,
@@ -1937,8 +1950,10 @@ def _running_card(ev, cancelling: bool | None = None) -> Div:
     if cancelling is None:
         cancelling = manager.status == "cancelling"
     line = (
-        f"evacuated {ev.evacuated}/{ev.total} · sim {ev.sim_time:.1f}s · "
-        f"wall {ev.wall_time:.0f}s · {ev.pct}%"
+        # ProgressEvent.total counts planned agents, flow agents included.
+        f"evacuated {ev.evacuated} of {ev.total} planned · "
+        f"sim {ev.sim_time:.1f} s · wall {ev.wall_time:.0f} s · {ev.pct}%"
+        + (f" · not spawned {ev.not_spawned}" if getattr(ev, "not_spawned", 0) else "")
         if ev
         else "Initialising…"
     )
@@ -2021,12 +2036,52 @@ _OUTCOME_GLYPH = {True: "\u2713", False: "\u26a0", None: "?"}
 _OUTCOME_TONE = {True: "is-complete", False: "is-incomplete", None: ""}
 
 
-def _tile(label: str, value: str, accent: str) -> Div:
+def _tile(
+    label: str,
+    value: str,
+    accent: str,
+    *extra,
+    note: bool = False,
+    describedby: str | None = None,
+) -> Div:
+    """A headline tile; *note* sets a non-number value in the muted note style,
+    *describedby* names the element that explains the value."""
+    described = {"aria_describedby": describedby} if describedby else {}
     return Div(
         Div(label, cls="kpi-label"),
-        Div(value, cls="kpi-value"),
+        Div(value, cls="kpi-value is-note" if note else "kpi-value", **described),
+        *extra,
         cls="kpi-tile",
         style=f"border-top-color:{accent}",
+    )
+
+
+_INCAP_HELP = (
+    "Agents that reached the incapacitation threshold (gas or heat FED). "
+    "Counted separately from Remaining."
+)
+
+
+def _incapacitated_tile(result) -> Div:
+    """Incapacitated agents, or "not modelled in this run" (#321).
+
+    Shown for every finished run, never folded into Remaining: the engine
+    does not guarantee the incapacitated are among those inside (#593).
+    """
+    modelled = incapacitation_modelled(getattr(result, "run_settings", None))
+    count = getattr(result, "agents_incapacitated", None)
+    return _tile(
+        "Incapacitated",
+        incapacitated_text(count, modelled),
+        "#837A74",
+        Div(
+            _INCAP_HELP + " ",
+            A("Gas FED", href=_MODELS_FED, target="_blank", rel="noopener"),
+            id="incap-help",
+            cls="kpi-help",
+        ),
+        note=not (modelled and count is not None),
+        describedby="incap-help",
     )
 
 
@@ -2035,8 +2090,8 @@ def _tenability_line(metrics: dict) -> Div | str:
 
     ``fed_max`` and ``heat_fed_max`` are the highest cumulative dose any
     agent reached. Under probabilistic incapacitation each agent has its own
-    threshold, so no threshold claim is attached. Incapacitation counts are
-    not reported by the engine yet (#141) and are not computed here.
+    threshold, so no threshold claim is attached. The incapacitated count
+    has its own tile (``_incapacitated_tile``).
     """
     doses = []
     if "fed_max" in metrics:
@@ -2067,15 +2122,7 @@ def _tenability_line(metrics: dict) -> Div | str:
         )
     if not doses:
         return ""
-    return Div(
-        *doses,
-        Div(
-            Span("Incapacitated", cls="kpi-label"),
-            Span("not reported by this version", cls="dose-note"),
-            cls="dose-row",
-        ),
-        cls="dose-card",
-    )
+    return Div(*doses, cls="dose-card")
 
 
 def _kpi_tiles(result) -> Div:
@@ -2097,11 +2144,11 @@ def _kpi_tiles(result) -> Div:
         _tile(
             "Evacuated",
             # total_agents counts only the agents that entered.
-            f"{result.agents_evacuated} / {result.total_agents} "
-            f"{'spawned agents' if not_spawned else 'agents'}",
+            evacuated_text(result.agents_evacuated, result.total_agents, not_spawned),
             "#3B82F6",
         ),
         _tile("Remaining", agents_label(result.agents_remaining), "#E01E37"),
+        _incapacitated_tile(result),
         *(
             [_tile("Not spawned", agents_label(not_spawned), "#E01E37")]
             if not_spawned
@@ -2216,11 +2263,25 @@ def _artifact_line(entry: str, folder: Path | None) -> Div:
     )
 
 
+def _smoke_interval(result) -> float | None:
+    """The smoke model's update interval [s] the run used, if recorded."""
+    smoke = (getattr(result, "run_settings", None) or {}).get("smoke_speed") or {}
+    return smoke.get("update_interval_s")
+
+
 def _plot_cards(result, run_opts: dict, plot_card) -> list:
     """Plot cards with data for this run, then one note naming those left out."""
     cards, skipped = [], []
     if result.smoke_history:
-        cards.append(plot_card("Smoke", plots.smoke_figure(result), "fig-smoke"))
+        cards.append(
+            plot_card(
+                "Smoke",
+                plots.smoke_figure(result),
+                "fig-smoke",
+                caption=plots.SMOKE_CAPTION,
+                notes=plots.smoke_summary(result, _smoke_interval(result)),
+            )
+        )
     else:
         why = _missing_reason("smoke_history", Namespace(**run_opts))
         skipped.append(f"Smoke: not shown \u2013 {why}.")
@@ -2270,13 +2331,15 @@ def _finished_view() -> Div:
     else:
         art = Div()
 
-    def plot_card(title, fig, div_id):
+    def plot_card(title, fig, div_id, caption=None, notes=()):
         return Div(
             Div(
                 title,
                 style=f"{_GROTESK};font-weight:600;font-size:15px;{_INK};margin-bottom:10px",
             ),
+            *([P(caption, cls="smoke-caption")] if caption else []),
             plots.figure_html(fig, div_id),
+            *[P(line, cls="smoke-summary") for line in notes],
             style=_CARD,
         )
 
@@ -2291,6 +2354,8 @@ def _finished_view() -> Div:
             fds_dir=manager.fds_dir,
             fed_threshold=run_opts.get("fed_threshold"),
             fed_mode=run_opts.get("incapacitation_mode"),
+            smoke_slice_height=run_opts.get("smoke_slice_height"),
+            constant_extinction=run_opts.get("constant_extinction"),
         ),
         *_plot_cards(result, run_opts, plot_card),
         _run_log(),

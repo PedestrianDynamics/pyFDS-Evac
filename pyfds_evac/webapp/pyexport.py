@@ -177,9 +177,13 @@ def run_status(spec: RunSpec) -> str:
     outcome = run_outcome(
         spec.completion, spec.agents_remaining, spec.agents_not_spawned
     )
+    if spec.incapacitation_modelled and spec.agents_incapacitated is not None:
+        incap = f", {spec.agents_incapacitated} incapacitated"
+    else:
+        incap = ", incapacitation not modelled"
     if outcome.complete:
         return (
-            f"{outcome.label} ({spec.agents_evacuated}/{spec.total_agents}), "
-            f"evacuation time {spec.evacuation_time:.2f} s"
+            f"{outcome.label} ({spec.agents_evacuated} of {spec.total_agents}), "
+            f"evacuation time {spec.evacuation_time:.1f} s{incap}"
         )
-    return f"{outcome.label}, simulated time {spec.evacuation_time:.2f} s"
+    return f"{outcome.label}, simulated time {spec.evacuation_time:.1f} s{incap}"

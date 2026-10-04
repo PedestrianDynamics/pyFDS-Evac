@@ -24,9 +24,9 @@ from typing import Any
 
 from pyfds_evac.config.frontend import Outcome as Outcome
 from pyfds_evac.config.frontend import agents_label as agents_label
+from pyfds_evac.config.frontend import incapacitation_modelled, utc_now
 from pyfds_evac.config.frontend import run_outcome as run_outcome
 from pyfds_evac.config.frontend import run_stamp as run_stamp
-from pyfds_evac.config.frontend import utc_now
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
 from pyfds_evac.core.manifest import find_project_root, git_state, package_versions
 
@@ -80,6 +80,10 @@ class RunSpec:
     agents_evacuated: int | None = None
     agents_remaining: int | None = None
     evacuation_time: float | None = None
+    # result.agents_incapacitated, and whether the run could incapacitate
+    # anyone (frontend.incapacitation_modelled of its run_settings).
+    agents_incapacitated: int | None = None
+    incapacitation_modelled: bool | None = None
     error: str | None = None
 
     def namespace(self) -> argparse.Namespace:
@@ -156,6 +160,10 @@ def _finished_spec(
             agents_evacuated=result.agents_evacuated,
             agents_remaining=result.agents_remaining,
             evacuation_time=result.evacuation_time,
+            agents_incapacitated=getattr(result, "agents_incapacitated", None),
+            incapacitation_modelled=incapacitation_modelled(
+                getattr(result, "run_settings", None)
+            ),
         )
     return dataclasses.replace(spec, **fields)
 
