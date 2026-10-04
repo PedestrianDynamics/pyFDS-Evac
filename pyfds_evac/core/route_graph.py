@@ -688,6 +688,17 @@ class FedRateSampler(Protocol):
     def sample_fed_rate(self, time_s: float, x: float, y: float) -> float: ...
 
 
+ROUTE_COST_MODELS = ("gate", "additive")
+
+
+def _unknown_cost_model(cost_model: object) -> ValueError:
+    """The error for a cost_model that names no route cost model."""
+    return ValueError(
+        f"Unknown routing cost_model {cost_model!r}; "
+        f"expected one of {ROUTE_COST_MODELS}"
+    )
+
+
 @dataclass(frozen=True)
 class RouteCostConfig:
     """Weights and thresholds for route cost evaluation."""
@@ -741,7 +752,8 @@ class RouteCostConfig:
     # available; "additive": the historical w_smoke/w_fed toll, kept because
     # the smoke term multiplies route *length*, so a long clean detour pays for
     # its own length and can never win however large w_smoke is (sweeping it
-    # 1 -> 20 on assets/world_100 moved 12 of 120 agents).
+    # 1 -> 20 on assets/world_100 moved 12 of 120 agents). Matched exactly;
+    # any other value raises ValueError.
     cost_model: str = "gate"
     # A route is refused when the sighting distance at its worst point falls
     # below this fraction of the distance still to walk -- FDS+Evac's own door
@@ -792,6 +804,11 @@ class RouteCostConfig:
     # rival's worst extinction is better by this fraction -- without it the
     # least-bad choice changes with every flicker of the field.
     fallback_switch_margin: float = 0.2
+
+    def __post_init__(self) -> None:
+        """Reject a cost_model that is not exactly one of ROUTE_COST_MODELS."""
+        if self.cost_model not in ROUTE_COST_MODELS:
+            raise _unknown_cost_model(self.cost_model)
 
     @classmethod
     def from_routing_params(cls, routing: dict | None) -> RouteCostConfig:
@@ -1856,10 +1873,12 @@ _ADDITIVE_POLICY = AdditivePolicy()
 
 
 def policy_for(config: RouteCostConfig) -> RouteModePolicy:
-    """The gate policy for ``cost_model == "gate"``, the additive one otherwise."""
+    """The policy named by ``config.cost_model``; ValueError for any other name."""
     if config.cost_model == "gate":
         return _GATE_POLICY
-    return _ADDITIVE_POLICY
+    if config.cost_model == "additive":
+        return _ADDITIVE_POLICY
+    raise _unknown_cost_model(config.cost_model)
 
 
 def _assess_measurements(

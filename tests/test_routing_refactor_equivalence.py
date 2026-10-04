@@ -191,7 +191,6 @@ class _UniformFed:
 
 _VARIANTS: dict[str, Callable[[RouteCostConfig], RouteCostConfig]] = {
     "as_is": lambda c: c,
-    "unknown_mode": lambda c: replace(c, cost_model="weird"),
     "anticipate_flipped": lambda c: replace(c, anticipate=not c.anticipate),
     "clean_tier_on": lambda c: replace(c, clean_extinction_threshold=0.03),
     "clean_tier_off": lambda c: replace(c, clean_extinction_threshold=0.0),
@@ -621,7 +620,6 @@ _PASS_CONFIGS = {
     "gate_no_anticipate": golden._gate(anticipate=False),
     "gate_queue": golden._gate(w_queue=0.5),
     "additive": golden._additive(w_queue=0.5),
-    "unknown_mode": golden._gate(cost_model="weird"),
 }
 
 
@@ -934,7 +932,7 @@ def _rc(exit_id: str, **kw) -> RouteCost:
 
 def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfig]]:
     out = []
-    for model in ("gate", "additive", "weird"):
+    for model in ("gate", "additive"):
         cc = replace(golden._gate(), cost_model=model)
         cfg = RerouteConfig(cost_config=cc, exit_switch_anchor=0.9)
         out.append((f"{model}-no_baseline", _rc("a"), None, cfg))
