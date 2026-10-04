@@ -202,7 +202,7 @@ def create_agent_parameters(
 
     elif model_type == "SocialForceModel":
         sfm_params = base_params.copy()
-        desired_speed = params.get("v0", 0.8)
+        desired_speed = params.get("v0", 1.25)
         reaction_time = global_params.relaxation_time if global_params else 0.5
         agent_scale = global_params.agent_strength if global_params else 2000
         force_distance = global_params.agent_range if global_params else 0.08
@@ -803,6 +803,66 @@ def build_exit_path_state(
     }
 
 
+_SPEED_KEY_ALIASES = (
+    ("desired_speed", "v0"),
+    ("desired_speed_distribution", "v0_distribution"),
+    ("desired_speed_std", "v0_std"),
+)
+
+
+def _normalize_speed_aliases(params: dict[str, Any], dist_id: str) -> None:
+    """Copy each ``desired_speed*`` alias to its ``v0*`` key in place.
+
+    ``Scenario.set_agent_params`` writes both key families with equal
+    values; a pair with different values is ambiguous and is rejected.
+    """
+    for alias, canonical in _SPEED_KEY_ALIASES:
+        if alias not in params:
+            continue
+        if canonical not in params:
+            params[canonical] = params[alias]
+            continue
+        if params[canonical] != params[alias]:
+            raise ValueError(
+                f"Distribution {dist_id!r} sets {alias}={params[alias]!r} and "
+                f"{canonical}={params[canonical]!r}; {alias} is an alias of "
+                f"{canonical}, set one of them"
+            )
+
+
+def _parameters_as_dict(params: Any) -> dict[str, Any] | None:
+    """Return distribution ``parameters`` as a dict, or None if not one."""
+    if isinstance(params, str):
+        try:
+            params = json.loads(params)
+        except json.JSONDecodeError:
+            return None
+    return params if isinstance(params, dict) else None
+
+
+def _normalize_distribution_speed_aliases(data: Any) -> None:
+    """Apply ``_normalize_speed_aliases`` to every distribution of ``data``.
+
+    String-encoded ``parameters`` are replaced by the parsed dict only when
+    they contain an alias; anything else is left for the loaders.
+    """
+    if not isinstance(data, dict):
+        return
+    distributions = data.get("distributions")
+    if not isinstance(distributions, dict):
+        return
+    for dist_id, dist_data in distributions.items():
+        if not isinstance(dist_data, dict):
+            continue
+        params = _parameters_as_dict(dist_data.get("parameters"))
+        if params is None:
+            continue
+        if not any(alias in params for alias, _ in _SPEED_KEY_ALIASES):
+            continue
+        _normalize_speed_aliases(params, dist_id)
+        dist_data["parameters"] = params
+
+
 def initialize_simulation_from_json(
     json_path: str,
     simulation: jps.Simulation,
@@ -819,6 +879,8 @@ def initialize_simulation_from_json(
             data = json.load(f)
     except (json.JSONDecodeError, FileNotFoundError) as e:
         raise ValueError(f"Error loading JSON configuration: {e}")
+
+    _normalize_distribution_speed_aliases(data)
 
     # Only require exits - everything else can be fallback
     if "exits" not in data or not data["exits"]:

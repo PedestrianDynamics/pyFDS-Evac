@@ -87,6 +87,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   other model. Names are matched exactly (`"gate"`, `"additive"`,
   `"lund"`, `"fridolf"`); an absent key still means `"gate"` and
   `"lund"`. Valid inputs give the same results (#305).
+- A scenario JSON accepts `desired_speed`, `desired_speed_distribution`
+  and `desired_speed_std` as aliases of `v0`, `v0_distribution` and
+  `v0_std`, as `Scenario.set_agent_params()` does. Before, the run
+  ignored them without a warning and used 1.25 m/s. A distribution that
+  sets an alias and its `v0*` key to different values is an error; equal
+  values are accepted. Scenarios without these keys run unchanged. The
+  SocialForceModel agent parameters fall back to 1.25 m/s, not 0.8, when
+  no `v0` is given; no run reached that fallback (#143).
 
 ## [0.2.4] - 2026-10-03
 
