@@ -68,6 +68,7 @@ from .widgets import (
     FieldRow,
     FileScreen,
     FindScreen,
+    PathBox,
     ScrollText,
     StepBar,
     TextBox,
@@ -208,7 +209,10 @@ class FdsStep(Step):
 
     def compose(self) -> ComposeResult:
         yield Static(m("[b]FDS output folder[/]"))
-        yield TextBox(placeholder="folder that holds the .smv file", id="fds-path")
+        yield PathBox(
+            placeholder="folder that holds the .smv file (Tab completes, ~ is home)",
+            id="fds-path",
+        )
         yield OptionList(id="fds-choices")
         yield Static(id="fds-panel")
 
@@ -485,6 +489,9 @@ class EvacTui(App[None]):
         self.scrub_index: int | None = None
         self.examples: list[model.Example] | None = None
         self.suggestions: list[Path] = []
+        # The folder the FDS path box browses, and its listed subfolders.
+        self.browse_folder: Path | None = None
+        self.browsed: list[tuple[Path, bool]] = []
         self._gen = 0
         self._cfg_timer: Any = None
         self.warned_confirmed = False
@@ -878,6 +885,89 @@ class EvacTui(App[None]):
     def _fds_choice(self, event: OptionList.OptionSelected) -> None:
         self._apply_fds_choice(event.option.id)
 
+    # --- browsing folders from the path box (dired-like) -------------------------
+
+    @on(Input.Changed, "#fds-path")
+    def _fds_path_changed(self, event: Input.Changed) -> None:
+        text = event.value
+        if not text.strip() or text == (self.form.fds_dir or ""):
+            self.browse_folder = None
+            self._show_suggestions(self.suggestions)
+            return
+        self._browse(text)
+
+    @work(thread=True, exclusive=True, group="browse")
+    def _browse(self, text: str) -> None:
+        folder, found = model.browse_dirs(text)
+        usable = folder is not None and model.has_smv(folder)
+        self.call_from_thread(self._show_browse, text, folder, found, usable)
+
+    def _show_browse(
+        self,
+        text: str,
+        folder: Path | None,
+        found: list[tuple[Path, bool]],
+        usable: bool,
+    ) -> None:
+        if text != self.query_one("#fds-path", Input).value or folder is None:
+            return
+        self.browse_folder, self.browsed = folder, found
+        choices = self.query_one("#fds-choices", OptionList)
+        choices.clear_options()
+        if usable:
+            choices.add_option(
+                Option(
+                    m(
+                        "[$success]Use this folder[/]  $p  [dim]FDS output[/]",
+                        p=_short(folder, 60),
+                    ),
+                    id="use",
+                )
+            )
+        if folder.parent != folder:
+            choices.add_option(
+                Option(m("..  [dim]up to $p[/]", p=_short(folder.parent, 60)), id="up")
+            )
+        for i, (path, smv) in enumerate(found):
+            tag = "  [$success]FDS output[/]" if smv else ""
+            choices.add_option(Option(m(f"$n/{tag}", n=path.name), id=f"dir-{i}"))
+        if not found:
+            choices.add_option(
+                Option(
+                    m("[dim]No matching folder in $p[/]", p=_short(folder, 60)),
+                    disabled=True,
+                )
+            )
+        # The suggestions stay below the browsed folders.
+        for i, path in enumerate(self.suggestions):
+            choices.add_option(
+                Option(
+                    m("[$success]Found FDS output[/]  $p", p=_short(path, 60)),
+                    id=f"fds-{i}",
+                )
+            )
+        choices.add_option(
+            Option(m("No FDS (clear air)  [dim]no fire input[/]"), id="no-fds")
+        )
+        choices.highlighted = 0
+
+    def _go_into(self, folder: Path) -> None:
+        box = self.query_one("#fds-path", Input)
+        box.value = str(folder) + os.sep
+        box.cursor_position = len(box.value)
+
+    def action_complete_path(self) -> None:
+        box = self.query_one("#fds-path", Input)
+        completed = model.complete_dir(box.value)
+        if completed != box.value:
+            box.value = completed
+            box.cursor_position = len(completed)
+        else:
+            self.query_one("#fds-choices").focus()
+
+    def action_focus_choices(self) -> None:
+        self.query_one("#fds-choices").focus()
+
     def _accept_fds_choice(self) -> None:
         typed = self.query_one("#fds-path", Input).value
         if self.focused is self.query_one("#fds-path") and typed.strip():
@@ -890,11 +980,28 @@ class EvacTui(App[None]):
         self._apply_fds_choice(choices.get_option_at_index(choices.highlighted).id)
 
     def _apply_fds_choice(self, ident: str | None) -> None:
+        browsing = ident in ("use", "up") or (ident or "").startswith("dir-")
+        if browsing and self.browse_folder is not None:
+            self._browse_choice(cast(str, ident))
+            return
         if ident == "no-fds":
             self.set_fds_dir(None)
         elif ident:
             self.set_fds_dir(str(self.suggestions[int(ident[4:])]))
         self.goto(2)
+
+    def _browse_choice(self, ident: str) -> None:
+        folder = cast(Path, self.browse_folder)
+        if ident == "up":
+            self._go_into(folder.parent)
+            return
+        target = folder if ident == "use" else self.browsed[int(ident[4:])][0]
+        if ident == "use" or self.browsed[int(ident[4:])][1]:
+            self.browse_folder = None
+            self.set_fds_dir(str(target.resolve()))
+            self.goto(2)
+            return
+        self._go_into(target)
 
     @on(Input.Submitted, "#fds-path")
     def _fds_submitted(self, event: Input.Submitted) -> None:

@@ -327,6 +327,69 @@ def find_fds_dirs(
     return found
 
 
+BROWSE_LIMIT = 200
+
+
+def has_smv(path: Path) -> bool:
+    """Whether *path* is a folder that holds a ``.smv`` file."""
+    try:
+        return any(e.is_file() and e.name.endswith(".smv") for e in os.scandir(path))
+    except OSError:
+        return False
+
+
+def browse_dirs(text: str) -> tuple[Path | None, list[tuple[Path, bool]]]:
+    """The folder that *text* points into and its matching subfolders.
+
+    ``"/a/b/"`` lists all of ``/a/b``; ``"/a/b/fd"`` lists the folders of
+    ``/a/b`` whose names start with ``fd`` (case-insensitive). Hidden folders
+    show only when the typed name starts with a dot. Each entry is
+    ``(path, holds a .smv file)``; at most :data:`BROWSE_LIMIT` entries.
+    """
+    raw = os.path.expanduser(text.strip())
+    if not raw:
+        return None, []
+    # Split the text itself: Path() would turn "a/." into "a".
+    head, prefix = os.path.split(raw)
+    folder = Path(head or ".")
+    try:
+        entries = sorted(os.scandir(folder), key=lambda e: e.name.lower())
+    except OSError:
+        return folder, []
+    found: list[tuple[Path, bool]] = []
+    for entry in entries:
+        name = entry.name
+        if name.startswith(".") and not prefix.startswith("."):
+            continue
+        if not name.lower().startswith(prefix.lower()):
+            continue
+        with contextlib.suppress(OSError):
+            if entry.is_dir():
+                found.append((Path(entry.path), has_smv(Path(entry.path))))
+        if len(found) >= BROWSE_LIMIT:
+            break
+    return folder, found
+
+
+def complete_dir(text: str) -> str:
+    """*text* completed as far as its matching folder names agree, as a shell does.
+
+    One match completes to ``<folder>/``; several to their common prefix;
+    none leaves *text* unchanged.
+    """
+    folder, found = browse_dirs(text)
+    if folder is None or not found:
+        return text
+    names = [p.name for p, _smv in found]
+    if len(names) == 1:
+        return str(folder / names[0]) + os.sep
+    common = os.path.commonprefix(names)
+    typed = os.path.split(os.path.expanduser(text.strip()))[1]
+    if len(common) <= len(typed):
+        return text
+    return str(folder / common)
+
+
 def check_fds_dir(text: str) -> tuple[str | None, str]:
     """``(error, details)`` of an FDS output folder; error None when usable.
 

@@ -355,7 +355,13 @@ def test_a5_fds_suggested_not_set_and_checked(workdir, tmp_path):
             await pilot.pause()
             assert "No .smv file in" in text_of(app, "#fds-panel")
             assert app.form.fds_dir is None
-            app.query_one("#fds-choices").focus()
+            choices = app.query_one("#fds-choices")
+            choices.focus()
+            # Typing a path lists its folders first; the suggestion follows.
+            ids = [
+                choices.get_option_at_index(i).id for i in range(choices.option_count)
+            ]
+            choices.highlighted = ids.index("fds-0")
             await pilot.press("enter")
             await settle(pilot, app)
             assert app.form.fds_dir == str(fds)
@@ -2212,5 +2218,71 @@ def test_results_chart_label_spans_the_frames(workdir):
             text = text_of(app, "#res-exits")
             assert "Evacuated over sim time, 0–20 s" in text
             assert "0–300 s" not in text
+
+    run(go())
+
+
+# --- FDS step: browse folders from the path box (dired-like) --------------------
+
+
+def _fds_tree(root: Path) -> Path:
+    """root/{alpha/, beta/case/run.smv, .hidden/}."""
+    (root / "alpha").mkdir(parents=True)
+    (root / "beta" / "case").mkdir(parents=True)
+    (root / "beta" / "case" / "run.smv").write_text("")
+    (root / ".hidden").mkdir()
+    return root
+
+
+def test_browse_dirs_lists_matching_folders_and_marks_fds_output(tmp_path):
+    root = _fds_tree(tmp_path / "t")
+    folder, found = model.browse_dirs(f"{root}/")
+    assert folder == root
+    assert [(p.name, smv) for p, smv in found] == [("alpha", False), ("beta", False)]
+    _, found = model.browse_dirs(f"{root}/b")
+    assert [p.name for p, _ in found] == ["beta"]
+    _, found = model.browse_dirs(f"{root}/beta/")
+    assert [(p.name, smv) for p, smv in found] == [("case", True)]
+    _, found = model.browse_dirs(f"{root}/.")
+    assert [p.name for p, _ in found] == [".hidden"]
+
+
+def test_complete_dir_completes_like_a_shell(tmp_path):
+    root = _fds_tree(tmp_path / "t")
+    assert model.complete_dir(f"{root}/al") == f"{root}/alpha/"
+    assert model.complete_dir(f"{root}/zz") == f"{root}/zz"
+    (root / "alps").mkdir()
+    assert model.complete_dir(f"{root}/a") == f"{root}/alp"
+
+
+def test_fds_path_box_browses_and_enters_folders(workdir, tmp_path):
+    root = _fds_tree(tmp_path / "t")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            app.select_scenario(workdir / "assets" / "ISO-table21")
+            await settle(pilot, app)
+            app.goto(1)
+            await settle(pilot, app)
+            box = app.query_one("#fds-path")
+            box.focus()
+            box.value = f"{root}/b"
+            await pilot.press("tab")
+            await settle(pilot, app)
+            assert box.value == f"{root}/beta/"
+            await pilot.press("down")
+            await settle(pilot, app)
+            choices = app.query_one("#fds-choices")
+            assert app.focused is choices
+            ids = [
+                choices.get_option_at_index(i).id for i in range(choices.option_count)
+            ]
+            assert ids[:2] == ["up", "dir-0"]
+            choices.highlighted = 1
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.fds_dir == str((root / "beta" / "case").resolve())
+            assert app.step == 2
 
     run(go())

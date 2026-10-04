@@ -263,6 +263,15 @@ class TextBox(Input):
         return character != "?" and super().check_consume_key(key, character)
 
 
+class PathBox(TextBox):
+    """A folder path box: Tab completes the name, Down goes to the list below."""
+
+    BINDINGS = [
+        Binding("tab", "app.complete_path", "complete", show=False),
+        Binding("down", "app.focus_choices", "list", show=False),
+    ]
+
+
 # The keys every footer shows on the right, whatever the step (#598).
 FIXED_KEYS = (("ctrl+q", "quit", "quit"), ("question_mark", "field_help", "keys"))
 
