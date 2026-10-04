@@ -38,6 +38,7 @@ from textual.widgets import (
     Input,
     OptionList,
     RichLog,
+    Select,
     Sparkline,
     Static,
     TabbedContent,
@@ -220,6 +221,12 @@ class ConfigureStep(Step):
         Binding("ctrl+n", "app.next_step", "review"),
         Binding("ctrl+p", "app.step_back", "fds"),
         Binding("ctrl+f", "app.find", "find"),
+        # Up/down move between the options, also out of a text box or a
+        # closed dropdown (which would otherwise open on them).
+        Binding("down", "app.move_field(1)", "next option", show=False, priority=True),
+        Binding(
+            "up", "app.move_field(-1)", "previous option", show=False, priority=True
+        ),
     ]
 
     def compose(self) -> ComposeResult:
@@ -643,7 +650,16 @@ class EvacTui(App[None]):
     def action_new_scenario(self) -> None:
         self.goto(0)
 
+    def action_move_field(self, delta: int) -> None:
+        if delta > 0:
+            self.screen.focus_next()
+        else:
+            self.screen.focus_previous()
+
     def check_action(self, action: str, parameters: tuple[object, ...]) -> bool | None:
+        if action == "move_field":
+            # An open dropdown keeps up/down for its own list.
+            return not any(s.expanded for s in self.screen.query(Select))
         if action == "run":
             return self.step in (2, 3, 5)
         if action == "field_help":

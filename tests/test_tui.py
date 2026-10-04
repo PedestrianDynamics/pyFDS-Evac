@@ -2144,3 +2144,52 @@ def test_enter_on_an_output_file_opens_its_preview(workdir, tmp_path):
             assert not isinstance(app.screen, FileScreen)
 
     run(go())
+
+
+# --- Configure: up/down between options, Enter flips a switch, click shows why ----
+
+
+def test_configure_up_down_moves_between_options_and_enter_flips(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            app.focus_field("constant_extinction")
+            await pilot.pause()
+            assert app.focused is row(app, "constant_extinction").control
+            await pilot.press("down")
+            await pilot.pause()
+            # Without FDS output the option is inactive: the row takes focus.
+            assert app.focused in (
+                row(app, "smoke_update_interval"),
+                row(app, "smoke_update_interval").control,
+            )
+            await pilot.press("up")
+            await pilot.pause()
+            assert app.focused is row(app, "constant_extinction").control
+            app.focus_field("enable_rerouting")
+            await pilot.pause()
+            before = app.form.switch["enable_rerouting"]
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.switch["enable_rerouting"] is (not before)
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.switch["enable_rerouting"] is before
+
+    run(go())
+
+
+def test_click_on_an_inactive_switch_shows_why(workdir):
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "ISO-table21", None)
+            hold = row(app, "allow_fds_horizon_hold")
+            assert hold.control.disabled
+            await pilot.click(hold.control)
+            await pilot.pause()
+            assert app.focused is hold
+            assert "inactive" in str(hold.query_one(".marker").render()) or hold.reason
+
+    run(go())

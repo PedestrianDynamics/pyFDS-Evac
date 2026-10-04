@@ -163,6 +163,11 @@ class FieldRow(Vertical):
         elif isinstance(control, Input):
             control.value = self.form.text[dest]
 
+    def on_click(self) -> None:
+        """A click on an inactive row focuses it, so its reason shows."""
+        if self.reason is not None:
+            self.focus()
+
     def action_enable(self) -> None:
         """Enter on a disabled row: go to the control that enables it."""
         if self.reason is None:

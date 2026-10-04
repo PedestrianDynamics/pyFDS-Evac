@@ -311,6 +311,7 @@ output folder is included. The idea is the same as in the Web GUI; see
 | everywhere | `?` or `F1` | the list of keys; on a Configure field, the field's help first. `?` is never typed into a text box |
 | Scenario, FDS, Configure | `ctrl+n` | next step (from Configure: to Review) |
 | Configure, Review, Results | `ctrl+r` | run. With warnings, outside Review, it asks "r Run anyway / Esc Review"; on Review it runs at once |
+| Configure | `↑` / `↓` | previous / next option, also out of a text box or a closed dropdown; `Enter` flips a switch, opens a dropdown or a section, and on an inactive option goes to the setting that enables it |
 | Configure | `ctrl+f` | find a setting |
 | Review | `c` | copy the command to the clipboard (OSC 52) |
 | Review | `s` | write `command.sh` and `run.py` into the planned run folder, before any run |
