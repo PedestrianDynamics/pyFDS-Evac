@@ -401,6 +401,16 @@ def test_model_rejects_invalid_layer_parameters(phi, eps_l):
         _model(60.0, 250.0, phi=phi, eps_l=eps_l)
 
 
+@pytest.mark.parametrize(
+    ("phi", "eps_l", "name"),
+    [(1.1, 0.9, "view factor"), (0.5, -0.1, "layer emissivity")],
+)
+def test_smoke_regime_still_checks_the_layer_ranges(phi, eps_l, name):
+    """The range checks run before the regime gate; config's B check relies on it."""
+    with pytest.raises(ValueError, match=rf"Heat {name} must be in \[0, 1\]"):
+        _model(60.0, None, regime="smoke", phi=phi, eps_l=eps_l)
+
+
 def test_layer_regime_needs_a_layer_field():
     with pytest.raises(ValueError):
         _model(60.0, None, phi=1.0, eps_l=0.9)
