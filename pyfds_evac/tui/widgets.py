@@ -100,7 +100,7 @@ class FieldRow(Vertical):
     FieldRow:focus-within .help, FieldRow:focus .help { display: block; }
     FieldRow.-inactive .label, FieldRow.-inactive .marker { text-style: dim; }
     FieldRow.-invalid .marker { color: $error; }
-    FieldRow:focus { background: $boost; }
+    FieldRow:focus, FieldRow:focus-within { background: $foreground 10%; }
     FieldRow:focus .label { text-style: reverse; }
     """
 
