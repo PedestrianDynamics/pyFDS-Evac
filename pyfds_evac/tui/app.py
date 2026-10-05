@@ -1292,7 +1292,7 @@ class EvacTui(App[None]):
                     "\nFDS output ends at $e s; scenario runs to $l s $g",
                     e=f"{horizon[0]:.1f}",
                     l=f"{limit:.1f}",
-                    g="✓" if ok else "! runs past the FDS end (D32)",
+                    g="✓" if ok else "! runs past the FDS end",
                 )
             )
         return Content.assemble(*parts)
@@ -1544,9 +1544,8 @@ class EvacTui(App[None]):
             errors.add_option(
                 Option(
                     m(
-                        "[$error]✗[/] $t  [dim]$r · Enter: go to field[/]",
+                        "[$error]✗[/] $t  [dim]Enter: go to field[/]",
                         t=issue.message,
-                        r=issue.rule,
                     ),
                     id=f"err-{issue.option or ''}-{i}",
                 )
@@ -2285,8 +2284,9 @@ def review_text(cfg: Any) -> Content:
     if cfg.level == 1 and inputs["fds_dir"]:
         parts.append(
             m(
-                "[dim]FDS folder not inspected: checks that need its slices (D3, D6, "
-                "D12, D17, D28, D32) are not shown yet. Palette: Inspect FDS folder.[/]\n"
+                "[dim]FDS folder not inspected: the checks against its slices (soot "
+                "extinction, CO/CO2/O2, temperature, integrated intensity) and its "
+                "end time are not shown yet. Palette: Inspect FDS folder.[/]\n"
             )
         )
     return Content.assemble(*parts)
