@@ -33,7 +33,6 @@ try:
     import jupedsim as jps
 except ModuleNotFoundError:
     jps = None
-import numpy as np
 from shapely import wkt
 from shapely.geometry import Polygon
 
@@ -176,32 +175,6 @@ _MODEL_BUILDERS = {
     ),
 }
 
-_AGENT_PARAM_BUILDERS = {
-    "CollisionFreeSpeedModel": lambda **kw: jps.CollisionFreeSpeedModelAgentParameters(
-        **kw
-    ),
-    "CollisionFreeSpeedModelV2": lambda **kw: (
-        jps.CollisionFreeSpeedModelV2AgentParameters(**kw)
-    ),
-    "GeneralizedCentrifugalForceModel": lambda **kw: (
-        jps.GeneralizedCentrifugalForceModelAgentParameters(
-            desired_speed=kw["desired_speed"],
-            a_v=1.0,
-            a_min=kw["radius"],
-            b_min=kw["radius"],
-            b_max=kw["radius"] * 2,
-            position=kw["position"],
-            journey_id=kw["journey_id"],
-            stage_id=kw["stage_id"],
-        )
-    ),
-    "SocialForceModel": lambda **kw: jps.SocialForceModelAgentParameters(**kw),
-    "AnticipationVelocityModel": lambda **kw: (
-        jps.AnticipationVelocityModelAgentParameters(**kw)
-    ),
-    "WarpDriverModel": lambda **kw: jps.WarpDriverModelAgentParameters(**kw),
-}
-
 
 def _build_model(model_type: str, sim_params: dict):
     """Construct the configured JuPedSim operational model."""
@@ -212,28 +185,6 @@ def _build_model(model_type: str, sim_params: dict):
             f"Unknown model type: {model_type}. Available: {list(_MODEL_BUILDERS)}"
         )
     return builder(sim_params)
-
-
-def _build_agent_params(
-    model_type: str,
-    v0: float,
-    radius: float,
-    position: tuple[float, float],
-    journey_id: int,
-    stage_id: int,
-):
-    """Construct JuPedSim agent parameters for the chosen model type."""
-    _require_jupedsim()
-    builder = _AGENT_PARAM_BUILDERS.get(model_type)
-    if builder is None:
-        raise ValueError(f"No agent params builder for model type: {model_type}")
-    return builder(
-        desired_speed=v0,
-        radius=radius,
-        position=position,
-        journey_id=journey_id,
-        stage_id=stage_id,
-    )
 
 
 def _require_jupedsim():
@@ -264,28 +215,6 @@ def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
     effective_radius = max(max_radius, 0.1)
     theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
     return max(1, math.floor(theoretical * 0.5))
-
-
-def _sample_agent_values(
-    params: dict, n_agents: int, rng: np.random.Generator
-) -> tuple[np.ndarray, np.ndarray]:
-    """Sample radii and speeds for *n_agents*."""
-    mean_radius = max(0.1, min(1.0, params.get("radius", 0.2)))
-    mean_v0 = max(0.1, min(5.0, params.get("desired_speed", params.get("v0", 1.25))))
-
-    if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(0.1, 1.0)
-    else:
-        radii = np.full(n_agents, mean_radius)
-
-    v0_dist = params.get("desired_speed_distribution", params.get("v0_distribution"))
-    v0_std = params.get("desired_speed_std", params.get("v0_std"))
-    if v0_dist == "gaussian" and v0_std:
-        v0s = rng.normal(mean_v0, v0_std, n_agents).clip(0.1, 5.0)
-    else:
-        v0s = np.full(n_agents, mean_v0)
-
-    return radii, v0s
 
 
 def _normalize_flow_schedule_entry(entry: dict) -> dict:
