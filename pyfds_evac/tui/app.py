@@ -1512,6 +1512,9 @@ class EvacTui(App[None]):
         self.push_screen(TextScreen(model.label(row.param), text))
 
     def action_copy_command(self) -> None:
+        if self.form.scenario is None:
+            return
+        self.config_now()  # an edit within the debounce is not configured yet
         if self.cfg is None:
             return
         self.copy_to_clipboard(self.cfg.command)
@@ -1543,7 +1546,10 @@ class EvacTui(App[None]):
         )
 
     def action_save(self) -> None:
-        if self.form.scenario is None or self.cfg is None:
+        if self.form.scenario is None:
+            return
+        self.config_now()  # an edit within the debounce is not configured yet
+        if self.cfg is None:
             return
         folder = Path(self.planned())
         sh, py = model.save_command(folder, self.cfg.command, self.preview_script())

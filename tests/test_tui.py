@@ -1895,7 +1895,6 @@ def test_rt_script_does_not_name_the_gui(tmp_path):
     assert "GUI" not in model.python_for(ns, ["Scenario: s"], "out")
 
 
-@pytest.mark.xfail(strict=True, reason="#559: Save writes a stale command.sh")
 def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
     async def go():
         app = EvacTui(
@@ -1914,6 +1913,29 @@ def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
             app.action_save()
             folder = Path(app.planned())
             assert cli_options((folder / "command.sh").read_text())["seed"] == 11
+
+    run(go())
+
+
+def test_rt_copy_right_after_an_edit_copies_the_edit(workdir):
+    async def go():
+        app = EvacTui(
+            cwd=workdir,
+            runner=FakeRunner(),
+            inspector=lambda path: FACTS,
+            debounce=30.0,
+        )
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.config_now()
+            app.goto(3)
+            await pilot.pause()
+            copied: list[str] = []
+            app.copy_to_clipboard = copied.append
+            app.form.text["seed"] = "11"
+            app.form_changed()  # the configuration is due in 30 s
+            app.action_copy_command()
+            assert cli_options(copied[-1])["seed"] == 11
 
     run(go())
 
