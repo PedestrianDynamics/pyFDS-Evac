@@ -625,21 +625,26 @@ We read Purser's labels as swapped, for four reasons:
   darkness and participants" on [Walking speed in
   smoke](/fundamentals/walking-speed.md#jin-irritant-and-non-irritant-smoke)).
 
-We have not read Jin (1981) itself: it has no DOI and we could not obtain
-it. Only the original can rule out a wrong label there, although Jin's
-1997 and 2002 summaries of it are explicit.
+Jin (1981) itself confirms this assignment: 0.15 1/m for occupants
+unfamiliar with the building, 0.5 1/m for familiar ones (Table 2, p. 139;
+Conclusion, p. 141).
 
 The thresholds come from one Japanese experiment, reported in 1981, with
-49 seated subjects, about half of them Fire Research Institute
-researchers, in white wood smoke that irritated their eyes and throats
-(Jin 1997, pp. 9–10; Jin 2002, p. 2-46). They mark the onset of unease
+49 subjects, 24 Fire Research Institute researchers and 25 members of
+the public, who sat at a steadiness tester and then walked about 10 m
+and back, in white wood smoke that irritated their eyes and throats
+(Jin 1981, pp. 130–132; Jin 1997, pp. 9–10; Jin 2002, p. 2-46). They mark the onset of unease
 or unsteadiness. They are not incapacitation data.
 
 No pyFDS-Evac default applies these limits by familiarity. Familiarity in pyFDS-Evac sets
 which exits an agent knows, its cognitive map (see
 [Wayfinding](/models/wayfinding.md) and
 [Familiarity](/verification/testing-familiarity.md)). It does not change
-how much smoke the agent tolerates. The opt-in additive routing model
+how much smoke the agent tolerates. Jin's familiarity is a different
+thing: all his subjects could see the exit of the test room, and the two
+groups also differed in sex. The researchers said the smoke did not
+scare them because the pre-test briefing had called it harmless (Jin
+1981, pp. 131, 139 and 141–142). The opt-in additive routing model
 counts a segment as not visible at or above
 `visibility_extinction_threshold` = 0.5 1/m
 (`RouteCostConfig` in `pyfds_evac/core/route_graph.py`). The value equals
@@ -741,6 +746,9 @@ Read for this page:
   Flammability, 9, 135–155 (April 1978). The scan ends at p. 155; the
   pages 135–157 given in some citations do not match it. No DOI or public
   URL.
+- Jin, T. (1981). *Studies of emotional instability in smoke from fires*.
+  Journal of Fire & Flammability, 12(2), 130–142 (April 1981). No DOI or
+  public URL.
 - Jin, T. (1971). *Visibility through fire smoke (Part 2. Visibility of
   monochromatic signs through fire smoke)*. Report of Fire Research
   Institute of Japan, 33, 31–49 (English, pp. 31–48; Japanese abstract
@@ -806,11 +814,6 @@ Read for this page:
 
 Cited by the sources above, not obtained:
 
-- Jin, T. (1981). *Studies of emotional instability in smoke from fires*.
-  Journal of Fire & Flammability, 12, 130–142. Cited by Jin (1997,
-  ref. 3), Jin (2002), Purser (2002) and Purser and McAllister (2016,
-  2026) for the familiar and
-  unfamiliar limits.
 - Jin, T. (1969). Abstract, Lecture Meeting of the Architectural
   Institute of Japan, p. 77. Cited by FRI Report 33 (ref. 5, p. 48) for
   signs whose place is unknown to the observer.
