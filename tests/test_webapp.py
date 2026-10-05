@@ -1445,6 +1445,22 @@ def test_decimal_fields_are_text_so_the_os_region_cannot_add_a_comma(client):
     assert 'type="number"' in seed
 
 
+def test_units_keep_their_case_in_the_uppercase_labels(client):
+    """The label is upper-cased; "(m)" must not read "(M)" (#348)."""
+    from pyfds_evac.config.parameters import GUI_UNIT_LABELS, parameter
+    from pyfds_evac.webapp.params import _LABEL
+
+    assert "text-transform:uppercase" in _LABEL
+    html = client.get("/").text
+    for dest in GUI_UNIT_LABELS:
+        unit = parameter(dest).unit
+        label = re.search(rf'<label[^>]*for="{dest}"[^>]*>(.*?)</label>', html, re.S)
+        assert label, dest
+        span = f'<span class="unit" style="text-transform:none">\u00a0({unit})</span>'
+        assert label.group(1).endswith(span), (dest, label.group(1))
+    assert 'aria-label="Help: Smoke slice height (m)"' in html
+
+
 def test_decimal_values_round_trip_and_a_comma_is_rejected():
     from pyfds_evac.webapp.params import form_to_opts
 
@@ -2456,8 +2472,8 @@ class TestAccessibleForm:
 
     def test_units_modes_and_tabs_are_stated(self, client):
         page = client.get("/").text
-        assert "Reroute interval (s)" in page
-        assert "Smoke slice height (m)" in page
+        assert "Reroute interval<span" in page and "\u00a0(s)</span>" in page
+        assert "Smoke slice height<span" in page and "\u00a0(m)</span>" in page
         assert 'id="btn-det" aria-pressed="true"' in page
         assert 'role="tablist"' in page and 'aria-selected="true"' in page
 
