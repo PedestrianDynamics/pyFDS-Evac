@@ -35,6 +35,16 @@ from .premovement_distributions import (
 
 _logger = logging.getLogger(__name__)
 
+_AGENT_MODEL_TYPES = (
+    "CollisionFreeSpeedModel",
+    "CollisionFreeSpeedModelV2",
+    "GeneralizedCentrifugalForceModel",
+    "SocialForceModel",
+    "AnticipationVelocityModel",
+    "WarpDriverModel",
+)
+"""Model types ``create_agent_parameters`` accepts (= ``scenario._MODEL_BUILDERS``)."""
+
 DEFAULT_PREMOVEMENT_S = 10.0
 """Pre-movement time [s] used when a distribution sets none (FDS+Evac PRE_MEAN)."""
 
@@ -240,10 +250,10 @@ def create_agent_parameters(
             avm_params["reaction_time"] = 0.3
         return jps.AnticipationVelocityModelAgentParameters(**avm_params)
 
-    else:
-        # Fallback to CollisionFreeSpeedModel
-        base_params["v0"] = params.get("v0", 1.25)
-        return jps.CollisionFreeSpeedModelAgentParameters(**base_params)
+    raise ValueError(
+        f"create_agent_parameters: unknown model_type {model_type!r}. "
+        f"Available: {list(_AGENT_MODEL_TYPES)}"
+    )
 
 
 def _estimate_max_capacity(polygon, max_radius):
