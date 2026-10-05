@@ -29,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   too small, or spawn no flow agents. An error other than a failed
   placement while spawning agents on a journey keeps its own type
   instead of being reported as a placement failure (#568).
+- `--show-config` exits 1 on a scenario whose `routing.cost_model` names no
+  route cost model, which every run rejects; the GUI rejects such a
+  scenario at upload and submit, and the terminal UI lists it in Review
+  (#571).
 
 ## [0.3.0] - 2026-10-05
 

@@ -50,6 +50,7 @@ from .rules import (
     inactive_settings,
     integrated_intensity_issue,
     predict_mechanisms,
+    routing_issue,
     visibility_value_issue,
 )
 
@@ -503,6 +504,9 @@ def _errors(
         if issue is not None:
             errors.append(issue)
     issue = visibility_value_issue(opts, raw, m)
+    if issue is not None:
+        errors.append(issue)
+    issue = routing_issue(raw)
     if issue is not None:
         errors.append(issue)
     return errors
