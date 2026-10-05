@@ -606,6 +606,8 @@ def _absolute(path: Any) -> str:
 
 
 def _flag_words(param: Any, value: Any) -> list[str]:
+    if param.kind == "text" and not str(value).strip():
+        return []  # a blank path is not set, as in the script and the run
     if param.kind == "text":  # every text option is a path
         return [param.flag, _cli_value(_absolute(value))]
     if param.action == "store_true":
