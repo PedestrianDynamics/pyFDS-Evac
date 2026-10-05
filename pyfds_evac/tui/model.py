@@ -694,12 +694,45 @@ def missing_paths(entry: Mapping[str, Any]) -> str:
     return "FDS folder missing" if fds else ""
 
 
-def distinct_locations(paths: list[str]) -> list[str]:
+def distinct_locations(paths: list[str], width: int | None = None) -> list[str]:
     """Where each of *paths* lies, up to the first part where they differ.
 
     For Recent rows that would read alike: ``~/work/checkout-a/…``. The
-    home folder is written ``~``; "" when the paths do not differ.
+    home folder is written ``~``; "" when the paths do not differ. With
+    *width*, a longer location keeps only the differing part, cut around
+    the first character where the parts differ, so the results stay
+    distinct (``…/…kout-a-very…/…``).
     """
+    locations = _locations(paths)
+    if width is None or all(len(text) <= width for text in locations):
+        return locations
+    short = _cut_differing(paths, width)
+    return short if len(set(short)) == len(set(locations)) else locations
+
+
+def _cut_differing(paths: list[str], width: int) -> list[str]:
+    """``…/<window of the first differing part>/…``, at most *width* long."""
+    parts = [Path(p).parts for p in paths]
+    first = next(k for k in range(len(parts[0])) if len({p[k] for p in parts}) > 1)
+    names = [p[first] for p in parts]
+    at = next(
+        i
+        for i in range(max(len(n) for n in names))
+        if len({n[i : i + 1] for n in names}) > 1
+    )
+    keep = max(1, width - 6)  # "…/" and "/…" and up to two "…" in the name
+    start = max(0, at - keep // 2)
+    cut = []
+    for name, p in zip(names, parts):
+        piece = name[start : start + keep]
+        piece = ("…" if start > 0 else "") + piece
+        piece += "…" if start + keep < len(name) else ""
+        tail = f"{os.sep}…" if len(p) > first + 1 else ""
+        cut.append(f"…{os.sep}{piece}{tail}")
+    return cut
+
+
+def _locations(paths: list[str]) -> list[str]:
     parts = [Path(p).parts for p in paths]
     shortest = min(len(p) for p in parts)
     first = next((k for k in range(shortest) if len({p[k] for p in parts}) > 1), None)

@@ -1062,6 +1062,21 @@ def test_600_distinct_locations():
     assert model.distinct_locations([a, a]) == ["", ""]
 
 
+def test_600_long_locations_stay_distinct_within_the_width():
+    """Cutting to the width keeps the differing characters (Codex review)."""
+    for a, b in (
+        ("checkout-a-very-long-shared-suffix", "checkout-b-very-long-shared-suffix"),
+        (
+            "a-very-long-shared-prefix-checkout-x",
+            "a-very-long-shared-prefix-checkout-y",
+        ),
+    ):
+        paths = [f"/tmp/{name}/assets/t_junction" for name in (a, b)]
+        short = model.distinct_locations(paths, 24)
+        assert short[0] != short[1], short
+        assert all(len(text) <= 24 for text in short), short
+
+
 def test_600_recent_keeps_missing_entries_after_usable_ones(tmp_path):
     recent = model.Recent(tmp_path / "recent.json")
     recent.add(str(tmp_path), None, "complete", "d1")
@@ -1108,9 +1123,16 @@ def test_600_only_missing_entries_open_examples(workdir, tmp_path):
     run(go())
 
 
-def test_600_same_scenario_in_two_places_reads_differently(workdir, tmp_path):
+@pytest.mark.parametrize(
+    "roots",
+    [
+        ("checkout-a", "checkout-b"),
+        ("checkout-a-very-long-shared-suffix", "checkout-b-very-long-shared-suffix"),
+    ],
+)
+def test_600_same_scenario_in_two_places_reads_differently(workdir, tmp_path, roots):
     recent = model.Recent(tmp_path / "recent.json")
-    for root in ("checkout-a", "checkout-b"):
+    for root in roots:
         copy_ = tmp_path / root / "assets" / "t_junction"
         shutil.copytree(workdir / "assets" / "t_junction", copy_)
         recent.add(str(copy_), None, "complete", "2026-10-05 14:30")
@@ -1121,7 +1143,7 @@ def test_600_same_scenario_in_two_places_reads_differently(workdir, tmp_path):
             await pilot.pause()
             first, second = _recent_rows(app)
             assert first != second
-            assert "checkout-b" in first and "checkout-a" in second
+            assert roots[1][:10] in first and roots[0][:10] in second
             width = app.query_one("#recent").scrollable_content_region.width
             assert max(len(first), len(second)) <= width
 

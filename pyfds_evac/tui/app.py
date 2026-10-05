@@ -131,8 +131,9 @@ def _recent_locations(rows: list[tuple[int, dict[str, Any], str]]) -> list[str]:
         if len(same) < 2:
             continue
         paths = [str(rows[k][1].get("scenario")) for k in same]
-        for k, text in zip(same, model.distinct_locations(paths)):
-            where[k] = _short(text, 24)  # one line at 80 columns
+        # 24 characters keep the row on one line at 80 columns.
+        for k, text in zip(same, model.distinct_locations(paths, 24)):
+            where[k] = text
     return where
 
 
