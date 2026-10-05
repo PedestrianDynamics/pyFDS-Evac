@@ -63,28 +63,51 @@ def _sfm_scenario_without_keys():
     return scenario
 
 
-def test_journey_path_keeps_the_type_of_a_non_placement_error(tmp_path, monkeypatch):
+def _initialize_t_junction(tmp_path, **parameters):
+    """Journey path, immediate spawning of 5 agents on t_junction."""
     scenario = load_scenario(T_JUNCTION)
     raw = json.loads(json.dumps(scenario.raw))
     for dist in raw["distributions"].values():
-        dist["parameters"]["use_flow_spawning"] = False
-        dist["parameters"]["number"] = 5
+        dist["parameters"].update(
+            {"use_flow_spawning": False, "number": 5, **parameters}
+        )
     deck = tmp_path / "deck.json"
     deck.write_text(json.dumps(raw), encoding="utf-8")
-
-    def broken(*args, **kwargs):
-        raise KeyError("not a placement error")
-
-    monkeypatch.setattr(simulation_init, "create_agent_parameters", broken)
     walkable = scenario.walkable_polygon
     simulation = jps.Simulation(
         model=_build_model("CollisionFreeSpeedModel", {}), geometry=walkable
     )
-    with pytest.raises(KeyError) as excinfo, contextlib.redirect_stdout(io.StringIO()):
+    with contextlib.redirect_stdout(io.StringIO()):
         simulation_init.initialize_simulation_from_json(
             str(deck), simulation, pedpy.WalkableArea(walkable), seed=1
         )
+
+
+@pytest.mark.parametrize("error", [KeyError, ValueError, RuntimeError])
+def test_journey_path_keeps_the_type_of_a_non_placement_error(
+    tmp_path, monkeypatch, error
+):
+    def broken(*args, **kwargs):
+        raise error("not a placement error")
+
+    monkeypatch.setattr(simulation_init, "create_agent_parameters", broken)
+    with pytest.raises(error) as excinfo:
+        _initialize_t_junction(tmp_path)
     assert "spawn area is too small" not in str(excinfo.value)
+
+
+def test_journey_path_reports_a_configuration_error_as_such(tmp_path):
+    with pytest.raises(ValueError) as excinfo:
+        _initialize_t_junction(
+            tmp_path, use_premovement=True, premovement_distribution="typo"
+        )
+    assert "spawn area is too small" not in str(excinfo.value)
+
+
+def test_journey_path_reports_an_overfull_area_as_placement(tmp_path):
+    with pytest.raises(Exception, match="spawn area is too small") as excinfo:
+        _initialize_t_junction(tmp_path, number=100000)
+    assert isinstance(excinfo.value.__cause__, Exception)
 
 
 def test_flow_spawning_with_sfm_keys_missing_spawns_agents():
