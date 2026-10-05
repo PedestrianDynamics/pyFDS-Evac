@@ -1424,7 +1424,7 @@ def test_non_choice_flag_still_renders_as_input(client):
     html = client.get("/").text
     assert not re.search(r'<select[^>]*name="fed_threshold"', html)
     tag = re.search(r'<input[^>]*name="fed_threshold"[^>]*>', html)
-    assert tag and 'inputmode="decimal"' in tag.group(0)
+    assert tag and "inputmode" not in tag.group(0)  # #552
     assert 'value="1.0"' in tag.group(0)
 
 
@@ -1439,7 +1439,7 @@ def test_decimal_fields_are_text_so_the_os_region_cannot_add_a_comma(client):
     ):
         tag = re.search(rf'<input[^>]*name="{dest}"[^>]*>', html).group(0)
         assert 'type="number"' not in tag
-        assert 'inputmode="decimal"' in tag
+        assert "inputmode" not in tag  # a comma keypad may lack the point (#552)
         assert f'value="{value}"' in tag
     seed = re.search(r'<input[^>]*name="seed"[^>]*>', html).group(0)
     assert 'type="number"' in seed

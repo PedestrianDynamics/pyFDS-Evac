@@ -474,9 +474,9 @@ def scenario_block(selected: str | None = None, note: Any = None) -> Any:
 # value in the OS region's format ("1,6" on a German region) whatever the
 # page language, while the server parses with float(). A text input shows
 # the value exactly as sent; the pattern flags a decimal comma before
-# submit, which float() would reject anyway.
+# submit, which float() would reject anyway. No inputmode=decimal: a
+# comma-region keypad may offer no point (#552).
 _DECIMAL_TEXT = {
-    "inputmode": "decimal",
     "autocomplete": "off",
     "spellcheck": "false",
     "pattern": "[^,]*",
