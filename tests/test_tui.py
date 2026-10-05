@@ -2002,11 +2002,25 @@ def test_321_live_line_shows_incapacitated_only_when_modelled(workdir, modelled,
             text = text_of(app, "#run-status")
             assert "evacuated 1 of 6 planned" in text
             assert ("incapacitated 1" in text) is shown
-            # The run never finishes here: stop the pending redraw so it
-            # cannot fire while the app tears down.
-            if app._render_timer is not None:
-                app._render_timer.stop()
-                app._render_timer = None
+
+    run(go())
+
+
+def test_602_no_redraw_after_the_app_closes(workdir):
+    """A run event arms a redraw; closing the app must cancel it."""
+
+    def no_widgets():
+        raise AssertionError("render_run after unmount")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _started(pilot, app, workdir)
+            app.on_run_event(events.PhaseEvent(events.PHASE_RUNNING))
+            assert app._render_timer is not None
+        assert app._render_timer is None and app._cfg_timer is None
+        app.render_run = no_widgets
+        app._render_tick()  # a tick that was already due
 
     run(go())
 

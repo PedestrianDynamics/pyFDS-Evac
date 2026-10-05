@@ -559,6 +559,11 @@ class EvacTui(App[None]):
     def on_unmount(self) -> None:
         """Let the reader thread remove the run's temporary folder."""
         self._quitting = True  # the screens are gone; drop late events
+        if self._render_timer is not None:
+            self._render_timer.stop()
+        if self._cfg_timer is not None:
+            self._cfg_timer.stop()
+        self._render_timer = self._cfg_timer = None
         join = getattr(self.runner, "join", None)
         if join is not None:
             join(10.0)
@@ -1670,6 +1675,8 @@ class EvacTui(App[None]):
     def _render_tick(self) -> None:
         """Redraw the Run step at most ten times per second."""
         self._render_timer = None
+        if self._quitting:
+            return  # the widgets render_run queries are gone
         if self.current_run is not None and not self.current_run.done:
             self.render_run()
 
