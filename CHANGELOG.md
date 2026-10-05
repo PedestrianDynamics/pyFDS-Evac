@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-05
+
 ### Added
 
 - `pyfds-evac-tui`, a terminal UI (`pip install 'pyfds-evac[tui]'`, built
@@ -78,6 +80,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when `--host` makes the GUI reachable from other computers. `app.py` and
   `python -m pyfds_evac.webapp.app` now stop with a usage error on
   arguments other than `--host` and `--port` (#477).
+- GUI and TUI results show an Incapacitated count after Remaining, or
+  "not modelled in this run" when no dose model applies. Counts read
+  "e of n agents", or "e of n that entered" when flow agents were cut
+  off. The smoke overlay draws the horizontal FDS slice at the run's
+  smoke slice height on fixed K bins, with a caption naming the slice
+  and the frame time. The smoke chart has fixed axes, a dashed mean K
+  and a numeric summary. `ResultEvent` and `PlanEvent` gain
+  `incapacitation_modelled` (#321).
 
 ### Fixed
 
@@ -110,6 +120,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   values are accepted. Scenarios without these keys run unchanged. The
   SocialForceModel agent parameters fall back to 1.25 m/s, not 0.8, when
   no `v0` is given; no run reached that fallback (#143).
+- In the layer heat regime, the effective configuration reports a
+  missing layer input once, not twice, and attributes layer errors to
+  the layer emissivity option, not to `heat_emissivity` (#522).
+- A `run_scenario` that fails removes its temporary trajectory SQLite
+  and its manifest. Before, they were left behind (#331).
+- Stale user-facing text: the usage of `scripts/run_and_plot.sh` names a
+  finished FDS run as `<fds-dir>`; the `--smoke-slice-height` help names
+  walking speed, FED and sign legibility; `examples/walkthrough.py` uses
+  the 1.6 m slice height; `examples/rset_ensemble.py` writes its figure
+  to a temporary folder or to its first argument, not over the tracked
+  site figure (#312).
+
+### Documentation
+
+- New Terminal UI page (#537).
+- Scenario JSON and Troubleshooting document the exact names of
+  `cost_model` and `speed_law` and the `desired_speed*` aliases; Usage
+  tables the defaults of `pyfds-evac` and `run_scenario()` (#584, #585).
+- Visibility (Fundamentals): Jin's limits of 0.15 1/m for occupants
+  unfamiliar with a building and 0.5 1/m for familiar ones, checked
+  against Jin (1981); the routing threshold of 0.5 1/m applies to all
+  agents (#515, #608).
+- Coming from FDS+Evac names FDS 6.7.7 as the last FDS+Evac release, and
+  the Wayfinding, Route-cost gate and model comparison pages mark
+  0.03 1/m as the Evac 2.6.0 door threshold (#542, #543).
+- Fundamentals pages state published laws only; the slice-height default
+  moved from ASET/RSET to the docs (#588).
 
 ## [0.2.4] - 2026-10-03
 
