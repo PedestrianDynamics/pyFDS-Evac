@@ -600,7 +600,7 @@ class EvacTui(App[None]):
             "Reset all settings", "Back to the defaults (asks first)", self.reset_all
         )
         yield SystemCommand("Toggle advanced in all sections", "", self.toggle_advanced)
-        yield SystemCommand("Open docs page", model.USAGE_DOCS, self.show_docs)
+        yield SystemCommand("Open docs page", model.TUI_DOCS, self.show_docs)
 
     def set_theme(self, name: str) -> None:
         self.theme = name
@@ -2078,7 +2078,7 @@ class EvacTui(App[None]):
                 c.collapsed = not collapse
 
     def show_docs(self) -> None:
-        self.notify(f"Docs: {model.USAGE_DOCS}", timeout=10, markup=False)
+        self.notify(f"Docs: {model.TUI_DOCS}", timeout=10, markup=False)
 
 
 # --- text builders (no widget state) ----------------------------------------------

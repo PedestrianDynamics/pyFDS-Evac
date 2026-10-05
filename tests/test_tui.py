@@ -870,6 +870,24 @@ def test_only_two_themes_in_the_palette(workdir):
     run(go())
 
 
+def test_575_docs_command_opens_the_terminal_ui_page(workdir):
+    page = "https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            commands = app.get_system_commands(app.screen)
+            (docs,) = [c for c in commands if c.title == "Open docs page"]
+            assert docs.help == page
+            said: list[str] = []
+            app.notify = lambda text, **_: said.append(text)
+            docs.callback()
+            assert said == [f"Docs: {page}"]
+
+    run(go())
+
+
 def test_a19_keyboard_only_to_a_run(workdir):
     runner = FakeRunner()
 
