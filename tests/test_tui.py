@@ -1872,6 +1872,14 @@ def test_rt_blank_paths_resolve_to_none(workdir):
     run(go())
 
 
+def test_rt_script_does_not_name_the_gui(tmp_path):
+    """A TUI-made run.py says nothing about the GUI (#576)."""
+    from pyfds_evac.cli import _build_parser
+
+    ns = _build_parser().parse_args(["--scenario", str(tmp_path)])
+    assert "GUI" not in model.python_for(ns, ["Scenario: s"], "out")
+
+
 @pytest.mark.xfail(strict=True, reason="#559: Save writes a stale command.sh")
 def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
     async def go():

@@ -72,7 +72,7 @@ def _literal(key: str, value: Any) -> str:
 
 
 def _abs_path(value: Any) -> str | None:
-    """Resolve a path option as the GUI process sees it, or keep None."""
+    """Resolve a path option as this process sees it, or keep None."""
     if value is None or str(value).strip() == "":
         return None
     return str(pathlib.Path(str(value)).expanduser().resolve())
@@ -106,14 +106,14 @@ def _body(
         "from pyfds_evac.core.manifest import manifest_path_for",
         "from pyfds_evac.core.run_config import build_run_kwargs",
         "",
-        "# PATHS: from the computer that ran the GUI. Edit them on another machine.",
+        "# PATHS: from the computer that made this script; edit on another machine.",
         f"SCENARIO = {_literal('scenario', paths['scenario'])}",
         f"FDS_DIR = {_literal('fds_dir', paths['fds_dir'])}",
         f"VIS_CACHE = {_literal('vis_cache', paths['vis_cache'])}",
-        "# A new folder: the script never overwrites the GUI run's files.",
+        "# A new folder: the script never writes into a front end's run folder.",
         f"OUTPUT_DIR = pathlib.Path({_literal('output_dir', output_dir)})",
         "",
-        "# Settings: the resolved configuration the GUI passes to build_run_kwargs.",
+        "# Settings: the resolved configuration passed to build_run_kwargs.",
         "OPTIONS = {",
     ]
     for key, value in options.items():
