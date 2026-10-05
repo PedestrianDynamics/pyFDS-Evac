@@ -1025,6 +1025,155 @@ def test_recent_entry_reopens_review(workdir):
     run(go())
 
 
+# --- #600: Recent entries whose paths are gone ------------------------------------
+
+
+def _recent_rows(app) -> list[str]:
+    options = app.query_one("#recent")
+    return [
+        str(options.get_option_at_index(k).prompt) for k in range(options.option_count)
+    ]
+
+
+def test_600_missing_paths_in_words(tmp_path):
+    there, gone = str(tmp_path), str(tmp_path / "gone")
+    assert model.missing_paths({"scenario": there, "fds_dir": None}) == ""
+    assert model.missing_paths({"scenario": there, "fds_dir": there}) == ""
+    assert model.missing_paths({"scenario": gone}) == "scenario missing"
+    assert (
+        model.missing_paths({"scenario": there, "fds_dir": gone})
+        == "FDS folder missing"
+    )
+    assert (
+        model.missing_paths({"scenario": gone, "fds_dir": gone})
+        == "scenario and FDS folder missing"
+    )
+
+
+def test_600_distinct_locations():
+    home = Path.home()
+    a = str(home / "work" / "checkout-a" / "assets" / "t_junction")
+    b = str(home / "work" / "checkout-b" / "assets" / "t_junction")
+    sep = os.sep
+    assert model.distinct_locations([a, b]) == [
+        f"~{sep}work{sep}checkout-a{sep}…",
+        f"~{sep}work{sep}checkout-b{sep}…",
+    ]
+    assert model.distinct_locations([a, a]) == ["", ""]
+
+
+def test_600_recent_keeps_missing_entries_after_usable_ones(tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    recent.add(str(tmp_path), None, "complete", "d1")
+    recent.add(str(tmp_path / "gone"), None, "complete", "d2")  # newest
+    order = [(i, missing) for i, _entry, missing in recent.ordered()]
+    assert order == [(1, ""), (0, "scenario missing")]
+    recent.remove(0)
+    assert [r["date"] for r in model.Recent(tmp_path / "recent.json").runs] == ["d1"]
+
+
+def test_600_enter_on_the_first_row_opens_the_usable_entry(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    scenario = workdir / "assets" / "t_junction"
+    recent.add(str(scenario), None, "complete", "2026-10-05 14:30")
+    recent.add(str(tmp_path / "gone"), None, "complete", "2026-10-05 15:00")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            assert app.query_one("#sc-tabs").active == "tab-recent"
+            rows = _recent_rows(app)
+            assert "missing" not in rows[0]
+            assert rows[1].endswith("scenario missing")
+            assert f"scenario {scenario}" in text_of(app, "#sc-info")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.step == 3
+            assert app.form.scenario.path == scenario
+
+    run(go())
+
+
+def test_600_only_missing_entries_open_examples(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    recent.add(str(tmp_path / "gone"), None, "complete", "d")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            assert app.query_one("#sc-tabs").active == "tab-examples"
+
+    run(go())
+
+
+def test_600_same_scenario_in_two_places_reads_differently(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    for root in ("checkout-a", "checkout-b"):
+        copy_ = tmp_path / root / "assets" / "t_junction"
+        shutil.copytree(workdir / "assets" / "t_junction", copy_)
+        recent.add(str(copy_), None, "complete", "2026-10-05 14:30")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            first, second = _recent_rows(app)
+            assert first != second
+            assert "checkout-b" in first and "checkout-a" in second
+            width = app.query_one("#recent").scrollable_content_region.width
+            assert max(len(first), len(second)) <= width
+
+    run(go())
+
+
+def test_600_fds_folder_gone_goes_to_the_fds_step(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    scenario = workdir / "assets" / "t_junction"
+    recent.add(str(scenario), str(tmp_path / "fds_gone"), "complete", "d")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            app.query_one("#sc-tabs").active = "tab-recent"
+            app.query_one("#recent").focus()
+            await pilot.pause()
+            assert "FDS folder not found" in text_of(app, "#sc-info")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.step == 1
+            assert app.form.scenario.path == scenario and app.form.fds_dir is None
+            panel = text_of(app, "#fds-panel")
+            assert f"was not found: {tmp_path / 'fds_gone'}" in panel
+
+    run(go())
+
+
+def test_600_scenario_gone_says_so_and_delete_removes_it(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    recent.add(str(tmp_path / "gone"), None, "complete", "d")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            app.query_one("#sc-tabs").active = "tab-recent"
+            app.query_one("#recent").focus()
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.step == 0
+            assert "Scenario not found" in text_of(app, "#sc-error")
+            await pilot.press("delete")
+            await pilot.pause()
+            assert model.Recent(tmp_path / "recent.json").runs == []
+            assert _recent_rows(app) == ["No recent runs yet."]
+
+    run(go())
+
+
 # --- model -------------------------------------------------------------------------------------
 
 

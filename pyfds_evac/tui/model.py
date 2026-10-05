@@ -678,6 +678,45 @@ def config_dir() -> Path:
     return root / "pyfds-evac"
 
 
+def missing_paths(entry: Mapping[str, Any]) -> str:
+    """Which recorded path of a Recent entry is gone, in words; "" if none.
+
+    An entry is usable when its scenario exists and its FDS folder, if one
+    was recorded, is a folder. No FDS folder recorded is not missing.
+    """
+    scenario = not Path(str(entry.get("scenario"))).exists()
+    fds_dir = entry.get("fds_dir")
+    fds = bool(fds_dir) and not Path(str(fds_dir)).is_dir()
+    if scenario and fds:
+        return "scenario and FDS folder missing"
+    if scenario:
+        return "scenario missing"
+    return "FDS folder missing" if fds else ""
+
+
+def distinct_locations(paths: list[str]) -> list[str]:
+    """Where each of *paths* lies, up to the first part where they differ.
+
+    For Recent rows that would read alike: ``~/work/checkout-a/…``. The
+    home folder is written ``~``; "" when the paths do not differ.
+    """
+    parts = [Path(p).parts for p in paths]
+    shortest = min(len(p) for p in parts)
+    first = next((k for k in range(shortest) if len({p[k] for p in parts}) > 1), None)
+    if first is None:
+        return ["" for _ in paths]
+    home = Path.home().parts
+    locations = []
+    for p in parts:
+        head = p[: first + 1]
+        if head[: len(home)] == home and len(head) > len(home):
+            text = os.path.join("~", *head[len(home) :])
+        else:
+            text = os.path.join(*head)
+        locations.append(text + (f"{os.sep}…" if len(p) > first + 1 else ""))
+    return locations
+
+
 class Recent:
     """``recent.json``: the last runs (scenario, FDS folder, status) and theme.
 
@@ -703,6 +742,21 @@ class Recent:
     @property
     def runs(self) -> list[dict[str, Any]]:
         return [r for r in self.data["runs"] if isinstance(r, dict)]
+
+    def ordered(self) -> list[tuple[int, dict[str, Any], str]]:
+        """``(index into runs, entry, missing)``: usable entries first.
+
+        *missing* is :func:`missing_paths` of the entry. Both groups keep
+        their recency order; nothing is dropped, a disk may come back.
+        """
+        rows = [(i, r, missing_paths(r)) for i, r in enumerate(self.runs)]
+        return [row for row in rows if not row[2]] + [row for row in rows if row[2]]
+
+    def remove(self, index: int) -> None:
+        """Remove ``runs[index]`` from recent.json (the user asked for it)."""
+        entry = self.runs[index]
+        self.data["runs"] = [r for r in self.data["runs"] if r is not entry]
+        self._save()
 
     def set_theme(self, theme: str) -> None:
         self.data["theme"] = theme
