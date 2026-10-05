@@ -640,7 +640,11 @@ No pyFDS-Evac default applies these limits by familiarity. Familiarity in pyFDS-
 which exits an agent knows, its cognitive map (see
 [Wayfinding](/models/wayfinding.md) and
 [Familiarity](/verification/testing-familiarity.md)). It does not change
-how much smoke the agent tolerates. The opt-in additive routing model
+how much smoke the agent tolerates. Jin's familiarity is a different
+thing: all his subjects could see the exit of the test room, and the two
+groups also differed in sex. The researchers said the smoke did not
+scare them because the pre-test briefing had called it harmless (Jin
+1981, pp. 131, 139 and 141–142). The opt-in additive routing model
 counts a segment as not visible at or above
 `visibility_extinction_threshold` = 0.5 1/m
 (`RouteCostConfig` in `pyfds_evac/core/route_graph.py`). The value equals
