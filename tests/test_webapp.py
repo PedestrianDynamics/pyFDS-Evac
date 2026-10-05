@@ -1631,6 +1631,7 @@ class TestEquivalentPython:
         expected = vars(opts)
         rebuilt = dict(lit["OPTIONS"])
         rebuilt.update(fds_dir=lit["FDS_DIR"], vis_cache=lit["VIS_CACHE"])
+        rebuilt.update(replay_exits=lit["REPLAY_EXITS"])
         assert set(rebuilt) | {"scenario"} == set(expected)
         for key, value in rebuilt.items():
             if key in OMITTED_OUTPUT_KEYS:
@@ -2689,7 +2690,6 @@ class TestRoundTrip:
         for key in _rt_hidden():
             assert opts[key] == default(key), key
 
-    @pytest.mark.xfail(strict=True, reason="#558: replay_exits stays relative")
     def test_run_export_resolves_replay_exits(self, tmp_path):
         from pathlib import Path
 

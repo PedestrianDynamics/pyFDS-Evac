@@ -26,7 +26,7 @@ _COMMAND_ONLY = frozenset(p.dest for p in PARAMETERS if not p.run_option)
 
 # Options that are paths on this machine. They go into the PATHS block,
 # resolved to absolute paths, so they are easy to find and edit.
-_PATH_KEYS = ("scenario", "fds_dir", "vis_cache")
+_PATH_KEYS = ("scenario", "fds_dir", "vis_cache", "replay_exits")
 
 # Output files the CLI and the GUI write through apply_outputs. The script
 # does not write them; the keys are set to None (build_run_kwargs reads only
@@ -107,9 +107,7 @@ def _body(
         "from pyfds_evac.core.run_config import build_run_kwargs",
         "",
         "# PATHS: from the computer that made this script; edit on another machine.",
-        f"SCENARIO = {_literal('scenario', paths['scenario'])}",
-        f"FDS_DIR = {_literal('fds_dir', paths['fds_dir'])}",
-        f"VIS_CACHE = {_literal('vis_cache', paths['vis_cache'])}",
+        *(f"{key.upper()} = {_literal(key, paths[key])}" for key in _PATH_KEYS),
         "# A new folder: the script never writes into a front end's run folder.",
         f"OUTPUT_DIR = pathlib.Path({_literal('output_dir', output_dir)})",
         "",
@@ -124,9 +122,7 @@ def _body(
         "",
         "opts = argparse.Namespace(",
         "    **OPTIONS,",
-        "    scenario=SCENARIO,",
-        "    fds_dir=FDS_DIR,",
-        "    vis_cache=VIS_CACHE,",
+        *(f"    {key}={key.upper()}," for key in _PATH_KEYS),
         ")",
         "",
         "scenario = load_scenario(SCENARIO)",

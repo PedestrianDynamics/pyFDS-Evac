@@ -1872,6 +1872,21 @@ def test_rt_blank_paths_resolve_to_none(workdir):
     run(go())
 
 
+def test_rt_script_resolves_replay_exits(tmp_path, monkeypatch):
+    """run.py passes an absolute replay_exits to the run (#558)."""
+    from _round_trip import script_literals
+
+    from pyfds_evac.cli import _build_parser
+
+    monkeypatch.chdir(tmp_path)
+    argv = ["--scenario", "s", "--replay-exits", "x/exits.csv"]
+    code = model.python_for(_build_parser().parse_args(argv), [], "out")
+    lit = script_literals(code)
+    assert lit["REPLAY_EXITS"] == str(tmp_path.resolve() / "x" / "exits.csv")
+    assert "replay_exits" not in lit["OPTIONS"]
+    assert "    replay_exits=REPLAY_EXITS," in code.splitlines()
+
+
 def test_rt_script_does_not_name_the_gui(tmp_path):
     """A TUI-made run.py says nothing about the GUI (#576)."""
     from pyfds_evac.cli import _build_parser
