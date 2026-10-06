@@ -51,7 +51,7 @@ SFPE form, not ISO 13571's). See
 for running at 2.0 m, and [Fractional effective dose](/models/fed.md) for the
 equations.
 
-`pyfds-evac init deck.fds -o scenario/` does much of this for you. It
+`pyfds-evac init deck.fds` does much of this for you. It
 keeps the evacuation namelists of one floor as exits and spawn areas, and
 writes a report of everything it approximated or dropped
 ([Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init)).

@@ -566,11 +566,15 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 ### Scenario from an FDS deck — `pyfds-evac init`
 
 Writes `config.json`, `geometry.wkt` and `import_report.json` into a
-directory that `pyfds-evac --scenario` runs as it is, and prints the summary
-and the run command.
+directory that `pyfds-evac --scenario` runs as it is, by default
+`<deck stem>_scenario/` next to the deck (`-o DIR` picks another). It prints
+the summary and the next steps: run FDS when its output is missing (with
+the command, `mpiexec -n N` for N meshes), run the scenario, then refine it
+in JuPedSim Web or the terminal UI. A scenario that cannot run gets no run
+command, only the list of what to fix.
 
 ```
-pyfds-evac init DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
+pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
     [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force]
 ```
@@ -590,10 +594,10 @@ pyfds-evac init DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
 - When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
   `--fds-dir`, and the output says so; `--no-fds` leaves it out. For an
   FDS+Evac deck the output is reported but not used.
-- `-o` refuses a folder that holds a `config.json` the importer did not
-  write (no `import_report.json` next to it), such as an authored scenario
-  next to its deck. `--force` overwrites it. A folder from an earlier
-  import is overwritten without asking.
+- The output folder, given with `-o` or the default, is refused when it
+  holds a `config.json` the importer did not write (no `import_report.json`
+  next to it), such as an authored scenario. `--force` overwrites it. A
+  folder from an earlier `pyfds-evac init` is overwritten without asking.
 
 Every approximated or dropped input is listed with its line number.
 

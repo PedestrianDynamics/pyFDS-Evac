@@ -531,7 +531,7 @@ def test_cli_init_runnable_and_error(tmp_path, capsys):
     assert (
         cli_init.main([str(deck), "-o", str(tmp_path / "o"), "--walkable", walk]) == 0
     )
-    assert "Run: pyfds-evac --scenario" in capsys.readouterr().out
+    assert f"pyfds-evac --scenario {tmp_path / 'o'}" in capsys.readouterr().out
     bad = _deck(tmp_path, "&CATF OTHER_FILES='x.fds' /", name="bad.fds")
     assert cli_init.main([str(bad), "-o", str(tmp_path / "b")]) == 1
     assert not (tmp_path / "b").exists()
@@ -702,8 +702,8 @@ def test_uniform_velocity_dist_becomes_gaussian(tmp_path):
 
 
 def test_cli_argument_error_exits_one(tmp_path, capsys):
-    assert cli_init.main([str(tmp_path / "d.fds")]) == cli_init.EXIT_ERROR
-    assert "-o/--output" in capsys.readouterr().err
+    assert cli_init.main([str(tmp_path / "d.fds"), "--no-such"]) == cli_init.EXIT_ERROR
+    assert "unrecognized arguments: --no-such" in capsys.readouterr().err
 
 
 def test_cli_write_failure_exits_one_and_leaves_nothing(tmp_path, capsys):
@@ -740,7 +740,9 @@ def test_cli_not_runnable_prints_no_run_command(tmp_path, capsys):
     path = _deck(tmp_path, MODERN.format(vents=""))
     argv = [str(path), "-o", str(tmp_path / "o"), "--walkable", _wkt(tmp_path)]
     assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE
-    assert "Run:" not in capsys.readouterr().out
+    out = capsys.readouterr().out
+    assert "pyfds-evac --scenario" not in out
+    assert "no exit found" in out and "pyfds-evac init again" in out
 
 
 def test_cli_exit_dropped_with_an_error_exits_three(tmp_path, capsys):
@@ -757,7 +759,7 @@ def test_cli_exit_dropped_with_an_error_exits_three(tmp_path, capsys):
     ]
     assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE
     out = capsys.readouterr().out
-    assert "Run:" in out and "dropped with an error" in out
+    assert "pyfds-evac --scenario" in out and "dropped with an error" in out
 
 
 def _authored_copy(tmp_path) -> Path:
@@ -818,3 +820,68 @@ def test_offset_floor_is_zero_for_a_gamma_detection():
     assert (delay.kind, status, delay.offset) == ("gamma", "A", 5)
     assert delay.a * delay.b + delay.offset == pytest.approx(16, abs=1e-12)
     assert delay.a * delay.b**2 == pytest.approx(18 + 100 / 12, abs=1e-12)
+
+
+# --- pyfds-evac init: default folder and next steps ----------------------------------
+
+
+OPEN_VENT = "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /"
+
+
+def _init(tmp_path, capsys, *extra: str, smv: bool = False) -> tuple[int, str]:
+    deck = _deck(tmp_path, MODERN.format(vents=OPEN_VENT), name="plain.fds")
+    if smv:
+        (tmp_path / "plain.smv").write_text("", encoding="utf-8")
+    status = cli_init.main([str(deck), "--walkable", _wkt(tmp_path), *extra])
+    captured = capsys.readouterr()
+    return status, captured.out + captured.err
+
+
+def test_default_output_folder_is_next_to_the_deck(tmp_path, capsys):
+    status, out = _init(tmp_path, capsys)
+    folder = tmp_path / "plain_scenario"
+    assert status == cli_init.EXIT_OK
+    assert sorted(p.name for p in folder.iterdir()) == [
+        "config.json",
+        "geometry.wkt",
+        "import_report.json",
+    ]
+    assert f"pyfds-evac --scenario {folder}" in out
+
+
+def test_guard_applies_to_the_default_folder(tmp_path, capsys):
+    folder = tmp_path / "plain_scenario"
+    folder.mkdir()
+    (folder / "config.json").write_text("{}", encoding="utf-8")
+    status, out = _init(tmp_path, capsys)
+    assert status == cli_init.EXIT_ERROR
+    assert "--force" in out
+    assert (folder / "config.json").read_text(encoding="utf-8") == "{}"
+    status, _ = _init(tmp_path, capsys, "--force")
+    assert status == cli_init.EXIT_OK
+    assert (folder / "import_report.json").exists()
+
+
+def test_next_steps_without_fds_output(tmp_path, capsys):
+    status, out = _init(tmp_path, capsys)
+    folder = tmp_path / "plain_scenario"
+    steps = out[out.index("Next steps:") :]
+    assert "1. Run FDS in" in steps and "mpiexec -n 2 fds plain.fds" in steps
+    assert (
+        f"2. Run the scenario with the fire: pyfds-evac --scenario {folder} " in steps
+    )
+    assert f"--fds-dir {tmp_path}" in steps
+    assert (
+        "3. Refine" in steps and "JuPedSim Web" in steps and "pyfds-evac-tui" in steps
+    )
+
+
+def test_next_steps_with_fds_output(tmp_path, capsys):
+    _, out = _init(tmp_path, capsys, smv=True)
+    steps = out[out.index("Next steps:") :]
+    assert "Run FDS" not in steps
+    assert (
+        f"1. Run the scenario: pyfds-evac --scenario {tmp_path / 'plain_scenario'}"
+        in (steps)
+    )
+    assert f"--fds-dir {tmp_path}" in steps

@@ -998,6 +998,7 @@ def _recommend(deck, deck_path, report, walkable, exits, height) -> None:
     rec["smoke_slice_height"] = rounded(height)
     rec["slices"] = _slice_availability(deck, height)
     rec["coverage"] = _coverage(deck, walkable, exits)
+    rec["fds_meshes"] = len(_meshes(deck, evacuation=False))
     smv = deck_path.parent / f"{deck.chid}.smv" if deck.chid else None
     found = smv is not None and smv.is_file()
     rec["fds_output_found"] = str(smv) if found else None

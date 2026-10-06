@@ -1,7 +1,9 @@
-"""``pyfds-evac init DECK.fds -o DIR``: start a scenario from an FDS deck.
+"""``pyfds-evac init DECK.fds [-o DIR]``: start a scenario from an FDS deck.
 
-Writes ``config.json``, ``geometry.wkt`` and ``import_report.json`` into DIR,
-prints the import summary and the command that runs the scenario.
+Writes ``config.json``, ``geometry.wkt`` and ``import_report.json`` into DIR
+(default: ``<deck stem>_scenario/`` next to the deck), prints the import
+summary and the next steps: run FDS if its output is missing, run the
+scenario, refine it in JuPedSim Web or the TUI.
 
 Exit status: 0 runnable; 3 written but not runnable (no exit, or no agents),
 or runnable with an input dropped at error level (an exit, a spawn area); 1
@@ -12,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import sys
+from pathlib import Path
 
 from rich_argparse import RawDescriptionRichHelpFormatter
 
@@ -31,8 +34,8 @@ exit status: 0 runnable; 3 written, but not runnable or an input dropped
 with an error; 1 error (nothing written)
 
 examples:
-  pyfds-evac init room.fds -o room_scenario/
-  pyfds-evac init room.fds -o room_scenario/ --walkable room.wkt --agents 40
+  pyfds-evac init room.fds            # writes room_scenario/ next to room.fds
+  pyfds-evac init room.fds --walkable room.wkt --agents 40
   pyfds-evac init room.fds -o out/ --exit 0,4.4,0,5.6,-1"""
 
 
@@ -57,9 +60,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-o",
         "--output",
-        required=True,
         metavar="DIR",
-        help="directory for config.json, geometry.wkt, import_report.json",
+        help="directory for config.json, geometry.wkt, import_report.json "
+        "(default: <deck stem>_scenario/ next to the deck)",
     )
     parser.add_argument(
         "--walkable",
@@ -144,6 +147,8 @@ def main(argv: list[str] | None = None) -> int:
     except _UsageError as exc:
         print(exc, file=sys.stderr)
         return EXIT_ERROR
+    if args.output is None:
+        args.output = str(default_output(args.deck))
     from pyfds_evac.core.fds_import import check_output_folder, import_fds_deck
 
     try:
@@ -176,16 +181,22 @@ def main(argv: list[str] | None = None) -> int:
     print(result.report.summary_text())
     _announce_fds(result.report.recommendations, args.no_fds)
     print(f"Wrote {args.output}/config.json, geometry.wkt, import_report.json")
-    return _verdict(result, args.output)
+    return _verdict(result, args)
 
 
-def _verdict(result, out_dir: str) -> int:
-    """Print the run command when there is one; 3 unless clean and runnable."""
+def default_output(deck: str) -> Path:
+    """``<deck stem>_scenario/`` next to the deck."""
+    path = Path(deck)
+    return path.with_name(f"{path.stem}_scenario")
+
+
+def _verdict(result, args) -> int:
+    """Print the next steps; 3 unless runnable with nothing dropped as error."""
     report = result.report
     if not report.runnable:
-        print("Not runnable: fix the items above, then import again.")
+        _print_fixes(report.not_runnable)
         return EXIT_NOT_RUNNABLE
-    print(f"Run: {result.run_command(out_dir)}")
+    print("\n".join(next_steps(result, args.output, args.no_fds)))
     if report.errors:
         print(
             f"{len(report.errors)} input(s) dropped with an error; check them "
@@ -193,6 +204,57 @@ def _verdict(result, out_dir: str) -> int:
         )
         return EXIT_NOT_RUNNABLE
     return EXIT_OK
+
+
+def _print_fixes(reasons: list[str]) -> None:
+    print("Not runnable, so no run command:")
+    print("\n".join(f"  - {reason}" for reason in reasons))
+    print(
+        "Fix these (or pass --walkable, --exit, --agents), then run pyfds-evac init again."
+    )
+
+
+def next_steps(result, out_dir: str, no_fds: bool) -> list[str]:
+    """The numbered next steps: FDS run if missing, the run, refining."""
+    rec = result.report.recommendations
+    deck = result.deck_path
+    scenario = f"pyfds-evac --scenario {out_dir}"
+    steps: list[str] = []
+    if not no_fds and not rec.get("fds_output_found"):
+        steps.append(_fds_step(result))
+        scenario += f" --fds-dir {deck.parent}"
+        steps.append(f"Run the scenario with the fire: {scenario}")
+        steps.append(f"  (clear air, without FDS: pyfds-evac --scenario {out_dir})")
+    else:
+        steps.append(f"Run the scenario: {result.run_command(out_dir)}")
+    steps.append(
+        "Refine exits, agents and routes in JuPedSim Web (https://app.jupedsim.org) "
+        "or the terminal UI (pyfds-evac-tui), then run again."
+    )
+    return ["Next steps:"] + _numbered(steps)
+
+
+def _fds_step(result) -> str:
+    deck = result.deck_path
+    meshes = result.report.recommendations.get("fds_meshes") or 1
+    run = f"fds {deck.name}" if meshes == 1 else f"mpiexec -n {meshes} fds {deck.name}"
+    if result.report.kind == "legacy":
+        return (
+            f"Run FDS in {deck.parent}: {run}. FDS releases after 6.7.7 have no "
+            "FDS+Evac; remove the evacuation namelists and meshes first."
+        )
+    return f"Run FDS in {deck.parent}: {run} (it writes the slices the run reads)."
+
+
+def _numbered(steps: list[str]) -> list[str]:
+    out, n = [], 0
+    for step in steps:
+        if step.startswith("  "):
+            out.append(f"   {step.strip()}")
+            continue
+        n += 1
+        out.append(f"  {n}. {step}")
+    return out
 
 
 def _read(path: str) -> str:
@@ -203,7 +265,7 @@ def _read(path: str) -> str:
 def _announce_fds(rec: dict, opted_out: bool) -> None:
     found = rec.get("fds_output_found")
     if not found:
-        print("FDS output: none next to the deck; the run command is clear air.")
+        print("FDS output: none next to the deck yet.")
         return
     if rec.get("fds_dir"):
         print(

@@ -101,7 +101,7 @@ examples:
   pyfds-evac-gui
 
   # start a scenario from an FDS deck (see: pyfds-evac init --help)
-  pyfds-evac init deck.fds -o scenario/"""
+  pyfds-evac init deck.fds"""
 
 
 def _verbatim(heading: str) -> str:
