@@ -501,6 +501,7 @@ marked.
 import argparse
 import pathlib
 import shutil
+import sys
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.manifest import manifest_path_for
@@ -541,6 +542,8 @@ result = run_scenario(scenario, **run_kwargs)
 # ... finished / stopped message, then copy the trajectory SQLite
 # and its manifest to OUTPUT_DIR ...
 result.cleanup()  # remove the temporary copies run_scenario wrote
+if not result.success:
+    sys.exit(2)
 ```
 {{< /details >}}
 
