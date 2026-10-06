@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import math
+from pathlib import Path
 
 import pytest
 from shapely import wkt as shapely_wkt
@@ -650,3 +651,35 @@ def test_round_trip_through_wkt_to_fds(tmp_path):
     walkable = shapely_wkt.loads(result.walkable_wkt)
     bound = original.length * dx / 2
     assert walkable.symmetric_difference(original).area <= bound
+
+
+def test_vent_with_a_slash_in_a_comment_is_still_an_exit(tmp_path):
+    vent = "&VENT XB=0,0,4,6,0,2, ! main door, see plan A/B\n      SURF_ID='OPEN' /"
+    assert list(_modern(tmp_path, vent).raw["exits"]) == ["vent_1"]
+
+
+def test_repo_t_junction_deck_imports(tmp_path):
+    """The deck has ``HRRPUA=1000, ! 1000 kW/m2 ...`` inside a record."""
+    root = Path(__file__).resolve().parents[1] / "assets" / "t_junction"
+    wkt = (root / "geometry.wkt").read_text(encoding="utf-8")
+    result = import_fds_deck(root / "t_junction.fds", walkable_wkt=wkt, agents=40)
+    assert result.report.runnable
+    assert len(result.raw["exits"]) == 2
+
+
+def test_default_properties_win_over_vel_mean_without_velocity_dist(tmp_path):
+    """FDS+Evac applies the preset while VELOCITY_DIST is unset (evac.f90:1850)."""
+    pers = "&PERS ID='A', DEFAULT_PROPERTIES='Adult', VEL_MEAN=1.0 /"
+    result = _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='A'"))
+    params = _params(result, "g")
+    assert (params["v0"], params["v0_distribution"]) == (1.25, "gaussian")
+    assert any("VEL_MEAN ignored" in i.message for i in _items(result, "A", "PERS"))
+
+
+def test_uniform_velocity_dist_becomes_gaussian(tmp_path):
+    pers = "&PERS ID='U', VELOCITY_DIST=1, VEL_LOW=0.95, VEL_HIGH=1.55 /"
+    result = _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='U'"))
+    params = _params(result, "g")
+    assert params["v0"] == pytest.approx(1.25, abs=1e-12)
+    assert params["v0_distribution"] == "gaussian"
+    assert params["v0_std"] == pytest.approx(0.30 / math.sqrt(3), abs=1e-9)

@@ -158,11 +158,36 @@ def speed_parameters(pers: NamelistRecord | None, add: AddItem) -> dict[str, Any
     """``v0`` keys from a ``&PERS``; empty when it sets no speed."""
     if pers is None:
         return {}
-    keys = _scalars(pers)
-    speed = component(keys, "VEL", "VELOCITY_DIST")
+    if _preset_wins(pers):
+        _note_ignored_vel_keys(pers, add)
+        return _default_properties_speed(pers, add)
+    speed = component(_scalars(pers), "VEL", "VELOCITY_DIST")
     if speed is None:
         return _default_properties_speed(pers, add)
     return _speed_from(speed, pers, add)
+
+
+def _preset_wins(pers: NamelistRecord) -> bool:
+    """FDS+Evac applies a DEFAULT_PROPERTIES speed only while VELOCITY_DIST
+    is unset (-1, evac.f90:1645), and then overwrites VEL_MEAN/LOW/HIGH
+    (``IF (VELOCITY_DIST < 0)``, evac.f90:1850-1857 for 'Adult'; FDS
+    6.7.6-404-gc9da70d7a)."""
+    name = pers.text("DEFAULT_PROPERTIES")
+    known = name is not None and name.upper() in DEFAULT_PROPERTIES_SPEED
+    return known and not pers.has("VELOCITY_DIST")
+
+
+def _note_ignored_vel_keys(pers: NamelistRecord, add: AddItem) -> None:
+    ignored = sorted(k for k in pers.params if k.startswith("VEL_"))
+    if ignored:
+        add(
+            "A",
+            "warning",
+            "PERS",
+            f"{', '.join(ignored)} ignored: without "
+            "VELOCITY_DIST, FDS+Evac uses the DEFAULT_PROPERTIES speed",
+            pers,
+        )
 
 
 def _scalars(record: NamelistRecord) -> dict[str, Any]:
