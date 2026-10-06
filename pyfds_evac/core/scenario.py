@@ -3013,7 +3013,7 @@ def run_scenario(
             if frame_recorder is not None:
                 frame_recorder.after_step(
                     simulation,
-                    incapacitated=incapacitated_agents,
+                    incapacitated=frozenset(incapacitated_agents),
                     not_spawned=_not_spawned(
                         has_flow_spawning,
                         num_agents_per_source,
@@ -3024,7 +3024,7 @@ def run_scenario(
         if frame_recorder is not None:
             frame_recorder.finish(
                 simulation,
-                incapacitated=incapacitated_agents,
+                incapacitated=frozenset(incapacitated_agents),
                 not_spawned=_not_spawned(
                     has_flow_spawning, num_agents_per_source, agent_counter_per_source
                 ),

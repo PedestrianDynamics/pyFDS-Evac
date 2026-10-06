@@ -505,6 +505,33 @@ def test_frames_are_throttled_by_wall_time():
     assert frames[-1].final
 
 
+def test_frames_get_a_frozen_incapacitated_set():
+    """The recorder gets a copy it cannot mutate, not the run's own set (#561)."""
+    from pyfds_evac.core.plan_view import FrameRecorder
+
+    received: list[object] = []
+
+    class _Spy(FrameRecorder):
+        def after_step(self, simulation, *, incapacitated, not_spawned):
+            received.append(incapacitated)
+            super().after_step(
+                simulation, incapacitated=incapacitated, not_spawned=not_spawned
+            )
+
+        def finish(self, simulation, *, incapacitated, not_spawned):
+            received.append(incapacitated)
+            super().finish(
+                simulation, incapacitated=incapacitated, not_spawned=not_spawned
+            )
+
+    result = _run(WORLD77, _Spy(lambda frame: None, max_hz=1e9))
+    result.cleanup()
+    assert received
+    assert {type(i) for i in received} == {frozenset}
+    with pytest.raises(AttributeError):
+        received[-1].add(0)  # type: ignore[attr-defined]
+
+
 @pytest.mark.parametrize("path", [NO_JOURNEY, WORLD77])
 def test_exit_counts_add_up_to_the_evacuated(path):
     """Direct-steering removals (every shipped asset) are counted per exit."""

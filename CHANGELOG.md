@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `model_type` and the accepted ones. It used to return collision-free
   speed model parameters, so a misspelled model type silently ran a
   different model (#570).
+- The plan-view frame recorder of the terminal UI gets a frozen copy of
+  the run's incapacitated agents, not the run's own set, so it cannot
+  change who is incapacitated. Frames and results are unchanged (#561).
 
 ## [0.3.0] - 2026-10-05
 
