@@ -413,3 +413,95 @@ class TestClearAirCacheHit:
         assert loaded.distance_to_node(5.0, 2.0, "e") == pytest.approx(
             built.distance_to_node(5.0, 2.0, "e")
         )
+
+
+class TestClearAirGridResolution:
+    """The clear-air grid against the thinnest wall of the deck (#115).
+
+    A cell blocks sight when its centre lies outside the walkable area, so a
+    wall no wider than one cell may hold no centre and let sight through.
+    """
+
+    SIGN = {"s": {"x": 8.0, "y": 2.0, "alpha": None, "c": 3}}
+    WALL_M = 0.4
+
+    def _walkable(self, height=4.0):
+        from shapely.geometry import box
+
+        # A 0.4 m wall from the bottom edge, placed so no 0.5 m cell centre
+        # (4.75, 5.25) falls inside it while two 0.25 m centres do.
+        return box(0, 0, 10, 4).difference(box(4.8, 0, 4.8 + self.WALL_M, height))
+
+    def _warnings(self, caplog):
+        return [r for r in caplog.records if "thinnest wall" in r.getMessage()]
+
+    def test_warns_when_the_cell_is_wider_than_a_boundary_wall(self, caplog):
+        VisibilityModel.clear_air(self._walkable(3.0), self.SIGN, cell_size_m=0.5)
+        (record,) = self._warnings(caplog)
+        assert record.levelname == "WARNING"
+        assert "0.4 m wide" in record.getMessage()
+
+    def test_silent_when_the_cell_is_narrower_than_every_wall(self, caplog):
+        VisibilityModel.clear_air(self._walkable(3.0), self.SIGN, cell_size_m=0.25)
+        assert not self._warnings(caplog)
+
+    def test_silent_without_any_wall(self, caplog):
+        from shapely.geometry import box
+
+        VisibilityModel.clear_air(box(0, 0, 10, 4), self.SIGN, cell_size_m=2.0)
+        assert not self._warnings(caplog)
+
+    def test_warns_on_a_cache_hit_too(self, tmp_path, caplog):
+        cache = tmp_path / "vis.npz"
+        walkable = self._walkable(3.0)
+        VisibilityModel.clear_air(
+            walkable, self.SIGN, cell_size_m=0.5, cache_path=cache
+        )
+        caplog.clear()
+        VisibilityModel.clear_air(
+            walkable, self.SIGN, cell_size_m=0.5, cache_path=cache
+        )
+        assert len(self._warnings(caplog)) == 1
+
+    @pytest.mark.parametrize(
+        ("deck", "cell_size_m", "warns"),
+        [
+            ("familiarity_test_discovery", 0.25, True),
+            # Equal to the 0.1 m walls: warns.
+            ("familiarity_test_discovery", 0.1, True),
+            ("familiarity_test_discovery", 0.08, False),
+            # Its walls touch the outer boundary: no hole of the polygon.
+            ("blind_spawn_discovery", 0.5, True),
+            ("blind_spawn_discovery", 0.4, True),
+            ("blind_spawn_discovery", 0.25, False),
+        ],
+    )
+    def test_deck_walls(self, deck, cell_size_m, warns, caplog):
+        from shapely import wkt
+
+        from pyfds_evac.core.visibility import _warn_if_walls_unresolved
+
+        text = Path(f"assets/{deck}/geometry.wkt").read_text()
+        _warn_if_walls_unresolved(wkt.loads(text), cell_size_m)
+        assert bool(self._warnings(caplog)) is warns
+
+    def test_api_default_is_the_cli_default(self):
+        import inspect
+
+        from pyfds_evac.config.parameters import VIS_CELL_SIZE_M
+
+        default = (
+            inspect.signature(VisibilityModel.clear_air)
+            .parameters["cell_size_m"]
+            .default
+        )
+        assert default == VIS_CELL_SIZE_M == 0.25
+
+    def test_default_grid_blocks_a_wall_the_old_default_lost(self):
+        """A 0.4 m partition hides the sign at the default, not at 0.5 m."""
+        walkable = self._walkable()
+        assert not VisibilityModel.clear_air(walkable, self.SIGN).node_is_visible(
+            0.0, 2.0, 2.0, "s"
+        )
+        coarse = VisibilityModel.clear_air(walkable, self.SIGN, cell_size_m=0.5)
+        assert coarse.node_is_visible(0.0, 2.0, 2.0, "s")

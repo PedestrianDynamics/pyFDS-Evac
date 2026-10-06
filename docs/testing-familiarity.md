@@ -299,9 +299,10 @@ movie.
   ([#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)). Do not
   quote a discovery egress time without its grid.
 - **Grid.** `run.py` uses a 0.25 m sight grid by default. On this deck it
-  sees through every wall. Pass `--vis-cell-size 0.05` for the discovery
-  deck; a warning for grids coarser than the walls is proposed in
-  [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168).
+  sees through every wall, and the run logs a warning that the cell is not
+  smaller than the thinnest wall
+  ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)).
+  Pass `--vis-cell-size 0.05` for the discovery deck.
 - **No reference for the egress times.** The full run's last agent is out at
   34.5 s. Its door passes 1.35 persons/s (1.13 persons/(s·m) of the 1.2 m
   door), measured where the agents cross the door's mid-line. No

@@ -224,7 +224,6 @@ but the same scenario can behave differently:
 | Incapacitation | `TenabilityConfig` whenever a FED track runs, unless `--disable-tenability` | none: `tenability_config=None`; a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
 | Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility`, unless `--no-visibility` | none: `vis_model=None` |
 | Visibility time step | = `--reroute-interval`, 1.0 s | 10.0 s: `VisibilityModel(time_step_s=)` |
-| Clear-air grid | 0.25 m (`--vis-cell-size`) | 0.5 m: `VisibilityModel.clear_air(cell_size_m=)` |
 | Smoke-blind, exit replay | `--smoke-blind`, `--replay-exits` | off: `smoke_blind=False`, `replay_exits=None` (a dict of `(origin, spawn_index)` to exit) |
 
 A Python user who copies `run_scenario(scenario)` therefore gets no

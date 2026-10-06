@@ -535,7 +535,6 @@ PARAMETERS: tuple[Parameter, ...] = (
         default=VIS_CELL_SIZE_M,
         unit="m",
         python="VisibilityModel.clear_air(cell_size_m=)",
-        python_default=0.5,
         checked="> 0, when the clear-air model is built",
     ),
     Parameter(

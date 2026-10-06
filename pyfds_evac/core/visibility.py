@@ -249,6 +249,56 @@ def _make_meta(
     }
 
 
+def _thinnest_obstacle(walkable) -> tuple[float, float, float] | None:
+    """Width and a point of the thinnest obstruction of a clear-air grid.
+
+    The obstructions are the parts of the bounding box of *walkable* that lie
+    outside it, so a wall attached to the outer boundary counts as well as a
+    hole. A part's width is the short side of the rectangle with the same
+    area and perimeter: exact for a rectangular wall, an estimate for any
+    other shape. None when there is no obstruction.
+    """
+    from shapely.geometry import box
+
+    rest = box(*walkable.bounds).difference(walkable)
+    thinnest = None
+    for part in getattr(rest, "geoms", [rest]):
+        area, perimeter = part.area, part.length
+        if area <= 1e-6:
+            continue
+        width = (perimeter - math.sqrt(max(perimeter**2 - 16 * area, 0.0))) / 4
+        if thinnest is None or width < thinnest[0]:
+            point = part.representative_point()
+            thinnest = (width, point.x, point.y)
+    return thinnest
+
+
+def _warn_if_walls_unresolved(walkable, cell_size_m: float) -> None:
+    """Warn when *cell_size_m* is not smaller than the thinnest wall.
+
+    A cell blocks sight when its centre lies outside *walkable*, so a wall
+    no wider than one cell may hold no cell centre and let sight through.
+    The grid resolves a wall only when ``cell_size_m < width``; for a wall
+    oblique to the grid this is necessary, not sufficient. A cell equal to
+    the width warns, with a 1e-9 m margin so a rounded width cannot hide it.
+    """
+    thinnest = _thinnest_obstacle(walkable)
+    if thinnest is None or cell_size_m < thinnest[0] - 1e-9:
+        return
+    width, x, y = thinnest
+    _logger.warning(
+        "Clear-air visibility grid: cell size %.3g m is not smaller than the "
+        "thinnest wall (%.3g m wide, near (%.2f, %.2f)); sight may pass "
+        "through it. Use a cell size below %.3g m (--vis-cell-size, "
+        "VisibilityModel.clear_air(cell_size_m=)).",
+        cell_size_m,
+        width,
+        x,
+        y,
+        width,
+    )
+
+
 def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):
     """Yield (x1, x2, y1, y2) rectangles covering every non-walkable cell.
 
@@ -756,7 +806,7 @@ class VisibilityModel:
         walkable,
         sign_descriptors: dict[str, dict],
         *,
-        cell_size_m: float = 0.5,
+        cell_size_m: float = 0.25,
         extinction_per_m: float = 0.0,
         cache_path: str | Path | None = None,
         max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
@@ -781,10 +831,12 @@ class VisibilityModel:
         deck inherits the resolution from its mesh; here it has to be chosen.
         Pick it below the thinnest wall that must block: at 0.5 m the 0.4 m
         walls of ``assets/blind_spawn_discovery`` vanish entirely, while 0.25 m
-        resolves them.  Cost grows as the inverse square, so halving it
-        quadruples the build -- which is what ``cache_path`` is for: the grid
-        depends only on the geometry, the signs and the resolution, none of
-        which change between runs of a deck.
+        (the default, as ``--vis-cell-size``) resolves them.  A warning is
+        logged when the cell is not smaller than the thinnest wall, measured
+        on the parts of the bounding box outside *walkable*.  Cost grows as
+        the inverse square, so halving it quadruples the build -- which is
+        what ``cache_path`` is for: the grid depends only on the geometry, the
+        signs and the resolution, none of which change between runs of a deck.
         """
         from fdsvismap import VisMap
 
@@ -802,6 +854,7 @@ class VisibilityModel:
 
         _check_max_sign_distance(max_sign_distance_m)
         _sign_caps(sign_descriptors)
+        _warn_if_walls_unresolved(walkable, cell_size_m)
         expected_meta = _make_clear_air_meta(
             walkable,
             sign_descriptors,

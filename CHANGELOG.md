@@ -47,6 +47,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file: MIT by default, GPL-3.0-only for the guide decks and the NIST
   software notice for `materials/evac.f90`. CI checks this with
   `reuse lint` (#633).
+- A clear-air visibility build logs a warning when its cell size is not
+  smaller than the thinnest wall of the walkable area, with the wall's
+  width and location: such a wall may hold no cell centre and let sight
+  through. Walls attached to the outer boundary count as well as holes
+  (#115).
 
 ### Changed
 
@@ -66,6 +71,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The built-in count for a deck without spawn areas drops from 100 to
   10; `simulationParams.number` still sets it. No shipped deck changes
   (#567).
+- `VisibilityModel.clear_air()` and `scripts/animate_cognitive_map.py
+  --cell-size` default to a 0.25 m grid, as `--vis-cell-size` does,
+  instead of 0.5 m. A Python caller that relied on the 0.5 m default
+  gets a finer grid, a build about four times slower, and walls between
+  0.25 to 0.5 m wide that may now block sight; pass `cell_size_m=0.5` to
+  keep the old grid (#115).
 
 ### Fixed
 

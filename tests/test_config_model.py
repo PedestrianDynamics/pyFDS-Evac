@@ -92,7 +92,7 @@ def test_python_defaults_of_the_model_match_the_code():
         == parameter("reroute_interval").python_default
     )
     clear_air = inspect.signature(VisibilityModel.clear_air).parameters
-    assert clear_air["cell_size_m"].default == parameter("vis_cell_size").python_default
+    assert clear_air["cell_size_m"].default == parameter("vis_cell_size").default
     assert DEFAULT_MAX_SIGN_DISTANCE_M == parameter("max_sign_distance").default
     tenability = TenabilityConfig()
     for dest in (
