@@ -10,8 +10,8 @@ Maintainer decisions applied here (import task record, 2026-10-06):
 
 - Q2: the delay is detection + pre-movement. Exact where the sum is one of
   our distributions, or one of them shifted by ``premovement_offset_s``;
-  otherwise (I1) the detection minimum as the offset plus a gamma with the
-  mean and variance of the rest, or the mean where a moment is not known
+  otherwise (I1) min(detection) + min(reaction) as the offset plus a gamma
+  with the mean and variance of the rest, or the mean where a moment is not known
   in closed form.
 - Q3: a uniform speed range becomes a Gaussian with the same mean and
   variance (std = half-range / sqrt(3)).
@@ -316,16 +316,25 @@ def combine_delays(det: Component, pre: Component) -> tuple[Component, str, str]
 
 
 def _offset_gamma(det: Component, pre: Component) -> tuple[Component, str, str]:
-    """I1: no agent starts before detection can end, so the detection
-    minimum (uniform low; 0 for gamma or Weibull) becomes the offset, and a
-    gamma carries the mean and variance of the rest."""
-    floor = float(det.a or 0.0) if det.kind == "uniform" else 0.0
-    rest = Component(det.kind, det.a, det.b, det.mean - floor, det.var)
-    gamma, status, how = _moment_gamma(rest, pre)
+    """I1: FDS+Evac starts an agent at detection + reaction (evac.f90:9209),
+    so nobody starts before min(detection) + min(reaction) (uniform low; 0
+    for gamma or Weibull). That floor is the offset; a gamma carries the
+    mean and variance of what lies above it, so both are kept exactly."""
+    floor = _minimum(det) + _minimum(pre)
+    rest = [
+        Component(c.kind, c.a, c.b, c.mean - _minimum(c), c.var) for c in (det, pre)
+    ]
+    gamma, status, how = _moment_gamma(*rest)
     if floor <= 0:
         return gamma, status, how
     shifted = Component("gamma", gamma.a, gamma.b, gamma.mean + floor, gamma.var, floor)
-    return shifted, status, f"offset {floor:g} s (detection minimum) + {how}"
+    how = f"offset {floor:g} s (min detection + min reaction) + {how}"
+    return shifted, status, how
+
+
+def _minimum(part: Component) -> float:
+    """Lower bound of a delay: the uniform's low, else 0 (gamma, Weibull)."""
+    return float(part.a or 0.0) if part.kind == "uniform" else 0.0
 
 
 def _shift(c: float, other: Component) -> tuple[Component, str, str]:

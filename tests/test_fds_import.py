@@ -219,14 +219,15 @@ def _delay(tmp_path, keys: str) -> dict:
         ),
         ("PRE_EVAC_DIST=3, PRE_PARA=2, PRE_PARA2=3", "gamma", 2, 3, None),
         ("PRE_EVAC_DIST=8, PRE_PARA=2, PRE_PARA2=0.1", "weibull", 10, 2, None),
-        # I1: offset = DET low 5 s; gamma on mean 15 s, variance 200/12 s2.
+        # I1: offset = DET low + PRE low = 10 s; gamma on the rest, mean 10 s,
+        # variance 200/12 s2 -> k = 6, theta = 5/3 (total mean 20 s kept).
         (
             "DET_EVAC_DIST=1, DET_LOW=5, DET_HIGH=15, "
             "PRE_EVAC_DIST=1, PRE_LOW=5, PRE_HIGH=15",
             "gamma",
-            13.5,
-            round(10 / 9, 9),
-            5,
+            6,
+            round(5 / 3, 9),
+            10,
         ),
         # I1: 5 s + gamma(2, 3) is exact.
         ("DET_MEAN=5, PRE_EVAC_DIST=3, PRE_PARA=2, PRE_PARA2=3", "gamma", 2, 3, 5),
@@ -793,3 +794,15 @@ def test_reimport_into_an_importer_made_folder_is_allowed(tmp_path):
     ]
     assert cli_import.main(argv) == cli_import.EXIT_OK
     assert cli_import.main(argv) == cli_import.EXIT_OK
+
+
+def test_offset_gamma_keeps_mean_variance_and_the_earliest_start():
+    """DET U(5,15) + PRE U(2,8): floor 7 s, mean 15 s, variance 100/12 + 36/12."""
+    from pyfds_evac.core.fds_import_people import Component, combine_delays
+
+    det = Component("uniform", 5, 15, 10, 100 / 12)
+    pre = Component("uniform", 2, 8, 5, 36 / 12)
+    delay, status, _ = combine_delays(det, pre)
+    assert (delay.kind, status, delay.offset) == ("gamma", "A", 7)
+    assert delay.a * delay.b + delay.offset == pytest.approx(15, abs=1e-12)
+    assert delay.a * delay.b**2 == pytest.approx(136 / 12, abs=1e-12)
