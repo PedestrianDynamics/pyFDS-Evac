@@ -9,6 +9,9 @@ The folder tree is kept: `Examples/`, `Validation/` and `Verification/`.
 The files are unmodified. Do not edit them; to change a deck, copy it to
 a new location outside this folder and mark it as modified (GPLv3 §5
 requires a notice stating the change and its date).
+`SHA256SUMS`, computed from the upstream repository at the pinned commit,
+holds each deck's checksum; `tests/test_fds_evac_guide_assets.py` fails on
+any changed, added or removed deck.
 
 ## License
 
