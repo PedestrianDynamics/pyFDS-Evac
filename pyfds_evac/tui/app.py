@@ -69,6 +69,7 @@ from .widgets import (
     FileScreen,
     FindScreen,
     PathBox,
+    RecentList,
     ScrollText,
     StepBar,
     TextBox,
@@ -111,6 +112,29 @@ def _short(path: Any, width: int = 40) -> str:
             break
         tail = candidate
     return f"…{tail}" if tail else f"…{text[-(width - 1) :]}"
+
+
+def _recent_name(entry: dict[str, Any]) -> str:
+    path = Path(str(entry.get("scenario")))
+    return model.scenario_name(path) if path.exists() else path.name
+
+
+def _recent_locations(rows: list[tuple[int, dict[str, Any], str]]) -> list[str]:
+    """The scenario location of Recent rows that would read alike, else ""."""
+    keys = [
+        (_recent_name(e), _short(e.get("fds_dir") or "no FDS", 30))
+        for _i, e, _x in rows
+    ]
+    where = [""] * len(rows)
+    for key in set(keys):
+        same = [k for k, other in enumerate(keys) if other == key]
+        if len(same) < 2:
+            continue
+        paths = [str(rows[k][1].get("scenario")) for k in same]
+        # 24 characters keep the row on one line at 80 columns.
+        for k, text in zip(same, model.distinct_locations(paths, 24)):
+            where[k] = text
+    return where
 
 
 def _clock(seconds: float) -> str:
@@ -183,7 +207,7 @@ class ScenarioStep(Step):
     def compose(self) -> ComposeResult:
         with TabbedContent(id="sc-tabs"):
             with TabPane("Recent", id="tab-recent"):
-                yield OptionList(id="recent")
+                yield RecentList(id="recent")
             with TabPane("Examples", id="tab-examples"):
                 yield TextBox(placeholder="type to filter", id="ex-filter")
                 yield OptionList(id="examples")
@@ -506,6 +530,8 @@ class EvacTui(App[None]):
         self._ui_context = contextvars.copy_context()
         self._render_timer: Any = None
         self._quitting = False
+        # Said on the FDS step when a Recent entry's FDS folder is gone.
+        self.fds_note = ""
         super().__init__()
 
     # --- set-up --------------------------------------------------------------
@@ -532,7 +558,7 @@ class EvacTui(App[None]):
         self._fill_examples("")
         self._browse_open(f"{self.cwd}{os.sep}")
         tabs = self.query_one("#sc-tabs", TabbedContent)
-        if self.recent.runs:
+        if any(not missing for _i, _e, missing in self.recent.ordered()):
             tabs.active = "tab-recent"
             self.query_one("#recent").focus()
         else:
@@ -694,25 +720,29 @@ class EvacTui(App[None]):
 
     # --- scenario step ---------------------------------------------------------
 
-    def _fill_recent(self) -> None:
+    def _fill_recent(self, highlight: int = 0) -> None:
+        """Usable entries first, missing ones dimmed after them (#600)."""
         recent = self.query_one("#recent", OptionList)
         recent.clear_options()
-        for i, entry in enumerate(self.recent.runs):
-            path = Path(str(entry.get("scenario")))
-            fds = entry.get("fds_dir")
-            missing = not path.exists() or (fds and not Path(fds).exists())
+        rows = self.recent.ordered()
+        for (i, entry, missing), where in zip(rows, _recent_locations(rows)):
             line = m(
-                "$n  [dim]$f[/]  $s  [dim]$d$x[/]",
-                n=model.scenario_name(path) if path.exists() else path.name,
-                f=_short(fds or "no FDS", 30),
+                "[dim]$n$l  $f  $s  $d  $x[/]"
+                if missing
+                else "$n[dim]$l[/]  [dim]$f[/]  $s  [dim]$d[/]",
+                n=_recent_name(entry),
+                l=f" {where}" if where else "",
+                f=_short(entry.get("fds_dir") or "no FDS", 30),
                 s=RECENT_GLYPHS.get(str(entry.get("status")), "")
                 + str(entry.get("status", "")),
                 d=str(entry.get("date", ""))[:16],
-                x="  missing" if missing else "",
+                x=missing,
             )
             recent.add_option(Option(line, id=f"recent-{i}"))
-        if recent.option_count:
-            recent.highlighted = 0
+        if not rows:
+            recent.add_option(Option("No recent runs yet.", disabled=True))
+            return
+        recent.highlighted = min(highlight, len(rows) - 1)
 
     def _fill_examples(self, query: str) -> None:
         if self.examples is None:
@@ -763,9 +793,64 @@ class EvacTui(App[None]):
             self.query_one("#examples").focus()
             event.stop()
 
+    @on(TabbedContent.TabActivated, "#sc-tabs")
+    def _sc_tab_activated(self) -> None:
+        """The info line follows the open tab's highlighted row."""
+        for list_id in ("#recent", "#examples"):
+            options = self.query_one(list_id, OptionList)
+            if options.highlighted is not None:
+                option = options.get_option_at_index(options.highlighted)
+                options.post_message(
+                    OptionList.OptionHighlighted(options, option, options.highlighted)
+                )
+
+    def _sc_tab(self) -> str | None:
+        return self.query_one("#sc-tabs", TabbedContent).active
+
+    @on(OptionList.OptionHighlighted, "#recent")
+    def _recent_highlighted(self, event: OptionList.OptionHighlighted) -> None:
+        if not event.option.id or self._sc_tab() != "tab-recent":
+            return
+        self.query_one("#sc-error", Static).update("")
+        entry = self.recent.runs[int(event.option.id[7:])]
+        path = Path(str(entry.get("scenario")))
+        fds = entry.get("fds_dir")
+        missing = model.missing_paths(entry)
+        if not missing:
+            self._show_info(path, f"\n  scenario {path}\n  FDS folder {fds or 'none'}")
+            return
+        lines = []
+        if missing.startswith("scenario"):
+            lines.append(f"Scenario not found: {path}")
+        if missing.endswith("FDS folder missing"):
+            lines.append(f"FDS folder not found: {fds}")
+        self.query_one("#sc-info", Static).update(
+            m(
+                "$t\n[dim]Enter: details · Delete: remove from Recent[/]",
+                t="\n".join(lines),
+            )
+        )
+
+    def action_remove_recent(self) -> None:
+        """Delete on a Recent row: remove the entry from recent.json."""
+        recent = self.query_one("#recent", OptionList)
+        position = recent.highlighted
+        if position is None:
+            return
+        ident = recent.get_option_at_index(position).id
+        if not ident:
+            return  # the "No recent runs yet." row
+        index = int(ident[7:])
+        name = _recent_name(self.recent.runs[index])
+        self.recent.remove(index)
+        self._fill_recent(highlight=position)
+        if not self.recent.runs:
+            self.query_one("#sc-info", Static).update("")
+        self.notify(f"Removed from Recent: {name}", markup=False)
+
     @on(OptionList.OptionHighlighted, "#examples")
     def _example_highlighted(self, event: OptionList.OptionHighlighted) -> None:
-        if event.option.id:
+        if event.option.id and self._sc_tab() == "tab-examples":
             examples = self.examples or []
             self._show_info(examples[int(event.option.id[3:])].path)
 
@@ -781,13 +866,31 @@ class EvacTui(App[None]):
     @on(OptionList.OptionSelected, "#recent")
     def _recent_selected(self, event: OptionList.OptionSelected) -> None:
         entry = self.recent.runs[int(str(event.option.id)[7:])]
+        path = Path(str(entry.get("scenario")))
         fds = entry.get("fds_dir")
-        if fds and not Path(fds).is_dir():
-            self._scenario_error(f"FDS folder missing: {fds}", "")
+        missing = model.missing_paths(entry)
+        if missing.startswith("scenario"):
+            self._scenario_error(
+                f"Scenario not found: {path}. If it is on a disk that is not "
+                "mounted, mount it and press Enter again. If it moved, open it "
+                "from its new place in the Open file tab. Delete removes this "
+                "entry from Recent.",
+                "",
+            )
             return
-        if self.select_scenario(Path(str(entry.get("scenario"))), advance=False):
-            self.set_fds_dir(fds or None)
-            self.goto(3)
+        if not self.select_scenario(path, advance=False):
+            return
+        if missing:  # only the FDS folder: never drop it silently
+            self.set_fds_dir(None)
+            self.fds_note = (
+                f"The FDS folder of the last run was not found: {fds}. Choose "
+                "another folder, or continue without one."
+            )
+            self.goto(1)
+            self._render_fds_panel()
+            return
+        self.set_fds_dir(fds or None)
+        self.goto(3)
 
     @on(Input.Submitted, "#open-path")
     def _open_path(self, event: Input.Submitted) -> None:
@@ -856,7 +959,7 @@ class EvacTui(App[None]):
         elif self.form.scenario is not None:
             self.goto(1)
 
-    def _show_info(self, path: Path) -> None:
+    def _show_info(self, path: Path, extra: str = "") -> None:
         try:
             info = model.read_scenario(path)
         except model.ScenarioError as exc:
@@ -865,13 +968,15 @@ class EvacTui(App[None]):
         agents = "?" if info.agents is None else info.agents
         self.query_one("#sc-info", Static).update(
             m(
-                "[b]$n[/]  [dim]$k[/]\n  agents $a   exits $x   max time $t s   seed $s",
+                "[b]$n[/]  [dim]$k[/]\n  agents $a   exits $x   max time $t s   seed $s"
+                "$e",
                 n=info.name,
                 k=info.kind,
                 a=agents,
                 x=info.exits,
                 t=f"{info.max_time:g}",
                 s=info.seed,
+                e=extra,
             )
         )
 
@@ -891,6 +996,7 @@ class EvacTui(App[None]):
             self._scenario_error(exc.message, exc.details)
             return False
         self.query_one("#sc-error", Static).update("")
+        self.fds_note = ""
         changed = self.form.scenario is None or self.form.scenario.path != info.path
         self.form.scenario = info
         self._show_info(info.path)
@@ -1102,6 +1208,8 @@ class EvacTui(App[None]):
         if path == self.form.fds_dir:
             return
         self.form.fds_dir = path
+        if path:
+            self.fds_note = ""
         self.query_one("#fds-path", Input).value = path or ""
         self.facts, self.facts_for, self.facts_error = None, None, None
         if path:
@@ -1141,8 +1249,9 @@ class EvacTui(App[None]):
             deck = self.form.scenario is not None and not self.suggestions
             panel.update(
                 m(
-                    "Not chosen yet: Enter on a suggestion, type a path, or choose "
-                    "No FDS (clear air).$x",
+                    "[$warning]$w[/]Not chosen yet: Enter on a suggestion, type a "
+                    "path, or choose No FDS (clear air).$x",
+                    w=f"{self.fds_note}\n" if self.fds_note else "",
                     x="\nThis example ships the FDS deck only. Run FDS first, or "
                     f"continue without fire: {model.FDS_DOCS}"
                     if deck

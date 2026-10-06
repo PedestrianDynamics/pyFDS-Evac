@@ -272,6 +272,12 @@ class PathBox(TextBox):
     ]
 
 
+class RecentList(OptionList):
+    """The Recent tab's list: Delete removes the highlighted entry (#600)."""
+
+    BINDINGS = [Binding("delete", "app.remove_recent", "remove", key_display="del")]
+
+
 class BrowseList(OptionList):
     """The list a path box browses: typing here goes to the box, as in fzf.
 
