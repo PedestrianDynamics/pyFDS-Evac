@@ -572,7 +572,7 @@ and the run command.
 ```
 pyfds-evac import DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds]
+    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force]
 ```
 
 - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
@@ -590,14 +590,18 @@ pyfds-evac import DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
 - When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
   `--fds-dir`, and the output says so; `--no-fds` leaves it out. For an
   FDS+Evac deck the output is reported but not used.
+- `-o` refuses a folder that holds a `config.json` the importer did not
+  write (no `import_report.json` next to it), such as an authored scenario
+  next to its deck. `--force` overwrites it. A folder from an earlier
+  import is overwritten without asking.
 
 Every approximated or dropped input is listed with its line number.
 
 | Status | Meaning |
 |---|---|
-| 0 | written and runnable |
-| 3 | written but not runnable: no exit or no agents |
-| 1 | an error; nothing written |
+| 0 | written and runnable, nothing dropped at error level |
+| 3 | written, but not runnable (no exit or no agents; no `Run:` line is printed), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
+| 1 | an error, including an argument error or a refused `-o` folder; nothing written |
 
 ### Walkable area from FDS obstructions — `generate_walkable_from_fds.py`
 

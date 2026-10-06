@@ -79,7 +79,7 @@ trajectory is written every tenth step (10 frames/s).
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. |
 | `premovement_param_a`, `premovement_param_b` | the preset of the distribution | — | Override the preset; the presets and their sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
 | `premovement_seed` | none | — | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
-| `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time; `pyfds-evac import` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Ignored with flow spawning. |
+| `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time; `pyfds-evac import` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Applies with and without `journeys`; ignored with flow spawning. |
 | `use_flow_spawning` | `false` | — | Add agents over time instead of at the start (no pre-movement then). |
 | `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. |
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |
