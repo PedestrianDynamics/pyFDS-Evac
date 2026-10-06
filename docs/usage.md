@@ -592,8 +592,11 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
   whose mesh ends at the building wall; draw the polygon and pass it with
   `--walkable` then.
 - When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
-  `--fds-dir`, and the output says so; `--no-fds` leaves it out. For an
-  FDS+Evac deck the output is reported but not used.
+  `--fds-dir`, and the output says so; `--no-fds` leaves it out. An
+  FDS+Evac deck needs the output of a fire-only run: the next steps say to
+  run FDS on a copy without the evacuation namelists and meshes, and to
+  pass that run's folder as `--fds-dir`. FDS+Evac output found next to the
+  deck is reported but not used.
 - The output folder, given with `-o` or the default, is refused when it
   holds a `config.json` the importer did not write (no `import_report.json`
   next to it), such as an authored scenario. `--force` overwrites it. A

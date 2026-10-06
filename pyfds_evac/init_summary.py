@@ -196,7 +196,15 @@ def next_steps(result: Any, out_dir: str, no_fds: bool) -> list[str]:
     deck_dir = show_path(result.deck_path.parent)
     scenario = f"pyfds-evac --scenario {show_path(out_dir)}"
     steps: list[list[str]] = []
-    if not no_fds and not rec.get("fds_output_found"):
+    if not no_fds and result.report.kind == "legacy":
+        steps.append(_fire_only_step(result))
+        steps.append(
+            [
+                f"{scenario} --fds-dir <folder of the fire-only run>",
+                "(clear air: drop --fds-dir)",
+            ]
+        )
+    elif not no_fds and not rec.get("fds_output_found"):
         steps.append(_fds_step(result, deck_dir))
         steps.append(
             [f"{scenario} --fds-dir {deck_dir}", "(clear air: drop --fds-dir)"]
@@ -218,14 +226,21 @@ def _fds_step(result: Any, deck_dir: str) -> list[str]:
     meshes = result.report.recommendations.get("fds_meshes") or 1
     run = f"fds {name}" if meshes == 1 else f"mpiexec -n {meshes} fds {name}"
     command = run if deck_dir == "." else f"cd {deck_dir} && {run}"
-    if result.report.kind == "legacy":
-        title = (
-            "Run FDS (FDS after 6.7.7 has no FDS+Evac: remove the evacuation "
-            "namelists and meshes first):"
-        )
-    else:
-        title = "Run FDS:"
-    return [title, f"  {command}"]
+    return ["Run FDS:", f"  {command}"]
+
+
+def _fire_only_step(result: Any) -> list[str]:
+    """FDS+Evac deck: the run needs the output of a fire-only FDS run."""
+    meshes = result.report.recommendations.get("fds_meshes") or 1
+    copy = "<fire-only copy>.fds"
+    run = f"fds {copy}" if meshes == 1 else f"mpiexec -n {meshes} fds {copy}"
+    return [
+        "Run FDS on a fire-only copy of the deck: remove the evacuation "
+        "namelists and meshes",
+        "  (&EVAC, &PERS, &EXIT, &DOOR, &ENTR, &EVHO, &CORR, &STRS, &EVSS, "
+        "&EDEV and every &MESH with EVACUATION=.TRUE.), then",
+        f"  {run}",
+    ]
 
 
 def _step_lines(n: int, step: list[str]) -> list[str]:

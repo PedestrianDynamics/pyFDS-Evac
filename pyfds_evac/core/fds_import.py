@@ -1006,8 +1006,8 @@ def _recommend(deck, deck_path, report, walkable, exits, height) -> None:
     rec["fds_dir"] = str(deck_path.parent) if use else None
     if found and not use:
         rec["fds_dir_note"] = (
-            "FDS+Evac output found but not used: reading it with "
-            "fdsreader is not verified; add --fds-dir to try"
+            "it is FDS+Evac output, and pyFDS-Evac reads only the output of "
+            "a fire-only run; fdsreader is not verified on FDS+Evac output"
         )
 
 

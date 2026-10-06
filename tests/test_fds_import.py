@@ -956,3 +956,31 @@ def test_delay_mean_in_the_report_is_the_total(tmp_path):
     assert mean == pytest.approx(20, abs=1e-6)
     [note] = [i.message for i in result.report.items if i.message.startswith("delay:")]
     assert "mean 20 s" in note
+
+
+def _legacy_init(tmp_path, capsys, monkeypatch, smv: bool) -> str:
+    """An FDS+Evac deck (CHID 'room'), with or without room.smv next to it."""
+    monkeypatch.chdir(tmp_path)
+    deck = _deck(tmp_path, ROOM.format(extra=DOOR + "\n" + EVAC.format(extra="")))
+    if smv:
+        (tmp_path / "room.smv").write_text("", encoding="utf-8")
+    argv = [str(deck), "--walkable", _wkt(tmp_path, ROOM_WKT)]
+    assert cli_init.main(argv) == cli_init.EXIT_OK
+    return capsys.readouterr().out
+
+
+@pytest.mark.parametrize("smv", [False, True], ids=["no-output", "evac-output"])
+def test_legacy_next_steps_ask_for_a_fire_only_run(tmp_path, capsys, monkeypatch, smv):
+    """N1: one message in both cases; never --fds-dir on the deck folder."""
+    out = _legacy_init(tmp_path, capsys, monkeypatch, smv)
+    steps = out[out.index("Next:") :]
+    assert "1. Run FDS on a fire-only copy of the deck" in steps
+    assert "EVACUATION=.TRUE." in steps
+    assert "--fds-dir <folder of the fire-only run>" in steps
+    assert "--fds-dir ." not in out and "room.fds" not in steps
+    found = [line for line in out.splitlines() if line.startswith("FDS output found")]
+    if not smv:
+        assert found == []
+        return
+    [line] = found
+    assert "not used" in line and "fire-only run" in line
