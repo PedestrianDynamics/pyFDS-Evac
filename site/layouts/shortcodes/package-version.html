@@ -1,0 +1,3 @@
+{{- /* The package version from pyproject.toml, so the site never needs a manual bump. */ -}}
+{{- $pyproject := (resources.Get "pyproject.toml").Content | transform.Unmarshal (dict "format" "toml") -}}
+{{- with $pyproject.project.version }}{{ . }}{{ else }}{{ errorf "package-version: no project.version in pyproject.toml" }}{{ end -}}

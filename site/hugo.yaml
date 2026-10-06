@@ -127,6 +127,9 @@ module:
     # assets replaces the default one, so assets/ is listed too.
     - source: ../tests/__snapshots__/test_tui
       target: assets/tui-snapshots
+    # The package version shown on the landing page comes from here.
+    - source: ../pyproject.toml
+      target: assets/pyproject.toml
     - source: assets
       target: assets
 
