@@ -624,6 +624,26 @@ def routing_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     return None
 
 
+def speed_alias_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """A ``desired_speed*`` alias that differs from its ``v0*`` key (#612).
+
+    The run rejects the pair when it places the agents; no form option
+    fixes it.
+    """
+    from pyfds_evac.core.agent_params import check_speed_aliases
+
+    try:
+        check_speed_aliases(raw)
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
+def scenario_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """The first scenario error a run stops on, in the run's order."""
+    return speed_alias_issue(raw) or routing_issue(raw)
+
+
 # --- whether an option applies, at any value (#485 R1) ---------------------
 
 

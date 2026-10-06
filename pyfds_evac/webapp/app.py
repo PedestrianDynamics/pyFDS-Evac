@@ -50,7 +50,7 @@ from pyfds_evac.config.frontend import (
     incapacitation_modelled,
 )
 from pyfds_evac.config.parameters import default
-from pyfds_evac.config.rules import routing_issue
+from pyfds_evac.config.rules import scenario_issue
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
@@ -1098,7 +1098,7 @@ async def upload_scenario(request: Request):
             raise ValueError("The archive held no .json or .wkt files.")
         # The one real check: if load_scenario accepts it, the run will too.
         # Cheaper and more honest than re-implementing format validation.
-        issue = routing_issue(load_scenario(str(dest)).raw)
+        issue = scenario_issue(load_scenario(str(dest)).raw)
         if issue is not None:
             raise ValueError(issue.message)
     except Exception as exc:
@@ -1137,7 +1137,7 @@ def _resolve_form(form: dict, stamp: str | None = None):
     API would reject, using the API's own checks.
     """
     scenario = load_scenario(str(params.scenario_path(form.get("scenario"))))
-    issue = routing_issue(scenario.raw)
+    issue = scenario_issue(scenario.raw)
     if issue is not None:
         raise _ScenarioError(issue.message)
     opts = params.form_to_opts(form, baseseed=scenario.seed, stamp=stamp)

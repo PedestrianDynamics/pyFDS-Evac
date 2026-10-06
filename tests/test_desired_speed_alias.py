@@ -21,6 +21,7 @@ import jupedsim as jps
 import pytest
 from shapely.geometry import box
 
+from pyfds_evac.core.agent_params import check_speed_aliases
 from pyfds_evac.core.scenario import load_scenario
 from pyfds_evac.core.simulation_init import (
     create_agent_parameters,
@@ -137,3 +138,55 @@ def test_social_force_default_speed_is_1_25():
         )
     )
     assert next(iter(simulation.agents())).model.desired_speed == 1.25
+
+
+def _run_error(raw: dict, tmp_path) -> str:
+    with pytest.raises(ValueError) as exc:
+        _spawn_speeds(ASSETS[0], copy.deepcopy(raw), tmp_path)
+    return str(exc.value)
+
+
+@pytest.mark.parametrize("encode", [False, True], ids=["dict", "string"])
+def test_check_raises_the_run_error_and_leaves_raw_untouched(encode, tmp_path):
+    """#612: the configuration check rejects what the run rejects, read-only."""
+    raw, keys = _raw_without_speed_keys(ASSETS[0])
+    params = raw["distributions"][keys[0]]["parameters"]
+    params.update(desired_speed=1.5, v0=1.2, desired_speed_std=0.3)
+    if encode:
+        raw["distributions"][keys[0]]["parameters"] = json.dumps(params)
+    before = copy.deepcopy(raw)
+    with pytest.raises(ValueError) as exc:
+        check_speed_aliases(raw)
+    assert raw == before
+    assert str(exc.value) == _run_error(raw, tmp_path)
+
+
+def test_check_reports_the_first_conflicting_distribution(tmp_path):
+    raw, keys = _raw_without_speed_keys(ASSETS[0])
+    assert len(keys) > 1
+    raw["distributions"][keys[0]]["parameters"].update(v0_std=0.1)
+    raw["distributions"][keys[0]]["parameters"].update(desired_speed_std=0.2)
+    raw["distributions"][keys[1]]["parameters"].update(desired_speed=1.5, v0=1.2)
+    with pytest.raises(ValueError) as exc:
+        check_speed_aliases(raw)
+    assert repr(keys[0]) in str(exc.value)
+    assert str(exc.value) == _run_error(raw, tmp_path)
+
+
+@pytest.mark.parametrize(
+    "parameters",
+    [
+        {"desired_speed": 1.5},
+        {"desired_speed": 1.5, "v0": 1.5},
+        {"desired_speed_std": 0.1, "v0": 1.2},
+        "{not json",
+        None,
+    ],
+)
+def test_check_accepts_what_the_run_accepts(parameters):
+    raw = {"distributions": {"a": {"parameters": parameters}, "b": "x"}}
+    before = copy.deepcopy(raw)
+    check_speed_aliases(raw)
+    check_speed_aliases({"distributions": []})
+    check_speed_aliases([])
+    assert raw == before

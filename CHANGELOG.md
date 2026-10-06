@@ -72,6 +72,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   documented number are unchanged; the `ft_full_gate_detour` and
   `ft_full_additive_detour` golden snapshots, with contact under
   synthetic smoke, are regenerated (#611).
+- `--show-config`, the TUI and the GUI report a distribution whose
+  `desired_speed`, `desired_speed_distribution` or `desired_speed_std`
+  differs from its `v0*` key, with the error the run stops on. They used
+  to accept the deck. The check,
+  `pyfds_evac.core.agent_params.check_speed_aliases`, does not import
+  JuPedSim; runs are unchanged (#612).
 - Sign visibility from an FDS run no longer stores a time point past the
   end of the FDS output when `--reroute-interval` does not divide `T_END`;
   the last stored point is `T_END`. It now raises `FdsHorizonError` only
