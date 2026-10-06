@@ -6,6 +6,10 @@ Technical Reference and User's Guide*), copied unchanged from
 commit `10eb1a4448ae771ad2187a238a8330c819550008`, folder `InputFiles/`.
 The folder tree is kept: `Examples/`, `Validation/` and `Verification/`.
 
+The files are unmodified. Do not edit them; to change a deck, copy it to
+a new location outside this folder and mark it as modified (GPLv3 §5
+requires a notice stating the change and its date).
+
 ## License
 
 These files are licensed under the GNU General Public License, version 3
