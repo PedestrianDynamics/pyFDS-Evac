@@ -18,7 +18,7 @@ import pytest
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon, box
 
-from pyfds_evac import cli, cli_import
+from pyfds_evac import cli, cli_init
 from pyfds_evac.core.fds_deck import parse_fds_deck
 from pyfds_evac.core.fds_import import import_fds_deck
 from pyfds_evac.core.fds_import_geometry import largest_remainder
@@ -420,8 +420,8 @@ def test_mesh_boundary_vent(tmp_path):
 def test_no_opening_is_written_but_not_runnable(tmp_path):
     out = tmp_path / "out"
     path = _deck(tmp_path, MODERN.format(vents=""))
-    status = cli_import.main([str(path), "-o", str(out), "--walkable", _wkt(tmp_path)])
-    assert status == cli_import.EXIT_NOT_RUNNABLE
+    status = cli_init.main([str(path), "-o", str(out), "--walkable", _wkt(tmp_path)])
+    assert status == cli_init.EXIT_NOT_RUNNABLE
     report = json.loads((out / "import_report.json").read_text())
     assert report["runnable"] is False
     assert json.loads((out / "config.json").read_text())["exits"] == {}
@@ -525,23 +525,23 @@ def test_import_report_written_in_the_fds_frame(tmp_path):
     assert json.loads((out / "import_report.json").read_text())["runnable"] is True
 
 
-def test_cli_import_runnable_and_error(tmp_path, capsys):
+def test_cli_init_runnable_and_error(tmp_path, capsys):
     deck = _deck(tmp_path, ROOM.format(extra=DOOR + "\n" + EVAC.format(extra="")))
     walk = _wkt(tmp_path, ROOM_WKT)
     assert (
-        cli_import.main([str(deck), "-o", str(tmp_path / "o"), "--walkable", walk]) == 0
+        cli_init.main([str(deck), "-o", str(tmp_path / "o"), "--walkable", walk]) == 0
     )
     assert "Run: pyfds-evac --scenario" in capsys.readouterr().out
     bad = _deck(tmp_path, "&CATF OTHER_FILES='x.fds' /", name="bad.fds")
-    assert cli_import.main([str(bad), "-o", str(tmp_path / "b")]) == 1
+    assert cli_init.main([str(bad), "-o", str(tmp_path / "b")]) == 1
     assert not (tmp_path / "b").exists()
 
 
-def test_pyfds_evac_dispatches_the_import_subcommand(tmp_path, monkeypatch):
+def test_pyfds_evac_dispatches_the_init_subcommand(tmp_path, monkeypatch):
     deck = _deck(tmp_path, MODERN.format(vents=""))
-    argv = ["pyfds-evac", "import", str(deck), "-o", str(tmp_path / "o")]
+    argv = ["pyfds-evac", "init", str(deck), "-o", str(tmp_path / "o")]
     monkeypatch.setattr("sys.argv", argv + ["--walkable", _wkt(tmp_path)])
-    assert cli.main() == cli_import.EXIT_NOT_RUNNABLE
+    assert cli.main() == cli_init.EXIT_NOT_RUNNABLE
 
 
 def test_fds_output_next_to_a_modern_deck_goes_into_the_run_command(tmp_path):
@@ -702,7 +702,7 @@ def test_uniform_velocity_dist_becomes_gaussian(tmp_path):
 
 
 def test_cli_argument_error_exits_one(tmp_path, capsys):
-    assert cli_import.main([str(tmp_path / "d.fds")]) == cli_import.EXIT_ERROR
+    assert cli_init.main([str(tmp_path / "d.fds")]) == cli_init.EXIT_ERROR
     assert "-o/--output" in capsys.readouterr().err
 
 
@@ -717,7 +717,7 @@ def test_cli_write_failure_exits_one_and_leaves_nothing(tmp_path, capsys):
         "--walkable",
         _wkt(tmp_path, ROOM_WKT),
     ]
-    assert cli_import.main(argv) == cli_import.EXIT_ERROR
+    assert cli_init.main(argv) == cli_init.EXIT_ERROR
     assert "cannot write" in capsys.readouterr().err
     assert sorted(p.name for p in tmp_path.iterdir()) == [
         "deck.fds",
@@ -739,7 +739,7 @@ def test_write_replaces_files_in_an_existing_folder(tmp_path):
 def test_cli_not_runnable_prints_no_run_command(tmp_path, capsys):
     path = _deck(tmp_path, MODERN.format(vents=""))
     argv = [str(path), "-o", str(tmp_path / "o"), "--walkable", _wkt(tmp_path)]
-    assert cli_import.main(argv) == cli_import.EXIT_NOT_RUNNABLE
+    assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE
     assert "Run:" not in capsys.readouterr().out
 
 
@@ -755,7 +755,7 @@ def test_cli_exit_dropped_with_an_error_exits_three(tmp_path, capsys):
         "--walkable",
         _wkt(tmp_path, ROOM_WKT),
     ]
-    assert cli_import.main(argv) == cli_import.EXIT_NOT_RUNNABLE
+    assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE
     out = capsys.readouterr().out
     assert "Run:" in out and "dropped with an error" in out
 
@@ -775,11 +775,11 @@ def test_import_refuses_to_overwrite_an_authored_scenario(tmp_path, capsys):
     before = (folder / "config.json").read_bytes()
     argv = [str(folder / "hrr060_2door.fds"), "-o", str(folder)]
     argv += ["--walkable", str(folder / "geometry.wkt")]
-    assert cli_import.main(argv) == cli_import.EXIT_ERROR
+    assert cli_init.main(argv) == cli_init.EXIT_ERROR
     assert "--force" in capsys.readouterr().err
     assert (folder / "config.json").read_bytes() == before
     assert not (folder / "import_report.json").exists()
-    assert cli_import.main([*argv, "--force"]) == cli_import.EXIT_OK
+    assert cli_init.main([*argv, "--force"]) == cli_init.EXIT_OK
     assert (folder / "config.json").read_bytes() != before
 
 
@@ -792,8 +792,8 @@ def test_reimport_into_an_importer_made_folder_is_allowed(tmp_path):
         "--walkable",
         _wkt(tmp_path, ROOM_WKT),
     ]
-    assert cli_import.main(argv) == cli_import.EXIT_OK
-    assert cli_import.main(argv) == cli_import.EXIT_OK
+    assert cli_init.main(argv) == cli_init.EXIT_OK
+    assert cli_init.main(argv) == cli_init.EXIT_OK
 
 
 def test_offset_gamma_keeps_mean_variance_and_the_earliest_start():

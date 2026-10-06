@@ -57,7 +57,7 @@ Under `config.simulation_settings`.
 |---|---|---|
 | `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). With `--fds-dir` it must not exceed the last FDS slice time by more than one output interval, unless `--allow-fds-horizon-hold` is given ([#340](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340)). |
 | `simulationParams.model_type` | `"CollisionFreeSpeedModel"` | The JuPedSim movement model. |
-| `simulationParams.smoke_slice_height` | none (`--smoke-slice-height`, 1.6 m) | Absolute FDS slice height [m] for smoke, gases and sign legibility. `pyfds-evac --smoke-slice-height` overrides it; the run prints the value when it comes from here. `pyfds-evac import` writes the floor level plus `HUMAN_SMOKE_HEIGHT`. The GUI and TUI do not read it yet. |
+| `simulationParams.smoke_slice_height` | none (`--smoke-slice-height`, 1.6 m) | Absolute FDS slice height [m] for smoke, gases and sign legibility. `pyfds-evac --smoke-slice-height` overrides it; the run prints the value when it comes from here. `pyfds-evac init` writes the floor level plus `HUMAN_SMOKE_HEIGHT`. The GUI and TUI do not read it yet. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
 
 `simulationParams.dt` is not read: the JuPedSim step is 0.01 s, and the
@@ -79,7 +79,7 @@ trajectory is written every tenth step (10 frames/s).
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. |
 | `premovement_param_a`, `premovement_param_b` | the preset of the distribution | — | Override the preset; the presets and their sources are in [Coming from FDS+Evac](coming-from-fds-evac.md#pre-movement-parameters). |
 | `premovement_seed` | none | — | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
-| `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time; `pyfds-evac import` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Applies with and without `journeys`; ignored with flow spawning. |
+| `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time; `pyfds-evac init` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Applies with and without `journeys`; ignored with flow spawning. |
 | `use_flow_spawning` | `false` | — | Add agents over time instead of at the start (no pre-movement then). |
 | `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. |
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |

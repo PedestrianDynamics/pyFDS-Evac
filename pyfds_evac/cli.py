@@ -100,8 +100,8 @@ examples:
   # the same settings in a browser form (pip install "pyfds-evac[gui]")
   pyfds-evac-gui
 
-  # start a scenario from an FDS deck (see: pyfds-evac import --help)
-  pyfds-evac import deck.fds -o scenario/"""
+  # start a scenario from an FDS deck (see: pyfds-evac init --help)
+  pyfds-evac init deck.fds -o scenario/"""
 
 
 def _verbatim(heading: str) -> str:
@@ -171,10 +171,10 @@ def _apply_scenario_settings(scenario, args) -> None:
 
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
-    if sys.argv[1:2] == ["import"]:
-        from pyfds_evac.cli_import import main as import_main
+    if sys.argv[1:2] == ["init"]:
+        from pyfds_evac.cli_init import main as init_main
 
-        return import_main(sys.argv[2:])
+        return init_main(sys.argv[2:])
     parser = _build_parser()
     args = parser.parse_args(
         namespace=argparse.Namespace(smoke_slice_height=_NOT_GIVEN)

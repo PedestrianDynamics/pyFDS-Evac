@@ -563,14 +563,14 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 
 ## Deriving inputs from an FDS deck
 
-### Scenario from an FDS deck — `pyfds-evac import`
+### Scenario from an FDS deck — `pyfds-evac init`
 
 Writes `config.json`, `geometry.wkt` and `import_report.json` into a
 directory that `pyfds-evac --scenario` runs as it is, and prints the summary
 and the run command.
 
 ```
-pyfds-evac import DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
+pyfds-evac init DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
     [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force]
 ```

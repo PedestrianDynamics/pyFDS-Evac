@@ -1,4 +1,4 @@
-"""``pyfds-evac import DECK.fds -o DIR``: start a scenario from an FDS deck.
+"""``pyfds-evac init DECK.fds -o DIR``: start a scenario from an FDS deck.
 
 Writes ``config.json``, ``geometry.wkt`` and ``import_report.json`` into DIR,
 prints the import summary and the command that runs the scenario.
@@ -31,9 +31,9 @@ exit status: 0 runnable; 3 written, but not runnable or an input dropped
 with an error; 1 error (nothing written)
 
 examples:
-  pyfds-evac import room.fds -o room_scenario/
-  pyfds-evac import room.fds -o room_scenario/ --walkable room.wkt --agents 40
-  pyfds-evac import room.fds -o out/ --exit 0,4.4,0,5.6,-1"""
+  pyfds-evac init room.fds -o room_scenario/
+  pyfds-evac init room.fds -o room_scenario/ --walkable room.wkt --agents 40
+  pyfds-evac init room.fds -o out/ --exit 0,4.4,0,5.6,-1"""
 
 
 def _exit_spec(text: str) -> tuple[float, ...]:
@@ -48,7 +48,7 @@ def _exit_spec(text: str) -> tuple[float, ...]:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = _Parser(
-        prog="pyfds-evac import",
+        prog="pyfds-evac init",
         description=_DESCRIPTION,
         epilog=_EPILOG,
         formatter_class=RawDescriptionRichHelpFormatter,
@@ -138,7 +138,7 @@ class _Parser(argparse.ArgumentParser):
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the import subcommand; returns the exit status."""
+    """Run the init subcommand; returns the exit status."""
     try:
         args = build_parser().parse_args(argv)
     except _UsageError as exc:
@@ -161,7 +161,7 @@ def main(argv: list[str] | None = None) -> int:
             layer_rules=args.layer_rules,
         )
     except (ValueError, OSError) as exc:
-        print(f"pyfds-evac import: error: {exc}", file=sys.stderr)
+        print(f"pyfds-evac init: error: {exc}", file=sys.stderr)
         return EXIT_ERROR
     if args.no_fds:
         result.report.recommendations["fds_dir"] = None
@@ -169,7 +169,7 @@ def main(argv: list[str] | None = None) -> int:
         result.write(args.output)
     except OSError as exc:
         print(
-            f"pyfds-evac import: error: cannot write {args.output}: {exc}",
+            f"pyfds-evac init: error: cannot write {args.output}: {exc}",
             file=sys.stderr,
         )
         return EXIT_ERROR
