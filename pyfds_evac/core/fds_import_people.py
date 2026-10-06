@@ -9,8 +9,10 @@ LOW, HIGH), 8 Weibull (PARA=alpha shape, PARA2=lambda rate), 9 Gumbel (PARA).
 Maintainer decisions applied here (import task record, 2026-10-06):
 
 - Q2: the delay is detection + pre-movement. Exact where the sum is one of
-  our distributions; otherwise a gamma with the same mean and variance
-  (moment-matched), or the mean where a moment is not known in closed form.
+  our distributions, or one of them shifted by ``premovement_offset_s``;
+  otherwise (I1) the detection minimum as the offset plus a gamma with the
+  mean and variance of the rest, or the mean where a moment is not known
+  in closed form.
 - Q3: a uniform speed range becomes a Gaussian with the same mean and
   variance (std = half-range / sqrt(3)).
 - Q4: the body radius is not mapped; FDS+Evac's body is three circles, so it
@@ -55,6 +57,8 @@ class Component:
     b: float | None
     mean: float
     var: float
+    #: Fixed delay added to every draw (``premovement_offset_s``) [s].
+    offset: float = 0.0
 
 
 def component(keys: dict[str, Any], prefix: str, dist_key: str) -> Component | None:
@@ -307,8 +311,21 @@ def combine_delays(det: Component, pre: Component) -> tuple[Component, str, str]
     if constant.kind == "constant":
         return _shift(constant.mean, other)
     if det.kind in _EXACT and pre.kind in _EXACT:
-        return _moment_gamma(det, pre)
+        return _offset_gamma(det, pre)
     return _at_mean(det.mean + pre.mean, det, pre)
+
+
+def _offset_gamma(det: Component, pre: Component) -> tuple[Component, str, str]:
+    """I1: no agent starts before detection can end, so the detection
+    minimum (uniform low; 0 for gamma or Weibull) becomes the offset, and a
+    gamma carries the mean and variance of the rest."""
+    floor = float(det.a or 0.0) if det.kind == "uniform" else 0.0
+    rest = Component(det.kind, det.a, det.b, det.mean - floor, det.var)
+    gamma, status, how = _moment_gamma(rest, pre)
+    if floor <= 0:
+        return gamma, status, how
+    shifted = Component("gamma", gamma.a, gamma.b, gamma.mean + floor, gamma.var, floor)
+    return shifted, status, f"offset {floor:g} s (detection minimum) + {how}"
 
 
 def _shift(c: float, other: Component) -> tuple[Component, str, str]:
@@ -319,8 +336,9 @@ def _shift(c: float, other: Component) -> tuple[Component, str, str]:
     if other.kind in ("gamma", "weibull") and c == 0:
         return other, "S", f"{other.kind} a={other.a:.6g}, b={other.b:.6g}"
     if other.kind in ("gamma", "weibull"):
-        zero = Component("constant", c, None, c, 0.0)
-        return _moment_gamma(zero, other)
+        shifted = Component(other.kind, other.a, other.b, other.mean + c, other.var, c)
+        how = f"offset {c:g} s + {other.kind} a={other.a:.6g}, b={other.b:.6g}"
+        return shifted, "S", how
     return _at_mean(other.mean + c, other)
 
 
@@ -348,6 +366,8 @@ def _premovement_keys(delay: Component) -> dict[str, Any]:
     }
     if delay.b is not None:
         keys["premovement_param_b"] = round(delay.b, 9)
+    if delay.offset > 0:
+        keys["premovement_offset_s"] = round(delay.offset, 9)
     return keys
 
 

@@ -207,26 +207,36 @@ def _delay(tmp_path, keys: str) -> dict:
 
 
 @pytest.mark.parametrize(
-    ("keys", "dist", "a", "b"),
+    ("keys", "dist", "a", "b", "offset"),
     [
-        ("DET_MEAN=2, PRE_MEAN=3", "constant", 5.0, None),
-        ("DET_MEAN=2, PRE_EVAC_DIST=1, PRE_LOW=5, PRE_HIGH=15", "uniform", 7, 17),
-        ("PRE_EVAC_DIST=3, PRE_PARA=2, PRE_PARA2=3", "gamma", 2, 3),
-        ("PRE_EVAC_DIST=8, PRE_PARA=2, PRE_PARA2=0.1", "weibull", 10, 2),
+        ("DET_MEAN=2, PRE_MEAN=3", "constant", 5.0, None, None),
+        (
+            "DET_MEAN=2, PRE_EVAC_DIST=1, PRE_LOW=5, PRE_HIGH=15",
+            "uniform",
+            7,
+            17,
+            None,
+        ),
+        ("PRE_EVAC_DIST=3, PRE_PARA=2, PRE_PARA2=3", "gamma", 2, 3, None),
+        ("PRE_EVAC_DIST=8, PRE_PARA=2, PRE_PARA2=0.1", "weibull", 10, 2, None),
+        # I1: offset = DET low 5 s; gamma on mean 15 s, variance 200/12 s2.
         (
             "DET_EVAC_DIST=1, DET_LOW=5, DET_HIGH=15, "
             "PRE_EVAC_DIST=1, PRE_LOW=5, PRE_HIGH=15",
             "gamma",
-            24,
-            0.833333333,
+            13.5,
+            round(10 / 9, 9),
+            5,
         ),
+        # I1: 5 s + gamma(2, 3) is exact.
+        ("DET_MEAN=5, PRE_EVAC_DIST=3, PRE_PARA=2, PRE_PARA2=3", "gamma", 2, 3, 5),
         (
-            "DET_MEAN=5, PRE_EVAC_DIST=3, PRE_PARA=2, PRE_PARA2=3",
-            "gamma",
-            round(121 / 18, 9),
-            round(18 / 11, 9),
+            "PRE_EVAC_DIST=7, PRE_MEAN=10, PRE_LOW=4, PRE_HIGH=16",
+            "constant",
+            10,
+            None,
+            None,
         ),
-        ("PRE_EVAC_DIST=7, PRE_MEAN=10, PRE_LOW=4, PRE_HIGH=16", "constant", 10, None),
     ],
     ids=[
         "const+const",
@@ -238,8 +248,9 @@ def _delay(tmp_path, keys: str) -> dict:
         "triangular",
     ],
 )
-def test_detection_plus_premovement(tmp_path, keys, dist, a, b):
+def test_detection_plus_premovement(tmp_path, keys, dist, a, b, offset):
     delay = _delay(tmp_path, keys)
+    assert delay.get("premovement_offset_s") == offset
     assert delay["use_premovement"] is True
     assert delay["premovement_distribution"] == dist
     assert delay["premovement_param_a"] == pytest.approx(a, abs=1e-9)
