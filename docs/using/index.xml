@@ -4229,10 +4229,17 @@ font-family: arial;
 &lt;p>Three tabs choose the scenario:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Recent&lt;/strong> lists the last 10 pairs of scenario and FDS folder, each with its
-last status and date. &lt;code>Enter&lt;/code> restores the scenario and the FDS folder and
-jumps to Review. It restores no other setting
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/534" target="_blank" rel="noopener">#534&lt;/a>). A path
-that no longer exists is marked &amp;ldquo;missing&amp;rdquo;.&lt;/li>
+last status and date. Entries whose scenario or FDS folder is gone come
+last, dimmed, and say which: &amp;ldquo;scenario missing&amp;rdquo;, &amp;ldquo;FDS folder missing&amp;rdquo;, or
+both. When two rows would read alike, a short part of the scenario&amp;rsquo;s
+folder tells them apart. &lt;code>Enter&lt;/code> restores the scenario and the FDS folder
+and jumps to Review. It restores no other setting
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/534" target="_blank" rel="noopener">#534&lt;/a>). If
+the scenario is gone, &lt;code>Enter&lt;/code> stays on the Scenario step and says how to
+recover. If only the FDS folder is gone, &lt;code>Enter&lt;/code> loads the scenario and
+opens the FDS step to choose another folder or none. &lt;code>Delete&lt;/code> removes the highlighted
+entry from the list; nothing is removed automatically. Recent opens at
+start only when one of its entries can be used.&lt;/li>
 &lt;li>&lt;strong>Examples&lt;/strong> lists every folder in &lt;code>./assets&lt;/code> that has a &lt;code>config.json&lt;/code>, with
 its &lt;code>config_*.json&lt;/code> variants, and a filter box. Each row says &amp;ldquo;FDS output
 found&amp;rdquo; or &amp;ldquo;deck only&amp;rdquo;.&lt;/li>
@@ -6330,7 +6337,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/4f187944384d8158e3040549b1abc70f6fac8f6f">&lt;code>4f18794&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/2e90821952d287c374173504a6eb824e88314042">&lt;code>2e90821&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6354,7 +6361,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e6530e30e69cce12c4b5030b75ef31a629fb3257fe56b006ec4da47a47c159ac&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">cafa62bac4691145bd788d6b4663ded87421df874148f73d65c51b07ac34d0b4&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
