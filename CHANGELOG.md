@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `create_agent_parameters` raises `ValueError` naming an unknown
+  `model_type` and the accepted ones. It used to return collision-free
+  speed model parameters, so a misspelled model type silently ran a
+  different model (#570).
+
 ## [0.3.0] - 2026-10-05
 
 ### Added
