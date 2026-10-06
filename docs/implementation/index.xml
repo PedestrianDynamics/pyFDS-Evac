@@ -816,9 +816,10 @@ agents through frozen smoke. &lt;code>sample&lt;/code> therefore raises &lt;code
 &lt;code>T_END&lt;/code>, so the last spacing can be shorter) past the last frame. The
 message names the quantity, the requested time and the last FDS time.
 The extinction, gas FED and heat FED fields pass this error on instead
-of treating it as an out-of-domain point. &lt;code>VisibilityModel&lt;/code> raises for a
-query past its last vismap time point, which is the first vismap step at
-or after the FDS end.&lt;/p>
+of treating it as an out-of-domain point. &lt;code>VisibilityModel&lt;/code> uses the same
+window: its stored times end at the last frame of the extinction slice,
+and it raises for a query more than one output interval of that slice
+past it (#510).&lt;/p>
 &lt;p>&lt;code>build_run_kwargs&lt;/code> checks the whole run at setup: a scenario
 &lt;code>max_simulation_time&lt;/code> more than one output interval past the last frame
 of any slice in &lt;code>--fds-dir&lt;/code> with at least two frames stops the run
