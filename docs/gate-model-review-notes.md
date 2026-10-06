@@ -488,7 +488,7 @@ discriminate anything; it is not evidence that `c` is inert where the gate works
 > and [Known limits](../site/content/fundamentals/visibility.md#known-limits).
 
 Jin and `c = 3` belong to the cognitive map, where the sign-legibility semantics
-are correct and the constant is properly sourced. **Done at `0d9bf79`:** the gate
+are correct (in the sense of the erratum) and the constant is properly sourced. **Done at `0d9bf79`:** the gate
 now carries `tau_max = 6.0` as its own constant, `sign_contrast_c` is gone, and
 the docs declare it uncalibrated. Calibrating it against a soot-dose or
 FED-equivalent limit remains open.
