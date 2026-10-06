@@ -1541,12 +1541,13 @@ class EvacTui(App[None]):
                 )
             )
         for i, issue in enumerate(cfg.errors):
+            # An error with no option is fixed in the scenario file (#571).
+            where = "in the scenario file · Enter: reload it"
+            if issue.option:
+                where = "Enter: go to field"
             errors.add_option(
                 Option(
-                    m(
-                        "[$error]✗[/] $t  [dim]Enter: go to field[/]",
-                        t=issue.message,
-                    ),
+                    m("[$error]✗[/] $t  [dim]$w[/]", t=issue.message, w=where),
                     id=f"err-{issue.option or ''}-{i}",
                 )
             )
@@ -1587,7 +1588,27 @@ class EvacTui(App[None]):
         dest = (
             ident.rsplit("-", 1)[0] if ident[-1].isdigit() and "-" in ident else ident
         )
-        self.focus_field(dest or None)
+        if dest:
+            self.focus_field(dest)
+        else:
+            self._reload_scenario_hint()
+
+    def _reload_scenario_hint(self) -> None:
+        """Step 1, Open file, the loaded scenario's path ready to reload."""
+        if self.form.scenario is None:
+            return
+        path = str(self.form.scenario.path)
+        self.goto(0)
+        self.query_one("#sc-tabs", TabbedContent).active = "tab-open"
+        box = self.query_one("#open-path", Input)
+        box.value = path
+        box.cursor_position = len(path)
+        self.call_after_refresh(box.focus)
+        self._scenario_error(
+            f"Fix this in the scenario file {path}, save it, then press Enter "
+            "here to reload it. Your settings are kept.",
+            "",
+        )
 
     def focus_field(self, dest: str | None) -> None:
         if dest in (None, "fds_dir"):

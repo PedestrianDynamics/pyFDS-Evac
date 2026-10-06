@@ -19,6 +19,7 @@ import logging
 import os
 import pickle
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -859,6 +860,24 @@ def test_show_config_exits_1_on_a_build_error():
     )
     assert proc.returncode == 1
     assert "cell_size_m must be positive, got 0.0" in proc.stdout
+
+
+def _bad_cost_model(tmp_path: Path) -> str:
+    """A copy of the discovery scenario whose routing cost_model is a typo."""
+    folder = tmp_path / "bad_cost_model"
+    shutil.copytree(Path(DISCOVERY).parent, folder)
+    deck = json.loads((folder / "config.json").read_text())
+    deck.setdefault("routing", {})["cost_model"] = "gaet"
+    (folder / "config.json").write_text(json.dumps(deck))
+    return str(folder / "config.json")
+
+
+@pytest.mark.parametrize("rerouting", ["--enable-rerouting", "--no-enable-rerouting"])
+def test_show_config_exits_1_on_a_bad_cost_model(tmp_path, rerouting):
+    """Every run builds the routing cost model, rerouting on or off (#571)."""
+    proc = _cli("--scenario", _bad_cost_model(tmp_path), rerouting, "--show-config")
+    assert proc.returncode == 1, proc.stdout
+    assert "Unknown routing cost_model 'gaet'" in proc.stdout
 
 
 def _output_opts(path: Path, **extra) -> argparse.Namespace:

@@ -759,6 +759,27 @@ class TestScenarioUpload:
         finally:
             shutil.rmtree(created, ignore_errors=True)
 
+    def test_bad_cost_model_is_rejected_with_the_api_message(self, client):
+        cfg, json = self._config()
+        deck = json.loads(cfg)
+        deck.setdefault("routing", {})["cost_model"] = "gaet"
+        created = self._uploads_root() / "pytest-costmodel"
+        try:
+            r = self._post(
+                client,
+                [
+                    ("files", ("config.json", json.dumps(deck), "application/json")),
+                    ("files", ("geometry.wkt", self.WKT, "text/plain")),
+                ],
+                name="pytest-costmodel",
+            )
+            assert r.status_code == 200
+            assert "Could not load that scenario: Unknown routing cost_model" in r.text
+            assert "(ValueError)" in r.text
+            assert not created.exists()
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
     def test_zip_slip_member_is_rejected_not_flattened(self, client):
         """A '../' member must not escape, and must not be kept at all.
 
@@ -2258,6 +2279,28 @@ class TestTerminalStates:
         )
         assert r.headers["HX-Retarget"] == "#form-status"
         assert "<span>Heat u factor: must be in [0.25, 1.0]" in r.text
+
+    def test_a_scenario_error_says_to_fix_the_scenario_file(self, client):
+        """A bad routing block: no field fixes it, so the hint says where (#571)."""
+        import json
+
+        from pyfds_evac.webapp.params import _UPLOAD_ROOT
+
+        folder = _UPLOAD_ROOT / "pytest-bad-routing"
+        shutil.copytree("assets/t_junction", folder)
+        try:
+            deck = json.loads((folder / "config.json").read_text())
+            deck["routing"]["cost_model"] = "gaet"
+            (folder / "config.json").write_text(json.dumps(deck))
+            r = client.post(
+                "/run", data={"scenario": "uploads/pytest-bad-routing"}, headers=_HX
+            )
+        finally:
+            shutil.rmtree(folder, ignore_errors=True)
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert "<span>Unknown routing cost_model" in r.text
+        assert "This is set in the scenario file, not in the form." in r.text
+        assert "correct them and run again" not in r.text
 
     def test_field_errors_name_the_field(self):
         from pyfds_evac.webapp.app import _field_label

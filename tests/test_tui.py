@@ -1252,6 +1252,55 @@ def test_573_fds_panel_and_level_1_note_carry_no_rule_id(workdir):
     run(go())
 
 
+# --- #571: an error the scenario file fixes ---------------------------------------
+
+
+def test_571_scenario_error_row_sends_to_the_scenario_file(workdir):
+    import json
+
+    scenario = workdir / "assets" / "t_junction"
+    deck = json.loads((scenario / "config.json").read_text())
+    deck["routing"]["cost_model"] = "gaet"
+    (scenario / "config.json").write_text(json.dumps(deck))
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, None)
+            app.form.text["seed"] = "11"
+            app.form_changed()
+            await settle(pilot, app)
+            assert [e.option for e in app.cfg.errors] == [None]
+            app.goto(3)
+            await pilot.pause()
+            errors = app.query_one("#rv-errors")
+            (prompt,) = [
+                str(errors.get_option_at_index(k).prompt)
+                for k in range(errors.option_count)
+            ]
+            assert "Unknown routing cost_model 'gaet'" in prompt
+            assert prompt.endswith("in the scenario file · Enter: reload it")
+            errors.focus()
+            errors.highlighted = 0
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.step == 0
+            assert app.query_one("#sc-tabs").active == "tab-open"
+            assert app.query_one("#open-path").value == str(scenario)
+            assert app.focused is app.query_one("#open-path")
+            assert "Your settings are kept" in text_of(app, "#sc-error")
+            # Fixed on disk, Enter reloads it and keeps the settings.
+            deck["routing"]["cost_model"] = "gate"
+            (scenario / "config.json").write_text(json.dumps(deck))
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.text["seed"] == "11"
+            assert not app.cfg.errors
+
+    run(go())
+
+
 # --- model -------------------------------------------------------------------------------------
 
 
