@@ -2234,6 +2234,46 @@ def test_rt_copy_right_after_an_edit_copies_the_edit(workdir):
     run(go())
 
 
+@pytest.mark.parametrize("key", ["s", "c", "p"])
+def test_619_save_and_copy_refuse_an_invalid_field(workdir, key):
+    """As Run does: an unparsed seed would be written as the default (#619).
+
+    ``p`` is Show Python, whose dialog copies the script with ``c``.
+    """
+
+    async def go():
+        app = EvacTui(
+            cwd=workdir,
+            runner=FakeRunner(),
+            inspector=lambda path: FACTS,
+            debounce=30.0,
+        )
+        notes: list[str] = []
+        copied: list[str] = []
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.config_now()
+            app.notify = lambda text, **_: notes.append(str(text))
+            app.copy_to_clipboard = copied.append
+            seed = app.query_one("#row-seed Input")
+            seed.focus()
+            await pilot.pause()
+            seed.value = ""
+            await pilot.press("a", "b", "c")  # real key events
+            await pilot.press("ctrl+n")  # to Review at once
+            assert app.step == 3
+            await pilot.press(key)
+            await pilot.pause()
+            await pilot.press("c")  # copies in the Show Python dialog
+            await pilot.pause()
+            assert copied == []
+            assert not (Path(app.planned()) / "command.sh").exists()
+            assert "seed" in app.parse_errors
+            assert notes and "Seed" in notes[-1] and "not valid" in notes[-1]
+
+    run(go())
+
+
 # --- #321: result labels -------------------------------------------------------
 
 

@@ -1649,13 +1649,27 @@ class EvacTui(App[None]):
         if self.form.scenario is None:
             return
         self.config_now()  # an edit within the debounce is not configured yet
-        if self.cfg is None:
+        if self.cfg is None or self._refuse_unparsed("copied"):
             return
         self.copy_to_clipboard(self.cfg.command)
         self.notify(
             "Sent to clipboard (OSC 52). If nothing was copied, select the "
             "command above or press s."
         )
+
+    def _refuse_unparsed(self, done: str) -> bool:
+        """Refuse when a field does not parse: its default would be written."""
+        if not self.parse_errors:
+            return False
+        names = ", ".join(
+            model.label(model.parameter(dest)) for dest in self.parse_errors
+        )
+        self.notify(
+            f"Nothing {done}: {names} not valid. Fix it first.",
+            severity="error",
+            markup=False,
+        )
+        return True
 
     def preview_script(self) -> str:
         name = self.form.scenario.name if self.form.scenario else "scenario"
@@ -1671,6 +1685,9 @@ class EvacTui(App[None]):
     def action_show_python(self) -> None:
         if self.form.scenario is None:
             return
+        self.config_now()  # parse errors of an edit within the debounce
+        if self._refuse_unparsed("shown"):
+            return
         self.push_screen(
             TextScreen(
                 "Equivalent Python (current settings, not a run)",
@@ -1683,7 +1700,7 @@ class EvacTui(App[None]):
         if self.form.scenario is None:
             return
         self.config_now()  # an edit within the debounce is not configured yet
-        if self.cfg is None:
+        if self.cfg is None or self._refuse_unparsed("saved"):
             return
         folder = Path(self.planned())
         sh, py = model.save_command(folder, self.cfg.command, self.preview_script())
