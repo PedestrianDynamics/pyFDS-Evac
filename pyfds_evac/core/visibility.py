@@ -251,11 +251,12 @@ def _make_meta(
 
 # A part of an obstruction that a clear-air grid may lose counts as a wall,
 # rather than a rounded corner or the tip of a wedge, when it runs longer than
-# this many cells ...
-WALL_MIN_LENGTH_CELLS = 1.5
+# this many cells: a part shorter than one cell is lost in both directions,
+# a post, not a wall ...
+WALL_MIN_LENGTH_CELLS = 1.0
 # ... and is close to uniformly thin: its widest point is at most this many
-# times its mean width (a rectangle: 1; a wedge tip: about 2).
-WALL_MAX_TAPER = 1.25
+# times its mean width. Walls measure <= 1.31, corners and tips >= 1.56.
+WALL_MAX_TAPER = 1.4
 
 
 def _polygons(geometry) -> list:
@@ -310,7 +311,7 @@ def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] 
 
     This is a heuristic estimate. None does not prove that the grid resolves
     every wall: a wall oblique to the grid can lose cells below one cell
-    width, and a short thin stub is not reported.
+    width, and parts shorter than one cell are not reported.
     """
     from shapely.geometry import box
 

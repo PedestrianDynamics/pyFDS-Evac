@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not. The run's visibility settings record the width and the verdict as
   `thin_wall_m` and `thin_wall_warning`, and `--show-config` predicts
   them from the scenario's geometry. No warning does not prove that every
-  wall blocks sight (#115).
+  wall blocks sight: parts shorter than one cell are not reported (#115).
 
 ### Changed
 

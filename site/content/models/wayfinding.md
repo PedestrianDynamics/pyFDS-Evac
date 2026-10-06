@@ -154,11 +154,11 @@ Script: `scripts/figures/sign_rotation.py`.*
   A warning is logged when the cell is not smaller than the thinnest wall
   (`visibility.py`, `unresolved_wall`). A wall is a part of the bounding box
   outside the walkable area that a disc one cell across cannot enter, longer
-  than 1.5 cells and evenly thin; rounded corners, bevels and wedge tips are
+  than one cell and evenly thin; rounded corners, bevels and wedge tips are
   not walls. The width is an estimate, recorded with the verdict as
   `thin_wall_m` and `thin_wall_warning` in the run's visibility settings.
   No warning does not prove that every wall blocks: a wall oblique to the
-  grid can leak below one cell width, and a stub shorter than 1.5 cells is
+  grid can leak below one cell width, and parts shorter than one cell are
   not reported.
   The extinction is zero, and one time point is stored (`visibility.py`, `VisibilityModel.clear_air`).
 

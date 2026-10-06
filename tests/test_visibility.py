@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
@@ -584,3 +585,40 @@ class TestClearAirGridResolution:
         open_room = VisibilityModel.clear_air(box(0, 0, 10, 4), self.SIGN)
         assert open_room.parameters["thin_wall_m"] is None
         assert open_room.parameters["thin_wall_warning"] is False
+
+    @pytest.mark.parametrize("attached", [False, True])
+    @pytest.mark.parametrize(
+        ("cells", "warns"),
+        [(0.9, False), (1.1, True), (1.25, True), (1.5, True), (2.0, True)],
+    )
+    def test_a_short_stub_longer_than_one_cell_warns(self, cells, warns, attached):
+        """A 0.1 m stub 1-1.5 cells long lets most sight through at 0.25 m."""
+        from shapely.geometry import box
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        length = cells * 0.25
+        y0 = 0.0 if attached else 5.0
+        stub = box(5.0, y0, 5.1, y0 + length)
+        found = unresolved_wall(box(0, 0, 10, 10).difference(stub), 0.25)
+        assert (found is not None) is warns
+
+    def test_a_wall_tapering_from_0_1_to_0_2_m_warns(self):
+        from shapely.geometry import Polygon, box
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        wall = Polygon([(5, 5), (10, 5), (10, 5.2), (5, 5.1)])
+        found = unresolved_wall(box(0, 0, 20, 20).difference(wall), 0.25)
+        assert found is not None
+        assert found[0] == pytest.approx(0.15, abs=0.01)
+
+    @pytest.mark.parametrize("degrees", [11, 20, 30, 45])
+    def test_the_tip_of_a_wedge_is_not_a_wall(self, degrees):
+        from shapely.geometry import Polygon, box
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        tip = 10 * math.tan(math.radians(degrees))
+        wedge = Polygon([(5, 5), (15, 5), (15, 5 + tip)])
+        assert unresolved_wall(box(0, 0, 30, 30).difference(wedge), 0.25) is None
