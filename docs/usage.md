@@ -576,7 +576,7 @@ command, only the list of what to fix.
 ```
 pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force]
+    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force] [-v]
 ```
 
 - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
@@ -599,7 +599,10 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
   next to it), such as an authored scenario. `--force` overwrites it. A
   folder from an earlier `pyfds-evac init` is overwritten without asking.
 
-Every approximated or dropped input is listed with its line number.
+The screen shows a short summary: each error on its own line with its deck
+line, then the approximations grouped, with the number of records each
+concerns. `import_report.json` lists every input that was approximated or
+dropped, with its line number; `-v`/`--verbose` prints all of it.
 
 | Status | Meaning |
 |---|---|

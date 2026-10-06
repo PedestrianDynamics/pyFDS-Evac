@@ -18,6 +18,8 @@ from pathlib import Path
 
 from rich_argparse import RawDescriptionRichHelpFormatter
 
+from pyfds_evac.init_summary import summary_lines
+
 EXIT_OK = 0
 EXIT_ERROR = 1
 EXIT_NOT_RUNNABLE = 3
@@ -123,6 +125,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="overwrite a config.json in the -o folder that the importer did not write",
     )
     parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="print every line of the import report, not the summary",
+    )
+    parser.add_argument(
         "--no-fds",
         action="store_true",
         help="leave --fds-dir out of the run command even when "
@@ -178,10 +186,8 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return EXIT_ERROR
-    print(result.report.summary_text())
-    _announce_fds(result.report.recommendations, args.no_fds)
-    print(f"Wrote {args.output}/config.json, geometry.wkt, import_report.json")
-    return _verdict(result, args)
+    _emit(summary_lines(result, args.output, args.no_fds, args.verbose))
+    return _status(result.report)
 
 
 def default_output(deck: str) -> Path:
@@ -190,89 +196,24 @@ def default_output(deck: str) -> Path:
     return path.with_name(f"{path.stem}_scenario")
 
 
-def _verdict(result, args) -> int:
-    """Print the next steps; 3 unless runnable with nothing dropped as error."""
-    report = result.report
-    if not report.runnable:
-        _print_fixes(report.not_runnable)
-        return EXIT_NOT_RUNNABLE
-    print("\n".join(next_steps(result, args.output, args.no_fds)))
-    if report.errors:
-        print(
-            f"{len(report.errors)} input(s) dropped with an error; check them "
-            "before relying on the result."
-        )
+def _status(report) -> int:
+    """0 runnable and clean; 3 not runnable or an input dropped as error."""
+    if not report.runnable or report.errors:
         return EXIT_NOT_RUNNABLE
     return EXIT_OK
 
 
-def _print_fixes(reasons: list[str]) -> None:
-    print("Not runnable, so no run command:")
-    print("\n".join(f"  - {reason}" for reason in reasons))
-    print(
-        "Fix these (or pass --walkable, --exit, --agents), then run pyfds-evac init again."
-    )
-
-
-def next_steps(result, out_dir: str, no_fds: bool) -> list[str]:
-    """The numbered next steps: FDS run if missing, the run, refining."""
-    rec = result.report.recommendations
-    deck = result.deck_path
-    scenario = f"pyfds-evac --scenario {out_dir}"
-    steps: list[str] = []
-    if not no_fds and not rec.get("fds_output_found"):
-        steps.append(_fds_step(result))
-        scenario += f" --fds-dir {deck.parent}"
-        steps.append(f"Run the scenario with the fire: {scenario}")
-        steps.append(f"  (clear air, without FDS: pyfds-evac --scenario {out_dir})")
-    else:
-        steps.append(f"Run the scenario: {result.run_command(out_dir)}")
-    steps.append(
-        "Refine exits, agents and routes in JuPedSim Web (https://app.jupedsim.org) "
-        "or the terminal UI (pyfds-evac-tui), then run again."
-    )
-    return ["Next steps:"] + _numbered(steps)
-
-
-def _fds_step(result) -> str:
-    deck = result.deck_path
-    meshes = result.report.recommendations.get("fds_meshes") or 1
-    run = f"fds {deck.name}" if meshes == 1 else f"mpiexec -n {meshes} fds {deck.name}"
-    if result.report.kind == "legacy":
-        return (
-            f"Run FDS in {deck.parent}: {run}. FDS releases after 6.7.7 have no "
-            "FDS+Evac; remove the evacuation namelists and meshes first."
-        )
-    return f"Run FDS in {deck.parent}: {run} (it writes the slices the run reads)."
-
-
-def _numbered(steps: list[str]) -> list[str]:
-    out, n = [], 0
-    for step in steps:
-        if step.startswith("  "):
-            out.append(f"   {step.strip()}")
-            continue
-        n += 1
-        out.append(f"  {n}. {step}")
-    return out
+def _emit(lines: list[str]) -> None:
+    """Print, falling back to ASCII on a console that cannot encode UTF-8."""
+    text = "\n".join(lines)
+    try:
+        print(text)
+    except UnicodeEncodeError:
+        for fancy, plain in (("→", "->"), ("✗", "x"), ("²", "2"), ("…", "...")):
+            text = text.replace(fancy, plain)
+        print(text.encode("ascii", "replace").decode("ascii"))
 
 
 def _read(path: str) -> str:
     with open(path, encoding="utf-8") as handle:
         return handle.read()
-
-
-def _announce_fds(rec: dict, opted_out: bool) -> None:
-    found = rec.get("fds_output_found")
-    if not found:
-        print("FDS output: none next to the deck yet.")
-        return
-    if rec.get("fds_dir"):
-        print(
-            f"FDS OUTPUT FOUND: {found}. The run command uses --fds-dir "
-            f"{rec['fds_dir']}, so the run includes the fire; pass --no-fds to "
-            "leave it out."
-        )
-        return
-    reason = "--no-fds given" if opted_out else rec.get("fds_dir_note", "")
-    print(f"FDS OUTPUT FOUND: {found}, not used ({reason}).")

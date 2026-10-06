@@ -759,7 +759,8 @@ def test_cli_exit_dropped_with_an_error_exits_three(tmp_path, capsys):
     ]
     assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE
     out = capsys.readouterr().out
-    assert "pyfds-evac --scenario" in out and "dropped with an error" in out
+    assert "✗ 1 error" in out and "Far (line" in out
+    assert "pyfds-evac --scenario" in out
 
 
 def _authored_copy(tmp_path) -> Path:
@@ -862,29 +863,83 @@ def test_guard_applies_to_the_default_folder(tmp_path, capsys):
     assert (folder / "import_report.json").exists()
 
 
-def test_next_steps_without_fds_output(tmp_path, capsys):
-    status, out = _init(tmp_path, capsys)
-    folder = tmp_path / "plain_scenario"
-    steps = out[out.index("Next steps:") :]
-    assert "1. Run FDS in" in steps and "mpiexec -n 2 fds plain.fds" in steps
+def test_next_steps_without_fds_output(tmp_path, capsys, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    _, out = _init(tmp_path, capsys)
+    steps = out[out.index("Next:") :].splitlines()
+    assert steps[1] == "  1. Run FDS:"
+    assert steps[2].strip() == "mpiexec -n 2 fds plain.fds"
+    assert steps[3] == "  2. pyfds-evac --scenario plain_scenario --fds-dir ."
+    assert "clear air: drop --fds-dir" in steps[4]
     assert (
-        f"2. Run the scenario with the fire: pyfds-evac --scenario {folder} " in steps
-    )
-    assert f"--fds-dir {tmp_path}" in steps
-    assert (
-        "3. Refine" in steps and "JuPedSim Web" in steps and "pyfds-evac-tui" in steps
+        steps[5].startswith("  3. Refine in JuPedSim Web")
+        and "pyfds-evac-tui" in steps[5]
     )
 
 
-def test_next_steps_with_fds_output(tmp_path, capsys):
+def test_next_steps_with_fds_output(tmp_path, capsys, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     _, out = _init(tmp_path, capsys, smv=True)
-    steps = out[out.index("Next steps:") :]
+    steps = out[out.index("Next:") :]
     assert "Run FDS" not in steps
-    assert (
-        f"1. Run the scenario: pyfds-evac --scenario {tmp_path / 'plain_scenario'}"
-        in (steps)
+    assert "  1. pyfds-evac --scenario plain_scenario --fds-dir ." in steps
+    assert "FDS output found: plain.smv; the run uses it" in out
+
+
+# --- pyfds-evac init: the quiet summary ---------------------------------------------
+
+
+def _many_groups(tmp_path) -> Path:
+    """Three groups with the same delay and dropped keys, one exit off the area."""
+    pers = (
+        "&PERS ID='P', DEFAULT_PROPERTIES='Adult', "
+        "DET_EVAC_DIST=1, DET_LOW=5, DET_HIGH=15, "
+        "PRE_EVAC_DIST=1, PRE_LOW=5, PRE_HIGH=15 /"
     )
-    assert f"--fds-dir {tmp_path}" in steps
+    far = "&EXIT ID='Far', IOR=1, XB=20,20,4,6,0.4,1.6 /"
+    groups = [
+        f"&EVAC ID='g{i}', XB={i},{i + 1},1,9,1,1, NUMBER_INITIAL_PERSONS=5, "
+        "PERS_ID='P', AGENT_TYPE=2 /"
+        for i in (1, 3, 5)
+    ]
+    return _deck(tmp_path, ROOM.format(extra="\n".join((DOOR, far, pers, *groups))))
+
+
+def _summary(tmp_path, capsys, *extra: str) -> list[str]:
+    deck = _many_groups(tmp_path)
+    argv = [str(deck), "--walkable", _wkt(tmp_path, ROOM_WKT), *extra]
+    assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE  # one exit dropped
+    return capsys.readouterr().out.splitlines()
+
+
+def test_summary_lists_errors_before_grouped_notes(tmp_path, capsys):
+    lines = _summary(tmp_path, capsys)
+    errors = lines.index("✗ 1 error")
+    notes = next(i for i, line in enumerate(lines) if line.startswith("! "))
+    assert errors < notes < lines.index("Next:")
+    assert lines[errors + 1].startswith("  Far (line ")
+    note_lines = lines[notes + 1 : lines.index("Next:") - 1]
+    delay = [line for line in note_lines if line.lstrip().startswith("delay:")]
+    assert len(delay) == 1 and delay[0].endswith("3 groups")
+    assert "mean 20 s" in delay[0]
+    dropped = [line for line in note_lines if "AGENT_TYPE" in line]
+    assert len(dropped) == 1 and dropped[0].endswith("3 groups")
+    assert int(lines[notes].split()[1]) == len(note_lines)
+
+
+def test_summary_hides_info_notes_and_the_errored_records_warnings(tmp_path, capsys):
+    text = "\n".join(_summary(tmp_path, capsys))
+    assert "omni-directional sign" not in text  # info level: report only
+    assert "walkable_suspect" not in text  # Far has an error line instead
+    assert "[A]" not in text and "[D]" not in text
+
+
+def test_verbose_prints_every_report_line(tmp_path, capsys):
+    lines = _summary(tmp_path, capsys, "--verbose")
+    delay = [line for line in lines if "delay: detection + reaction" in line]
+    assert len(delay) == 3
+    assert any(line.startswith("  [D] error: &EXIT 'Far'") for line in lines)
+    assert "Next:" in lines
 
 
 def test_delay_mean_in_the_report_is_the_total(tmp_path):
