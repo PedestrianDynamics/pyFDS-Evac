@@ -707,15 +707,35 @@ class TestClearAirGridResolution:
         assert {(30, 13), (32, 13), (54, 27)} <= thin
         assert V.unresolved_wall(walkable, cell_size_m)[0] <= 0.05 + 0.005
 
-    def test_station_fahy_names_its_thinnest_strip(self):
+    @pytest.mark.parametrize(
+        ("cell_size_m", "width_m"), [(0.1, 0.021), (0.25, 0.028), (0.5, 0.039)]
+    )
+    def test_station_fahy_names_its_thinnest_strip(self, cell_size_m, width_m):
+        """Real strips, not the crescent slivers along the opening arcs.
+
+        Without the face-cut rule (WALL_CUT_MAX_WIDTHS) a 3 mm sliver is
+        reported at 0.1 m and a 0.033 m one at 0.5 m.
+        """
         from shapely import wkt
 
         from pyfds_evac.core.visibility import unresolved_wall
 
         text = Path("assets/station_fahy/geometry.wkt").read_text()
-        found = unresolved_wall(wkt.loads(text), 0.25)
+        found = unresolved_wall(wkt.loads(text), cell_size_m)
         assert found is not None
-        assert found[0] == pytest.approx(0.028, abs=0.003)
+        assert found[0] == pytest.approx(width_m, abs=0.003)
+
+    def test_splitting_stops_at_the_depth_cap(self, monkeypatch):
+        """A split that never makes progress still ends, at depth 6."""
+        from shapely.geometry import box
+
+        from pyfds_evac.core import visibility as V
+
+        walkable = box(0, 0, 10, 10).difference(box(5, 2, 5.1, 8))
+        monkeypatch.setattr(V, "_lost_parts", lambda part, _cell: [part])
+        found = V.unresolved_wall(walkable, 0.25)
+        assert found is not None
+        assert found[0] == pytest.approx(0.1)
 
     @pytest.mark.parametrize("cell_size_m", [0.1, 0.25, 0.5])
     def test_corners_and_wedges_stay_silent(self, cell_size_m):
