@@ -155,7 +155,10 @@ def _apply_scenario_settings(scenario, args) -> None:
     from pyfds_evac.config.parameters import default
     from pyfds_evac.core.run_config import scenario_smoke_slice_height
 
-    height = scenario_smoke_slice_height(scenario)
+    try:
+        height = scenario_smoke_slice_height(scenario)
+    except ValueError as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
     if height is None:
         args.smoke_slice_height = default("smoke_slice_height")
         return

@@ -8,6 +8,9 @@ on the command line overrides it, and without the key nothing changes.
 from __future__ import annotations
 
 import argparse
+import json
+import shutil
+from pathlib import Path
 
 import pytest
 
@@ -63,3 +66,42 @@ def test_run_warns_when_it_samples_away_from_the_scenario_height(caplog):
         run_config._warn_slice_height_differs(_Scenario({}), opts)
     [record] = caplog.records
     assert "5.7 m" in record.getMessage() and "1.6 m" in record.getMessage()
+
+
+def _scenario_dir(tmp_path, height):
+    source = Path(__file__).resolve().parents[1] / "assets/familiarity_test_no_journey"
+    raw = json.loads((source / "config.json").read_text(encoding="utf-8"))
+    raw["config"]["simulation_settings"]["simulationParams"]["smoke_slice_height"] = (
+        height
+    )
+    (tmp_path / "config.json").write_text(json.dumps(raw), encoding="utf-8")
+    shutil.copy(source / "geometry.wkt", tmp_path / "geometry.wkt")
+    return str(tmp_path)
+
+
+def _main_height(monkeypatch, argv) -> float:
+    """Run ``cli.main`` up to --show-config and return the height it used."""
+    seen = {}
+
+    def show(scenario, args):
+        seen["height"] = args.smoke_slice_height
+        return 0
+
+    monkeypatch.setattr(cli, "_show_config", show)
+    monkeypatch.setattr("sys.argv", ["pyfds-evac", *argv, "--show-config"])
+    assert cli.main() == 0
+    return seen["height"]
+
+
+def test_main_applies_the_scenario_height(tmp_path, monkeypatch):
+    folder = _scenario_dir(tmp_path, 5.7)
+    assert _main_height(monkeypatch, ["--scenario", folder]) == 5.7
+    flagged = ["--scenario", folder, "--smoke-slice-height", "1.6"]
+    assert _main_height(monkeypatch, flagged) == 1.6
+
+
+def test_main_reports_a_bad_scenario_height_without_a_traceback(tmp_path, monkeypatch):
+    folder = _scenario_dir(tmp_path, "high")
+    monkeypatch.setattr("sys.argv", ["pyfds-evac", "--scenario", folder])
+    with pytest.raises(SystemExit, match="pyfds-evac: error: .*smoke_slice_height"):
+        cli.main()
