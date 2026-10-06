@@ -7,6 +7,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `pyfds-evac init DECK.fds` starts a scenario from an FDS deck. It writes
+  `config.json`, `geometry.wkt` and `import_report.json` to
+  `<deck stem>_scenario/` next to the deck (`-o DIR` picks another folder),
+  prints a short summary and the next steps, and exits 0 when runnable, 3
+  when written but not runnable or an input was dropped at error level, and
+  1 on an error, with nothing written (#605, part of #606, #632).
+  - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR`
+    and `&PERS` records for one floor. Detection plus reaction becomes one
+    pre-movement delay with the same mean and variance, and no agent
+    starts before the earliest FDS+Evac start.
+  - A plain FDS deck gets exits from `SURF_ID='OPEN'` vents on the outside
+    of its meshes, or from `--exit`, and a flagged placeholder of 100
+    agents unless `--agents` is given.
+  - `import_report.json` lists every input that was imported, inferred,
+    approximated or dropped, with its deck line; `-v` prints all of it.
+  - The walkable area comes from `scripts/generate_walkable_from_fds.py`
+    (source checkout only) or from `--walkable FILE.wkt`; the Station
+    layer rules are opt-in (`--layer-rules station`).
+- `--force` lets `pyfds-evac init` overwrite an output folder that holds a
+  `config.json` it did not write; without it, such a folder is refused
+  (#632).
+- Scenario key `simulationParams.smoke_slice_height` [m]: the absolute FDS
+  slice height of a run. `pyfds-evac init` writes the floor level plus
+  `HUMAN_SMOKE_HEIGHT`. `--smoke-slice-height` overrides it; a run that
+  samples elsewhere logs a warning. A bad value stops the run with a
+  one-line error (#632).
+- Scenario key `distributions.<id>.parameters.premovement_offset_s` [s]:
+  a fixed delay added to every drawn pre-movement time, with and without
+  journeys. It needs `use_premovement: true` (#632).
+
+### Changed
+
+- `pyfds-evac --scenario` takes the slice height from the scenario's
+  `smoke_slice_height` when `--smoke-slice-height` is not given, and says
+  so. A scenario without the key runs as before (#632).
+- `pyfds-evac --help` lists `pyfds-evac init` among its examples (#606).
+
 ## [0.3.1] - 2026-10-06
 
 ### Removed
