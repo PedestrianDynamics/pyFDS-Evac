@@ -550,7 +550,13 @@ def _share(ctx, record, pieces, number, params) -> list[ImportedSpawn]:
             continue
         name = base if len(pieces) == 1 else f"{base}_{index}"
         out.append(
-            ImportedSpawn(name, piece, f"&{record.group}", {**params, "number": count})
+            ImportedSpawn(
+                name,
+                piece,
+                f"&{record.group}",
+                {**params, "number": count},
+                parent=(record.group, record.line),
+            )
         )
     ctx.add("S", "info", record.group, f"{number} agents in {len(out)} area(s)", record)
     return out
@@ -599,7 +605,8 @@ def _entr_spawns(ctx, record, exit_ids) -> list[ImportedSpawn]:
         f"flow spawning: {number} agents over [{start:g}, {stop:g}] s",
         record,
     )
-    return [ImportedSpawn(record.id or f"ENTR_{record.line}", strip, "&ENTR", params)]
+    name = record.id or f"ENTR_{record.line}"
+    return [ImportedSpawn(name, strip, "&ENTR", params, parent=("ENTR", record.line))]
 
 
 def _entry_window(ctx, record) -> tuple[float, float]:

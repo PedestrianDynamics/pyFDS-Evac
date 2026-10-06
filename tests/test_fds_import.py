@@ -889,7 +889,7 @@ def test_next_steps_with_fds_output(tmp_path, capsys, monkeypatch):
 # --- pyfds-evac init: the quiet summary ---------------------------------------------
 
 
-def _many_groups(tmp_path) -> Path:
+def _many_groups(tmp_path, *records: str) -> Path:
     """Three groups with the same delay and dropped keys, one exit off the area."""
     pers = (
         "&PERS ID='P', DEFAULT_PROPERTIES='Adult', "
@@ -902,11 +902,12 @@ def _many_groups(tmp_path) -> Path:
         "PERS_ID='P', AGENT_TYPE=2 /"
         for i in (1, 3, 5)
     ]
-    return _deck(tmp_path, ROOM.format(extra="\n".join((DOOR, far, pers, *groups))))
+    extra = "\n".join((DOOR, far, pers, *groups, *records))
+    return _deck(tmp_path, ROOM.format(extra=extra))
 
 
-def _summary(tmp_path, capsys, *extra: str) -> list[str]:
-    deck = _many_groups(tmp_path)
+def _summary(tmp_path, capsys, *extra: str, records: tuple = ()) -> list[str]:
+    deck = _many_groups(tmp_path, *records)
     argv = [str(deck), "--walkable", _wkt(tmp_path, ROOM_WKT), *extra]
     assert cli_init.main(argv) == cli_init.EXIT_NOT_RUNNABLE  # one exit dropped
     return capsys.readouterr().out.splitlines()
@@ -984,3 +985,26 @@ def test_legacy_next_steps_ask_for_a_fire_only_run(tmp_path, capsys, monkeypatch
         return
     [line] = found
     assert "not used" in line and "fire-only run" in line
+
+
+def test_summary_counts_deck_groups_not_split_pieces(tmp_path, capsys):
+    """F2: three &EVAC records with an &EVHO through each give 'Groups 3'."""
+    lines = _summary(tmp_path, capsys, records=("&EVHO XB=0,10,4,5,1,1 /",))
+    [overview] = [line for line in lines if "Groups" in line]
+    assert "Groups    3 (15 agents)" in overview
+    config = json.loads((tmp_path / "deck_scenario" / "config.json").read_text())
+    assert len(config["distributions"]) == 6  # each group split in two
+
+
+def test_summary_names_spawn_areas_on_a_plain_deck(tmp_path, capsys):
+    _, out = _init(tmp_path, capsys)
+    assert "Spawn     1 area (100 placeholder agents)" in out
+
+
+def test_summary_shows_result_changing_info_notes(tmp_path, capsys):
+    """F1: a missing T_END is an info item, but it sets the run's time limit."""
+    deck = _deck(tmp_path, MODERN.format(vents=OPEN_VENT), name="plain.fds")
+    status = cli_init.main([str(deck), "--walkable", _wkt(tmp_path), "--agents", "5"])
+    out = capsys.readouterr().out
+    assert status == cli_init.EXIT_OK
+    assert "no T_END: max_simulation_time 300 s" in out

@@ -603,8 +603,9 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
   folder from an earlier `pyfds-evac init` is overwritten without asking.
 
 The screen shows a short summary: each error on its own line with its deck
-line, then the approximations grouped, with the number of records each
-concerns. `import_report.json` lists every input that was approximated or
+line, then every approximated or dropped input, whatever its level (each can
+change what runs), grouped by pattern with the number of records each
+concerns. Exact mappings and cosmetic keys are only in the report. `import_report.json` lists every input that was approximated or
 dropped, with its line number; `-v`/`--verbose` prints all of it.
 
 | Status | Meaning |

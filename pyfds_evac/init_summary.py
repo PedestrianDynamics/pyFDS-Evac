@@ -4,8 +4,9 @@ Presentation only: ``import_report.json`` keeps every item, and the exit
 status is decided by the caller from the report.
 
 - Errors come first, one line each, with the deck line and the reason.
-- Warning-level notes with the same pattern print once, with the number of
-  records they concern; info-level notes stay in ``import_report.json``.
+- Approximated or dropped inputs (A, D), at any level, print once per
+  pattern with the number of records they concern: each can change what
+  runs. Exact (S) and cosmetic (C) items stay in ``import_report.json``.
 - ``verbose`` prints every report line instead, as the report's own text.
 - Paths are relative to the working directory when that is shorter.
 """
@@ -26,6 +27,7 @@ _UNITS = {
     "EXIT": "exits",
     "DOOR": "doors",
     "VENT": "vents",
+    "EVHO": "holes",
 }
 _NO_COUNTERPART = re.compile(r"^([A-Z0-9_()]+) has no counterpart$")
 _VALUE = re.compile(r"'[^']*'|\[[^\]]*\]|-?\d+(?:\.\d+)?(?:e-?\d+)?")
@@ -75,14 +77,15 @@ def _cut(text: str) -> str:
 
 
 def group_notes(items: list[Any]) -> list[_Group]:
-    """Warning-level A/D notes grouped by pattern, in first-seen order.
-
+    """Approximated (A) and dropped (D) notes, whatever their level,
+    grouped by pattern in first-seen order: each can change what runs.
+    Exact mappings (S) and cosmetic keys (C) stay in import_report.json.
     A record dropped with an error shows only its error.
     """
     failed = {(i.group, i.id, i.line) for i in items if i.level == "error"}
     groups: dict[str, _Group] = {}
     for item in items:
-        if item.level != "warning" or item.status not in ("A", "D"):
+        if item.status not in ("A", "D"):
             continue
         if (item.group, item.id, item.line) in failed:
             continue
@@ -145,8 +148,7 @@ def format_header(result: Any, out_dir: str) -> list[str]:
     placeholder = " placeholder" if any(d.get("placeholder") for d in spawns) else ""
     left = [
         f"Walkable  {walkable.get('area_m2', 0):.1f} m², {areas} area{'s' if areas != 1 else ''}",
-        f"Spawn     {len(spawns)} area{'s' if len(spawns) != 1 else ''} "
-        f"({agents}{placeholder} agents)",
+        f"{_spawn_label(result, len(spawns))} ({agents}{placeholder} agents)",
     ]
     right = [
         f"Exits    {len(exits)} of {len(exits) + len(dropped)}{_names(exits)}",
@@ -157,6 +159,14 @@ def format_header(result: Any, out_dir: str) -> list[str]:
         f"{show_path(result.deck_path)} → {show_path(out_dir)}{os.sep}   ({kind})",
         "",
     ] + [f"  {a:<{width}}{b}" for a, b in zip(left, right, strict=True)]
+
+
+def _spawn_label(result: Any, n_areas: int) -> str:
+    """Deck groups (&EVAC/&ENTR records) when there are any, else areas."""
+    parents = {s.parent for s in getattr(result, "spawns", []) if s.parent}
+    if parents:
+        return f"Groups    {len(parents)}"
+    return f"Spawn     {n_areas} area{'s' if n_areas != 1 else ''}"
 
 
 def _names(exits: list[str]) -> str:

@@ -201,3 +201,6 @@ class ImportedSpawn:
     source: str
     parameters: dict[str, Any]
     placeholder: bool = False
+    #: The deck record the area comes from, ("EVAC", line) or ("ENTR", line);
+    #: None for an inferred area. Not written to any file.
+    parent: tuple[str, int] | None = None

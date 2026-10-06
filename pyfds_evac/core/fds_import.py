@@ -28,7 +28,7 @@ import os
 import shutil
 import tempfile
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
 from typing import Any
@@ -116,6 +116,8 @@ class ImportResult:
     walkable_wkt: str
     report: ImportReport
     deck_path: Path
+    #: The spawn areas as built, kept in memory for the terminal summary.
+    spawns: list[ImportedSpawn] = field(default_factory=list)
 
     def run_command(self, out_dir: str | Path) -> str:
         command = f"pyfds-evac --scenario {out_dir}"
@@ -844,7 +846,7 @@ def _finish(
     _runnable(report, exits, spawns)
     raw = _raw(deck, report, exits, spawns, height)
     text = shapely_wkt.dumps(walkable, rounding_precision=6, trim=True)
-    return ImportResult(raw, text, report, deck_path)
+    return ImportResult(raw, text, report, deck_path, spawns)
 
 
 def _check_connectivity(walkable, exits, spawns, report) -> None:
