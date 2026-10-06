@@ -51,6 +51,11 @@ SFPE form, not ISO 13571's). See
 for running at 2.0 m, and [Fractional effective dose](/models/fed.md) for the
 equations.
 
+`pyfds-evac init deck.fds` does much of this for you. It
+keeps the evacuation namelists of one floor as exits and spawn areas, and
+writes a report of everything it approximated or dropped
+([Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init)).
+
 A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). `uv run python run.py --scenario <json|dir|zip> --fds-dir
 <fds output>` combines them.
@@ -120,7 +125,7 @@ or `app.py` in a source checkout) runs uploaded scenarios. It does not edit geom
 | `HUMAN_SMOKE_HEIGHT` (§8.7) | Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61) | `--smoke-slice-height` [m], default 1.6 as in FDS+Evac (2.0 before; pass `--smoke-slice-height 2.0` for it), an absolute z in the FDS domain rather than a height above the floor ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). It selects the extinction, gas and temperature slices closest to it, so the deck must contain an `&SLCF PBZ=` at that height. |
 | `&EVAC` (§8.8) | Places a group of agents in a rectangle | A `distributions` entry in the JSON: a polygon plus `parameters` (`number`, `v0`, `radius`, pre-movement, familiarity). |
 | `&PERS` (§8.7) | Agent type: body size, speed, pre-movement, force constants | Per distribution in the JSON: `v0` [m/s], `radius` [m] and the pre-movement keys below. There are no named agent types and no three-circle body; an agent is a circle. |
-| `&EVHO` (§8.9) | Area where no agents are placed | Not supported. Draw the distribution polygon so that it excludes the area. |
+| `&EVHO` (§8.9) | Area where no agents are placed | No JSON key. Draw the distribution polygon so that it excludes the area; `pyfds-evac init` does this by splitting the spawn area into pieces around the hole, sharing the agents by area. |
 | `&EXIT` (§8.10) | Line that removes agents | An `exits` entry in the JSON (a polygon). Optional `enable_throughput_throttling` and `max_throughput` cap the flow, and an optional `sign` feeds visibility. |
 | `&DOOR` (§8.12) | Moves agents to another part of the calculation | No door object. A doorway is a gap in the walkable polygon; an intermediate target is a `checkpoints` entry in a journey. |
 | `&ENTR` (§8.11) | Adds agents at a constant rate | Flow spawning on a distribution: `use_flow_spawning`, `flow_start_time`, `flow_end_time` [s]. |

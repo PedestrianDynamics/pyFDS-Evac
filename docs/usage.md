@@ -563,6 +563,57 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 
 ## Deriving inputs from an FDS deck
 
+### Scenario from an FDS deck — `pyfds-evac init`
+
+Writes `config.json`, `geometry.wkt` and `import_report.json` into a
+directory that `pyfds-evac --scenario` runs as it is, by default
+`<deck stem>_scenario/` next to the deck (`-o DIR` picks another). It prints
+the summary and the next steps: run FDS when its output is missing (with
+the command, `mpiexec -n N` for N meshes), run the scenario, then refine it
+in JuPedSim Web or the terminal UI. A scenario that cannot run gets no run
+command, only the list of what to fix.
+
+```
+pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
+    [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
+    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force] [-v]
+```
+
+- An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
+  `&PERS` records, on one floor (the lowest; `--floor` picks another).
+- A plain FDS deck gets an exit for every `SURF_ID='OPEN'` vent on the
+  outside of its meshes between 0.1 and 1.8 m above the floor, plus any
+  `--exit`. Each walkable part with an exit is a spawn area, with a
+  placeholder of 100 agents in all unless `--agents` is given.
+- An exit is a strip of `--exit-depth` metres on the room side of the exit
+  line, so agents leave about 0.4 s before the line at 1.25 m/s.
+- The walkable area comes from `scripts/generate_walkable_from_fds.py` (a
+  source checkout only), or from `--walkable`. The script fails on most decks
+  whose mesh ends at the building wall; draw the polygon and pass it with
+  `--walkable` then.
+- When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
+  `--fds-dir`, and the output says so; `--no-fds` leaves it out. An
+  FDS+Evac deck needs the output of a fire-only run: the next steps say to
+  run FDS on a copy without the evacuation namelists and meshes, and to
+  pass that run's folder as `--fds-dir`. FDS+Evac output found next to the
+  deck is reported but not used.
+- The output folder, given with `-o` or the default, is refused when it
+  holds a `config.json` the importer did not write (no `import_report.json`
+  next to it), such as an authored scenario. `--force` overwrites it. A
+  folder from an earlier `pyfds-evac init` is overwritten without asking.
+
+The screen shows a short summary: each error on its own line with its deck
+line, then every approximated or dropped input, whatever its level (each can
+change what runs), grouped by pattern with the number of records each
+concerns. Exact mappings and cosmetic keys are only in the report. `import_report.json` lists every input that was approximated or
+dropped, with its line number; `-v`/`--verbose` prints all of it.
+
+| Status | Meaning |
+|---|---|
+| 0 | written and runnable, nothing dropped at error level |
+| 3 | written, but not runnable (no exit or no agents; no `Run:` line is printed), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
+| 1 | an error, including an argument error or a refused `-o` folder; nothing written |
+
 ### Walkable area from FDS obstructions — `generate_walkable_from_fds.py`
 
 Subtracts an FDS deck's blocking `&OBST` records from its mesh footprint and

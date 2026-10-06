@@ -103,6 +103,61 @@ def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
     }
 
 
+def _premovement_offset(params: dict, dist_id: Any) -> float | None:
+    """``premovement_offset_s`` [s] of a spawn area, or None when absent.
+
+    Added to every sampled pre-movement time, so no agent starts before
+    it (FDS+Evac's detection time, which precedes the reaction time).
+    """
+    if "premovement_offset_s" not in params:
+        return None
+    value = params["premovement_offset_s"]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(
+            f"Distribution {dist_id!r}: premovement_offset_s must be a number "
+            f"of seconds, got {value!r}"
+        )
+    if not (math.isfinite(value) and value >= 0):
+        raise ValueError(
+            f"Distribution {dist_id!r}: premovement_offset_s must be finite and "
+            f">= 0, got {value!r}"
+        )
+    return float(value)
+
+
+def _copy_premovement_offset(params: dict, target: dict, dist_id: Any) -> None:
+    """Check ``premovement_offset_s`` at load and copy it into *target*.
+
+    Both set-up paths (with and without journeys) rebuild the spawn
+    parameters from a fixed key list; a key left out of it is silently
+    dropped. Checking here also reports a bad value before agent placement,
+    whose errors are reported as placement failures.
+    """
+    if "premovement_offset_s" not in params:
+        return
+    _premovement_offset(params, dist_id)
+    if not params.get("use_flow_spawning", False) and not params.get(
+        "use_premovement", False
+    ):
+        _premovement_offset_unused(params, dist_id)
+    target["premovement_offset_s"] = params["premovement_offset_s"]
+
+
+def _offset_times(times, params: dict, dist_id: Any):
+    """*times* shifted by the spawn area's ``premovement_offset_s``, if any."""
+    offset = _premovement_offset(params, dist_id)
+    return times if offset is None else times + offset
+
+
+def _premovement_offset_unused(params: dict, dist_id: Any) -> None:
+    """An offset without pre-movement would be silently ignored: refuse it."""
+    if "premovement_offset_s" in params:
+        raise ValueError(
+            f"Distribution {dist_id!r}: premovement_offset_s needs "
+            "use_premovement: true and a premovement_distribution"
+        )
+
+
 def _premovement_params(dist_type: str, param_a, param_b) -> dict:
     """Return the (a, b) of a pre-movement distribution, falling back to presets.
 
@@ -1202,6 +1257,7 @@ def _initialize_with_fallback(
                         "familiarity": params.get("familiarity", "full"),
                         "entrance": params.get("entrance"),
                     }
+                    _copy_premovement_offset(params, dist_params, dist_id)
 
                     distribution_params.append(dist_params)
                     total_agents += int(dist_params["number"])
@@ -1500,7 +1556,13 @@ def _initialize_with_fallback(
             distribution = create_premovement_distribution(
                 dist_type, dist_params, premovement_seed
             )
-            agent_premovement_times = distribution.sample(len(positions))
+            agent_premovement_times = _offset_times(
+                distribution.sample(len(positions)),
+                spawn_data["params"],
+                spawn_data["dist_key"],
+            )
+        else:
+            _premovement_offset_unused(spawn_data["params"], spawn_data["dist_key"])
 
         # Sample per-agent radius and v0
         rng = np.random.RandomState(
@@ -1876,6 +1938,7 @@ def _process_distributions(
             "familiarity": params.get("familiarity", "full"),
             "entrance": params.get("entrance"),
         }
+        _copy_premovement_offset(params, dist_params[dist_id], dist_id)
 
     return dist_geom, dist_params
 
@@ -2619,7 +2682,11 @@ def _add_agents(
                 distribution = create_premovement_distribution(
                     dist_type, dist_params, premovement_seed
                 )
-                agent_premovement_times = distribution.sample(len(positions))
+                agent_premovement_times = _offset_times(
+                    distribution.sample(len(positions)), spawn_params, dist_key
+                )
+            else:
+                _premovement_offset_unused(spawn_params, dist_key)
 
             # Sample per-agent radius and v0
             rng = np.random.RandomState(
