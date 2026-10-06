@@ -89,6 +89,24 @@ def _premovement_offset(params: dict, dist_id: Any) -> float | None:
     return float(value)
 
 
+def _copy_premovement_offset(params: dict, target: dict, dist_id: Any) -> None:
+    """Check ``premovement_offset_s`` at load and copy it into *target*.
+
+    Both set-up paths (with and without journeys) rebuild the spawn
+    parameters from a fixed key list; a key left out of it is silently
+    dropped. Checking here also reports a bad value before agent placement,
+    whose errors are reported as placement failures.
+    """
+    if "premovement_offset_s" not in params:
+        return
+    _premovement_offset(params, dist_id)
+    if not params.get("use_flow_spawning", False) and not params.get(
+        "use_premovement", False
+    ):
+        _premovement_offset_unused(params, dist_id)
+    target["premovement_offset_s"] = params["premovement_offset_s"]
+
+
 def _offset_times(times, params: dict, dist_id: Any):
     """*times* shifted by the spawn area's ``premovement_offset_s``, if any."""
     offset = _premovement_offset(params, dist_id)
@@ -1203,10 +1221,7 @@ def _initialize_with_fallback(
                         "familiarity": params.get("familiarity", "full"),
                         "entrance": params.get("entrance"),
                     }
-                    if "premovement_offset_s" in params:
-                        dist_params["premovement_offset_s"] = params[
-                            "premovement_offset_s"
-                        ]
+                    _copy_premovement_offset(params, dist_params, dist_id)
 
                     distribution_params.append(dist_params)
                     total_agents += int(dist_params["number"])
@@ -1887,6 +1902,7 @@ def _process_distributions(
             "familiarity": params.get("familiarity", "full"),
             "entrance": params.get("entrance"),
         }
+        _copy_premovement_offset(params, dist_params[dist_id], dist_id)
 
     return dist_geom, dist_params
 
