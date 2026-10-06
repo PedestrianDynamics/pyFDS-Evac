@@ -142,7 +142,11 @@ Script: `scripts/figures/sign_rotation.py`.*
   `config/parameters.py`, `SMOKE_SLICE_HEIGHT_M`), chosen by the same rule as walking speed and
   FED, with a warning when it is more than 0.5 m away (`fds_sampling.py`,
   `select_horizontal_slice`). Stored times are spaced by `--reroute-interval`
+  and end at the last frame of the extinction slice, which is always stored
   (`visibility.py`, `_build_vismap`; `run_config.py`, `_build_vis_model`).
+  A query past that frame by at most one output interval of the slice reads
+  the last frame; a later one raises `FdsHorizonError`, the window walking
+  speed, FED and the setup check use (#510).
 - **From clear air** (no `--fds-dir`). The walkable polygon is rasterised at
   `--vis-cell-size`. A cell is an obstruction when its centre lies outside the
   polygon (`visibility.py`, `_blocked_runs`, `VisibilityModel.clear_air`). A wall thinner than one cell

@@ -160,6 +160,19 @@ def _extinction_slice_index(fds_dir: str, slice_height_m: float) -> int:
     return next(i for i, s in enumerate(slices) if s is chosen)
 
 
+def _vismap_time_points(t_end: float, time_step_s: float) -> list[float]:
+    """Times 0, step, 2 step, ... before *t_end*, then *t_end* itself.
+
+    No point lies past the last FDS frame: a step that does not divide T_END
+    would otherwise add a point after it, which fdsvismap answers with the
+    last frame (0.3.2) or rejects (fdsvismap#86).  The filter also drops a
+    point that ``arange`` rounds onto or past *t_end*.
+    """
+    t_end = float(t_end)
+    points = np.arange(0.0, t_end, time_step_s)
+    return [*points[points < t_end * (1 - 1e-9)].tolist(), t_end]
+
+
 def _build_vismap(
     fds_dir: str,
     sign_descriptors: dict[str, dict],
@@ -175,8 +188,7 @@ def _build_vismap(
         fds_slc_height=slice_height_m,
         fds_slc_index=_extinction_slice_index(fds_dir, slice_height_m),
     )
-    t_max = vis.fds_time_points.max()
-    vis.set_time_points(list(np.arange(0, t_max + time_step_s, time_step_s)))
+    vis.set_time_points(_vismap_time_points(vis.fds_time_points.max(), time_step_s))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
         alpha = sign.get("alpha")
         vis.add_sign(
@@ -230,7 +242,10 @@ def _make_meta(
         # extinction slice nearest the height, not the first one declared.
         # Format 5 is fdsvismap 0.3.1, where a directional sign is legible
         # from its own cell; earlier caches hold NaN there.
-        "format": 5,
+        # Format 6 ends the time points at the last FDS frame and stores the
+        # extinction slice's output interval; earlier caches may hold a point
+        # past it.
+        "format": 6,
     }
 
 
@@ -281,8 +296,10 @@ class _VisMapCache:
         y_coords: np.ndarray,
         vis: np.ndarray,  # shape (T, N_wp, H, W), dtype bool
         metres: np.ndarray | None = None,  # same shape, float: sighting distance
+        output_interval_s: float | None = None,  # FDS output interval, None: clear air
     ) -> None:
         self._time_points = time_points
+        self.output_interval_s = output_interval_s
         self._x_coords = x_coords
         self._y_coords = y_coords
         self._vis = vis
@@ -382,6 +399,7 @@ def _save_vismap_cache(
     arrays: np.ndarray,
     meta: dict,
     metres: np.ndarray | None = None,
+    output_interval_s: float | None = None,
 ) -> None:
     """Serialise VisMap arrays to an npz file (no pickle, safe to load)."""
     npz_path = path.with_suffix(".npz")
@@ -400,6 +418,10 @@ def _save_vismap_cache(
         y_coords=vis.all_y_coords,
         vis=arrays,
         metres=(metres if metres is not None else np.zeros((0,), dtype=np.float16)),
+        # NaN for clear air, which has no FDS output.
+        output_interval_s=np.array(
+            np.nan if output_interval_s is None else output_interval_s
+        ),
         meta=np.array(json.dumps(meta)),
     )
 
@@ -445,15 +467,26 @@ def _build_cache_from_fds(
     )
     arrays = _vis_bool_array(vis_obj)
     metres = _vis_metre_array(vis_obj)
+    # The extinction slice's own spacing, not the vismap step: the horizon
+    # window has to match the one the preflight and the slice samplers use.
+    interval = fds_sampling._output_interval(vis_obj.fds_time_points)
     result = _VisMapCache(
         time_points=vis_obj.vismap_time_points,
         x_coords=vis_obj.all_x_coords,
         y_coords=vis_obj.all_y_coords,
         vis=arrays,
         metres=metres,
+        output_interval_s=interval,
     )
     if cache:
-        _save_vismap_cache(cache, vis_obj, arrays, expected_meta, metres=metres)
+        _save_vismap_cache(
+            cache,
+            vis_obj,
+            arrays,
+            expected_meta,
+            metres=metres,
+            output_interval_s=interval,
+        )
     return result
 
 
@@ -474,15 +507,20 @@ def _load_vismap_cache(path: Path, expected_meta: dict) -> _VisMapCache | None:
             if json.loads(str(data["meta"])) != expected_meta:
                 _logger.info("Vismap cache metadata mismatch — recomputing.")
                 return None
+            if "output_interval_s" not in data.files:
+                _logger.info("Vismap cache has no output interval — recomputing.")
+                return None
             metres = data["metres"] if "metres" in data.files else None
             if metres is not None and metres.size == 0:
                 metres = None
+            interval = float(data["output_interval_s"])
             return _VisMapCache(
                 time_points=data["time_points"],
                 x_coords=data["x_coords"],
                 y_coords=data["y_coords"],
                 vis=data["vis"],
                 metres=metres,
+                output_interval_s=None if np.isnan(interval) else interval,
             )
     except Exception as e:
         _logger.warning("Failed to load vismap cache: %s", e)
@@ -565,14 +603,16 @@ class VisibilityModel:
     The cache is safe to load (no pickle / no arbitrary code execution).
     Metadata mismatches trigger an automatic recompute and cache refresh.
 
-    A model built from FDS output raises ``FdsHorizonError`` for a query past
-    its last time point, the first vismap step at or after the FDS end, so
-    at most one step past T_END; unless
-    *allow_horizon_hold* is set: then the last time point is held and one
-    warning is logged.  A clear-air model is time-invariant and never raises.
+    A model built from FDS output stores time points up to the last frame of
+    the extinction slice and raises ``FdsHorizonError`` for a query more than
+    one output interval of that slice past it, the window the preflight and
+    the slice samplers use; unless *allow_horizon_hold* is set: then the last
+    time point is held and one warning is logged.  A clear-air model is
+    time-invariant and never raises.
     """
 
-    # (last time point, time step) of an FDS-built model; None for clear air.
+    # (last time point, FDS output interval) of an FDS-built model; None for
+    # clear air.
     _horizon: tuple[float, float] | None = None
     _allow_horizon_hold = False
     # The settings the model was built with (for the run manifest).
@@ -608,7 +648,7 @@ class VisibilityModel:
             max_sign_distance_m,
         )
 
-        self._vis: _VisBackend = _resolve_vis(
+        cache_obj = _resolve_vis(
             str(fds_dir),
             sign_descriptors,
             time_step_s,
@@ -618,8 +658,13 @@ class VisibilityModel:
             expected_meta,
             max_sign_distance_m,
         )
-        times = np.asarray(self._vis._time_points, dtype=float)
-        self._horizon = (float(times[-1]), fds_sampling._output_interval(times))
+        if cache_obj.output_interval_s is None:
+            raise ValueError(
+                f"vismap built from {fds_dir} carries no FDS output interval"
+            )
+        self._vis: _VisBackend = cache_obj
+        times = np.asarray(cache_obj._time_points, dtype=float)
+        self._horizon = (float(times[-1]), cache_obj.output_interval_s)
         self._allow_horizon_hold = allow_horizon_hold
         # Map node_id → internal waypoint index (insertion order preserved)
         self._wp_ids: dict[str, int] = {
@@ -818,11 +863,11 @@ class VisibilityModel:
         return model
 
     def _check_horizon(self, time: float) -> None:
-        """Raise, or warn once, when *time* is past the vismap time points."""
+        """Raise, or warn once, when *time* is past the FDS output window."""
         if self._horizon is None:
             return
         last, interval = self._horizon
-        if time <= last:
+        if time <= last + interval:
             return
         message = fds_sampling.horizon_error_message(
             "sign visibility", time, last, interval

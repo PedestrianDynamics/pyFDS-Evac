@@ -126,20 +126,25 @@ def _vis_model(**kwargs):
         y_coords=np.array([0.0]),
         vis=np.ones((2, 1, 1, 2), dtype=bool),
         metres=np.full((2, 1, 1, 2), 12.0),
+        output_interval_s=5.0,
     )
     signs = {"e0": {"x": 0.0, "y": 0.0}}
     with patch("pyfds_evac.core.visibility._resolve_vis", return_value=cache):
         return VisibilityModel("unused", signs, **kwargs)
 
 
-def test_visibility_raises_past_the_vismap_time_points():
-    """The last vismap point already lies at or after T_END: no extra step."""
+def test_visibility_raises_past_one_fds_output_interval():
+    """The run-wide window (#510): last frame plus one FDS output interval.
+
+    The interval is the extinction slice's (5 s here), not the vismap step.
+    """
     model = _vis_model()
-    assert model.node_is_visible(10.0, 0.0, 0.0, "e0") is True
+    assert model.node_is_visible(15.0, 0.0, 0.0, "e0") is True
+    assert model.visibility_to_node(15.0, 0.0, 0.0, "e0") == 12.0
     with pytest.raises(FdsHorizonError):
-        model.node_is_visible(20.0, 0.0, 0.0, "e0")
+        model.node_is_visible(15.1, 0.0, 0.0, "e0")
     with pytest.raises(FdsHorizonError):
-        model.visibility_to_node(20.0, 0.0, 0.0, "e0")
+        model.visibility_to_node(15.1, 0.0, 0.0, "e0")
 
 
 def test_visibility_flag_holds_and_warns_once(caplog):
