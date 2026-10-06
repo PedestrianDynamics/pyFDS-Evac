@@ -155,10 +155,17 @@ colour:
 Three tabs choose the scenario:
 
 - **Recent** lists the last 10 pairs of scenario and FDS folder, each with its
-  last status and date. `Enter` restores the scenario and the FDS folder and
-  jumps to Review. It restores no other setting
-  ([#534](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/534)). A path
-  that no longer exists is marked "missing".
+  last status and date. Entries whose scenario or FDS folder is gone come
+  last, dimmed, and say which: "scenario missing", "FDS folder missing", or
+  both. When two rows would read alike, a short part of the scenario's
+  folder tells them apart. `Enter` restores the scenario and the FDS folder
+  and jumps to Review. It restores no other setting
+  ([#534](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/534)). If
+  the scenario is gone, `Enter` stays on the Scenario step and says how to
+  recover. If only the FDS folder is gone, `Enter` loads the scenario and
+  opens the FDS step to choose another folder or none. `Delete` removes the highlighted
+  entry from the list; nothing is removed automatically. Recent opens at
+  start only when one of its entries can be used.
 - **Examples** lists every folder in `./assets` that has a `config.json`, with
   its `config_*.json` variants, and a filter box. Each row says "FDS output
   found" or "deck only".
