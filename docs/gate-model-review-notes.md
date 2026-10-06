@@ -186,6 +186,12 @@ to plan section 3.
 - **`c = 3`**: correct, confirmed independently by `evac.f90:5496` and Jin 1978.
   Note the duplicate constant: `smoke_speed.py:99` `visibility_factor_c = 3.0`.
 
+> **Erratum (#287).** The two sources above are one chain, not two
+> independent confirmations: `evac.f90` and FDS take C = 3 from Mulholland
+> (2002), who cites Jin. C = 3 is the line drawn in Jin (1971/1978, Fig. 2),
+> as used by Mulholland (2002) and FDS. See
+> [Visibility through smoke](../site/content/fundamentals/visibility.md).
+
 ---
 
 ## D. Scenario numbers
@@ -467,6 +473,15 @@ exposure budget directly, `tau_max = 2c`, so `c = 8` is a 2.7x looser gate than
 `c = 3`. The earlier finding that `sign_contrast_c = 8` "barely moves it" was
 measured on t_junction, which is optically saturated at K ~ 10.7 /m and cannot
 discriminate anything; it is not evidence that `c` is inert where the gate works.
+
+> **Erratum (#287).** Two statements in the paragraph above are wrong.
+> (1) `c = 3` is Jin's obscuration threshold, the contrast at which a sign is
+> barely seen; it is not the threshold for recognising or reading a sign.
+> (2) Jin does not give S = 0.4 m at K = 7–8 /m. That value extrapolates the
+> law far beyond his data, which were taken at V = 5.5–15.5 m in much thinner
+> smoke. See
+> [Seeing a sign versus reading it](../site/content/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)
+> and [Known limits](../site/content/fundamentals/visibility.md#known-limits).
 
 Jin and `c = 3` belong to the cognitive map, where the sign-legibility semantics
 are correct and the constant is properly sourced. **Done at `0d9bf79`:** the gate

@@ -364,7 +364,9 @@ optical depth then time decides. The sort key is
 
 This is FDS+Evac's primary door rule in Evac 2.6.0 (`evac.f90:16601`,
 `:16608`), and its threshold is not a new constant: `FED_DOOR_CRIT = -100` becomes `3.0/100` =
-0.03 /m at `:5496`, which is Jin's `S = 3/K` at a 100 m sighting distance. Two
+0.03 /m at `:5496`, which is Jin's `S = 3/K` at a 100 m sighting distance.
+The conversion borrows only the form of Jin's law: 100 m is far outside the
+5–15 m range Jin states for it ([Visibility › Known limits](/fundamentals/visibility.md#known-limits)). Two
 differences from the reference implementation are worth stating:
 
 - **FDS+Evac's tier 1 is a hard filter.** `IF (T_tmp < L2_min .AND. L2_tmp <
