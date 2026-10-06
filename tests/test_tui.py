@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import copy
 import os
+import re
 import shlex
 import shutil
 import sqlite3
@@ -1192,6 +1193,61 @@ def test_600_scenario_gone_says_so_and_delete_removes_it(workdir, tmp_path):
             await pilot.pause()
             assert model.Recent(tmp_path / "recent.json").runs == []
             assert _recent_rows(app) == ["No recent runs yet."]
+
+    run(go())
+
+
+# --- #573: checks in words, no rule IDs ---------------------------------------------
+
+RULE_ID = re.compile(r"\bD\d+\b|\bB ·")
+
+
+def test_573_review_error_rows_carry_no_rule_id(workdir):
+    scenario = workdir / "assets" / "iso_table21_coupled"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            app.form.switch["enable_heat_fed"] = True
+            app.form.text["heat_fed_method"] = "total-flux"
+            app.form.text["heat_regime"] = "layer"
+            app.form_changed()
+            await settle(pilot, app)
+            assert [e.rule for e in app.cfg.errors] == ["D19"]
+            app.goto(3)
+            await pilot.pause()
+            errors = app.query_one("#rv-errors")
+            rows = [
+                str(errors.get_option_at_index(k).prompt)
+                for k in range(errors.option_count)
+            ]
+            assert rows and all("Enter: go to field" in r for r in rows)
+            assert not any(RULE_ID.search(r) for r in rows), rows
+
+    run(go())
+
+
+def test_573_fds_panel_and_level_1_note_carry_no_rule_id(workdir):
+    from pyfds_evac.tui.app import review_text
+
+    scenario = workdir / "assets" / "iso_table21_coupled"
+
+    async def go():
+        short = FdsFacts(ALL_SLICES, (10.0, 1.0))
+        app = make_app(workdir, facts=short)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            panel = text_of(app, "#fds-panel")
+            assert "! runs past the FDS end" in panel
+            assert not RULE_ID.search(panel), panel
+        app = make_app(workdir, facts=None)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            assert app.cfg.level == 1
+            text = str(review_text(app.cfg))
+            assert "the checks against its slices (soot extinction" in text
+            assert not RULE_ID.search(text), text
 
     run(go())
 
