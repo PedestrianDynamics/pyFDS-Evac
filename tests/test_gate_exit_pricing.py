@@ -8,10 +8,11 @@ None of these tests reads FDS output.
   is walking. Before, every exit was priced on the path the search found from
   the agent's origin node, and an agent that had walked past smoke near its
   origin saw its current exit priced on a detour.
-* #452 (strict xfail, passes once the issue is fixed; then remove the
-  marker): the gate orders routes on raw optical depth, while the exit anchor
+* #452: the gate ordered routes on raw optical depth, while the exit anchor
   treats differences up to ``tau_max * tau_deadband`` as ties. A τ difference
-  of 1e-19 then decides whether the agent may switch at all.
+  of 1e-19 then decided whether the agent may switch at all. Taus within
+  ``EPS_TAU`` now order as equal and travel time decides; a real τ
+  difference inside the deadband still orders on τ.
 """
 
 import math
@@ -21,6 +22,7 @@ from test_rerouting_smoke_sweep import FAR_EXIT, NEAR_EXIT, SPAWN, _graph
 
 from pyfds_evac.core.cognitive_map import AgentCognitiveMap
 from pyfds_evac.core.route_graph import (
+    EPS_TAU,
     AgentRouteState,
     RerouteConfig,
     RouteCostConfig,
@@ -29,6 +31,7 @@ from pyfds_evac.core.route_graph import (
     StageNode,
     _decide_exit_change,
     _euclidean,
+    _order_routes,
     _polyline_stats,
     _select_candidate,
     evaluate_route,
@@ -453,6 +456,144 @@ def test_clear_air_moves_the_agent_to_the_near_exit():
     assert _exit_from_far(_NearArm(0.0)) == NEAR_EXIT
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="#452")
 def test_negligible_smoke_inside_the_deadband_does_not_block_the_switch():
     assert _exit_from_far(_NearArm(1e-20)) == NEAR_EXIT
+
+
+class _FarArm:
+    """K on the arm towards the far exit (x < 17 m), clear elsewhere."""
+
+    def __init__(self, k: float) -> None:
+        self.k = k
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return self.k if x < 17.0 else 0.0
+
+
+@pytest.mark.parametrize(
+    "field",
+    [_NearArm(0.0), _NearArm(1e-20), _FarArm(1e-20), _NearArm(1e-12), _FarArm(1e-12)],
+    ids=["clear", "near-1e-20", "far-1e-20", "near-1e-12", "far-1e-12"],
+)
+def test_round_off_smoke_on_either_arm_leaves_the_decision_unchanged(field):
+    assert _exit_from_far(field) == NEAR_EXIT
+
+
+def _first_exit(field) -> str:
+    ranked = rank_routes(_graph(), SPAWN, 0.0, 0.0, field, None, _gate_config())
+    return ranked[0].exit_id
+
+
+@pytest.mark.parametrize("field", [_NearArm(1e-20), _FarArm(1e-20)])
+def test_initial_choice_with_round_off_smoke_is_the_faster_exit(field):
+    assert _first_exit(field) == NEAR_EXIT
+
+
+def test_a_real_tau_difference_still_orders_on_tau():
+    """Δτ ≈ 0.01 is far above EPS_TAU and inside the deadband: τ decides."""
+    field = _NearArm(1e-3)
+    ranked = rank_routes(_graph(), SPAWN, 0.0, 0.0, field, None, _gate_config())
+    near = next(rc for rc in ranked if rc.exit_id == NEAR_EXIT)
+    assert near.tau_route > 1e3 * EPS_TAU
+    assert ranked[0].exit_id == FAR_EXIT
+    assert _exit_from_far(field) == FAR_EXIT
+
+
+def _star_graph() -> StageGraph:
+    """Origin O; exit E1 10 m east, E2 14 m west, E3 8 m north, E4 18 m south."""
+    nodes = [
+        _node("O", 0.0, 0.0, "distribution"),
+        _node("E1", 10.0, 0.0, "exit"),
+        _node("E2", -14.0, 0.0, "exit"),
+        _node("E3", 0.0, 8.0, "exit"),
+        _node("E4", 0.0, -18.0, "exit"),
+    ]
+    graph = StageGraph(nodes={n.stage_id: n for n in nodes})
+    graph.edges = {"O": [_edge(graph, "O", e) for e in ("E1", "E2", "E3", "E4")]}
+    return graph
+
+
+class _StarSmoke:
+    """K = 0.5 /m towards E3; the given K on the east, west and south arms."""
+
+    def __init__(self, east: float, west: float, south: float = 0.0) -> None:
+        self.east, self.west, self.south = east, west, south
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        if y > 0.5:
+            return 0.5
+        if y < -0.5:
+            return self.south
+        if x > 0.5:
+            return self.east
+        return self.west if x < -0.5 else 0.0
+
+
+def _rank_star(field, current_exit: str = "E3") -> list:
+    return rank_routes(
+        _star_graph(),
+        "O",
+        0.0,
+        0.0,
+        field,
+        None,
+        _gate_config(),
+        current_exit=current_exit,
+    )
+
+
+@pytest.mark.parametrize(
+    ("east", "west"), [(1e-20, 0.0), (0.0, 1e-20)], ids=["east", "west"]
+)
+def test_rivals_within_eps_tau_order_by_travel_time(east, west):
+    ranked = _rank_star(_StarSmoke(east, west))
+    assert [rc.exit_id for rc in ranked] == ["E1", "E2", "E4", "E3"]
+
+
+def _taus(ranked) -> dict[str, float]:
+    return {rc.exit_id: rc.tau_route for rc in ranked}
+
+
+def test_a_tie_across_a_rounding_boundary_orders_by_travel_time():
+    """τ 5.1e-10 against 4.9e-10: a grid of EPS_TAU would split them."""
+    ranked = _rank_star(_StarSmoke(east=6.12e-11, west=4.0e-11, south=0.5))
+    tau = _taus(ranked)
+    assert tau["E2"] < 0.5 * EPS_TAU < tau["E1"]
+    assert abs(tau["E1"] - tau["E2"]) < EPS_TAU
+    assert [rc.exit_id for rc in ranked][:2] == ["E1", "E2"]
+
+
+def test_a_tie_with_the_discounted_current_exit_orders_by_travel_time():
+    """The current exit's τ is discounted before the tie is tested."""
+    ranked = _rank_star(_StarSmoke(east=6.12e-11, west=4.41e-11, south=0.5), "E2")
+    tau = _taus(ranked)
+    discounted = tau["E2"] * _gate_config().current_exit_discount
+    assert discounted < 0.5 * EPS_TAU < tau["E1"] < 0.5 * EPS_TAU + EPS_TAU
+    assert [rc.exit_id for rc in ranked][:2] == ["E1", "E2"]
+
+
+def test_a_chain_of_ties_is_one_group_ordered_by_travel_time():
+    """τ 0, 0.75e-9 and 1.5e-9, each faster than the last: no preference cycle.
+
+    Each neighbouring pair ties, so the three share one group and travel time
+    orders all of them, although E1 and E4 are 1.5e-9 apart.
+    """
+    ranked = _rank_star(_StarSmoke(east=1.8e-10, west=6.1e-11))
+    tau = _taus(ranked)
+    assert tau["E4"] == 0.0
+    assert tau["E2"] - tau["E4"] <= EPS_TAU
+    assert tau["E1"] - tau["E2"] <= EPS_TAU
+    assert tau["E1"] - tau["E4"] > EPS_TAU
+    assert [rc.exit_id for rc in ranked] == ["E1", "E2", "E4", "E3"]
+
+
+def test_equal_keys_in_a_tie_group_keep_the_input_order():
+    """Raw τ never decides: equal time and path length keep the input order.
+
+    At the walked-path substitution this keeps the priced route (first) over
+    the walked one, as the strict comparison did before #452.
+    """
+    keys = {"rc": (0, 0, 4e-10, 10.0, 2), "walked": (0, 0, 3e-10, 10.0, 2)}
+    assert _order_routes(["rc", "walked"], keys.__getitem__) == ["rc", "walked"]
+    keys = {"a": (0, 0, 0.51e-9, 10.0, 2), "b": (0, 0, 0.49e-9, 10.0, 2)}
+    assert _order_routes(["a", "b"], keys.__getitem__) == ["a", "b"]

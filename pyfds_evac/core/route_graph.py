@@ -5,6 +5,7 @@ from __future__ import annotations
 import heapq
 import logging
 import math
+from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import Protocol
 
@@ -16,6 +17,22 @@ from .smoke_speed import speed_factor_from_extinction
 _logger = logging.getLogger(__name__)
 
 _SECONDS_PER_MINUTE = 60.0
+
+# Optical depths at most this far apart order as equal under the gate, so
+# travel time decides (#452). tau = K_ave * L below 1e-9 needs K_ave < 1e-12 /m
+# on routes up to 1 km: physically clear air, and far below FDS's single
+# precision. Without it, round-off such as 1e-19 against 4e-15 decided which
+# clear exit came first. This is a numerical tie, not the anchor's deadband.
+EPS_TAU = 1e-9
+
+
+def taus_tie(a: float, b: float) -> bool:
+    """Whether optical depths *a* and *b* count as equal (``EPS_TAU``).
+
+    Non-finite values never tie: ``inf - inf`` is NaN.
+    """
+    return abs(a - b) <= EPS_TAU
+
 
 # A segment is cached per (source, target) and, when anticipating, per whole
 # second of arrival time -- the same edge costs differently to an agent that
@@ -2238,6 +2255,10 @@ def rank_routes(
 
     # Phase 3: evaluate full routes (reusing cached segments).
     costs = [measure(path) for _dist, path in all_paths.values()]
+
+    def key(rc: RouteCost) -> tuple[int, int, float, float, int]:
+        return policy.order_key(rc, config, current_exit)
+
     if (
         agent_position is not None
         and current_path is not None
@@ -2247,15 +2268,48 @@ def rank_routes(
         costs = [
             walked
             if rc.exit_id == current_exit
-            and policy.order_key(walked, config, current_exit)
-            < policy.order_key(rc, config, current_exit)
+            and _order_routes([rc, walked], key)[0] is walked
             else rc
             for rc in costs
         ]
 
     costs = policy.apply_candidate_set_rules(costs, config)
-    costs.sort(key=lambda rc: policy.order_key(rc, config, current_exit))
-    return _apply_fallback(costs, config, current_exit)
+    return _apply_fallback(_order_routes(costs, key), config, current_exit)
+
+
+def _order_routes(
+    costs: list[RouteCost],
+    key: Callable[[RouteCost], tuple[int, int, float, float, int]],
+) -> list[RouteCost]:
+    """Sort *costs* on *key*, with ordering taus that tie counted as equal.
+
+    A pairwise tolerance is not transitive, so it cannot drive a comparison
+    sort: taus 0, 0.75e-9 and 1.5e-9 with successively faster routes would
+    form a preference cycle. Instead, routes sorted on *key* are grouped while
+    each ordering tau ties the previous one (:func:`taus_tie`) within the same
+    rejection state and tier, and every route in a group takes the group's
+    smallest tau. Any two taus within ``EPS_TAU`` then share a group, and the
+    remaining keys decide among them, then the input order -- never the raw
+    tau. A chain of routes can stretch one group past ``EPS_TAU``. Under
+    "additive" the tau slot is always 0.0, so the order is the plain stable
+    sort on *key*.
+    """
+    keys = [key(rc) for rc in costs]
+    by_raw = sorted(range(len(costs)), key=lambda i: keys[i])
+    group_tau = [0.0] * len(costs)
+    prev: tuple[int, int, float, float, int] | None = None
+    current = 0.0
+    for i in by_raw:
+        k = keys[i]
+        if prev is None or prev[:2] != k[:2] or not taus_tie(prev[2], k[2]):
+            current = k[2]
+        group_tau[i] = current
+        prev = k
+    order = sorted(
+        range(len(costs)),
+        key=lambda i: (keys[i][0], keys[i][1], group_tau[i], *keys[i][3:], i),
+    )
+    return [costs[i] for i in order]
 
 
 def _prices_current_path(

@@ -252,7 +252,9 @@ FDS commit [c9da70d7a](https://github.com/firemodels/fds/blob/c9da70d7a/Source/e
 
 At each re-decision the candidates ranked above the agent's current exit are
 tried in order, and the first one the **exit-switch anchor** accepts is
-taken. The anchor (`_AnchoredPolicy.anchor_allows`) decides in this order:
+taken. Under the gate, two `tau` values at most `EPS_TAU` = 1e-9 apart rank
+as equal (after the current-exit discount), so travel time orders them;
+neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor (`_AnchoredPolicy.anchor_allows`) decides in this order:
 
 1. No current route: accept.
 2. **Must flee** (`_must_flee_rejection`): the current route is refused for its
@@ -473,11 +475,13 @@ Exit throughput throttling has no general test yet
   the walk itself is not sampled. Anticipated arrival times are counted from
   the origin node along the whole first segment (`_measure_route`, `_arrival_time`;
   [#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
-- The ordering compares `tau` with no tolerance, while the anchor treats a
-  difference within `tau_max` × `tau_deadband` as a tie. A difference far
-  below that band, round-off included, can therefore decide whether an agent
-  may switch at all
-  ([#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452), open).
+- The ordering treats `tau` differences up to 1e-9 as ties, so round-off no
+  longer decides it
+  ([#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)).
+  The anchor treats a difference within `tau_max` × `tau_deadband` as a tie,
+  but a real difference inside that band still keeps the current exit ranked
+  first, and the anchor is then never consulted
+  ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187), open).
 - When every route is refused, the fallback keeps the current exit unless the
   rival's worst extinction `k_max_route` is lower by
   `fallback_switch_margin`; it ignores `tau`. In the S4 T-junction, agents

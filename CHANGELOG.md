@@ -89,6 +89,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   order that depends on `PYTHONHASHSEED`: the agent's known subgraph is
   built in sorted order, so an exact tie goes to the alphabetically
   first exit. Full-familiarity agents keep the scenario's order (#199).
+- Under the gate, route optical depths `tau` at most 1e-9 apart rank as
+  equal, so travel time decides. Round-off such as 1e-19 against 4e-15
+  used to decide the order, and with it whether the exit-switch anchor
+  was asked at all. Neighbouring ties form one group; within it, travel
+  time, path length and then the candidate order decide, never the raw
+  `tau`. Three FDS decks move, each from a tie with |Δtau| ≤ 1.6e-12:
+  `t_junction` goes from 0 to 1 switch, one agent of `l_corridor_gate`
+  first picks the near exit (far exit 28 → 27 agents), and agents 5 and
+  6 of `world100_stream_east` take another exit. CI goldens and snapshots
+  are unchanged (#452).
 
 ## [0.3.1] - 2026-10-06
 
