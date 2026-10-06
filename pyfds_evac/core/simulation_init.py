@@ -80,6 +80,10 @@ DEFAULT_SPAWN_PARAMS: dict[str, Any] = {"number": 10, "radius": 0.2, "v0": 1.25}
 sets none and whose deck sets no ``simulationParams`` value (FDS+Evac
 VEL_MEAN for ``v0``)."""
 
+_SPAWN_DEFAULT_TYPES = {"number": int, "radius": float, "v0": float}
+"""How a ``simulationParams`` spawn default is read; ``int`` matches how a
+distribution's ``number`` is read when agents are placed."""
+
 
 def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
     """``number``, ``radius`` and ``v0`` for a distribution that leaves one out.
@@ -87,15 +91,23 @@ def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
     ``simulationParams.number``, ``.radius`` and ``.v0`` are deck-wide
     defaults; a key they do not set takes ``DEFAULT_SPAWN_PARAMS``. The same
     defaults apply with and without journeys, and nothing is taken from
-    another distribution (#567).
+    another distribution (#567). Numeric strings are converted, so both
+    initialisers see the same number; anything else raises ``ValueError``
+    naming the key.
     """
     defaults = dict(DEFAULT_SPAWN_PARAMS)
     if global_parameters is None:
         return defaults
-    for key in defaults:
+    for key, convert in _SPAWN_DEFAULT_TYPES.items():
         value = getattr(global_parameters, key, None)
-        if value is not None:
-            defaults[key] = value
+        if value is None:
+            continue
+        try:
+            defaults[key] = convert(value)
+        except (TypeError, ValueError) as error:
+            raise ValueError(
+                f"simulationParams.{key} must be a number, got {value!r}"
+            ) from error
     return defaults
 
 

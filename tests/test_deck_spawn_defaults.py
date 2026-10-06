@@ -197,3 +197,43 @@ def test_flow_agents_spawn_with_the_deck_defaults(asset, monkeypatch):
     # A blocked spawn is retried, so there can be more calls than agents.
     assert len(built) >= len(raw["distributions"])
     assert set(built) == {(1.1, 0.18)}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_built_in_defaults_are_pinned(asset, tmp_path):
+    """1.25 m/s (FDS+Evac VEL_MEAN), 0.2 m and 10 agents, as literals."""
+    raw, keys = _stripped_raw(asset, ("v0", "desired_speed", "radius"))
+    spawned = _spawn(asset, raw, tmp_path)
+    assert spawned.speeds == {1.25}
+    assert spawned.radii == {0.2}
+    assert DEFAULT_SPAWN_PARAMS == {"number": 10, "radius": 0.2, "v0": 1.25}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_numeric_strings_are_converted(asset, tmp_path):
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    spawned = _spawn(asset, raw, tmp_path, v0="1.1", radius="0.18", number="3")
+    assert spawned.count == 3 * len(keys)
+    assert spawned.speeds == {1.1}
+    assert spawned.radii == {0.18}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+@pytest.mark.parametrize(
+    ("key", "value"), [("v0", "fast"), ("radius", [0.2]), ("number", "3.9")]
+)
+def test_non_numeric_sim_param_names_the_key(asset, key, value, tmp_path):
+    raw, _ = _stripped_raw(asset, SPAWN_KEYS)
+    with pytest.raises(ValueError, match=rf"simulationParams\.{key} must be a number"):
+        _spawn(asset, raw, tmp_path, **{key: value})
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_count_edge_cases(asset, tmp_path):
+    """Zero is a count, not unset; a float count is truncated like ``number``."""
+    raw, keys = _stripped_raw(asset, ("number",))
+    assert _spawn(asset, raw, tmp_path, number=0).count == 0
+    assert _spawn(asset, raw, tmp_path, number=3.9).count == 3 * len(keys)
+    raw["distributions"][keys[0]]["parameters"]["number"] = 0
+    spawned = _spawn(asset, raw, tmp_path, number=3)
+    assert spawned.count == 3 * (len(keys) - 1)
