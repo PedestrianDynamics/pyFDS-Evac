@@ -62,6 +62,13 @@ def _rank_under(hash_seed: str) -> str:
     return done.stdout
 
 
+# Exact ties go to the alphabetically first exit.
+_EXPECTED = (
+    "gate ['exit_e', 'exit_n', 'exit_s', 'exit_w']\n"
+    "additive ['exit_e', 'exit_n', 'exit_s', 'exit_w']\n"
+)
+
+
 def test_tied_routes_rank_the_same_under_every_hash_seed():
     outputs = {_rank_under(seed) for seed in ("0", "1", "7", "42", "12345")}
-    assert len(outputs) == 1, outputs
+    assert outputs == {_EXPECTED}
