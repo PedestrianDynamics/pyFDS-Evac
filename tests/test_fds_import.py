@@ -806,3 +806,15 @@ def test_offset_gamma_keeps_mean_variance_and_the_earliest_start():
     assert (delay.kind, status, delay.offset) == ("gamma", "A", 7)
     assert delay.a * delay.b + delay.offset == pytest.approx(15, abs=1e-12)
     assert delay.a * delay.b**2 == pytest.approx(136 / 12, abs=1e-12)
+
+
+def test_offset_floor_is_zero_for_a_gamma_detection():
+    """R6: DET gamma(2, 3) + PRE U(5, 15): floor 0 + 5 s; mean 16 s, var 18 + 100/12."""
+    from pyfds_evac.core.fds_import_people import Component, combine_delays
+
+    det = Component("gamma", 2, 3, 6, 18)
+    pre = Component("uniform", 5, 15, 10, 100 / 12)
+    delay, status, _ = combine_delays(det, pre)
+    assert (delay.kind, status, delay.offset) == ("gamma", "A", 5)
+    assert delay.a * delay.b + delay.offset == pytest.approx(16, abs=1e-12)
+    assert delay.a * delay.b**2 == pytest.approx(18 + 100 / 12, abs=1e-12)
