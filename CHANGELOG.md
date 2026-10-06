@@ -72,10 +72,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   documented number are unchanged; the `ft_full_gate_detour` and
   `ft_full_additive_detour` golden snapshots, with contact under
   synthetic smoke, are regenerated (#611).
-
-
-### Fixed
-
 - Sign visibility from an FDS run no longer stores a time point past the
   end of the FDS output when `--reroute-interval` does not divide `T_END`;
   the last stored point is `T_END`. It now raises `FdsHorizonError` only
@@ -83,6 +79,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   check and the smoke and FED samplers use, so a run the setup check
   accepts no longer fails mid-run in sign visibility. The vismap cache
   format goes from 5 to 6, so existing caches are rebuilt once (#510).
+- Routes that tie exactly for a discovery agent no longer rank in an
+  order that depends on `PYTHONHASHSEED`: the agent's known subgraph is
+  built in sorted order, so an exact tie goes to the alphabetically
+  first exit. Full-familiarity agents keep the scenario's order (#199).
 
 ## [0.3.1] - 2026-10-06
 
