@@ -2866,6 +2866,11 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;td>The JuPedSim movement model.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>simulationParams.number&lt;/code>, &lt;code>.radius&lt;/code>, &lt;code>.v0&lt;/code>&lt;/td>
+&lt;td>10, 0.2 m, 1.25 m/s&lt;/td>
+&lt;td>Deck-wide defaults for a spawn area that does not set its own &lt;code>number&lt;/code>, &lt;code>radius&lt;/code> or &lt;code>v0&lt;/code>, with and without journeys; see &lt;a href="#spawn-areas-distributionsidparameters">Spawn areas&lt;/a>. A deck without spawn areas places &lt;code>number&lt;/code> agents in the whole walkable area. &lt;code>number&lt;/code> is read with Python&amp;rsquo;s &lt;code>int()&lt;/code> (3.9 and &lt;code>&amp;quot;3&amp;quot;&lt;/code> give 3), &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> with &lt;code>float()&lt;/code>, so numeric strings are accepted; &lt;code>null&lt;/code> means unset. &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> must be finite and greater than 0. A value that does not convert, such as &lt;code>&amp;quot;3.9&amp;quot;&lt;/code> for &lt;code>number&lt;/code> or &lt;code>&amp;quot;fast&amp;quot;&lt;/code> for &lt;code>v0&lt;/code>, or a &lt;code>radius&lt;/code> or &lt;code>v0&lt;/code> of 0, below 0, infinite or NaN (&lt;code>&amp;quot;1e400&amp;quot;&lt;/code>, &lt;code>&amp;quot;nan&amp;quot;&lt;/code>), stops the run with a &lt;code>ValueError&lt;/code> that names the key.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>simulationParams.smoke_slice_height&lt;/code>&lt;/td>
 &lt;td>none (&lt;code>--smoke-slice-height&lt;/code>, 1.6 m)&lt;/td>
 &lt;td>Absolute FDS slice height [m] for smoke, gases and sign legibility. &lt;code>pyfds-evac --smoke-slice-height&lt;/code> overrides it; the run prints the value when it comes from here. &lt;code>pyfds-evac init&lt;/code> writes the floor level plus &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>. The GUI and TUI do not read it yet.&lt;/td>
@@ -2961,9 +2966,9 @@ manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>number&lt;/code>&lt;/td>
-&lt;td>the first distribution&amp;rsquo;s &lt;code>number&lt;/code>, else 100&lt;/td>
+&lt;td>&lt;code>simulationParams.number&lt;/code>, else 10&lt;/td>
 &lt;td>≥ 0&lt;/td>
-&lt;td>Agents placed at the start.&lt;/td>
+&lt;td>Agents placed at the start. No value is taken from another spawn area.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>distribution_mode&lt;/code>&lt;/td>
@@ -2973,7 +2978,7 @@ manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>v0&lt;/code>&lt;/td>
-&lt;td>1.25 m/s&lt;/td>
+&lt;td>&lt;code>simulationParams.v0&lt;/code>, else 1.25 m/s&lt;/td>
 &lt;td>—&lt;/td>
 &lt;td>Clear-air walking speed, for every movement model (FDS+Evac &lt;code>VEL_MEAN&lt;/code>; 1.2 before). Every smoke, irritant and zone factor multiplies this value.&lt;/td>
 &lt;/tr>
@@ -2991,7 +2996,7 @@ manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
-&lt;td>0.2 m&lt;/td>
+&lt;td>&lt;code>simulationParams.radius&lt;/code>, else 0.2 m&lt;/td>
 &lt;td>—&lt;/td>
 &lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it.&lt;/td>
 &lt;/tr>
@@ -6491,7 +6496,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/4e5c6bae2f26ff187c7b09305e2b1bd36b5eca4c">&lt;code>4e5c6ba&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e2e8b74d1fbc006ad737a72deb9a0dea1a5b615f">&lt;code>e2e8b74&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6515,7 +6520,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8c777c9d14c4a170038795fc7817bdfde0680f80cfc70cd08d77fd5b4d580e7f&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bf9cee7aeef248ddf9778e8bcb37744bd8dfeef7028fc53a0f598e7db1716ec7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
