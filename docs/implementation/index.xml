@@ -218,7 +218,7 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/iso-table21-sweep.png" alt="ISO 20414 Test 18 (Table 21) sweep" loading="lazy" />&lt;/p>
-&lt;p>Generate the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> smoke-density vs speed verification plot:&lt;/p>
+&lt;p>Generate the &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> smoke-density vs speed plot:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python scripts/generate_smoke_density_speed_plot.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -231,6 +231,55 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Figure: &lt;img src="https://pedestriandynamics.org/pyFDS-Evac/artifacts/smoke-density-vs-speed.png" alt="soot_density vs speed" loading="lazy" />&lt;/p>
+&lt;p>The &amp;ldquo;pyFDS-Evac&amp;rdquo; markers in this figure are the closed-form law evaluated
+at the guide&amp;rsquo;s four densities, from the same function as the &amp;ldquo;Theory&amp;rdquo;
+line. The figure therefore cannot show a disagreement and is not a
+verification against FDS+Evac.&lt;/p>
+&lt;p>The comparison with the FDS+Evac guide test &amp;ldquo;Unimpeded walking speed vs
+smoke density&amp;rdquo; (Korhonen, FDS+Evac Technical Reference and User&amp;rsquo;s Guide,
+FDS 6.7.6 / Evac 2.6.0, section &amp;ldquo;Component Testing&amp;rdquo;) is in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fds_evac_guide_cases.py" target="_blank" rel="noopener">&lt;code>tests/verification/test_fds_evac_guide_cases.py&lt;/code>&lt;/a>.
+With v0 = 1.5 m/s and the default floor of 0.1, which starts at
+K = 11.15 1/m (1281 mg/m³), the law gives at the densities the FDS run
+holds (0.997 of nominal):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Soot density [mg/m³]&lt;/th>
+&lt;th>K [1/m]&lt;/th>
+&lt;th>Speed [m/s]&lt;/th>
+&lt;th>Time over 5 m [s]&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>1.500&lt;/td>
+&lt;td>3.33&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>498.5&lt;/td>
+&lt;td>4.34&lt;/td>
+&lt;td>0.975&lt;/td>
+&lt;td>5.13&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>997&lt;/td>
+&lt;td>8.67&lt;/td>
+&lt;td>0.4495&lt;/td>
+&lt;td>11.12&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>1495.5&lt;/td>
+&lt;td>13.01&lt;/td>
+&lt;td>0.150 (floor)&lt;/td>
+&lt;td>33.33&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>pyFDS-Evac reproduces these values to a relative 1e-9, since both codes
+use the same law and defaults.&lt;/p>
 &lt;h2>Conversion utilities&lt;span class="hx-absolute -hx-mt-20" id="conversion-utilities">&lt;/span>
 &lt;a href="#conversion-utilities" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Two helper functions support the soot-density-based workflow from the
 original FDS+Evac guide:&lt;/p>

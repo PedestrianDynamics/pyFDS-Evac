@@ -1178,6 +1178,11 @@ on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/
 &lt;td>Local value at agent position on the evacuation mesh, at &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> above the floor (default 1.6 m, evac.f90:1138; [1] §8.7 p. 81; [7] p. 61)&lt;/td>
 &lt;td>Local value at agent position: nearest value position of the extinction slice closest to &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m as in FDS+Evac, 2.0 m before; an absolute z in the FDS domain, not a height above the floor). For FDS&amp;rsquo;s default node-centred slices this is the nearest node, a value FDS averages from the surrounding cells; for &lt;code>CELL_CENTERED=T&lt;/code> slices it is the nearest cell centre (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>). Gas FED is read from the slice of each species nearest the same height&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Verification against FDS+Evac guide tests&lt;/strong>&lt;/td>
+&lt;td>&amp;ldquo;Unimpeded walking speed vs smoke density&amp;rdquo; and &amp;ldquo;FED calculation&amp;rdquo; ([1], &amp;ldquo;Component Testing&amp;rdquo;)&lt;/td>
+&lt;td>Closed-form tests in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fds_evac_guide_cases.py" target="_blank" rel="noopener">&lt;code>tests/verification/test_fds_evac_guide_cases.py&lt;/code>&lt;/a>. Smoke vs speed: same law and defaults, equal to a relative 1e-9. FED: same Purser form; CO coefficient 2.764e-5 against 2.7641667e-5 in FDS &lt;code>func.f90&lt;/code> (relative 6e-5); HV = 1 at zero CO2 and the O2 term below 20 %, as in FDS. The guide&amp;rsquo;s FED figure includes ambient CO2, so its CO case reads about 0.062 at 100 s rather than the nominal 0.059&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>&lt;strong>Key difference:&lt;/strong> Both systems apply the speed reduction using the
