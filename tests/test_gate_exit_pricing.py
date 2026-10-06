@@ -31,6 +31,7 @@ from pyfds_evac.core.route_graph import (
     StageNode,
     _decide_exit_change,
     _euclidean,
+    _order_routes,
     _polyline_stats,
     _select_candidate,
     evaluate_route,
@@ -584,3 +585,15 @@ def test_a_chain_of_ties_is_one_group_ordered_by_travel_time():
     assert tau["E1"] - tau["E2"] <= EPS_TAU
     assert tau["E1"] - tau["E4"] > EPS_TAU
     assert [rc.exit_id for rc in ranked] == ["E1", "E2", "E4", "E3"]
+
+
+def test_equal_keys_in_a_tie_group_keep_the_input_order():
+    """Raw τ never decides: equal time and path length keep the input order.
+
+    At the walked-path substitution this keeps the priced route (first) over
+    the walked one, as the strict comparison did before #452.
+    """
+    keys = {"rc": (0, 0, 4e-10, 10.0, 2), "walked": (0, 0, 3e-10, 10.0, 2)}
+    assert _order_routes(["rc", "walked"], keys.__getitem__) == ["rc", "walked"]
+    keys = {"a": (0, 0, 0.51e-9, 10.0, 2), "b": (0, 0, 0.49e-9, 10.0, 2)}
+    assert _order_routes(["a", "b"], keys.__getitem__) == ["a", "b"]

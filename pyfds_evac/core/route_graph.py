@@ -2289,21 +2289,27 @@ def _order_routes(
     each ordering tau ties the previous one (:func:`taus_tie`) within the same
     rejection state and tier, and every route in a group takes the group's
     smallest tau. Any two taus within ``EPS_TAU`` then share a group, and the
-    remaining keys decide among them. A chain of routes can stretch one group
-    past ``EPS_TAU``. Under "additive" the tau slot is always 0.0, so the
-    order is the plain sort on *key*.
+    remaining keys decide among them, then the input order -- never the raw
+    tau. A chain of routes can stretch one group past ``EPS_TAU``. Under
+    "additive" the tau slot is always 0.0, so the order is the plain stable
+    sort on *key*.
     """
-    ranked = sorted(((key(rc), rc) for rc in costs), key=lambda kr: kr[0])
-    grouped = []
+    keys = [key(rc) for rc in costs]
+    by_raw = sorted(range(len(costs)), key=lambda i: keys[i])
+    group_tau = [0.0] * len(costs)
     prev: tuple[int, int, float, float, int] | None = None
-    group_tau = 0.0
-    for k, rc in ranked:
+    current = 0.0
+    for i in by_raw:
+        k = keys[i]
         if prev is None or prev[:2] != k[:2] or not taus_tie(prev[2], k[2]):
-            group_tau = k[2]
+            current = k[2]
+        group_tau[i] = current
         prev = k
-        grouped.append(((k[0], k[1], group_tau, k[3], k[4]), rc))
-    grouped.sort(key=lambda kr: kr[0])
-    return [rc for _k, rc in grouped]
+    order = sorted(
+        range(len(costs)),
+        key=lambda i: (keys[i][0], keys[i][1], group_tau[i], *keys[i][3:], i),
+    )
+    return [costs[i] for i in order]
 
 
 def _prices_current_path(
