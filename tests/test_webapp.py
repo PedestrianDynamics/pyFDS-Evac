@@ -1424,7 +1424,7 @@ def test_non_choice_flag_still_renders_as_input(client):
     html = client.get("/").text
     assert not re.search(r'<select[^>]*name="fed_threshold"', html)
     tag = re.search(r'<input[^>]*name="fed_threshold"[^>]*>', html)
-    assert tag and 'inputmode="decimal"' in tag.group(0)
+    assert tag and "inputmode" not in tag.group(0)  # #552
     assert 'value="1.0"' in tag.group(0)
 
 
@@ -1439,10 +1439,26 @@ def test_decimal_fields_are_text_so_the_os_region_cannot_add_a_comma(client):
     ):
         tag = re.search(rf'<input[^>]*name="{dest}"[^>]*>', html).group(0)
         assert 'type="number"' not in tag
-        assert 'inputmode="decimal"' in tag
+        assert "inputmode" not in tag  # a comma keypad may lack the point (#552)
         assert f'value="{value}"' in tag
     seed = re.search(r'<input[^>]*name="seed"[^>]*>', html).group(0)
     assert 'type="number"' in seed
+
+
+def test_units_keep_their_case_in_the_uppercase_labels(client):
+    """The label is upper-cased; "(m)" must not read "(M)" (#348)."""
+    from pyfds_evac.config.parameters import GUI_UNIT_LABELS, parameter
+    from pyfds_evac.webapp.params import _LABEL
+
+    assert "text-transform:uppercase" in _LABEL
+    html = client.get("/").text
+    for dest in GUI_UNIT_LABELS:
+        unit = parameter(dest).unit
+        label = re.search(rf'<label[^>]*for="{dest}"[^>]*>(.*?)</label>', html, re.S)
+        assert label, dest
+        span = f'<span class="unit" style="text-transform:none">\u00a0({unit})</span>'
+        assert label.group(1).endswith(span), (dest, label.group(1))
+    assert 'aria-label="Help: Smoke slice height (m)"' in html
 
 
 def test_decimal_values_round_trip_and_a_comma_is_rejected():
@@ -2456,8 +2472,8 @@ class TestAccessibleForm:
 
     def test_units_modes_and_tabs_are_stated(self, client):
         page = client.get("/").text
-        assert "Reroute interval (s)" in page
-        assert "Smoke slice height (m)" in page
+        assert "Reroute interval<span" in page and "\u00a0(s)</span>" in page
+        assert "Smoke slice height<span" in page and "\u00a0(m)</span>" in page
         assert 'id="btn-det" aria-pressed="true"' in page
         assert 'role="tablist"' in page and 'aria-selected="true"' in page
 
