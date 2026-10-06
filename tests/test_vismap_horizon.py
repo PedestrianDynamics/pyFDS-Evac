@@ -62,6 +62,23 @@ def test_time_grid_ends_at_t_end(t_end, step):
     assert np.diff(points).max() == pytest.approx(step)
 
 
+def test_point_within_rounding_of_t_end_is_merged_into_it():
+    """A grid point 1e-9 x T_END or closer to T_END is T_END itself.
+
+    It reads the same last frame, so keeping both would only store the map
+    twice; ``arange`` rounding lands points there too.
+    """
+    fake = MagicMock()
+    fake.fds_time_points = np.array([0.0, 300.0000001])
+    with (
+        patch("fdsvismap.VisMap", return_value=fake),
+        patch("pyfds_evac.core.visibility._extinction_slice_index", return_value=0),
+    ):
+        _build_vismap("unused", {}, time_step_s=1.0, slice_height_m=1.6)
+    points = fake.set_time_points.call_args.args[0]
+    assert points[-2:] == [299.0, 300.0000001]
+
+
 def test_sign_visibility_follows_the_run_wide_window():
     """Answered up to the preflight's last frame + interval, raises past it."""
     last, interval = fds_output_horizon(FDS_DIR)
@@ -98,3 +115,32 @@ def test_cache_without_output_interval_is_rebuilt(tmp_path):
         meta=np.array(json.dumps(meta)),
     )
     assert _load_vismap_cache(path, meta) is None
+
+
+def test_format_5_cache_is_rebuilt_once_then_reused(tmp_path):
+    """A cache from before #510 (point past T_END, no interval) is rebuilt."""
+    path = tmp_path / "vis.npz"
+    old_meta = {**_make_meta(FDS_DIR, SIGN, 1.5, 1.6), "format": 5}
+    np.savez_compressed(
+        path,
+        time_points=np.array([0.0, 1.5, 3.0]),
+        x_coords=np.array([0.0]),
+        y_coords=np.array([0.0]),
+        vis=np.ones((3, 1, 1, 1), dtype=bool),
+        metres=np.full((3, 1, 1, 1), 99.0, dtype=np.float16),
+        meta=np.array(json.dumps(old_meta)),
+    )
+    kwargs = {"cache_path": path, "time_step_s": 1.5, "slice_height_m": 1.6}
+    rebuilt = VisibilityModel(FDS_DIR, SIGN, **kwargs)
+    with np.load(path, allow_pickle=False) as data:
+        assert json.loads(str(data["meta"]))["format"] == 6
+        assert data["time_points"].tolist() == [0.0, 1.5, 2.0]
+        assert float(data["output_interval_s"]) == pytest.approx(1.4633, abs=1e-4)
+    with patch("pyfds_evac.core.visibility._build_vismap") as build:
+        reused = VisibilityModel(FDS_DIR, SIGN, **kwargs)
+    build.assert_not_called()
+    assert reused._horizon == rebuilt._horizon
+    for t in (0.0, 1.8, 2.5):
+        assert reused.visibility_to_node(t, 2.0, 0.0, "s0") == (
+            rebuilt.visibility_to_node(t, 2.0, 0.0, "s0")
+        )

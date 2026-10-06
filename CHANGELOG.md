@@ -56,6 +56,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so. A scenario without the key runs as before (#632).
 - `pyfds-evac --help` lists `pyfds-evac init` among its examples (#606).
 
+### Fixed
+
+- Sign visibility from an FDS run no longer stores a time point past the
+  end of the FDS output when `--reroute-interval` does not divide `T_END`;
+  the last stored point is `T_END`. It now raises `FdsHorizonError` only
+  more than one FDS output interval past the end, the window the setup
+  check and the smoke and FED samplers use, so a run the setup check
+  accepts no longer fails mid-run in sign visibility. The vismap cache
+  format goes from 5 to 6, so existing caches are rebuilt once (#510).
+
 ## [0.3.1] - 2026-10-06
 
 ### Removed

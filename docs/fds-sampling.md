@@ -52,9 +52,10 @@ agents through frozen smoke. `sample` therefore raises `FdsHorizonError`
 `T_END`, so the last spacing can be shorter) past the last frame. The
 message names the quantity, the requested time and the last FDS time.
 The extinction, gas FED and heat FED fields pass this error on instead
-of treating it as an out-of-domain point. `VisibilityModel` raises for a
-query past its last vismap time point, which is the first vismap step at
-or after the FDS end.
+of treating it as an out-of-domain point. `VisibilityModel` uses the same
+window: its stored times end at the last frame of the extinction slice,
+and it raises for a query more than one output interval of that slice
+past it (#510).
 
 `build_run_kwargs` checks the whole run at setup: a scenario
 `max_simulation_time` more than one output interval past the last frame
