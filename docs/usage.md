@@ -563,6 +563,42 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 
 ## Deriving inputs from an FDS deck
 
+### Scenario from an FDS deck — `pyfds-evac import`
+
+Writes `config.json`, `geometry.wkt` and `import_report.json` into a
+directory that `pyfds-evac --scenario` runs as it is, and prints the summary
+and the run command.
+
+```
+pyfds-evac import DECK.fds -o DIR [--walkable FILE.wkt] [--agents N] \
+    [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
+    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds]
+```
+
+- An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
+  `&PERS` records, on one floor (the lowest; `--floor` picks another).
+- A plain FDS deck gets an exit for every `SURF_ID='OPEN'` vent on the
+  outside of its meshes between 0.1 and 1.8 m above the floor, plus any
+  `--exit`. Each walkable part with an exit is a spawn area, with a
+  placeholder of 100 agents in all unless `--agents` is given.
+- An exit is a strip of `--exit-depth` metres on the room side of the exit
+  line, so agents leave about 0.4 s before the line at 1.25 m/s.
+- The walkable area comes from `scripts/generate_walkable_from_fds.py` (a
+  source checkout only), or from `--walkable`. The script fails on most decks
+  whose mesh ends at the building wall; draw the polygon and pass it with
+  `--walkable` then.
+- When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
+  `--fds-dir`, and the output says so; `--no-fds` leaves it out. For an
+  FDS+Evac deck the output is reported but not used.
+
+Every approximated or dropped input is listed with its line number.
+
+| Status | Meaning |
+|---|---|
+| 0 | written and runnable |
+| 3 | written but not runnable: no exit or no agents |
+| 1 | an error; nothing written |
+
 ### Walkable area from FDS obstructions — `generate_walkable_from_fds.py`
 
 Subtracts an FDS deck's blocking `&OBST` records from its mesh footprint and

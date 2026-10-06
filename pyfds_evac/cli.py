@@ -4,6 +4,7 @@ import argparse
 import contextlib
 import importlib
 import json
+import sys
 from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
@@ -97,7 +98,10 @@ examples:
       --output-fed-history out/fed.csv --output-exit-history out/exits.csv
 
   # the same settings in a browser form (pip install "pyfds-evac[gui]")
-  pyfds-evac-gui"""
+  pyfds-evac-gui
+
+  # start a scenario from an FDS deck (see: pyfds-evac import --help)
+  pyfds-evac import deck.fds -o scenario/"""
 
 
 def _verbatim(heading: str) -> str:
@@ -164,6 +168,10 @@ def _apply_scenario_settings(scenario, args) -> None:
 
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
+    if sys.argv[1:2] == ["import"]:
+        from pyfds_evac.cli_import import main as import_main
+
+        return import_main(sys.argv[2:])
     parser = _build_parser()
     args = parser.parse_args(
         namespace=argparse.Namespace(smoke_slice_height=_NOT_GIVEN)

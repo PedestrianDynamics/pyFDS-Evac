@@ -1,0 +1,399 @@
+"""Agent parameters from FDS+Evac ``&PERS``/``&EVAC``: speed, delay, familiarity.
+
+FDS+Evac distribution indices (Guide, Table "Statistical distributions"):
+0 none (MEAN), 1 uniform (LOW, HIGH), 2 truncated normal (MEAN, PARA, LOW,
+HIGH), 3 gamma (PARA=k, PARA2=theta), 4 normal (MEAN, PARA), 5 log-normal
+(MEAN, PARA, HIGH, PARA2=x0), 6 beta (PARA, PARA2), 7 triangular (MEAN=peak,
+LOW, HIGH), 8 Weibull (PARA=alpha shape, PARA2=lambda rate), 9 Gumbel (PARA).
+
+Maintainer decisions applied here (import task record, 2026-10-06):
+
+- Q2: the delay is detection + pre-movement. Exact where the sum is one of
+  our distributions; otherwise a gamma with the same mean and variance
+  (moment-matched), or the mean where a moment is not known in closed form.
+- Q3: a uniform speed range becomes a Gaussian with the same mean and
+  variance (std = half-range / sqrt(3)).
+- Q4: the body radius is not mapped; FDS+Evac's body is three circles, so it
+  has no single-radius equivalent. JuPedSim's 0.2 m stays.
+- Q1: no known doors -> ``discovery``; every exit known -> ``full``; one
+  known exit -> ``discovery`` with that ``entrance``; else the closest of
+  these, with a warning.
+"""
+
+from __future__ import annotations
+
+import math
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
+
+from .fds_deck import NamelistRecord
+
+#: FDS+Evac default agent types: speed (mean, half-range) [m/s].
+DEFAULT_PROPERTIES_SPEED = {
+    "ADULT": (1.25, 0.30),
+    "MALE": (1.35, 0.20),
+    "FEMALE": (1.15, 0.20),
+    "CHILD": (0.90, 0.30),
+    "ELDERLY": (0.80, 0.30),
+}
+#: FDS+Evac HUMAN_SMOKE_HEIGHT default [m above the floor].
+HUMAN_SMOKE_HEIGHT_M = 1.6
+_EULER_GAMMA = 0.5772156649015329
+# Distributions whose sum with another one we can express exactly.
+_EXACT = {"constant", "uniform", "gamma", "weibull"}
+
+AddItem = Callable[..., None]
+
+
+@dataclass(frozen=True)
+class Component:
+    """One FDS+Evac random quantity: our form, its moments, and its source."""
+
+    kind: str
+    a: float | None
+    b: float | None
+    mean: float
+    var: float
+
+
+def component(keys: dict[str, Any], prefix: str, dist_key: str) -> Component | None:
+    """Read ``<prefix>_*`` keys as a :class:`Component`; None if none is set."""
+    if not any(k.startswith(prefix + "_") or k == dist_key for k in keys):
+        return None
+    dist = int(_num(keys, dist_key, 0))
+    reader = _READERS.get(dist)
+    if reader is None:
+        raise ValueError(f"{dist_key}={dist} is not an FDS+Evac distribution index")
+    return reader(keys, prefix)
+
+
+def _num(keys: dict[str, Any], key: str, default: float | None = None) -> float:
+    value = keys.get(key, default)
+    if value is None:
+        raise ValueError(f"{key} is required by the distribution but not given")
+    return float(value)
+
+
+# FDS+Evac's x_MEAN defaults: PRE_MEAN 10 s, DET_MEAN T_BEGIN (0 s here).
+_MEAN_DEFAULTS = {"PRE": 10.0, "DET": 0.0, "VEL": 1.25}
+
+
+def _constant(keys, p):
+    mean = _num(keys, f"{p}_MEAN", _MEAN_DEFAULTS.get(p))
+    return Component("constant", mean, None, mean, 0.0)
+
+
+def _uniform(keys, p):
+    lo, hi = _num(keys, f"{p}_LOW"), _num(keys, f"{p}_HIGH")
+    return Component("uniform", lo, hi, (lo + hi) / 2, (hi - lo) ** 2 / 12)
+
+
+def _truncated_normal(keys, p):
+    mean, sd = _num(keys, f"{p}_MEAN"), _num(keys, f"{p}_PARA")
+    return Component("truncated_normal", mean, sd, mean, sd * sd)
+
+
+def _normal(keys, p):
+    mean, sd = _num(keys, f"{p}_MEAN"), _num(keys, f"{p}_PARA")
+    return Component("normal", mean, sd, mean, sd * sd)
+
+
+def _gamma(keys, p):
+    k, theta = _num(keys, f"{p}_PARA"), _num(keys, f"{p}_PARA2")
+    return Component("gamma", k, theta, k * theta, k * theta * theta)
+
+
+def _lognormal(keys, p):
+    mu, sigma = _num(keys, f"{p}_MEAN"), _num(keys, f"{p}_PARA")
+    x0 = _num(keys, f"{p}_PARA2", 0.0)
+    mean = x0 + math.exp(mu + sigma * sigma / 2)
+    var = (math.exp(sigma * sigma) - 1) * math.exp(2 * mu + sigma * sigma)
+    return Component("lognormal", mu, sigma, mean, var)
+
+
+def _beta(keys, p):
+    a, b = _num(keys, f"{p}_PARA"), _num(keys, f"{p}_PARA2")
+    var = a * b / ((a + b) ** 2 * (a + b + 1))
+    return Component("beta", a, b, a / (a + b), var)
+
+
+def _triangular(keys, p):
+    peak, lo, hi = (_num(keys, f"{p}_{k}") for k in ("MEAN", "LOW", "HIGH"))
+    var = (lo * lo + peak * peak + hi * hi - lo * peak - lo * hi - peak * hi) / 18
+    return Component("triangular", peak, None, (lo + peak + hi) / 3, var)
+
+
+def _weibull(keys, p):
+    """FDS+Evac (alpha shape, lambda rate) -> ours (a = 1/lambda scale, b = alpha)."""
+    alpha, lam = _num(keys, f"{p}_PARA"), _num(keys, f"{p}_PARA2")
+    g1, g2 = math.gamma(1 + 1 / alpha), math.gamma(1 + 2 / alpha)
+    return Component("weibull", 1 / lam, alpha, g1 / lam, (g2 - g1 * g1) / lam**2)
+
+
+def _gumbel(keys, p):
+    alpha = _num(keys, f"{p}_PARA")
+    var = math.pi**2 / (6 * alpha * alpha)
+    return Component("gumbel", alpha, None, _EULER_GAMMA / alpha, var)
+
+
+_READERS = {
+    0: _constant,
+    1: _uniform,
+    2: _truncated_normal,
+    3: _gamma,
+    4: _normal,
+    5: _lognormal,
+    6: _beta,
+    7: _triangular,
+    8: _weibull,
+    9: _gumbel,
+}
+
+
+# --- speed -----------------------------------------------------------------
+
+
+def speed_parameters(pers: NamelistRecord | None, add: AddItem) -> dict[str, Any]:
+    """``v0`` keys from a ``&PERS``; empty when it sets no speed."""
+    if pers is None:
+        return {}
+    keys = _scalars(pers)
+    speed = component(keys, "VEL", "VELOCITY_DIST")
+    if speed is None:
+        return _default_properties_speed(pers, add)
+    return _speed_from(speed, pers, add)
+
+
+def _scalars(record: NamelistRecord) -> dict[str, Any]:
+    return {key: record.value(key) for key in record.params}
+
+
+def _default_properties_speed(pers: NamelistRecord, add: AddItem) -> dict[str, Any]:
+    name = pers.text("DEFAULT_PROPERTIES")
+    if name is None:
+        return {}
+    preset = DEFAULT_PROPERTIES_SPEED.get(name.upper())
+    if preset is None:
+        add("D", "warning", "PERS", f"DEFAULT_PROPERTIES={name!r} is unknown", pers)
+        return {}
+    mean, half = preset
+    std = half / math.sqrt(3)
+    add(
+        "A",
+        "warning",
+        "PERS",
+        f"DEFAULT_PROPERTIES={name!r}: speed uniform {mean - half:g}..{mean + half:g} "
+        f"m/s -> Gaussian v0={mean:g}, v0_std={std:.6g} (same mean and variance)",
+        pers,
+    )
+    return {"v0": mean, "v0_distribution": "gaussian", "v0_std": round(std, 9)}
+
+
+def _speed_from(speed: Component, pers: NamelistRecord, add: AddItem):
+    if speed.kind == "constant":
+        add("S", "info", "PERS", f"constant speed v0={speed.mean:g} m/s", pers)
+        return {"v0": speed.mean, "v0_distribution": "constant"}
+    std = math.sqrt(speed.var)
+    note = {
+        "uniform": "uniform -> Gaussian with the same mean and variance",
+        "truncated_normal": "truncated normal -> Gaussian; LOW/HIGH cut-offs "
+        "dropped, draws are clipped to [0.1, 5] m/s",
+        "normal": "normal -> Gaussian",
+    }.get(speed.kind)
+    if note is None:
+        add(
+            "A",
+            "warning",
+            "PERS",
+            f"{speed.kind} speed -> constant at its mean {speed.mean:g} m/s",
+            pers,
+        )
+        return {"v0": speed.mean, "v0_distribution": "constant"}
+    status = "S" if speed.kind == "normal" else "A"
+    level = "info" if status == "S" else "warning"
+    add(
+        status,
+        level,
+        "PERS",
+        f"speed {note}: v0={speed.mean:g}, v0_std={std:.6g}",
+        pers,
+    )
+    return {"v0": speed.mean, "v0_distribution": "gaussian", "v0_std": round(std, 9)}
+
+
+def body_size_note(pers: NamelistRecord, add: AddItem) -> None:
+    """Q4: the body size is reported, never mapped to ``radius``."""
+    if not (pers.has("DEFAULT_PROPERTIES") or _has_prefix(pers, "DIA")):
+        return
+    add(
+        "A",
+        "warning",
+        "PERS",
+        "body size not mapped: FDS+Evac's body is three circles with no "
+        "single-radius equivalent; the JuPedSim radius stays 0.2 m",
+        pers,
+    )
+
+
+def _has_prefix(record: NamelistRecord, prefix: str) -> bool:
+    return any(
+        k.startswith(prefix + "_") or k == "DIAMETER_DIST" for k in record.params
+    )
+
+
+# --- delay (detection + pre-movement) --------------------------------------
+
+
+def delay_parameters(
+    pers: NamelistRecord | None, group: NamelistRecord, add: AddItem, label: str
+) -> dict[str, Any]:
+    """Premovement keys from DET + PRE; empty when neither is set (Q2)."""
+    keys = _delay_keys(pers)
+    keys.update(_delay_keys(group))
+    det = component(keys, "DET", "DET_EVAC_DIST")
+    pre = component(keys, "PRE", "PRE_EVAC_DIST")
+    if det is None and pre is None:
+        return {}
+    det = det or Component("constant", 0.0, None, 0.0, 0.0)
+    pre = pre or Component("constant", 10.0, None, 10.0, 0.0)
+    combined, status, how = combine_delays(det, pre)
+    level = "info" if status == "S" else "warning"
+    add(status, level, label, f"delay = detection + pre-movement: {how}", group)
+    return _premovement_keys(combined)
+
+
+def _delay_keys(record: NamelistRecord | None) -> dict[str, Any]:
+    if record is None:
+        return {}
+    return {k: record.value(k) for k in record.params if k.startswith(("PRE_", "DET_"))}
+
+
+def combine_delays(det: Component, pre: Component) -> tuple[Component, str, str]:
+    """Sum of two independent delays as one of our distributions."""
+    if det.kind == "constant" and pre.kind == "constant":
+        total = det.mean + pre.mean
+        return (
+            Component("constant", total, None, total, 0.0),
+            "S",
+            f"constant {total:g} s",
+        )
+    constant, other = (det, pre) if det.kind == "constant" else (pre, det)
+    if constant.kind == "constant":
+        return _shift(constant.mean, other)
+    if det.kind in _EXACT and pre.kind in _EXACT:
+        return _moment_gamma(det, pre)
+    return _at_mean(det.mean + pre.mean, det, pre)
+
+
+def _shift(c: float, other: Component) -> tuple[Component, str, str]:
+    if other.kind == "uniform":
+        lo, hi = float(other.a or 0.0) + c, float(other.b or 0.0) + c
+        shifted = Component("uniform", lo, hi, other.mean + c, other.var)
+        return shifted, "S", f"uniform {lo:g}..{hi:g} s"
+    if other.kind in ("gamma", "weibull") and c == 0:
+        return other, "S", f"{other.kind} a={other.a:.6g}, b={other.b:.6g}"
+    if other.kind in ("gamma", "weibull"):
+        zero = Component("constant", c, None, c, 0.0)
+        return _moment_gamma(zero, other)
+    return _at_mean(other.mean + c, other)
+
+
+def _moment_gamma(*parts: Component) -> tuple[Component, str, str]:
+    mean = sum(p.mean for p in parts)
+    var = sum(p.var for p in parts)
+    k, theta = mean * mean / var, var / mean
+    how = (
+        f"{' + '.join(p.kind for p in parts)} -> gamma with the same mean "
+        f"{mean:.6g} s and variance {var:.6g} s2 (k={k:.6g}, theta={theta:.6g})"
+    )
+    return Component("gamma", k, theta, mean, var), "A", how
+
+
+def _at_mean(mean: float, *parts: Component) -> tuple[Component, str, str]:
+    how = f"{' + '.join(p.kind for p in parts)} -> constant at the mean {mean:.6g} s"
+    return Component("constant", mean, None, mean, 0.0), "A", how
+
+
+def _premovement_keys(delay: Component) -> dict[str, Any]:
+    keys: dict[str, Any] = {
+        "use_premovement": True,
+        "premovement_distribution": delay.kind,
+        "premovement_param_a": round(delay.a or 0.0, 9),
+    }
+    if delay.b is not None:
+        keys["premovement_param_b"] = round(delay.b, 9)
+    return keys
+
+
+# --- familiarity -----------------------------------------------------------
+
+
+def familiarity_parameters(
+    group: NamelistRecord,
+    exit_ids: list[str],
+    known_exits: list[str],
+    add: AddItem,
+    label: str,
+) -> dict[str, Any]:
+    """Q1 mapping of ``KNOWN_DOOR_NAMES``/``KNOWN_DOOR_PROBS``."""
+    names = [str(n) for n in group.values("KNOWN_DOOR_NAMES")]
+    probs = [float(p) for p in group.values("KNOWN_DOOR_PROBS")] or [1.0] * len(names)
+    if len(probs) != len(names):
+        add(
+            "A",
+            "warning",
+            label,
+            "KNOWN_DOOR_PROBS and KNOWN_DOOR_NAMES differ in "
+            "length; every listed door taken as known",
+            group,
+        )
+        probs = [1.0] * len(names)
+    unknown = [n for n in names if n not in exit_ids]
+    if unknown:
+        add(
+            "D",
+            "warning",
+            label,
+            f"known doors not imported as exits: {unknown}",
+            group,
+        )
+    known = {n: p for n, p in zip(names, probs, strict=True) if n in exit_ids and p > 0}
+    known.update({e: 1.0 for e in known_exits if e in exit_ids})
+    return _familiarity_for(known, exit_ids, group, add, label)
+
+
+def _familiarity_for(known, exit_ids, group, add, label) -> dict[str, Any]:
+    certain = sorted(n for n, p in known.items() if p >= 1.0)
+    if not known:
+        add(
+            "A",
+            "warning",
+            label,
+            "no known doors -> familiarity 'discovery'; agents "
+            "find exits by signs read within 30 m, FDS+Evac by unlimited sight",
+            group,
+        )
+        return {"familiarity": "discovery"}
+    if len(certain) == len(known) and set(certain) == set(exit_ids):
+        add("S", "info", label, "every exit known -> familiarity 'full'", group)
+        return {"familiarity": "full"}
+    if len(certain) == len(known) == 1:
+        add(
+            "S",
+            "info",
+            label,
+            f"one known exit -> 'discovery', entrance {certain[0]!r}",
+            group,
+        )
+        return {"familiarity": "discovery", "entrance": certain[0]}
+    best = max(known, key=lambda n: (known[n], -list(known).index(n)))
+    add(
+        "A",
+        "warning",
+        label,
+        f"known doors {dict(known)} cannot be expressed; "
+        f"closest: 'discovery' with entrance {best!r}",
+        group,
+    )
+    return {"familiarity": "discovery", "entrance": best}
