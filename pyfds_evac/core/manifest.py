@@ -288,6 +288,7 @@ def build_manifest(
     replay_exits: dict[str, Any] | None = None,
     fds_coverage: dict[str, Any] | None = None,
     outcome: dict[str, Any] | None = None,
+    sfm: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
@@ -306,6 +307,9 @@ def build_manifest(
     FDS slices (``FdsCoverageReport.to_dict``), recorded when FDS is sampled.
     ``outcome`` is how the run ended: ``status`` (``"completed"`` or
     ``"incomplete"``), ``agents_remaining`` and ``agents_not_spawned``.
+    ``sfm`` is what a SocialForceModel run gave JuPedSim: ``body_force``,
+    ``friction``, ``friction_requested`` and ``friction_clamped``
+    (``scenario.sfm_model_settings``), recorded for that model only.
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -340,6 +344,8 @@ def build_manifest(
         manifest["fds_coverage"] = fds_coverage
     if outcome is not None:
         manifest["outcome"] = outcome
+    if sfm is not None:
+        manifest["sfm"] = sfm
     return manifest
 
 

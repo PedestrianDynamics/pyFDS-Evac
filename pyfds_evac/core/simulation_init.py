@@ -198,6 +198,14 @@ def install_if_missing(pip_name: str, import_name: str = None):
         print(f"{pip_name} already installed.")
 
 
+def _sfm_obstacle_scale(global_params) -> float:
+    """``sfm_obstacle_scale`` (default 2000, JuPedSim's), validated."""
+    from .scenario import sfm_parameter  # scenario imports this module lazily
+
+    params = vars(global_params) if global_params is not None else {}
+    return sfm_parameter(params, "sfm_obstacle_scale", 2000.0)
+
+
 def create_agent_parameters(
     model_type: str,
     position: tuple,
@@ -297,6 +305,7 @@ def create_agent_parameters(
         reaction_time = getattr(global_params, "relaxation_time", 0.5)
         agent_scale = getattr(global_params, "agent_strength", 2000)
         force_distance = getattr(global_params, "agent_range", 0.08)
+        obstacle_scale = _sfm_obstacle_scale(global_params)
         return _construct_with_fallbacks(
             jps.SocialForceModelAgentParameters,
             {
@@ -304,6 +313,7 @@ def create_agent_parameters(
                 "desired_speed": desired_speed,
                 "reaction_time": reaction_time,
                 "agent_scale": agent_scale,
+                "obstacle_scale": obstacle_scale,
                 "force_distance": force_distance,
             },
             {
@@ -311,6 +321,7 @@ def create_agent_parameters(
                 "desiredSpeed": desired_speed,
                 "reactionTime": reaction_time,
                 "agentScale": agent_scale,
+                "obstacleScale": obstacle_scale,
                 "forceDistance": force_distance,
             },
         )

@@ -63,6 +63,32 @@ Under `config.simulation_settings`.
 `simulationParams.dt` is not read: the JuPedSim step is 0.01 s, and the
 trajectory is written every tenth step (10 frames/s).
 
+### Social force model
+
+Read when `model_type` is `"SocialForceModel"`. The symbols are those of
+Helbing, Farkas & Vicsek (2000), Eqs. (1)–(3)
+([doi:10.1038/35035023](https://doi.org/10.1038/35035023)); a missing key takes
+JuPedSim 1.4.2's default.
+
+| Key (`simulationParams.`) | JuPedSim parameter | Symbol | Unit | Default |
+|---|---|---|---|---|
+| `sfm_body_force` | `SocialForceModel(body_force=)` | *k* | kg s⁻² | 120000 |
+| `sfm_friction` | `SocialForceModel(friction=)` | *κ* | kg m⁻¹ s⁻¹ | always 0, see below |
+| `agent_strength` | `agent_scale`, per agent | *A*, agent term | N | 2000 |
+| `sfm_obstacle_scale` | `obstacle_scale`, per agent | *A*, wall term | N | 2000 |
+| `agent_range` | `force_distance`, per agent | *B* | m | 0.08 |
+| `relaxation_time` | `reaction_time`, per agent | *τ* | s | 0.5 |
+
+Negative, non-finite or non-numeric `sfm_body_force`, `sfm_friction` or
+`sfm_obstacle_scale` stop the run with `ValueError`. JuPedSim 1.4.2 has
+one friction for the agent and wall terms and applies the wall term with
+the wrong sign
+([jupedsim#1677](https://github.com/PedestrianDynamics/jupedsim/pull/1677)),
+so friction is always passed as 0, also when `sfm_friction` is missing
+([#635](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635)).
+A deck that declares `sfm_friction` above 0 gets a warning. The run
+manifest records what JuPedSim received under `sfm`.
+
 ## Spawn areas: `distributions.<id>.parameters`
 
 | Key | Default | Range | Effect |
