@@ -559,6 +559,11 @@ class EvacTui(App[None]):
     def on_unmount(self) -> None:
         """Let the reader thread remove the run's temporary folder."""
         self._quitting = True  # the screens are gone; drop late events
+        if self._render_timer is not None:
+            self._render_timer.stop()
+        if self._cfg_timer is not None:
+            self._cfg_timer.stop()
+        self._render_timer = self._cfg_timer = None
         join = getattr(self.runner, "join", None)
         if join is not None:
             join(10.0)
@@ -595,7 +600,7 @@ class EvacTui(App[None]):
             "Reset all settings", "Back to the defaults (asks first)", self.reset_all
         )
         yield SystemCommand("Toggle advanced in all sections", "", self.toggle_advanced)
-        yield SystemCommand("Open docs page", model.USAGE_DOCS, self.show_docs)
+        yield SystemCommand("Open docs page", model.TUI_DOCS, self.show_docs)
 
     def set_theme(self, name: str) -> None:
         self.theme = name
@@ -1512,6 +1517,9 @@ class EvacTui(App[None]):
         self.push_screen(TextScreen(model.label(row.param), text))
 
     def action_copy_command(self) -> None:
+        if self.form.scenario is None:
+            return
+        self.config_now()  # an edit within the debounce is not configured yet
         if self.cfg is None:
             return
         self.copy_to_clipboard(self.cfg.command)
@@ -1543,7 +1551,10 @@ class EvacTui(App[None]):
         )
 
     def action_save(self) -> None:
-        if self.form.scenario is None or self.cfg is None:
+        if self.form.scenario is None:
+            return
+        self.config_now()  # an edit within the debounce is not configured yet
+        if self.cfg is None:
             return
         folder = Path(self.planned())
         sh, py = model.save_command(folder, self.cfg.command, self.preview_script())
@@ -1664,6 +1675,8 @@ class EvacTui(App[None]):
     def _render_tick(self) -> None:
         """Redraw the Run step at most ten times per second."""
         self._render_timer = None
+        if self._quitting:
+            return  # the widgets render_run queries are gone
         if self.current_run is not None and not self.current_run.done:
             self.render_run()
 
@@ -2065,7 +2078,7 @@ class EvacTui(App[None]):
                 c.collapsed = not collapse
 
     def show_docs(self) -> None:
-        self.notify(f"Docs: {model.USAGE_DOCS}", timeout=10, markup=False)
+        self.notify(f"Docs: {model.TUI_DOCS}", timeout=10, markup=False)
 
 
 # --- text builders (no widget state) ----------------------------------------------

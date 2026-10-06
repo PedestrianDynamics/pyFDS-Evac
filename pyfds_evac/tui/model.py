@@ -72,6 +72,7 @@ SECTION_DOCS: dict[str, str] = {
     GROUP_SIGHT: DOCS_URL + "models/wayfinding/",
 }
 USAGE_DOCS = DOCS_URL + "docs/usage/"
+TUI_DOCS = DOCS_URL + "docs/using/terminal-ui/"
 FDS_DOCS = DOCS_URL + "docs/fds-case-requirements/"
 
 #: Options set on other steps (scenario, FDS folder) or derived from the

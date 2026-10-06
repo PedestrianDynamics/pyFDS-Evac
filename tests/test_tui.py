@@ -870,6 +870,24 @@ def test_only_two_themes_in_the_palette(workdir):
     run(go())
 
 
+def test_575_docs_command_opens_the_terminal_ui_page(workdir):
+    page = "https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            commands = app.get_system_commands(app.screen)
+            (docs,) = [c for c in commands if c.title == "Open docs page"]
+            assert docs.help == page
+            said: list[str] = []
+            app.notify = lambda text, **_: said.append(text)
+            docs.callback()
+            assert said == [f"Docs: {page}"]
+
+    run(go())
+
+
 def test_a19_keyboard_only_to_a_run(workdir):
     runner = FakeRunner()
 
@@ -1895,7 +1913,6 @@ def test_rt_script_does_not_name_the_gui(tmp_path):
     assert "GUI" not in model.python_for(ns, ["Scenario: s"], "out")
 
 
-@pytest.mark.xfail(strict=True, reason="#559: Save writes a stale command.sh")
 def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
     async def go():
         app = EvacTui(
@@ -1914,6 +1931,29 @@ def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
             app.action_save()
             folder = Path(app.planned())
             assert cli_options((folder / "command.sh").read_text())["seed"] == 11
+
+    run(go())
+
+
+def test_rt_copy_right_after_an_edit_copies_the_edit(workdir):
+    async def go():
+        app = EvacTui(
+            cwd=workdir,
+            runner=FakeRunner(),
+            inspector=lambda path: FACTS,
+            debounce=30.0,
+        )
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.config_now()
+            app.goto(3)
+            await pilot.pause()
+            copied: list[str] = []
+            app.copy_to_clipboard = copied.append
+            app.form.text["seed"] = "11"
+            app.form_changed()  # the configuration is due in 30 s
+            app.action_copy_command()
+            assert cli_options(copied[-1])["seed"] == 11
 
     run(go())
 
@@ -1980,11 +2020,25 @@ def test_321_live_line_shows_incapacitated_only_when_modelled(workdir, modelled,
             text = text_of(app, "#run-status")
             assert "evacuated 1 of 6 planned" in text
             assert ("incapacitated 1" in text) is shown
-            # The run never finishes here: stop the pending redraw so it
-            # cannot fire while the app tears down.
-            if app._render_timer is not None:
-                app._render_timer.stop()
-                app._render_timer = None
+
+    run(go())
+
+
+def test_602_no_redraw_after_the_app_closes(workdir):
+    """A run event arms a redraw; closing the app must cancel it."""
+
+    def no_widgets():
+        raise AssertionError("render_run after unmount")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _started(pilot, app, workdir)
+            app.on_run_event(events.PhaseEvent(events.PHASE_RUNNING))
+            assert app._render_timer is not None
+        assert app._render_timer is None and app._cfg_timer is None
+        app.render_run = no_widgets
+        app._render_tick()  # a tick that was already due
 
     run(go())
 
