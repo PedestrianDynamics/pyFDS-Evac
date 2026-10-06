@@ -247,10 +247,13 @@ def cognitive_subgraph(cmap: AgentCognitiveMap, graph):
     # Familiarity limits what the agent knows, not how it measures: keep the
     # engine so distances from the agent's position follow the walkable area.
     sub = StageGraph(routing_engine=graph.routing_engine)
-    for node_id in cmap.known_nodes:
+    # Sorted, not set order: routes tied on every ranking key keep the
+    # subgraph's order, and set order follows the per-process string hash
+    # (#199).
+    for node_id in sorted(cmap.known_nodes):
         if node_id in graph.nodes:
             sub.nodes[node_id] = graph.nodes[node_id]
-    for src, tgt in cmap.known_edges:
+    for src, tgt in sorted(cmap.known_edges):
         if src in sub.nodes and tgt in sub.nodes:
             for edge in graph.edges.get(src, []):
                 if edge.target == tgt:
