@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The plan-view frame recorder of the terminal UI gets a frozen copy of
   the run's incapacitated agents, not the run's own set, so it cannot
   change who is incapacitated. Frames and results are unchanged (#561).
+- A SocialForceModel deck whose `simulationParams` omits
+  `relaxation_time`, `agent_strength` or `agent_range` runs with 0.5,
+  2000 and 0.08 for the missing keys, the values already used without
+  simulation parameters. It used to crash, report a spawn area that is
+  too small, or spawn no flow agents. An error other than a failed
+  placement while spawning agents on a journey keeps its own type
+  instead of being reported as a placement failure (#568).
 
 ## [0.3.0] - 2026-10-05
 
