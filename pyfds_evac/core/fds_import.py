@@ -24,6 +24,9 @@ from __future__ import annotations
 
 import json
 import math
+import os
+import shutil
+import tempfile
 from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
@@ -120,14 +123,58 @@ class ImportResult:
         return command + (f" --fds-dir {fds_dir}" if fds_dir else "")
 
     def write(self, out_dir: str | Path) -> Path:
-        """Write ``config.json``, ``geometry.wkt`` and ``import_report.json``."""
+        """Write ``config.json``, ``geometry.wkt`` and ``import_report.json``.
+
+        The files are written into a temporary folder next to *out_dir* and
+        then moved in, so a failed write leaves no partial file behind.
+        """
         target = Path(out_dir)
-        target.mkdir(parents=True, exist_ok=True)
         self.report.recommendations["run_command"] = self.run_command(out_dir)
-        _dump(target / "config.json", self.raw)
-        (target / "geometry.wkt").write_text(self.walkable_wkt + "\n", encoding="utf-8")
-        _dump(target / "import_report.json", self.report.to_dict())
+        target.parent.mkdir(parents=True, exist_ok=True)
+        staging = Path(tempfile.mkdtemp(prefix=f".{target.name}.", dir=target.parent))
+        try:
+            self._write_files(staging)
+            _move_into(staging, target)
+        finally:
+            shutil.rmtree(staging, ignore_errors=True)
         return target
+
+    def _write_files(self, folder: Path) -> None:
+        _dump(folder / "config.json", self.raw)
+        (folder / "geometry.wkt").write_text(self.walkable_wkt + "\n", encoding="utf-8")
+        _dump(folder / "import_report.json", self.report.to_dict())
+
+
+_OUTPUT_FILES = ("config.json", "geometry.wkt", "import_report.json")
+
+
+def check_output_folder(out_dir: str | Path, *, force: bool = False) -> None:
+    """Refuse to overwrite a scenario the importer did not write.
+
+    A folder with a ``config.json`` but no ``import_report.json`` holds an
+    authored scenario (decks sit next to theirs in ``assets/``); importing
+    over it would replace its journeys, routing and parameters. A folder
+    the importer made may be re-imported. *force* skips the check.
+    """
+    target = Path(out_dir)
+    if force or not (target / "config.json").exists():
+        return
+    if (target / "import_report.json").exists():
+        return
+    raise FdsImportError(
+        f"{target} holds a config.json that the importer did not write "
+        "(no import_report.json); importing would replace it. Choose another "
+        "-o folder, or pass --force to overwrite it"
+    )
+
+
+def _move_into(staging: Path, target: Path) -> None:
+    """Rename the staged folder to *target*, or each file into an existing one."""
+    if not target.exists():
+        staging.rename(target)
+        return
+    for name in _OUTPUT_FILES:
+        os.replace(staging / name, target / name)
 
 
 def _dump(path: Path, data: dict[str, Any]) -> None:

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import math
+import shutil
 from pathlib import Path
 
 import pytest
@@ -683,3 +684,101 @@ def test_uniform_velocity_dist_becomes_gaussian(tmp_path):
     assert params["v0"] == pytest.approx(1.25, abs=1e-12)
     assert params["v0_distribution"] == "gaussian"
     assert params["v0_std"] == pytest.approx(0.30 / math.sqrt(3), abs=1e-9)
+
+
+# --- CLI exit statuses and output ------------------------------------------------
+
+
+def test_cli_argument_error_exits_one(tmp_path, capsys):
+    assert cli_import.main([str(tmp_path / "d.fds")]) == cli_import.EXIT_ERROR
+    assert "-o/--output" in capsys.readouterr().err
+
+
+def test_cli_write_failure_exits_one_and_leaves_nothing(tmp_path, capsys):
+    deck = _deck(tmp_path, ROOM.format(extra=DOOR + "\n" + EVAC.format(extra="")))
+    blocker = tmp_path / "file"
+    blocker.write_text("", encoding="utf-8")
+    argv = [
+        str(deck),
+        "-o",
+        str(blocker / "out"),
+        "--walkable",
+        _wkt(tmp_path, ROOM_WKT),
+    ]
+    assert cli_import.main(argv) == cli_import.EXIT_ERROR
+    assert "cannot write" in capsys.readouterr().err
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "deck.fds",
+        "file",
+        "walk.wkt",
+    ]
+
+
+def test_write_replaces_files_in_an_existing_folder(tmp_path):
+    out = tmp_path / "o"
+    out.mkdir()
+    (out / "keep.txt").write_text("x", encoding="utf-8")
+    _room(tmp_path, DOOR).write(out)
+    names = sorted(p.name for p in out.iterdir())
+    assert names == ["config.json", "geometry.wkt", "import_report.json", "keep.txt"]
+    assert [p.name for p in tmp_path.iterdir() if p.name.startswith(".")] == []
+
+
+def test_cli_not_runnable_prints_no_run_command(tmp_path, capsys):
+    path = _deck(tmp_path, MODERN.format(vents=""))
+    argv = [str(path), "-o", str(tmp_path / "o"), "--walkable", _wkt(tmp_path)]
+    assert cli_import.main(argv) == cli_import.EXIT_NOT_RUNNABLE
+    assert "Run:" not in capsys.readouterr().out
+
+
+def test_cli_exit_dropped_with_an_error_exits_three(tmp_path, capsys):
+    far = "&EXIT ID='Far', IOR=1, XB=20,20,4,6,0.4,1.6 /"
+    deck = _deck(
+        tmp_path, ROOM.format(extra="\n".join((DOOR, far, EVAC.format(extra=""))))
+    )
+    argv = [
+        str(deck),
+        "-o",
+        str(tmp_path / "o"),
+        "--walkable",
+        _wkt(tmp_path, ROOM_WKT),
+    ]
+    assert cli_import.main(argv) == cli_import.EXIT_NOT_RUNNABLE
+    out = capsys.readouterr().out
+    assert "Run:" in out and "dropped with an error" in out
+
+
+def _authored_copy(tmp_path) -> Path:
+    """QA's overwrite case: a deck next to its authored scenario."""
+    source = (
+        Path(__file__).resolve().parents[1] / "assets/schroeder2020_room/hrr060_2door"
+    )
+    target = tmp_path / "hrr060_2door"
+    shutil.copytree(source, target)
+    return target
+
+
+def test_import_refuses_to_overwrite_an_authored_scenario(tmp_path, capsys):
+    folder = _authored_copy(tmp_path)
+    before = (folder / "config.json").read_bytes()
+    argv = [str(folder / "hrr060_2door.fds"), "-o", str(folder)]
+    argv += ["--walkable", str(folder / "geometry.wkt")]
+    assert cli_import.main(argv) == cli_import.EXIT_ERROR
+    assert "--force" in capsys.readouterr().err
+    assert (folder / "config.json").read_bytes() == before
+    assert not (folder / "import_report.json").exists()
+    assert cli_import.main([*argv, "--force"]) == cli_import.EXIT_OK
+    assert (folder / "config.json").read_bytes() != before
+
+
+def test_reimport_into_an_importer_made_folder_is_allowed(tmp_path):
+    deck = _deck(tmp_path, ROOM.format(extra=DOOR + "\n" + EVAC.format(extra="")))
+    argv = [
+        str(deck),
+        "-o",
+        str(tmp_path / "o"),
+        "--walkable",
+        _wkt(tmp_path, ROOM_WKT),
+    ]
+    assert cli_import.main(argv) == cli_import.EXIT_OK
+    assert cli_import.main(argv) == cli_import.EXIT_OK

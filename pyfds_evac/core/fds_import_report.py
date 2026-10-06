@@ -58,6 +58,11 @@ class ImportReport:
     def runnable(self) -> bool:
         return not self.not_runnable
 
+    @property
+    def errors(self) -> list[ReportItem]:
+        """Items dropped at error level (an exit, a spawn area, ...)."""
+        return [item for item in self.items if item.level == "error"]
+
     def add(
         self,
         status: str,
