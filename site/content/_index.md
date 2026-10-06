@@ -4,7 +4,7 @@ layout: hextra-home
 ---
 
 {{< hextra/hero-badge link="https://github.com/PedestrianDynamics/pyFDS-Evac" >}}
-  <span>Alpha, MIT licence</span>
+  <span>v{{< package-version >}}, MIT licence</span>
   {{< icon name="arrow-circle-right" attributes="height=14" >}}
 {{< /hextra/hero-badge >}}
 
