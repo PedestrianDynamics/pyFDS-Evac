@@ -92,23 +92,34 @@ def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
     defaults; a key they do not set takes ``DEFAULT_SPAWN_PARAMS``. The same
     defaults apply with and without journeys, and nothing is taken from
     another distribution (#567). Numeric strings are converted, so both
-    initialisers see the same number; anything else raises ``ValueError``
-    naming the key.
+    initialisers see the same number. ``radius`` and ``v0`` must be finite
+    and > 0. Anything else raises ``ValueError`` naming the key.
     """
     defaults = dict(DEFAULT_SPAWN_PARAMS)
     if global_parameters is None:
         return defaults
-    for key, convert in _SPAWN_DEFAULT_TYPES.items():
+    for key in _SPAWN_DEFAULT_TYPES:
         value = getattr(global_parameters, key, None)
-        if value is None:
-            continue
-        try:
-            defaults[key] = convert(value)
-        except (TypeError, ValueError, OverflowError) as error:
-            raise ValueError(
-                f"simulationParams.{key} must be a number, got {value!r}"
-            ) from error
+        if value is not None:
+            defaults[key] = _deck_spawn_value(key, value)
     return defaults
+
+
+def _deck_spawn_value(key: str, value: Any) -> Any:
+    """``simulationParams.<key>`` converted; a ``ValueError`` names the key."""
+    try:
+        converted = _SPAWN_DEFAULT_TYPES[key](value)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError(
+            f"simulationParams.{key} must be a number, got {value!r}"
+        ) from error
+    if key == "number":
+        return converted
+    if not (math.isfinite(converted) and converted > 0):
+        raise ValueError(
+            f"simulationParams.{key} must be finite and > 0, got {value!r}"
+        )
+    return converted
 
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:

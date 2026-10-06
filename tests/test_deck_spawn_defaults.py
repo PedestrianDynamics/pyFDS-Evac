@@ -244,3 +244,16 @@ def test_count_edge_cases(asset, tmp_path):
     raw["distributions"][keys[0]]["parameters"]["number"] = 0
     spawned = _spawn(asset, raw, tmp_path, number=3)
     assert spawned.count == 3 * (len(keys) - 1)
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+@pytest.mark.parametrize("key", ["v0", "radius"])
+@pytest.mark.parametrize("value", ["1e400", "nan", "inf", float("nan"), 0, -0.5])
+def test_non_finite_or_non_positive_sim_param_names_the_key(
+    asset, key, value, tmp_path
+):
+    raw, _ = _stripped_raw(asset, SPAWN_KEYS)
+    with pytest.raises(
+        ValueError, match=rf"simulationParams\.{key} must be finite and > 0"
+    ):
+        _spawn(asset, raw, tmp_path, **{key: value})
