@@ -15,6 +15,7 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import math
 from types import SimpleNamespace
 
 import jupedsim as jps
@@ -119,3 +120,161 @@ def test_flow_spawning_with_sfm_keys_missing_spawns_agents():
         assert result.metrics["agents_not_spawned"] < 200
     finally:
         result.cleanup()
+
+
+# --- model-level SFM parameters (#611) and the friction clamp (#635) --------
+
+WALL_DECK_GEOMETRY = [(0, 0), (60, 0), (60, 4), (0, 4)]
+WALL_DECK_EXIT = [(58, 0), (60, 0), (60, 4), (58, 4)]
+
+
+def _sfm_model(params):
+    return _build_model("SocialForceModel", params)
+
+
+def test_sfm_body_force_is_read_from_the_deck():
+    assert _sfm_model({"sfm_body_force": 50000.0}).body_force == 50000.0
+
+
+def test_sfm_body_force_defaults_to_jupedsim_and_ignores_agent_strength():
+    assert _sfm_model({}).body_force == 120000.0
+    assert _sfm_model({"agent_strength": 1500}).body_force == 120000.0
+
+
+def test_sfm_declared_friction_is_clamped_with_a_warning(caplog):
+    with caplog.at_level("WARNING", logger="pyfds_evac"):
+        model = _sfm_model({"sfm_friction": 240000})
+    assert model.friction == 0.0
+    warnings = [r for r in caplog.records if r.levelname == "WARNING"]
+    assert len(warnings) == 1
+    assert "1677" in warnings[0].getMessage()
+    assert "#635" in warnings[0].getMessage()
+    assert "240000" in warnings[0].getMessage()
+
+
+@pytest.mark.parametrize("params", [{}, {"sfm_friction": 0}])
+def test_sfm_friction_is_zero_and_silent_unless_declared_positive(caplog, params):
+    with caplog.at_level("WARNING", logger="pyfds_evac"):
+        model = _sfm_model(params)
+    assert model.friction == 0.0
+    assert not [r for r in caplog.records if r.levelname == "WARNING"]
+
+
+@pytest.mark.parametrize("key", ["sfm_body_force", "sfm_friction"])
+@pytest.mark.parametrize("value", [-1.0, float("nan"), float("inf"), "x", True])
+def test_sfm_invalid_model_parameter_raises(key, value):
+    with pytest.raises(ValueError, match=key):
+        _sfm_model({key: value})
+
+
+def test_sfm_obstacle_scale_is_read_from_the_deck():
+    def obstacle_scale(global_params):
+        return create_agent_parameters(
+            "SocialForceModel", (0.0, 0.0), {"v0": 1.0}, global_params=global_params
+        ).obstacle_scale
+
+    assert obstacle_scale(SimpleNamespace(sfm_obstacle_scale=1500)) == 1500
+    assert obstacle_scale(SimpleNamespace(agent_strength=1500)) == 2000
+
+
+def test_sfm_builder_raises_no_deprecation_warning():
+    import warnings
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        _sfm_model({"sfm_body_force": 120000.0, "sfm_friction": 0})
+
+
+def _wall_push_speed(params, *, y=0.25, radius=0.3, mass=80.0, dt=0.01):
+    """Normal speed after one step of an agent at rest overlapping a wall."""
+    simulation = jps.Simulation(
+        model=_sfm_model(params), geometry=WALL_DECK_GEOMETRY, dt=dt
+    )
+    exit_id = simulation.add_exit_stage(WALL_DECK_EXIT)
+    journey = simulation.add_journey(jps.JourneyDescription([exit_id]))
+    agent = create_agent_parameters(
+        "SocialForceModel",
+        (1.0, y),
+        {"v0": 0.0, "radius": radius},
+        global_params=SimpleNamespace(),
+        journey_id=journey,
+        stage_id=exit_id,
+    )
+    agent.mass = mass
+    agent_id = simulation.add_agent(agent)
+    simulation.iterate()
+    return simulation.agent(agent_id).model.velocity[1]
+
+
+@pytest.mark.parametrize(
+    ("body_force", "expected"), [(120000.0, 1.217061), (2000.0, 0.479561)]
+)
+def test_sfm_wall_push_matches_the_closed_form(body_force, expected):
+    """One step: v_y = (A exp((r - d)/B) + k (r - d)) / m * dt, d = 0.25 m.
+
+    A = obstacle_scale 2000 N, B = 0.08 m, r = 0.3 m, m = 80 kg, dt = 0.01 s;
+    desired speed 0 and friction 0 leave the radial wall force alone.
+    """
+    d, r, a, b, m, dt = 0.25, 0.3, 2000.0, 0.08, 80.0, 0.01
+    closed_form = (a * math.exp((r - d) / b) + body_force * (r - d)) / m * dt
+    assert closed_form == pytest.approx(expected, abs=5e-7)
+    speed = _wall_push_speed({"sfm_body_force": body_force, "sfm_friction": 0})
+    assert speed == pytest.approx(closed_form, rel=1e-9)
+
+
+@pytest.mark.xfail(
+    strict=True,
+    raises=AssertionError,
+    reason="jupedsim#1677: wall friction has the wrong sign; remove the "
+    "friction clamp (#635) once a release with the fix is pinned",
+)
+def test_jupedsim_wall_friction_sign_canary():
+    """Canary for #635, on raw JuPedSim with the friction clamp bypassed.
+
+    An agent sliding along a wall at 1 m/s must be slowed by friction. In
+    JuPedSim 1.4.2 it is accelerated to about 10.6 m/s in 20 ms, so this
+    fails as expected. An XPASS means the installed JuPedSim has the fix:
+    raise the pin and remove the clamp. Any other error (e.g. a removed
+    API) is not the expected failure and also turns the run red.
+    """
+    simulation = jps.Simulation(
+        model=jps.SocialForceModel(body_force=120000.0, friction=240000.0),
+        geometry=WALL_DECK_GEOMETRY,
+        dt=0.001,
+    )
+    exit_id = simulation.add_exit_stage(WALL_DECK_EXIT)
+    journey = simulation.add_journey(jps.JourneyDescription([exit_id]))
+    agent_id = simulation.add_agent(
+        jps.SocialForceModelAgentParameters(
+            journey_id=journey,
+            stage_id=exit_id,
+            position=(1.0, 0.25),
+            velocity=(1.0, 0.0),
+            desired_speed=1.0,
+            reaction_time=0.5,
+            radius=0.3,
+        )
+    )
+    for _ in range(20):
+        simulation.iterate()
+    assert 0.0 <= simulation.agent(agent_id).model.velocity[0] < 0.5
+
+
+def test_sfm_manifest_records_the_effective_model_parameters():
+    scenario = load_scenario(T_JUNCTION)
+    scenario.set_model_type("SocialForceModel")
+    scenario.sim_params.update({"sfm_body_force": 50000.0, "sfm_friction": 240000})
+    scenario.set_max_time(1)
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(scenario, seed=1)
+    try:
+        with open(result.manifest_file, encoding="utf-8") as handle:
+            recorded = json.load(handle)["sfm"]
+    finally:
+        result.cleanup()
+    assert recorded == {
+        "body_force": 50000.0,
+        "friction": 0.0,
+        "friction_requested": 240000.0,
+        "friction_clamped": True,
+    }

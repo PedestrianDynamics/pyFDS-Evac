@@ -242,6 +242,7 @@ def create_agent_parameters(
         reaction_time = getattr(global_params, "relaxation_time", 0.5)
         agent_scale = getattr(global_params, "agent_strength", 2000)
         force_distance = getattr(global_params, "agent_range", 0.08)
+        obstacle_scale = getattr(global_params, "sfm_obstacle_scale", 2000)
         return _construct_with_fallbacks(
             jps.SocialForceModelAgentParameters,
             {
@@ -249,6 +250,7 @@ def create_agent_parameters(
                 "desired_speed": desired_speed,
                 "reaction_time": reaction_time,
                 "agent_scale": agent_scale,
+                "obstacle_scale": obstacle_scale,
                 "force_distance": force_distance,
             },
             {
@@ -256,6 +258,7 @@ def create_agent_parameters(
                 "desiredSpeed": desired_speed,
                 "reactionTime": reaction_time,
                 "agentScale": agent_scale,
+                "obstacleScale": obstacle_scale,
                 "forceDistance": force_distance,
             },
         )

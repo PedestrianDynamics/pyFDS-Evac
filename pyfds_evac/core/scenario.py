@@ -136,6 +136,65 @@ class _FedRateAdapter:
 # Model factory
 # ---------------------------------------------------------------------------
 
+# JuPedSim 1.4.2 SocialForceModel defaults: body force k and friction kappa.
+SFM_DEFAULT_BODY_FORCE = 120000.0
+SFM_DEFAULT_FRICTION = 240000.0
+
+
+def _sfm_parameter(params: Mapping[str, Any], key: str, default: float) -> float:
+    """A model-level SFM parameter: finite and non-negative, else ValueError."""
+    value = params.get(key, default)
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"SocialForceModel: {key}={value!r} is not a number")
+    if not math.isfinite(value) or value < 0:
+        raise ValueError(
+            f"SocialForceModel: {key}={value!r} must be finite and non-negative"
+        )
+    return float(value)
+
+
+def sfm_model_settings(params: Mapping[str, Any]) -> dict[str, Any]:
+    """The SocialForceModel's model-level parameters a deck yields.
+
+    ``body_force`` is ``sfm_body_force`` (default 120000). ``friction`` is
+    what JuPedSim receives: always 0, see the workaround below.
+    ``friction_requested`` is ``sfm_friction`` or JuPedSim's default 240000
+    when the key is missing; ``friction_clamped`` says it was set to 0.
+
+    Workaround (#635): JuPedSim <= 1.4.2, and master until
+    PedestrianDynamics/jupedsim#1677 is merged, applies the wall friction
+    term with the wrong sign, so an agent sliding along a wall speeds up
+    instead of slowing down. JuPedSim has one friction for agents and
+    walls, so the agent-agent friction is lost too. Regression tests:
+    ``tests/test_sfm_params.py`` (the clamp, and the strict-xfail canary
+    ``test_jupedsim_wall_friction_sign_canary``). Remove the clamp when a
+    JuPedSim release containing #1677 is pinned in ``pyproject.toml``.
+    """
+    body_force = _sfm_parameter(params, "sfm_body_force", SFM_DEFAULT_BODY_FORCE)
+    requested = _sfm_parameter(params, "sfm_friction", SFM_DEFAULT_FRICTION)
+    return {
+        "body_force": body_force,
+        "friction": 0.0,
+        "friction_requested": requested,
+        "friction_clamped": requested > 0,
+    }
+
+
+def _build_social_force_model(params: Mapping[str, Any]):
+    """SocialForceModel from ``sfm_body_force``, with friction clamped to 0."""
+    settings = sfm_model_settings(params)
+    if "sfm_friction" in params and settings["friction_clamped"]:
+        _logger.warning(
+            "SocialForceModel: sfm_friction=%g is set to 0, because JuPedSim "
+            "applies wall friction with the wrong sign "
+            "(PedestrianDynamics/jupedsim#1677, pyFDS-Evac #635).",
+            settings["friction_requested"],
+        )
+    return jps.SocialForceModel(
+        body_force=settings["body_force"], friction=settings["friction"]
+    )
+
+
 _MODEL_BUILDERS = {
     "CollisionFreeSpeedModel": lambda p: jps.CollisionFreeSpeedModel(
         strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
@@ -161,10 +220,7 @@ _MODEL_BUILDERS = {
         max_neighbor_repulsion_force=p.get("gcfm_max_neighbor_repulsion_force", 9.0),
         max_geometry_repulsion_force=p.get("gcfm_max_geometry_repulsion_force", 3.0),
     ),
-    "SocialForceModel": lambda p: jps.SocialForceModel(
-        bodyForce=p.get("agent_strength", 2000),
-        friction=p.get("agent_range", 0.08),
-    ),
+    "SocialForceModel": _build_social_force_model,
     "WarpDriverModel": lambda p: jps.WarpDriverModel(
         time_horizon=p.get("time_horizon", 2.0),
         step_size=p.get("step_size", 0.5),
@@ -3134,6 +3190,11 @@ def run_scenario(
                     key: metrics[key]
                     for key in ("status", "agents_remaining", "agents_not_spawned")
                 },
+                sfm=(
+                    sfm_model_settings(scenario.sim_params)
+                    if scenario.model_type == "SocialForceModel"
+                    else None
+                ),
                 replay_exits=(
                     None
                     if replay_exits is None
