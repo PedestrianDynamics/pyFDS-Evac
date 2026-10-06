@@ -1285,7 +1285,9 @@ optical depth then time decides. The sort key is
 &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code>.&lt;/p>
 &lt;p>This is FDS+Evac&amp;rsquo;s primary door rule in Evac 2.6.0 (&lt;code>evac.f90:16601&lt;/code>,
 &lt;code>:16608&lt;/code>), and its threshold is not a new constant: &lt;code>FED_DOOR_CRIT = -100&lt;/code> becomes &lt;code>3.0/100&lt;/code> =
-0.03 /m at &lt;code>:5496&lt;/code>, which is Jin&amp;rsquo;s &lt;code>S = 3/K&lt;/code> at a 100 m sighting distance. Two
+0.03 /m at &lt;code>:5496&lt;/code>, which is Jin&amp;rsquo;s &lt;code>S = 3/K&lt;/code> at a 100 m sighting distance.
+The conversion borrows only the form of Jin&amp;rsquo;s law: 100 m is far outside the
+5.5–15.5 m range of Jin&amp;rsquo;s measurements (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/#known-limits">Visibility › Known limits&lt;/a>). Two
 differences from the reference implementation are worth stating:&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>FDS+Evac&amp;rsquo;s tier 1 is a hard filter.&lt;/strong> &lt;code>IF (T_tmp &amp;lt; L2_min .AND. L2_tmp &amp;lt; ABS(FED_DOOR_CRIT))&lt;/code> only ever selects a &lt;em>qualifying&lt;/em> door; when no door

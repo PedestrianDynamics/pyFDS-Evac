@@ -847,7 +847,9 @@ counts as smoke-free while &lt;code>K_ave &amp;lt; ABS(FED_DOOR_CRIT)&lt;/code>.
 a visibility in metres (&lt;code>FED_DOOR_CRIT = -100.0&lt;/code>, evac.f90:1524) which
 is converted to an extinction coefficient by Jin&amp;rsquo;s relation,
 &lt;code>FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT&lt;/code> (evac.f90:5496) — so the default
-is 0.03 /m. &lt;code>K_ave_Door&lt;/code> is assigned from &lt;code>See_door&lt;/code> at evac.f90:16497,
+is 0.03 /m. The conversion uses the form of Jin&amp;rsquo;s law only: 100 m (and
+1000 m in Evac 2.6.1) is far outside the 5.5–15.5 m range of Jin&amp;rsquo;s
+measurements (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/#known-limits">Visibility › Known limits&lt;/a>). &lt;code>K_ave_Door&lt;/code> is assigned from &lt;code>See_door&lt;/code> at evac.f90:16497,
 and the tier-1 test that reads it is at evac.f90:16601 and :16608. Among
 the doors that pass, the agent minimises the time &lt;code>T&lt;/code> above.&lt;/p>
 &lt;p>&lt;a id="evac-261-door-criterion">&lt;/a>&lt;strong>Evac 2.6.1 changed this test.&lt;/strong> The
