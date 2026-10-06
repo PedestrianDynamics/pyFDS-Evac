@@ -255,6 +255,20 @@ is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (`&DUMP DT_SLCF`).
 
+**Social force friction.** With `model_type: "SocialForceModel"`, the
+friction *κ* is 0 for agents and walls: JuPedSim 1.4.2 applies the wall
+friction with the wrong sign
+([jupedsim#1677](https://github.com/PedestrianDynamics/jupedsim/pull/1677)),
+and its one friction parameter also drives the agent term. This holds
+when `sfm_friction` is missing, without a warning; a deck that declares
+it above 0 gets a warning
+([#635](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635)).
+There is no sliding friction, so no clogging or faster-is-slower effect
+from friction at a bottleneck. The body force *k* acts. *A* and *B* were
+fitted to one bottleneck flow at a desired speed of about 0.8 m/s
+(Helbing, Farkas & Vicsek 2000); the shipped SFM decks use 1.25–1.3 m/s
+and a radius of 0.2 m.
+
 **Re-entry.** An agent that reaches an exit is removed from the simulation
 (`run_scenario` in `pyfds_evac/core/scenario.py`), so nobody goes back into
 the building. In Wood's UK survey, 43 % of those who had left the building
@@ -284,6 +298,10 @@ numbered per process, so a second run in the same process reports the same
 agents under other ids.
 
 ## References
+
+Helbing, D., Farkas, I., and Vicsek, T. (2000). Simulating dynamical
+features of escape panic. *Nature*, 407, 487–490.
+[doi:10.1038/35035023](https://doi.org/10.1038/35035023).
 
 Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User's Guide*. VTT Technical Research Centre of

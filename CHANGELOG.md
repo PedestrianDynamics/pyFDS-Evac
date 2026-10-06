@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The SocialForceModel builder reads `sfm_body_force` (default 120000,
+  JuPedSim's) as the body force *k* and passes it as `body_force=`. It
+  used to pass `agent_strength` (2000) as *k* and `agent_range` (0.08)
+  as the friction, through the deprecated `bodyForce=`.
+  `sfm_obstacle_scale` reaches the per-agent `obstacle_scale` (default
+  2000). Negative, non-finite or non-numeric `sfm_body_force` and
+  `sfm_friction` raise `ValueError`. The run manifest records the
+  effective values under `sfm`. Shipped decks in clear air and every
+  documented number are unchanged; the `ft_full_gate_detour` and
+  `ft_full_additive_detour` golden snapshots, with contact under
+  synthetic smoke, are regenerated (#611).
+
+### Changed
+
+- SocialForceModel friction is passed to JuPedSim as 0, with a warning
+  when a deck declares `sfm_friction` above 0. JuPedSim 1.4.2 applies
+  the wall friction with the wrong sign (jupedsim#1677). The clamp goes
+  once a JuPedSim release with that fix is pinned (#635).
+
 ## [0.3.1] - 2026-10-06
 
 ### Removed
