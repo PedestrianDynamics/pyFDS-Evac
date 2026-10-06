@@ -155,13 +155,13 @@ Script: `scripts/figures/sign_rotation.py`.*
   (`visibility.py`, `unresolved_wall`). The check is a heuristic. It counts
   as a wall a part of the bounding box outside the walkable area that a
   disc one cell across cannot enter, longer than one cell and evenly thin,
-  which is meant to leave out rounded corners, bevels and wedge tips. The
-  width is an estimate, recorded with the verdict as `thin_wall_m` and
+  which is meant to leave out rounded corners, bevels and wedge tips. A
+  junction of walls of different widths is measured per wall, and the
+  width reported is that of the thinnest wall. The width is an estimate, recorded with the verdict as `thin_wall_m` and
   `thin_wall_warning` in the run's visibility settings; `--show-config`
   predicts both and lists the warning. No warning does not prove that every
   wall blocks: a wall oblique to the grid can leak below one cell width,
-  parts shorter than one cell are not reported, and walls of different
-  widths joined together can be measured as one wider wall.
+  and parts shorter than one cell are not reported.
   The extinction is zero, and one time point is stored (`visibility.py`, `VisibilityModel.clear_air`).
 
 At run time the model answers `node_is_visible(t, x, y, node)` by looking up

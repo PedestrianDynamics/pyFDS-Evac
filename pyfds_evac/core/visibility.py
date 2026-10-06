@@ -7,7 +7,7 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
@@ -257,6 +257,17 @@ WALL_MIN_LENGTH_CELLS = 1.0
 # ... and is close to uniformly thin: its widest point is at most this many
 # times its mean width. Walls measure <= 1.31, corners and tips >= 1.56.
 WALL_MAX_TAPER = 1.4
+# A lost part is re-opened by a disc this fraction of its mean width across:
+# just below the mean width, so a uniform wall is kept and only thinner parts
+# split off, and a junction of walls of different widths is measured per wall.
+WALL_SPLIT = 0.98
+# A wall part found by splitting is bounded by true faces except at its two
+# ends: its edges inside the obstruction are at most this many widths long.
+# This drops crescent slivers along the arcs of the opening.
+WALL_CUT_MAX_WIDTHS = 3.0
+WALL_MAX_SPLIT_DEPTH = 6
+
+_Wall = tuple[float, Any]
 
 
 def _polygons(geometry) -> list:
@@ -279,50 +290,98 @@ def _lost_parts(obstruction, cell_size_m: float) -> list:
     return _polygons(obstruction.difference(kept))
 
 
-def _wall_width(piece, cell_size_m: float) -> float | None:
-    """Width of a lost *piece* that is a wall, None for a corner or a tip.
-
-    Width and length are the sides of the rectangle with the area and
-    perimeter of *piece*: exact for a rectangular wall.
-    """
+def _width_and_length(piece) -> tuple[float, float]:
+    """Sides of the rectangle with the area and perimeter of *piece*."""
     area, perimeter = piece.area, piece.length
-    if area <= 1e-4 * cell_size_m**2:
-        return None
     width = (perimeter - math.sqrt(max(perimeter**2 - 16 * area, 0.0))) / 4
-    if perimeter / 2 - width <= WALL_MIN_LENGTH_CELLS * cell_size_m:
-        return None
+    return float(width), float(perimeter / 2 - width)
+
+
+def _is_long(piece, cell_size_m: float) -> bool:
+    """True when *piece* is longer than :data:`WALL_MIN_LENGTH_CELLS` cells."""
+    if piece.area <= 1e-4 * cell_size_m**2:
+        return False
+    return _width_and_length(piece)[1] > WALL_MIN_LENGTH_CELLS * cell_size_m
+
+
+def _leaf_wall(piece, faces, check_cut: bool) -> list[_Wall]:
+    """``[(width, piece)]`` when *piece* is evenly thin, else ``[]``.
+
+    With *check_cut*, *piece* must also lie along *faces*, the true faces of
+    the obstructions, except for :data:`WALL_CUT_MAX_WIDTHS` widths of cut.
+    """
+    width = _width_and_length(piece)[0]
     if not piece.buffer(-WALL_MAX_TAPER * width / 2).is_empty:
-        return None
-    return float(width)
+        return []
+    cut = piece.exterior.difference(faces).length
+    if check_cut and cut > WALL_CUT_MAX_WIDTHS * width:
+        return []
+    return [(width, piece)]
+
+
+def _walls(piece, faces, cell_size_m: float, depth: int = 0) -> list[_Wall]:
+    """The walls in a lost *piece*, split at width steps.
+
+    *piece* is re-opened just below its mean width (:data:`WALL_SPLIT`). The
+    sub-parts longer than one cell are its parts thinner than the mean. When
+    each is a wall, *piece* is a junction of walls: they and the remainder
+    are judged on their own. When one tapers to a tip, the sub-parts that
+    are walls are kept and *piece* is judged whole, so a wedge yields none.
+    """
+    if not _is_long(piece, cell_size_m):
+        return []
+    check_cut = depth > 0
+    width = _width_and_length(piece)[0]
+    subs = []
+    if depth < WALL_MAX_SPLIT_DEPTH:
+        subs = _lost_parts(piece, WALL_SPLIT * width)
+        subs = [sub for sub in subs if _is_long(sub, cell_size_m)]
+    if not subs:
+        return _leaf_wall(piece, faces, check_cut)
+    found = [_walls(sub, faces, cell_size_m, depth + 1) for sub in subs]
+    walls = [wall for group in found for wall in group]
+    if not all(found):
+        return walls + _leaf_wall(piece, faces, check_cut)
+    from shapely.ops import unary_union
+
+    for rest in _polygons(piece.difference(unary_union(subs))):
+        walls += _walls(rest, faces, cell_size_m, depth + 1)
+    return walls
 
 
 def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] | None:
     """The thinnest wall a clear-air grid of *cell_size_m* may lose, or None.
 
-    Returns its estimated mean width and a point on it. The obstructions are
-    the parts of the bounding box of *walkable* outside it, so a wall attached
-    to the outer boundary counts as well as a hole. A part of an obstruction
-    is lost when a disc one cell across cannot enter it (local width up to
-    one cell, see :func:`_lost_parts`); it counts as a wall when it is long
-    and evenly thin (:data:`WALL_MIN_LENGTH_CELLS`, :data:`WALL_MAX_TAPER`),
-    which leaves out rounded corners, bevels and the tips of acute wedges.
+    Returns its estimated width and a point on it. The obstructions are the
+    parts of the bounding box of *walkable* outside it, so a wall attached to
+    the outer boundary counts as well as a hole. A part of an obstruction is
+    lost when a disc one cell across cannot enter it (local width up to one
+    cell, see :func:`_lost_parts`). A lost part is split at width steps, so a
+    junction of walls of different widths is measured per wall (:func:`_walls`),
+    and a part counts as a wall when it is longer than one cell and evenly
+    thin (:data:`WALL_MIN_LENGTH_CELLS`, :data:`WALL_MAX_TAPER`), which is
+    meant to leave out rounded corners, bevels and the tips of acute wedges.
     Those still let sight clip them, as any grid does at a corner, and
     refining the grid does not remove that.
 
     This is a heuristic estimate. None does not prove that the grid resolves
     every wall: a wall oblique to the grid can lose cells below one cell
-    width, and parts shorter than one cell are not reported.
+    width, and parts shorter than one cell are not reported. On irregular
+    geometry the width is an estimate.
     """
     from shapely.geometry import box
 
-    obstructions = _polygons(box(*walkable.bounds).difference(walkable))
-    pieces = (p for part in obstructions for p in _lost_parts(part, cell_size_m))
+    rest = box(*walkable.bounds).difference(walkable)
+    # The faces from the obstructions, not from walkable: a walkable read as
+    # a GeometryCollection has no boundary.
+    faces = rest.boundary.buffer(1e-6)
+    pieces = (p for part in _polygons(rest) for p in _lost_parts(part, cell_size_m))
+    walls = (wall for piece in pieces for wall in _walls(piece, faces, cell_size_m))
     thinnest = None
-    for piece in pieces:
-        width = _wall_width(piece, cell_size_m)
-        if width is None or (thinnest is not None and width >= thinnest[0]):
+    for width, wall in walls:
+        if thinnest is not None and width >= thinnest[0]:
             continue
-        point = piece.representative_point()
+        point = wall.representative_point()
         thinnest = (width, point.x, point.y)
     return thinnest
 

@@ -613,7 +613,8 @@ class TestClearAirGridResolution:
         wall = Polygon([(5, 5), (10, 5), (10, 5.2), (5, 5.1)])
         found = unresolved_wall(box(0, 0, 20, 20).difference(wall), 0.25)
         assert found is not None
-        assert found[0] == pytest.approx(0.15, abs=0.01)
+        # The thin end, by design: the wall is split at width steps.
+        assert found[0] == pytest.approx(0.1, abs=0.01)
 
     @pytest.mark.parametrize("degrees", [11, 20, 30, 45])
     def test_the_tip_of_a_wedge_is_not_a_wall(self, degrees):
@@ -624,3 +625,111 @@ class TestClearAirGridResolution:
         tip = 10 * math.tan(math.radians(degrees))
         wedge = Polygon([(5, 5), (15, 5), (15, 5 + tip)])
         assert unresolved_wall(box(0, 0, 30, 30).difference(wedge), 0.25) is None
+
+    @staticmethod
+    def _room_minus(*shapes):
+        from shapely.geometry import box
+        from shapely.ops import unary_union
+
+        return box(0, 0, 20, 20).difference(unary_union(shapes))
+
+    @staticmethod
+    def _junctions():
+        from shapely.geometry import Polygon, box
+
+        return {
+            "0.05+0.2 end": ([box(5, 5, 5.05, 10), box(5, 10, 5.2, 15)], 0.05),
+            "0.05 T 0.2": ([box(5, 5, 5.05, 10), box(2, 10, 8, 10.2)], 0.05),
+            "0.1+0.2 end": ([box(5, 5, 5.1, 10), box(5, 10, 5.2, 15)], 0.1),
+            "0.1+0.13 end": ([box(5, 5, 5.1, 10), box(5, 10, 5.13, 15)], 0.1),
+            "0.1+0.4 end": ([box(5, 5, 5.1, 10), box(5, 10, 5.4, 15)], 0.1),
+            "0.05+0.2, 0.2 to a tip": (
+                [
+                    box(5, 5, 5.05, 10),
+                    Polygon([(5, 10), (5.2, 10), (5.2, 15), (5, 16.5)]),
+                ],
+                0.05,
+            ),
+            "0.05 T 0.2 with a tapered arm": (
+                [
+                    box(5, 5, 5.05, 10),
+                    Polygon([(2, 10), (8, 10), (8, 10.2), (3.5, 10.2)]),
+                ],
+                0.05,
+            ),
+        }
+
+    @pytest.mark.parametrize("cell_size_m", [0.25, 0.5])
+    @pytest.mark.parametrize(
+        "case",
+        [
+            "0.05+0.2 end",
+            "0.05 T 0.2",
+            "0.1+0.2 end",
+            "0.1+0.13 end",
+            "0.1+0.4 end",
+            "0.05+0.2, 0.2 to a tip",
+            "0.05 T 0.2 with a tapered arm",
+        ],
+    )
+    def test_joined_walls_are_measured_per_wall(self, case, cell_size_m):
+        """A junction of walls of different widths reports its thinnest wall."""
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        shapes, thinnest = self._junctions()[case]
+        found = unresolved_wall(self._room_minus(*shapes), cell_size_m)
+        assert found is not None
+        assert found[0] == pytest.approx(thinnest, abs=0.01)
+
+    @pytest.mark.parametrize("cell_size_m", [0.2, 0.25, 0.5])
+    def test_haspel_names_its_0_05_m_walls(self, cell_size_m):
+        """The three 0.05 m walls of Haspel are found, not merged away."""
+        from shapely import wkt
+        from shapely.geometry import box
+
+        from pyfds_evac.core import visibility as V
+
+        text = Path("assets/Haspel/BUW_Geometrie_EG.wkt").read_text()
+        walkable = wkt.loads(text)
+        rest = box(*walkable.bounds).difference(walkable)
+        faces = rest.boundary.buffer(1e-6)
+        walls = [
+            (width, wall.representative_point())
+            for part in V._polygons(rest)
+            for piece in V._lost_parts(part, cell_size_m)
+            for width, wall in V._walls(piece, faces, cell_size_m)
+        ]
+        thin = {
+            (round(p.x), round(p.y))
+            for width, p in walls
+            if width == pytest.approx(0.05, abs=0.005)
+        }
+        assert {(30, 13), (32, 13), (54, 27)} <= thin
+        assert V.unresolved_wall(walkable, cell_size_m)[0] <= 0.05 + 0.005
+
+    def test_station_fahy_names_its_thinnest_strip(self):
+        from shapely import wkt
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        text = Path("assets/station_fahy/geometry.wkt").read_text()
+        found = unresolved_wall(wkt.loads(text), 0.25)
+        assert found is not None
+        assert found[0] == pytest.approx(0.028, abs=0.003)
+
+    @pytest.mark.parametrize("cell_size_m", [0.1, 0.25, 0.5])
+    def test_corners_and_wedges_stay_silent(self, cell_size_m):
+        from shapely import affinity
+        from shapely.geometry import Polygon, box
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        shapes = [
+            Polygon([(0, 0), (20, 0), (20, 19.9), (19.9, 20), (0, 20)]),
+            Polygon([(0, 0), (20, 0), (20, 18), (18, 20), (0, 20)]),
+            self._room_minus(affinity.rotate(box(9.5, 9.5, 10.5, 10.5), 45)),
+        ]
+        for degrees in (2, 5, 11, 20, 30, 45):
+            tip = 10 * math.tan(math.radians(degrees))
+            shapes.append(self._room_minus(Polygon([(5, 5), (15, 5), (15, 5 + tip)])))
+        assert all(unresolved_wall(g, cell_size_m) is None for g in shapes)

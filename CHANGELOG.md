@@ -58,8 +58,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scenario's geometry with the same function, prints them as resolved
   values and lists the warning under "Setup warnings". No warning does
   not prove that every wall blocks sight: parts shorter than one cell are
-  not reported, and walls of different widths joined together can be
-  measured as one wider wall (#115).
+  not reported. A junction of walls of different widths is measured per
+  wall, and the width reported is that of the thinnest wall (#115).
 
 ### Changed
 
