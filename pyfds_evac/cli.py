@@ -4,6 +4,7 @@ import argparse
 import contextlib
 import importlib
 import json
+import sys
 from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
@@ -97,7 +98,10 @@ examples:
       --output-fed-history out/fed.csv --output-exit-history out/exits.csv
 
   # the same settings in a browser form (pip install "pyfds-evac[gui]")
-  pyfds-evac-gui"""
+  pyfds-evac-gui
+
+  # start a scenario from an FDS deck (see: pyfds-evac init --help)
+  pyfds-evac init deck.fds"""
 
 
 def _verbatim(heading: str) -> str:
@@ -139,14 +143,47 @@ def _show_config(scenario, args) -> int:
     return 0 if configuration.ok else 1
 
 
+# Placeholder for an option the command line did not give, so that a
+# scenario key can supply it; the CLI value always wins.
+_NOT_GIVEN = object()
+
+
+def _apply_scenario_settings(scenario, args) -> None:
+    """Fill options the command line left out from the scenario JSON."""
+    if args.smoke_slice_height is not _NOT_GIVEN:
+        return
+    from pyfds_evac.config.parameters import default
+    from pyfds_evac.core.run_config import scenario_smoke_slice_height
+
+    try:
+        height = scenario_smoke_slice_height(scenario)
+    except ValueError as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
+    if height is None:
+        args.smoke_slice_height = default("smoke_slice_height")
+        return
+    args.smoke_slice_height = height
+    print(
+        f"Smoke slice height {height:g} m from the scenario "
+        "(simulationParams.smoke_slice_height); --smoke-slice-height overrides it."
+    )
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
+    if sys.argv[1:2] == ["init"]:
+        from pyfds_evac.cli_init import main as init_main
+
+        return init_main(sys.argv[2:])
     parser = _build_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(
+        namespace=argparse.Namespace(smoke_slice_height=_NOT_GIVEN)
+    )
     _configure_logging(args.debug)
     _load_run_stack()
 
     scenario = load_scenario(args.scenario)
+    _apply_scenario_settings(scenario, args)
     print("Initialization started.")
 
     if args.print_summary:

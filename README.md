@@ -62,7 +62,9 @@ pip install pyfds-evac
 pyfds-evac --help
 ```
 
-`pyfds-evac` runs a scenario; `python -m pyfds_evac` does the same. The
+`pyfds-evac` runs a scenario; `python -m pyfds_evac` does the same.
+`pyfds-evac init deck.fds` starts a scenario from an FDS or
+FDS+Evac deck and reports what it could not carry over. The
 package contains no scenarios, examples or scripts. Each example page on the
 documentation site offers its input files as a zip, which unpacks into a
 folder of its own; run the commands from inside that folder. The
@@ -209,3 +211,13 @@ monsterui and python-multipart. fdsvismap is pinned exactly (0.3.2), and a
 plain `pip install` works on Python 3.12, 3.13 and 3.14. Versions and pins
 are in
 [`pyproject.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyproject.toml).
+
+## License
+
+pyFDS-Evac is released under the [MIT license](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/LICENSE). Two
+third-party parts of the repository keep their own licenses and are not
+included in the published packages:
+[`assets/fds_evac_guide/`](https://github.com/PedestrianDynamics/pyFDS-Evac/tree/main/assets/fds_evac_guide), the FDS+Evac guide's input decks
+(GPL-3.0-only), and `materials/evac.f90`, the FDS+Evac source (NIST software
+notice). [`REUSE.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/REUSE.toml) records the license of every file, and CI
+checks it with `reuse lint`.

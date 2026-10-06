@@ -555,7 +555,8 @@ only at the end of a run, so a closed terminal or a dropped SSH session leaves
 - **Glyphs.** `• ● ◆ ◐ ✓ ✗` have an ambiguous East Asian width. In a CJK locale
   a terminal may draw them two cells wide. There is no ASCII fallback.
 - **Platforms.** The terminal UI tests, including the snapshots, run in CI on
-  Ubuntu with Python 3.12, 3.13 and 3.14. It was developed on macOS. Windows
+  Ubuntu with Python 3.12, 3.13 and 3.14 (3.12 and 3.14 on pull requests).
+  It was developed on macOS. Windows
   is not tested. Windows has no SIGHUP, so there the run stops on a closed
   terminal only through the check of the parent process.
 

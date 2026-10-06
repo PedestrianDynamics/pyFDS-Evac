@@ -17,7 +17,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.12", "3.13", "3.14"]
+        # Pull requests test the oldest and newest supported Python; pushes
+        # to main test every supported version.
+        python-version: ${{ fromJSON(github.event_name == 'pull_request' && '["3.12", "3.14"]' || '["3.12", "3.13", "3.14"]') }}
     env:
       # Coverage runs on 3.14 only: with branch coverage, coverage.py uses
       # the fast sys.monitoring core from Python 3.14 on and the much

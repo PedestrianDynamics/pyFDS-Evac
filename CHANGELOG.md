@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `pyfds-evac init DECK.fds` starts a scenario from an FDS deck. It writes
+  `config.json`, `geometry.wkt` and `import_report.json` to
+  `<deck stem>_scenario/` next to the deck (`-o DIR` picks another folder),
+  prints a short summary and the next steps, and exits 0 when runnable, 3
+  when written but not runnable or an input was dropped at error level, and
+  1 on an error, with nothing written (#605, part of #606, #632).
+  - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR`
+    and `&PERS` records for one floor. Detection plus reaction becomes one
+    pre-movement delay with the same mean and variance, and no agent
+    starts before the earliest FDS+Evac start.
+  - A plain FDS deck gets exits from `SURF_ID='OPEN'` vents on the outside
+    of its meshes, or from `--exit`, and a flagged placeholder of 100
+    agents unless `--agents` is given.
+  - `import_report.json` lists every input that was imported, inferred,
+    approximated or dropped, with its deck line; `-v` prints all of it.
+  - The walkable area comes from `scripts/generate_walkable_from_fds.py`
+    (source checkout only) or from `--walkable FILE.wkt`; the Station
+    layer rules are opt-in (`--layer-rules station`).
+- `--force` lets `pyfds-evac init` overwrite an output folder that holds a
+  `config.json` it did not write; without it, such a folder is refused
+  (#632).
+- Scenario key `simulationParams.smoke_slice_height` [m]: the absolute FDS
+  slice height of a run. `pyfds-evac init` writes the floor level plus
+  `HUMAN_SMOKE_HEIGHT`. `--smoke-slice-height` overrides it; a run that
+  samples elsewhere logs a warning. A bad value stops the run with a
+  one-line error (#632).
+- Scenario key `distributions.<id>.parameters.premovement_offset_s` [s]:
+  a fixed delay added to every drawn pre-movement time, with and without
+  journeys. It needs `use_premovement: true` (#632).
+- The 182 input decks of the FDS+Evac guide in `assets/fds_evac_guide/`,
+  copied unmodified from tkorhon1/FDS-Evac-Guide at a pinned commit, as
+  reference input for the deck importer. They are GPL-3.0-only and are
+  excluded from the wheel and the sdist. A test fails when a deck is
+  changed, added or removed (#633).
+- `REUSE.toml`, `LICENSES/` and `NOTICE` declare the license of every
+  file: MIT by default, GPL-3.0-only for the guide decks and the NIST
+  software notice for `materials/evac.f90`. CI checks this with
+  `reuse lint` (#633).
+
+### Changed
+
+- `pyfds-evac --scenario` takes the slice height from the scenario's
+  `smoke_slice_height` when `--smoke-slice-height` is not given, and says
+  so. A scenario without the key runs as before (#632).
+- `pyfds-evac --help` lists `pyfds-evac init` among its examples (#606).
+- SocialForceModel friction is passed to JuPedSim as 0, with a warning
+  when a deck declares `sfm_friction` above 0. JuPedSim 1.4.2 applies
+  the wall friction with the wrong sign (jupedsim#1677). The clamp goes
+  once a JuPedSim release with that fix is pinned (#635).
+
 ### Fixed
 
 - The SocialForceModel builder reads `sfm_body_force` (default 120000,
@@ -15,18 +67,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as the friction, through the deprecated `bodyForce=`.
   `sfm_obstacle_scale` reaches the per-agent `obstacle_scale` (default
   2000). Negative, non-finite or non-numeric `sfm_body_force`,
-  `sfm_friction` and `sfm_obstacle_scale` raise `ValueError`. The run manifest records the
-  effective values under `sfm`. Shipped decks in clear air and every
+  `sfm_friction` and `sfm_obstacle_scale` raise `ValueError`. The run
+  manifest records the effective values under `sfm`. Shipped decks in clear air and every
   documented number are unchanged; the `ft_full_gate_detour` and
   `ft_full_additive_detour` golden snapshots, with contact under
   synthetic smoke, are regenerated (#611).
 
-### Changed
-
-- SocialForceModel friction is passed to JuPedSim as 0, with a warning
-  when a deck declares `sfm_friction` above 0. JuPedSim 1.4.2 applies
-  the wall friction with the wrong sign (jupedsim#1677). The clamp goes
-  once a JuPedSim release with that fix is pinned (#635).
 
 ## [0.3.1] - 2026-10-06
 
