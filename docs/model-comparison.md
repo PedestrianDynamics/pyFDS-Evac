@@ -148,7 +148,9 @@ counts as smoke-free while `K_ave < ABS(FED_DOOR_CRIT)`.  The input is
 a visibility in metres (`FED_DOOR_CRIT = -100.0`, evac.f90:1524) which
 is converted to an extinction coefficient by Jin's relation,
 `FED_DOOR_CRIT = 3.0 / FED_DOOR_CRIT` (evac.f90:5496) — so the default
-is 0.03 /m.  `K_ave_Door` is assigned from `See_door` at evac.f90:16497,
+is 0.03 /m.  The conversion uses the form of Jin's law only: 100 m (and
+1000 m in Evac 2.6.1) is far outside the 5.5–15.5 m range of Jin's
+measurements ([Visibility › Known limits](/fundamentals/visibility.md#known-limits)).  `K_ave_Door` is assigned from `See_door` at evac.f90:16497,
 and the tier-1 test that reads it is at evac.f90:16601 and :16608.  Among
 the doors that pass, the agent minimises the time `T` above.
 

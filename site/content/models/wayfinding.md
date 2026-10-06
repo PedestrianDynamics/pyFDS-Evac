@@ -35,7 +35,14 @@ These words are used with one meaning each, here and on the linked pages.
   visibility constant *C* of Jin's law.
 - **Legible.** A sign is legible from a grid cell at a time when it passes the
   precomputed sign-legibility test below. Legibility is a property of the
-  present position and time.
+  present position and time. The test's threshold is Jin's obscuration
+  threshold: a legible sign is barely seen at distance *V*, and its words or
+  arrow need not be readable
+  ([Seeing a sign versus reading it](/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)).
+  On this page, "read" and "reading distance" refer to this same seeing test.
+  Jin (1978, Fig. 7, p. 143) uses "legible threshold" for reading the words
+  of a sign; this page uses "legible" for his obscuration threshold
+  instead; on Visibility, "legibility" keeps Jin's sense.
 - **Known.** A node or edge is known to an agent when it is stored in that
   agent's cognitive map. Knowledge persists.
 - **Learn.** A node or edge is learned when it is added to the map.
@@ -466,6 +473,13 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   *C* = 3, readable from every direction. *C* = 3 is the FDS default for a
   reflecting sign; the Fundamentals page gives Jin's range as 2–4 for
   reflecting and 5–10 for light-emitting signs.
+- **A seen sign counts as understood.** A legible sign teaches the agent its
+  node and the direction to it, although the test only says the sign is
+  barely seen. Reading the letters of an exit sign needs 3–5 times more
+  contrast ([Seeing a sign versus reading it](/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)),
+  so the knowledge the model grants is optimistic; a lit sign modelled with
+  *C* = 3 is the exception (Jin's lit-sign reading data lie near
+  \(C_s V\) = 4.5, above 3; Jin 1978, Fig. 7).
 - **Legibility is binary** and acts only on knowledge. In the discrete-choice
   studies on [Exit choice and familiarity](/fundamentals/exit-choice.md), exit
   visibility enters the utility as a graded attribute.
@@ -504,8 +518,10 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   so in clear air a sign farther away is illegible at any bearing, and a
   discovery agent in a space wider than that must approach an exit to learn
   it. The value is a default, not derived from sign size or a signage
-  standard; set `"max_distance"` per sign where it matters. FDS+Evac has no
-  such limit ([Coming from FDS+Evac](/docs/coming-from-fds-evac.md#seeing-a-door-vs-reading-a-sign)).
+  standard; set `"max_distance"` per sign where it matters. Jin's law was
+  measured at 5.5–15.5 m, so the 30 m default is an extrapolation
+  ([Visibility › Known limits](/fundamentals/visibility.md#known-limits)).
+  FDS+Evac has no such limit ([Coming from FDS+Evac](/docs/coming-from-fds-evac.md#seeing-a-door-vs-reading-a-sign)).
 - **Off the FDS grid, signs are read in clear air**
   ([#426](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/426)). An
   agent beyond the grid of an FDS model sees every sign within its reading

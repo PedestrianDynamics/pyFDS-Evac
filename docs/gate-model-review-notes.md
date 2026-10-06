@@ -186,6 +186,15 @@ to plan section 3.
 - **`c = 3`**: correct, confirmed independently by `evac.f90:5496` and Jin 1978.
   Note the duplicate constant: `smoke_speed.py:99` `visibility_factor_c = 3.0`.
 
+> **Erratum (#287).** The two sources above are one chain, not two
+> independent confirmations. FDS takes C = 3 from Mulholland (2002, Eq. 15),
+> who cites Jin (1978); the SFPE Handbook 6th ed. (2026), Ch. 40 (McGrattan &
+> Merci), Eq. 40.22, p. 1206, gives the same 3 and 8, citing Jin and
+> Mulholland. `evac.f90` (l. 5495) and the FDS+Evac guide write S = 3/K
+> without a source; that they took it from FDS is our inference. C = 3 is the
+> line drawn in Jin (1971/1978, Fig. 2). See
+> [Visibility through smoke](../site/content/fundamentals/visibility.md).
+
 ---
 
 ## D. Scenario numbers
@@ -468,8 +477,18 @@ exposure budget directly, `tau_max = 2c`, so `c = 8` is a 2.7x looser gate than
 measured on t_junction, which is optically saturated at K ~ 10.7 /m and cannot
 discriminate anything; it is not evidence that `c` is inert where the gate works.
 
+> **Erratum (#287).** Two statements in the paragraph above are wrong.
+> (1) `c = 3` is Jin's obscuration threshold, the contrast at which a sign is
+> barely seen; it is not the threshold for recognising or reading a sign.
+> (2) Jin does not give S = 0.4 m at K = 7–8 /m. That value extrapolates the
+> law far beyond his data, which were taken at V = 5.5–15.5 m and reached
+> K ≈ 1.8 1/m for lit signs and ≈ 0.75 1/m for the reflecting signs behind
+> C = 3 (Jin 1971/1978, Figs. 1–2). See
+> [Seeing a sign versus reading it](../site/content/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)
+> and [Known limits](../site/content/fundamentals/visibility.md#known-limits).
+
 Jin and `c = 3` belong to the cognitive map, where the sign-legibility semantics
-are correct and the constant is properly sourced. **Done at `0d9bf79`:** the gate
+are correct (in the sense of the erratum) and the constant is properly sourced. **Done at `0d9bf79`:** the gate
 now carries `tau_max = 6.0` as its own constant, `sign_contrast_c` is gone, and
 the docs declare it uncalibrated. Calibrating it against a soot-dose or
 FED-equivalent limit remains open.
