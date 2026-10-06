@@ -57,6 +57,7 @@ Under `config.simulation_settings`.
 |---|---|---|
 | `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). With `--fds-dir` it must not exceed the last FDS slice time by more than one output interval, unless `--allow-fds-horizon-hold` is given ([#340](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340)). |
 | `simulationParams.model_type` | `"CollisionFreeSpeedModel"` | The JuPedSim movement model. |
+| `simulationParams.smoke_slice_height` | none (`--smoke-slice-height`, 1.6 m) | Absolute FDS slice height [m] for smoke, gases and sign legibility. `pyfds-evac --smoke-slice-height` overrides it; the run prints the value when it comes from here. `pyfds-evac import` writes the floor level plus `HUMAN_SMOKE_HEIGHT`. The GUI and TUI do not read it yet. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
 
 `simulationParams.dt` is not read: the JuPedSim step is 0.01 s, and the

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import csv
 import logging
+import math
 import pathlib
 from collections.abc import Callable
 from typing import Any
@@ -57,6 +58,29 @@ _logger = logging.getLogger(__name__)
 
 def _noop(_message: str) -> None:
     """Default logger that discards status messages."""
+
+
+def scenario_smoke_slice_height(scenario: Any) -> float | None:
+    """``simulationParams.smoke_slice_height`` of *scenario* [m], or None.
+
+    The absolute FDS slice height the scenario asks for (an imported FDS+Evac
+    deck writes z_floor + HUMAN_SMOKE_HEIGHT); ``--smoke-slice-height``
+    overrides it. A value that is not a finite number is an error.
+    """
+    params = getattr(scenario, "sim_params", None) or {}
+    if "smoke_slice_height" not in params:
+        return None
+    value = params["smoke_slice_height"]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(
+            "simulationParams.smoke_slice_height must be a number of metres, "
+            f"got {value!r}"
+        )
+    if not math.isfinite(value):
+        raise ValueError(
+            f"simulationParams.smoke_slice_height must be finite, got {value!r}"
+        )
+    return float(value)
 
 
 def _build_smoke_model(opts: Any, log: Logger):
