@@ -39,6 +39,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a fixed delay added to every drawn pre-movement time, with and without
   journeys. It needs `use_premovement: true` (#632).
 
+- The 182 input decks of the FDS+Evac guide in `assets/fds_evac_guide/`,
+  copied unmodified from tkorhon1/FDS-Evac-Guide at a pinned commit, as
+  reference input for the deck importer. They are GPL-3.0-only and are
+  excluded from the wheel and the sdist. A test fails when a deck is
+  changed, added or removed (#633).
+- `REUSE.toml`, `LICENSES/` and `NOTICE` declare the license of every
+  file: MIT by default, GPL-3.0-only for the guide decks and the NIST
+  software notice for `materials/evac.f90`. CI checks this with
+  `reuse lint` (#633).
+
 ### Changed
 
 - `pyfds-evac --scenario` takes the slice height from the scenario's

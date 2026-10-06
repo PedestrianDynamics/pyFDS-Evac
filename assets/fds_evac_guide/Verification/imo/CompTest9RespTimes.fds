@@ -1,0 +1,130 @@
+ FDS+Evac version: FDS 6.7.6, Evac 2.6.0 (GIT FDS6.7.6-226)
+ All material properties etc. are completely fabricated.
+
+ IMO MSC.1/Circ.1238 (30 October 2007) 'Guidelines For
+ Evacuation Analysis for New and Existing Passenger Ships',
+ Annex 3 'Guidance on Validation/Verification of Evacuation
+ Simulation Tools'
+
+ Component testing, Test 5: Responce time
+ Component testing, Test 9: Exit flow: large public room
+
+ This uses the test case 9 geometry, where are 1000 persons in
+ order to calculate histograms in Excel to see the distribution.
+
+&HEAD CHID='CompTest9RespTimes',TITLE='IMO Component Test9 geometry' /
+
+&MESH IJK=128,96,1, XB=-1.0,31.0, -2.0,22.0, 0.95,1.05, EVACUATION=.TRUE., 
+      EVAC_HUMANS=.TRUE., EVAC_Z_OFFSET=1.0, ID = 'FF1stFloor' /
+
+&TIME T_END=0.1, DT=0.1 /
+
+&MISC EVACUATION_DRILL=.TRUE., EVACUATION_INITIALIZATION=.TRUE. /
+&RADI RADIATION=.FALSE. /
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=1,
+      DT_PART=1.0,
+      DT_HRR=1.0,
+      DT_SLCF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 /
+
+&SURF ID    = 'WALL'
+      RGB            = 150,150,150
+      MATL_ID        = 'Concrete'
+      THICKNESS      = 0.10 /
+
+&MATL ID            = 'Concrete'
+      FYI           = 'Normal Weigth Concrete'
+      CONDUCTIVITY  = 1.60
+      SPECIFIC_HEAT = 1.00
+      DENSITY       = 2300.0 /
+
+ Default material for evacuation meshes is INERT and its color
+ can not be changed esily in Smokeview. Thus, an evacuation 
+ material is defined below, which has only color:
+&SURF ID='EVAC_WALL', RGB=200,0,200, EVAC_DEFAULT=.TRUE. / or COLOR
+ 
+=======================================================
+============= FIRE FDS GEOMETRY STARTS ================
+=======================================================
+
+&OBST XB = -1.0, 0.0, -2.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB = 30.0,31.0, -2.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+
+&OBST XB = -1.0, 4.0, -2.0, 0.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB =  5.0,25.0, -2.0, 0.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB = 26.0,31.0, -2.0, 0.0, 0.0,2.0, SURF_ID='WALL' / 
+
+&OBST XB = -1.0, 4.0, 20.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB =  5.0,25.0, 20.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB = 26.0,31.0, 20.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+
+=======================================================
+============= FIRE FDS GEOMETRY ENDS ==================
+=======================================================
+
+=======================================================
+============= EVAC GEOMETRY STARTS ====================
+=======================================================
+
+&EXIT ID='Exit1', IOR = +2,
+      FYI = 'Comment line',
+      XYZ= 4.5, 19.8, 1.0,
+      XB= 4.0, 5.0, 22.0,22.0, 1.0,1.0 /
+
+&EXIT ID='Exit2', IOR = +2,
+      FYI = 'Comment line',
+      XYZ=25.5, 19.8, 1.0,
+      XB=25.0,26.0, 22.0,22.0, 1.0,1.0 /
+
+&EXIT ID='Exit3', IOR = -2,
+      FYI = 'Comment line',
+      XYZ= 4.5, 0.2, 1.0,
+      XB= 4.0, 5.0, -2.0,-2.0, 1.0,1.0 /
+
+&EXIT ID='Exit4', IOR = -2,
+      FYI = 'Comment line',
+      XYZ=25.5, 0.2, 1.0,
+      XB=25.0,26.0, -2.0,-2.0, 1.0,1.0 /
+
+=======================================================
+============= EVAC GEOMETRY ENDS ======================
+=======================================================
+
+ Test lognormal response times, IMO MSC.1/Circ.1238 (30 October 2007)
+ Response time T, day:   mean(ln(T))     = 3.44, sigma(ln(T))     = 0.94,    0 < x < 300 
+ Response time T, night: mean(ln(T-400)) = 3.95, sigma(ln(T-400)) = 0.84,  400 < x < 700 
+
+ Lognormal: distribution type = 5
+     para:  sigma of ln(x)
+     mean:  mean of ln(x)
+     high:  high end cutoff of x
+     para2: shift of x, x_out = x + shift, where ln(x) is lognormal
+
+ Human start to walk at t=1.0 s. Target speed is 1.0 m/s.
+&PERS ID='Imo1',
+      FYI='Imo, 30-50 males',
+      DEFAULT_PROPERTIES='Male',
+      VELOCITY_DIST=1, VEL_MEAN=1.295,VEL_PARA=0.05,VEL_LOW=0.97,VEL_HIGH=1.62,
+      PRE_EVAC_DIST=5, PRE_MEAN=3.44, PRE_PARA=0.94, PRE_PARA2=0, PRE_HIGH=300,
+      DET_EVAC_DIST=5, DET_MEAN=3.95, DET_PARA=0.84, DET_PARA2=400, DET_HIGH=700,
+      TDET_SMOKE_DENS=0.1 ,
+      HUMAN_SMOKE_HEIGHT=1.60,
+      DENS_INIT = 4.0,
+      COLOR_METHOD = 0 ,
+      I_HERDING_TYPE=2, /
+
+ Initial position of the humans
+&EVAC ID = 'EVAC_1', 
+      NUMBER_INITIAL_PERSONS = 1000,
+      FYI = 'Comment line',
+      XB = 1.0,29.0, 1.0,19.0, 1.0,1.0
+      AVATAR_COLOR = 'BLACK', AGENT_TYPE=2,
+      PERS_ID = 'Imo1' / 
+
+ Next line could be used to plot the evacuation flow fields:
+ SLCF PBZ = 1.000, QUANTITY = 'VELOCITY', VECTOR = .TRUE., EVACUATION=.TRUE./ 
+
+&TAIL /

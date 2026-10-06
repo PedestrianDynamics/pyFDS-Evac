@@ -1,0 +1,2 @@
+# Third-party decks are kept byte for byte (checked by SHA256SUMS).
+assets/fds_evac_guide/**/*.fds -text

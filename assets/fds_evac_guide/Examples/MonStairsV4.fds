@@ -1,0 +1,205 @@
+ FDS+Evac version: FDS 6.7.6, Evac 2.6.0 (GIT FDS6.7.6-336)
+ All material properties etc. are completely fabricated.
+
+ And example of "wide" stairs connecting two floors.  This
+ example can be used to learn how the agents are moved from
+ one main evacuation mesh to some other one (like from the
+ ground floor to the first floor).
+ NOTE: If you connect more than two floors, then you should
+ think, which landings and stair flights you put in which
+ floor. There can not be landings/flights on top of each
+ others in any of the evacuation meshes. For example, say
+ you have 1st floor, 2nd floor, 3rd floor,...
+ Then you could say, that the intermediate landing between
+ 1-2 floor is in the 1st floor mesh, the landing between
+ 2-3- floor is in the 2nd floor mesh, etc. Similarly for
+ the flights of the stairs.
+
+ This has also an intermediate landing in the stairs, which
+ the example "MonStairs.fds" did not have. This is more or
+ less the same than "MonStairsV3.fds"´, but this has a
+ 180 degree "bend" on the stairs.
+
+ The geometry: Two floors, each having one exit to the outside
+ and wide stairs connecting the floors (just one way, GF => 1st F).
+
+ Ground floor ==> Door_GF ==> Entr_1stF ==> 1st floor
+ and the "stairs" are modelled as EVSS in the 1st floor mesh.
+
+&HEAD CHID='MonStairsV4', TITLE='Simple example of wide stairs'  / 
+
+ Fire meshes, but these are not used, because the MISC has evacuation drill enabled.
+&MESH IJK=100,50,8, XB= 0.0,50.0, 0.0,25.0, 0.0,4.0, ID='FireMesh1' /
+&MESH IJK=100,50,8, XB=30.0,80.0, 0.0,25.0, 4.0,8.0, ID='FireMesh2' /
+
+ dx = dy = 0.5 m for the evacuation meshes.
+
+&MESH IJK=100,50,1, XB= 0.0,50.0, 0.0,25.0,  0.9,1.1, EVAC_Z_OFFSET=1.0, 
+      EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., ID='GroundFloor' /
+&MESH IJK=100,50,1, XB= 30.0,80.0, 0.0,25.0, 4.9,5.1, EVAC_Z_OFFSET=1.0, 
+      EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., ID='FirstFloor' /
+
+&TIME T_END=120.0, DT=0.05 / 
+
+&MISC EVACUATION_DRILL=.TRUE., EVACUATION_INITIALIZATION=.TRUE. / 
+      Note: Now no fire meshes: RADIATION=.FALSE. saves some CPU time and memory
+&RADI RADIATION=.FALSE., /
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=200,
+      DT_PART=0.5,
+      DT_HRR=1.0,
+      DT_SLCF=1000000.0,
+      DT_BNDF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 / We do not want any fire related output (no fire meshes)
+      Note: DT_PART is used also for the agents in Smokeview
+            DT_HRR is used also for CHID_evac.csv output
+
+ Default material for evacuation meshes is INERT and its color
+ can not be changed esily in Smokeview. Thus, an evacuation 
+ material is defined below, which has only color information:
+&SURF ID='EVAC_WALL', RGB= 200,0,200, EVAC_DEFAULT=.TRUE. / or COLOR
+
+ Outer walls: 0.2 m thick, ground floor
+&OBST XB=  0.0, 0.2,  0.0,25.0, 0.0,4.0, SURF_ID='INERT' /
+&OBST XB= 49.8,50.0,  0.0,25.0, 0.0,4.0, SURF_ID='INERT' /
+&OBST XB=  0.0,50.0,  0.0, 0.2, 0.0,4.0, SURF_ID='INERT' /
+&OBST XB=  0.0,50.0, 24.8,25.0, 0.0,4.0, SURF_ID='INERT' /
+
+ Ceiling slab
+&OBST XB= 0.0,50.0, 0.0,25.0, 3.8,4.0, SURF_ID='INERT' /
+
+ Outer walls: 0.2 m thick, 1st floor
+&OBST XB= 30.0,30.2,  0.0,25.0, 4.0,8.0, SURF_ID='INERT' /
+&OBST XB= 79.8,80.0,  0.0,25.0, 4.0,8.0, SURF_ID='INERT' /
+&OBST XB= 30.0,80.0,  0.0, 0.2, 4.0,8.0, SURF_ID='INERT' /
+&OBST XB= 30.0,80.0, 24.8,25.0, 4.0,8.0, SURF_ID='INERT' /
+
+ Holes for the exits to the outside of the building
+
+ Ground floor door at x= 10-12m, on the y=25m wall
+&HOLE XB= 9.99,12.01, 24.5,25.5, 0.0,2.2 /
+
+ First floor door at x= 78-80m, on the y=25m wall
+&HOLE XB= 77.99,80.01, 24.5,25.5, 4.0,6.2 /
+
+ The wide stairs are at x=40m - 50m and the stairs are mainly
+ used to go from the ground floor to the first floor, so we
+ put the stairs (EVSS) at the 1st floor mesh, so the door ==>
+ door connection is at x=40m
+
+ The stairs belong to the 1st floor, so we put an OBST at the
+ ground floor, so nobody could be "under" the stairs, where the
+ is not enough space in the z-direction.
+&OBST XB=40.0,45.0, 10.0,15.0, 0.9,1.1, EVACUATION=.TRUE., OUTLINE=.TRUE. /
+
+&DOOR ID='GF_2_Stairs', IOR=+1,
+      FYI= 'Comment line',
+      KEEP_XY=.TRUE.,
+      COLOR='PINK', EXIT_SIGN=.TRUE.,
+      TO_NODE= 'Stairs_2_Up',
+      XYZ=39.0, 12.5, 1.0,
+      XB= 40.0,40.0, 10.0,15.0, 0.9,1.1, /
+&ENTR ID='Stairs_2_Up', IOR=+1,
+      FYI= 'Comment line',
+      COLOR='CYAN',
+      XB= 40.0,40.0, 10.0,15.0, 4.9,5.1, / 
+ Note: Now we have DOOR ==> ENTR at the bottom end of the stairs.
+ One could have put this also at the top end or somewhere else,
+ like between the lower flight and the intermediate landing, or
+ between the intermediate landing and the upper flight. 
+ It is up to user to put the DOOR ==> ENTR there, where it will
+ "work best". DOOR ==> ENTR is not very nice, if there is merging
+ flows, i.e., there are dense crowd in front of the ENTR. So, for
+ stairs going up, it is nice to put DOOR ==> ENTR at the bottom
+ of the stairs or at the intermediate landing.
+
+&EXIT ID='GroundExit', IOR=+2,
+      FYI= 'Comment line',
+      COLOR='YELLOW',
+      XYZ=11.0, 24.0, 1.0,
+      XB= 10.0,12.0, 25.0,25.0, 0.9,1.1, /
+
+&EXIT ID='1stFloorExit', IOR=+2,
+      FYI= 'Comment line',
+      COLOR='GREEN',
+      XYZ=79.0, 24.0, 5.0,
+      XB= 78.0,80.0, 25.0,25.0, 4.9,5.1, /
+
+ (EVSS-namelist IOR: The edge at the height HEIGHT0)
+ 
+ Wide (5m) stairs with an intermediate landing, where the
+ direction changes 180 degress. Now the DOOR ==> ENTR is
+ at the bottom of the stairs, i.e., the GF to 1st floor
+ transition is happening there ==> the EVSS are in the
+ 1st floor (main evacuation) mesh.
+
+&EVSS XB=40.0,44.0, 10.0,15.0, 4.9,5.1, IOR=-1, ID='WideStairs1',
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.7, FAC_V0_HORI=1.0,
+      HEIGHT=-2.0, HEIGHT0=-4.0, MESH_ID='FirstFloor' / lower flight
+ Next is a landing ==> normal velocities are used
+&EVSS XB=44.0,49.0, 10.0,20.0, 4.9,5.1, IOR=-1, ID='WideStairs2',
+      FAC_V0_UP=1.0, FAC_V0_DOWN=1.0, FAC_V0_HORI=1.0,
+      HEIGHT=-2.0, HEIGHT0=-2.0, MESH_ID='FirstFloor' / landing
+&EVSS XB=40.0,44.0, 15.0,20.0, 4.9,5.1, IOR=+1, ID='WideStairs3',
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.7, FAC_V0_HORI=1.0,
+      HEIGHT=0.0, HEIGHT0=-2.0, MESH_ID='FirstFloor' / upper flight
+
+ Now the 1st floor mesh has x=30m - 80m (x_min is not anymore 40m)
+ So we need to put solid obst at the bottom end of the stairs, so
+ that the 1st floor flow field will be nice. Well, you could say,
+ that you need this obst, or otherwise the agents could drop to
+ the stairs.
+&OBST XB=39.8,40.0,  10.0,15.0, 4.9,5.1, /
+
+ Railings at the sides of the stairs (needed if there
+ are no OBST in the fire geometry at the z-level 4.9-5.1)
+&OBST XB=40.0,49.0,  9.8,10.0, 4.9,5.1, /
+&OBST XB=49.0,49.0, 10.0,20.2, 4.9,5.1, /
+&OBST XB=40.0,44.5, 15.0,15.2, 4.9,5.1, /
+&OBST XB=40.0,49.0, 20.0,20.2, 4.9,5.1, /
+
+
+ Evacuation calculation, human properties
+
+&PERS ID='Adult',
+      FYI='Male+Female diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      PRE_EVAC_DIST=1,PRE_LOW=2.0,PRE_HIGH=4.0,
+      DET_EVAC_DIST=1,DET_LOW=1.0,DET_HIGH=3.0,
+      TDET_SMOKE_DENS=0.1 , HUMAN_SMOKE_HEIGHT=1.60,
+      OUTPUT_SPEED=.TRUE.,
+      COLOR_METHOD=0, I_HERDING_TYPE=2, /
+
+ Initial positions of the agents
+
+&EVAC ID= 'AgentsExitDoor1st', 
+      NUMBER_INITIAL_PERSONS = 25,
+      XB =60.0,79.0,  1.0,24.0, 4.9,5.1,
+      AVATAR_COLOR = 'RED', AGENT_TYPE=2,
+      KNOWN_DOOR_NAMES = '1stFloorExit',
+      KNOWN_DOOR_PROBS = 1.0,
+      PERS_ID = 'Adult' / 
+
+&EVAC ID= 'AgentsGF2Exit', 
+      NUMBER_INITIAL_PERSONS = 25,
+      XB = 1.0,30.0,  1.0,24.0, 0.9,1.1,
+      AVATAR_COLOR = 'BLUE', AGENT_TYPE=2,
+      KNOWN_DOOR_NAMES = 'GF_2_Stairs','GroundExit',
+      KNOWN_DOOR_PROBS = 0.0,1.0,
+      PERS_ID = 'Adult' / 
+
+&EVAC ID= 'Agents2doors', 
+      NUMBER_INITIAL_PERSONS = 125,
+      XB = 1.0,30.0,  1.0,24.0, 0.9,1.1,
+      AVATAR_COLOR = 'GREEN', AGENT_TYPE=2,
+      KNOWN_DOOR_NAMES = 'GF_2_Stairs','GroundExit',
+      KNOWN_DOOR_PROBS = 0.5,1.0,
+      PERS_ID = 'Adult' / 
+
+ Next lines could be used to plot the evacuation flow fields:
+ SLCF PBZ=1.0, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+ SLCF PBZ=5.0, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+
+&TAIL /
