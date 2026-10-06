@@ -14,8 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   used to pass `agent_strength` (2000) as *k* and `agent_range` (0.08)
   as the friction, through the deprecated `bodyForce=`.
   `sfm_obstacle_scale` reaches the per-agent `obstacle_scale` (default
-  2000). Negative, non-finite or non-numeric `sfm_body_force` and
-  `sfm_friction` raise `ValueError`. The run manifest records the
+  2000). Negative, non-finite or non-numeric `sfm_body_force`,
+  `sfm_friction` and `sfm_obstacle_scale` raise `ValueError`. The run manifest records the
   effective values under `sfm`. Shipped decks in clear air and every
   documented number are unchanged; the `ft_full_gate_detour` and
   `ft_full_additive_detour` golden snapshots, with contact under

@@ -29,7 +29,7 @@ aliases: [/docs/model-comparison/]
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
-| **Locomotion model** | Social Force Model (Helbing et al. [6], three-circle body shape [1] Table 1), continuous 2-D equation of motion solved with a modified velocity-Verlet integrator ([1] §3.1–3.2, §3.6) | JuPedSim operational model chosen per deck (`model_type`); the default collision-free speed model has no social forces. With `SocialForceModel`, the force model of Helbing, Farkas & Vicsek (2000) on a circle: body force *k* acts, friction is 0 ([#635](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635)) |
+| **Locomotion model** | Social Force Model (Helbing et al. [6], three-circle body shape [1] Table 1), continuous 2-D equation of motion solved with a modified velocity-Verlet integrator ([1] §3.1–3.2, §3.6) | JuPedSim operational model chosen per deck (`model_type`); the default collision-free speed model has no social forces. With `SocialForceModel`, the force model of Helbing et al. [12] on a circle: body force *k* acts, friction is 0 ([#635](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635)) |
 | **Body shape** | Three overlapping circles (torso Rd, shoulder Rs, head Rt) with rotational degree of freedom ([1] Table 1, Fig. 1) | Point agent (circle of configurable radius in JuPedSim) |
 | **Counterflow** | Dedicated counterflow collision-avoidance algorithm ([1] §3.3) | Handled by JuPedSim's operational model; no separate counterflow algorithm |
 | **Spatial discretisation** | Rectilinear evacuation mesh (separate from the FDS fire mesh); geometry is fitted to the underlying grid; minimum ~0.25 m cell size recommended ([1] §1.2) | Continuous walkable polygon (Shapely geometry); no grid |
@@ -750,3 +750,7 @@ path-integrated hazard sampling.
 11. Schroder, B., Arnold, L., Seyfried, A. (2020). A map
     representation of the ASET-RSET concept. *Fire Safety Journal*,
     115, 103154.
+
+12. Helbing, D., Farkas, I. & Vicsek, T. (2000). Simulating dynamical
+    features of escape panic. *Nature*, 407(6803), 487–490.
+    DOI: [10.1038/35035023](https://doi.org/10.1038/35035023).

@@ -78,8 +78,8 @@ JuPedSim 1.4.2's default.
 | `agent_range` | `force_distance`, per agent | *B* | m | 0.08 |
 | `relaxation_time` | `reaction_time`, per agent | *τ* | s | 0.5 |
 
-Negative, non-finite or non-numeric `sfm_body_force` or `sfm_friction`
-stop the run with `ValueError`. JuPedSim 1.4.2 has one friction for the
+Negative, non-finite or non-numeric `sfm_body_force`, `sfm_friction` or
+`sfm_obstacle_scale` stop the run with `ValueError`. JuPedSim 1.4.2 has one friction for the
 agent and wall terms and applies the wall term with the wrong sign
 ([jupedsim#1677](https://github.com/PedestrianDynamics/jupedsim/pull/1677)),
 so friction is always passed as 0, also when `sfm_friction` is missing
