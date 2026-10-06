@@ -28,7 +28,8 @@ and pick a template:
 ## Set up
 
 The project uses [uv](https://github.com/astral-sh/uv) and supports Python
-3.12, 3.13 and 3.14. CI tests all three; lint and docs run on 3.14.
+3.12, 3.13 and 3.14. CI tests all three on main and 3.12 and 3.14 on pull
+requests; lint and docs run on 3.14.
 
 ```bash
 git clone https://github.com/PedestrianDynamics/pyFDS-Evac.git
