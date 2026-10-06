@@ -178,13 +178,36 @@ uv run python scripts/generate_iso_table21_sweep.py
 
 Figure: ![ISO 20414 Test 18 (Table 21) sweep](/artifacts/iso-table21-sweep.png)
 
-Generate the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) smoke-density vs speed verification plot:
+Generate the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) smoke-density vs speed plot:
 
 ```bash
 uv run python scripts/generate_smoke_density_speed_plot.py
 ```
 
 Figure: ![soot_density vs speed](/artifacts/smoke-density-vs-speed.png)
+
+The "pyFDS-Evac" markers in this figure are the closed-form law evaluated
+at the guide's four densities, from the same function as the "Theory"
+line. The figure therefore cannot show a disagreement and is not a
+verification against FDS+Evac.
+
+The comparison with the FDS+Evac guide test "Unimpeded walking speed vs
+smoke density" (Korhonen, FDS+Evac Technical Reference and User's Guide,
+FDS 6.7.6 / Evac 2.6.0, section "Component Testing") is in
+[`tests/verification/test_fds_evac_guide_cases.py`](../tests/verification/test_fds_evac_guide_cases.py).
+With v0 = 1.5 m/s and the default floor of 0.1, which starts at
+K = 11.15 1/m (1281 mg/m³), the law gives at the densities the FDS run
+holds (0.997 of nominal):
+
+| Soot density [mg/m³] | K [1/m] | Speed [m/s] | Time over 5 m [s] |
+|---|---|---|---|
+| 0 | 0 | 1.500 | 3.33 |
+| 498.5 | 4.34 | 0.975 | 5.13 |
+| 997 | 8.67 | 0.4495 | 11.12 |
+| 1495.5 | 13.01 | 0.150 (floor) | 33.33 |
+
+pyFDS-Evac reproduces these values to a relative 1e-9, since both codes
+use the same law and defaults.
 
 ## Conversion utilities
 
