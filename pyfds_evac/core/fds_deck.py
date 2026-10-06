@@ -3,8 +3,11 @@
 FDS reads its input as Fortran namelists, and so does this module:
 
 - a record starts at ``&NAME`` as the first non-blank text of a line and
-  ends at the first ``/`` outside quotes; text outside records is a
-  comment, so a record may span lines and anything after ``/`` is ignored;
+  ends at the first ``/`` outside quotes and comments; text outside records
+  is a comment, so a record may span lines and anything after ``/`` is
+  ignored; inside a record, ``!`` starts a comment to the end of the line;
+  a record whose ``/`` is missing before the next ``&NAME`` line is an
+  error;
 - values are separated by commas and/or whitespace (``XB= 0,40 0,20, 0,4``);
 - strings take ``'`` or ``"``; logicals are ``.TRUE.``/``.FALSE.``/``T``/``F``;
   ``n*v`` repeats ``v`` n times; keys are case-insensitive;
@@ -187,27 +190,62 @@ def parse_fds_text(text: str, path: Path | None = None) -> FdsDeck:
 def _read_record(text: str, match: re.Match, issues: list[DeckIssue]):
     group = match.group(1).upper()
     line = text.count("\n", 0, match.start()) + 1
-    body_start = match.end()
-    end = _record_end(text, body_start)
-    if end is None:
-        raise FdsDeckError(f"&{group} (line {line}): no closing '/' found")
+    end, body = _scan_body(text, match.end(), group, line)
     if group == "TAIL":
         return None
-    params = _parse_body(text[body_start:end], group, line, issues)
+    params = _parse_body(body, group, line, issues)
     return NamelistRecord(group=group, params=params, line=line)
 
 
-def _record_end(text: str, start: int) -> int | None:
-    quote = None
-    for index in range(start, len(text)):
+_NEXT_RECORD = re.compile(r"[ \t]*&([A-Za-z][A-Za-z0-9_]*)")
+
+
+def _scan_body(text: str, start: int, group: str, line: int) -> tuple[int, str]:
+    """End of the record at *start* and its body with ``!`` comments removed.
+
+    As in Fortran namelist input, ``!`` outside quotes starts a comment that
+    runs to the end of the line, so a ``/`` in it does not end the record.
+    A line that starts another ``&NAME`` before the closing ``/`` is an
+    error: FDS rejects the deck, and reading on would merge two records.
+    """
+    kept: list[str] = []
+    index, quote = start, None
+    while index < len(text):
         char = text[index]
-        if quote:
-            quote = None if char == quote else quote
-        elif char in "'\"":
-            quote = char
-        elif char == "/":
-            return index
-    return None
+        if quote is None and char == "/":
+            return index, "".join(kept)
+        if quote is None and char == "!":
+            index = _line_end(text, index)
+            continue
+        quote = _next_quote(quote, char)
+        kept.append(char)
+        _check_no_new_record(text, index, quote, group, line)
+        index += 1
+    raise FdsDeckError(f"&{group} (line {line}): no closing '/' found")
+
+
+def _line_end(text: str, index: int) -> int:
+    end = text.find("\n", index)
+    return len(text) if end < 0 else end
+
+
+def _next_quote(quote: str | None, char: str) -> str | None:
+    if quote is not None:
+        return None if char == quote else quote
+    return char if char in "'\"" else None
+
+
+def _check_no_new_record(text, index, quote, group, line) -> None:
+    if quote is not None or text[index] != "\n":
+        return
+    found = _NEXT_RECORD.match(text, index + 1)
+    if found is None:
+        return
+    next_line = text.count("\n", 0, index + 1) + 1
+    raise FdsDeckError(
+        f"&{group} (line {line}): no closing '/' before "
+        f"&{found.group(1).upper()} on line {next_line}"
+    )
 
 
 def _parse_body(body: str, group: str, line: int, issues: list[DeckIssue]):

@@ -100,3 +100,35 @@ def test_geom_and_controlled_obst_are_reported():
 def test_unterminated_record_is_an_error():
     with pytest.raises(FdsDeckError, match="no closing"):
         parse_fds_text("&HEAD CHID='x'\n")
+
+
+def test_bang_comment_with_slash_does_not_end_the_record():
+    """FDS reads ``!`` to the end of the line as a comment, '/' included."""
+    deck = parse_fds_text(
+        "&VENT XB=0,0,4,6,0,2, ! main door, see plan A/B\n      SURF_ID='OPEN' /\n"
+    )
+    vent = deck.first("VENT")
+    assert vent.xb() == (0, 0, 4, 6, 0, 2)
+    assert vent.text("SURF_ID") == "OPEN"
+
+
+def test_bang_comment_after_a_value():
+    deck = parse_fds_text(
+        "&SURF ID='FIRE',\n      HRRPUA=1000,  ! 1000 kW/m2 x 2 m2 = 2 MW peak\n"
+        "      COLOR='RED' /\n"
+    )
+    surf = deck.first("SURF")
+    assert surf.number("HRRPUA") == 1000
+    assert surf.text("COLOR") == "RED"
+
+
+def test_bang_inside_quotes_is_text():
+    assert parse_fds_text("&OBST ID='a!b/c', XB=0,1,0,1,0,1 /").first("OBST").id == (
+        "a!b/c"
+    )
+
+
+def test_missing_slash_before_the_next_record_is_an_error():
+    text = "&VENT SURF_ID='OPEN' XB=0,0,0,1,0,1\n&OBST XB=2,3,0,1,0,1 /\n"
+    with pytest.raises(FdsDeckError, match=r"&VENT \(line 1\).*&OBST on line 2"):
+        parse_fds_text(text)
