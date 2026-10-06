@@ -498,6 +498,19 @@ def test_cli_command_paths_are_absolute(tmp_path, monkeypatch):
         assert Path(words[words.index(flag) + 1]).is_absolute(), flag
 
 
+@pytest.mark.parametrize("blank", ["", "  "])
+def test_cli_command_skips_blank_paths(blank):
+    """A blank path is no path: the command agrees with the script (#557)."""
+    from pyfds_evac.config.script import python_script
+
+    opts = _parse("--scenario", "s.json")
+    for key in ("fds_dir", "vis_cache", "replay_exits", "output_sqlite"):
+        setattr(opts, key, blank)
+    words = shlex.split(cli_command(opts))
+    assert words == ["pyfds-evac", "--scenario", os.path.abspath("s.json")]
+    assert "\nFDS_DIR = None\n" in python_script(opts)
+
+
 def test_gui_form_command_runs_the_same_options():
     """The GUI's opts.scenario is a picker value; the command needs the file."""
     from pyfds_evac.webapp import app
