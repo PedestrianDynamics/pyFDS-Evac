@@ -350,9 +350,9 @@ two differ:
   an optical-depth margin, then an anchor on the ranking cost. The
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
-  is re-admitted, but the current route is kept first if the rival's worst
-  extinction is not lower by `fallback_switch_margin`
-  (`route_graph.py`, `_apply_fallback`, `_fallback_holds_current`).
+  is re-admitted, but the current route is kept first unless the rival's
+  optical depth \(\tau\) is lower by `fallback_switch_margin`
+  (`route_graph.py`, `_apply_fallback`, `_fallback_rival_wins`).
 
 An agent can therefore keep a known route that is not first in the ranking.
 
@@ -405,8 +405,7 @@ along the walk's full length, including any stretch behind the route's origin
 node. The walk's mean \(\bar K\), length and travel time enter the route
 mean \(\bar K\), \(\tau\), the gate and the ranking, so the agent is charged
 for the smoke ahead of it only (`_measure_route`). The walk also gives the
-route's worst sample `k_max_route`, which decides whether an agent keeps its
-exit when every route is refused (`route_graph.py`, `_fallback_holds_current`),
+route's worst sample `k_max_route`, which is reported but decides nothing,
 and the worst leg mean, which decides the optional clean tier, off by default
 (`clean_extinction_threshold` = 0). Without a position, the first leg is the
 whole node-to-node polyline. Under the `"additive"` model only, a route

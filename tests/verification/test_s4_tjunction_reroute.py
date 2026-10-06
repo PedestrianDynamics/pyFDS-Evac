@@ -15,8 +15,9 @@ Arms:
   switch from the right exit to the left (clear) one, and never the reverse.
   An agent already inside the arm is charged the smoke on its walk back as
   well as ahead (#451); with every route refused, the fallback keeps its
-  current exit unless a rival's worst K is clearly lower
-  (``_fallback_holds_current``), so it may walk on to the right exit.
+  current exit unless a rival's optical depth is clearly lower
+  (``_fallback_rival_wins``, #458), so an agent just inside the arm turns
+  back to the left exit.
 
 The smoke starts at ``smoke_onset_s``, once the whole population is inside and
 still walking. That delay is what makes this a test of *re*-routing: the opening
@@ -26,8 +27,8 @@ switch away from.
 
 Assertions are aggregate (counts, directions, earliest-switch latency), never
 per-agent or trajectory-level -- the coupled run is not bit-reproducible (see
-project memory). The one exception is the strict xfail for #458, which names
-four agents by spawn index under seed 42; it records the defect, not a result.
+project memory). The one exception is the #458 regression test, which names
+four agents by spawn index under seed 42.
 
 Engine note: rerouting only engages on the **flow-spawning** agent-init path;
 ``t_junction_scenario`` uses it (a by-number population leaves agents out of
@@ -54,13 +55,12 @@ from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 from pyfds_evac.core.scenario import run_scenario
 
 REEVAL_INTERVAL_S = 5.0
-# A quarter of the population: at onset about half the agents are already in
-# the K = 6 arm, where both routes are refused and the fallback holds their
-# exit (see the module docstring). The rest, still in the stem, switch.
-# Four of the held agents are held on k_max alone although the walk back is
-# far less smoky (#458, see test_fallback_moves_agents_at_the_arm_entrance).
-# Raise MIN_SWITCHES to at least 12 once #458 is fixed.
-MIN_SWITCHES = TJunctionSpec().num_agents // 4
+# At onset about half the agents are already in the K = 6 arm, where both
+# routes are refused. The agents still in the stem switch, and so do the four
+# just inside the arm, whose walk back has a third of the optical depth
+# (#458, see test_fallback_moves_agents_at_the_arm_entrance). 12 is the count
+# measured under seed 42; the agents deeper in the arm hold their exit.
+MIN_SWITCHES = 12
 # Spawn indices of the agents 0.4-1.4 m inside the right arm at onset
 # (x 23.4-24.4): right τ 31-35 against left τ 10.7-11.0, equal k_max.
 ARM_ENTRANCE_SPAWN_INDICES = {8, 9, 12, 13}
@@ -138,15 +138,6 @@ def test_smoke_forces_switch_to_clear_exit():
         result.cleanup()
 
 
-@pytest.mark.xfail(
-    strict=True,
-    raises=AssertionError,
-    reason=(
-        "#458: with every route refused, _fallback_holds_current keeps the "
-        "current exit on k_max alone, so agents just inside the smoky arm "
-        "walk on through it (seed 42)"
-    ),
-)
 def test_fallback_moves_agents_at_the_arm_entrance():
     """Agents just inside the smoky arm turn back to the clear exit.
 

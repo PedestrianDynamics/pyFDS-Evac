@@ -817,8 +817,8 @@ class RouteCostConfig:
     # Cap on how far ahead that reaches. Unbounded is perfect foresight; a
     # finite horizon models an occupant who can only judge the near future.
     foresight_horizon_s: float = math.inf
-    # When every exit is dead, the agent keeps its least-bad target unless a
-    # rival's worst extinction is better by this fraction -- without it the
+    # Between two refused routes the agent keeps its exit unless the rival's
+    # optical depth tau is lower by this fraction (#458) -- without it the
     # least-bad choice changes with every flicker of the field.
     fallback_switch_margin: float = 0.2
 
@@ -1450,9 +1450,9 @@ def _measure_route(
     # The mean rather than the worst sample: a maximum over sampled cells is a
     # step function of where the agent stands, and the same 28.9 m route
     # reported 91 m of sight, then 8 m, then 91 m again on consecutive seconds,
-    # taking the ordering with it. k_max_route is still reported and still
-    # orders the all-refused fallback, where the question is which walk is
-    # survivable rather than which is cleanest.
+    # taking the ordering with it. k_max_route is still reported but no
+    # longer decides anything; tau orders and holds the all-refused fallback
+    # too (#458).
     tau_route = k_ave * effective_length
 
     # Composite cost: effective_length * (1 + w_smoke * K_ave) + w_fed * FED_max
@@ -1602,13 +1602,17 @@ class _AnchoredPolicy:
     ) -> bool:
         """Whether the agent may leave *old_rc* for *candidate*.
 
-        No baseline allows, a hazard the agent must flee allows, and
-        otherwise the cost model says whether *candidate* is enough better.
+        No baseline allows, a hazard the agent must flee allows, and between
+        two refused routes only a clearly lower tau allows (#458): the time
+        anchor does not decide there. Otherwise the cost model says whether
+        *candidate* is enough better.
         """
         if old_rc is None:
             return True
         if _must_flee_rejection(old_rc, config.cost_config):
             return True
+        if not candidate.feasible and not old_rc.feasible:
+            return _fallback_rival_wins(candidate, old_rc, config.cost_config)
         return self.improvement(candidate, old_rc, config)
 
 
@@ -2117,16 +2121,22 @@ def _first_hops(
     return hops
 
 
-def _fallback_holds_current(
-    winner: RouteCost, current: RouteCost, config: RouteCostConfig
+def _fallback_rival_wins(
+    rival: RouteCost, current: RouteCost, config: RouteCostConfig
 ) -> bool:
-    """Whether the current exit keeps its place ahead of the fallback winner.
+    """Whether a refused *rival* may displace the refused *current* exit.
 
-    It does unless the winner's worst stretch is clearly milder, by
-    fallback_switch_margin; equality does not hold it.
+    Only if its optical depth is lower by fallback_switch_margin (#458).
+    The comparison is strict, so a rival at exactly the margin holds, and
+    taus within ``EPS_TAU`` tie and hold too, so round-off (or both taus 0)
+    never moves an agent. One rule for the fallback order and the anchor:
+    a k_max hold with a time anchor behind it kept agents on an exit with
+    three times the smoke.
     """
+    if taus_tie(rival.tau_route, current.tau_route):
+        return False
     margin = 1.0 - config.fallback_switch_margin
-    return winner.k_max_route > current.k_max_route * margin
+    return rival.tau_route < current.tau_route * margin
 
 
 def _apply_fallback(
@@ -2144,7 +2154,8 @@ def _apply_fallback(
     tick is what lets that happen. The price is that in a fire smoky enough to
     refuse everything -- which is most of a real run, see
     docs/gate-model-review-notes.md -- the ordering follows the field, so the
-    current exit is held unless a rival's worst stretch is clearly milder.
+    current exit is held unless a rival's optical depth is clearly lower
+    (``_fallback_rival_wins``).
 
     Ordered by optical depth here too, not by the worst sample: ordering
     refused routes by k_max alone once put a 51 m route ahead of a 22 m one
@@ -2160,7 +2171,7 @@ def _apply_fallback(
         costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
         current = next((rc for rc in costs if rc.exit_id == current_exit), None)
         if current is not None and costs[0].exit_id != current.exit_id:
-            if _fallback_holds_current(costs[0], current, config):
+            if not _fallback_rival_wins(costs[0], current, config):
                 costs = [current] + [rc for rc in costs if rc is not current]
         best = costs[0]
         costs[0] = replace(

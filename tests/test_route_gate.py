@@ -196,11 +196,15 @@ class TestFallbackStability:
         )
         assert ranked[0].exit_id == "near"
 
-    def test_the_current_exit_is_held_when_rivals_are_no_milder(self):
-        """Uniform smoke: k_max ties, so the margin must keep the incumbent."""
+    def test_the_current_exit_is_held_unless_the_rival_has_clearly_less_tau(self):
+        """Uniform smoke: equal k_max, but the near route has half the tau.
+
+        The margin is on tau (#458), so the near exit holds and an agent
+        heading far leaves for it.
+        """
         for held in ("near", "far"):
             ranked = self._all_refused(held)
-            assert ranked[0].exit_id == held, held
+            assert ranked[0].exit_id == "near", held
 
 
 class TestRankCostIsWhatOrders:

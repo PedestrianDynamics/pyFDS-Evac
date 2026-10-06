@@ -181,6 +181,8 @@ to plan section 3.
 - **Infinities**: no `inf` arithmetic, no NaN path reachable.
 - **`fallback_switch_margin` direction**: correct — but *usually unreachable*,
   because `rank_routes` un-rejects first, leaving `alive` non-empty.
+
+  > **Superseded 2026-10-06 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).** `fallback_switch_margin` now compares `tau_route`, not the worst-case K, and the anchor uses the same rule whenever two refused routes meet; see [Models › Routing › Switching rule](/models/routing.md#switching-rule).
 - (**Clear air is NOT clean — moved to B11 below.** The scenario check ran with
   no `--fds-dir`, so K is exactly 0 and the check cannot fail.)
 - **`c = 3`**: correct, confirmed independently by `evac.f90:5496` and Jin 1978.

@@ -85,6 +85,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gets a finer grid, a build about four times slower, and walls 0.25 to
   0.5 m wide that may now block sight; pass `cell_size_m=0.5` to
   keep the old grid (#115).
+- Scenario key `routing.fallback_switch_margin` (default 0.2) now
+  compares optical depth `tau` instead of the worst extinction
+  `k_max_route`. Between two refused routes, under both cost models, an
+  agent leaves its exit only for a rival whose `tau` is at least 20 %
+  lower; equality and differences up to 1e-9 keep the exit, also when
+  both `tau` are 0. The same rule replaces the travel-time anchor
+  between two refused routes, which kept agents on a route with three
+  times the smoke. Configs that set the key still load; its effect
+  changes. In the S4 T-junction the four agents just inside the smoky
+  arm now turn back (8 → 12 switches). CI references move: four
+  fallback cases and the `tj_full_gate_fallback` and
+  `tj_discovery_gate_ramp` snapshots on both platforms; in the latter
+  one agent turns back late and is still in the building at the 60 s
+  horizon (#458).
 
 ### Fixed
 
