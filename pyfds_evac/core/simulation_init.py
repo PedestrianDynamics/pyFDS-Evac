@@ -104,7 +104,7 @@ def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
             continue
         try:
             defaults[key] = convert(value)
-        except (TypeError, ValueError) as error:
+        except (TypeError, ValueError, OverflowError) as error:
             raise ValueError(
                 f"simulationParams.{key} must be a number, got {value!r}"
             ) from error

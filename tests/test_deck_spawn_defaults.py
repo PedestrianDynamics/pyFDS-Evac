@@ -220,7 +220,14 @@ def test_numeric_strings_are_converted(asset, tmp_path):
 
 @pytest.mark.parametrize("asset", ASSETS)
 @pytest.mark.parametrize(
-    ("key", "value"), [("v0", "fast"), ("radius", [0.2]), ("number", "3.9")]
+    ("key", "value"),
+    [
+        ("v0", "fast"),
+        ("radius", [0.2]),
+        ("number", "3.9"),
+        ("number", float("inf")),
+        ("v0", 10**400),
+    ],
 )
 def test_non_numeric_sim_param_names_the_key(asset, key, value, tmp_path):
     raw, _ = _stripped_raw(asset, SPAWN_KEYS)
