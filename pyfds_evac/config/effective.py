@@ -110,6 +110,7 @@ class EffectiveConfiguration:
     command: str
     fds_slices: tuple[str, ...] | None = None
     _mechanisms: Mechanisms | None = field(default=None, repr=False, compare=False)
+    _walkable: Any = field(default=None, repr=False, compare=False)
 
     @property
     def ok(self) -> bool:
@@ -236,6 +237,7 @@ def effective_configuration(
         command=cli_command(opts, scenario_path=_scenario_path(opts, scenario)),
         fds_slices=None if facts is None else tuple(sorted(facts.slices)),
         _mechanisms=mech,
+        _walkable=getattr(scenario, "walkable_polygon", None),
     )
 
 
@@ -732,7 +734,7 @@ def predicted_run_settings(
         "heat_fed": _predicted_heat(opts, sampling) if m.heat_fed else None,
         "tenability": _predicted_tenability(opts, m) if m.tenability else None,
         "rerouting": _predicted_rerouting(opts, raw) if m.rerouting else None,
-        "visibility": _predicted_visibility(opts, m),
+        "visibility": _predicted_visibility(opts, m, cfg._walkable),
         "smoke_blind": bool(option(opts, "smoke_blind")),
         "replay_exits": bool(option(opts, "replay_exits")),
         "require_fds_coverage": bool(option(opts, "require_fds_coverage")),
@@ -787,7 +789,9 @@ def _predicted_rerouting(opts: Any, raw: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _predicted_visibility(opts: Any, m: Mechanisms) -> dict[str, Any] | None:
+def _predicted_visibility(
+    opts: Any, m: Mechanisms, walkable: Any
+) -> dict[str, Any] | None:
     if m.visibility is None:
         return None
     if m.visibility == "clear-air":
@@ -795,6 +799,7 @@ def _predicted_visibility(opts: Any, m: Mechanisms) -> dict[str, Any] | None:
             "kind": "clear-air",
             "cell_size_m": option(opts, "vis_cell_size"),
             "max_sign_distance_m": option(opts, "max_sign_distance"),
+            **_predicted_wall_check(walkable, option(opts, "vis_cell_size")),
         }
     return {
         "kind": "smoky",
@@ -802,6 +807,22 @@ def _predicted_visibility(opts: Any, m: Mechanisms) -> dict[str, Any] | None:
         "slice_height_m": option(opts, "smoke_slice_height"),
         "max_sign_distance_m": option(opts, "max_sign_distance"),
     }
+
+
+def _predicted_wall_check(walkable: Any, cell_size_m: Any) -> dict[str, Any]:
+    """The clear-air model's ``thin_wall_*`` record, from the loaded geometry.
+
+    Empty without a walkable polygon (a raw scenario mapping) or with a cell
+    size the model would reject, so the prediction then lists them as
+    differing rather than guessing.
+    """
+    if walkable is None or not isinstance(cell_size_m, (int, float)):
+        return {}
+    if cell_size_m <= 0:
+        return {}
+    from pyfds_evac.core.visibility import wall_check_parameters
+
+    return wall_check_parameters(walkable, float(cell_size_m))
 
 
 def _differences(predicted: Any, used: Any, path: str = "") -> list[str]:

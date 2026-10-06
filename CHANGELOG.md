@@ -49,9 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `reuse lint` (#633).
 - A clear-air visibility build logs a warning when its cell size is not
   smaller than the thinnest wall of the walkable area, with the wall's
-  width and location: such a wall may hold no cell centre and let sight
-  through. Walls attached to the outer boundary count as well as holes
-  (#115).
+  estimated width and location: such a wall may hold no cell centre and
+  let sight through. Walls attached to the outer boundary and thin parts
+  of larger obstructions count; rounded corners, bevels and wedge tips do
+  not. The run's visibility settings record the width and the verdict as
+  `thin_wall_m` and `thin_wall_warning`, and `--show-config` predicts
+  them from the scenario's geometry. No warning does not prove that every
+  wall blocks sight (#115).
 
 ### Changed
 

@@ -249,54 +249,118 @@ def _make_meta(
     }
 
 
-def _thinnest_obstacle(walkable) -> tuple[float, float, float] | None:
-    """Width and a point of the thinnest obstruction of a clear-air grid.
+# A part of an obstruction that a clear-air grid may lose counts as a wall,
+# rather than a rounded corner or the tip of a wedge, when it runs longer than
+# this many cells ...
+WALL_MIN_LENGTH_CELLS = 1.5
+# ... and is close to uniformly thin: its widest point is at most this many
+# times its mean width (a rectangle: 1; a wedge tip: about 2).
+WALL_MAX_TAPER = 1.25
 
-    The obstructions are the parts of the bounding box of *walkable* that lie
-    outside it, so a wall attached to the outer boundary counts as well as a
-    hole. A part's width is the short side of the rectangle with the same
-    area and perimeter: exact for a rectangular wall, an estimate for any
-    other shape. None when there is no obstruction.
+
+def _polygons(geometry) -> list:
+    """The polygons of *geometry*, which may be a collection."""
+    parts = getattr(geometry, "geoms", [geometry])
+    return [part for part in parts if part.geom_type == "Polygon"]
+
+
+def _lost_parts(obstruction, cell_size_m: float) -> list:
+    """Parts of *obstruction* that a disc one cell across cannot enter.
+
+    This is the morphological opening of *obstruction* by a disc of diameter
+    *cell_size_m*, subtracted from *obstruction*. A wall exactly one cell wide
+    is lost too (the 1e-9 m margin), so equality warns. Growing the opened
+    shape by 5 % more than it shrank absorbs the arc approximation of
+    ``buffer``, which would otherwise leave slivers along every edge.
+    """
+    radius = cell_size_m / 2 + 1e-9
+    kept = obstruction.buffer(-radius).buffer(1.05 * radius)
+    return _polygons(obstruction.difference(kept))
+
+
+def _wall_width(piece, cell_size_m: float) -> float | None:
+    """Width of a lost *piece* that is a wall, None for a corner or a tip.
+
+    Width and length are the sides of the rectangle with the area and
+    perimeter of *piece*: exact for a rectangular wall.
+    """
+    area, perimeter = piece.area, piece.length
+    if area <= 1e-4 * cell_size_m**2:
+        return None
+    width = (perimeter - math.sqrt(max(perimeter**2 - 16 * area, 0.0))) / 4
+    if perimeter / 2 - width <= WALL_MIN_LENGTH_CELLS * cell_size_m:
+        return None
+    if not piece.buffer(-WALL_MAX_TAPER * width / 2).is_empty:
+        return None
+    return width
+
+
+def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] | None:
+    """The thinnest wall a clear-air grid of *cell_size_m* may lose, or None.
+
+    Returns its estimated mean width and a point on it. The obstructions are
+    the parts of the bounding box of *walkable* outside it, so a wall attached
+    to the outer boundary counts as well as a hole. A part of an obstruction
+    is lost when a disc one cell across cannot enter it (local width up to
+    one cell, see :func:`_lost_parts`); it counts as a wall when it is long
+    and evenly thin (:data:`WALL_MIN_LENGTH_CELLS`, :data:`WALL_MAX_TAPER`),
+    which leaves out rounded corners, bevels and the tips of acute wedges.
+    Those still let sight clip them, as any grid does at a corner, and
+    refining the grid does not remove that.
+
+    This is a heuristic estimate. None does not prove that the grid resolves
+    every wall: a wall oblique to the grid can lose cells below one cell
+    width, and a short thin stub is not reported.
     """
     from shapely.geometry import box
 
-    rest = box(*walkable.bounds).difference(walkable)
+    obstructions = _polygons(box(*walkable.bounds).difference(walkable))
+    pieces = (p for part in obstructions for p in _lost_parts(part, cell_size_m))
     thinnest = None
-    for part in getattr(rest, "geoms", [rest]):
-        area, perimeter = part.area, part.length
-        if area <= 1e-6:
+    for piece in pieces:
+        width = _wall_width(piece, cell_size_m)
+        if width is None or (thinnest is not None and width >= thinnest[0]):
             continue
-        width = (perimeter - math.sqrt(max(perimeter**2 - 16 * area, 0.0))) / 4
-        if thinnest is None or width < thinnest[0]:
-            point = part.representative_point()
-            thinnest = (width, point.x, point.y)
+        point = piece.representative_point()
+        thinnest = (width, point.x, point.y)
     return thinnest
 
 
-def _warn_if_walls_unresolved(walkable, cell_size_m: float) -> None:
-    """Warn when *cell_size_m* is not smaller than the thinnest wall.
+def wall_check_parameters(walkable, cell_size_m: float) -> dict[str, object]:
+    """The ``thin_wall_*`` entries of a clear-air model's ``parameters``.
 
-    A cell blocks sight when its centre lies outside *walkable*, so a wall
-    no wider than one cell may hold no cell centre and let sight through.
-    The grid resolves a wall only when ``cell_size_m < width``; for a wall
-    oblique to the grid this is necessary, not sufficient. A cell equal to
-    the width warns, with a 1e-9 m margin so a rounded width cannot hide it.
+    ``thin_wall_m`` is the estimated width of the thinnest wall the grid may
+    lose (None: none found), ``thin_wall_warning`` whether the build warned.
+    ``pyfds_evac.config.effective`` predicts them with this same function.
     """
-    thinnest = _thinnest_obstacle(walkable)
-    if thinnest is None or cell_size_m < thinnest[0] - 1e-9:
-        return
-    width, x, y = thinnest
-    _logger.warning(
-        "Clear-air visibility grid: cell size %.3g m is not smaller than the "
-        "thinnest wall (%.3g m wide, near (%.2f, %.2f)); sight may pass "
-        "through it. Use a cell size below %.3g m (--vis-cell-size, "
-        "VisibilityModel.clear_air(cell_size_m=)).",
-        cell_size_m,
-        width,
-        x,
-        y,
-        width,
-    )
+    return _wall_record(unresolved_wall(walkable, cell_size_m))
+
+
+def _wall_record(found: tuple[float, float, float] | None) -> dict[str, object]:
+    return {
+        "thin_wall_m": None if found is None else found[0],
+        "thin_wall_warning": found is not None,
+    }
+
+
+def _warn_if_walls_unresolved(walkable, cell_size_m: float) -> dict[str, object]:
+    """Log a warning for a wall the grid may lose; return the record of it."""
+    found = unresolved_wall(walkable, cell_size_m)
+    if found is not None:
+        width, x, y = found
+        _logger.warning(
+            "Clear-air visibility grid: a wall about %.3g m wide near "
+            "(%.2f, %.2f) is not wider than the %.3g m cell; sight may pass "
+            "through it. Use a cell size below %.3g m (--vis-cell-size, "
+            "VisibilityModel.clear_air(cell_size_m=)). The width is an "
+            "estimate.",
+            width,
+            x,
+            y,
+            cell_size_m,
+            width,
+        )
+    return _wall_record(found)
 
 
 def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):
@@ -832,11 +896,12 @@ class VisibilityModel:
         Pick it below the thinnest wall that must block: at 0.5 m the 0.4 m
         walls of ``assets/blind_spawn_discovery`` vanish entirely, while 0.25 m
         (the default, as ``--vis-cell-size``) resolves them.  A warning is
-        logged when the cell is not smaller than the thinnest wall, measured
-        on the parts of the bounding box outside *walkable*.  Cost grows as
-        the inverse square, so halving it quadruples the build -- which is
-        what ``cache_path`` is for: the grid depends only on the geometry, the
-        signs and the resolution, none of which change between runs of a deck.
+        logged when the cell is not smaller than the thinnest wall, an
+        estimate recorded in ``parameters`` (:func:`unresolved_wall`).  Cost
+        grows as the inverse square, so halving it quadruples the build --
+        which is what ``cache_path`` is for: the grid depends only on the
+        geometry, the signs and the resolution, none of which change between
+        runs of a deck.
         """
         from fdsvismap import VisMap
 
@@ -854,7 +919,7 @@ class VisibilityModel:
 
         _check_max_sign_distance(max_sign_distance_m)
         _sign_caps(sign_descriptors)
-        _warn_if_walls_unresolved(walkable, cell_size_m)
+        wall_check = _warn_if_walls_unresolved(walkable, cell_size_m)
         expected_meta = _make_clear_air_meta(
             walkable,
             sign_descriptors,
@@ -866,6 +931,7 @@ class VisibilityModel:
             "kind": "clear-air",
             "cell_size_m": cell_size_m,
             "max_sign_distance_m": max_sign_distance_m,
+            **wall_check,
         }
         cache = Path(cache_path) if cache_path else None
         if cache is not None:

@@ -433,13 +433,15 @@ class TestClearAirGridResolution:
         return box(0, 0, 10, 4).difference(box(4.8, 0, 4.8 + self.WALL_M, height))
 
     def _warnings(self, caplog):
-        return [r for r in caplog.records if "thinnest wall" in r.getMessage()]
+        return [
+            r for r in caplog.records if "Clear-air visibility grid" in r.getMessage()
+        ]
 
     def test_warns_when_the_cell_is_wider_than_a_boundary_wall(self, caplog):
         VisibilityModel.clear_air(self._walkable(3.0), self.SIGN, cell_size_m=0.5)
         (record,) = self._warnings(caplog)
         assert record.levelname == "WARNING"
-        assert "0.4 m wide" in record.getMessage()
+        assert "about 0.4 m wide" in record.getMessage()
 
     def test_silent_when_the_cell_is_narrower_than_every_wall(self, caplog):
         VisibilityModel.clear_air(self._walkable(3.0), self.SIGN, cell_size_m=0.25)
@@ -479,11 +481,10 @@ class TestClearAirGridResolution:
     def test_deck_walls(self, deck, cell_size_m, warns, caplog):
         from shapely import wkt
 
-        from pyfds_evac.core.visibility import _warn_if_walls_unresolved
+        from pyfds_evac.core.visibility import unresolved_wall
 
         text = Path(f"assets/{deck}/geometry.wkt").read_text()
-        _warn_if_walls_unresolved(wkt.loads(text), cell_size_m)
-        assert bool(self._warnings(caplog)) is warns
+        assert (unresolved_wall(wkt.loads(text), cell_size_m) is not None) is warns
 
     def test_api_default_is_the_cli_default(self):
         import inspect
@@ -505,3 +506,81 @@ class TestClearAirGridResolution:
         )
         coarse = VisibilityModel.clear_air(walkable, self.SIGN, cell_size_m=0.5)
         assert coarse.node_is_visible(0.0, 2.0, 2.0, "s")
+
+    def test_warns_on_a_thin_stem_of_a_large_obstruction(self, caplog):
+        """A 0.1 m stem on a 6 m x 4 m base is a 0.1 m wall, not a 1.5 m one."""
+        from shapely.geometry import box
+
+        stem = box(9.95, 2, 10.05, 14).union(box(7, 2, 13, 6))
+        walkable = box(0, 0, 20, 20).difference(stem)
+        sign = {"s": {"x": 11.0, "y": 10.0, "alpha": None, "c": 3}}
+        model = VisibilityModel.clear_air(walkable, sign, cell_size_m=0.25)
+        (record,) = self._warnings(caplog)
+        assert "near (10.00," in record.getMessage()
+        assert model.parameters["thin_wall_m"] == pytest.approx(0.1, abs=0.005)
+        assert model.parameters["thin_wall_warning"] is True
+
+    @pytest.mark.parametrize(
+        "corner",
+        [
+            # A 0.1 m bevel of a convex room: no wall, nothing to see through.
+            [(0, 0), (20, 0), (20, 19.9), (19.9, 20), (0, 20)],
+            # A 2 m bevel: its 45 degree corners are not walls either.
+            [(0, 0), (20, 0), (20, 18), (18, 20), (0, 20)],
+        ],
+    )
+    def test_silent_on_a_bevelled_exterior_corner(self, corner, caplog):
+        from shapely.geometry import Polygon
+
+        model = VisibilityModel.clear_air(Polygon(corner), self.SIGN, cell_size_m=0.25)
+        assert not self._warnings(caplog)
+        assert model.parameters["thin_wall_m"] is None
+        assert model.parameters["thin_wall_warning"] is False
+
+    def test_the_tip_of_an_acute_wedge_is_not_a_wall(self):
+        from shapely.geometry import Polygon, box
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        wedge = Polygon([(5, 5), (15, 5), (15, 7)])  # 11 degree tip
+        assert unresolved_wall(box(0, 0, 20, 20).difference(wedge), 0.25) is None
+
+    @pytest.mark.parametrize(("cell_size_m", "warns"), [(0.5, True), (0.25, False)])
+    def test_an_oblique_wall_is_measured_across(self, cell_size_m, warns):
+        from shapely import affinity
+        from shapely.geometry import box
+
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        wall = affinity.rotate(box(9.8, 5, 10.2, 15), 30)
+        found = unresolved_wall(box(0, 0, 20, 20).difference(wall), cell_size_m)
+        assert (found is not None) is warns
+        if warns:
+            assert found[0] == pytest.approx(0.4, abs=1e-6)
+
+    @pytest.mark.parametrize(
+        ("cell_size_m", "warns"), [(0.4, True), (0.4 - 1e-6, False)]
+    )
+    def test_a_cell_equal_to_the_wall_warns(self, cell_size_m, warns):
+        from pyfds_evac.core.visibility import unresolved_wall
+
+        found = unresolved_wall(self._walkable(3.0), cell_size_m)
+        assert (found is not None) is warns
+
+    def test_parameters_record_the_check_built_and_cached(self, tmp_path):
+        from shapely.geometry import box
+
+        cache = tmp_path / "vis.npz"
+        walkable = self._walkable(3.0)
+        built = VisibilityModel.clear_air(
+            walkable, self.SIGN, cell_size_m=0.5, cache_path=cache
+        )
+        loaded = VisibilityModel.clear_air(
+            walkable, self.SIGN, cell_size_m=0.5, cache_path=cache
+        )
+        assert built.parameters == loaded.parameters
+        assert built.parameters["thin_wall_m"] == pytest.approx(0.4)
+        assert built.parameters["thin_wall_warning"] is True
+        open_room = VisibilityModel.clear_air(box(0, 0, 10, 4), self.SIGN)
+        assert open_room.parameters["thin_wall_m"] is None
+        assert open_room.parameters["thin_wall_warning"] is False
