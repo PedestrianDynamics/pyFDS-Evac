@@ -288,7 +288,7 @@ def delay_parameters(
     pre = pre or Component("constant", 10.0, None, 10.0, 0.0)
     combined, status, how = combine_delays(det, pre)
     level = "info" if status == "S" else "warning"
-    add(status, level, label, f"delay = detection + pre-movement: {how}", group)
+    add(status, level, label, f"delay: detection + reaction = {how}", group)
     return _premovement_keys(combined)
 
 
@@ -328,7 +328,11 @@ def _offset_gamma(det: Component, pre: Component) -> tuple[Component, str, str]:
     if floor <= 0:
         return gamma, status, how
     shifted = Component("gamma", gamma.a, gamma.b, gamma.mean + floor, gamma.var, floor)
-    how = f"offset {floor:g} s (min detection + min reaction) + {how}"
+    how = (
+        f"{floor:g} s + gamma(k={gamma.a:.6g}, theta={gamma.b:.6g}), mean "
+        f"{shifted.mean:.6g} s; variance {shifted.var:.6g} s2 kept; {det.kind} + "
+        f"{pre.kind}, the offset is min detection + min reaction"
+    )
     return shifted, status, how
 
 

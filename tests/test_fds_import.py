@@ -885,3 +885,19 @@ def test_next_steps_with_fds_output(tmp_path, capsys):
         in (steps)
     )
     assert f"--fds-dir {tmp_path}" in steps
+
+
+def test_delay_mean_in_the_report_is_the_total(tmp_path):
+    """The written offset + gamma has mean 20 s, and the note says so."""
+    pers = (
+        "&PERS ID='P', DET_EVAC_DIST=1, DET_LOW=5, DET_HIGH=15, "
+        "PRE_EVAC_DIST=1, PRE_LOW=5, PRE_HIGH=15 /"
+    )
+    result = _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='P'"))
+    params = _params(result, "g")
+    mean = params["premovement_offset_s"] + (
+        params["premovement_param_a"] * params["premovement_param_b"]
+    )
+    assert mean == pytest.approx(20, abs=1e-6)
+    [note] = [i.message for i in result.report.items if i.message.startswith("delay:")]
+    assert "mean 20 s" in note
