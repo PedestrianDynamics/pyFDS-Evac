@@ -76,6 +76,7 @@ exclude = [
     "/.opencode",
     "/.specify",
     "/artifacts",
+    "/assets/fds_evac_guide",
     "/materials",
     "/site",
     "/specs",

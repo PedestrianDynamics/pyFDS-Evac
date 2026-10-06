@@ -1,0 +1,24 @@
+pyFDS-Evac
+Copyright (c) 2024 Pedestrian Dynamics
+Licensed under the MIT license (LICENSE).
+
+This repository contains two third-party parts that keep their own
+licenses. Neither is included in the published wheel or sdist.
+REUSE.toml records the license of every file.
+
+assets/fds_evac_guide/*.fds
+    Input files of the FDS+Evac guide (FDS+Evac: Technical Reference
+    and User's Guide), by Timo Korhonen, VTT Technical Research Centre
+    of Finland. Copied unmodified from
+    https://github.com/tkorhon1/FDS-Evac-Guide at commit
+    10eb1a4448ae771ad2187a238a8330c819550008.
+    License: GPL-3.0-only (LICENSES/GPL-3.0-only.txt).
+
+materials/evac.f90
+    FDS+Evac source code from the Fire Dynamics Simulator,
+    https://github.com/firemodels/fds, commit c9da70d7a0. Developed by
+    the National Institute of Standards and Technology (NIST) and, for
+    FDS+Evac, by Timo Korhonen, VTT Technical Research Centre of
+    Finland. Unmodified.
+    License: NIST software notice (LICENSES/NIST-Software.txt);
+    see materials/evac.f90.NOTICE.md.

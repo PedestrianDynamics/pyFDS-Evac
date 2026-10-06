@@ -209,3 +209,13 @@ monsterui and python-multipart. fdsvismap is pinned exactly (0.3.2), and a
 plain `pip install` works on Python 3.12, 3.13 and 3.14. Versions and pins
 are in
 [`pyproject.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyproject.toml).
+
+## License
+
+pyFDS-Evac is released under the [MIT license](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/LICENSE). Two
+third-party parts of the repository keep their own licenses and are not
+included in the published packages:
+[`assets/fds_evac_guide/`](https://github.com/PedestrianDynamics/pyFDS-Evac/tree/main/assets/fds_evac_guide), the FDS+Evac guide's input decks
+(GPL-3.0-only), and `materials/evac.f90`, the FDS+Evac source (NIST software
+notice). [`REUSE.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/REUSE.toml) records the license of every file, and CI
+checks it with `reuse lint`.

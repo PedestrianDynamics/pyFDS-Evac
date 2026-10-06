@@ -25,4 +25,6 @@ jobs:
         run: uv run ruff check .
       - name: Check formatting
         run: uv run ruff format --check .
+      - name: Check licensing (REUSE)
+        run: uvx --from 'reuse[charset-normalizer]==6.2.0' reuse lint
       

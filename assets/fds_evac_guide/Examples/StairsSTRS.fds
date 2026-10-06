@@ -1,0 +1,291 @@
+ FDS+Evac version: FDS 6.7.6, Evac 2.6.0 (GIT FDS6.7.6-336)
+ All material properties etc. are completely fabricated.
+
+ An example staircase using STRS model for the stairs.
+
+&HEAD CHID='StairsSTRS', TITLE='An example staircase' /
+
+ Fire mesh for the staircase
+&MESH IJK=60,36,200, XB=-2.55,6.45, -0.3,5.1, -3.9,26.1 /
+
+&MESH IJK=25,25,1, XB=-7.5,-2.5 -0.1,4.9, 22.5,22.7, 
+      EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., ID='EMesh_Up', EVAC_Z_OFFSET=1.0 / 
+&MESH IJK=25,25,1, XB=-7.5,-2.5 -0.1,4.9, -2.7,-2.5,
+      EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., ID='EMesh_Dn', EVAC_Z_OFFSET=1.0 / 
+
+&TIME T_END=500.0, DT=0.1 / 
+
+&STRS ID='StairsLeft', COLOR='RED',
+      XB= -2.5,6.1, -0.1,4.9, -4.0,24.0,
+      IJK=62,24,1, EVAC_Z_OFFSET=1.8,
+      XB_CORES(1,:)= -1.0,4.6,  2.1,2.7, -4.0,24.0,
+      RIGHT_HANDED=.TRUE., 
+      VERTICAL_LANDING_SEPARATION=1.8,  N_LANDINGS=15,
+      XB_LANDINGS( 1,:)= -2.5,-1.0, -0.1,4.9, -2.7,-2.5,
+      XB_LANDINGS( 2,:)=  4.6, 6.1, -0.1,4.9, -0.9,-0.7,
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.75, FAC_V0_HORI=1.0, /
+
+&MISC EVACUATION_DRILL=.TRUE., NO_EVACUATION=.FALSE., EVACUATION_INITIALIZATION=.TRUE./
+&RADI RADIATION=.FALSE., /
+
+ Choose a color for the evacuation mesh OBSTs
+&SURF ID= 'EvacSurf', COLOR='NAVY', EVAC_DEFAULT=.TRUE. / 
+
+&SURF ID= 'Wall' , DEFAULT=.TRUE.,
+      MATL_ID= 'Concrete' 
+      COLOR= 'GRAY 35'
+      THICKNESS= 0.25  / 
+                                               
+&MATL ID= 'Concrete'               
+      FYI= 'Just an example' 
+      CONDUCTIVITY= 1.0                   
+      SPECIFIC_HEAT= 0.88                  
+      EMISSIVITY= 0.8                   
+      DENSITY= 2200. /               
+  
+ Note, evacuation flow field dumps do not use dt_slcf.
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=500,
+      DT_PART=1.0,
+      DT_HRR=1.0,
+      DT_DEVC=1000000.0,
+      DT_SLCF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 /
+
+&DOOR ID='Door_out_0', IOR=+1, MESH_ID='EMesh_Dn',
+      EXIT_SIGN=.FALSE., TO_NODE='StairsLeft',
+      XYZ= -2.7, 0.80, -2.6,
+      XB=-2.5,-2.5, 0.3,1.3,  -2.7,-2.5, /
+
+&EXIT ID='Exit_out_0', IOR=-1,
+      COUNT_ONLY=.FALSE.,
+      XYZ= -7.3, 0.80, -2.6,
+      XB=-7.5,-7.5, 0.3,1.3,  -2.7,-2.5, /
+
+&DOOR ID='Door_in_7', IOR=+1, MESH_ID='EMesh_Up',
+      EXIT_SIGN=.TRUE., TO_NODE='StairsLeft',
+      XYZ= -2.7, 0.80, -22.6,
+      XB=-2.5,-2.5, 0.3,1.3,  22.5,22.7,  /
+
+&ENTR ID='Humans_7th_floor', IOR=+1,
+      PERS_ID='Adult', AGENT_TYPE=2,
+      MAX_FLOW=0.2, TIME_START=0.0, TIME_STOP=100.0,
+      AVATAR_COLOR= 'BLUE',
+      KNOWN_DOOR_NAMES='Exit_out_0',
+      KNOWN_DOOR_PROBS=1.0,
+      XB= -7.5,-7.5, 0.3,2.3, 22.5,22.7  /
+
+&PERS ID='Adult',
+      FYI='Male+Female diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      PRE_EVAC_DIST=1,
+      PRE_MEAN=0.0,PRE_LOW=0.0,PRE_HIGH=5.0,
+      HUMAN_SMOKE_HEIGHT=1.60,
+      DET_EVAC_DIST=1,
+      DET_MEAN=0.0,DET_LOW=0.00,DET_HIGH=5.0,
+      DENS_INIT=1.0, 
+      COLOR_METHOD=0, I_HERDING_TYPE=2, /
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,-3.60,-3.95, SURF_ID='Wall', /Level
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,-3.60,-3.45, SURF_ID='Wall', /basement - GF
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,-3.45,-3.30, SURF_ID='Wall', /
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,-3.30,-3.15, SURF_ID='Wall', /
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,-3.15,-3.00, SURF_ID='Wall', /
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,-3.00,-2.85, SURF_ID='Wall', /
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,-2.85,-2.70, SURF_ID='Wall', /
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,-2.70,-2.55, SURF_ID='Wall', /
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,-2.55,-2.40, SURF_ID='Wall', /
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,-2.40,-2.25, SURF_ID='Wall', /
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,-2.25,-2.10, SURF_ID='Wall', /
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,-2.10,-1.95, SURF_ID='Wall', /
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,-1.95,-1.80, SURF_ID='Wall', /
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,-1.80,-2.15, SURF_ID='Wall', /
+
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,-1.80,-1.65, SURF_ID='Wall', /
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,-1.65,-1.50, SURF_ID='Wall', /
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,-1.50,-1.35, SURF_ID='Wall', /
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,-1.35,-1.20, SURF_ID='Wall', /
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,-1.20,-1.05, SURF_ID='Wall', /
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,-1.05,-0.90, SURF_ID='Wall', /
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,-0.90,-0.75, SURF_ID='Wall', /
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,-0.75,-0.60, SURF_ID='Wall', /
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,-0.60,-0.45, SURF_ID='Wall', /
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,-0.45,-0.30, SURF_ID='Wall', /
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,-0.30,-0.15, SURF_ID='Wall', /
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,-0.15,0.00 , SURF_ID='Wall', /
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,0.00,-0.35 SURF_ID='Wall', /Level GF - 1st
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,0.00 ,0.15 SURF_ID='Wall', /
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,0.15 ,0.30 SURF_ID='Wall', /
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,0.30 ,0.45 SURF_ID='Wall', /
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,0.45 ,0.60 SURF_ID='Wall', /
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,0.60 ,0.75 SURF_ID='Wall', /
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,0.75 ,0.90 SURF_ID='Wall', /
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,0.90 ,1.05 SURF_ID='Wall', /
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,1.05 ,1.20 SURF_ID='Wall', /
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,1.20 ,1.35 SURF_ID='Wall', /
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,1.35 ,1.50 SURF_ID='Wall', /
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,1.50 ,1.65 SURF_ID='Wall', /
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,1.65 ,1.80 SURF_ID='Wall', /
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,1.80 ,1.45 SURF_ID='Wall', /
+                                                
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,1.80,1.95 SURF_ID='Wall', /
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,1.95,2.10 SURF_ID='Wall', /
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,2.10,2.25 SURF_ID='Wall', /
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,2.25,2.40 SURF_ID='Wall', /
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,2.40,2.55 SURF_ID='Wall', /
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,2.55,2.70 SURF_ID='Wall', /
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,2.70,2.85 SURF_ID='Wall', /
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,2.85,3.00 SURF_ID='Wall', /
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,3.00,3.15 SURF_ID='Wall', /
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,3.15,3.30 SURF_ID='Wall', /
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,3.30,3.45 SURF_ID='Wall', /
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,3.45,3.60 SURF_ID='Wall', /
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,3.60,3.25,  SURF_ID='Wall', /Level 1st - 2nd        
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,3.60,3.75,  SURF_ID='Wall', /          
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,3.75,3.90,  SURF_ID='Wall', /
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,3.90,4.05,  SURF_ID='Wall', /
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,4.05,4.20,  SURF_ID='Wall', /
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,4.20,4.35,  SURF_ID='Wall', /
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,4.35,4.50,  SURF_ID='Wall', /
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,4.50,4.65,  SURF_ID='Wall', /
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,4.65,4.80,  SURF_ID='Wall', /
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,4.80,4.95,  SURF_ID='Wall', /
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,4.95,5.10,  SURF_ID='Wall', /
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,5.10,5.25,  SURF_ID='Wall', /
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,5.25,5.40,  SURF_ID='Wall', /
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,5.40,5.05,  SURF_ID='Wall', /
+ 
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,5.40,5.55,  SURF_ID='Wall', /
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,5.55,5.70,  SURF_ID='Wall', /
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,5.70,5.85,  SURF_ID='Wall', /
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,5.85,6.00,  SURF_ID='Wall', /
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,6.00,6.15,  SURF_ID='Wall', /
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,6.15,6.30,  SURF_ID='Wall', /
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,6.30,6.45,  SURF_ID='Wall', /
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,6.45,6.60,  SURF_ID='Wall', /
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,6.60,6.75,  SURF_ID='Wall', /
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,6.75,6.90,  SURF_ID='Wall', /
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,6.90,7.05,  SURF_ID='Wall', /
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,7.05,7.20,  SURF_ID='Wall', /
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,7.20,6.85 , SURF_ID='Wall', /Level 2nd - 3rd
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,7.20,7.35 , SURF_ID='Wall', /  
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,7.35,7.50 , SURF_ID='Wall', /  
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,7.50,7.65 , SURF_ID='Wall', /  
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,7.65,7.80 , SURF_ID='Wall', /  
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,7.80,7.95 , SURF_ID='Wall', /  
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,7.95,8.10 , SURF_ID='Wall', /  
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,8.10,8.25 , SURF_ID='Wall', /  
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,8.25,8.40 , SURF_ID='Wall', /  
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,8.40,8.55 , SURF_ID='Wall', /  
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,8.55,8.70 , SURF_ID='Wall', /  
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,8.70,8.85 , SURF_ID='Wall', /  
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,8.85,9.00 , SURF_ID='Wall', /  
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,9.00,8.65 , SURF_ID='Wall', /  
+
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,9.00 ,9.15 , SURF_ID='Wall', /  
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,9.15 ,9.30 , SURF_ID='Wall', /  
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,9.30 ,9.45 , SURF_ID='Wall', /  
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,9.45 ,9.60 , SURF_ID='Wall', /  
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,9.60 ,9.75 , SURF_ID='Wall', /  
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,9.75 ,9.90 , SURF_ID='Wall', /  
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,9.90 ,10.05, SURF_ID='Wall', /  
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,10.05,10.20, SURF_ID='Wall', /  
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,10.20,10.35, SURF_ID='Wall', /  
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,10.35,10.50, SURF_ID='Wall', /  
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,10.50,10.65, SURF_ID='Wall', /  
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,10.65,10.80, SURF_ID='Wall', /  
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,10.80,10.45, SURF_ID='Wall', /Level 3rd - 4th
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,10.80,10.95, SURF_ID='Wall', /  
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,10.95,11.10, SURF_ID='Wall', /  
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,11.10,11.25, SURF_ID='Wall', /  
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,11.25,11.40, SURF_ID='Wall', /  
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,11.40,11.55, SURF_ID='Wall', /  
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,11.55,11.70, SURF_ID='Wall', /  
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,11.70,11.85, SURF_ID='Wall', /  
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,11.85,12.00, SURF_ID='Wall', /  
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,12.00,12.15, SURF_ID='Wall', /  
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,12.15,12.30, SURF_ID='Wall', /  
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,12.30,12.45, SURF_ID='Wall', /  
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,12.45,12.60, SURF_ID='Wall', /    
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,12.60,12.25, SURF_ID='Wall', /    
+
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,12.60,12.75, SURF_ID='Wall', /    
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,12.75,12.90, SURF_ID='Wall', /    
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,12.90,13.05, SURF_ID='Wall', /    
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,13.05,13.20, SURF_ID='Wall', /    
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,13.20,13.35, SURF_ID='Wall', /    
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,13.35,13.50, SURF_ID='Wall', /    
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,13.50,13.65, SURF_ID='Wall', /    
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,13.65,13.80, SURF_ID='Wall', /    
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,13.80,13.95, SURF_ID='Wall', /    
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,13.95,14.10, SURF_ID='Wall', /    
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,14.10,14.25, SURF_ID='Wall', /    
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,14.25,14.40, SURF_ID='Wall', /    
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,14.40,14.05, SURF_ID='Wall', /Level 4th - 5th   
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,14.40,14.55, SURF_ID='Wall', /    
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,14.55,14.70, SURF_ID='Wall', /    
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,14.70,14.85, SURF_ID='Wall', /    
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,14.85,15.00, SURF_ID='Wall', /    
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,15.00,15.15, SURF_ID='Wall', /    
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,15.15,15.30, SURF_ID='Wall', /    
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,15.30,15.45, SURF_ID='Wall', /    
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,15.45,15.60, SURF_ID='Wall', /    
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,15.60,15.75, SURF_ID='Wall', /    
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,15.75,15.90, SURF_ID='Wall', /    
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,15.90,16.05, SURF_ID='Wall', /    
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,16.05,16.20, SURF_ID='Wall', /    
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,16.20,15.85, SURF_ID='Wall', /    
+
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,16.20,16.35, SURF_ID='Wall', /    
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,16.35,16.50, SURF_ID='Wall', /    
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,16.50,16.65, SURF_ID='Wall', /    
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,16.65,16.80, SURF_ID='Wall', /    
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,16.80,16.95, SURF_ID='Wall', /    
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,16.95,17.10, SURF_ID='Wall', /    
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,17.10,17.25, SURF_ID='Wall', /    
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,17.25,17.40, SURF_ID='Wall', /    
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,17.40,17.55, SURF_ID='Wall', /    
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,17.55,17.70, SURF_ID='Wall', /    
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,17.70,17.85, SURF_ID='Wall', /    
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,17.85,18.00, SURF_ID='Wall', /    
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,18.00,17.65, SURF_ID='Wall', /Level 5th - 6th   
+&OBST XB=0.00 ,0.30   ,0.00,2.40   ,18.00,18.15, SURF_ID='Wall', /    
+&OBST XB=0.30 ,0.60   ,0.00,2.40   ,18.15,18.30, SURF_ID='Wall', /    
+&OBST XB=0.60 ,0.90   ,0.00,2.40   ,18.30,18.45, SURF_ID='Wall', /    
+&OBST XB=0.90 ,1.20   ,0.00,2.40   ,18.45,18.60, SURF_ID='Wall', /    
+&OBST XB=1.20 ,1.50   ,0.00,2.40   ,18.60,18.75, SURF_ID='Wall', /    
+&OBST XB=1.50 ,1.80   ,0.00,2.40   ,18.75,18.90, SURF_ID='Wall', /    
+&OBST XB=1.80 ,2.10   ,0.00,2.40   ,18.90,19.05, SURF_ID='Wall', /    
+&OBST XB=2.10 ,2.40   ,0.00,2.40   ,19.05,19.20, SURF_ID='Wall', /    
+&OBST XB=2.40 ,2.70   ,0.00,2.40   ,19.20,19.35, SURF_ID='Wall', /    
+&OBST XB=2.70 ,3.00   ,0.00,2.40   ,19.35,19.50, SURF_ID='Wall', /    
+&OBST XB=3.00 ,3.30   ,0.00,2.40   ,19.50,19.65, SURF_ID='Wall', /    
+&OBST XB=3.30 ,3.60   ,0.00,2.40   ,19.65,19.80, SURF_ID='Wall', /    
+&OBST XB=3.60 ,6.00   ,0.00,4.80   ,19.80,19.45, SURF_ID='Wall', /    
+
+&OBST XB=3.60 ,3.30   ,2.40,4.80   ,19.80,19.95, SURF_ID='Wall', /    
+&OBST XB=3.30 ,3.00   ,2.40,4.80   ,19.95,20.10, SURF_ID='Wall', /    
+&OBST XB=3.00 ,2.70   ,2.40,4.80   ,20.10,20.25, SURF_ID='Wall', /    
+&OBST XB=2.70 ,2.40   ,2.40,4.80   ,20.25,20.40, SURF_ID='Wall', /    
+&OBST XB=2.40 ,2.10   ,2.40,4.80   ,20.40,20.55, SURF_ID='Wall', /    
+&OBST XB=2.10 ,1.80   ,2.40,4.80   ,20.55,20.70, SURF_ID='Wall', /   
+&OBST XB=1.80 ,1.50   ,2.40,4.80   ,20.70,20.85, SURF_ID='Wall', /   
+&OBST XB=1.50 ,1.20   ,2.40,4.80   ,20.85,21.00, SURF_ID='Wall', /   
+&OBST XB=1.20 ,0.90   ,2.40,4.80   ,21.00,21.15, SURF_ID='Wall', /   
+&OBST XB=0.90 ,0.60   ,2.40,4.80   ,21.15,21.30, SURF_ID='Wall', /   
+&OBST XB=0.60 ,0.30   ,2.40,4.80   ,21.30,21.45, SURF_ID='Wall', /   
+&OBST XB=0.30 ,0.00   ,2.40,4.80   ,21.45,21.60, SURF_ID='Wall', /   
+
+&OBST XB=-2.40,0.00   ,0.00,4.80   ,21.60,21.25, SURF_ID='Wall', /Level 6th - 7th 
+   
+ Next lines could be used to plot the evacuation flow fields:
+ SLCF PBZ=22.6, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+
+&TAIL /
