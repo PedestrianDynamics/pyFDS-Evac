@@ -1183,3 +1183,19 @@ def test_predicted_clear_air_wall_check_matches_the_built_model(argv, tmp_path):
         used = run_settings(seed=scenario.seed, vis_model=kwargs["vis_model"])
         assert predicted == used["visibility"]
     assert predicted["thin_wall_warning"] is (argv == ["--clear-air-visibility"])
+
+
+def test_show_config_predicts_the_thin_wall_check():
+    """--show-config prints the record and the warning the build gives."""
+    scenario = _load(DISCOVERY)
+    warns = effective_configuration(_parse("--scenario", "x"), scenario)
+    assert warns.resolved["thin_wall_warning"] is True
+    assert warns.resolved["thin_wall_m"] == pytest.approx(0.1, abs=0.005)
+    text = warns.format_text()
+    assert "resolved thin_wall_warning" in text
+    assert any("Clear-air visibility grid" in w for w in warns.warnings)
+    fine = effective_configuration(
+        _parse("--scenario", "x", "--vis-cell-size", "0.08"), scenario
+    )
+    assert fine.resolved["thin_wall_warning"] is False
+    assert not any("Clear-air visibility grid" in w for w in fine.warnings)

@@ -477,6 +477,8 @@ class TestClearAirGridResolution:
             ("blind_spawn_discovery", 0.5, True),
             ("blind_spawn_discovery", 0.4, True),
             ("blind_spawn_discovery", 0.25, False),
+            # Strips of 0.08-0.2 m (#115 record): 0.25 m does not resolve it.
+            ("station_fahy", 0.25, True),
         ],
     )
     def test_deck_walls(self, deck, cell_size_m, warns, caplog):

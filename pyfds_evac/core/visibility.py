@@ -293,7 +293,7 @@ def _wall_width(piece, cell_size_m: float) -> float | None:
         return None
     if not piece.buffer(-WALL_MAX_TAPER * width / 2).is_empty:
         return None
-    return width
+    return float(width)
 
 
 def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] | None:
@@ -327,41 +327,38 @@ def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] 
     return thinnest
 
 
-def wall_check_parameters(walkable, cell_size_m: float) -> dict[str, object]:
-    """The ``thin_wall_*`` entries of a clear-air model's ``parameters``.
+def wall_check(walkable, cell_size_m: float) -> tuple[dict[str, object], str | None]:
+    """The ``thin_wall_*`` record of a clear-air model and its warning text.
 
     ``thin_wall_m`` is the estimated width of the thinnest wall the grid may
-    lose (None: none found), ``thin_wall_warning`` whether the build warned.
-    ``pyfds_evac.config.effective`` predicts them with this same function.
+    lose (None: none found), ``thin_wall_warning`` whether the build warns;
+    the text is None when it does not. ``pyfds_evac.config.effective``
+    predicts both with this same function for ``--show-config`` and the run
+    record.
     """
-    return _wall_record(unresolved_wall(walkable, cell_size_m))
-
-
-def _wall_record(found: tuple[float, float, float] | None) -> dict[str, object]:
-    return {
+    found = unresolved_wall(walkable, cell_size_m)
+    record: dict[str, object] = {
         "thin_wall_m": None if found is None else found[0],
         "thin_wall_warning": found is not None,
     }
+    if found is None:
+        return record, None
+    width, x, y = found
+    return record, (
+        f"Clear-air visibility grid: a wall about {width:.3g} m wide near "
+        f"({x:.2f}, {y:.2f}) is not wider than the {cell_size_m:.3g} m cell; "
+        f"sight may pass through it. Use a cell size below {width:.3g} m "
+        "(--vis-cell-size, VisibilityModel.clear_air(cell_size_m=)). The "
+        "width is an estimate."
+    )
 
 
 def _warn_if_walls_unresolved(walkable, cell_size_m: float) -> dict[str, object]:
     """Log a warning for a wall the grid may lose; return the record of it."""
-    found = unresolved_wall(walkable, cell_size_m)
-    if found is not None:
-        width, x, y = found
-        _logger.warning(
-            "Clear-air visibility grid: a wall about %.3g m wide near "
-            "(%.2f, %.2f) is not wider than the %.3g m cell; sight may pass "
-            "through it. Use a cell size below %.3g m (--vis-cell-size, "
-            "VisibilityModel.clear_air(cell_size_m=)). The width is an "
-            "estimate.",
-            width,
-            x,
-            y,
-            cell_size_m,
-            width,
-        )
-    return _wall_record(found)
+    record, message = wall_check(walkable, cell_size_m)
+    if message is not None:
+        _logger.warning("%s", message)
+    return record
 
 
 def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):

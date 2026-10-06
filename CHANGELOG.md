@@ -50,12 +50,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A clear-air visibility build logs a warning when its cell size is not
   smaller than the thinnest wall of the walkable area, with the wall's
   estimated width and location: such a wall may hold no cell centre and
-  let sight through. Walls attached to the outer boundary and thin parts
-  of larger obstructions count; rounded corners, bevels and wedge tips do
-  not. The run's visibility settings record the width and the verdict as
-  `thin_wall_m` and `thin_wall_warning`, and `--show-config` predicts
-  them from the scenario's geometry. No warning does not prove that every
-  wall blocks sight: parts shorter than one cell are not reported (#115).
+  let sight through. The check is a heuristic: it is meant to find walls
+  attached to the outer boundary and thin parts of larger obstructions,
+  and to pass over rounded corners, bevels and wedge tips. The run's
+  visibility settings record the width and the verdict as `thin_wall_m`
+  and `thin_wall_warning`; `--show-config` predicts both from the
+  scenario's geometry with the same function, prints them as resolved
+  values and lists the warning under "Setup warnings". No warning does
+  not prove that every wall blocks sight: parts shorter than one cell are
+  not reported, and walls of different widths joined together can be
+  measured as one wider wall (#115).
 
 ### Changed
 
@@ -78,8 +82,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `VisibilityModel.clear_air()` and `scripts/animate_cognitive_map.py
   --cell-size` default to a 0.25 m grid, as `--vis-cell-size` does,
   instead of 0.5 m. A Python caller that relied on the 0.5 m default
-  gets a finer grid, a build about four times slower, and walls between
-  0.25 to 0.5 m wide that may now block sight; pass `cell_size_m=0.5` to
+  gets a finer grid, a build about four times slower, and walls 0.25 to
+  0.5 m wide that may now block sight; pass `cell_size_m=0.5` to
   keep the old grid (#115).
 
 ### Fixed

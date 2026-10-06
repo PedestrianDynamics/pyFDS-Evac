@@ -152,14 +152,16 @@ Script: `scripts/figures/sign_rotation.py`.*
   polygon (`visibility.py`, `_blocked_runs`, `VisibilityModel.clear_air`). A wall thinner than one cell
   *may* therefore let sight through, depending on how it falls on the grid.
   A warning is logged when the cell is not smaller than the thinnest wall
-  (`visibility.py`, `unresolved_wall`). A wall is a part of the bounding box
-  outside the walkable area that a disc one cell across cannot enter, longer
-  than one cell and evenly thin; rounded corners, bevels and wedge tips are
-  not walls. The width is an estimate, recorded with the verdict as
-  `thin_wall_m` and `thin_wall_warning` in the run's visibility settings.
-  No warning does not prove that every wall blocks: a wall oblique to the
-  grid can leak below one cell width, and parts shorter than one cell are
-  not reported.
+  (`visibility.py`, `unresolved_wall`). The check is a heuristic. It counts
+  as a wall a part of the bounding box outside the walkable area that a
+  disc one cell across cannot enter, longer than one cell and evenly thin,
+  which is meant to leave out rounded corners, bevels and wedge tips. The
+  width is an estimate, recorded with the verdict as `thin_wall_m` and
+  `thin_wall_warning` in the run's visibility settings; `--show-config`
+  predicts both and lists the warning. No warning does not prove that every
+  wall blocks: a wall oblique to the grid can leak below one cell width,
+  parts shorter than one cell are not reported, and walls of different
+  widths joined together can be measured as one wider wall.
   The extinction is zero, and one time point is stored (`visibility.py`, `VisibilityModel.clear_air`).
 
 At run time the model answers `node_is_visible(t, x, y, node)` by looking up
