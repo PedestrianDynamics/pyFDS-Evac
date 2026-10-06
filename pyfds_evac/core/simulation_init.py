@@ -75,6 +75,29 @@ def _placing(call, *args, **kwargs):
 DEFAULT_PREMOVEMENT_S = 10.0
 """Pre-movement time [s] used when a distribution sets none (FDS+Evac PRE_MEAN)."""
 
+DEFAULT_SPAWN_PARAMS: dict[str, Any] = {"number": 10, "radius": 0.2, "v0": 1.25}
+"""Agent count, radius [m] and clear-air speed [m/s] of a distribution that
+sets none and whose deck sets no ``simulationParams`` value (FDS+Evac
+VEL_MEAN for ``v0``)."""
+
+
+def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
+    """``number``, ``radius`` and ``v0`` for a distribution that leaves one out.
+
+    ``simulationParams.number``, ``.radius`` and ``.v0`` are deck-wide
+    defaults; a key they do not set takes ``DEFAULT_SPAWN_PARAMS``. The same
+    defaults apply with and without journeys, and nothing is taken from
+    another distribution (#567).
+    """
+    defaults = dict(DEFAULT_SPAWN_PARAMS)
+    if global_parameters is None:
+        return defaults
+    for key in defaults:
+        value = getattr(global_parameters, key, None)
+        if value is not None:
+            defaults[key] = value
+    return defaults
+
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
     """Give a distribution that sets no pre-movement the FDS+Evac default.
@@ -975,7 +998,7 @@ def _initialize_complete_config(
 ) -> tuple[dict[str, Any], list[tuple[float, float]], dict[int, float]]:
     """Original initialization logic for complete configurations"""
     stage_map, direct_steering_info = _add_stages(simulation, data)
-    dist_geom, dist_params = _process_distributions(data)
+    dist_geom, dist_params = _process_distributions(data, global_parameters)
     direct_steering_keys = set(direct_steering_info.keys())
     journey_data = _create_journeys(simulation, data, stage_map, direct_steering_keys)
     global_ds_stage_id = None
@@ -1032,40 +1055,10 @@ def _initialize_with_fallback(
 
     # print("Data:", data)
 
-    # Extract default parameters from distributions if available
-    default_agent_radius = 0.2
-    default_v0 = 1.25
-    default_n_agents = 100
-
-    # Try to get parameters from the first distribution with valid parameters
-    if data.get("distributions"):
-        for dist_id, dist_data in data["distributions"].items():
-            if "parameters" in dist_data:
-                params = dist_data["parameters"]
-                if isinstance(params, str):
-                    try:
-                        params = json.loads(params)
-                    except Exception:
-                        continue
-
-                if isinstance(params, dict):
-                    default_agent_radius = params.get("radius", default_agent_radius)
-                    default_v0 = params.get("v0", default_v0)
-                    default_n_agents = params.get("number", default_n_agents)
-                    break
-
-    # # Default parameters
-    # default_agent_radius = 0.2
-    # default_v0 = 1.2
-    # default_n_agents = 100
-
-    # Override defaults with global parameters if provided
-    if global_parameters:
-        default_v0 = getattr(global_parameters, "v0", default_v0)
-        default_agent_radius = getattr(
-            global_parameters, "radius", default_agent_radius
-        )
-        default_n_agents = getattr(global_parameters, "number", default_n_agents)
+    spawn_defaults = _deck_spawn_defaults(global_parameters)
+    default_agent_radius = spawn_defaults["radius"]
+    default_v0 = spawn_defaults["v0"]
+    default_n_agents = spawn_defaults["number"]
 
     # Step 1: Add exits to simulation
     stage_map = {}
@@ -1851,10 +1844,12 @@ def _add_stages(
 
 def _process_distributions(
     data: dict[str, Any],
+    global_parameters=None,
 ) -> tuple[dict[str, list[list[float]]], dict[str, dict[str, Any]]]:
     """Process distribution geometries from JSON."""
     dist_geom = {}
     dist_params = {}
+    spawn_defaults = _deck_spawn_defaults(global_parameters)
 
     for dist_id, dist_data in data.get("distributions", {}).items():
         dist_geom[dist_id] = dist_data["coordinates"]
@@ -1864,15 +1859,15 @@ def _process_distributions(
             try:
                 params = json.loads(params)
             except json.JSONDecodeError:
-                params = {"number": 10, "radius": 0.2, "v0": 1.25}
+                params = {}
         elif not isinstance(params, dict):
-            params = {"number": 10, "radius": 0.2, "v0": 1.25}
+            params = {}
         params = _apply_default_premovement(params, dist_id)
 
         dist_params[dist_id] = {
-            "number": params.get("number", 10),
-            "radius": params.get("radius", 0.2),
-            "v0": params.get("v0", 1.25),
+            "number": params.get("number", spawn_defaults["number"]),
+            "radius": params.get("radius", spawn_defaults["radius"]),
+            "v0": params.get("v0", spawn_defaults["v0"]),
             "use_flow_spawning": params.get("use_flow_spawning", False),
             "flow_start_time": params.get("flow_start_time", 0),
             "flow_end_time": params.get("flow_end_time", 10),
