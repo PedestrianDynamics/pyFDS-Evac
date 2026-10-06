@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The unused agent-parameter builders and second speed sampler in
+  `core.scenario`. Runs never called them; spawning uses
+  `core.simulation_init`. Results are unchanged (#569).
+
 ### Fixed
 
 - `create_agent_parameters` raises `ValueError` naming an unknown
