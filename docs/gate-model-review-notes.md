@@ -187,9 +187,12 @@ to plan section 3.
   Note the duplicate constant: `smoke_speed.py:99` `visibility_factor_c = 3.0`.
 
 > **Erratum (#287).** The two sources above are one chain, not two
-> independent confirmations: `evac.f90` and FDS take C = 3 from Mulholland
-> (2002), who cites Jin. C = 3 is the line drawn in Jin (1971/1978, Fig. 2),
-> as used by Mulholland (2002) and FDS. See
+> independent confirmations. FDS takes C = 3 from Mulholland (2002, Eq. 15),
+> who cites Jin (1978); the SFPE Handbook 6th ed. (2026), Ch. 40 (McGrattan &
+> Merci), Eq. 40.22, p. 1206, gives the same 3 and 8, citing Jin and
+> Mulholland. `evac.f90` (l. 5495) and the FDS+Evac guide write S = 3/K
+> without a source; that they took it from FDS is our inference. C = 3 is the
+> line drawn in Jin (1971/1978, Fig. 2). See
 > [Visibility through smoke](../site/content/fundamentals/visibility.md).
 
 ---
@@ -478,8 +481,9 @@ discriminate anything; it is not evidence that `c` is inert where the gate works
 > (1) `c = 3` is Jin's obscuration threshold, the contrast at which a sign is
 > barely seen; it is not the threshold for recognising or reading a sign.
 > (2) Jin does not give S = 0.4 m at K = 7–8 /m. That value extrapolates the
-> law far beyond his data, which were taken at V = 5.5–15.5 m in much thinner
-> smoke. See
+> law far beyond his data, which were taken at V = 5.5–15.5 m and reached
+> K ≈ 1.8 1/m for lit signs and ≈ 0.75 1/m for the reflecting signs behind
+> C = 3 (Jin 1971/1978, Figs. 1–2). See
 > [Seeing a sign versus reading it](../site/content/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)
 > and [Known limits](../site/content/fundamentals/visibility.md#known-limits).
 

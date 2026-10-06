@@ -40,6 +40,8 @@ These words are used with one meaning each, here and on the linked pages.
   arrow need not be readable
   ([Seeing a sign versus reading it](/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)).
   On this page, "read" and "reading distance" refer to this same seeing test.
+  Jin (1978, Fig. 7, p. 143) uses "legible threshold" for reading the words
+  of a sign; this page uses "legible" for his obscuration threshold instead.
 - **Known.** A node or edge is known to an agent when it is stored in that
   agent's cognitive map. Knowledge persists.
 - **Learn.** A node or edge is learned when it is added to the map.
@@ -474,7 +476,8 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   node and the direction to it, although the test only says the sign is
   barely seen. Reading the letters of an exit sign needs several times more
   contrast ([Seeing a sign versus reading it](/fundamentals/visibility.md#seeing-a-sign-versus-reading-it)),
-  so the knowledge the model grants is optimistic.
+  so the knowledge the model grants is optimistic; a lit sign modelled with
+  *C* = 3 is the exception.
 - **Legibility is binary** and acts only on knowledge. In the discrete-choice
   studies on [Exit choice and familiarity](/fundamentals/exit-choice.md), exit
   visibility enters the utility as a graded attribute.
