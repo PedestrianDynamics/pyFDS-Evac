@@ -57,6 +57,7 @@ Under `config.simulation_settings`.
 |---|---|---|
 | `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). With `--fds-dir` it must not exceed the last FDS slice time by more than one output interval, unless `--allow-fds-horizon-hold` is given ([#340](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340)). |
 | `simulationParams.model_type` | `"CollisionFreeSpeedModel"` | The JuPedSim movement model. |
+| `simulationParams.number`, `.radius`, `.v0` | 10, 0.2 m, 1.25 m/s | Deck-wide defaults for a spawn area that does not set its own `number`, `radius` or `v0`, with and without journeys; see [Spawn areas](#spawn-areas-distributionsidparameters). A deck without spawn areas places `number` agents in the whole walkable area. `number` is read with Python's `int()` (3.9 and `"3"` give 3), `radius` and `v0` with `float()`, so numeric strings are accepted; `null` means unset. `radius` and `v0` must be finite and greater than 0. A value that does not convert, such as `"3.9"` for `number` or `"fast"` for `v0`, or a `radius` or `v0` of 0, below 0, infinite or NaN (`"1e400"`, `"nan"`), stops the run with a `ValueError` that names the key. |
 | `simulationParams.smoke_slice_height` | none (`--smoke-slice-height`, 1.6 m) | Absolute FDS slice height [m] for smoke, gases and sign legibility. `pyfds-evac --smoke-slice-height` overrides it; the run prints the value when it comes from here. `pyfds-evac init` writes the floor level plus `HUMAN_SMOKE_HEIGHT`. The GUI and TUI do not read it yet. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
 
@@ -93,12 +94,12 @@ manifest records what JuPedSim received under `sfm`.
 
 | Key | Default | Range | Effect |
 |---|---|---|---|
-| `number` | the first distribution's `number`, else 100 | ≥ 0 | Agents placed at the start. |
+| `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start. No value is taken from another spawn area. |
 | `distribution_mode` | `"by_number"` | `by_number`, `by_percentage` | `by_percentage` fills the polygon to `percentage` (1–100, default 50). |
-| `v0` | 1.25 m/s | — | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
+| `v0` | `simulationParams.v0`, else 1.25 m/s | — | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |
-| `radius` | 0.2 m | — | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
+| `radius` | `simulationParams.radius`, else 0.2 m | — | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
 | `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1, 1.0] m. |
 | `radius_std` | none | — | Spread of the Gaussian draw. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |

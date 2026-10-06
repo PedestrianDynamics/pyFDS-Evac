@@ -58,6 +58,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when a deck declares `sfm_friction` above 0. JuPedSim 1.4.2 applies
   the wall friction with the wrong sign (jupedsim#1677). The clamp goes
   once a JuPedSim release with that fix is pinned (#635).
+- A spawn area that leaves out `number`, `radius` or `v0` takes
+  `simulationParams.number`, `.radius` or `.v0`, else 10 agents, 0.2 m
+  and 1.25 m/s, with and without journeys. Without journeys it took the
+  `simulationParams` value, else the first spawn area's value, else a
+  built-in count of 100; with journeys it ignored `simulationParams`.
+  The built-in count for a deck without spawn areas drops from 100 to
+  10; `simulationParams.number` still sets it. No shipped deck changes
+  (#567).
 
 ### Fixed
 
