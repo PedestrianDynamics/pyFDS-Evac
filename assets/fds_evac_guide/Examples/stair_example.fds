@@ -1,0 +1,238 @@
+ FDS+Evac version: FDS 6.7.6, Evac 2.6.0 (GIT FDS6.7.6-336)
+ All material properties etc. are completely fabricated.
+
+ Two floor evacuation test case:
+
+ The 1st floor has the floor at the level of 3.0 m and has
+ two different stairwells going down.
+
+ The ground floor has the floor at the level of 0.0 m and, for
+ simplicity, has just one exit door.
+
+ Two stairs connecting the floors: One is "outside of the building"
+ and the other is "inside the building".
+
+&HEAD CHID='stair_example', TITLE='Simple example of stairs'  / 
+
+ Fire mesh(es)
+&MESH IJK=90,60,30, XB= -6.2,11.8, -0.2,11.8, 0.0,6.0, ID='FireMesh' /
+
+ dx = dy = 0.2 m
+
+ Evacuation meshes
+&MESH IJK=90,60,1, XB= -6.2,11.8, -0.2,11.8, 0.9,1.1, EVAC_Z_OFFSET=1.0, 
+      EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., ID='GroundFloor' /
+&MESH IJK=67,60,1, XB= -1.6,11.8, -0.2,11.8, 3.9,4.1, EVAC_Z_OFFSET=1.0, 
+      EVACUATION=.TRUE., EVAC_HUMANS=.TRUE., ID='FirstFloor' /
+
+&TIME T_END=60.0, DT=0.05 / 
+
+ Note: EVACUATION_MC_MODE=.TRUE. try to read eff and fed files.
+       EVACUATION_DRILL=.TRUE. do not read (and use) the fed file.
+&MISC EVACUATION_MC_MODE=.FALSE., EVACUATION_DRILL=.TRUE., EVACUATION_INITIALIZATION=.TRUE./ 
+      Note: Now now fire calculation: RADIATION=.FALSE. saves some CPU time and memory
+&RADI RADIATION=.FALSE., /
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=200,
+      DT_PART=0.5,
+      DT_HRR=1.0,
+      DT_SLCF=10000.0,
+      DT_BNDF=10000.0,
+      DT_PL3D=10000.0,
+      DT_ISOF=10000.0 / We do not want any fire related output
+      Note: DT_PART is used also for the agents in Smokeview
+            DT_HRR is used also for CHID_evac.csv output
+
+ Default material for evacuation meshes is INERT and its color
+ can not be changed esily in Smokeview. Thus, an evacuation 
+ material is defined below, which has only color:
+&SURF ID='EVAC_WALL', RGB= 200,0,200, EVAC_DEFAULT=.TRUE.  / or COLOR
+
+ Outer walls: 0.2 m thick
+&OBST XB= -0.2, 0.0, -0.2,11.8, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= 11.6,11.8, -0.2,11.8, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= -0.2,11.8, -0.2, 0.0, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= -0.2,11.8, 11.6,11.8, 0.0,6.0, SURF_ID='INERT' /
+
+ Ceiling slab
+&OBST XB= -0.2,11.8, -0.2,11.8, 2.8,3.0, SURF_ID='INERT' /
+
+********** The outside stairs ************************************
+
+ Walls of the "outside" stairs (at the left)
+&OBST XB= -6.2,-6.0,  2.8, 5.8, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= -6.2,-0.2,  2.8, 3.0, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= -6.2,-0.2,  5.6, 5.8, 0.0,6.0, SURF_ID='INERT' /
+ The core at the middle of the stairs
+ Stair flights x: -4.8 <==> -1.4 (3.4 m)
+ Landigs: x: -6.0 <==> -4.8 (1.2 m)
+ Landigs: x: -1.4 <==> -0.2 (1.2 m)
+&OBST XB= -4.8,-1.4,  4.2, 4.4, 0.0,6.0, SURF_ID='INERT' / core
+&OBST XB= -1.4,-0.2,  2.8, 5.8, 2.8,3.0, SURF_ID='INERT' / landing
+&OBST XB= -6.0,-4.8,  2.8, 5.8, 1.2,1.4, SURF_ID='INERT' / landing
+
+&OBST XB= -1.6,-1.4, 4.4, 5.8, 5.0,6.0, SURF_ID='INERT' / 
+&OBST XB= -1.6,-1.4, 3.0, 4.2, 3.0,6.0, SURF_ID='INERT' / 
+
+ The intermediate landing at the ground level mesh. This just makes
+ the z-coordinate look nice in Smokeview:
+ Hole needed, because there is a landing OBST at the fire geometry that
+ would otherwise be also in the evacuation mesh. For stairs it is a good
+ way to make holes for the evss always to be sure that there will not
+ be any OBSTs from the fire geometry meshing up things in the evacuation
+ mesh.  For now, the evacuation OBSTs are generated at the level of
+ the evacuation meshes (the main level of the evacuation mesh and the level
+ defined by the HUMAN_SMOKE_HEIGHT for the head level, i.e., if the agents
+ are able to see things).
+&HOLE XB= -6.01,-4.79, 2.99, 5.61, 0.1,1.9, EVACUATION=.TRUE. / 
+&EVSS XB=-6.0,-4.8,  3.0, 5.6, 0.9,1.1, IOR=-1, ID='IntLanding',
+      FAC_V0_UP=1.0, FAC_V0_DOWN=1.0, FAC_V0_HORI=1.0,
+      HEIGHT=1.4, HEIGHT0=1.4, MESH_ID='GroundFloor' /
+ The flights are the stairs, these are also in the ground level mesh.
+&EVSS XB=-4.8,-1.4,  4.4, 5.6, 0.9,1.1, IOR=-1, ID='FlightUpper',
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.6, FAC_V0_HORI=1.0,
+      HEIGHT=3.0, HEIGHT0=1.4, MESH_ID='GroundFloor' /
+&EVSS XB=-4.8,-1.4,  3.0, 4.2, 0.9,1.1, IOR=+1, ID='FlightLower',
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.6, FAC_V0_HORI=1.0,
+      HEIGHT=1.4, HEIGHT0=0.0, MESH_ID='GroundFloor' /
+ Note: the IOR edge of the EVSS is at HEIGHT0.
+
+ Door holes to/out of the stairs
+ Hole for the evacuation mesh needed at ground level evacuation mesh
+&HOLE XB= -0.25,0.05, 3.0,4.2, 0.0,2.0, EVACUATION=.TRUE./
+ Hole for the evacuation mesh needed at 1st level evacuation mesh
+&HOLE XB= -0.25,0.05, 4.40,5.60, 3.0,5.0, EVACUATION=.TRUE./
+
+********** The middle stairs ************************************
+
+ Walls of the "inside" stairs (at the middle)
+&OBST XB= 1.8,2.0, 2.8,5.8, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= 8.0,8.2, 2.8,5.8, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= 1.8,8.2, 2.8,3.0, 0.0,6.0, SURF_ID='INERT' /
+&OBST XB= 1.8,8.2, 5.6,5.8, 0.0,6.0, SURF_ID='INERT' /
+ The core at the middle of the stairs
+&OBST XB= 3.2,6.8, 4.2, 4.4, 0.0,6.0, SURF_ID='INERT' / core
+&OBST XB= 2.0,3.2, 2.8, 5.8, 1.2,1.4, SURF_ID='INERT' / landing
+&HOLE XB= 2.0,6.8, 3.0, 4.2, 2.75,3.05,  / no ceiling slab in the stairs
+&HOLE XB= 2.0,6.8, 4.4, 5.6, 2.75,3.05,  / no ceiling slab in the stairs
+&HOLE XB= 2.0,3.2, 2.8, 5.8, 2.75,3.05,  / no ceiling slab in the stairs
+
+ The stairs end at ground level:
+&OBST XB= 6.6,6.8, 4.4, 5.8, 0.0,2.8, SURF_ID='INERT' /
+
+&OBST XB= 6.6,6.8, 4.4, 5.8, 5.0,6.0, SURF_ID='INERT' / 
+&OBST XB= 6.6,6.8, 3.0, 4.2, 3.0,6.0, SURF_ID='INERT' / 
+
+ The intermediate landing at the ground level mesh. This just makes
+ the z-coordinate look nice in Smokeview:
+&HOLE XB= 1.99,3.21,  2.99, 5.61, 0.1,1.9, EVACUATION=.TRUE. / 
+&EVSS XB= 2.0,3.2,  3.0, 5.6, 0.9,1.1, IOR=-1, ID='IntLanding2',
+      FAC_V0_UP=1.0, FAC_V0_DOWN=1.0, FAC_V0_HORI=1.0,
+      HEIGHT=1.4, HEIGHT0=1.4, MESH_ID='GroundFloor' /
+ The flights are the stairs, these are also in the ground level mesh.
+&EVSS XB= 3.2,6.8,  4.4, 5.6, 0.9,1.1, IOR=-1, ID='FlightUpper2',
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.6, FAC_V0_HORI=1.0,
+      HEIGHT=3.0, HEIGHT0=1.4, MESH_ID='GroundFloor' /
+&EVSS XB= 3.2,6.8,  3.0, 4.2, 0.9,1.1, IOR=+1, ID='FlightLower2',
+      FAC_V0_UP=0.4, FAC_V0_DOWN=0.6, FAC_V0_HORI=1.0,
+      HEIGHT=1.4, HEIGHT0=0.0, MESH_ID='GroundFloor' /
+ Note: the IOR edge of the EVSS is at HEIGHT0.
+
+ Door holes to/out of the stairs
+ Hole for the evacuation mesh needed at ground level evacuation mesh
+&HOLE XB= 7.95,8.25, 3.0,4.2, 0.0,2.0, EVACUATION=.TRUE./
+ Hole for the evacuation mesh needed at 1st level evacuation mesh
+&HOLE XB= 7.95,8.25, 4.4,5.6, 3.0,5.0, EVACUATION=.TRUE./
+
+********* Below are the doors and entries and exits ***************
+
+ First floor door to the stairs at the landing at the left
+ (the stair flights and intermediate landing belong to the
+ ground floor mesh)
+ HOLE XB= -1.65,-1.35, 4.40,5.60, 3.0,5.00,  EVACUATION=.TRUE./
+&DOOR ID='LeftDoor1st', IOR=-1,
+      FYI= 'Comment line',
+      COLOR='GREEN', EXIT_SIGN=.TRUE.,
+      TO_NODE= 'LeftEntr',
+      XYZ= 0.1, 5.0, 4.0,
+      XB= -1.60,-1.60,  4.40,5.60, 3.9,4.10, /
+&OBST XB= -1.60,-1.40, 4.40,5.80, 0.0,2.00, EVACUATION=.TRUE./
+&ENTR ID='LeftEntr', IOR=-1,
+      FYI= 'Comment line',
+      COLOR='GREEN',
+      XB= -1.60,-1.60,  4.40,5.60, 0.9,1.10, / 
+
+ First floor door to the stairs at the landing at the middle
+ (the stair flights and intermediate landing belong to the
+ ground floor mesh)
+ HOLE XB= 6.55,6.85, 4.40,5.60, 3.0,5.00,  EVACUATION=.TRUE./
+&DOOR ID='RightDoor1st', IOR=-1,
+      FYI= 'Comment line',
+      COLOR='CYAN', EXIT_SIGN=.TRUE.,
+      TO_NODE= 'RightEntr',
+      XYZ= 8.3, 5.0, 4.0,
+      XB=  6.60,6.60, 4.40,5.60, 3.9,4.1, /
+&OBST XB=  6.40,6.60, 4.40,5.60, 3.0,5.0, EVACUATION=.TRUE./
+&ENTR ID='RightEntr', IOR=-1,
+      FYI= 'Comment line',
+      COLOR='RED',
+      XB= 6.60,6.60, 4.40,5.60, 0.9,1.10, / 
+
+&EXIT ID='GroundExit', IOR=-2,
+      FYI= 'Comment line',
+      COLOR='YELLOW',
+      XYZ= 5.00, 0.10, 1.00,
+      XB=  4.40, 5.60, -0.20,-0.20, 0.9,1.1 /
+&HOLE XB=  4.35, 5.65, -0.25, 0.05, 0.0,2.0, EVACUATION=.TRUE./
+
+ Evacuation calculation, human properties
+
+ COLOR_METHOD: How Smokeview draws humans:
+   -1: (default) Default colors in Smokeview
+    0: The color given at the EVAC/ENTR-line
+    3: The color given at the PERS-line
+    4: The color of the target door
+
+&PERS ID='Adult',
+      FYI='Male+Female diameter and velocity',
+      DEFAULT_PROPERTIES='Adult',
+      PRE_EVAC_DIST=1,PRE_LOW=2.0,PRE_HIGH=5.0,
+      DET_EVAC_DIST=1,DET_LOW=1.0,DET_HIGH=3.0,
+      TDET_SMOKE_DENS=0.1 , HUMAN_SMOKE_HEIGHT=1.60,
+      OUTPUT_SPEED=.TRUE., 
+      COLOR_METHOD=4, I_HERDING_TYPE=2, /
+
+ Initial positions of the agents
+
+ 1st Floor:
+ These humans will go to the left exit, if it is not blocked by smoke.
+&EVAC ID= 'AgentsLeftDoor1st', 
+      NUMBER_INITIAL_PERSONS = 25,
+      XB = 1.0,9.0,  1.0,9.0, 3.9,4.1
+      AVATAR_COLOR = 'BLUE', AGENT_TYPE=2,
+      KNOWN_DOOR_NAMES = 'GroundExit','LeftDoor1st','RightDoor1st',
+      KNOWN_DOOR_PROBS = 1.0,1.0,1.0,
+      PERS_ID = 'Adult' / 
+
+&EVAC ID= 'AgentsGF', 
+      NUMBER_INITIAL_PERSONS = 25,
+      XB = 1.0,9.0,  1.0,9.0, 0.9,1.1
+      AVATAR_COLOR = 'RED', AGENT_TYPE=2,
+      KNOWN_DOOR_NAMES = 'GroundExit',
+      KNOWN_DOOR_PROBS = 1.0,
+      PERS_ID = 'Adult' / 
+
+ An evacuation hole, do not put agents inside the internal stairwell
+&EVHO ID='Evho_1stFloor',
+      FYI='internal stairs',
+      XB= 2.0,8.0, 3.0,5.6, 3.9,4.1 /
+&EVHO ID='Evho_GfFloor',
+      FYI= 'internal stairs',
+      XB= 2.0,8.0, 3.0,5.6, 0.9,1.1 /
+
+ Next lines could be used to plot the evacuation flow fields:
+ SLCF PBZ=1.0, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+ SLCF PBZ=4.0, QUANTITY='VELOCITY', VECTOR=.TRUE., EVACUATION=.TRUE. / 
+
+&TAIL /

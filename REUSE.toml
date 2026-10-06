@@ -1,0 +1,26 @@
+version = 1
+SPDX-PackageName = "pyFDS-Evac"
+SPDX-PackageDownloadLocation = "https://github.com/PedestrianDynamics/pyFDS-Evac"
+
+[[annotations]]
+path = "**"
+SPDX-FileCopyrightText = "2024 Pedestrian Dynamics"
+SPDX-License-Identifier = "MIT"
+
+# Input decks of the FDS+Evac guide, copied unchanged from
+# https://github.com/tkorhon1/FDS-Evac-Guide at commit
+# 10eb1a4448ae771ad2187a238a8330c819550008. Excluded from the wheel and
+# the sdist; see assets/fds_evac_guide/README.md.
+[[annotations]]
+path = "assets/fds_evac_guide/**/*.fds"
+precedence = "override"
+SPDX-FileCopyrightText = "Timo Korhonen, VTT Technical Research Centre of Finland"
+SPDX-License-Identifier = "GPL-3.0-only"
+
+# Unmodified FDS+Evac source from the FDS repository, kept so the docs can
+# cite line numbers; see materials/evac.f90.NOTICE.md.
+[[annotations]]
+path = "materials/evac.f90"
+precedence = "override"
+SPDX-FileCopyrightText = ["National Institute of Standards and Technology", "Timo Korhonen, VTT Technical Research Centre of Finland"]
+SPDX-License-Identifier = "NIST-Software"

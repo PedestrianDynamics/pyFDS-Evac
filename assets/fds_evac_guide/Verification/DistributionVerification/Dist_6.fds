@@ -1,0 +1,104 @@
+ FDS+Evac version: FDS 6.7.6, Evac 2.6.0 (GIT FDS6.7.6-226)
+ All material properties etc. are completely fabricated.
+
+
+This uses the IMO test case 9 geometry, where are 1000 persons in
+ order to calculate histograms in Excel to see the distribution.
+
+&HEAD CHID='Dist_6',TITLE='Beta, two parameter sets' /
+
+&MESH IJK=128,96,1, XB=-1.0,31.0, -2.0,22.0, 0.95,1.05, EVACUATION=.TRUE., 
+      EVAC_HUMANS=.TRUE., EVAC_Z_OFFSET=1.0, ID = 'FF1stFloor' /
+
+&TIME T_END=0.1, DT=0.1 /
+
+&MISC EVACUATION_INITIALIZATION=.TRUE., EVACUATION_DRILL=.TRUE. /
+&RADI RADIATION=.FALSE. /
+
+&DUMP SMOKE3D=.FALSE.,
+      NFRAMES=1,
+      DT_PART=1.0,
+      DT_HRR=1.0,
+      DT_SLCF=1000000.0,
+      DT_PL3D=1000000.0,
+      DT_ISOF=1000000.0 /
+
+&SURF ID= 'WALL',
+      RGB= 150,150,150,
+      MATL_ID= 'Concrete',
+      THICKNESS= 0.10 /
+
+&MATL ID= 'Concrete',
+      FYI= 'Normal Weigth Concrete',
+      CONDUCTIVITY= 1.60,
+      SPECIFIC_HEAT= 1.00,
+      DENSITY= 2300.0 /
+
+&SURF ID='EVAC_WALL', RGB=200,0,200, EVAC_DEFAULT=.TRUE. / or COLOR
+ 
+=======================================================
+============= FIRE FDS GEOMETRY STARTS ================
+=======================================================
+
+&OBST XB = -1.0, 0.0, -2.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB = 30.0,31.0, -2.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+
+&OBST XB = -1.0, 4.0, -2.0, 0.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB =  5.0,25.0, -2.0, 0.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB = 26.0,31.0, -2.0, 0.0, 0.0,2.0, SURF_ID='WALL' / 
+
+&OBST XB = -1.0, 4.0, 20.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB =  5.0,25.0, 20.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+&OBST XB = 26.0,31.0, 20.0,22.0, 0.0,2.0, SURF_ID='WALL' / 
+
+=======================================================
+============= FIRE FDS GEOMETRY ENDS ==================
+=======================================================
+
+=======================================================
+============= EVAC GEOMETRY STARTS ====================
+=======================================================
+
+&EXIT ID='Exit1', IOR = +2,
+      FYI = 'Comment line',
+      XYZ= 4.5, 19.8, 1.0,
+      XB= 4.0, 5.0, 22.0,22.0, 1.0,1.0 /
+
+=======================================================
+============= EVAC GEOMETRY ENDS ======================
+=======================================================
+
+ Test lognormal response times, IMO MSC.1/Circ.1238 (30 October 2007)
+ Response time T, day:   mean(ln(T))     = 3.44, sigma(ln(T))     = 0.94,    0 < x < 300 
+ Response time T, night: mean(ln(T-400)) = 3.95, sigma(ln(T-400)) = 0.84,  400 < x < 700 
+ Lognormal: distribution type = 5
+     para:  sigma of ln(x)
+     mean:  mean of ln(x)
+     high:  high end cutoff of x
+     para2: shift of x, x_out = x + shift, where ln(x) is lognormal
+
+&PERS ID='Males', DEFAULT_PROPERTIES='Male',
+      PRE_EVAC_DIST=6, PRE_PARA=2.0, PRE_PARA2=2.0,
+      DET_EVAC_DIST=6, DET_PARA=0.5, DET_PARA2=0.5,
+      DENS_INIT = 4.0, COLOR_METHOD = 0, /
+
+Distribution  Index Parameters
+No distribution  0 _MEAN (x)
+Uniform          1 _LOW, _HIGH (xmin,xmax)
+Truncated normal 2 _MEAN, _PARA, _LOW, _HIGH (x,sigma,xmin,xmax)
+Gamma            3 _PARA, _PARA2 (alpha,beta)
+Normal           4 _MEAN, _PARA (x,sigma)
+Log-normal       5 _MEAN, _PARA, _HIGH, _PARA2 (ln(x-x0),sigma_ln(x-x0),xmax,x0)
+Beta             6 _PARA, _PARA2 (alpha,beta)
+Triangular       7 _MEAN, _LOW, _HIGH (xpeak,xmin,xmax)
+Weibull          8 _PARA, _PARA2 (alpha,lambda)
+Exponential      8 _PARA=1, _PARA2 (alpha=1,lambda)
+Gumbel           9 _PARA (alpha)
+
+&EVAC ID = 'EVAC_1', 
+      NUMBER_INITIAL_PERSONS = 1000,
+      FYI = 'Comment line',
+      XB = 1.0,29.0, 1.0,19.0, 1.0,1.0
+      AVATAR_COLOR = 'BLACK', PERS_ID = 'Males' / 
+
+&TAIL /
