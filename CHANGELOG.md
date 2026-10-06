@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-06
+
 ### Removed
 
 - The unused agent-parameter builders and second speed sampler in
@@ -33,6 +35,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   route cost model, which every run rejects; the GUI rejects such a
   scenario at upload and submit, and the terminal UI lists it in Review
   (#571).
+- The exported `run.py` gives `replay_exits` as an absolute path, so a
+  script run from another folder still replays the exits, and a script
+  written by the terminal UI no longer says it came from the GUI (#558,
+  #576).
+- A blank FDS folder is left out of the equivalent CLI command instead of
+  becoming the current folder (#557).
+- Terminal UI:
+  - Save and Copy command right after an edit include that edit (#559).
+  - Save, Copy command and Show Python refuse while a field does not
+    parse, and name the field; they used to write the default value
+    (#619).
+  - The Recent tab keeps entries whose scenario or FDS folder is gone,
+    dimmed and labelled with what is missing; `Delete` removes the
+    highlighted entry, and two long paths no longer look the same
+    (#600).
+  - Checks are described in words instead of rule IDs (D3, D17, ...);
+    the JSON output keeps the IDs (#573).
+  - "Open docs page" opens the Terminal UI page (#575), and no redraw
+    runs after the app closes (#602).
+- Web GUI: decimal fields no longer ask for a keypad without a decimal
+  point (#552), and units keep their case in the uppercase form labels,
+  e.g. "(m)" instead of "(M)" (#348).
+- The FDS case warnings link the published FDS case page instead of a
+  path in the repository (#323).
+- The analysis scripts that call `run.py` report a run that ends with
+  exit status 2 as incomplete instead of using it silently (#449).
+
+### Documentation
+
+- Smoke speed model: FDS+Evac reference speeds from the guide's component
+  test; the plot is no longer called a verification, and new
+  verification tests check the speed and FED cases of the FDS+Evac guide
+  against formulas rebuilt from `evac.f90` and `func.f90` (#631).
+- Web GUI: the `run.py` listing matches the exported script (#558, #576).
+- Terminal UI: the Recent tab (#600).
 
 ## [0.3.0] - 2026-10-05
 
