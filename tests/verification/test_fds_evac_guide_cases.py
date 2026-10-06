@@ -61,11 +61,12 @@ CO_COEF_FDS = 2.7641667e-5  # func.f90 FED, CO_FED_FAC for activity 2
 CO_COEF_PYFDS = 2.764e-5  # pyFDS-Evac value (rounded)
 T_END_S = 100.0  # guide FED test duration
 
-# Guide densities [mg/m3].  The FDS run holds 0.997 of nominal (air density
-# 1.1984 kg/m3; the 1000 mg/m3 deck records 9.97e-4 kg/m3, K = 8.68 1/m).
-# 498.6 and 1495.6 are 0.997 * nominal rounded to 0.1 mg/m3.
+# Guide densities [mg/m3].  The FDS run holds 0.997 of nominal: the decks set
+# the soot mass fraction from an air density of 1.1984 kg/m3, while FDS's own
+# gas density is about 1.1949 kg/m3.  The 1000 mg/m3 deck's device output
+# records 9.97e-4 kg/m3, K = 8.68 1/m.  498.5 and 1495.5 are 0.997 * nominal.
 NOMINAL_DENSITIES = (0.0, 500.0, 1000.0, 1500.0)
-FDS_ACTUAL_DENSITIES = (498.6, 997.0, 1495.6)
+FDS_ACTUAL_DENSITIES = (498.5, 997.0, 1495.5)
 
 # Guide FED cases: (CO2 %, CO ppm, O2 %).
 FED_CASES = {
@@ -132,9 +133,9 @@ def test_guide_smoke_speed_table_values():
         500.0: (0.9732, 5.138),
         1000.0: (0.4464, 11.201),
         1500.0: (0.150, 33.333),
-        498.6: (0.9747, 5.130),
+        498.5: (0.9748, 5.129),
         997.0: (0.4495, 11.122),
-        1495.6: (0.150, 33.333),
+        1495.5: (0.150, 33.333),
     }
     for rho, (v_ref, t_ref) in table.items():
         v = speed_from_soot_density(V0, rho)
@@ -145,17 +146,14 @@ def test_guide_smoke_speed_table_values():
 def test_guide_smoke_speed_figure_read_off():
     """Visual read-off of the guide figure markers (abs 0.02 m/s).
 
-    Documentation only, not a regression target.  The FDS+Evac marker at
-    1000 mg/m3 (~0.45 m/s) lies closer to the speed at the density the FDS
-    run actually holds (997 mg/m3, 0.4495 m/s) than to nominal (0.4464 m/s).
+    Documentation only, not a regression target.  The 997 mg/m3 density
+    comes from the deck's device output (9.97e-4 kg/m3), not from this
+    read-off: the 0.003 m/s gap between 997 and 1000 mg/m3 is below the
+    0.02 m/s read-off resolution.
     """
-    figure = {0.0: 1.50, 498.6: 0.98, 997.0: 0.45, 1495.6: 0.15}
+    figure = {0.0: 1.50, 498.5: 0.98, 997.0: 0.45, 1495.5: 0.15}
     for rho, v_fig in figure.items():
         assert speed_from_soot_density(V0, rho) == pytest.approx(v_fig, abs=0.02)
-    v_fig_1000 = figure[997.0]
-    assert abs(speed_from_soot_density(V0, 997.0) - v_fig_1000) < abs(
-        speed_from_soot_density(V0, 1000.0) - v_fig_1000
-    )
 
 
 def test_guide_smoke_speed_floor_onset():

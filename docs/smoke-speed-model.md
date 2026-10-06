@@ -202,9 +202,9 @@ holds (0.997 of nominal):
 | Soot density [mg/m³] | K [1/m] | Speed [m/s] | Time over 5 m [s] |
 |---|---|---|---|
 | 0 | 0 | 1.500 | 3.33 |
-| 498.6 | 4.34 | 0.975 | 5.13 |
+| 498.5 | 4.34 | 0.975 | 5.13 |
 | 997 | 8.67 | 0.4495 | 11.12 |
-| 1495.6 | 13.01 | 0.150 (floor) | 33.33 |
+| 1495.5 | 13.01 | 0.150 (floor) | 33.33 |
 
 pyFDS-Evac reproduces these values to a relative 1e-9, since both codes
 use the same law and defaults.
