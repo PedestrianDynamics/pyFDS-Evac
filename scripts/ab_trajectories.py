@@ -83,6 +83,8 @@ def _run(python: str, checkout: Path, run_args: list[str], sqlite: Path) -> floa
     if proc.returncode not in (0, 2):
         sys.stderr.write(proc.stderr[-4000:])
         raise SystemExit(f"run.py failed in {checkout} (exit {proc.returncode})")
+    if proc.returncode == 2:
+        print(f"{sqlite}: run incomplete (exit 2)", file=sys.stderr)
     return wall
 
 
