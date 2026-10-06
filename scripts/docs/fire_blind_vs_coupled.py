@@ -207,7 +207,8 @@ def execute(job):
     # written and RSET is censored.
     if code in (0, 2):
         ok.write_text(f"{wall:.1f}\n")
-    return arm, pre, seed, "ok" if code in (0, 2) else f"crashed ({code})", wall
+    state = {0: "ok", 2: "incomplete (exit 2)"}.get(code, f"crashed ({code})")
+    return arm, pre, seed, state, wall
 
 
 def run_all(jobs_by_phase, workers):

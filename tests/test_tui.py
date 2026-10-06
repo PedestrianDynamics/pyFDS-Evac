@@ -11,6 +11,7 @@ import argparse
 import asyncio
 import copy
 import os
+import re
 import shlex
 import shutil
 import sqlite3
@@ -870,6 +871,24 @@ def test_only_two_themes_in_the_palette(workdir):
     run(go())
 
 
+def test_575_docs_command_opens_the_terminal_ui_page(workdir):
+    page = "https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            commands = app.get_system_commands(app.screen)
+            (docs,) = [c for c in commands if c.title == "Open docs page"]
+            assert docs.help == page
+            said: list[str] = []
+            app.notify = lambda text, **_: said.append(text)
+            docs.callback()
+            assert said == [f"Docs: {page}"]
+
+    run(go())
+
+
 def test_a19_keyboard_only_to_a_run(workdir):
     runner = FakeRunner()
 
@@ -1003,6 +1022,281 @@ def test_recent_entry_reopens_review(workdir):
             await settle(pilot, second)
             assert second.step == 3
             assert second.form.fds_dir.endswith("iso_table21_coupled/fds")
+
+    run(go())
+
+
+# --- #600: Recent entries whose paths are gone ------------------------------------
+
+
+def _recent_rows(app) -> list[str]:
+    options = app.query_one("#recent")
+    return [
+        str(options.get_option_at_index(k).prompt) for k in range(options.option_count)
+    ]
+
+
+def test_600_missing_paths_in_words(tmp_path):
+    there, gone = str(tmp_path), str(tmp_path / "gone")
+    assert model.missing_paths({"scenario": there, "fds_dir": None}) == ""
+    assert model.missing_paths({"scenario": there, "fds_dir": there}) == ""
+    assert model.missing_paths({"scenario": gone}) == "scenario missing"
+    assert (
+        model.missing_paths({"scenario": there, "fds_dir": gone})
+        == "FDS folder missing"
+    )
+    assert (
+        model.missing_paths({"scenario": gone, "fds_dir": gone})
+        == "scenario and FDS folder missing"
+    )
+
+
+def test_600_distinct_locations():
+    home = Path.home()
+    a = str(home / "work" / "checkout-a" / "assets" / "t_junction")
+    b = str(home / "work" / "checkout-b" / "assets" / "t_junction")
+    sep = os.sep
+    assert model.distinct_locations([a, b]) == [
+        f"~{sep}work{sep}checkout-a{sep}…",
+        f"~{sep}work{sep}checkout-b{sep}…",
+    ]
+    assert model.distinct_locations([a, a]) == ["", ""]
+
+
+def test_600_long_locations_stay_distinct_within_the_width():
+    """Cutting to the width keeps the differing characters (Codex review)."""
+    for a, b in (
+        ("checkout-a-very-long-shared-suffix", "checkout-b-very-long-shared-suffix"),
+        (
+            "a-very-long-shared-prefix-checkout-x",
+            "a-very-long-shared-prefix-checkout-y",
+        ),
+    ):
+        paths = [f"/tmp/{name}/assets/t_junction" for name in (a, b)]
+        short = model.distinct_locations(paths, 24)
+        assert short[0] != short[1], short
+        assert all(len(text) <= 24 for text in short), short
+
+
+def test_600_recent_keeps_missing_entries_after_usable_ones(tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    recent.add(str(tmp_path), None, "complete", "d1")
+    recent.add(str(tmp_path / "gone"), None, "complete", "d2")  # newest
+    order = [(i, missing) for i, _entry, missing in recent.ordered()]
+    assert order == [(1, ""), (0, "scenario missing")]
+    recent.remove(0)
+    assert [r["date"] for r in model.Recent(tmp_path / "recent.json").runs] == ["d1"]
+
+
+def test_600_enter_on_the_first_row_opens_the_usable_entry(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    scenario = workdir / "assets" / "t_junction"
+    recent.add(str(scenario), None, "complete", "2026-10-05 14:30")
+    recent.add(str(tmp_path / "gone"), None, "complete", "2026-10-05 15:00")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            assert app.query_one("#sc-tabs").active == "tab-recent"
+            rows = _recent_rows(app)
+            assert "missing" not in rows[0]
+            assert rows[1].endswith("scenario missing")
+            assert f"scenario {scenario}" in text_of(app, "#sc-info")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.step == 3
+            assert app.form.scenario.path == scenario
+
+    run(go())
+
+
+def test_600_only_missing_entries_open_examples(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    recent.add(str(tmp_path / "gone"), None, "complete", "d")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            assert app.query_one("#sc-tabs").active == "tab-examples"
+
+    run(go())
+
+
+@pytest.mark.parametrize(
+    "roots",
+    [
+        ("checkout-a", "checkout-b"),
+        ("checkout-a-very-long-shared-suffix", "checkout-b-very-long-shared-suffix"),
+    ],
+)
+def test_600_same_scenario_in_two_places_reads_differently(workdir, tmp_path, roots):
+    recent = model.Recent(tmp_path / "recent.json")
+    for root in roots:
+        copy_ = tmp_path / root / "assets" / "t_junction"
+        shutil.copytree(workdir / "assets" / "t_junction", copy_)
+        recent.add(str(copy_), None, "complete", "2026-10-05 14:30")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            first, second = _recent_rows(app)
+            assert first != second
+            assert roots[1][:10] in first and roots[0][:10] in second
+            width = app.query_one("#recent").scrollable_content_region.width
+            assert max(len(first), len(second)) <= width
+
+    run(go())
+
+
+def test_600_fds_folder_gone_goes_to_the_fds_step(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    scenario = workdir / "assets" / "t_junction"
+    recent.add(str(scenario), str(tmp_path / "fds_gone"), "complete", "d")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            app.query_one("#sc-tabs").active = "tab-recent"
+            app.query_one("#recent").focus()
+            await pilot.pause()
+            assert "FDS folder not found" in text_of(app, "#sc-info")
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.step == 1
+            assert app.form.scenario.path == scenario and app.form.fds_dir is None
+            panel = text_of(app, "#fds-panel")
+            assert f"was not found: {tmp_path / 'fds_gone'}" in panel
+
+    run(go())
+
+
+def test_600_scenario_gone_says_so_and_delete_removes_it(workdir, tmp_path):
+    recent = model.Recent(tmp_path / "recent.json")
+    recent.add(str(tmp_path / "gone"), None, "complete", "d")
+
+    async def go():
+        app = make_app(workdir, recent=recent)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await pilot.pause()
+            app.query_one("#sc-tabs").active = "tab-recent"
+            app.query_one("#recent").focus()
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.step == 0
+            assert "Scenario not found" in text_of(app, "#sc-error")
+            await pilot.press("delete")
+            await pilot.pause()
+            assert model.Recent(tmp_path / "recent.json").runs == []
+            assert _recent_rows(app) == ["No recent runs yet."]
+
+    run(go())
+
+
+# --- #573: checks in words, no rule IDs ---------------------------------------------
+
+RULE_ID = re.compile(r"\bD\d+\b|\bB ·")
+
+
+def test_573_review_error_rows_carry_no_rule_id(workdir):
+    scenario = workdir / "assets" / "iso_table21_coupled"
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            app.form.switch["enable_heat_fed"] = True
+            app.form.text["heat_fed_method"] = "total-flux"
+            app.form.text["heat_regime"] = "layer"
+            app.form_changed()
+            await settle(pilot, app)
+            assert [e.rule for e in app.cfg.errors] == ["D19"]
+            app.goto(3)
+            await pilot.pause()
+            errors = app.query_one("#rv-errors")
+            rows = [
+                str(errors.get_option_at_index(k).prompt)
+                for k in range(errors.option_count)
+            ]
+            assert rows and all("Enter: go to field" in r for r in rows)
+            assert not any(RULE_ID.search(r) for r in rows), rows
+
+    run(go())
+
+
+def test_573_fds_panel_and_level_1_note_carry_no_rule_id(workdir):
+    from pyfds_evac.tui.app import review_text
+
+    scenario = workdir / "assets" / "iso_table21_coupled"
+
+    async def go():
+        short = FdsFacts(ALL_SLICES, (10.0, 1.0))
+        app = make_app(workdir, facts=short)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            panel = text_of(app, "#fds-panel")
+            assert "! runs past the FDS end" in panel
+            assert not RULE_ID.search(panel), panel
+        app = make_app(workdir, facts=None)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, scenario / "fds")
+            assert app.cfg.level == 1
+            text = str(review_text(app.cfg))
+            assert "the checks against its slices (soot extinction" in text
+            assert not RULE_ID.search(text), text
+
+    run(go())
+
+
+# --- #571: an error the scenario file fixes ---------------------------------------
+
+
+def test_571_scenario_error_row_sends_to_the_scenario_file(workdir):
+    import json
+
+    scenario = workdir / "assets" / "t_junction"
+    deck = json.loads((scenario / "config.json").read_text())
+    deck["routing"]["cost_model"] = "gaet"
+    (scenario / "config.json").write_text(json.dumps(deck))
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, None)
+            app.form.text["seed"] = "11"
+            app.form_changed()
+            await settle(pilot, app)
+            assert [e.option for e in app.cfg.errors] == [None]
+            app.goto(3)
+            await pilot.pause()
+            errors = app.query_one("#rv-errors")
+            (prompt,) = [
+                str(errors.get_option_at_index(k).prompt)
+                for k in range(errors.option_count)
+            ]
+            assert "Unknown routing cost_model 'gaet'" in prompt
+            assert prompt.endswith("in the scenario file · Enter: reload it")
+            errors.focus()
+            errors.highlighted = 0
+            await pilot.pause()
+            await pilot.press("enter")
+            await pilot.pause()
+            assert app.step == 0
+            assert app.query_one("#sc-tabs").active == "tab-open"
+            assert app.query_one("#open-path").value == str(scenario)
+            assert app.focused is app.query_one("#open-path")
+            assert "Your settings are kept" in text_of(app, "#sc-error")
+            # Fixed on disk, Enter reloads it and keeps the settings.
+            deck["routing"]["cost_model"] = "gate"
+            (scenario / "config.json").write_text(json.dumps(deck))
+            await pilot.press("enter")
+            await settle(pilot, app)
+            assert app.form.text["seed"] == "11"
+            assert not app.cfg.errors
 
     run(go())
 
@@ -1872,7 +2166,29 @@ def test_rt_blank_paths_resolve_to_none(workdir):
     run(go())
 
 
-@pytest.mark.xfail(strict=True, reason="#559: Save writes a stale command.sh")
+def test_rt_script_resolves_replay_exits(tmp_path, monkeypatch):
+    """run.py passes an absolute replay_exits to the run (#558)."""
+    from _round_trip import script_literals
+
+    from pyfds_evac.cli import _build_parser
+
+    monkeypatch.chdir(tmp_path)
+    argv = ["--scenario", "s", "--replay-exits", "x/exits.csv"]
+    code = model.python_for(_build_parser().parse_args(argv), [], "out")
+    lit = script_literals(code)
+    assert lit["REPLAY_EXITS"] == str(tmp_path.resolve() / "x" / "exits.csv")
+    assert "replay_exits" not in lit["OPTIONS"]
+    assert "    replay_exits=REPLAY_EXITS," in code.splitlines()
+
+
+def test_rt_script_does_not_name_the_gui(tmp_path):
+    """A TUI-made run.py says nothing about the GUI (#576)."""
+    from pyfds_evac.cli import _build_parser
+
+    ns = _build_parser().parse_args(["--scenario", str(tmp_path)])
+    assert "GUI" not in model.python_for(ns, ["Scenario: s"], "out")
+
+
 def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
     async def go():
         app = EvacTui(
@@ -1891,6 +2207,69 @@ def test_rt_save_right_after_an_edit_writes_the_edit(workdir):
             app.action_save()
             folder = Path(app.planned())
             assert cli_options((folder / "command.sh").read_text())["seed"] == 11
+
+    run(go())
+
+
+def test_rt_copy_right_after_an_edit_copies_the_edit(workdir):
+    async def go():
+        app = EvacTui(
+            cwd=workdir,
+            runner=FakeRunner(),
+            inspector=lambda path: FACTS,
+            debounce=30.0,
+        )
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.config_now()
+            app.goto(3)
+            await pilot.pause()
+            copied: list[str] = []
+            app.copy_to_clipboard = copied.append
+            app.form.text["seed"] = "11"
+            app.form_changed()  # the configuration is due in 30 s
+            app.action_copy_command()
+            assert cli_options(copied[-1])["seed"] == 11
+
+    run(go())
+
+
+@pytest.mark.parametrize("key", ["s", "c", "p"])
+def test_619_save_and_copy_refuse_an_invalid_field(workdir, key):
+    """As Run does: an unparsed seed would be written as the default (#619).
+
+    ``p`` is Show Python, whose dialog copies the script with ``c``.
+    """
+
+    async def go():
+        app = EvacTui(
+            cwd=workdir,
+            runner=FakeRunner(),
+            inspector=lambda path: FACTS,
+            debounce=30.0,
+        )
+        notes: list[str] = []
+        copied: list[str] = []
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, workdir / "assets" / "t_junction", None)
+            app.config_now()
+            app.notify = lambda text, **_: notes.append(str(text))
+            app.copy_to_clipboard = copied.append
+            seed = app.query_one("#row-seed Input")
+            seed.focus()
+            await pilot.pause()
+            seed.value = ""
+            await pilot.press("a", "b", "c")  # real key events
+            await pilot.press("ctrl+n")  # to Review at once
+            assert app.step == 3
+            await pilot.press(key)
+            await pilot.pause()
+            await pilot.press("c")  # copies in the Show Python dialog
+            await pilot.pause()
+            assert copied == []
+            assert not (Path(app.planned()) / "command.sh").exists()
+            assert "seed" in app.parse_errors
+            assert notes and "Seed" in notes[-1] and "not valid" in notes[-1]
 
     run(go())
 
@@ -1957,11 +2336,25 @@ def test_321_live_line_shows_incapacitated_only_when_modelled(workdir, modelled,
             text = text_of(app, "#run-status")
             assert "evacuated 1 of 6 planned" in text
             assert ("incapacitated 1" in text) is shown
-            # The run never finishes here: stop the pending redraw so it
-            # cannot fire while the app tears down.
-            if app._render_timer is not None:
-                app._render_timer.stop()
-                app._render_timer = None
+
+    run(go())
+
+
+def test_602_no_redraw_after_the_app_closes(workdir):
+    """A run event arms a redraw; closing the app must cancel it."""
+
+    def no_widgets():
+        raise AssertionError("render_run after unmount")
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(120, 35)) as pilot:
+            await _started(pilot, app, workdir)
+            app.on_run_event(events.PhaseEvent(events.PHASE_RUNNING))
+            assert app._render_timer is not None
+        assert app._render_timer is None and app._cfg_timer is None
+        app.render_run = no_widgets
+        app._render_tick()  # a tick that was already due
 
     run(go())
 

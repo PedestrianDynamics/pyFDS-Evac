@@ -19,6 +19,7 @@ import logging
 import os
 import pickle
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -498,6 +499,19 @@ def test_cli_command_paths_are_absolute(tmp_path, monkeypatch):
         assert Path(words[words.index(flag) + 1]).is_absolute(), flag
 
 
+@pytest.mark.parametrize("blank", ["", "  "])
+def test_cli_command_skips_blank_paths(blank):
+    """A blank path is no path: the command agrees with the script (#557)."""
+    from pyfds_evac.config.script import python_script
+
+    opts = _parse("--scenario", "s.json")
+    for key in ("fds_dir", "vis_cache", "replay_exits", "output_sqlite"):
+        setattr(opts, key, blank)
+    words = shlex.split(cli_command(opts))
+    assert words == ["pyfds-evac", "--scenario", os.path.abspath("s.json")]
+    assert "\nFDS_DIR = None\n" in python_script(opts)
+
+
 def test_gui_form_command_runs_the_same_options():
     """The GUI's opts.scenario is a picker value; the command needs the file."""
     from pyfds_evac.webapp import app
@@ -846,6 +860,24 @@ def test_show_config_exits_1_on_a_build_error():
     )
     assert proc.returncode == 1
     assert "cell_size_m must be positive, got 0.0" in proc.stdout
+
+
+def _bad_cost_model(tmp_path: Path) -> str:
+    """A copy of the discovery scenario whose routing cost_model is a typo."""
+    folder = tmp_path / "bad_cost_model"
+    shutil.copytree(Path(DISCOVERY).parent, folder)
+    deck = json.loads((folder / "config.json").read_text())
+    deck.setdefault("routing", {})["cost_model"] = "gaet"
+    (folder / "config.json").write_text(json.dumps(deck))
+    return str(folder / "config.json")
+
+
+@pytest.mark.parametrize("rerouting", ["--enable-rerouting", "--no-enable-rerouting"])
+def test_show_config_exits_1_on_a_bad_cost_model(tmp_path, rerouting):
+    """Every run builds the routing cost model, rerouting on or off (#571)."""
+    proc = _cli("--scenario", _bad_cost_model(tmp_path), rerouting, "--show-config")
+    assert proc.returncode == 1, proc.stdout
+    assert "Unknown routing cost_model 'gaet'" in proc.stdout
 
 
 def _output_opts(path: Path, **extra) -> argparse.Namespace:

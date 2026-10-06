@@ -608,6 +608,22 @@ def visibility_value_issue(
     return None
 
 
+def routing_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """The scenario's routing block, built as every run builds it (#571).
+
+    Each run ranks the opening exit choice with
+    ``RouteCostConfig.from_routing_params``, rerouting on or off, so a value
+    it rejects stops every run; no form option fixes it.
+    """
+    from pyfds_evac.core.route_graph import RouteCostConfig
+
+    try:
+        RouteCostConfig.from_routing_params(raw.get("routing"))
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
 # --- whether an option applies, at any value (#485 R1) ---------------------
 
 

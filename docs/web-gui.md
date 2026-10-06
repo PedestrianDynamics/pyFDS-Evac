@@ -473,8 +473,8 @@ marked.
    "(with uncommitted changes)" when the checkout was dirty; the commit alone
    then does not identify the code. Then "Run #N, started *UTC time*" or
    "Preview", the scenario name, and the notices shown in the dialog.
-2. **`PATHS`.** `SCENARIO`, `FDS_DIR` and `VIS_CACHE` are absolute paths on
-   the machine that ran the GUI. `OUTPUT_DIR` is a new relative folder,
+2. **`PATHS`.** `SCENARIO`, `FDS_DIR`, `VIS_CACHE` and `REPLAY_EXITS` are
+   absolute paths on the machine that ran the GUI. `OUTPUT_DIR` is a new relative folder,
    `pyfds_evac_<scenario>_run<N>_<start time>_output` or
    `pyfds_evac_<scenario>_preview_output`, resolved against the folder the
    script is launched from.
@@ -501,19 +501,21 @@ marked.
 import argparse
 import pathlib
 import shutil
+import sys
 
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs
 
-# PATHS: from the computer that ran the GUI. Edit them on another machine.
+# PATHS: from the computer that made this script; edit on another machine.
 SCENARIO = '/.../pyFDS-Evac/assets/blind_spawn_discovery'  # path shortened
 FDS_DIR = None
 VIS_CACHE = None
-# A new folder: the script never overwrites the GUI run's files.
+REPLAY_EXITS = None
+# A new folder: the script never writes into a front end's run folder.
 OUTPUT_DIR = pathlib.Path('pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output')
 
-# Settings: the resolved configuration the GUI passes to build_run_kwargs.
+# Settings: the resolved configuration passed to build_run_kwargs.
 OPTIONS = {
     'seed': 1301,  # seed used by run #1
     'cleanup': False,
@@ -530,6 +532,7 @@ opts = argparse.Namespace(
     scenario=SCENARIO,
     fds_dir=FDS_DIR,
     vis_cache=VIS_CACHE,
+    replay_exits=REPLAY_EXITS,
 )
 
 scenario = load_scenario(SCENARIO)
@@ -539,6 +542,8 @@ result = run_scenario(scenario, **run_kwargs)
 # ... finished / stopped message, then copy the trajectory SQLite
 # and its manifest to OUTPUT_DIR ...
 result.cleanup()  # remove the temporary copies run_scenario wrote
+if not result.success:
+    sys.exit(2)
 ```
 {{< /details >}}
 

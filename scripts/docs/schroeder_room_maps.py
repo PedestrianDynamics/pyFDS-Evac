@@ -352,6 +352,8 @@ def run_one(data, runs, v, fds, seed):
     # outputs are written.
     if code not in (0, 2):
         raise subprocess.CalledProcessError(code, cmd)
+    if code == 2:
+        print(f"{folder}: run incomplete (exit 2)", file=sys.stderr)
     return folder
 
 

@@ -35,6 +35,42 @@ from .premovement_distributions import (
 
 _logger = logging.getLogger(__name__)
 
+_AGENT_MODEL_TYPES = (
+    "CollisionFreeSpeedModel",
+    "CollisionFreeSpeedModelV2",
+    "GeneralizedCentrifugalForceModel",
+    "SocialForceModel",
+    "AnticipationVelocityModel",
+    "WarpDriverModel",
+)
+"""Model types ``create_agent_parameters`` accepts (= ``scenario._MODEL_BUILDERS``)."""
+
+_PLACEMENT_ERRORS = (
+    RuntimeError,  # Simulation.add_agent: outside the area, too close
+    jps.AgentNumberError,  # distribute_by_number
+    jps.IncorrectParameterError,
+    jps.NegativeValueError,
+    jps.OverlappingCirclesError,
+)
+"""Errors of the JuPedSim placement calls.
+
+JuPedSim 1.4.2: ``distribute_by_number`` raises the four distribution errors,
+``Simulation.add_agent`` raises ``RuntimeError``.
+"""
+
+
+class _AgentPlacementError(Exception):
+    """The capacity check, the position distribution or ``add_agent`` failed."""
+
+
+def _placing(call, *args, **kwargs):
+    """Run one placement call; report its failure as ``_AgentPlacementError``."""
+    try:
+        return call(*args, **kwargs)
+    except _PLACEMENT_ERRORS as error:
+        raise _AgentPlacementError(str(error)) from error
+
+
 DEFAULT_PREMOVEMENT_S = 10.0
 """Pre-movement time [s] used when a distribution sets none (FDS+Evac PRE_MEAN)."""
 
@@ -258,9 +294,9 @@ def create_agent_parameters(
     elif model_type == "SocialForceModel":
         sfm_params = base_params.copy()
         desired_speed = params.get("v0", 1.25)
-        reaction_time = global_params.relaxation_time if global_params else 0.5
-        agent_scale = global_params.agent_strength if global_params else 2000
-        force_distance = global_params.agent_range if global_params else 0.08
+        reaction_time = getattr(global_params, "relaxation_time", 0.5)
+        agent_scale = getattr(global_params, "agent_strength", 2000)
+        force_distance = getattr(global_params, "agent_range", 0.08)
         return _construct_with_fallbacks(
             jps.SocialForceModelAgentParameters,
             {
@@ -295,10 +331,10 @@ def create_agent_parameters(
             avm_params["reaction_time"] = 0.3
         return jps.AnticipationVelocityModelAgentParameters(**avm_params)
 
-    else:
-        # Fallback to CollisionFreeSpeedModel
-        base_params["v0"] = params.get("v0", 1.25)
-        return jps.CollisionFreeSpeedModelAgentParameters(**base_params)
+    raise ValueError(
+        f"create_agent_parameters: unknown model_type {model_type!r}. "
+        f"Available: {list(_AGENT_MODEL_TYPES)}"
+    )
 
 
 def _estimate_max_capacity(polygon, max_radius):
@@ -2604,12 +2640,13 @@ def _add_agents(
             requested_count = int(spawn_params.get("number", 0))
             max_capacity = _estimate_max_capacity(spawn_data["area"], max_radius)
             if requested_count > max_capacity:
-                raise ValueError(
+                raise _AgentPlacementError(
                     f"Distribution '{dist_key}': requested {requested_count} agents "
                     f"but area can hold at most ~{max_capacity}. "
                     f"Reduce the number of agents or enlarge the distribution area."
                 )
-            positions = jps.distribute_by_number(
+            positions = _placing(
+                jps.distribute_by_number,
                 polygon=spawn_data["area"],
                 number_of_agents=requested_count,
                 distance_to_agents=2 * max_radius,
@@ -2740,7 +2777,7 @@ def _add_agents(
                                     stage_id=agent_stage_id,
                                 )
 
-                                agent_id = simulation.add_agent(agent_params)
+                                agent_id = _placing(simulation.add_agent, agent_params)
                                 key = assign_spawn_key(
                                     spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
                                 )
@@ -2823,7 +2860,7 @@ def _add_agents(
                         stage_id=nearest_stage_id,
                     )
 
-                    agent_id = simulation.add_agent(agent_params)
+                    agent_id = _placing(simulation.add_agent, agent_params)
                     key = assign_spawn_key(
                         spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
                     )
@@ -2847,7 +2884,7 @@ def _add_agents(
                         }
                     current_agent_id += 1
 
-        except Exception as e:
+        except _AgentPlacementError as e:
             error_msg = (
                 f"CRITICAL: Failed to place agents in distribution '{dist_key}'. "
                 f"Error: {e!s}. This usually means the spawn area is too small or crowded. "
@@ -2855,7 +2892,7 @@ def _add_agents(
                 f"3) Increasing distance between agents, or 4) Checking for obstacles in the area."
             )
             print(f"ERROR: {error_msg}")
-            raise Exception(error_msg)
+            raise Exception(error_msg) from e
 
     spawning_info = {
         "has_flow_spawning": has_flow_spawning,

@@ -306,16 +306,21 @@ def _lbl(
     to reference with aria-labelledby. The help block sits in normal
     document flow, so it is bounded by the field width and never clipped.
     """
-    text = _with_unit(text, dest)
+    # The label is upper-cased; the unit keeps its case, "(m)" is not "(M)".
+    # A no-break space keeps it on the line of the last word (#348).
+    unit = _UNITS.get(dest)
+    parts = [text]
+    if unit:
+        parts.append(Span(f"\u00a0({unit})", cls="unit", style="text-transform:none"))
     if control:
-        label = Label(text, style=_LABEL, fr=for_ or dest)
+        label = Label(*parts, style=_LABEL, fr=for_ or dest)
     else:
-        label = Span(text, style=_LABEL, id=f"lbl-{dest}")
+        label = Span(*parts, style=_LABEL, id=f"lbl-{dest}")
     tip = _help_text(dest, action)
     if not tip:
         return label
     return Div(
-        Div(label, NotStr(_help_button(text, dest)), cls="lbl-line"),
+        Div(label, NotStr(_help_button(_with_unit(text, dest), dest)), cls="lbl-line"),
         _help_tip(dest, tip),
         cls="lblwrap",
     )
@@ -474,9 +479,9 @@ def scenario_block(selected: str | None = None, note: Any = None) -> Any:
 # value in the OS region's format ("1,6" on a German region) whatever the
 # page language, while the server parses with float(). A text input shows
 # the value exactly as sent; the pattern flags a decimal comma before
-# submit, which float() would reject anyway.
+# submit, which float() would reject anyway. No inputmode=decimal: a
+# comma-region keypad may offer no point (#552).
 _DECIMAL_TEXT = {
-    "inputmode": "decimal",
     "autocomplete": "off",
     "spellcheck": "false",
     "pattern": "[^,]*",

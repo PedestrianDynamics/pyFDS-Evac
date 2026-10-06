@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import math
 import time
-from collections.abc import Callable, Iterable, Mapping
+from collections.abc import Callable, Iterable, Mapping, Set
 from typing import Any
 
 import numpy as np
@@ -337,7 +337,7 @@ class FrameRecorder:
         self,
         simulation: Any,
         *,
-        incapacitated: set[int],
+        incapacitated: Set[int],
         not_spawned: int,
     ) -> None:
         """Count the agents that left in this step; send a frame when due."""
@@ -356,7 +356,7 @@ class FrameRecorder:
         return float(simulation.elapsed_time()) - self._last_sim >= self._min_sim
 
     def finish(
-        self, simulation: Any, *, incapacitated: set[int], not_spawned: int
+        self, simulation: Any, *, incapacitated: Set[int], not_spawned: int
     ) -> None:
         """Send the last frame of the run."""
         self._send(simulation, self._clock(), incapacitated, not_spawned, final=True)
@@ -365,7 +365,7 @@ class FrameRecorder:
         self,
         simulation: Any,
         now: float,
-        incapacitated: set[int],
+        incapacitated: Set[int],
         not_spawned: int,
         *,
         final: bool,

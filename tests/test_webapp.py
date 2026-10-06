@@ -759,6 +759,27 @@ class TestScenarioUpload:
         finally:
             shutil.rmtree(created, ignore_errors=True)
 
+    def test_bad_cost_model_is_rejected_with_the_api_message(self, client):
+        cfg, json = self._config()
+        deck = json.loads(cfg)
+        deck.setdefault("routing", {})["cost_model"] = "gaet"
+        created = self._uploads_root() / "pytest-costmodel"
+        try:
+            r = self._post(
+                client,
+                [
+                    ("files", ("config.json", json.dumps(deck), "application/json")),
+                    ("files", ("geometry.wkt", self.WKT, "text/plain")),
+                ],
+                name="pytest-costmodel",
+            )
+            assert r.status_code == 200
+            assert "Could not load that scenario: Unknown routing cost_model" in r.text
+            assert "(ValueError)" in r.text
+            assert not created.exists()
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
     def test_zip_slip_member_is_rejected_not_flattened(self, client):
         """A '../' member must not escape, and must not be kept at all.
 
@@ -1403,7 +1424,7 @@ def test_non_choice_flag_still_renders_as_input(client):
     html = client.get("/").text
     assert not re.search(r'<select[^>]*name="fed_threshold"', html)
     tag = re.search(r'<input[^>]*name="fed_threshold"[^>]*>', html)
-    assert tag and 'inputmode="decimal"' in tag.group(0)
+    assert tag and "inputmode" not in tag.group(0)  # #552
     assert 'value="1.0"' in tag.group(0)
 
 
@@ -1418,10 +1439,26 @@ def test_decimal_fields_are_text_so_the_os_region_cannot_add_a_comma(client):
     ):
         tag = re.search(rf'<input[^>]*name="{dest}"[^>]*>', html).group(0)
         assert 'type="number"' not in tag
-        assert 'inputmode="decimal"' in tag
+        assert "inputmode" not in tag  # a comma keypad may lack the point (#552)
         assert f'value="{value}"' in tag
     seed = re.search(r'<input[^>]*name="seed"[^>]*>', html).group(0)
     assert 'type="number"' in seed
+
+
+def test_units_keep_their_case_in_the_uppercase_labels(client):
+    """The label is upper-cased; "(m)" must not read "(M)" (#348)."""
+    from pyfds_evac.config.parameters import GUI_UNIT_LABELS, parameter
+    from pyfds_evac.webapp.params import _LABEL
+
+    assert "text-transform:uppercase" in _LABEL
+    html = client.get("/").text
+    for dest in GUI_UNIT_LABELS:
+        unit = parameter(dest).unit
+        label = re.search(rf'<label[^>]*for="{dest}"[^>]*>(.*?)</label>', html, re.S)
+        assert label, dest
+        span = f'<span class="unit" style="text-transform:none">\u00a0({unit})</span>'
+        assert label.group(1).endswith(span), (dest, label.group(1))
+    assert 'aria-label="Help: Smoke slice height (m)"' in html
 
 
 def test_decimal_values_round_trip_and_a_comma_is_rejected():
@@ -1631,6 +1668,7 @@ class TestEquivalentPython:
         expected = vars(opts)
         rebuilt = dict(lit["OPTIONS"])
         rebuilt.update(fds_dir=lit["FDS_DIR"], vis_cache=lit["VIS_CACHE"])
+        rebuilt.update(replay_exits=lit["REPLAY_EXITS"])
         assert set(rebuilt) | {"scenario"} == set(expected)
         for key, value in rebuilt.items():
             if key in OMITTED_OUTPUT_KEYS:
@@ -2258,6 +2296,28 @@ class TestTerminalStates:
         assert r.headers["HX-Retarget"] == "#form-status"
         assert "<span>Heat u factor: must be in [0.25, 1.0]" in r.text
 
+    def test_a_scenario_error_says_to_fix_the_scenario_file(self, client):
+        """A bad routing block: no field fixes it, so the hint says where (#571)."""
+        import json
+
+        from pyfds_evac.webapp.params import _UPLOAD_ROOT
+
+        folder = _UPLOAD_ROOT / "pytest-bad-routing"
+        shutil.copytree("assets/t_junction", folder)
+        try:
+            deck = json.loads((folder / "config.json").read_text())
+            deck["routing"]["cost_model"] = "gaet"
+            (folder / "config.json").write_text(json.dumps(deck))
+            r = client.post(
+                "/run", data={"scenario": "uploads/pytest-bad-routing"}, headers=_HX
+            )
+        finally:
+            shutil.rmtree(folder, ignore_errors=True)
+        assert r.headers["HX-Retarget"] == "#form-status"
+        assert "<span>Unknown routing cost_model" in r.text
+        assert "This is set in the scenario file, not in the form." in r.text
+        assert "correct them and run again" not in r.text
+
     def test_field_errors_name_the_field(self):
         from pyfds_evac.webapp.app import _field_label
 
@@ -2412,8 +2472,8 @@ class TestAccessibleForm:
 
     def test_units_modes_and_tabs_are_stated(self, client):
         page = client.get("/").text
-        assert "Reroute interval (s)" in page
-        assert "Smoke slice height (m)" in page
+        assert "Reroute interval<span" in page and "\u00a0(s)</span>" in page
+        assert "Smoke slice height<span" in page and "\u00a0(m)</span>" in page
         assert 'id="btn-det" aria-pressed="true"' in page
         assert 'role="tablist"' in page and 'aria-selected="true"' in page
 
@@ -2689,7 +2749,6 @@ class TestRoundTrip:
         for key in _rt_hidden():
             assert opts[key] == default(key), key
 
-    @pytest.mark.xfail(strict=True, reason="#558: replay_exits stays relative")
     def test_run_export_resolves_replay_exits(self, tmp_path):
         from pathlib import Path
 

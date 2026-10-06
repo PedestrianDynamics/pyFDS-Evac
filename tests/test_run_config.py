@@ -172,6 +172,18 @@ def test_heat_fed_is_off_by_default(temperature_only_case):
     assert any("--enable-heat-fed" in m for m in messages)
 
 
+def test_fds_case_warnings_link_the_published_page(temperature_only_case, caplog):
+    """Every front end shows these: a URL, not a repository path (#323)."""
+    from pyfds_evac.config.messages import heat_without_temperature
+
+    url = "https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/"
+    with caplog.at_level("WARNING"):
+        build_run_kwargs(_scenario(), _opts(fds_dir="fds_data"))
+    fed = [m for m in caplog.messages if m.startswith("FED is disabled")]
+    assert fed and fed[0].endswith(f"see {url}")
+    assert heat_without_temperature("d").endswith(f"see {url}")
+
+
 def test_enable_heat_fed_opts_in(temperature_only_case):
     kwargs = build_run_kwargs(
         _scenario(),

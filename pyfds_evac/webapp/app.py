@@ -50,6 +50,7 @@ from pyfds_evac.config.frontend import (
     incapacitation_modelled,
 )
 from pyfds_evac.config.parameters import default
+from pyfds_evac.config.rules import routing_issue
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.manifest import manifest_path_for
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
@@ -1034,11 +1035,13 @@ def _extract_zip(blob: bytes, dest: Path) -> list[str]:
     return written
 
 
-def _upload_error(message: str, selected: str | None = None):
+def _upload_error(message: str, selected: str | None = None, kind: str = ""):
+    """The upload note: the message first, the exception type *kind* apart."""
     return params.scenario_block(
         selected,
         note=Div(
             message,
+            *([Span(f" ({kind})", style="opacity:.7")] if kind else []),
             style=(
                 f"{_MONO};font-size:10.5px;color:#E01E37;margin-top:6px;line-height:1.5"
             ),
@@ -1095,11 +1098,13 @@ async def upload_scenario(request: Request):
             raise ValueError("The archive held no .json or .wkt files.")
         # The one real check: if load_scenario accepts it, the run will too.
         # Cheaper and more honest than re-implementing format validation.
-        load_scenario(str(dest))
+        issue = routing_issue(load_scenario(str(dest)).raw)
+        if issue is not None:
+            raise ValueError(issue.message)
     except Exception as exc:
         shutil.rmtree(dest, ignore_errors=True)
         return _upload_error(
-            f"Could not load that scenario. {type(exc).__name__}: {exc}", current
+            f"Could not load that scenario: {exc}", current, type(exc).__name__
         )
 
     value = f"{params.UPLOAD_PREFIX}{dest.name}"
@@ -1120,6 +1125,10 @@ class _FdsDirError(ValueError):
     """The FDS dir field does not name a folder."""
 
 
+class _ScenarioError(ValueError):
+    """A check of the scenario file failed; no form field fixes it."""
+
+
 def _resolve_form(form: dict, stamp: str | None = None):
     """Resolve a submitted form into ``(scenario, opts)`` for build_run_kwargs.
 
@@ -1128,6 +1137,9 @@ def _resolve_form(form: dict, stamp: str | None = None):
     API would reject, using the API's own checks.
     """
     scenario = load_scenario(str(params.scenario_path(form.get("scenario"))))
+    issue = routing_issue(scenario.raw)
+    if issue is not None:
+        raise _ScenarioError(issue.message)
     opts = params.form_to_opts(form, baseseed=scenario.seed, stamp=stamp)
     # Normalise the FDS dir and fail fast on a bogus value. Without this,
     # a stale/garbage field (e.g. a pasted error string) is handed to
@@ -1173,7 +1185,11 @@ def _form_error(exc: Exception | str):
             cls="form-error-main",
         ),
         P(
-            "Your settings are kept; correct them and run again. "
+            "This is set in the scenario file, not in the form. Fix the "
+            "scenario's JSON and run again; an uploaded scenario must be "
+            "uploaded again. Your settings are kept."
+            if isinstance(exc, _ScenarioError)
+            else "Your settings are kept; correct them and run again. "
             "Results already shown are unchanged.",
             cls="form-error-hint",
         ),
@@ -1399,7 +1415,8 @@ def _pyexport_notes(version, scenario_name: str, scenario_path: str) -> list:
         ),
         P(
             "Paths are from this computer. Edit the PATHS block at the top of the "
-            "script: SCENARIO, FDS_DIR, VIS_CACHE (if used) and OUTPUT_DIR."
+            "script: SCENARIO, FDS_DIR, VIS_CACHE and REPLAY_EXITS (if used), "
+            "and OUTPUT_DIR."
         ),
     ]
     if str(scenario_name).startswith(params.UPLOAD_PREFIX):
