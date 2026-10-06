@@ -1399,7 +1399,8 @@ def _pyexport_notes(version, scenario_name: str, scenario_path: str) -> list:
         ),
         P(
             "Paths are from this computer. Edit the PATHS block at the top of the "
-            "script: SCENARIO, FDS_DIR, VIS_CACHE (if used) and OUTPUT_DIR."
+            "script: SCENARIO, FDS_DIR, VIS_CACHE and REPLAY_EXITS (if used), "
+            "and OUTPUT_DIR."
         ),
     ]
     if str(scenario_name).startswith(params.UPLOAD_PREFIX):
