@@ -301,12 +301,12 @@ def _exit_line(ctx, record: NamelistRecord, outward: bool) -> ExitLine | None:
         x0, y0, x1, y1 = line_from_xb(
             record.xb() or (), None if ior is None else int(ior)
         )
+        nx, ny = ior_normal(int(ior)) if ior is not None else (0.0, 0.0)
     except ValueError as exc:
         ctx.add("D", "error", record.group, f"dropped: {exc}", record)
         return None
     if ior is None:
         return _guess_side(ctx, record, (x0, y0, x1, y1))
-    nx, ny = ior_normal(int(ior))
     normal = (-nx, -ny) if outward else (nx, ny)
     return ExitLine(x0, y0, x1, y1, normal)
 

@@ -370,6 +370,14 @@ def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         )
         floors = [_modern_floor(deck, opts)]
     floor = _choose_floor(floors, opts.floor)
+    if opts.agents is not None:
+        report.add(
+            "D",
+            "warning",
+            "--agents",
+            "ignored for an FDS+Evac deck: the &EVAC records set the numbers",
+            id="agents",
+        )
     band = opts.z_band or floor.slab
     domain = union([_mesh_box(m) for m in floor.meshes])
     spec = FloorSpec(
@@ -776,6 +784,7 @@ def _finish(
     _check_connectivity(walkable, exits, spawns, report)
     _check_extent(walkable, domain, tol, report)
     _check_density(walkable, spawns, report)
+    _fire_surfaces(deck, (floor.z_floor, band[1]), walkable, report)
     report.floor = {
         "id": floor.id,
         "z_floor": rounded(floor.z_floor),
@@ -851,6 +860,43 @@ def _check_density(walkable, spawns, report) -> None:
             )
 
 
+def _fire_surfaces(deck: FdsDeck, z_range, walkable, report) -> None:
+    """Burning surfaces between the floor and the band top, in walkable space.
+
+    Reported, not excluded: FDS+Evac does not exclude them either.
+    """
+    burning = {s.id for s in deck.group("SURF") if _burns(s)}
+    for record in deck.group("VENT") + deck.group("OBST"):
+        if not _burning_surface(record, burning):
+            continue
+        x0, x1, y0, y1, z0, z1 = record.box6()
+        overlap = box(x0, y0, x1, y1).intersection(walkable).area
+        if overlap <= 0 or z1 < z_range[0] - 1e-9 or z0 > z_range[1]:
+            continue
+        report.add(
+            "A",
+            "info",
+            record.group,
+            f"fire surface over {overlap:.3f} m2 "
+            "of the walkable area: agents may spawn on it, as in FDS+Evac; "
+            "exclude it with &EVHO or the spawn polygon",
+            record,
+        )
+
+
+def _burns(surf: NamelistRecord) -> bool:
+    return (surf.number("HRRPUA") or 0.0) > 0 or surf.has("MLRPUA")
+
+
+def _burning_surface(record: NamelistRecord, burning: set) -> bool:
+    if record.xb() is None:
+        return False
+    surfs = [
+        str(v) for k in ("SURF_ID", "SURF_IDS", "SURF_ID6") for v in record.values(k)
+    ]
+    return any(s in burning for s in surfs)
+
+
 def _exit_report(exit_: ImportedExit) -> dict[str, Any]:
     return {
         "id": exit_.id,
@@ -874,8 +920,30 @@ def _spawn_report(spawn: ImportedSpawn, walkable) -> dict[str, Any]:
         "area_m2": rounded(area),
         "density_per_m2": rounded(number / area) if area > 0 else None,
         "parameters_written": sorted(spawn.parameters),
+        "loader_defaults": _loader_defaults(spawn.parameters),
         "placeholder": spawn.placeholder,
     }
+
+
+#: What the loader applies to a spawn area that leaves a key out
+#: (docs/scenario-json.md); listed so a reader sees every inferred value.
+LOADER_DEFAULTS = {
+    "v0": "1.25 m/s, constant",
+    "radius": "0.2 m",
+    "premovement": "constant 10 s (FDS+Evac PRE_MEAN), with a warning",
+    "familiarity": "full",
+}
+
+
+def _loader_defaults(params: dict[str, Any]) -> dict[str, str]:
+    written = {
+        "v0": "v0" in params,
+        "radius": "radius" in params,
+        "premovement": "use_premovement" in params
+        or bool(params.get("use_flow_spawning")),
+        "familiarity": "familiarity" in params,
+    }
+    return {key: text for key, text in LOADER_DEFAULTS.items() if not written[key]}
 
 
 def _recommend(deck, deck_path, report, walkable, exits, height) -> None:

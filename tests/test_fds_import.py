@@ -600,3 +600,53 @@ def test_script_provider_failure_names_the_deck_and_the_way_out(tmp_path):
     floor = FloorSpec(0.0, (0.1, 1.8), box(0, 0, 20, 10))
     with pytest.raises(WalkableError, match="deck.fds.*--walkable FILE.wkt"):
         script_walkable(parse_fds_deck(path), floor)
+
+
+# --- report details --------------------------------------------------------------
+
+
+def test_fire_surface_in_walkable_space_is_reported(tmp_path):
+    burner = (
+        "&SURF ID='BURNER', HRRPUA=1000. /\n"
+        "&OBST XB=3,4,3,4,0,0.6 /\n"
+        "&VENT XB=3,4,3,4,0.6,0.6, SURF_ID='BURNER' /"
+    )
+    result = _room(tmp_path, DOOR, burner)
+    [item] = [i for i in _items(result, "A", "VENT") if "fire surface" in i.message]
+    assert "1.000 m2" in item.message
+
+
+def test_report_lists_the_loader_defaults(tmp_path):
+    result = _modern(tmp_path, "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /")
+    defaults = result.report.distributions[0]["loader_defaults"]
+    assert set(defaults) == {"v0", "radius", "premovement", "familiarity"}
+
+
+def test_bad_ior_drops_the_exit_not_the_import(tmp_path):
+    bad = "&EXIT ID='Up', IOR=3, XB=5,5,4,6,0.4,1.6 /"
+    result = _room(tmp_path, DOOR, bad)
+    assert list(result.raw["exits"]) == ["Left"]
+    assert any(i.id == "Up" and i.level == "error" for i in _items(result, "D"))
+
+
+def test_agents_option_on_a_legacy_deck_is_reported(tmp_path):
+    result = _room(tmp_path, DOOR, EVAC.format(extra=""), agents=50)
+    assert _params(result, "g")["number"] == 25
+    assert any(i.group == "--agents" for i in _items(result, "D"))
+
+
+def test_round_trip_through_wkt_to_fds(tmp_path):
+    """WKT -> wkt_to_fds deck -> import: area error <= perimeter * dx / 2.
+
+    This checks the default walkable provider, not the importer. The deck
+    has no OPEN vent, so it says nothing about exits.
+    """
+    from pyfds_evac.core.wkt_to_fds import wkt_to_fds
+
+    original = shapely_wkt.loads("POLYGON ((0 0, 6 0, 6 4, 10 4, 10 10, 0 10, 0 0))")
+    dx = 0.1
+    deck = _deck(tmp_path, wkt_to_fds(original, dx=dx, include_fire=False))
+    result = import_fds_deck(deck)
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    bound = original.length * dx / 2
+    assert walkable.symmetric_difference(original).area <= bound
