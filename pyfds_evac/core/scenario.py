@@ -141,8 +141,8 @@ SFM_DEFAULT_BODY_FORCE = 120000.0
 SFM_DEFAULT_FRICTION = 240000.0
 
 
-def _sfm_parameter(params: Mapping[str, Any], key: str, default: float) -> float:
-    """A model-level SFM parameter: finite and non-negative, else ValueError."""
+def sfm_parameter(params: Mapping[str, Any], key: str, default: float) -> float:
+    """An ``sfm_*`` deck value: finite and non-negative, else ValueError."""
     value = params.get(key, default)
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise ValueError(f"SocialForceModel: {key}={value!r} is not a number")
@@ -170,8 +170,8 @@ def sfm_model_settings(params: Mapping[str, Any]) -> dict[str, Any]:
     ``test_jupedsim_wall_friction_sign_canary``). Remove the clamp when a
     JuPedSim release containing #1677 is pinned in ``pyproject.toml``.
     """
-    body_force = _sfm_parameter(params, "sfm_body_force", SFM_DEFAULT_BODY_FORCE)
-    requested = _sfm_parameter(params, "sfm_friction", SFM_DEFAULT_FRICTION)
+    body_force = sfm_parameter(params, "sfm_body_force", SFM_DEFAULT_BODY_FORCE)
+    requested = sfm_parameter(params, "sfm_friction", SFM_DEFAULT_FRICTION)
     return {
         "body_force": body_force,
         "friction": 0.0,

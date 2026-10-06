@@ -177,6 +177,17 @@ def test_sfm_obstacle_scale_is_read_from_the_deck():
     assert obstacle_scale(SimpleNamespace(agent_strength=1500)) == 2000
 
 
+@pytest.mark.parametrize("value", [-500.0, float("nan"), float("inf"), "x", True])
+def test_sfm_invalid_obstacle_scale_raises(value):
+    with pytest.raises(ValueError, match="sfm_obstacle_scale"):
+        create_agent_parameters(
+            "SocialForceModel",
+            (0.0, 0.0),
+            {"v0": 1.0},
+            global_params=SimpleNamespace(sfm_obstacle_scale=value),
+        )
+
+
 def test_sfm_builder_raises_no_deprecation_warning():
     import warnings
 
