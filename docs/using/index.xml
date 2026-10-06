@@ -2879,6 +2879,75 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;/table>
 &lt;p>&lt;code>simulationParams.dt&lt;/code> is not read: the JuPedSim step is 0.01 s, and the
 trajectory is written every tenth step (10 frames/s).&lt;/p>
+&lt;h3>Social force model&lt;span class="hx-absolute -hx-mt-20" id="social-force-model">&lt;/span>
+&lt;a href="#social-force-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Read when &lt;code>model_type&lt;/code> is &lt;code>&amp;quot;SocialForceModel&amp;quot;&lt;/code>. The symbols are those of
+Helbing, Farkas &amp;amp; Vicsek (2000), Eqs. (1)–(3)
+(&lt;a href="https://doi.org/10.1038/35035023" target="_blank" rel="noopener">doi:10.1038/35035023&lt;/a>); a missing key takes
+JuPedSim 1.4.2&amp;rsquo;s default.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key (&lt;code>simulationParams.&lt;/code>)&lt;/th>
+&lt;th>JuPedSim parameter&lt;/th>
+&lt;th>Symbol&lt;/th>
+&lt;th>Unit&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>sfm_body_force&lt;/code>&lt;/td>
+&lt;td>&lt;code>SocialForceModel(body_force=)&lt;/code>&lt;/td>
+&lt;td>&lt;em>k&lt;/em>&lt;/td>
+&lt;td>kg s⁻²&lt;/td>
+&lt;td>120000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sfm_friction&lt;/code>&lt;/td>
+&lt;td>&lt;code>SocialForceModel(friction=)&lt;/code>&lt;/td>
+&lt;td>&lt;em>κ&lt;/em>&lt;/td>
+&lt;td>kg m⁻¹ s⁻¹&lt;/td>
+&lt;td>always 0, see below&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>agent_strength&lt;/code>&lt;/td>
+&lt;td>&lt;code>agent_scale&lt;/code>, per agent&lt;/td>
+&lt;td>&lt;em>A&lt;/em>, agent term&lt;/td>
+&lt;td>N&lt;/td>
+&lt;td>2000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sfm_obstacle_scale&lt;/code>&lt;/td>
+&lt;td>&lt;code>obstacle_scale&lt;/code>, per agent&lt;/td>
+&lt;td>&lt;em>A&lt;/em>, wall term&lt;/td>
+&lt;td>N&lt;/td>
+&lt;td>2000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>agent_range&lt;/code>&lt;/td>
+&lt;td>&lt;code>force_distance&lt;/code>, per agent&lt;/td>
+&lt;td>&lt;em>B&lt;/em>&lt;/td>
+&lt;td>m&lt;/td>
+&lt;td>0.08&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>relaxation_time&lt;/code>&lt;/td>
+&lt;td>&lt;code>reaction_time&lt;/code>, per agent&lt;/td>
+&lt;td>&lt;em>τ&lt;/em>&lt;/td>
+&lt;td>s&lt;/td>
+&lt;td>0.5&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Negative, non-finite or non-numeric &lt;code>sfm_body_force&lt;/code>, &lt;code>sfm_friction&lt;/code> or
+&lt;code>sfm_obstacle_scale&lt;/code> stop the run with &lt;code>ValueError&lt;/code>. JuPedSim 1.4.2 has
+one friction for the agent and wall terms and applies the wall term with
+the wrong sign
+(&lt;a href="https://github.com/PedestrianDynamics/jupedsim/pull/1677" target="_blank" rel="noopener">jupedsim#1677&lt;/a>),
+so friction is always passed as 0, also when &lt;code>sfm_friction&lt;/code> is missing
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635" target="_blank" rel="noopener">#635&lt;/a>).
+A deck that declares &lt;code>sfm_friction&lt;/code> above 0 gets a warning. The run
+manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;h2>Spawn areas: &lt;code>distributions.&amp;lt;id&amp;gt;.parameters&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="spawn-areas-distributionsidparameters">&lt;/span>
 &lt;a href="#spawn-areas-distributionsidparameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -6421,7 +6490,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/15fb2dbb8577614a81d0efcbeabb1cae0fc2f6c6">&lt;code>15fb2db&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/958c22f3e3e2d8c583de06877a7d8acede1ba9e9">&lt;code>958c22f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6445,7 +6514,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bf07ba9b56c49123845f1300e4dc8e88b49afe6e1467e05d8b4c3c977e6baa2e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e7f60517464cfb6fc622dc9179a76fdaf32ef6e7929e70e1ba971361a35399d4&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
