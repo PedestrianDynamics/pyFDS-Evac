@@ -10,6 +10,11 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+# The published page on what an FDS case must write (docs/fds-case-requirements.md).
+FDS_CASE_DOCS = (
+    "https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/"
+)
+
 
 def no_effect(flag: str, reason: str) -> str:
     """An option set to a value that changes nothing in this run."""
@@ -37,7 +42,7 @@ def fed_without_gases(fds_dir: str, missing: Iterable[str]) -> str:
         f"FED is disabled for {fds_dir}: it has no {named} {noun}, and all "
         "three of CO, CO2 and O2 are needed. Results will report zero dose and "
         "no incapacitation. FDS only writes these species when the &REAC line "
-        "asks for them (CO needs CO_YIELD); see docs/fds-case-requirements.md."
+        f"asks for them (CO needs CO_YIELD); see {FDS_CASE_DOCS}"
     )
 
 
@@ -47,7 +52,7 @@ def heat_without_temperature(fds_dir: str) -> str:
         f"Heat FED is disabled for {fds_dir}: it has no TEMPERATURE slice. "
         "Results will report zero heat dose and no thermal "
         "incapacitation. Add `&SLCF QUANTITY='TEMPERATURE'` to the FDS "
-        "deck; see docs/fds-case-requirements.md."
+        f"deck; see {FDS_CASE_DOCS}"
     )
 
 

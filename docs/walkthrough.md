@@ -308,7 +308,7 @@ computed. In step 3, the same occupant in the same gas was incapacitated at
 path differs):
 
 ```text
-WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp42qhswh0/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &REAC line asks for them (CO needs CO_YIELD); see docs/fds-case-requirements.md.
+WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp42qhswh0/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &REAC line asks for them (CO needs CO_YIELD); see https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/
 ```
 
 The warning says "zero dose"; in fact the result has no FED at all, as the
