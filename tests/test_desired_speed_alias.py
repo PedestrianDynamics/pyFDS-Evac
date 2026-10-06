@@ -190,3 +190,33 @@ def test_check_accepts_what_the_run_accepts(parameters):
     check_speed_aliases({"distributions": []})
     check_speed_aliases([])
     assert raw == before
+
+
+@pytest.mark.parametrize("encode", [False, True], ids=["dict", "string"])
+def test_check_reports_speed_before_distribution_before_std(encode):
+    """Within one distribution the pairs are checked in alias-table order."""
+    params = {
+        "desired_speed": 1.5,
+        "v0": 1.2,
+        "desired_speed_distribution": "gaussian",
+        "v0_distribution": "constant",
+        "desired_speed_std": 0.3,
+        "v0_std": 0.1,
+    }
+    expected = [
+        "Distribution 'a' sets desired_speed=1.5 and v0=1.2; "
+        "desired_speed is an alias of v0, set one of them",
+        "Distribution 'a' sets desired_speed_distribution='gaussian' and "
+        "v0_distribution='constant'; desired_speed_distribution is an alias "
+        "of v0_distribution, set one of them",
+        "Distribution 'a' sets desired_speed_std=0.3 and v0_std=0.1; "
+        "desired_speed_std is an alias of v0_std, set one of them",
+    ]
+    for message in expected:
+        encoded = json.dumps(params) if encode else dict(params)
+        with pytest.raises(ValueError) as exc:
+            check_speed_aliases({"distributions": {"a": {"parameters": encoded}}})
+        assert str(exc.value) == message
+        alias = next(iter(params))
+        params.pop(alias)
+        params.pop(alias.replace("desired_speed", "v0"))
