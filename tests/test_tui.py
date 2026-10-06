@@ -1301,6 +1301,35 @@ def test_571_scenario_error_row_sends_to_the_scenario_file(workdir):
     run(go())
 
 
+def test_612_speed_alias_conflict_is_a_scenario_error(workdir):
+    import json
+
+    scenario = workdir / "assets" / "t_junction"
+    deck = json.loads((scenario / "config.json").read_text())
+    deck["distributions"]["jps-distributions_0"]["parameters"].update(
+        v0=1.2, desired_speed=1.8
+    )
+    (scenario / "config.json").write_text(json.dumps(deck))
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await to_configure(pilot, app, scenario, None)
+            await settle(pilot, app)
+            assert [e.option for e in app.cfg.errors] == [None]
+            app.goto(3)
+            await pilot.pause()
+            errors = app.query_one("#rv-errors")
+            (prompt,) = [
+                str(errors.get_option_at_index(k).prompt)
+                for k in range(errors.option_count)
+            ]
+            assert "desired_speed=1.8 and v0=1.2" in prompt
+            assert prompt.endswith("in the scenario file · Enter: reload it")
+
+    run(go())
+
+
 # --- model -------------------------------------------------------------------------------------
 
 

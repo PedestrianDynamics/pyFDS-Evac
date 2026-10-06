@@ -116,7 +116,8 @@ aliases of `v0`, `v0_distribution` and `v0_std`. An alias set alone is used
 as its `v0*` key. An alias and its `v0*` key with the same value are
 accepted; with different values the run stops at the start with a
 `ValueError` that names the distribution and both keys
-([Troubleshooting](troubleshooting.md#errors)). This check applies to the
+([Troubleshooting](troubleshooting.md#errors)). `--show-config`, the TUI
+and the GUI report the same error before a run. This check applies to the
 scenario JSON; `Scenario.set_agent_params()` in Python lets `desired_speed`
 win instead
 ([#586](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/586)).

@@ -780,6 +780,30 @@ class TestScenarioUpload:
         finally:
             shutil.rmtree(created, ignore_errors=True)
 
+    def test_speed_alias_conflict_is_rejected_with_the_api_message(self, client):
+        """#612: the GUI rejects the deck the run would stop on."""
+        cfg, json = self._config()
+        deck = json.loads(cfg)
+        deck["distributions"]["jps-distributions_0"]["parameters"].update(
+            v0=1.2, desired_speed=1.8
+        )
+        created = self._uploads_root() / "pytest-speedalias"
+        try:
+            r = self._post(
+                client,
+                [
+                    ("files", ("config.json", json.dumps(deck), "application/json")),
+                    ("files", ("geometry.wkt", self.WKT, "text/plain")),
+                ],
+                name="pytest-speedalias",
+            )
+            assert r.status_code == 200
+            assert "Could not load that scenario: Distribution" in r.text
+            assert "desired_speed=1.8 and v0=1.2" in r.text
+            assert not created.exists()
+        finally:
+            shutil.rmtree(created, ignore_errors=True)
+
     def test_zip_slip_member_is_rejected_not_flattened(self, client):
         """A '../' member must not escape, and must not be kept at all.
 

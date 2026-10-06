@@ -880,6 +880,67 @@ def test_show_config_exits_1_on_a_bad_cost_model(tmp_path, rerouting):
     assert "Unknown routing cost_model 'gaet'" in proc.stdout
 
 
+def _speed_alias_conflict(tmp_path: Path) -> str:
+    """A copy of the discovery scenario with v0 1.3 and desired_speed 1.8."""
+    folder = tmp_path / "speed_alias"
+    shutil.copytree(Path(DISCOVERY).parent, folder)
+    deck = json.loads((folder / "config.json").read_text())
+    deck["distributions"]["jps-distributions_0"]["parameters"]["desired_speed"] = 1.8
+    (folder / "config.json").write_text(json.dumps(deck))
+    return str(folder / "config.json")
+
+
+def _run_error(path: str) -> str:
+    """The ValueError text the run stops on."""
+    from pyfds_evac.core import run_scenario
+
+    with pytest.raises(ValueError) as exc:
+        run_scenario(_load(path), seed=1)
+    return str(exc.value)
+
+
+def test_config_reports_the_speed_alias_error_of_the_run(tmp_path):
+    """#612: the conflict the run rejects is a configuration error."""
+    path = _speed_alias_conflict(tmp_path)
+    message = _run_error(path)
+    assert "desired_speed=1.8 and v0=1.3" in message
+    cfg = effective_configuration(_parse("--scenario", path), _load(path))
+    assert [(e.rule, e.option, e.message) for e in cfg.errors] == [("B", None, message)]
+
+
+def test_show_config_exits_1_on_a_speed_alias_conflict(tmp_path):
+    path = _speed_alias_conflict(tmp_path)
+    proc = _cli("--scenario", path, "--show-config")
+    assert proc.returncode == 1, proc.stdout
+    assert _run_error(path) in proc.stdout
+
+
+_ALIAS_PROBE = """\
+import argparse, sys
+import pyfds_evac.config as config
+from pyfds_evac.config import effective_configuration
+opts = argparse.Namespace(**{{**config.DEFAULTS, "scenario": "s.json"}})
+raw = {{"distributions": {{"a": {{"parameters": {{"v0": 1.3, "desired_speed": 1.8}}}}}}}}
+cfg = effective_configuration(opts, raw, inspect_fds=False)
+assert [e.message for e in cfg.errors] == [
+    "Distribution 'a' sets desired_speed=1.8 and v0=1.3; "
+    "desired_speed is an alias of v0, set one of them"
+], cfg.errors
+print([m for m in {heavy!r} if m in sys.modules])
+"""
+
+
+def test_speed_alias_check_loads_no_simulation_stack():
+    """#612: the check runs in --show-config and the TUI without JuPedSim."""
+    proc = subprocess.run(
+        [sys.executable, "-c", _ALIAS_PROBE.format(heavy=_HEAVY)],
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.strip() == "[]"
+
+
 def _output_opts(path: Path, **extra) -> argparse.Namespace:
     """The options apply_outputs reads, writing only the trajectory."""
     fields = dict(
