@@ -23,7 +23,8 @@ from types import SimpleNamespace
 import jupedsim as jps
 import pytest
 
-from pyfds_evac.core.scenario import load_scenario
+from pyfds_evac.core import simulation_init
+from pyfds_evac.core.scenario import Scenario, load_scenario, run_scenario
 from pyfds_evac.core.simulation_init import (
     DEFAULT_SPAWN_PARAMS,
     initialize_simulation_from_json,
@@ -56,7 +57,10 @@ def _first_populated(raw: dict, keys: list[str]) -> str:
 
 
 def _spawn(asset: str, raw: dict, tmp_path, **sim_params) -> SimpleNamespace:
-    """Initialise *raw* with ``simulationParams`` extended by *sim_params*."""
+    """Initialise *raw* with ``simulationParams`` extended by *sim_params*.
+
+    ``flows`` holds the parameters stored for flow-spawned distributions.
+    """
     scenario = load_scenario(asset)
     path = tmp_path / "config.json"
     path.write_text(json.dumps(raw))
@@ -64,7 +68,7 @@ def _spawn(asset: str, raw: dict, tmp_path, **sim_params) -> SimpleNamespace:
         model=jps.CollisionFreeSpeedModel(), geometry=scenario.walkable_polygon
     )
     with contextlib.redirect_stdout(io.StringIO()):
-        _, _, radii, _ = initialize_simulation_from_json(
+        _, _, radii, info = initialize_simulation_from_json(
             str(path),
             simulation,
             SimpleNamespace(polygon=scenario.walkable_polygon),
@@ -75,6 +79,7 @@ def _spawn(asset: str, raw: dict, tmp_path, **sim_params) -> SimpleNamespace:
         count=simulation.agent_count(),
         speeds={round(a.model.desired_speed, 9) for a in simulation.agents()},
         radii={round(r, 9) for r in radii.values()},
+        flows=[flow["params"] for flow in info.get("flow_distributions", [])],
     )
 
 
@@ -132,3 +137,63 @@ def test_whole_area_fallback_uses_the_defaults(tmp_path):
     spawned = _spawn(asset, raw, tmp_path, number=5, radius=0.18)
     assert spawned.count == 5
     assert spawned.radii == {0.18}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_alias_wins_over_sim_params(asset, tmp_path):
+    """``desired_speed`` is the distribution's own ``v0``, not a deck value."""
+    raw, keys = _stripped_raw(asset, ("v0", "desired_speed"))
+    raw["distributions"][_first_populated(raw, keys)]["parameters"]["desired_speed"] = (
+        1.5
+    )
+    spawned = _spawn(asset, raw, tmp_path, v0=1.1)
+    assert spawned.speeds == {1.5, 1.1}
+
+
+def _flow_raw(asset: str) -> dict:
+    """*asset* with every distribution flow-spawned in 0-1 s, no spawn keys."""
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    for key in keys:
+        raw["distributions"][key]["parameters"].update(
+            use_flow_spawning=True, flow_start_time=0, flow_end_time=1
+        )
+    return raw
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_flow_distributions_store_the_deck_defaults(asset, tmp_path):
+    raw = _flow_raw(asset)
+    spawned = _spawn(asset, raw, tmp_path, v0=1.1, radius=0.18, number=3)
+    assert len(spawned.flows) == len(raw["distributions"])
+    for params in spawned.flows:
+        assert (params["number"], params["radius"], params["v0"]) == (3, 0.18, 1.1)
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_flow_agents_spawn_with_the_deck_defaults(asset, monkeypatch):
+    """Agents added during the run take ``simulationParams.v0`` and ``.radius``."""
+    raw = _flow_raw(asset)
+    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
+    sim_params.update(max_simulation_time=3.0, v0=1.1, radius=0.18, number=1)
+    scenario = Scenario(
+        raw=raw,
+        walkable_area_wkt=load_scenario(asset).walkable_polygon.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=1,
+        sim_params=sim_params,
+        source_path=None,
+    )
+    built = []
+    create = simulation_init.create_agent_parameters
+
+    def recording(*args, **kwargs):
+        agent = create(*args, **kwargs)
+        built.append((round(agent.desired_speed, 9), round(agent.radius, 9)))
+        return agent
+
+    monkeypatch.setattr(simulation_init, "create_agent_parameters", recording)
+    with contextlib.redirect_stdout(io.StringIO()):
+        run_scenario(scenario, seed=1).cleanup()
+    # A blocked spawn is retried, so there can be more calls than agents.
+    assert len(built) >= len(raw["distributions"])
+    assert set(built) == {(1.1, 0.18)}
