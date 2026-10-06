@@ -83,6 +83,24 @@ def scenario_smoke_slice_height(scenario: Any) -> float | None:
     return float(value)
 
 
+def _warn_slice_height_differs(scenario: Any, opts: Any) -> None:
+    """Warn when the run samples away from the scenario's slice height.
+
+    Only the CLI applies the key by itself; a GUI, TUI or Python run passes
+    its own value, which on an imported upper floor samples the wrong storey.
+    """
+    wanted = scenario_smoke_slice_height(scenario)
+    used = option(opts, "smoke_slice_height")
+    if wanted is None or used == wanted:
+        return
+    _logger.warning(
+        "The scenario sets simulationParams.smoke_slice_height = %g m, but this "
+        "run samples the FDS slices at %g m.",
+        wanted,
+        used,
+    )
+
+
 def _build_smoke_model(opts: Any, log: Logger):
     """Build the smoke-speed model from FDS output or a constant extinction."""
     if not opts.fds_dir and opts.constant_extinction is None:
@@ -559,6 +577,7 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     ``require_fds_coverage``). Raises ``ValueError`` for invalid option combinations.
     """
     validate_opts(opts)
+    _warn_slice_height_differs(scenario, opts)
     _check_fds_horizon(scenario, opts, log)
     smoke_speed_model = _build_smoke_model(opts, log)
     fed_model = _build_fed_model(opts, log)

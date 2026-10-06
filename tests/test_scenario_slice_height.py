@@ -50,3 +50,16 @@ def test_without_the_key_the_default_is_unchanged():
 def test_bad_scenario_slice_height_is_an_error(bad):
     with pytest.raises(ValueError, match="smoke_slice_height"):
         scenario_smoke_slice_height(_Scenario({"smoke_slice_height": bad}))
+
+
+def test_run_warns_when_it_samples_away_from_the_scenario_height(caplog):
+    from pyfds_evac.core import run_config
+
+    opts = argparse.Namespace(smoke_slice_height=1.6)
+    with caplog.at_level("WARNING", logger=run_config.__name__):
+        run_config._warn_slice_height_differs(
+            _Scenario({"smoke_slice_height": 5.7}), opts
+        )
+        run_config._warn_slice_height_differs(_Scenario({}), opts)
+    [record] = caplog.records
+    assert "5.7 m" in record.getMessage() and "1.6 m" in record.getMessage()
