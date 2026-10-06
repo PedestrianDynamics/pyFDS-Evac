@@ -125,6 +125,7 @@ def _vis_model(visible: bool, signs=None, **kwargs):
         y_coords=np.array([0.0]),
         vis=np.full(shape, visible, dtype=bool),
         metres=np.full(shape, 12.0 if visible else 0.0),
+        output_interval_s=10.0,
     )
     signs = signs or {"s": {"x": 1.0, "y": 0.0}}
     with patch("pyfds_evac.core.visibility._resolve_vis", return_value=cache):

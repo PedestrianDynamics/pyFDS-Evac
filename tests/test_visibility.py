@@ -39,6 +39,7 @@ class _FakeVis:
     """
 
     vismap_time_points = np.array([0.0, 10.0])
+    fds_time_points = np.array([0.0, 10.0])
     all_x_coords = np.array([0.0])
     all_y_coords = np.array([0.0])
     all_time_all_sign_vismap_list = [
@@ -66,6 +67,7 @@ def _write_valid_cache(path: Path, fds_dir: str = FDS_DIR) -> dict:
         x_coords=np.array([0.0]),
         y_coords=np.array([0.0]),
         vis=np.zeros((2, 2, 1, 1), dtype=bool),
+        output_interval_s=np.array(10.0),
         meta=np.array(json.dumps(meta)),
     )
     return meta
@@ -271,6 +273,7 @@ class TestSignSynthesis:
 
         class _GatedFakeVis:
             vismap_time_points = np.array([0.0])
+            fds_time_points = np.array([0.0])
             all_x_coords = np.array([0.0, 1.0])
             all_y_coords = np.array([0.0])
             all_time_all_sign_vismap_list = [
