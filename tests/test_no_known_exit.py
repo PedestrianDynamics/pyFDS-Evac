@@ -37,6 +37,7 @@ from pyfds_evac.core.route_graph import (
     RouteCostConfig,
     StageGraph,
     evaluate_and_reroute,
+    nearest_exit_by_walking,
 )
 from pyfds_evac.core.scenario import Scenario, _check_run_modes, run_scenario
 from pyfds_evac.core.simulation_init import _find_nearest_exit
@@ -312,6 +313,35 @@ def test_the_nearest_exit_is_measured_on_foot():
         position, exit_geometries=exits, routing_engine=engine, walkable=WALKABLE
     )
     assert nearest == "far"
+
+
+def _around(x: float, y: float) -> Polygon:
+    return box(x - 0.25, y - 0.25, x + 0.25, y + 0.25)
+
+
+def test_the_nearest_exit_is_searched_from_the_agent():
+    """S -> A -> EA is shorter from S than S -> B -> EA (10.4 vs 11 m), but
+    an agent at (0, 9), walking S -> B, is 2 m from EA by B. Pruning paths
+    from S first would leave only S -> A -> EA (17.1 m) and pick EB (10.0 m).
+    """
+    stages = {
+        "A": {"polygon": _around(1, 1), "stage_type": "checkpoint"},
+        "B": {"polygon": _around(0, 10), "stage_type": "checkpoint"},
+        "EA": {"polygon": _around(1, 10), "stage_type": "exit"},
+        "EB": {"polygon": _around(10, 10), "stage_type": "exit"},
+    }
+    edges = [("S", "A"), ("A", "EA"), ("S", "B"), ("B", "EA"), ("S", "EB")]
+    graph = StageGraph.from_scenario(
+        stages,
+        [{"from": a, "to": b} for a, b in edges],
+        distributions={"S": {"polygon": _around(0, 0)}},
+        walkable_polygon=box(-2, -2, 12, 12),
+    )
+    assert nearest_exit_by_walking(graph, "S", None) == ("EA", ["S", "A", "EA"])
+    assert nearest_exit_by_walking(graph, "S", (0.0, 9.0)) == (
+        "EA",
+        ["S", "B", "EA"],
+    )
 
 
 def _coords(polygon) -> list[list[float]]:

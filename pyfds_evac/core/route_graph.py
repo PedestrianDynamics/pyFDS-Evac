@@ -3036,6 +3036,19 @@ def terminal_exit(wait_info: dict, graph_nodes: dict) -> str | None:
     return None
 
 
+def _walking_first_hops(
+    graph: StageGraph, source: str, agent_position: tuple[float, float]
+) -> dict[str, float]:
+    """The walking distance from the agent to each successor of *source*."""
+    hops: dict[str, float] = {}
+    for edge in graph.edges.get(source, []):
+        node = graph.nodes[edge.target]
+        hops[edge.target] = _walkable_distance(
+            graph.routing_engine, agent_position, (node.centroid_x, node.centroid_y)
+        )
+    return hops
+
+
 def nearest_exit_by_walking(
     graph: StageGraph,
     source: str,
@@ -3043,17 +3056,25 @@ def nearest_exit_by_walking(
 ) -> tuple[str, list[str]] | None:
     """The exit of *graph* nearest by walking distance, and the path to it.
 
-    Path lengths are the edge weights, which follow the walkable area, with
-    the first leg measured from *agent_position*. Ties go to the exit whose
-    id sorts first. Pass a graph without closed stages.
+    Path lengths are the edge weights, which follow the walkable area. With
+    *agent_position* the search starts where the agent stands, as route
+    ranking's does: the first leg is the walk to each of *source*'s
+    successors, so a path that is longer from *source* but shorter from the
+    agent is not pruned. Ties go to the exit whose id sorts first. Pass a
+    graph without closed stages.
     """
     from .cognitive_map import _cost_from_agent
 
+    first_hops = None
+    if agent_position is not None and _search_from_position(graph, source):
+        first_hops = _walking_first_hops(graph, source, agent_position)
+    paths = graph.shortest_paths_to_exits(source, first_hops=first_hops)
     best: tuple[str, float, list[str]] | None = None
-    for exit_id, (cost, path) in sorted(graph.shortest_paths_to_exits(source).items()):
+    for exit_id, (cost, path) in sorted(paths.items()):
         if len(path) < 2:
             continue
-        cost = _cost_from_agent(graph, path, cost, agent_position)
+        if first_hops is None:
+            cost = _cost_from_agent(graph, path, cost, agent_position)
         if best is None or cost < best[1]:
             best = (exit_id, cost, path)
     if best is None:
