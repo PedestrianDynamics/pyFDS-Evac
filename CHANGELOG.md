@@ -79,6 +79,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `familiarity_test_no_journey`, `blind_spawn_discovery` and `world_100` set
   `explore`. In the first FDS case 93/150 agents get out instead of 70/150,
   82 of them by an exit not in their map (#610).
+- **API change:** `run_scenario` on a deck whose distribution sets a
+  non-default `no_known_exit` and without `reroute_config` (rerouting off or
+  `smoke_blind`) now raises `ValueError` naming the distribution; so do
+  `--no-enable-rerouting` and `--smoke-blind` with such a deck (D33, #610).
+  Pass a `RerouteConfig`, or drop the key to run on the default.
 - The nearest exit of a spawn area without a journey is measured on foot
   through the walkable area, not in a straight line (#610).
 - An agent's first choice of a known exit is logged as `initial`, not as a

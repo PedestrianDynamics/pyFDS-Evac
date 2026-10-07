@@ -534,3 +534,18 @@ def test_a_run_learns_the_leg_walked_to_a_checkpoint():
         }
     finally:
         result.cleanup()
+
+
+@pytest.mark.parametrize("mode", ["explore", "default_route"])
+def test_an_exit_learned_mid_hop_is_taken_at_once(mode):
+    """AT11: an agent walking a frontier hop that learns an exit on the way
+    chooses it at that evaluation, logged as ``initial`` with no old exit,
+    instead of finishing the hop first."""
+    wait_info = _wait_info(mode, path_choices={"S": [("C", 100.0)]})
+    state = AgentRouteState(current_path=["S", "C"])
+    cmap = _cmap({"S", "C", "EA"}, {("S", "C"), ("C", "EA")})
+    switch = _evaluate(wait_info, state, cmap)
+    assert switch is not None
+    assert (switch.reason, switch.old_exit, switch.new_exit) == ("initial", None, "EA")
+    assert state.current_exit == "EA"
+    assert wait_info["path_choices"]["C"] == [("EA", 100.0)]
