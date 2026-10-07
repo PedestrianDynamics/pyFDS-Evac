@@ -269,7 +269,7 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    the smoke because it is quicker, and a tie (both `tau` 0 included) holds.
    The fallback order uses the same rule
    ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
-   A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked (`_return_locked`). It guards against route smoke sampling that
+   A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked while at most `fallback_return_lockout_s` (10 s) have passed since the first switch, and allowed after; a feasible route on either side, must-flee and a third exit are not blocked (`_return_locked`). It guards against route smoke sampling that
    steps over a narrow plume core ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
 4. Otherwise the cost model decides (`improvement`):
    - **Gate** (`GatePolicy.improvement`): a clean candidate leaves a dirty

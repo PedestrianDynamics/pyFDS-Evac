@@ -232,7 +232,9 @@ exit choice uses the cost model too.
 
 `fallback_return_lockout_s` (seconds, default 10) holds an agent after an
 exit switch between two refused routes: a switch straight back to the exit
-it left, again between two refused routes, waits that long; 0 turns it off.
+it left, again between two refused routes, is blocked while at most that
+many seconds have passed (a return at exactly 10 s is still blocked) and
+allowed after; 0 turns it off.
 It must be a number ≥ 0, or the run stops with a `ValueError`, also with
 `--no-enable-rerouting`.
 

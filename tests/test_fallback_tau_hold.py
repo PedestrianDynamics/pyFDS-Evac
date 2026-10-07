@@ -28,6 +28,8 @@ from pyfds_evac.core.route_graph import (
     RouteCost,
     RouteCostConfig,
     _apply_fallback,
+    _return_locked,
+    _select_candidate,
     evaluate_and_reroute,
     policy_for,
 )
@@ -237,6 +239,66 @@ def test_return_to_a_feasible_route_is_never_blocked():
 def test_zero_lockout_restores_the_plain_rule():
     agent = _left_east_at(5.0, lockout=0.0)
     assert agent.evaluate(7.0, _WEST_SMOKY) == CURRENT
+
+
+def test_a_switch_to_a_feasible_route_clears_the_record():
+    """The clean return leaves no lockout behind (reset)."""
+    agent = _left_east_at(5.0)
+    assert agent.evaluate(7.0, _EAST_CLEAR) == CURRENT
+    assert agent.state.refused_switch_from is None
+    assert agent.state.refused_switch_time_s == -math.inf
+
+
+def test_a_departure_to_a_feasible_route_sets_no_lockout():
+    """Only a switch between two refused routes arms the lockout.
+
+    East is refused and west clear at 5 s: the agent leaves east for a
+    feasible west. At 7 s both are refused and east is clearly cleaner, so
+    the agent may go straight back.
+    """
+    agent = _Agent()
+    assert agent.evaluate(5.0, golden.ArmField({"east": 2.0})) == RIVAL
+    assert agent.state.refused_switch_from is None
+    assert agent.evaluate(7.0, _WEST_SMOKY) == CURRENT
+
+
+def _locked_state() -> AgentRouteState:
+    """An agent on west that left east at 5 s, between two refused routes."""
+    return AgentRouteState(
+        current_exit=RIVAL, refused_switch_from=CURRENT, refused_switch_time_s=5.0
+    )
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_lockout_needs_the_current_route_refused(model):
+    cfg = RerouteConfig(cost_config=_config(model))
+    east = _refused(CURRENT, tau=10.0, rank_cost=1.0)
+    west = _refused(RIVAL, tau=40.0, rank_cost=20.0)
+    assert _return_locked(east, west, _locked_state(), 7.0, cfg)
+    feasible_west = replace(west, feasible=True, rejected=False)
+    assert not _return_locked(east, feasible_west, _locked_state(), 7.0, cfg)
+
+
+@pytest.mark.parametrize("model", MODELS)
+def test_lockout_yields_to_must_flee(model):
+    cfg = RerouteConfig(cost_config=_config(model))
+    east = _refused(CURRENT, tau=10.0, rank_cost=1.0)
+    lethal_west = replace(
+        _refused(RIVAL, tau=40.0, rank_cost=20.0),
+        rejection_reason="FED_max 1.2 > 1.0",
+    )
+    assert not _return_locked(east, lethal_west, _locked_state(), 7.0, cfg)
+
+
+def test_the_scan_skips_a_locked_return_for_a_third_exit():
+    """Gate scan: the locked abandoned exit leads, a third exit is taken."""
+    cfg = RerouteConfig(cost_config=_config("gate"))
+    east = _refused(CURRENT, tau=10.0, rank_cost=1.0)
+    north = _refused("north", tau=12.0, rank_cost=2.0)
+    west = _refused(RIVAL, tau=40.0, rank_cost=20.0)
+    ranked = [east, north, west]
+    assert _select_candidate(ranked, _locked_state(), cfg).exit_id == CURRENT
+    assert _select_candidate(ranked, _locked_state(), cfg, 7.0).exit_id == "north"
 
 
 @pytest.mark.parametrize("value", [-1.0, math.nan, "10", True])
