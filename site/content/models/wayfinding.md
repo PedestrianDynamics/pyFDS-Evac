@@ -466,6 +466,13 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **View angle.** The cosine factor is the Lambertian assumption of Börger et
   al., who call it "highly simplified" (p. 4). It is not part of Jin's
   experiments.
+- **Sign photometry.** With smoke and ambient light held constant, "all
+  factors affecting the contrast can be encapsulated by a single visibility
+  factor *C*" (Börger et al., p. 1). The luminance, size and contrast of the
+  sign and the ambient light are not modelled, nor light from other sources
+  scattered into the line of sight. The
+  [Fundamentals page](/fundamentals/visibility.md) gives Jin's contrast model
+  behind *C*.
 - **Sampling height.** Börger et al. use one slice at 2 m, with the eye at
   sign height (p. 4). The code uses 1.6 m, the [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`.
   The extinction slice is the horizontal one nearest that height, as for
