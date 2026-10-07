@@ -2146,8 +2146,8 @@ def _apply_fallback(
     """Un-reject the least bad route when every route is refused.
 
     Fallback: with every route refused the agent still has to go somewhere,
-    and the least bad one is the one whose worst stretch is least bad -- the
-    question is surviving the walk, not averaging it.
+    and the least bad one is the one with the least smoke to walk through,
+    the smallest optical depth tau, then the quickest (#458).
 
     Refusal is never remembered: the sight criterion is measured against the
     distance *still to walk*, so it relaxes as the agent closes on an exit and

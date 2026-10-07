@@ -100,9 +100,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fallback cases and the `tj_full_gate_fallback` and
   `tj_discovery_gate_ramp` snapshots on both platforms. In the latter
   agent 29 turns back late and is still in the building at the 60 s
-  horizon. Some returns to an abandoned exit remain; they come from
-  foresight that samples each leg at one instant, tracked in #650
-  (#458).
+  horizon. Some returns to an abandoned exit remain; part of them come
+  from foresight that samples each leg at one instant (#650). The
+  `t_junction` FDS deck moves too: 1 → 4 switches, and agent 21 now
+  leaves by exit B instead of A (#458).
 
 ### Fixed
 

@@ -10,9 +10,11 @@ passable.
 The cost of recomputing every tick is that in a fire smoky enough to refuse
 every route -- most of a real run, see docs/gate-model-review-notes.md -- the
 ordering follows the field second by second. Two things hold it steady: the
-all-refused fallback keeps the current exit unless a rival's worst stretch is
-clearly milder, and the exit-switch anchor keeps it unless a rival is clearly
-quicker. Under the gate model those are the only churn protection there is.
+all-refused fallback and the anchor between two refused routes keep the
+current exit unless a rival's optical depth is more than
+fallback_switch_margin lower (#458), and otherwise the exit-switch anchor keeps
+it unless a rival is clearly quicker. Under the gate model those are the only
+churn protection there is.
 
 Smoke decides which exits are available; among the survivors distance decides,
 and the visibility band takes no part in the ordering. It used to, and on

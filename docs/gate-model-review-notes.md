@@ -296,7 +296,7 @@ left the ordering and sight moved from the route's worst sample to its mean
 | B8 `feasible` conflates gate failure with every rejection | **open**, but no longer irreversible |
 | B11 clear-air equivalence at small nonzero K | **addressed** (`cea33ce`) -- bands saturate at 3 classes and no longer order feasible routes, so the term that diverged at small nonzero K is out of the sort. Not re-measured at K = 1e-4; the K = 0 result stands (world100 7712 rows, t_junction 4030 rows) |
 | A4 uniform band lattice | **moot for ordering** (`cea33ce`) -- the lattice still exists but only orders the all-refused fallback |
-| A? sight read from the route's worst sample | **fixed** (`cea33ce`) -- `min_visibility_m` is now `c / k_ave`. `k_max_route` is reported and drives the fallback switch margin only |
+| A? sight read from the route's worst sample | **fixed** (`cea33ce`) -- `min_visibility_m` is now `c / k_ave`. `k_max_route` is reported and drives the fallback switch margin only. **Superseded 2026-10-07 by [#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458):** the margin compares `tau_route`; `k_max_route` is reported only |
 | B10 double-gating on the extinction thresholds | **open** -- still three smoke gates under the gate model |
 | E: gate diagnostics missing from the CSV | **fixed** (`cea33ce`) -- `rank_cost`, `k_max_route`, `min_visibility_m`, `band`, `feasible` are written |
 | monotonicity (returns to abandoned exits) | **open** -- 182 returns across 26 agents became 38 across 12 on world100. The requirement is zero |
