@@ -516,7 +516,8 @@ the gate, `_anchor_allows` decides in this order (`25a6f8f`):
    the fallback above; the clean bypass below is not consulted ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
    If the last exit switch was also between two refused routes, a return to
    the exit it left is refused for `fallback_return_lockout_s` (10 s) after
-   it ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+   it, including at exactly 10 s ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The lockout stands in for a
+   finer smoke sampling step ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
 3. The rival is clean and the current exit is not — adopt.
 4. The rival is not `feasible` — fall through to the `rank_cost` comparison.
 5. Otherwise a **symmetric deadband** on `tau`, with

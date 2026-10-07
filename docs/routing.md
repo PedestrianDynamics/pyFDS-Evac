@@ -233,7 +233,7 @@ fallback so the agent always has a path, and its reason is prefixed
 lowest undiscounted `tau_route`, then the lowest `rank_cost`, with
 `fallback_switch_margin` hysteresis on `tau_route`: the current exit stays
 first unless the rival's `tau` is more than that fraction lower ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Under the
-additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458); the underlying sampling cause is [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
 
 Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
