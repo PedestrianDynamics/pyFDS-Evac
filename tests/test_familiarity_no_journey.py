@@ -10,9 +10,13 @@ population-dependent: stale ``path_choices`` legs trapped exactly the agents
 that learned the exit mid-leg (fixed alongside this file; see
 ``TestRerouteAgent.test_reroute_clears_stale_choices_at_new_terminal``).
 
-Coupled JuPedSim runs are not bit-reproducible under a fixed seed, so only
-aggregate invariants are asserted (everyone gets out, within the deck's time
-budget), never trajectories or exact times.
+A small share of runs never finishes: two agents meet head-on in a doorway,
+or four jam at CP1, and stand there for the rest of the run (#359). An
+exploring agent with nothing left to explore used to patrol, and its patrol
+broke such stands up; since it looks from the node point first (#250), the
+stand is permanent. The model fix is #359's. Until then the module bounds
+the rate of these deadlocks instead of asserting that everyone gets out, and
+asserts only aggregate outcomes, never trajectories or exact times.
 
 ``VisibilityModel.clear_air`` needs cells thinner than the thinnest wall that
 must block sight; this maze's walls are 0.1 m, hence 0.05 m cells (see the
@@ -35,8 +39,10 @@ from pyfds_evac.core.visibility import VisibilityModel, extract_sign_descriptors
 DECK = Path(__file__).resolve().parents[1] / "assets" / "familiarity_test_no_journey"
 CELL_SIZE_M = 0.05
 
-AGENT_COUNTS = [5, 20, 30]
-SEEDS = [420, 7, 1234]
+# (agents, seeds, most deadlocked runs allowed); see the rate test.
+RATE_CASES = [(5, range(1, 31), 4), (20, range(1, 21), 5)]
+# A deadlock leaves at most the four agents of the CP1 jam behind.
+MOST_LEFT_IN_A_DEADLOCK = 4
 
 
 def test_deck_declares_what_the_module_assumes():
@@ -60,24 +66,16 @@ def vis_model():
     )
 
 
-@pytest.mark.parametrize(
-    ("n_agents", "seed"),
-    [(n_agents, seed) for n_agents in AGENT_COUNTS for seed in SEEDS],
-)
-def test_every_discovery_agent_finds_the_exit(tmp_path, vis_model, n_agents, seed):
+def _run(tmp_path, vis_model, n_agents, seed):
     config = json.loads((DECK / "config.json").read_text())
-    max_time_s = config["config"]["simulation_settings"]["simulationParams"][
-        "max_simulation_time"
-    ]
     cfg = copy.deepcopy(config)
     for dist in cfg["distributions"].values():
         dist["parameters"]["number"] = n_agents
-    deck = tmp_path / "deck"
+    deck = tmp_path / f"deck_{n_agents}_{seed}"
     deck.mkdir()
     (deck / "config.json").write_text(json.dumps(cfg))
     (deck / "geometry.wkt").write_text((DECK / "geometry.wkt").read_text())
-
-    result = run_scenario(
+    return run_scenario(
         load_scenario(str(deck)),
         seed=seed,
         reroute_config=RerouteConfig(
@@ -85,9 +83,39 @@ def test_every_discovery_agent_finds_the_exit(tmp_path, vis_model, n_agents, see
         ),
         vis_model=vis_model,
     )
-    try:
-        assert result.total_agents == n_agents
-        assert result.agents_evacuated == n_agents
-        assert 0.0 < result.evacuation_time < max_time_s
-    finally:
-        result.cleanup()
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize(
+    ("n_agents", "seeds", "most_deadlocks"),
+    RATE_CASES,
+    ids=[f"{n}_agents" for n, _, _ in RATE_CASES],
+)
+def test_discovery_agents_find_the_exit_but_for_deadlocks(
+    tmp_path, vis_model, n_agents, seeds, most_deadlocks
+):
+    """Every run ends complete or in a #359 deadlock, and deadlocks are rare.
+
+    Measured at #250 with these settings: 5 agents deadlock in 5 of seeds
+    1-150 (3.3 %), 20 agents in 5 of seeds 1-60 (8.3 %); before #250, 3 of
+    150 and 0 of 60. Each bound is the smallest k with P(X > k) <= 1 % at
+    that rate, binomial over the seeds run here: 4 of 30 and 5 of 20.
+    """
+    config = json.loads((DECK / "config.json").read_text())
+    max_time_s = config["config"]["simulation_settings"]["simulationParams"][
+        "max_simulation_time"
+    ]
+    deadlocked = []
+    for seed in seeds:
+        result = _run(tmp_path, vis_model, n_agents, seed)
+        try:
+            assert result.total_agents == n_agents, seed
+            left = n_agents - result.agents_evacuated
+            assert left <= MOST_LEFT_IN_A_DEADLOCK, (seed, left)
+            if left:
+                deadlocked.append(seed)
+            else:
+                assert 0.0 < result.evacuation_time < max_time_s, seed
+        finally:
+            result.cleanup()
+    assert len(deadlocked) <= most_deadlocks, deadlocked

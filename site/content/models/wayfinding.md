@@ -642,6 +642,18 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   ([#122](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122)). It
   visits only known nodes. When smoke limits legibility to a few metres, the
   walks between them may never pass a new legible sign.
+- **Exploring agents can deadlock in a doorway**
+  ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
+  Two agents that meet head-on in a door, or four jammed at a checkpoint,
+  can stand there for the rest of the run. Under `explore`, and `return`
+  when it explores, nothing breaks the stand up: an agent with nothing left
+  to explore looks from the node point before it patrols (#250), and the
+  patrols that used to clear such stands no longer pass.
+  `familiarity_test_no_journey`, in clear air on the 0.05 m grid with the
+  settings of `tests/test_familiarity_no_journey.py`, ends with up to 4
+  agents left in 5 of 150 runs of 5 agents (seeds 1–150; 3 before #250)
+  and in 5 of 60 runs of 20 agents (seeds 1–60; none before #250). That
+  test bounds the rate.
 - **Discovery results depend on the clear-air grid**
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). Do
   not report a discovery egress time without its grid;
