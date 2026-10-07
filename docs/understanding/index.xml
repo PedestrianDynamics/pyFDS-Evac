@@ -744,7 +744,7 @@ call (:13256), with no behaviour change. The note on Evac 2.6.1 in
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Spatial discretisation&lt;/strong>&lt;/td>
-&lt;td>Rectilinear evacuation mesh (separate from the FDS fire mesh); geometry is fitted to the underlying grid; minimum ~0.25 m cell size recommended ([1] §1.2)&lt;/td>
+&lt;td>Rectilinear evacuation mesh (separate from the FDS fire mesh); geometry is fitted to the underlying grid; the cell size is the user&amp;rsquo;s choice, and the guide advises cells of 0.25 m or larger for the flow fields ([1] §1.2, p. 10)&lt;/td>
 &lt;td>Continuous walkable polygon (Shapely geometry); no grid&lt;/td>
 &lt;/tr>
 &lt;/tbody>

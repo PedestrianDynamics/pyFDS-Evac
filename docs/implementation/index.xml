@@ -737,7 +737,7 @@ following discovery egress times:&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The fully familiar tier took 34.5 s. The code advises a cell smaller than the
-thinnest wall (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>). The #168 investigation recommends at
+thinnest wall and warns when it is not (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
 change below that is not explained
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>). Do not
