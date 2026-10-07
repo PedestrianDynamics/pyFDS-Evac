@@ -111,6 +111,7 @@ manifest records what JuPedSim received under `sfm`.
 | `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. |
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |
 | `entrance` | none | an exit id | One exit, reachable from the spawn area, that the agents know from the start. |
+| `no_known_exit` | `"default_route"` | `default_route`, `explore`, `return`, `stay` | What an agent does while no exit is reachable in its map. `default_route` (the FDS+Evac counterpart) follows the journey, or without one the nearest exit on foot, and flags leaving by an exit not in the map. `explore`, `return` and `stay` need rerouting and are refused with `--smoke-blind`; see [Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract). |
 
 `desired_speed`, `desired_speed_distribution` and `desired_speed_std` are
 aliases of `v0`, `v0_distribution` and `v0_std`. An alias set alone is used

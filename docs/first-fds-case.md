@@ -157,6 +157,14 @@ Simulation incomplete: time limit reached after 300.00 s (70/150 evacuated, 80 r
 Route switches: 180
 ```
 
+> **These results predate the `no_known_exit` rule**
+> ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)). Under
+> its default an agent that knows no exit follows the journey as its default
+> route, and the exit history flags each exit it leaves through that is not in
+> its map ([Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract)).
+> The current code therefore prints other numbers. This page is regenerated at
+> the end of the 0.4.0 routing work.
+
 The run reaches the 300 s time limit with agents still inside or still to
 enter, so it is incomplete and `run.py` exits with status 2
 ([Exit status](usage.md#exit-status)).
@@ -291,13 +299,21 @@ and from 120 s the median agent is there.
 
 ![Stacked horizontal bars: clear air, 144 through exit B and 6 inside; fire, 10 through exit A, 60 through exit B and 80 inside](/images/first-fds-case/exits.png)
 
-The route log explains the fire run. The 10 agents who switched to exit A
-(`smoke_reroute`) did so in the first 28 s, and all 10 left by it. 25 agents,
-spawned between 24 and 236 s, never learned an exit: no exit sign was
-readable to them. They walk back and forth between the spawn area and the
-junction (169 `wander` route changes), and all 25 are still inside at 300 s.
-The 170th `wander` is one step of the last agent to switch to exit A, a
-second before it switched.
+The route log explains the fire run. Only 12 of the 150 agents ever had an
+exit in their map. 10 of them turned to exit A in the first 28 s, and all 10
+left by it; the other 2 left by exit B. The log records all 10 as
+`smoke_reroute`, but only 3 of them switched away from a known exit B. For the
+other 7 it was their first choice of a known exit: the log named exit B,
+which they had never learned, as the exit they left (the blank `old_cost`).
+138 agents never learned an exit: no exit sign was readable to them.
+58 of them still left by exit B. They did not choose it: the journey
+of the spawn area sends 99 % of the agents from the junction to exit B, and
+they followed it. 25 others, spawned between 24 and 236 s, walk back and
+forth between the spawn area and the junction (169 `wander` route changes),
+and all 25 are still inside at 300 s. The remaining 55 follow the journey
+but, slowed by the smoke, are still inside at 300 s. The 170th `wander`
+is one step of the last agent to switch to exit A, a second before it
+switched.
 
 ## 6. Was there time to get out? (ASET and RSET) {#aset-rset}
 
@@ -440,10 +456,9 @@ not included in either panel. The map form follows Schröder et al. (2020);
 their demonstration case.*
 
 Panel (b) measures wayfinding: it shows when the signs stop guiding.
-This is consistent with section 5, where 25 agents spawned between 24 and
-236 s never learned an exit: on this map the spawn centre loses sight of
-every sign at 39 s. The engine's own sign test differs (see *How the
-numbers are computed*). ISO 13571 (§4.5, note) does not expect obscuration
+This is consistent with section 5, where 138 of the 150 agents never learned
+an exit: on this map the spawn centre loses sight of every sign at 39 s. The
+engine's own sign test differs (see *How the numbers are computed*). ISO 13571 (§4.5, note) does not expect obscuration
 alone to make conditions untenable for people who are not carrying out
 cognitive or motor tasks: it treats obscuration as mattering through the
 tasks it impairs, such as finding an exit. This page assesses it through

@@ -317,20 +317,38 @@ before it evaluates any edge (`route_graph.py`, `rank_routes`;
 all-refused fallback see known nodes and edges only. An exit that is not known
 is not refused; it is absent, and the fallback cannot restore it.
 
-**Exception ([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)).**
-Every agent receives the geometrically nearest exit as its steering target
-before its map exists (`simulation_init.py`, `_find_nearest_exit`). The opening choice
-replaces that target only when the map contains a reachable exit
-(`scenario.py`, `_assign_initial_exit`). If it contains none, and neither exploration nor
-patrol yields a target (below), the agent keeps steering towards that
-geometric exit (`route_graph.py`, `_decide_explore`). For a map that holds only the
-spawn node neither does: the spawn node is visited from the start
-(`cognitive_map.py`, `init_cognitive_map`), so there is no frontier, and the patrol
-excludes the current node, so a one-node map has no stop
-(`cognitive_map.py`, `wander_target`). Periodic learning may add the exit
-on the way once its sign is legible, but the target was never chosen from the
-map. This is a defect, not intended behaviour (see also defect 2 in
-`assets/blind_spawn_discovery/README.md`).
+**When no exit is known ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610),
+[#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)).**
+Before its map exists, every agent receives a steering plan: the journey of
+its spawn area or, for a spawn area without a journey, the exit nearest its
+spawn point on foot, measured through the walkable area by the JuPedSim
+routing engine (`simulation_init.py`, `_find_nearest_exit`). The opening
+choice replaces that plan only when the map contains a reachable exit
+(`scenario.py`, `_assign_initial_exit`). Otherwise the spawn area's
+`no_known_exit` decides, at the opening and at every re-evaluation that finds
+no reachable known exit (`route_graph.py`, `_decide_no_known_exit`):
+
+- **`default_route`** (default). The agent keeps the plan as its default
+  route, logged once as `reason="default_route"`. A plan that ends at a closed
+  exit, or nowhere, is replaced by the nearest open exit on foot
+  (`route_graph.py`, `nearest_exit_by_walking`). This is the FDS+Evac
+  counterpart: an agent with no known or visible door follows the main
+  evacuation flow field (see [Relation to FDS+Evac](#relation-to-fdsevac)).
+  The default route is modeller knowledge, not perception. The exit history
+  marks every exit an agent leaves through that is not in its map
+  (`exit_in_map`), and the run counts these agents
+  (`agents_left_by_unknown_exit`).
+- **`explore`**, **`return`**, **`stay`** (opt-in, "No known exit" below). No
+  agent walks towards a stage absent from its map: a scripted leg to such a
+  stage is not taken (`direct_steering_runtime.py`, `advance_path_target`),
+  and an agent with nowhere known to go stands, logged as `reason="stay"`.
+  These modes act at re-evaluation, so a run without rerouting, and a
+  `--smoke-blind` run, refuses them; use a clear-air run as the control.
+
+`current_exit` holds only an exit the agent knows, so its first known exit is
+logged as `reason="initial"`. In the queue tally, a default-route agent counts
+at its default exit, as FDS+Evac counts an agent at the door its flow field
+leads to; under the opt-in modes an agent with no known exit counts nowhere.
 
 The contract covers **ranking**, not **adoption**. Ranking orders the known
 routes; adoption is whether a moving agent switches to the first of them. The
@@ -362,7 +380,9 @@ explore and wander targets below (`route_graph.py`, `without_closed_stages`).
 An agent whose route ends at a closed exit re-evaluates at the next reroute
 check, whatever its interval, on the map it holds; the switch is logged as
 `reason="exit_closed"`. An agent that knows no open exit and no other node to
-walk to waits at the closed exit. A closed exit removes nobody.
+walk to follows its `no_known_exit` mode: by default it takes the nearest open
+exit on foot; under `explore` it waits at the closed exit. A closed exit
+removes nobody.
 An opened exit is taken at the agent's next regular re-evaluation. The
 schedule is on
 [Scenario JSON](/docs/scenario-json.md#exits-exitsid).
@@ -376,7 +396,8 @@ current route's (`route_graph.py`, `_AnchoredPolicy.anchor_allows`;
 `RouteCostConfig.tau_max`, `RouteCostConfig.tau_deadband`). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.
 
-**No known exit.** When the known subgraph contains no reachable exit,
+**No known exit, opt-in modes.** When the known subgraph contains no reachable
+exit and the spawn area sets `no_known_exit` to `explore`,
 `evaluate_and_reroute` looks for a target (`route_graph.py`, `_decide_explore`):
 
 1. **Explore.** The frontier node with the lowest path cost through the known
@@ -388,6 +409,15 @@ more than 10 % faster than the exit the agent is heading for.
    over known edges taken **in either direction**
    (`wander_target`, `_undirected_known_path`, `cognitive_map.py`).
    Logged as `reason="wander"`.
+3. **Stand.** When neither yields a target and the agent is walking towards a
+   stage not in its map, it stops where it is. Logged as `reason="stay"`.
+
+`return` first walks back over known legs, in either direction, to the
+nearest known node from which a known exit is reachable, logged as
+`reason="return"`; without one it explores. It differs from `explore` only
+where a one-way transition leads away from the known exit. `stay` stands
+until an exit becomes known. Perception still runs at every re-evaluation, so
+a standing agent can still read a sign.
 
 **What route choice does not read.** Route choice never reads the
 sign-legibility test or a line-of-sight visibility
@@ -415,7 +445,7 @@ an extinction threshold, not a sign test.
 
 ## Parameters
 
-`familiarity`, `entrance` and `sign` are scenario keys. The other rows are
+`familiarity`, `entrance`, `no_known_exit` and `sign` are scenario keys. The other rows are
 command-line options, with the default of the underlying class for direct
 library use.
 
@@ -423,6 +453,7 @@ library use.
 |---|---|---|---|---|---|
 | `familiarity` | distribution `parameters` | – | `"full"` (`simulation_init.py`, `_initialize_with_fallback`) | – | `"full"`, `"discovery"` or \(p \in [0,1]\) |
 | `entrance` | distribution `parameters` | – | none (`simulation_init.py`, `_initialize_with_fallback`) | – | a reachable exit learned at spawn |
+| `no_known_exit` | distribution `parameters` | – | `"default_route"` (`cognitive_map.py`, `DEFAULT_NO_KNOWN_EXIT`) | – | `"default_route"`, `"explore"`, `"return"` or `"stay"`: what an agent does with no reachable known exit (§2.4) |
 | `sign.c` | node `sign` | – | 3 (`visibility.py`, `_default_sign`, `_build_vismap`) | – | *C* |
 | `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py`, `_default_sign`) | ° | bearing the sign faces |
 | \(V_{\max}\) | `--max-sign-distance` | 30 | 30 (`DEFAULT_MAX_SIGN_DISTANCE_M`) | m | reading distance of every sign, also in clear air |
@@ -536,9 +567,16 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 
 ## Limitations
 
-- **An agent with no known exit can walk to an unknown one**
-  ([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)). See
-  the exception under §2.4. The intended behaviour is exploration.
+- **The default route is modeller knowledge**
+  ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610),
+  [#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)). Under
+  the default `no_known_exit`, an agent that knows no exit follows the journey
+  or the nearest exit on foot, as FDS+Evac's agents follow its flow field, and
+  it can leave through an exit it never learned. The exit history flags each
+  such exit (§2.4). Herding, the step FDS+Evac takes before its flow field, is
+  not modelled ([#78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78)).
+  The opt-in modes are mechanisms, not validated behaviour: we found no
+  published data on how occupants explore unknown space.
 - **FED and arrival times on the first leg**
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
   The first-leg smoke and travel time follow the walked path at
@@ -616,6 +654,7 @@ that file. The detailed account of FDS+Evac door choice is on
 | **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
 | **Smoke memory** | lone agents mark the previous target negative or zero | none |
 | **Default** | agent type 2, `KNOWN_DOOR = .FALSE.` | `familiarity = "full"` |
+| **No known or visible door** | the agent herds with visible neighbours that have a target (`:8046`, `:8066–8211`), else follows the main evacuation mesh flow field, which leads to every exit of the mesh (`:16826–16842`, `:16868–16900`); with `I_HERDING_TYPE` > 1 it stands | `no_known_exit = "default_route"`: the journey, or the nearest exit on foot; no herding (#78). `stay` corresponds to standing |
 
 Details, with line numbers:
 
@@ -666,8 +705,9 @@ Details, with line numbers:
   angle, line-of-sight extinction) has no FDS+Evac counterpart. The exposure
   gate is a separate mechanism, related to FDS+Evac's smoke-free and tier-4
   criteria (see [routing](/models/routing.md)).
-- **No counterpart.** FDS+Evac's herding and follower agents (types 3 and 4)
-  and its group behaviour.
+- **No counterpart.** FDS+Evac's herding, which a default type-2 agent with no
+  door also does (`:8046`), its follower agents (types 3 and 4) and its group
+  behaviour. Exploration (`explore`, `return`) has no FDS+Evac counterpart.
 
 <a id="verification-familiarity-comparison"></a><a id="visualising-cognitive-map-evolution"></a><a id="diagnostic-scripts"></a>
 
@@ -699,10 +739,13 @@ criteria 1–5 pass, and the discovery egress time is not grid-converged
   splits between them.
 - `tests/verification/test_cognitive_map_verif.py`: tier invariants on a toy
   graph.
+- `tests/test_no_known_exit.py`: each `no_known_exit` mode on a toy graph; the
+  default route leaves by the exit nearest on foot behind a wall and is
+  flagged, while the opt-in modes never leave by an unknown exit; the walked
+  leg is learned on arrival; the refusal with `--smoke-blind`.
 
 `tests/test_familiarity_routing.py::TestDiscoveryMeasuresAroundWalls` pins
-the #172 fix. No test pins the #91 behaviour or convergence with the grid
-(#168).
+the #172 fix. No test pins convergence with the grid (#168).
 
 ## Sources
 
