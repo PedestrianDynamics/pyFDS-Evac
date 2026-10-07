@@ -382,9 +382,16 @@ def _reroute_world(case: golden.RerouteCase) -> dict:
     }
 
 
+# The return lockout's record (#458), which the frozen copy never writes; it
+# is pinned live in tests/test_fallback_tau_hold.py.
+_LOCKOUT_FIELDS = frozenset({"refused_switch_from", "refused_switch_time_s"})
+
+
 def _state_fields(route_state: AgentRouteState) -> dict:
     return {
-        f.name: copy.deepcopy(getattr(route_state, f.name)) for f in fields(route_state)
+        f.name: copy.deepcopy(getattr(route_state, f.name))
+        for f in fields(route_state)
+        if f.name not in _LOCKOUT_FIELDS
     }
 
 
@@ -1498,7 +1505,10 @@ def _assignments(case: golden.RerouteCase) -> dict[str, list[str]]:
         world["route_state"] = states[side] = _AssignmentLog.of(world["route_state"])
 
     _both(case, on_world)
-    return {side: state.__dict__["_assigned"] for side, state in states.items()}
+    return {
+        side: [n for n in state.__dict__["_assigned"] if n not in _LOCKOUT_FIELDS]
+        for side, state in states.items()
+    }
 
 
 def test_same_exit_switch_does_not_assign_current_exit():

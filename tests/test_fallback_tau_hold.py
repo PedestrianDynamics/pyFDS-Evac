@@ -20,12 +20,15 @@ import math
 from dataclasses import replace
 
 import pytest
+import test_rerouting_golden as golden
 
 from pyfds_evac.core.route_graph import (
+    AgentRouteState,
     RerouteConfig,
     RouteCost,
     RouteCostConfig,
     _apply_fallback,
+    evaluate_and_reroute,
     policy_for,
 )
 
@@ -160,3 +163,83 @@ def test_swapped_taus_inside_the_margin_do_not_flicker(model):
     second = (_refused(RIVAL, 34.0, 5.0), _refused(CURRENT, 30.0, 10.0))
     for rival, current in (first, second):
         _assert_decision(rival, current, switch=False, model=model)
+
+
+# ── Return lockout (#458) ─────────────────────────────────────────────
+#
+# Agent 22's pattern on the t_junction FDS deck, on the two-arm star: a
+# fallback switch east -> west between two refused routes, then the smoke
+# swings so that east's tau is clearly lower again. The return is blocked
+# for fallback_return_lockout_s after the first switch.
+
+_EAST_SMOKY = golden.ArmField({"west": 0.4, "east": 2.0})
+_WEST_SMOKY = golden.ArmField({"west": 2.0, "east": 0.4})
+_EAST_CLEAR = golden.ArmField({"west": 2.0})
+
+
+class _Agent:
+    """One agent on the star, heading east, evaluated call by call."""
+
+    def __init__(self, lockout: float | None = None) -> None:
+        cost = golden._gate()
+        if lockout is not None:
+            cost = replace(cost, fallback_return_lockout_s=lockout)
+        self.config = RerouteConfig(cost_config=cost)
+        self.graph = golden._star2()
+        self.wait_info = golden._wait_info(
+            self.graph, "spawn", CURRENT, path_choices={}, state="to_target"
+        )
+        self.state = AgentRouteState(current_exit=CURRENT)
+
+    def evaluate(self, time_s: float, field) -> str | None:
+        evaluate_and_reroute(
+            agent_id=22,
+            wait_info=self.wait_info,
+            route_state=self.state,
+            graph=self.graph,
+            current_time_s=time_s,
+            current_fed=0.0,
+            extinction_sampler=field,
+            fed_rate_sampler=None,
+            config=self.config,
+        )
+        return self.state.current_exit
+
+
+def _left_east_at(time_s: float, lockout: float | None = None) -> _Agent:
+    agent = _Agent(lockout)
+    assert agent.evaluate(time_s, _EAST_SMOKY) == RIVAL
+    assert agent.state.refused_switch_from == CURRENT
+    return agent
+
+
+def test_default_lockout_is_ten_seconds():
+    assert RouteCostConfig().fallback_return_lockout_s == 10.0
+    assert RouteCostConfig.from_routing_params({}).fallback_return_lockout_s == 10.0
+
+
+def test_refused_return_within_the_lockout_is_blocked():
+    agent = _left_east_at(5.0)
+    assert agent.evaluate(7.0, _WEST_SMOKY) == RIVAL
+    assert agent.evaluate(15.0, _WEST_SMOKY) == RIVAL  # 10 s: still inside
+
+
+def test_refused_return_after_the_lockout_is_allowed():
+    agent = _left_east_at(5.0)
+    assert agent.evaluate(15.5, _WEST_SMOKY) == CURRENT
+
+
+def test_return_to_a_feasible_route_is_never_blocked():
+    agent = _left_east_at(5.0)
+    assert agent.evaluate(7.0, _EAST_CLEAR) == CURRENT
+
+
+def test_zero_lockout_restores_the_plain_rule():
+    agent = _left_east_at(5.0, lockout=0.0)
+    assert agent.evaluate(7.0, _WEST_SMOKY) == CURRENT
+
+
+@pytest.mark.parametrize("value", [-1.0, math.nan, "10", True])
+def test_lockout_must_be_a_non_negative_number(value):
+    with pytest.raises(ValueError, match="fallback_return_lockout_s"):
+        RouteCostConfig.from_routing_params({"fallback_return_lockout_s": value})

@@ -821,11 +821,28 @@ class RouteCostConfig:
     # optical depth tau is more than this fraction lower (#458) -- without it the
     # least-bad choice changes with every flicker of the field.
     fallback_switch_margin: float = 0.2
+    # After an exit switch between two refused routes, a switch straight back
+    # to the exit just left, again between two refused routes, is blocked for
+    # this many seconds (#458). A route smoke sample that steps over a narrow
+    # plume core can swing tau past the margin and back within one or two
+    # evaluations (#653); this keeps that from reversing the agent. 0 turns
+    # it off.
+    fallback_return_lockout_s: float = 10.0
 
     def __post_init__(self) -> None:
-        """Reject a cost_model that is not exactly one of ROUTE_COST_MODELS."""
+        """Reject an unknown cost_model and a negative or non-numeric lockout."""
         if self.cost_model not in ROUTE_COST_MODELS:
             raise _unknown_cost_model(self.cost_model)
+        lockout = self.fallback_return_lockout_s
+        if (
+            isinstance(lockout, bool)
+            or not isinstance(lockout, (int, float))
+            or not lockout >= 0.0
+        ):
+            raise ValueError(
+                "routing.fallback_return_lockout_s must be a number of seconds "
+                f">= 0, got {lockout!r}"
+            )
 
     @classmethod
     def from_routing_params(cls, routing: dict | None) -> RouteCostConfig:
@@ -854,6 +871,9 @@ class RouteCostConfig:
             anticipate=routing.get("anticipate", True),
             foresight_horizon_s=routing.get("foresight_horizon_s", math.inf),
             fallback_switch_margin=routing.get("fallback_switch_margin", 0.2),
+            fallback_return_lockout_s=routing.get(
+                "fallback_return_lockout_s", RouteCostConfig.fallback_return_lockout_s
+            ),
             w_smoke=routing.get("w_smoke", 1.0),
             w_fed=routing.get("w_fed", 10.0),
             w_queue=routing.get("w_queue", 0.0),
@@ -2403,6 +2423,10 @@ class AgentRouteState:
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
     wander_step: int = 0  # position in the knowledge-exhausted patrol rotation
+    # The exit left by the last exit switch, if both its routes were refused,
+    # and when; any other exit switch clears it (#458 return lockout).
+    refused_switch_from: str | None = None
+    refused_switch_time_s: float = -math.inf
 
 
 @dataclass(frozen=True)
@@ -2598,6 +2622,7 @@ def _select_candidate(
     ranked: list[RouteCost],
     route_state: AgentRouteState,
     config: RerouteConfig,
+    time_s: float | None = None,
 ) -> RouteCost:
     """The route the agent would move to: rank 1, or the first it can adopt.
 
@@ -2610,7 +2635,7 @@ def _select_candidate(
     adoptable one wins; if none is, nothing changes, as before.
 
     Gate only. The scan stops at the agent's own exit and does not skip
-    refused routes.
+    refused routes. With *time_s*, the return lockout applies too.
     """
     best = ranked[0]
     current_exit_now = route_state.current_exit
@@ -2622,7 +2647,7 @@ def _select_candidate(
         for candidate in ranked:
             if candidate.exit_id == current_exit_now:
                 break  # the agent's own exit outranks the rest: stay
-            if _adoptable(candidate, ranked, route_state, config):
+            if _adoptable(candidate, ranked, route_state, config, time_s):
                 best = candidate
                 break
     return best
@@ -2633,13 +2658,51 @@ def _adoptable(
     ranked: list[RouteCost],
     route_state: AgentRouteState,
     config: RerouteConfig,
+    time_s: float | None = None,
 ) -> bool:
-    """Whether the agent could switch to *candidate* if the ordering offered it."""
+    """Whether the agent could switch to *candidate* if the ordering offered it.
+
+    With *time_s*, a return the lockout blocks is not adoptable.
+    """
     old_exit = route_state.current_exit
     if old_exit is None or candidate.exit_id == old_exit:
         return True
     old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
-    return _anchor_allows(candidate, old_rc, config)
+    if not _anchor_allows(candidate, old_rc, config):
+        return False
+    return not _return_locked(candidate, old_rc, route_state, time_s, config)
+
+
+def _both_refused(candidate: RouteCost, old_rc: RouteCost | None) -> bool:
+    """Whether a move from *old_rc* to *candidate* is between two refused routes."""
+    return old_rc is not None and not candidate.feasible and not old_rc.feasible
+
+
+def _return_locked(
+    candidate: RouteCost,
+    old_rc: RouteCost | None,
+    route_state: AgentRouteState | None,
+    time_s: float | None,
+    config: RerouteConfig,
+) -> bool:
+    """Whether the return lockout blocks leaving *old_rc* for *candidate*.
+
+    After an exit switch between two refused routes, a switch straight back to
+    the exit just left, again between two refused routes, waits
+    ``fallback_return_lockout_s`` (#458). A feasible route on either side, a
+    hazard the agent must flee and a third exit are never blocked. Without a
+    route state or a time nothing is blocked.
+    """
+    lockout = config.cost_config.fallback_return_lockout_s
+    if route_state is None or time_s is None or lockout <= 0.0:
+        return False
+    if candidate.exit_id != route_state.refused_switch_from:
+        return False
+    if old_rc is None or not _both_refused(candidate, old_rc):
+        return False
+    if _must_flee_rejection(old_rc, config.cost_config):
+        return False
+    return time_s - route_state.refused_switch_time_s <= lockout
 
 
 def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
@@ -2723,6 +2786,9 @@ def _decide_exit_change(
     old_rc: RouteCost | None,
     old_cost: float | None,
     config: RerouteConfig,
+    *,
+    route_state: AgentRouteState | None = None,
+    time_s: float | None = None,
 ) -> RouteDecision:
     """Whether to move the agent to *best*'s exit, or give it its first one.
 
@@ -2732,12 +2798,15 @@ def _decide_exit_change(
     intervals. Anchoring does not apply to the initial choice (old_exit is
     None) or when the old exit is no longer reachable and so was never
     priced. Everything else is _anchor_allows, which is also what chose
-    `best`.
+    `best`, and, given *route_state* and *time_s*, the return lockout.
     """
     if (
         old_exit is not None
         and old_cost is not None
-        and not _anchor_allows(best, old_rc, config)
+        and (
+            not _anchor_allows(best, old_rc, config)
+            or _return_locked(best, old_rc, route_state, time_s, config)
+        )
     ):
         return RouteDecision(kind="keep")
 
@@ -2929,7 +2998,7 @@ def evaluate_and_reroute(
             decision, agent_id, wait_info, route_state, current_time_s
         )
 
-    best = _select_candidate(ranked, route_state, config)
+    best = _select_candidate(ranked, route_state, config, current_time_s)
 
     if (
         best.rejected
@@ -2977,10 +3046,31 @@ def evaluate_and_reroute(
             current_target=current_target,
         )
     else:
-        decision = _decide_exit_change(best, old_exit, old_rc, old_cost, config)
+        decision = _decide_exit_change(
+            best,
+            old_exit,
+            old_rc,
+            old_cost,
+            config,
+            route_state=route_state,
+            time_s=current_time_s,
+        )
         if decision.kind == "switch" and stage_closed(graph, old_exit, current_time_s):
             decision = replace(decision, switch_reason="exit_closed")
-    return _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
+    switch = _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
+    if decision.kind in ("switch", "fallback") and switch is not None:
+        _remember_exit_switch(route_state, switch, _both_refused(best, old_rc))
+    return switch
+
+
+def _remember_exit_switch(
+    route_state: AgentRouteState, switch: RouteSwitch, refused: bool
+) -> None:
+    """Record the exit an applied switch left, for the return lockout."""
+    if switch.old_exit is None or switch.old_exit == switch.new_exit:
+        return
+    route_state.refused_switch_from = switch.old_exit if refused else None
+    route_state.refused_switch_time_s = switch.time_s if refused else -math.inf
 
 
 def stage_closed(graph: StageGraph, stage_id: str | None, time_s: float) -> bool:

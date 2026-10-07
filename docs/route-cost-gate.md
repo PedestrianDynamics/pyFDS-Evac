@@ -514,6 +514,9 @@ the gate, `_anchor_allows` decides in this order (`25a6f8f`):
 2. Both the rival and the current exit are refused (not `feasible`) — adopt
    only if the rival's `tau` is more than `fallback_switch_margin` lower, as in
    the fallback above; the clean bypass below is not consulted ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
+   If the last exit switch was also between two refused routes, a return to
+   the exit it left is refused for `fallback_return_lockout_s` (10 s) after
+   it ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
 3. The rival is clean and the current exit is not — adopt.
 4. The rival is not `feasible` — fall through to the `rank_cost` comparison.
 5. Otherwise a **symmetric deadband** on `tau`, with
@@ -656,6 +659,7 @@ Every key below is read from the scenario's `routing` block by
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
+| `fallback_return_lockout_s` | `10.0` | After an exit switch between two refused routes, a switch straight back between two refused routes is blocked this many seconds; 0 turns it off. | active | active |
 | `fallback_switch_margin` | `0.2` | Hysteresis between two refused routes: a rival's `tau` must be more than this fraction lower. Compared `k_max_route` before 0.4.0 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). | active | active |
 | `w_smoke` | `1.0` | Smoke weight in the additive composite and its Dijkstra edge weights. Since `0d9bf79` the gate weights edges by their own `tau`, so neither weight reaches route choice under the gate; the composite is still reported. | **inert** (reported only) | active |
 | `w_fed` | `10.0` | FED weight. Same. | **inert** (reported only) | active |
