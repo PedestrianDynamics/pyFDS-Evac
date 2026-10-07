@@ -92,10 +92,12 @@ class Mechanisms:
 
 def has_discovery_agents(raw: Mapping[str, Any]) -> bool:
     """Whether any spawn area starts agents that must find their way."""
+    from pyfds_evac.core.agent_params import parameters_as_dict
     from pyfds_evac.core.cognitive_map import familiarity_probability
 
     for dist in raw.get("distributions", {}).values():
-        value = dist.get("parameters", {}).get("familiarity", "full")
+        params = parameters_as_dict(dist.get("parameters")) or {}
+        value = params.get("familiarity", "full")
         if value is None:
             continue
         try:

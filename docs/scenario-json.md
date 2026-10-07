@@ -92,6 +92,24 @@ manifest records what JuPedSim received under `sfm`.
 
 ## Spawn areas: `distributions.<id>.parameters`
 
+`parameters` is an object, or the same object as a JSON-encoded string;
+both read the same everywhere: the run, `--show-config`, the TUI, the GUI
+and the `Scenario` views
+([#644](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/644)):
+
+```json
+"parameters": {"number": 20, "v0": 1.2}
+"parameters": "{\"number\": 20, \"v0\": 1.2}"
+```
+
+A missing or `null` `parameters`, a string that is not valid JSON, and a
+string or value that is not an object (`"null"`, `"[]"`, `"42"`, `[]`)
+read as no parameters, so every key takes its default. The
+`Scenario.set_agent_params()`, `set_agent_count()` and
+`set_flow_schedule()` setters store an object: a string is replaced by
+the object it encodes, with all its keys, and an unreadable value by an
+empty object, before the setter's keys are written.
+
 | Key | Default | Range | Effect |
 |---|---|---|---|
 | `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start. No value is taken from another spawn area. |

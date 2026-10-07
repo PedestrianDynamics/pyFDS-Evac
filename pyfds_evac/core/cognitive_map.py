@@ -6,6 +6,8 @@ import heapq
 import math
 from dataclasses import dataclass, field
 
+from .agent_params import parameters_as_dict
+
 
 @dataclass
 class AgentCognitiveMap:
@@ -86,7 +88,11 @@ def distribution_no_known_exit(raw) -> dict[str, str]:
     """
     modes: dict[str, str] = {}
     for dist_id, dist in (raw.get("distributions") or {}).items():
-        params = dist.get("parameters") if isinstance(dist, dict) else None
+        params = (
+            parameters_as_dict(dist.get("parameters"))
+            if isinstance(dist, dict)
+            else None
+        )
         value = params.get("no_known_exit") if isinstance(params, dict) else None
         try:
             modes[dist_id] = no_known_exit_mode(value)

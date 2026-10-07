@@ -41,7 +41,7 @@ from pyfds_evac.config import messages
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
-from .agent_params import deck_default_number
+from .agent_params import deck_default_number, parameters_as_dict
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_FAMILIARITY,
@@ -335,12 +335,24 @@ def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
     *default_number* counts a distribution that sets no ``number``; the
     views pass the run's default, :func:`deck_default_number` (#647).
     """
-    params = dist.get("parameters", {})
+    params = parameters_as_dict(dist.get("parameters")) or {}
     schedule = _normalized_flow_schedule(params)
     if schedule:
         initial_number = int(params.get("initial_number", 0) or 0)
         return initial_number + sum(entry["number"] for entry in schedule)
     return int(params.get("number", default_number) or 0)
+
+
+def _writable_parameters(dist: dict) -> dict:
+    """``dist["parameters"]`` as a dict that a setter can update (#644).
+
+    A JSON-encoded string is replaced by the object it encodes; a missing,
+    ``null`` or unparseable value by an empty one, which is how the run
+    reads it.
+    """
+    params = parameters_as_dict(dist.get("parameters")) or {}
+    dist["parameters"] = params
+    return params
 
 
 # ---------------------------------------------------------------------------
@@ -449,7 +461,7 @@ class Scenario:
             )
             lines.append(f"  Sequence:      {' -> '.join(journey_sequence)}")
         for dist_id, dist in self.distributions.items():
-            params = dist.get("parameters", {})
+            params = parameters_as_dict(dist.get("parameters")) or {}
             flow = params.get("use_flow_spawning", False)
             n = params.get("number", default_number)
             tag = (
@@ -650,7 +662,7 @@ class Scenario:
         result = []
         default_number = deck_default_number(self.sim_params)
         for i, (did, d) in enumerate(self.distributions.items()):
-            params = d.get("parameters", {})
+            params = parameters_as_dict(d.get("parameters")) or {}
             result.append(
                 {
                     "index": i,
@@ -710,9 +722,9 @@ class Scenario:
         distribution_id = self._resolve_distribution_id(distribution_id)
         if not isinstance(count, int) or count <= 0:
             raise ValueError(f"count must be a positive integer, got {count!r}")
-        dist = self.distributions[distribution_id]
-        dist.setdefault("parameters", {})["number"] = count
-        dist["parameters"]["distribution_mode"] = "by_number"
+        params = _writable_parameters(self.distributions[distribution_id])
+        params["number"] = count
+        params["distribution_mode"] = "by_number"
 
     def set_seed(self, seed: int):
         if not isinstance(seed, int) or seed < 0:
@@ -787,8 +799,7 @@ class Scenario:
             n = kwargs["number"]
             if not isinstance(n, int) or n <= 0:
                 raise ValueError(f"number must be a positive integer, got {n!r}")
-        dist = self.distributions[distribution_id]
-        params = dist.setdefault("parameters", {})
+        params = _writable_parameters(self.distributions[distribution_id])
         params.update(kwargs)
         if speed_value is not None:
             params["desired_speed"] = speed_value
@@ -821,8 +832,7 @@ class Scenario:
             key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
         )
 
-        dist = self.distributions[distribution_id]
-        params = dist.setdefault("parameters", {})
+        params = _writable_parameters(self.distributions[distribution_id])
 
         if keep_initial_agents:
             params["initial_number"] = int(params.get("number", 0) or 0)
@@ -1751,13 +1761,13 @@ def run_scenario(
         # "full", "discovery", or a probability in [0, 1] that each exit is
         # already known -- a real crowd is a gradient, not two camps.
         dist_familiarity: list = [
-            d.get("parameters", {}).get("familiarity", "full")
+            (parameters_as_dict(d.get("parameters")) or {}).get("familiarity", "full")
             for d in scenario.raw.get("distributions", {}).values()
         ]
         # The exit each spawn area's occupants walked in through, which they
         # know whatever their familiarity.
         dist_entrance: list = [
-            d.get("parameters", {}).get("entrance")
+            (parameters_as_dict(d.get("parameters")) or {}).get("entrance")
             for d in scenario.raw.get("distributions", {}).values()
         ]
         dist_no_known_exit: list = list(no_known_exit_by_dist.values())

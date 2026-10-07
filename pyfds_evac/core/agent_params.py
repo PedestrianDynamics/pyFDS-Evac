@@ -54,8 +54,12 @@ def _normalize_speed_aliases(params: dict[str, Any], dist_id: str) -> None:
             params[canonical] = params[alias]
 
 
-def _parameters_as_dict(params: Any) -> dict[str, Any] | None:
-    """Return distribution ``parameters`` as a dict, or None if not one."""
+def parameters_as_dict(params: Any) -> dict[str, Any] | None:
+    """Return distribution ``parameters`` as a dict, or None if not one.
+
+    A scenario may give ``parameters`` as an object or as a JSON-encoded
+    string; the initialisers read both (#644).
+    """
     if isinstance(params, str):
         try:
             params = json.loads(params)
@@ -79,7 +83,7 @@ def _alias_parameters(data: Any) -> Iterator[tuple[str, dict, dict[str, Any]]]:
     for dist_id, dist_data in distributions.items():
         if not isinstance(dist_data, dict):
             continue
-        params = _parameters_as_dict(dist_data.get("parameters"))
+        params = parameters_as_dict(dist_data.get("parameters"))
         if params is None:
             continue
         if not any(alias in params for alias, _ in SPEED_KEY_ALIASES):
