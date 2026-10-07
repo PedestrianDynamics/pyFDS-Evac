@@ -224,7 +224,6 @@ but the same scenario can behave differently:
 | Incapacitation | `TenabilityConfig` whenever a FED track runs, unless `--disable-tenability` | none: `tenability_config=None`; a `fed_model` without `tenability_config` accumulates dose but never incapacitates |
 | Visibility model | built for discovery agents, `--vis-cache` or `--clear-air-visibility`, unless `--no-visibility` | none: `vis_model=None` |
 | Visibility time step | = `--reroute-interval`, 1.0 s | 10.0 s: `VisibilityModel(time_step_s=)` |
-| Clear-air grid | 0.25 m (`--vis-cell-size`) | 0.5 m: `VisibilityModel.clear_air(cell_size_m=)` |
 | Smoke-blind, exit replay | `--smoke-blind`, `--replay-exits` | off: `smoke_blind=False`, `replay_exits=None` (a dict of `(origin, spawn_index)` to exit) |
 
 A Python user who copies `run_scenario(scenario)` therefore gets no
@@ -558,7 +557,7 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 | `--agent ID` | Agent to follow (default: lowest id in the run). |
 | `--seed N` | Run seed (default 420); needed to reproduce a specific movie. |
 | `--fps N` | Movie frame rate (default 12). |
-| `--cell-size M` | Visibility grid resolution in metres (default 0.5). |
+| `--cell-size M` | Visibility grid resolution in metres (default 0.25, as `--vis-cell-size`). |
 | `--work DIR` | Working directory for the deck variant and run SQLite (default `results/cognitive_map_movie`). |
 
 ## Deriving inputs from an FDS deck

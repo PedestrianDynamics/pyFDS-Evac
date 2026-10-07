@@ -39,6 +39,7 @@ from matplotlib.lines import Line2D
 from shapely import wkt as shapely_wkt
 from shapely.geometry import Point, Polygon
 
+from pyfds_evac.config.parameters import VIS_CELL_SIZE_M
 from pyfds_evac.core import load_scenario, run_scenario
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 from pyfds_evac.core.visibility import (
@@ -443,7 +444,7 @@ def main() -> int:
     ap.add_argument(
         "--cell-size",
         type=float,
-        default=0.5,
+        default=VIS_CELL_SIZE_M,
         help="visibility grid resolution in m; walls thinner than one cell "
         "stop occluding, so pick it below the deck's thinnest wall "
         "(see VisibilityModel.clear_air)",

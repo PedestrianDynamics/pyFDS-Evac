@@ -92,7 +92,7 @@ def test_python_defaults_of_the_model_match_the_code():
         == parameter("reroute_interval").python_default
     )
     clear_air = inspect.signature(VisibilityModel.clear_air).parameters
-    assert clear_air["cell_size_m"].default == parameter("vis_cell_size").python_default
+    assert clear_air["cell_size_m"].default == parameter("vis_cell_size").default
     assert DEFAULT_MAX_SIGN_DISTANCE_M == parameter("max_sign_distance").default
     tenability = TenabilityConfig()
     for dest in (
@@ -1158,3 +1158,44 @@ def test_predicted_run_settings_match_the_built_models(heat_scenario, argv):
     cfg = effective_configuration(opts, heat_scenario)
     assert used["heat_fed"] is not None and used["visibility"] is not None
     assert predicted_run_settings(opts, heat_scenario.raw, cfg) == used
+
+
+@pytest.mark.parametrize(
+    "argv",
+    [
+        # 0.25 m: the 0.1 m walls warn; 0.08 m resolves them.
+        ["--clear-air-visibility"],
+        ["--clear-air-visibility", "--vis-cell-size", "0.08"],
+    ],
+)
+def test_predicted_clear_air_wall_check_matches_the_built_model(argv, tmp_path):
+    """The thin-wall record is predicted from the loaded geometry (#115)."""
+    from pyfds_evac.config.effective import predicted_run_settings
+    from pyfds_evac.core.manifest import run_settings
+
+    scenario = _load(DISCOVERY)
+    cache = str(tmp_path / "vis.npz")
+    opts = _parse("--scenario", "x", "--vis-cache", cache, *argv)
+    cfg = effective_configuration(opts, scenario)
+    predicted = predicted_run_settings(opts, scenario.raw, cfg)["visibility"]
+    for _build in ("cold", "cached"):
+        kwargs = build_run_kwargs(scenario, opts)
+        used = run_settings(seed=scenario.seed, vis_model=kwargs["vis_model"])
+        assert predicted == used["visibility"]
+    assert predicted["thin_wall_warning"] is (argv == ["--clear-air-visibility"])
+
+
+def test_show_config_predicts_the_thin_wall_check():
+    """--show-config prints the record and the warning the build gives."""
+    scenario = _load(DISCOVERY)
+    warns = effective_configuration(_parse("--scenario", "x"), scenario)
+    assert warns.resolved["thin_wall_warning"] is True
+    assert warns.resolved["thin_wall_m"] == pytest.approx(0.1, abs=0.005)
+    text = warns.format_text()
+    assert "resolved thin_wall_warning" in text
+    assert any("Clear-air visibility grid" in w for w in warns.warnings)
+    fine = effective_configuration(
+        _parse("--scenario", "x", "--vis-cell-size", "0.08"), scenario
+    )
+    assert fine.resolved["thin_wall_warning"] is False
+    assert not any("Clear-air visibility grid" in w for w in fine.warnings)

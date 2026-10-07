@@ -7,7 +7,7 @@ import json
 import logging
 import math
 from pathlib import Path
-from typing import Protocol
+from typing import Any, Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
@@ -247,6 +247,177 @@ def _make_meta(
         # past it.
         "format": 6,
     }
+
+
+# A part of an obstruction that a clear-air grid may lose counts as a wall,
+# rather than a rounded corner or the tip of a wedge, when it runs longer than
+# this many cells: a part shorter than one cell is lost in both directions,
+# a post, not a wall ...
+WALL_MIN_LENGTH_CELLS = 1.0
+# ... and is close to uniformly thin: its widest point is at most this many
+# times its mean width. Walls measure <= 1.31, corners and tips >= 1.56.
+WALL_MAX_TAPER = 1.4
+# A lost part is re-opened by a disc this fraction of its mean width across:
+# just below the mean width, so a uniform wall is kept and only thinner parts
+# split off, and a junction of walls of different widths is measured per wall.
+WALL_SPLIT = 0.98
+# A wall part found by splitting is bounded by true faces except at its two
+# ends: its edges inside the obstruction are at most this many widths long.
+# This drops crescent slivers along the arcs of the opening.
+WALL_CUT_MAX_WIDTHS = 3.0
+WALL_MAX_SPLIT_DEPTH = 6
+
+_Wall = tuple[float, Any]
+
+
+def _polygons(geometry) -> list:
+    """The polygons of *geometry*, which may be a collection."""
+    parts = getattr(geometry, "geoms", [geometry])
+    return [part for part in parts if part.geom_type == "Polygon"]
+
+
+def _lost_parts(obstruction, cell_size_m: float) -> list:
+    """Parts of *obstruction* that a disc one cell across cannot enter.
+
+    This is the morphological opening of *obstruction* by a disc of diameter
+    *cell_size_m*, subtracted from *obstruction*. A wall exactly one cell wide
+    is lost too (the 1e-9 m margin), so equality warns. Growing the opened
+    shape by 5 % more than it shrank absorbs the arc approximation of
+    ``buffer``, which would otherwise leave slivers along every edge.
+    """
+    radius = cell_size_m / 2 + 1e-9
+    kept = obstruction.buffer(-radius).buffer(1.05 * radius)
+    return _polygons(obstruction.difference(kept))
+
+
+def _width_and_length(piece) -> tuple[float, float]:
+    """Sides of the rectangle with the area and perimeter of *piece*."""
+    area, perimeter = piece.area, piece.length
+    width = (perimeter - math.sqrt(max(perimeter**2 - 16 * area, 0.0))) / 4
+    return float(width), float(perimeter / 2 - width)
+
+
+def _is_long(piece, cell_size_m: float) -> bool:
+    """True when *piece* is longer than :data:`WALL_MIN_LENGTH_CELLS` cells."""
+    if piece.area <= 1e-4 * cell_size_m**2:
+        return False
+    return _width_and_length(piece)[1] > WALL_MIN_LENGTH_CELLS * cell_size_m
+
+
+def _leaf_wall(piece, faces, check_cut: bool) -> list[_Wall]:
+    """``[(width, piece)]`` when *piece* is evenly thin, else ``[]``.
+
+    With *check_cut*, *piece* must also lie along *faces*, the true faces of
+    the obstructions, except for :data:`WALL_CUT_MAX_WIDTHS` widths of cut.
+    """
+    width = _width_and_length(piece)[0]
+    if not piece.buffer(-WALL_MAX_TAPER * width / 2).is_empty:
+        return []
+    cut = piece.exterior.difference(faces).length
+    if check_cut and cut > WALL_CUT_MAX_WIDTHS * width:
+        return []
+    return [(width, piece)]
+
+
+def _walls(piece, faces, cell_size_m: float, depth: int = 0) -> list[_Wall]:
+    """The walls in a lost *piece*, split at width steps.
+
+    *piece* is re-opened just below its mean width (:data:`WALL_SPLIT`). The
+    sub-parts longer than one cell are its parts thinner than the mean. When
+    each is a wall, *piece* is a junction of walls: they and the remainder
+    are judged on their own. When one tapers to a tip, the sub-parts that
+    are walls are kept and *piece* is judged whole, so a wedge yields none.
+    """
+    if not _is_long(piece, cell_size_m):
+        return []
+    check_cut = depth > 0
+    width = _width_and_length(piece)[0]
+    subs = []
+    if depth < WALL_MAX_SPLIT_DEPTH:
+        subs = _lost_parts(piece, WALL_SPLIT * width)
+        subs = [sub for sub in subs if _is_long(sub, cell_size_m)]
+    if not subs:
+        return _leaf_wall(piece, faces, check_cut)
+    found = [_walls(sub, faces, cell_size_m, depth + 1) for sub in subs]
+    walls = [wall for group in found for wall in group]
+    if not all(found):
+        return walls + _leaf_wall(piece, faces, check_cut)
+    from shapely.ops import unary_union
+
+    for rest in _polygons(piece.difference(unary_union(subs))):
+        walls += _walls(rest, faces, cell_size_m, depth + 1)
+    return walls
+
+
+def unresolved_wall(walkable, cell_size_m: float) -> tuple[float, float, float] | None:
+    """The thinnest wall a clear-air grid of *cell_size_m* may lose, or None.
+
+    Returns its estimated width and a point on it. The obstructions are the
+    parts of the bounding box of *walkable* outside it, so a wall attached to
+    the outer boundary counts as well as a hole. A part of an obstruction is
+    lost when a disc one cell across cannot enter it (local width up to one
+    cell, see :func:`_lost_parts`). A lost part is split at width steps, so a
+    junction of walls of different widths is measured per wall (:func:`_walls`),
+    and a part counts as a wall when it is longer than one cell and evenly
+    thin (:data:`WALL_MIN_LENGTH_CELLS`, :data:`WALL_MAX_TAPER`), which is
+    meant to leave out rounded corners, bevels and the tips of acute wedges.
+    Those still let sight clip them, as any grid does at a corner, and
+    refining the grid does not remove that.
+
+    This is a heuristic estimate. None does not prove that the grid resolves
+    every wall: a wall oblique to the grid can lose cells below one cell
+    width, and parts shorter than one cell are not reported. On irregular
+    geometry the width is an estimate.
+    """
+    from shapely.geometry import box
+
+    rest = box(*walkable.bounds).difference(walkable)
+    # The faces from the obstructions, not from walkable: a walkable read as
+    # a GeometryCollection has no boundary.
+    faces = rest.boundary.buffer(1e-6)
+    pieces = (p for part in _polygons(rest) for p in _lost_parts(part, cell_size_m))
+    walls = (wall for piece in pieces for wall in _walls(piece, faces, cell_size_m))
+    thinnest = None
+    for width, wall in walls:
+        if thinnest is not None and width >= thinnest[0]:
+            continue
+        point = wall.representative_point()
+        thinnest = (width, point.x, point.y)
+    return thinnest
+
+
+def wall_check(walkable, cell_size_m: float) -> tuple[dict[str, object], str | None]:
+    """The ``thin_wall_*`` record of a clear-air model and its warning text.
+
+    ``thin_wall_m`` is the estimated width of the thinnest wall the grid may
+    lose (None: none found), ``thin_wall_warning`` whether the build warns;
+    the text is None when it does not. ``pyfds_evac.config.effective``
+    predicts both with this same function for ``--show-config`` and the run
+    record.
+    """
+    found = unresolved_wall(walkable, cell_size_m)
+    record: dict[str, object] = {
+        "thin_wall_m": None if found is None else found[0],
+        "thin_wall_warning": found is not None,
+    }
+    if found is None:
+        return record, None
+    width, x, y = found
+    return record, (
+        f"Clear-air visibility grid: a wall about {width:.3g} m wide near "
+        f"({x:.2f}, {y:.2f}) is not wider than the {cell_size_m:.3g} m cell; "
+        f"sight may pass through it. Use a cell size below {width:.3g} m "
+        "(--vis-cell-size, VisibilityModel.clear_air(cell_size_m=)). The "
+        "width is an estimate."
+    )
+
+
+def _warn_if_walls_unresolved(walkable, cell_size_m: float) -> dict[str, object]:
+    """Log a warning for a wall the grid may lose; return the record of it."""
+    record, message = wall_check(walkable, cell_size_m)
+    if message is not None:
+        _logger.warning("%s", message)
+    return record
 
 
 def _blocked_runs(walkable, x_coords, y_coords, cell_size_m: float):
@@ -756,7 +927,7 @@ class VisibilityModel:
         walkable,
         sign_descriptors: dict[str, dict],
         *,
-        cell_size_m: float = 0.5,
+        cell_size_m: float = 0.25,
         extinction_per_m: float = 0.0,
         cache_path: str | Path | None = None,
         max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
@@ -781,10 +952,13 @@ class VisibilityModel:
         deck inherits the resolution from its mesh; here it has to be chosen.
         Pick it below the thinnest wall that must block: at 0.5 m the 0.4 m
         walls of ``assets/blind_spawn_discovery`` vanish entirely, while 0.25 m
-        resolves them.  Cost grows as the inverse square, so halving it
-        quadruples the build -- which is what ``cache_path`` is for: the grid
-        depends only on the geometry, the signs and the resolution, none of
-        which change between runs of a deck.
+        (the default, as ``--vis-cell-size``) resolves them.  A warning is
+        logged when the cell is not smaller than the thinnest wall, an
+        estimate recorded in ``parameters`` (:func:`unresolved_wall`).  Cost
+        grows as the inverse square, so halving it quadruples the build --
+        which is what ``cache_path`` is for: the grid depends only on the
+        geometry, the signs and the resolution, none of which change between
+        runs of a deck.
         """
         from fdsvismap import VisMap
 
@@ -802,6 +976,7 @@ class VisibilityModel:
 
         _check_max_sign_distance(max_sign_distance_m)
         _sign_caps(sign_descriptors)
+        wall_check = _warn_if_walls_unresolved(walkable, cell_size_m)
         expected_meta = _make_clear_air_meta(
             walkable,
             sign_descriptors,
@@ -813,6 +988,7 @@ class VisibilityModel:
             "kind": "clear-air",
             "cell_size_m": cell_size_m,
             "max_sign_distance_m": max_sign_distance_m,
+            **wall_check,
         }
         cache = Path(cache_path) if cache_path else None
         if cache is not None:

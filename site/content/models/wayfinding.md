@@ -151,6 +151,17 @@ Script: `scripts/figures/sign_rotation.py`.*
   `--vis-cell-size`. A cell is an obstruction when its centre lies outside the
   polygon (`visibility.py`, `_blocked_runs`, `VisibilityModel.clear_air`). A wall thinner than one cell
   *may* therefore let sight through, depending on how it falls on the grid.
+  A warning is logged when the cell is not smaller than the thinnest wall
+  (`visibility.py`, `unresolved_wall`). The check is a heuristic. It counts
+  as a wall a part of the bounding box outside the walkable area that a
+  disc one cell across cannot enter, longer than one cell and evenly thin,
+  which is meant to leave out rounded corners, bevels and wedge tips. A
+  junction of walls of different widths is measured per wall, and the
+  width reported is that of the thinnest wall. The width is an estimate, recorded with the verdict as `thin_wall_m` and
+  `thin_wall_warning` in the run's visibility settings; `--show-config`
+  predicts both and lists the warning. No warning does not prove that every
+  wall blocks: a wall oblique to the grid can leak below one cell width,
+  and parts shorter than one cell are not reported.
   The extinction is zero, and one time point is stored (`visibility.py`, `VisibilityModel.clear_air`).
 
 At run time the model answers `node_is_visible(t, x, y, node)` by looking up
@@ -408,14 +419,15 @@ library use.
 | `--smoke-slice-height` | CLI | 1.6 (`config/parameters.py`, `SMOKE_SLICE_HEIGHT_M`) | 1.6 (`visibility.py`, `VisibilityModel.__init__`) | m | FDS slice height |
 | `--reroute-interval` | CLI | 1.0 (`config/parameters.py`, `REROUTE_INTERVAL_S`) | 10.0 (`route_graph.py`, `RerouteConfig.reevaluation_interval_s`) | s | re-evaluation interval, hence periodic learning |
 | vismap time step | = `--reroute-interval` | 1.0 (`run_config.py`, `_build_vis_model`) | 10.0 (`visibility.py`, `VisibilityModel.__init__`) | s | FDS model only; clear air stores one time |
-| `--vis-cell-size` | CLI | 0.25 (`config/parameters.py`, `VIS_CELL_SIZE_M`) | 0.5 (`visibility.py`, `VisibilityModel.clear_air`) | m | clear-air grid; FDS models use the FDS mesh |
+| `--vis-cell-size` | CLI | 0.25 (`config/parameters.py`, `VIS_CELL_SIZE_M`) | 0.25 (`visibility.py`, `VisibilityModel.clear_air`) | m | clear-air grid; FDS models use the FDS mesh |
 | `--vis-cache` | CLI | none | none | – | `.npz` cache path |
 
 All defaults that differ between `run.py` and `run_scenario()` are listed in
 [Python API and command line](/docs/usage.md#python-api-and-command-line).
 
 The `--vis-cell-size` docstring advises a cell smaller than the thinnest wall
-(`visibility.py`, `VisibilityModel.clear_air`). Results for discovery agents have not converged
+(`visibility.py`, `VisibilityModel.clear_air`), and the build warns when it is
+not ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)). Results for discovery agents have not converged
 with the cell size ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
 
 ## Where it acts in the time step
