@@ -9,6 +9,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Scenario key `distributions.<id>.parameters.no_known_exit`: what an agent
+  does while no exit is reachable in its map. `default_route` (default, the
+  FDS+Evac counterpart) follows the journey, or without one the exit nearest
+  on foot; `explore` (frontier, patrol), `return` and `stay` are opt-in and
+  never walk to a stage absent from the map. The opt-in modes need rerouting
+  and are refused with `--smoke-blind`, before a CLI, GUI or TUI run (D33,
+  #610, #91).
+- Exit history rows carry `exit_in_map`, and the run metrics count
+  `agents_left_by_unknown_exit`, the agents that left by an exit absent from
+  their map (#610).
+
 - `pyfds-evac init DECK.fds` starts a scenario from an FDS deck. It writes
   `config.json`, `geometry.wkt` and `import_report.json` to
   `<deck stem>_scenario/` next to the deck (`-o DIR` picks another folder),
@@ -62,6 +73,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   wall, and the width reported is that of the thinnest wall (#115).
 
 ### Changed
+
+- An agent that knows no exit no longer explores by default; it follows the
+  default route (see `no_known_exit`). `familiarity_test_discovery`,
+  `familiarity_test_no_journey`, `blind_spawn_discovery` and `world_100` set
+  `explore`. In the first FDS case 93/150 agents get out instead of 70/150,
+  82 of them by an exit not in their map (#610).
+- The nearest exit of a spawn area without a journey is measured on foot
+  through the walkable area, not in a straight line (#610).
+- An agent's first choice of a known exit is logged as `initial`, not as a
+  `smoke_reroute` away from an exit it never knew, and is adopted at once
+  (#610).
 
 - `pyfds-evac --scenario` takes the slice height from the scenario's
   `smoke_slice_height` when `--smoke-slice-height` is not given, and says
@@ -117,6 +139,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   moves. A negative or non-numeric value stops the run (#458).
 
 ### Fixed
+
+- Arriving at a node teaches the leg just walked, and its reverse where the
+  graph has one (#468).
 
 - The SocialForceModel builder reads `sfm_body_force` (default 120000,
   JuPedSim's) as the body force *k* and passes it as `body_force=`. It
