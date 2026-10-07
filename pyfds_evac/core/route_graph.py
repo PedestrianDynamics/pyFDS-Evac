@@ -1008,7 +1008,8 @@ class RouteAssessment:
 class RouteDecision:
     """What one reevaluation decided for an agent, before it is applied."""
 
-    # "keep", "switch", "fallback", "explore" or "wander".
+    # "keep", "switch", "fallback", "explore", "wander", "return", "stay"
+    # or "default_route".
     kind: str
     path: list[str] | None = None
     old_exit: str | None = None
@@ -2427,6 +2428,23 @@ class AgentRouteState:
     # and when; any other exit switch clears it (#458 return lockout).
     refused_switch_from: str | None = None
     refused_switch_time_s: float = -math.inf
+    # The exit of the default route the agent follows while it knows no exit
+    # (no_known_exit "default_route", #610). current_exit holds only exits
+    # the agent knows, so its first known exit is an initial choice, not a
+    # switch away from this one.
+    default_exit: str | None = None
+    # Whether the agent stands because it has nowhere known to go (#610).
+    standing: bool = False
+
+    @property
+    def counted_exit(self) -> str | None:
+        """The exit this agent is counted at in ``exit_counts``.
+
+        A default-route agent walks to its default exit and queues there, so
+        it is counted at it, as FDS+Evac counts an agent following its flow
+        field at the door the field leads to.
+        """
+        return self.current_exit or self.default_exit
 
 
 @dataclass(frozen=True)
@@ -2911,15 +2929,36 @@ def _apply_decision(
         if decision.update_cached_path:
             route_state.current_path = decision.path
         return None
+    if decision.kind == "stay":
+        _stand(wait_info, route_state, decision.target_id)
+        return _switch_record(decision, agent_id, current_time_s)
+    if decision.kind == "default_route" and not decision.path:
+        # The scripted plan already leads to the default exit; only the
+        # bookkeeping changes.
+        _follow_default_route(route_state, decision, [])
+        return _switch_record(decision, agent_id, current_time_s)
     stage_configs = wait_info.get("stage_configs", {})
     changed = reroute_agent(wait_info, decision.path, stage_configs)
     if not changed:
         if decision.update_cached_path:
             route_state.current_path = decision.path
         return None
+    if route_state.standing:
+        route_state.standing = False
+    if decision.kind == "default_route":
+        _follow_default_route(route_state, decision, decision.path or [])
+        return _switch_record(decision, agent_id, current_time_s)
     if decision.kind in ("switch", "fallback") and not decision.update_cached_path:
         route_state.current_exit = decision.target_id
+        if route_state.default_exit is not None:
+            route_state.default_exit = None
     route_state.current_path = decision.path
+    return _switch_record(decision, agent_id, current_time_s)
+
+
+def _switch_record(
+    decision: RouteDecision, agent_id: int, current_time_s: float
+) -> RouteSwitch:
     return RouteSwitch(
         time_s=current_time_s,
         agent_id=agent_id,
@@ -2928,6 +2967,236 @@ def _apply_decision(
         old_cost=decision.old_cost,
         new_cost=decision.new_cost,
         reason=decision.switch_reason,
+    )
+
+
+def _follow_default_route(
+    route_state: AgentRouteState, decision: RouteDecision, path: list[str]
+) -> None:
+    """Record that the agent now walks the default route to its exit."""
+    route_state.current_exit = None
+    route_state.default_exit = decision.target_id
+    route_state.standing = False
+    route_state.current_path = list(path)
+
+
+def _stand(wait_info: dict, route_state: AgentRouteState, node: str | None) -> None:
+    """Stop the agent where it is, with no onward plan, at *node*.
+
+    Idle keeps it in the reroute pass, so it moves on once a decision gives
+    it somewhere to go. Its target becomes the point it stands on, which
+    the runtime assigns: an idle agent is otherwise left walking to the
+    target it had.
+    """
+    wait_info["state"] = "idle"
+    if node is not None:
+        wait_info["current_origin"] = node
+        wait_info["current_target_stage"] = node
+    # Without a recorded position the runtime stands it where it is next.
+    position = wait_info.get("current_position")
+    wait_info["target"] = tuple(position) if position is not None else None
+    wait_info["target_assigned"] = False
+    wait_info["wait_until"] = None
+    wait_info["inside_since"] = None
+    route_state.standing = True
+    route_state.current_path = []
+
+
+def terminal_exit(wait_info: dict, graph_nodes: dict) -> str | None:
+    """The exit the agent's scripted plan ends at, or None.
+
+    Follows the first choice of each stage's ``path_choices`` from the
+    current target.
+    """
+    if wait_info.get("mode") != "path":
+        return None
+    path_choices = wait_info.get("path_choices", {})
+    stage = wait_info.get("current_target_stage")
+    visited = set()
+    while stage and stage in path_choices and stage not in visited:
+        visited.add(stage)
+        choices = path_choices[stage]
+        if choices:
+            stage = (
+                choices[0][0] if isinstance(choices[0], (list, tuple)) else choices[0]
+            )
+        else:
+            break
+    if stage and stage in graph_nodes:
+        node = graph_nodes[stage]
+        if node.stage_type == "exit":
+            return stage
+    fallback = wait_info.get("current_target_stage")
+    if (
+        fallback
+        and fallback in graph_nodes
+        and graph_nodes[fallback].stage_type == "exit"
+    ):
+        return fallback
+    return None
+
+
+def nearest_exit_by_walking(
+    graph: StageGraph,
+    source: str,
+    agent_position: tuple[float, float] | None,
+) -> tuple[str, list[str]] | None:
+    """The exit of *graph* nearest by walking distance, and the path to it.
+
+    Path lengths are the edge weights, which follow the walkable area, with
+    the first leg measured from *agent_position*. Ties go to the exit whose
+    id sorts first. Pass a graph without closed stages.
+    """
+    from .cognitive_map import _cost_from_agent
+
+    best: tuple[str, float, list[str]] | None = None
+    for exit_id, (cost, path) in sorted(graph.shortest_paths_to_exits(source).items()):
+        if len(path) < 2:
+            continue
+        cost = _cost_from_agent(graph, path, cost, agent_position)
+        if best is None or cost < best[1]:
+            best = (exit_id, cost, path)
+    if best is None:
+        return None
+    return best[0], best[2]
+
+
+def _decide_no_known_exit(
+    wait_info: dict,
+    route_state: AgentRouteState,
+    graph: StageGraph,
+    source: str,
+    cognitive_map,
+    agent_position: tuple[float, float] | None,
+) -> RouteDecision:
+    """What an agent with no reachable known exit does, by its mode (#610).
+
+    *graph* is the stage graph without closed stages.
+    """
+    from .cognitive_map import no_known_exit_mode
+
+    mode = no_known_exit_mode(wait_info.get("no_known_exit"))
+    if mode == "default_route":
+        return _decide_default_route(
+            wait_info, route_state, graph, source, agent_position
+        )
+    if mode == "stay":
+        return _decide_stay(route_state, source)
+    if mode == "return":
+        decision = _decide_return(wait_info, route_state, graph, source, cognitive_map)
+        if decision is not None:
+            return decision
+    decision = _decide_explore(
+        wait_info, route_state, graph, source, cognitive_map, agent_position
+    )
+    if decision.kind != "keep":
+        return decision
+    # Nothing to explore: an agent must not walk on toward a node it does
+    # not know (C4), such as the first stage of a journey or the exit
+    # nearest its spawn point.
+    if wait_info.get("current_target_stage") in cognitive_map.known_nodes:
+        return decision
+    return _decide_stay(route_state, source)
+
+
+def _decide_stay(route_state: AgentRouteState, source: str) -> RouteDecision:
+    """Stand where the agent is, once; later evaluations keep it standing."""
+    if route_state.standing:
+        return RouteDecision(kind="keep")
+    return RouteDecision(
+        kind="stay", target_id=source, new_cost=0.0, switch_reason="stay"
+    )
+
+
+def _decide_default_route(
+    wait_info: dict,
+    route_state: AgentRouteState,
+    graph: StageGraph,
+    source: str,
+    agent_position: tuple[float, float] | None,
+) -> RouteDecision:
+    """Follow the default route: the scripted plan, else the nearest exit.
+
+    The scripted plan is the distribution's journey, or for a distribution
+    without one the exit nearest the spawn point by walking distance. It is
+    kept while it leads to an open exit. An idle agent, or one whose plan
+    ends at a closed exit or nowhere, is sent to the nearest open exit by
+    walking distance. This is the FDS+Evac counterpart: an agent with no
+    known door follows the modeller's flow field. The exit is not in the
+    agent's map; leaving through it is flagged in the exit history.
+    """
+    idle = wait_info.get("state") == "idle"
+    exit_id = None if idle else terminal_exit(wait_info, graph.nodes)
+    path: list[str] = []
+    if exit_id is None:
+        found = nearest_exit_by_walking(graph, source, agent_position)
+        if found is None:
+            return RouteDecision(kind="keep")
+        exit_id, path = found
+    elif route_state.default_exit == exit_id and route_state.current_exit is None:
+        return RouteDecision(kind="keep")
+    return RouteDecision(
+        kind="default_route",
+        path=path,
+        old_exit=route_state.current_exit,
+        target_id=exit_id,
+        new_cost=0.0,
+        switch_reason="default_route",
+    )
+
+
+def _decide_return(
+    wait_info: dict,
+    route_state: AgentRouteState,
+    graph: StageGraph,
+    source: str,
+    cognitive_map,
+) -> RouteDecision | None:
+    """Walk back over known legs to the nearest node with a known exit.
+
+    A known exit can be out of reach from where the agent stands and in
+    reach from a node it passed: routes are directed and a one-way leg
+    leads only forward. The agent retraces known legs in either direction
+    to the nearest such node; None when there is none.
+    """
+    from .cognitive_map import _undirected_known_path, cognitive_subgraph
+
+    sub = cognitive_subgraph(cognitive_map, graph)
+    best: tuple[float, str, list[str]] | None = None
+    for node_id in sorted(cognitive_map.known_nodes):
+        if node_id == source or node_id not in graph.nodes:
+            continue
+        if not sub.shortest_paths_to_exits(node_id):
+            continue
+        path = _undirected_known_path(cognitive_map, graph, source, node_id)
+        if path is None:
+            continue
+        length = sum(
+            math.hypot(
+                graph.nodes[a].centroid_x - graph.nodes[b].centroid_x,
+                graph.nodes[a].centroid_y - graph.nodes[b].centroid_y,
+            )
+            for a, b in zip(path, path[1:])
+        )
+        if best is None or length < best[0]:
+            best = (length, node_id, path)
+    if best is None:
+        return None
+    _length, node_id, path = best
+    committed = route_state.current_path
+    if (
+        wait_info.get("state") != "idle"
+        and committed
+        and committed[-1] == node_id
+        and wait_info.get("current_target_stage") in committed
+    ):
+        return RouteDecision(kind="keep")
+    return RouteDecision(
+        kind="return",
+        path=path,
+        target_id=node_id,
+        new_cost=0.0,
+        switch_reason="return",
     )
 
 
@@ -2980,13 +3249,12 @@ def evaluate_and_reroute(
     )
     if not ranked:
         # No exit reachable in the agent's known subgraph (typically a
-        # discovery agent that hasn't found the way out yet). Rather than
-        # standing still, head toward the nearest known-but-unexplored node
-        # so the cognitive map keeps growing until an exit is found.
+        # discovery agent that hasn't found the way out yet). Its
+        # distribution's no_known_exit mode decides what it does (#610).
         route_state.last_eval_time_s = current_time_s
         if cognitive_map is None:
             return None
-        decision = _decide_explore(
+        decision = _decide_no_known_exit(
             wait_info,
             route_state,
             without_closed_stages(graph, current_time_s),

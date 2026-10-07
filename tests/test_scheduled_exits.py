@@ -210,11 +210,14 @@ def test_agent_knowing_only_the_closed_exit_learns_no_other():
     """Familiarity holds: a closed entrance does not reveal the other door.
 
     Such an agent knows only its spawn area, already visited, and the closed
-    door. It has nowhere to explore or wander, so it keeps its route and waits
-    at the closed door.
+    door. Under no_known_exit "explore" it has nowhere to explore or wander,
+    so it keeps its route and waits at the closed door.
     """
     scenario = _scenario(
-        {"west": {"closed_after_s": T_CLOSE_S}}, familiarity=0.0, entrance="west"
+        {"west": {"closed_after_s": T_CLOSE_S}},
+        familiarity=0.0,
+        entrance="west",
+        no_known_exit="explore",
     )
     run = _run(scenario, reroute_config=REROUTE)
     doors = [(t, door) for t, door in run["departures"] if t < MAX_TIME_S - 1.0]
@@ -225,6 +228,24 @@ def test_agent_knowing_only_the_closed_exit_learns_no_other():
     assert len(waiting) == run["remaining"]
     west = DOORS["west"]
     assert all(west.distance(Point(x, y)) <= WEST_POCKET_M for x, y in waiting)
+
+
+def test_agent_knowing_only_the_closed_exit_takes_the_default_route():
+    """Under the default no_known_exit the agent takes the open door (#610).
+
+    The closed entrance leaves it no known exit, so it follows the default
+    route: the nearest open exit on foot, which is not in its map.
+    """
+    scenario = _scenario(
+        {"west": {"closed_after_s": T_CLOSE_S}}, familiarity=0.0, entrance="west"
+    )
+    run = _run(scenario, reroute_config=REROUTE)
+    late = [door for t, door in run["departures"] if t > T_CLOSE_S + FRAME_S]
+    assert late and set(late) <= {"east"}
+    default = [r for r in run["routes"] if r["reason"] == "default_route"]
+    assert default
+    assert {(r["old_exit"], r["new_exit"]) for r in default} == {("west", "east")}
+    assert all(r["time_s"] >= T_CLOSE_S for r in default)
 
 
 def test_unscheduled_exits_are_always_open():

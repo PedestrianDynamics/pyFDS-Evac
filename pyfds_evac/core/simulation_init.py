@@ -1263,6 +1263,9 @@ def _initialize_with_fallback(
         )
         total_agents = default_n_agents
 
+    # Walking distances for the nearest-exit assignment (#610, D4).
+    routing_engine = jps.RoutingEngine(walkable_area.polygon)
+
     # Step 3: Create a single global DS journey for all fallback agents
     global_ds_stage_id = simulation.add_direct_steering_stage()
     global_ds_journey = jps.JourneyDescription([global_ds_stage_id])
@@ -1576,7 +1579,12 @@ def _initialize_with_fallback(
 
         # Add agents with nearest exit assignment — all on global DS journey
         for idx, pos in enumerate(positions):
-            nearest_exit_id = _find_nearest_exit(pos, exit_geometries=exit_geometries)
+            nearest_exit_id = _find_nearest_exit(
+                pos,
+                exit_geometries=exit_geometries,
+                routing_engine=routing_engine,
+                walkable=walkable_area.polygon,
+            )
             spawn_origin = spawn_key or nearest_exit_id
 
             agent_radius = float(sampled_radii[idx])
@@ -1682,13 +1690,48 @@ def _initialize_with_fallback(
     )
 
 
+def _exit_aim(exit_geom, walkable) -> tuple[float, float]:
+    """A point of the exit inside the walkable area, to measure a walk to.
+
+    An exit polygon can reach past the walkable boundary, and a routing
+    query to a point outside it falls back to a straight line.
+    """
+    inside = exit_geom.intersection(walkable) if walkable is not None else exit_geom
+    if inside.is_empty:
+        inside = exit_geom
+    point = inside.representative_point()
+    return (point.x, point.y)
+
+
+def _exit_distance(position: tuple, exit_geom, routing_engine, walkable) -> float:
+    """Walking distance from *position* to the exit, or straight-line without
+    a routing engine."""
+    if routing_engine is None:
+        return float(Point(position).distance(exit_geom))
+    from .route_graph import _walkable_distance
+
+    return _walkable_distance(
+        routing_engine, tuple(position), _exit_aim(exit_geom, walkable)
+    )
+
+
 def _find_nearest_exit(
     position: tuple,
     stage_map: dict | None = None,
     exits: list | None = None,
     exit_geometries: dict | None = None,
+    *,
+    routing_engine=None,
+    walkable=None,
 ):
-    """Find the key of the nearest exit to the given position."""
+    """Find the key of the nearest exit to the given position.
+
+    With *routing_engine* (a ``jupedsim.RoutingEngine`` over *walkable*)
+    exits in *exit_geometries* are compared by walking distance, so a wall
+    between an agent and an exit counts (#610, D4). This is the default
+    route of an agent of a distribution without a journey that knows no
+    exit.
+    """
 
     point = Point(position)
     min_distance = float("inf")
@@ -1696,7 +1739,7 @@ def _find_nearest_exit(
 
     if exit_geometries:
         for stage_id, exit_geom in exit_geometries.items():
-            distance = point.distance(exit_geom)
+            distance = _exit_distance(position, exit_geom, routing_engine, walkable)
             if distance < min_distance:
                 min_distance = distance
                 nearest_stage_id = stage_id

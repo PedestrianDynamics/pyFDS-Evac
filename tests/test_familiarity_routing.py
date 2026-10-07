@@ -343,6 +343,8 @@ class TestSameExitLeavesRejectedPath:
 
 class TestExploreReroute:
     def _run(self, graph, wait_info, route_state, cmap):
+        # Frontier exploration is the opt-in explore mode (#610).
+        wait_info.setdefault("no_known_exit", "explore")
         return evaluate_and_reroute(
             agent_id=1,
             wait_info=wait_info,
