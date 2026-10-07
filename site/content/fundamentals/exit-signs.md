@@ -5,12 +5,12 @@ weight: 5
 
 Information given to occupants must be perceived, paid attention to and
 comprehended before they act on it (Kuligowski and Kinateder 2026, Ch. 65,
-p. 2113); *our reading:* this applies to exit signs. [Visibility through smoke](/fundamentals/visibility.md) covers
-the first step: Jin's law *V* = *C*/*K* for the distance at which a sign is
-barely seen. This page covers the rest: the steps between seeing a sign and
-acting on it, the waypoint method that applies Jin's law along a line of
-sight to a sign, and the studies that measured how often occupants detect
-and follow signs.
+p. 2113); *our reading:* this applies to exit signs.
+[Visibility through smoke](/fundamentals/visibility.md) gives Jin's law
+*V* = *C*/*K* for the distance at which a sign is barely seen. Below are
+the steps between seeing a sign and acting on it, the waypoint method that
+applies Jin's law along a line of sight to a sign, and the studies that
+measured how often occupants detect and follow signs.
 
 ## Terms
 
@@ -33,24 +33,25 @@ The sources use the same words for different thresholds. This page uses:
 
 ## From seeing a sign to using it
 
-The SFPE Handbook states that information given to occupants "must be
-perceived (e.g., heard or seen), paid attention to, and then comprehended
-first before any actions take place" (Kuligowski and Kinateder 2026,
-Ch. 65, p. 2113); *our reading:* this applies to exit signs. Its decision
-model puts the same three processes before any protective action
-(p. 2110). Xie et al. (2012, p. 368) split sign use into visibility,
+The decision model in SFPE Ch. 65 puts perception, attention and
+comprehension before any protective action (Kuligowski and Kinateder
+2026, p. 2110). Xie et al. (2012, p. 368) split sign use into visibility,
 detection ('see the sign and correctly interpret the information') and
 acceptance (following it).
 
-No study measures all of these steps for one sign in smoke. Each measures
-one or two of them:
+*Our reading:* no study measures all of these steps for one sign in
+smoke. Each measures one or two of them:
 
-| Step | Measured as | Studies |
-|---|---|---|
-| Seen | smoke density at which a sign of known location vanishes | Jin 1970–1972 (see [Visibility](/fundamentals/visibility.md)) |
-| Detected | share of people who noticed the sign | Xie et al. 2012; Galea et al. 2014; Zhu et al. 2021 |
-| Read | sign size, distance or smoke density at which the content is made out | Wong and Lo 2007; Xie et al. 2007; Cheung et al. 2026 (thresholds) |
-| Understood and followed | share of those who detected the sign and took its direction | Xie et al. 2012; Galea et al. 2014; Zhu et al. 2021 |
+- **Seen:** the smoke density at which a sign of known location vanishes.
+  Jin 1970–1972 (see [Visibility](/fundamentals/visibility.md)).
+- **Detected:** the share of people who noticed the sign. Xie et al.
+  2012; Galea et al. 2014; Zhu et al. 2021.
+- **Read:** the sign size, distance or smoke density at which the content
+  is made out. Wong and Lo 2007; Xie et al. 2007; Cheung et al. 2026
+  (thresholds); Fujii et al. 2014 via SFPE Ch. 68.
+- **Understood and followed:** the share of those who detected the sign
+  and took its direction. Xie et al. 2012; Galea et al. 2014; Zhu et al.
+  2021.
 
 *Our reading:* Xie et al. (2012) report interpretation and following
 together ("correctly interpret and follow", p. 375); Galea et al. (2014)
@@ -84,6 +85,7 @@ vertical height difference is ignored (Eq. 3, pp. 3–4). A cell is
 passable at time *t* if at least one sign is visible from it (Eq. 4,
 p. 4).
 
+<a id="view-angle"></a>
 **The view angle.** Signs are treated as Lambertian radiators, "although
 this assumption is highly simplified depending on the sign's light source
 and surface" (p. 4). The visual distance falls with cos θ, citing
@@ -111,12 +113,15 @@ V = -0.59 + \frac{3.68}{C_s} + 137.19\,S\cos\theta
 $$
 
 with *V* the visible distance [m], \(C_s\) the extinction coefficient
-[1/m], *S* the sign area [m²] and θ the yaw angle; adjusted
-\(R^2\) = 0.734. Twenty young volunteers with visual acuity above 1.0
-viewed a sign of 251 cd/m² in white smoke at 114 lx, at yaw angles of
-0–80° (Fig. 68.9). The angle enters through the sign-area term, added to
-the smoke term, so it reduces visibility much less than a factor
-cos θ on *C*/σ̄ would.
+[1/m] (Ch. 68: "optical smoke density"), *S* the sign area [m²] and θ
+the yaw angle [degree]; adjusted \(R^2\) = 0.734. Twenty young volunteers
+with visual acuity above 1.0 viewed a sign of 251 cd/m² in white smoke at
+114 lx, at yaw angles of 0–80° (Fig. 68.9, p. 2205). They had to
+"recognize the pictogram" (p. 2204), so this is a reading threshold, like
+Xie et al. (2007), not a law for seeing a sign. The angle enters through
+the sign-area term, added to the smoke term. *Our arithmetic*, assuming
+S ≈ 0.026 m²: in light smoke (\(C_s\) ≈ 1 1/m) the angle reduces *V*
+much less than cos θ; near \(C_s\) = 5 1/m the two are close.
 
 **The obstruction.** \(U_{i,j,k}\) is 1 if the cell is not hidden from
 the sign by a wall, 0 otherwise. It comes from a ray cast from the sign
@@ -175,9 +180,8 @@ of flaming and smouldering smoke, and gives limited scope for ambient light
 
 ## Detection and reading studies
 
-None of these studies used real fire smoke with occupants under threat.
-The table gives the setting at a glance; the sections below give the
-values.
+*Our reading:* none of these studies used real fire smoke with occupants
+under threat.
 
 | Study | Setting | People | Smoke |
 |---|---|---|---|
@@ -195,8 +199,9 @@ Building regulations implicitly treat the region from which a sign can be
 read, the visibility catchment area (VCA), as a semicircle centred on the
 sign, independent of the observation angle (pp. 48 and 62). Xie et al.
 assume instead that the eye resolves a fixed minimum angle; the VCA is
-then a circle approximately tangent to the sign (Eq. 4, p. 47; p. 48), with a diameter about
-equal to the radius of the regulatory semicircle (p. 48).
+then a circle approximately tangent to the sign (Eq. 4, p. 47; p. 48),
+with a diameter about equal to the radius of the regulatory semicircle
+(p. 48).
 
 Forty-eight volunteers, 29 men and 19 women, walked towards a sign in a
 39 m corridor under strong artificial light until they could resolve half
@@ -210,8 +215,9 @@ circle" (p. 53). The luminance of the signs was not considered (p. 49).
 pure cos θ law. The authors find the data close to their theoretical
 circle (p. 53), which is itself a cos θ law (*our reading* of Eq. 4).
 This is a reading threshold in clear air; it does not test the cos θ
-factor of the waypoint method, which applies to seeing in smoke. For the
-angle in smoke, see Eq. 68.2 under [The view angle](#the-waypoint-method).
+factor of the waypoint method, which applies to seeing in smoke.
+Eq. 68.2 under [The view angle](#view-angle) is also a reading
+threshold, measured in smoke.
 
 ### Detected, identified, identified with confidence (Wong and Lo 2007)
 
@@ -231,7 +237,8 @@ between seeing and reading the content was measured directly. Their
 
 Sixty-eight people, 41 unfamiliar and 27 familiar with the building, were
 told to leave a university building as quickly as possible, one at a time,
-without running, by any route they chose (p. 370). The signs were reflective, 0.1 × 0.3 m, in
+without running, by any route they chose (p. 370). The signs were
+reflective, 0.1 × 0.3 m, in
 well-lit areas above 100 lx (p. 369). Whether a person detected a sign was
 judged mainly from a questionnaire, checked against video (p. 371).
 
@@ -262,7 +269,8 @@ first decision point,
 Participants wore eye-tracking glasses, and a sign counted as detected
 when the gaze stayed on it longer than 0.1 s (p. 4). Ten drills of 23–33
 participants each met a T-junction with the sign at the bottom or the top,
-and 0, 1 or 3 "disturbers", strangers or acquaintances (Table 1, p. 3). For the top
+and 0, 1 or 3 "disturbers", strangers or acquaintances (Table 1, p. 3).
+For the top
 sign, detection was below 20 % with no disturbers, 41 % with one and 33 %
 with three (p. 4). Among those who detected the sign, about 20 % followed
 the disturbers instead (22 %, p. 6; "around 20 %", p. 7). The authors
@@ -295,9 +303,9 @@ tested an internally illuminated, a photoluminescent and a reflective exit
 sign in a smoke chamber. Five men aged 25–39, with visual acuity 0.8 to
 above 1.2, adjusted the light until they could identify the running-man
 symbol or read 28 mm text (§2.2–2.3, pp. 3–4). *Our reading:* this is a reading
-threshold, not Jin's obscuration threshold, although the authors compare
-their values with Jin's. They report σ*V* = 3–7 for the lit sign
-and 0.5–2 for the photoluminescent and reflective signs (abstract, p. 1).
+threshold; the authors compare their values with Jin's obscuration
+threshold. They report σ*V* = 3–7 for the lit sign and 0.5–2 for the
+photoluminescent and reflective signs (abstract, p. 1).
 The observers knew where the sign was (§2.4, p. 4). Smaller details, such
 as 16 mm text or arrows, "were often unrecognizable in dense smoke or at
 longer distances", so a sign "may be detected as glowing objects" while
