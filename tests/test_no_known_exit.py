@@ -536,6 +536,115 @@ def test_a_run_learns_the_leg_walked_to_a_checkpoint():
         result.cleanup()
 
 
+# --- C1/C4 for flow spawns: decided as they enter ----------------------------
+
+FLOW_SPAWN = box(0.6, 1.0, 1.4, 3.0)
+FLOW_EXIT = box(1.8, 1.0, 2.4, 3.0)  # 0.4 m on: reached within a second
+
+
+def _flow_scenario(mode: str, journey: bool) -> Scenario:
+    """Five agents enter at 0.2 s intervals beside an exit they do not know.
+
+    The reroute pass runs at 0 s and 1 s, so four of them spawn between
+    passes. *journey* sends them to the exit by a journey, otherwise by the
+    nearest-exit fallback; the two are separate spawn paths.
+    """
+    params = {
+        "number": 5,
+        "radius": 0.15,
+        "v0": 1.3,
+        "distribution_mode": "by_number",
+        "use_premovement": False,
+        "familiarity": "discovery",
+        "use_flow_spawning": True,
+        "flow_start_time": 0,
+        "flow_end_time": 1.0,
+        "no_known_exit": mode,
+    }
+    transitions = (
+        [
+            {
+                "from": "jps-distributions_0",
+                "to": "jps-exits_0",
+                "journey_id": "journey_0",
+            }
+        ]
+        if journey
+        else []
+    )
+    sim_params = {"max_simulation_time": 4.0, "model_type": "CollisionFreeSpeedModel"}
+    raw = {
+        "project_version": "2.0",
+        "config": {
+            "simulation_settings": {
+                "simulationParams": sim_params,
+                "numberOfSimulations": 1,
+                "baseSeed": 3,
+            }
+        },
+        "exits": {
+            "jps-exits_0": {"type": "polygon", "coordinates": _coords(FLOW_EXIT)}
+        },
+        "distributions": {
+            "jps-distributions_0": {
+                "type": "polygon",
+                "coordinates": _coords(FLOW_SPAWN),
+                "parameters": params,
+            }
+        },
+        "checkpoints": {},
+        "zones": {},
+        "journeys": (
+            [
+                {
+                    "id": "journey_0",
+                    "stages": ["jps-distributions_0", "jps-exits_0"],
+                    "transitions": transitions,
+                }
+            ]
+            if journey
+            else []
+        ),
+        "transitions": transitions,
+    }
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=box(0, 0, 6, 4).wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=3,
+        sim_params=sim_params,
+        source_path=None,
+    )
+
+
+@pytest.mark.parametrize("journey", [True, False], ids=["journey", "no_journey"])
+@pytest.mark.parametrize("mode", ["explore", "return", "stay"])
+def test_a_flow_agent_decides_as_it_spawns(mode, journey):
+    """An agent spawned between reroute passes takes its no_known_exit
+    decision at once, and does not walk to the exit it does not know."""
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(
+            _flow_scenario(mode, journey),
+            seed=3,
+            reroute_config=RerouteConfig(reevaluation_interval_s=1.0),
+        )
+    try:
+        assert result.agents_evacuated == 0
+        assert result.metrics["agents_left_by_unknown_exit"] == 0
+        rows = result.route_history
+        assert [row["reason"] for row in rows] == ["stay"] * 5
+        # Each at its agent's spawn, before the pass at 1 s.
+        assert all(row["time_s"] < 1.0 for row in rows)
+        frames = result.trajectory_dataframe()
+        for _, track in frames.groupby("id"):
+            moved = (
+                (track.x - track.x.iloc[0]) ** 2 + (track.y - track.y.iloc[0]) ** 2
+            ) ** 0.5
+            assert moved.max() < 0.2
+    finally:
+        result.cleanup()
+
+
 @pytest.mark.parametrize("mode", ["explore", "default_route"])
 def test_an_exit_learned_mid_hop_is_taken_at_once(mode):
     """AT11: an agent walking a frontier hop that learns an exit on the way

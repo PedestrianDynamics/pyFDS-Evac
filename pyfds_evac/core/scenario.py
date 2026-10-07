@@ -1930,6 +1930,207 @@ def run_scenario(
             if rs.counted_exit is not None:
                 exit_counts[rs.counted_exit] = exit_counts.get(rs.counted_exit, 0) + 1
 
+        def _prepare_route_agent(
+            agent_id: int, wait_info: dict, current_time: float, config: RerouteConfig
+        ) -> AgentRouteState:
+            """The route state of a path agent, created with its map on first use."""
+            # Spawn areas become steerable patrol stops for wander.
+            for _dist_id, _cfg in distribution_stage_configs.items():
+                wait_info["stage_configs"].setdefault(_dist_id, _cfg)
+            # Initialize route state on first encounter.
+            if agent_id not in agent_route_state:
+                agent_route_state[agent_id] = AgentRouteState(
+                    eval_offset_s=compute_eval_offset(
+                        stagger_index(lookup_spawn_key(spawn_keys, agent_id)),
+                        config.reevaluation_interval_s,
+                    ),
+                )
+            # Initialize cognitive map on first encounter.
+            if agent_id not in cognitive_maps and stage_graph is not None:
+                spawn_node = wait_info.get("current_origin") or wait_info.get(
+                    "current_target_stage"
+                )
+                if spawn_node is not None:
+                    familiarity = wait_info.get("familiarity", "full")
+                    cognitive_maps[agent_id] = init_cognitive_map(
+                        spawn_node,
+                        stage_graph,
+                        familiarity,
+                        vis_model,
+                        current_time,
+                        # Seeded per agent so a probabilistic draw is
+                        # reproducible under a fixed run seed.
+                        rng=agent_rng(
+                            seed,
+                            lookup_spawn_key(spawn_keys, agent_id),
+                            PURPOSE_FAMILIARITY,
+                        ),
+                        entrance=wait_info.get("entrance"),
+                    )
+            return agent_route_state[agent_id]
+
+        def _reevaluate(
+            agent_id: int,
+            wait_info: dict,
+            rs: AgentRouteState,
+            current_time: float,
+            extinction_sampler,
+            route_segment_cache: dict,
+            config: RerouteConfig,
+            graph: StageGraph,
+        ) -> None:
+            """One route evaluation of a path agent, with its bookkeeping.
+
+            The reroute pass and a flow spawn that knows no exit share it, so an
+            agent decides the same way whenever it is evaluated (#610).
+            """
+            current_fed = fed_state.get(agent_id, {}).get("cumulative", 0.0)
+            # Expand cognitive map from current position before reevaluation.
+            _cmap = cognitive_maps.get(agent_id)
+            _pos = wait_info.get("current_position")
+            if _cmap is not None and graph is not None:
+                _cur_node = wait_info.get("current_origin") or wait_info.get(
+                    "current_target_stage"
+                )
+                if _cur_node is not None and _pos is not None:
+                    expand_from_visibility(
+                        _cmap,
+                        _cur_node,
+                        graph,
+                        vis_model,
+                        current_time,
+                        _pos[0],
+                        _pos[1],
+                    )
+            if collect_route_cost_history:
+                source = wait_info.get("current_origin") or wait_info.get(
+                    "current_target_stage"
+                )
+                if source is not None and source in graph.nodes:
+                    ranked = rank_routes(
+                        graph,
+                        source,
+                        current_time,
+                        current_fed,
+                        extinction_sampler,
+                        _fed_rate_adapter,
+                        config.cost_config,
+                        cached_segments=route_segment_cache,
+                        exit_counts=exit_counts,
+                        cognitive_map=_cmap,
+                        agent_position=tuple(_pos) if _pos is not None else None,
+                        current_exit=rs.current_exit or None,
+                        current_target=wait_info.get("current_target_stage"),
+                        current_path=_reconstruct_committed_path(wait_info),
+                    )
+                    for route_rank, rc in enumerate(ranked, start=1):
+                        _exit_node = graph.nodes.get(rc.exit_id)
+                        _exit_cap = (
+                            _exit_node.capacity_agents_per_s
+                            if _exit_node is not None
+                            and _exit_node.capacity_agents_per_s is not None
+                            else config.cost_config.default_exit_capacity
+                        )
+                        route_cost_history.append(
+                            {
+                                "time_s": round(float(current_time), 6),
+                                "agent_id": agent_id,
+                                "source": source,
+                                "current_exit": rs.current_exit or "",
+                                "current_fed": float(current_fed),
+                                "route_rank": route_rank,
+                                "exit_id": rc.exit_id,
+                                "path": " > ".join(rc.path),
+                                "path_length_m": float(rc.path_length_m),
+                                "k_ave_route": float(rc.k_ave_route),
+                                "travel_time_s": float(rc.travel_time_s),
+                                "fed_max_route": float(rc.fed_max_route),
+                                "composite_cost": float(rc.composite_cost),
+                                # The gate's own diagnostics. Without
+                                # them its decisions cannot be audited
+                                # from its output: composite_cost does
+                                # not rank under the gate, and the sight
+                                # that decides feasibility is invisible.
+                                "rank_cost": float(rc.rank_cost),
+                                "k_max_route": float(rc.k_max_route),
+                                "tau_route": float(rc.tau_route),
+                                "k_leg_max": float(rc.k_leg_max),
+                                "clean": bool(rc.clean),
+                                "feasible": bool(rc.feasible),
+                                "rejected": bool(rc.rejected),
+                                "rejection_reason": rc.rejection_reason or "",
+                                "queue_time_s": float(rc.queue_time_s),
+                                "exit_count": exit_counts.get(rc.exit_id, 0),
+                                "exit_capacity": float(_exit_cap),
+                            }
+                        )
+            _counted_before = rs.counted_exit
+            switch = evaluate_and_reroute(
+                agent_id=agent_id,
+                wait_info=wait_info,
+                route_state=rs,
+                graph=graph,
+                current_time_s=current_time,
+                current_fed=current_fed,
+                extinction_sampler=extinction_sampler,
+                fed_rate_sampler=_fed_rate_adapter,
+                config=config,
+                cached_segments=route_segment_cache,
+                exit_counts=exit_counts,
+                cognitive_map=_cmap,
+                agent_position=tuple(_pos) if _pos is not None else None,
+            )
+            _move_count(exit_counts, _counted_before, rs.counted_exit)
+            if rs.counted_exit is not None:
+                agent_exits[agent_id] = rs.counted_exit
+            else:
+                agent_exits.pop(agent_id, None)
+            if switch is not None:
+                route_history.append(
+                    {
+                        "time_s": round(float(switch.time_s), 6),
+                        "agent_id": switch.agent_id,
+                        "old_exit": switch.old_exit or "",
+                        "new_exit": switch.new_exit,
+                        "old_cost": round(float(switch.old_cost), 4)
+                        if switch.old_cost is not None
+                        else "",
+                        "new_cost": round(float(switch.new_cost), 4),
+                        "reason": switch.reason,
+                    }
+                )
+
+        def _decide_at_flow_spawn(
+            agent_id: int, wait_info: dict, chosen: str | None
+        ) -> None:
+            """Apply the no_known_exit mode to a flow agent as it spawns.
+
+            An agent placed at t=0 is evaluated by the first reroute pass
+            before it takes a step. A flow agent spawns between passes, and
+            without this it would walk toward its scripted target, a stage
+            it does not know, until the next one (C1, C4, #610). The
+            default route needs no decision: the script is that route.
+            """
+            if reroute_config is None or stage_graph is None or chosen is not None:
+                return
+            if _no_known_exit(wait_info) == DEFAULT_NO_KNOWN_EXIT:
+                return
+            current_time = simulation.elapsed_time()
+            wait_info["current_position"] = extract_agent_xy(simulation.agent(agent_id))
+            rs = _prepare_route_agent(agent_id, wait_info, current_time, reroute_config)
+            _reevaluate(
+                agent_id,
+                wait_info,
+                rs,
+                current_time,
+                smoke_speed_model.field
+                if smoke_speed_model is not None
+                else _ZERO_EXTINCTION,
+                {},
+                reroute_config,
+                stage_graph,
+            )
+
         if reroute_config is not None and stage_graph is not None:
             # Initialise all exits to zero.
             for node_id, node in stage_graph.nodes.items():
@@ -2255,12 +2456,15 @@ def run_scenario(
                                             if _dist_idx < len(dist_no_known_exit)
                                             else None
                                         )
-                                        _initial_exit_choice(
+                                        _chosen = _initial_exit_choice(
                                             agent_id,
                                             path_state,
                                             origin=_flow_origin(flow_dist, source_id),
                                         )
                                         _seed_route_state(agent_id, path_state, key)
+                                        _decide_at_flow_spawn(
+                                            agent_id, path_state, _chosen
+                                        )
                                 elif (
                                     not selected_variant
                                     and agent_wait_info is not None
@@ -2342,13 +2546,16 @@ def run_scenario(
                                             < len(dist_no_known_exit)
                                             else None,
                                         }
-                                        _initial_exit_choice(
+                                        _chosen = _initial_exit_choice(
                                             agent_id,
                                             agent_wait_info[agent_id],
                                             origin=_flow_origin(flow_dist, source_id),
                                         )
                                         _seed_route_state(
                                             agent_id, agent_wait_info[agent_id], key
+                                        )
+                                        _decide_at_flow_spawn(
+                                            agent_id, agent_wait_info[agent_id], _chosen
                                         )
 
                                 spawned_this_attempt = True
@@ -2733,40 +2940,9 @@ def run_scenario(
                     reroute_loop_agents += 1
                     if wait_info.get("state") == "done":
                         continue
-                    # Spawn areas become steerable patrol stops for wander.
-                    for _dist_id, _cfg in distribution_stage_configs.items():
-                        wait_info["stage_configs"].setdefault(_dist_id, _cfg)
-                    # Initialize route state on first encounter.
-                    if agent_id not in agent_route_state:
-                        agent_route_state[agent_id] = AgentRouteState(
-                            eval_offset_s=compute_eval_offset(
-                                stagger_index(lookup_spawn_key(spawn_keys, agent_id)),
-                                reroute_config.reevaluation_interval_s,
-                            ),
-                        )
-                    # Initialize cognitive map on first encounter.
-                    if agent_id not in cognitive_maps and stage_graph is not None:
-                        spawn_node = wait_info.get("current_origin") or wait_info.get(
-                            "current_target_stage"
-                        )
-                        if spawn_node is not None:
-                            familiarity = wait_info.get("familiarity", "full")
-                            cognitive_maps[agent_id] = init_cognitive_map(
-                                spawn_node,
-                                stage_graph,
-                                familiarity,
-                                vis_model,
-                                current_time,
-                                # Seeded per agent so a probabilistic draw is
-                                # reproducible under a fixed run seed.
-                                rng=agent_rng(
-                                    seed,
-                                    lookup_spawn_key(spawn_keys, agent_id),
-                                    PURPOSE_FAMILIARITY,
-                                ),
-                                entrance=wait_info.get("entrance"),
-                            )
-                    rs = agent_route_state[agent_id]
+                    rs = _prepare_route_agent(
+                        agent_id, wait_info, current_time, reroute_config
+                    )
                     # Force the very first evaluation to happen immediately (at
                     # spawn), regardless of the staggering offset, so agents that
                     # know a better route than their scripted spawn journey — e.g.
@@ -2783,7 +2959,6 @@ def run_scenario(
                         current_time, rs, reroute_config.reevaluation_interval_s
                     ):
                         continue
-                    current_fed = fed_state.get(agent_id, {}).get("cumulative", 0.0)
                     if reroute_debug_samples < 5:
                         source = wait_info.get("current_origin") or wait_info.get(
                             "current_target_stage"
@@ -2799,122 +2974,16 @@ def run_scenario(
                             f"in_graph={source in stage_graph.nodes if source is not None else False}"
                         )
                         reroute_debug_samples += 1
-                    # Expand cognitive map from current position before reevaluation.
-                    _cmap = cognitive_maps.get(agent_id)
-                    _pos = wait_info.get("current_position")
-                    if _cmap is not None and stage_graph is not None:
-                        _cur_node = wait_info.get("current_origin") or wait_info.get(
-                            "current_target_stage"
-                        )
-                        if _cur_node is not None and _pos is not None:
-                            expand_from_visibility(
-                                _cmap,
-                                _cur_node,
-                                stage_graph,
-                                vis_model,
-                                current_time,
-                                _pos[0],
-                                _pos[1],
-                            )
-                    if collect_route_cost_history:
-                        source = wait_info.get("current_origin") or wait_info.get(
-                            "current_target_stage"
-                        )
-                        if source is not None and source in stage_graph.nodes:
-                            ranked = rank_routes(
-                                stage_graph,
-                                source,
-                                current_time,
-                                current_fed,
-                                extinction_sampler,
-                                _fed_rate_adapter,
-                                reroute_config.cost_config,
-                                cached_segments=route_segment_cache,
-                                exit_counts=exit_counts,
-                                cognitive_map=_cmap,
-                                agent_position=tuple(_pos)
-                                if _pos is not None
-                                else None,
-                                current_exit=rs.current_exit or None,
-                                current_target=wait_info.get("current_target_stage"),
-                                current_path=_reconstruct_committed_path(wait_info),
-                            )
-                            for route_rank, rc in enumerate(ranked, start=1):
-                                _exit_node = stage_graph.nodes.get(rc.exit_id)
-                                _exit_cap = (
-                                    _exit_node.capacity_agents_per_s
-                                    if _exit_node is not None
-                                    and _exit_node.capacity_agents_per_s is not None
-                                    else reroute_config.cost_config.default_exit_capacity
-                                )
-                                route_cost_history.append(
-                                    {
-                                        "time_s": round(float(current_time), 6),
-                                        "agent_id": agent_id,
-                                        "source": source,
-                                        "current_exit": rs.current_exit or "",
-                                        "current_fed": float(current_fed),
-                                        "route_rank": route_rank,
-                                        "exit_id": rc.exit_id,
-                                        "path": " > ".join(rc.path),
-                                        "path_length_m": float(rc.path_length_m),
-                                        "k_ave_route": float(rc.k_ave_route),
-                                        "travel_time_s": float(rc.travel_time_s),
-                                        "fed_max_route": float(rc.fed_max_route),
-                                        "composite_cost": float(rc.composite_cost),
-                                        # The gate's own diagnostics. Without
-                                        # them its decisions cannot be audited
-                                        # from its output: composite_cost does
-                                        # not rank under the gate, and the sight
-                                        # that decides feasibility is invisible.
-                                        "rank_cost": float(rc.rank_cost),
-                                        "k_max_route": float(rc.k_max_route),
-                                        "tau_route": float(rc.tau_route),
-                                        "k_leg_max": float(rc.k_leg_max),
-                                        "clean": bool(rc.clean),
-                                        "feasible": bool(rc.feasible),
-                                        "rejected": bool(rc.rejected),
-                                        "rejection_reason": rc.rejection_reason or "",
-                                        "queue_time_s": float(rc.queue_time_s),
-                                        "exit_count": exit_counts.get(rc.exit_id, 0),
-                                        "exit_capacity": float(_exit_cap),
-                                    }
-                                )
-                    _counted_before = rs.counted_exit
-                    switch = evaluate_and_reroute(
-                        agent_id=agent_id,
-                        wait_info=wait_info,
-                        route_state=rs,
-                        graph=stage_graph,
-                        current_time_s=current_time,
-                        current_fed=current_fed,
-                        extinction_sampler=extinction_sampler,
-                        fed_rate_sampler=_fed_rate_adapter,
-                        config=reroute_config,
-                        cached_segments=route_segment_cache,
-                        exit_counts=exit_counts,
-                        cognitive_map=_cmap,
-                        agent_position=tuple(_pos) if _pos is not None else None,
+                    _reevaluate(
+                        agent_id,
+                        wait_info,
+                        rs,
+                        current_time,
+                        extinction_sampler,
+                        route_segment_cache,
+                        reroute_config,
+                        stage_graph,
                     )
-                    _move_count(exit_counts, _counted_before, rs.counted_exit)
-                    if rs.counted_exit is not None:
-                        agent_exits[agent_id] = rs.counted_exit
-                    else:
-                        agent_exits.pop(agent_id, None)
-                    if switch is not None:
-                        route_history.append(
-                            {
-                                "time_s": round(float(switch.time_s), 6),
-                                "agent_id": switch.agent_id,
-                                "old_exit": switch.old_exit or "",
-                                "new_exit": switch.new_exit,
-                                "old_cost": round(float(switch.old_cost), 4)
-                                if switch.old_cost is not None
-                                else "",
-                                "new_cost": round(float(switch.new_cost), 4),
-                                "reason": switch.reason,
-                            }
-                        )
                 if not reroute_debug_printed:
                     _logger.debug(
                         "Reroute debug pass: "
