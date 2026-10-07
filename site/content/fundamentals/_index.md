@@ -53,6 +53,7 @@ For the full treatment, see Part VIII, Human Behavior (Ch. 65–72), of the
   {{< card link="design-fires" title="Design fires" subtitle="The t² growth law and its four classes, how growth is capped, and what a design fire represents." >}}
   {{< card link="extinction" title="Extinction coefficient" subtitle="Beer–Lambert attenuation, optical density and the mass-specific extinction coefficient." >}}
   {{< card link="visibility" title="Visibility through smoke" subtitle="Jin's V = C/K, where C comes from, and how it changes in dim light." >}}
+  {{< card link="exit-signs" title="Seeing and using exit signs" subtitle="From a sign barely seen to a sign followed: the waypoint method and the detection studies." >}}
   {{< card link="walking-speed" title="Walking speed in smoke" subtitle="Jin, Frantzich and Nilsson, Fridolf et al., and the fractional versus absolute readings." >}}
   {{< card link="asphyxiant-fed" title="Asphyxiant fractional effective dose" subtitle="CO, HCN, CO₂ hyperventilation and low-oxygen hypoxia after Purser and ISO 13571." >}}
   {{< card link="irritants" title="Irritant gases" subtitle="FEC as a separate endpoint in ISO 13571; FIC and FLD in Purser." >}}

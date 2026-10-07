@@ -1,6 +1,6 @@
 ---
 title: "Irritant gases"
-weight: 7
+weight: 8
 ---
 
 Irritant gases such as hydrogen chloride (HCl), hydrogen bromide (HBr),
