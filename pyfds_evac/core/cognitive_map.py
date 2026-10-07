@@ -76,7 +76,7 @@ def no_known_exit_mode(value) -> str:
             f"unknown no_known_exit {value!r}: expected one of "
             f"{', '.join(NO_KNOWN_EXIT_MODES)}"
         )
-    return value
+    return str(value)
 
 
 def distribution_no_known_exit(raw) -> dict[str, str]:
