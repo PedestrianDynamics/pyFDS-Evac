@@ -246,8 +246,9 @@ none are visibility-rejected.&lt;/p>
 fallback so the agent always has a path, and its reason is prefixed
 &lt;code>fallback: &lt;/code>. Under the gate the least-bad route is the one with the
 lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
-&lt;code>fallback_switch_margin&lt;/code> hysteresis on &lt;code>k_max_route&lt;/code>; under the additive
-model it is the lowest-composite route.&lt;/p>
+&lt;code>fallback_switch_margin&lt;/code> hysteresis on &lt;code>tau_route&lt;/code>: the current exit stays
+first unless the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than that fraction lower (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). Under the
+additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>; the underlying sampling cause is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/p>
 &lt;p>Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
 closes on an exit — the distance in &lt;code>tau&lt;/code> is the distance that remains.&lt;/p>
@@ -543,7 +544,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
-&lt;td>when every route is rejected: re-sorted by raw τ, then &lt;code>rank_cost&lt;/code>; the current exit goes first unless the winner&amp;rsquo;s worst extinction is at or below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>); the first route is un-rejected with a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
+&lt;td>when every route is rejected: re-sorted by raw τ, then &lt;code>rank_cost&lt;/code>; the current exit goes first unless the winner&amp;rsquo;s τ is below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>) and differs from it by more than 1e-9; the first route is un-rejected with a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -553,8 +554,8 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
-&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>), or when the rival is clean and the current exit is not. Otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
-&lt;td>only the top-ranked route is tried; the anchor accepts under the same hazard bypasses, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
+&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>). Next, between two refused routes the rival needs a τ strictly below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor; a return to the exit left by such a switch waits &lt;code>fallback_return_lockout_s&lt;/code>. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
+&lt;td>only the top-ranked route is tried; the anchor accepts under the same hazard bypasses and the same rule between two refused routes, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
@@ -834,7 +835,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>k_max_route&lt;/code>&lt;/td>
 &lt;td>&lt;code>float&lt;/code>&lt;/td>
-&lt;td>Worst extinction anywhere on the route. Reported; used only by the all-refused fallback&amp;rsquo;s switch margin&lt;/td>
+&lt;td>Worst extinction anywhere on the route. Reported only&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>tau_route&lt;/code>&lt;/td>
@@ -1058,9 +1059,8 @@ maximum over sampled cells is a step function of where the agent stands: one
 dense cell entering the sample swings the estimate by an order of magnitude
 between ticks, and measured on &lt;code>world100&lt;/code> the same 28.9 m route reported 91 m of
 sight, then 8 m, then 91 m again on consecutive seconds, with the ordering
-flipping each time. &lt;code>k_max_route&lt;/code> is still computed and reported, and still
-decides the all-refused fallback&amp;rsquo;s switch margin, where the question is which
-walk is survivable rather than which is cleanest.&lt;/p>
+flipping each time. &lt;code>k_max_route&lt;/code> is still computed and reported, but since
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a> it decides nothing: the all-refused fallback is held on &lt;code>tau&lt;/code> too.&lt;/p>
 &lt;p>&lt;strong>The line of sight is a diagnostic, not a gate.&lt;/strong> fdsvismap&amp;rsquo;s obstruction-aware
 sight line to an exit&amp;rsquo;s own sign is the more faithful measurement of what an
 occupant can see, but it is defined only where a sign resolves — so selecting
@@ -1387,10 +1387,11 @@ Every tick re-decides from the current field; there is no permanent exit death.&
 &lt;a href="#when-every-route-is-refused" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The agent still has to move. &lt;code>rank_routes&lt;/code> re-sorts the refused routes by
 &lt;code>(tau_route, rank_cost)&lt;/code> — least smoke to walk through, then quickest — and
 un-rejects the head with a &lt;code>fallback:&lt;/code> prefix on its reason. The agent keeps its
-current target unless a rival&amp;rsquo;s worst extinction is better by more than
-&lt;code>fallback_switch_margin&lt;/code> (default 0.2), i.e. unless&lt;/p>
+current target unless the rival&amp;rsquo;s optical depth is more than
+&lt;code>fallback_switch_margin&lt;/code> (default 0.2) lower, i.e. unless&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>rival.k_max_route &amp;lt;= current.k_max_route * (1 - fallback_switch_margin)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;pre>&lt;code>|rival.tau_route - current.tau_route| &amp;gt; EPS_TAU (1e-9)
+and rival.tau_route &amp;lt; current.tau_route * (1 - fallback_switch_margin)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1400,9 +1401,14 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>Equality holds, and so does a tie: with both &lt;code>tau&lt;/code> 0 the current exit stays.
+The anchor applies the same rule whenever two refused routes meet
+(&lt;code>_fallback_rival_wins&lt;/code>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). Before 0.4.0 the fallback compared
+&lt;code>k_max_route&lt;/code> and the anchor then compared travel time, so a rival with the
+same worst stretch and a third of the smoke never won.&lt;/p>
 &lt;p>The fallback sort uses the &lt;strong>undiscounted&lt;/strong> &lt;code>tau_route&lt;/code>;
-&lt;code>current_exit_discount&lt;/code> applies to the feasible ordering only, and the
-&lt;code>fallback_switch_margin&lt;/code> on &lt;code>k_max_route&lt;/code> is the hysteresis here instead.
+&lt;code>current_exit_discount&lt;/code> applies to the feasible ordering only, and
+&lt;code>fallback_switch_margin&lt;/code> is the hysteresis here instead.
 Ordering refused routes by &lt;code>k_max&lt;/code> alone once put a 51 m route ahead of a 22 m
 one on 2.0 m of sight against 1.8 m — two tenths of a metre of visibility,
 neither usable, deciding a 29 m detour. &lt;code>tau&lt;/code> carries the distance with it, so
@@ -1415,6 +1421,13 @@ the gate, &lt;code>_anchor_allows&lt;/code> decides in this order (&lt;code>25a6
 &lt;ol>
 &lt;li>The current exit is a &amp;ldquo;must flee&amp;rdquo; rejection — adopt. In practice only a
 dose rejection reaches this; see &lt;a href="#known-limitations">limitations&lt;/a>.&lt;/li>
+&lt;li>Both the rival and the current exit are refused (not &lt;code>feasible&lt;/code>) — adopt
+only if the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than &lt;code>fallback_switch_margin&lt;/code> lower, as in
+the fallback above; the clean bypass below is not consulted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>).
+If the last exit switch was also between two refused routes, a return to
+the exit it left is refused for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after
+it, including at exactly 10 s (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The lockout stands in for a
+finer smoke sampling step (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/li>
 &lt;li>The rival is clean and the current exit is not — adopt.&lt;/li>
 &lt;li>The rival is not &lt;code>feasible&lt;/code> — fall through to the &lt;code>rank_cost&lt;/code> comparison.&lt;/li>
 &lt;li>Otherwise a &lt;strong>symmetric deadband&lt;/strong> on &lt;code>tau&lt;/code>, with
@@ -1665,11 +1678,18 @@ title="Copy code"
 &lt;td>&lt;strong>active&lt;/strong>&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>fallback_return_lockout_s&lt;/code>&lt;/td>
+&lt;td>&lt;code>10.0&lt;/code>&lt;/td>
+&lt;td>After an exit switch between two refused routes, a switch straight back between two refused routes is blocked this many seconds; 0 turns it off.&lt;/td>
+&lt;td>active&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.2&lt;/code>&lt;/td>
-&lt;td>Hysteresis when every route is refused.&lt;/td>
+&lt;td>Hysteresis between two refused routes: a rival&amp;rsquo;s &lt;code>tau&lt;/code> must be more than this fraction lower. Compared &lt;code>k_max_route&lt;/code> before 0.4.0 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>).&lt;/td>
 &lt;td>active&lt;/td>
-&lt;td>inert&lt;/td>
+&lt;td>active&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>w_smoke&lt;/code>&lt;/td>
