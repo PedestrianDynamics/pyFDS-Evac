@@ -818,7 +818,7 @@ class RouteCostConfig:
     # finite horizon models an occupant who can only judge the near future.
     foresight_horizon_s: float = math.inf
     # Between two refused routes the agent keeps its exit unless the rival's
-    # optical depth tau is lower by this fraction (#458) -- without it the
+    # optical depth tau is more than this fraction lower (#458) -- without it the
     # least-bad choice changes with every flicker of the field.
     fallback_switch_margin: float = 0.2
 
@@ -2126,7 +2126,8 @@ def _fallback_rival_wins(
 ) -> bool:
     """Whether a refused *rival* may displace the refused *current* exit.
 
-    Only if its optical depth is lower by fallback_switch_margin (#458).
+    Only if its optical depth is more than fallback_switch_margin lower
+    (#458): ``rival < current * (1 - margin)``.
     The comparison is strict, so a rival at exactly the margin holds, and
     taus within ``EPS_TAU`` tie and hold too, so round-off (or both taus 0)
     never moves an agent. One rule for the fallback order and the anchor:

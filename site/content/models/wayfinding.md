@@ -351,7 +351,7 @@ two differ:
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
   is re-admitted, but the current route is kept first unless the rival's
-  optical depth \(\tau\) is lower by `fallback_switch_margin`
+  optical depth \(\tau\) is more than `fallback_switch_margin` lower
   (`route_graph.py`, `_apply_fallback`, `_fallback_rival_wins`).
 
 An agent can therefore keep a known route that is not first in the ranking.

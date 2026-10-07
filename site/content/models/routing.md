@@ -200,7 +200,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused |
 | `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time |
 | `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
-| `fallback_switch_margin` | `0.2` | Between two refused routes, a rival's `tau` must be this fraction below the current exit's; differences up to 1e-9 are ties, which hold. Before 0.4.0 it compared worst extinction `k_max_route` ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
+| `fallback_switch_margin` | `0.2` | Between two refused routes, a rival's `tau` must be more than this fraction below the current exit's; differences up to 1e-9 are ties, which hold. Before 0.4.0 it compared worst extinction `k_max_route` ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
 | `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
 | `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
@@ -261,10 +261,10 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    projected FED, or for visibility with a route-average *K* above
    `impassable_extinction_threshold`. Accept, whatever the cost.
 3. **Two refused routes** (both `feasible` false, which includes a route the
-   fallback re-admitted): the candidate is accepted only if its `tau` is below
-   the current route's × (1 − `fallback_switch_margin`) and the two differ by
-   more than `EPS_TAU` (`_fallback_rival_wins`). Neither travel time nor
-   `k_max_route` decides, so the agent is not held on a route with three times
+   fallback re-admitted): the candidate is accepted only if its `tau` is
+   strictly below the current route's × (1 − `fallback_switch_margin`) and the
+   two differ by more than `EPS_TAU` (`_fallback_rival_wins`). Neither travel
+   time, `k_max_route` nor the clean bypass of step 4 decides, so the agent is not held on a route with three times
    the smoke because it is quicker, and a tie (both `tau` 0 included) holds.
    The fallback order uses the same rule
    ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).

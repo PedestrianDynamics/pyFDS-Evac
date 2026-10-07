@@ -127,6 +127,20 @@ def test_round_off_taus_tie_and_hold(model):
 
 
 @pytest.mark.parametrize("model", MODELS)
+def test_absolute_floor_is_1e_9(model):
+    """A difference of exactly 1e-9 ties and holds; one ulp more switches.
+
+    The literal is the contract (#458, second round), not ``EPS_TAU``, so a
+    changed constant fails here.
+    """
+    current_at = _refused(CURRENT, tau=1e-9, rank_cost=10.0)
+    current_past = _refused(CURRENT, tau=math.nextafter(1e-9, math.inf), rank_cost=10.0)
+    rival = _refused(RIVAL, tau=0.0, rank_cost=1.0)
+    _assert_decision(rival, current_at, switch=False, model=model)
+    _assert_decision(rival, current_past, switch=True, model=model)
+
+
+@pytest.mark.parametrize("model", MODELS)
 def test_must_flee_overrides_the_hold_at_the_anchor(model):
     """Impassable smoke on the current route lets go whatever the taus say."""
     cc = _config(model)

@@ -479,8 +479,8 @@ Every tick re-decides from the current field; there is no permanent exit death.
 The agent still has to move. `rank_routes` re-sorts the refused routes by
 `(tau_route, rank_cost)` — least smoke to walk through, then quickest — and
 un-rejects the head with a `fallback:` prefix on its reason. The agent keeps its
-current target unless the rival's optical depth is lower by
-`fallback_switch_margin` (default 0.2), i.e. unless
+current target unless the rival's optical depth is more than
+`fallback_switch_margin` (default 0.2) lower, i.e. unless
 
 ```
 |rival.tau_route - current.tau_route| > EPS_TAU  (1e-9)
@@ -512,8 +512,8 @@ the gate, `_anchor_allows` decides in this order (`25a6f8f`):
 1. The current exit is a "must flee" rejection — adopt. In practice only a
    dose rejection reaches this; see [limitations](#known-limitations).
 2. Both the rival and the current exit are refused (not `feasible`) — adopt
-   only if the rival's `tau` is lower by `fallback_switch_margin`, as in the
-   fallback above ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
+   only if the rival's `tau` is more than `fallback_switch_margin` lower, as in
+   the fallback above; the clean bypass below is not consulted ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
 3. The rival is clean and the current exit is not — adopt.
 4. The rival is not `feasible` — fall through to the `rank_cost` comparison.
 5. Otherwise a **symmetric deadband** on `tau`, with
@@ -656,7 +656,7 @@ Every key below is read from the scenario's `routing` block by
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
-| `fallback_switch_margin` | `0.2` | Hysteresis between two refused routes: a rival's `tau` must be this fraction lower. Compared `k_max_route` before 0.4.0 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). | active | active |
+| `fallback_switch_margin` | `0.2` | Hysteresis between two refused routes: a rival's `tau` must be more than this fraction lower. Compared `k_max_route` before 0.4.0 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). | active | active |
 | `w_smoke` | `1.0` | Smoke weight in the additive composite and its Dijkstra edge weights. Since `0d9bf79` the gate weights edges by their own `tau`, so neither weight reaches route choice under the gate; the composite is still reported. | **inert** (reported only) | active |
 | `w_fed` | `10.0` | FED weight. Same. | **inert** (reported only) | active |
 | `w_queue` | `0.0` | Congestion weight, off by default. | active (as `w_queue * queue_time_s` on the rank cost) | active (as distance-equivalent in the composite) |
