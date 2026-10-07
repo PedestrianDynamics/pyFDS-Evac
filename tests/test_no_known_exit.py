@@ -445,17 +445,40 @@ def test_arrival_teaches_the_leg_walked():
     assert ("C", "S") not in cmap.known_edges
 
 
-def test_arrival_teaches_the_reverse_when_the_graph_has_it():
+class _Hides:
+    """A visibility model under which the named nodes cannot be seen."""
+
+    def __init__(self, *hidden: str) -> None:
+        self.hidden = set(hidden)
+
+    def node_is_visible(self, time_s, ax, ay, node_id) -> bool:
+        return node_id not in self.hidden
+
+
+def _expand_hiding_s(edges) -> set:
+    """Arrive at C from S, with S out of sight from C: only the walk teaches."""
     from pyfds_evac.core.cognitive_map import expand_on_arrival
 
     graph = StageGraph.from_scenario(
         {k: dict(v) for k, v in STAGES.items()},
-        [{"from": "S", "to": "C"}, {"from": "C", "to": "S"}],
+        [{"from": a, "to": b} for a, b in edges],
         distributions={"S": {"polygon": box(-1, -1, 1, 1)}},
     )
     cmap = _cmap({"S"})
-    expand_on_arrival(cmap, "C", graph, from_node="S")
-    assert {("S", "C"), ("C", "S")} <= cmap.known_edges
+    expand_on_arrival(
+        cmap, "C", graph, vis_model=_Hides("S"), ax=0.0, ay=10.0, from_node="S"
+    )
+    return cmap.known_edges
+
+
+def test_arrival_teaches_the_reverse_when_the_graph_has_it():
+    known = _expand_hiding_s([("S", "C"), ("C", "S")])
+    assert known == {("S", "C"), ("C", "S")}
+
+
+def test_arrival_against_the_edge_teaches_the_edge():
+    """A patrol or return can walk C -> S backwards, from S to C."""
+    assert _expand_hiding_s([("C", "S")]) == {("C", "S")}
 
 
 @pytest.mark.parametrize("mode", ["explore", "default_route"])
@@ -688,3 +711,115 @@ def test_an_exit_learned_mid_hop_is_taken_at_once(mode):
     assert (switch.reason, switch.old_exit, switch.new_exit) == ("initial", None, "EA")
     assert state.current_exit == "EA"
     assert wait_info["path_choices"]["C"] == [("EA", 100.0)]
+
+
+class _ExitSeenPastX:
+    """Every node is visible, except the exit until the agent is past *x*.
+
+    Records when and where the exit was first seen.
+    """
+
+    def __init__(self, exit_id: str, x: float) -> None:
+        self.exit_id = exit_id
+        self.x = x
+        self.first_seen: tuple[float, float] | None = None
+
+    def node_is_visible(self, time_s, ax, ay, node_id) -> bool:
+        if node_id != self.exit_id:
+            return True
+        if ax <= self.x:
+            return False
+        if self.first_seen is None:
+            self.first_seen = (time_s, ax)
+        return True
+
+    def signs_outside_grid(self) -> list:
+        return []
+
+
+def _hop_scenario(flow: bool) -> Scenario:
+    """One explorer, a checkpoint 12 m east and the only exit 7 m north.
+
+    No journey, so the spawn assigns the exit as the nearest one, which the
+    agent does not know: the exit an unknown-exit seed would hold.
+    """
+    params = {
+        "number": 1,
+        "radius": 0.15,
+        "v0": 1.3,
+        "distribution_mode": "by_number",
+        "use_premovement": False,
+        "familiarity": "discovery",
+        "no_known_exit": "explore",
+    }
+    if flow:
+        params.update(use_flow_spawning=True, flow_start_time=0.5, flow_end_time=1.0)
+    sim_params = {"max_simulation_time": 30.0, "model_type": "CollisionFreeSpeedModel"}
+    raw = {
+        "project_version": "2.0",
+        "config": {
+            "simulation_settings": {
+                "simulationParams": sim_params,
+                "numberOfSimulations": 1,
+                "baseSeed": 3,
+            }
+        },
+        "exits": {
+            "jps-exits_0": {"type": "polygon", "coordinates": _coords(box(1, 9, 3, 10))}
+        },
+        "distributions": {
+            "jps-distributions_0": {
+                "type": "polygon",
+                "coordinates": _coords(box(1, 1, 3, 3)),
+                "parameters": params,
+            }
+        },
+        "checkpoints": {
+            "jps-checkpoints_0": {
+                "type": "polygon",
+                "coordinates": _coords(box(14, 1, 16, 3)),
+                "waiting_time": 0,
+            }
+        },
+        "zones": {},
+        "journeys": [],
+        "transitions": [],
+    }
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=box(0, 0, 20, 10).wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=3,
+        sim_params=sim_params,
+        source_path=None,
+    )
+
+
+@pytest.mark.parametrize("flow", [False, True], ids=["placed", "flow"])
+def test_a_spawned_explorer_takes_an_exit_seen_mid_hop(flow):
+    """AT11 through spawn and seeding: the explorer heads for the checkpoint,
+    sees the exit 5 m out and takes it at that evaluation, as ``initial``.
+    Seeded with the unknown exit, it would finish the hop first and log a
+    switch from that exit to itself."""
+    exit_id = "jps-exits_0"
+    vis = _ExitSeenPastX(exit_id, x=5.0)
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(
+            _hop_scenario(flow),
+            seed=3,
+            reroute_config=RerouteConfig(reevaluation_interval_s=1.0),
+            vis_model=vis,
+        )
+    try:
+        rows = [
+            (row["time_s"], row["old_exit"], row["new_exit"], row["reason"])
+            for row in result.route_history
+        ]
+        assert rows[0][2:] == ("jps-checkpoints_0", "explore")
+        assert vis.first_seen is not None
+        seen_at, seen_x = vis.first_seen
+        assert seen_x < 14.0  # short of the checkpoint
+        assert rows[1:] == [(seen_at, "", exit_id, "initial")]
+        assert result.agents_evacuated == 1
+    finally:
+        result.cleanup()
