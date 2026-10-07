@@ -16,8 +16,9 @@ Right, the steps the left panel is made of, with the equation numbers of
 Börger, Belt and Arnold (2024).
 
 The extinction slices of the run are tracked in
-``assets/t_junction/fire_2MW_PVC_extinction`` (see its README), so the
-script runs without arguments. ``--fds-dir`` takes another copy of the run.
+``scripts/figures/data/t_junction_fire_2MW_PVC_extinction`` (see its
+README), outside ``assets/`` so no tool takes them for a full run of the
+scenario, and the script runs without arguments. ``--fds-dir`` takes another copy of the run.
 Run from the repository root::
 
     uv run python scripts/figures/sign_legibility_steps.py
@@ -118,14 +119,18 @@ def main():
     Parameters
     ----------
     --fds-dir : t_junction FDS output (fire_2MW_PVC); default: the tracked
-        extinction slices in assets/t_junction/fire_2MW_PVC_extinction.
+        extinction slices in scripts/figures/data/.
 
     Saves
     -----
     site/static/images/wayfinding/sign_legibility_steps.png
     """
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fds-dir", default=ASSET / "fire_2MW_PVC_extinction", type=Path)
+    ap.add_argument(
+        "--fds-dir",
+        default=Path(__file__).parent / "data" / "t_junction_fire_2MW_PVC_extinction",
+        type=Path,
+    )
     args = ap.parse_args()
 
     # --- Data ---

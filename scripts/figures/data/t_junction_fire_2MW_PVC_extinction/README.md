@@ -1,10 +1,11 @@
 # t_junction, fire_2MW_PVC: extinction slices only
 
 The soot extinction coefficient at z = 2.0 m from the FDS run of
-`../t_junction.fds` (FDS-6.10.1-0-g12efa16-release), the only part of the
-run that `scripts/figures/sign_legibility_steps.py` reads. It is tracked so
-the docs workflow can regenerate that figure; the full run is in sciebo
-`fds-evac-data/t_junction/fire_2MW_PVC/`.
+`assets/t_junction/t_junction.fds` (FDS-6.10.1-0-g12efa16-release), the
+only part of the run that `scripts/figures/sign_legibility_steps.py` reads.
+It is tracked so the docs workflow can regenerate that figure, and kept out
+of `assets/` so the TUI and other tools do not take it for a full run of the
+scenario; the full run is in sciebo `fds-evac-data/t_junction/fire_2MW_PVC/`.
 
 The four `.sf` files and their `.sf.bnd` files (one per mesh) are copied
 byte for byte from the run. `t_junction.smv` is the run's file with every
