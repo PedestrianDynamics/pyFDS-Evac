@@ -1,6 +1,6 @@
 ---
 title: "Walking speed in smoke"
-weight: 5
+weight: 6
 ---
 
 Smoke slows people down because they see less, and irritant smoke slows them

@@ -1,6 +1,6 @@
 ---
 title: "Incapacitation thresholds"
-weight: 9
+weight: 10
 ---
 
 A fractional effective dose (FED) of 1 is, by definition, the dose at which

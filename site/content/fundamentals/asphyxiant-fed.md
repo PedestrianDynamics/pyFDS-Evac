@@ -1,6 +1,6 @@
 ---
 title: "Asphyxiant fractional effective dose"
-weight: 6
+weight: 7
 ---
 
 The fractional effective dose (FED) [-] is the fraction of an

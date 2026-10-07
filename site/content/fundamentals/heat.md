@@ -1,6 +1,6 @@
 ---
 title: "Heat"
-weight: 8
+weight: 9
 ---
 
 Heat can incapacitate in three ways: heat stroke (hyperthermia), skin pain
