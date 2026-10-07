@@ -121,6 +121,18 @@ $$
 The obstruction factor applies in clear air too: a wall hides a sign there as
 it does in smoke.
 
+![Left: plan of the T-shaped corridor with the extinction field at t = 20 s, the fire between the junction and exit B, the cells from which sign B is legible in yellow and those legible in clear air outlined by a dotted line. Three cells are marked: P at the far west end of the corridor, legible; Q, 3 m from the sign next to the fire, not legible because of smoke; R in the stem, hidden behind a wall. Right: a flowchart of the steps from the FDS slice to the agent's cognitive map](/images/wayfinding/sign_legibility_steps.png)
+
+*(a) Sign B of `assets/t_junction` in the FDS run `fire_2MW_PVC` at
+t = 20 s, the first map time at which its legible area falls below half the
+clear-air area (31.2 of 92.3 m²). Every value is read from the VisMap of a
+run. For an unobstructed sight line (\(U = 1\)) below the cap, the test
+\(V \ge L\) is \(\bar K L \le A\,C\), where \(\bar K L\) approximates
+the extinction summed along the line; distance alone does not decide
+legibility. Beyond the smoke, clear cells add little to that sum, so P,
+29.5 m away, is legible while Q, 3 m from the sign, is not. (b) The steps, with the equation numbers
+of Börger et al. Script: `scripts/figures/sign_legibility_steps.py`.*
+
 ![Animation of a sign turning away from a standing agent. As the angle grows, the visibility curve falls; when it drops below the 6 m distance near 53°, the sight line turns from solid blue to dashed red and the heading changes from a filled blue "sign legible" to a hollow red "sign not legible"](/images/wayfinding/sign_rotation.gif)
 
 *An agent stands 6 m from a sign in uniform smoke (\(\bar K\) = 0.3 m⁻¹,
