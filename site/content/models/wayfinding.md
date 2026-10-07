@@ -716,7 +716,9 @@ Details, with line numbers:
 These tests check implementation behaviour. They do not validate human
 wayfinding or evacuation times. The FDS-case check is
 [Verification › Familiarity](/verification/testing-familiarity.md): its
-criteria 1–5 pass, and the discovery egress time is not grid-converged
+criteria 1–5 pass, except criterion 4 on the 0.1 m grid, where 4 agents
+deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)),
+and the discovery egress time is not grid-converged
 ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168),
 [#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)).
 

@@ -382,17 +382,17 @@ over a few known nodes may never pass a legible new sign
 
 **Discovery times depend on the grid.** On
 `assets/familiarity_test_discovery`, seed 420, the runs of the
-[familiarity verification](testing-familiarity.md) (at `8c0c02d`) give the
+[familiarity verification](testing-familiarity.md) (at `82b7927c`) give the
 following discovery egress times:
 
 | Clear-air cell | Discovery egress |
 |---|---|
-| 0.25 m | 68.1 s |
-| 0.1 m | 226.0 s |
-| 0.05 m | 109.7 s |
-| 0.025 m | 149.8 s |
+| 0.25 m | 86.3 s |
+| 0.1 m | 16 of 20 out; 4 deadlocked in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
+| 0.05 m | 161.3 s |
+| 0.025 m | 108.4 s |
 
-The fully familiar tier took 34.5 s. The code advises a cell smaller than the
+The fully familiar tier took 34.8 s. The code advises a cell smaller than the
 thinnest wall and warns when it is not (`visibility.py`, `VisibilityModel.clear_air`). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
 change below that is not explained
@@ -406,18 +406,19 @@ with legible signs are learned, so walls and bearings cut the known set even
 in clear air. The talk's counts (8 of 11 and 3 of 11 nodes) were not
 reproduced for this page.
 
-![Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, most discovery agents detour through a dead-end room first](/images/wayfinding/full_vs_discovery_paths.png)
+![Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, all discovery agents detour through a dead-end room first](/images/wayfinding/full_vs_discovery_paths.png)
 
 *Figure 7. Full versus discovery. `assets/familiarity_test_full` and
 `assets/familiarity_test_discovery`: 20 agents, seed 420, same geometry and
 signs; `familiarity` differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
-known from t = 0, no route changes; the last agent leaves at 34.5 s, median
-path 29 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
-end; the exit enters the maps at t = 15–97 s (median 42 s). After t = 0 the
-agents make 78 route changes (52 explore, 6 wander, 20 onto the exit), 16 of
-the 20 with a detour into a dead-end room; the last leaves at 109.8 s, median
-path 56 m. The discovery time has not converged with the grid (68.1 s at
-0.25 m, 226.0 s at 0.1 m, 149.8 s at 0.025 m; #168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
+known from t = 0, no route changes; the last agent leaves at 34.9 s, median
+path 28 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
+end; the exit enters the maps at t = 28–149 s (median 47 s). After t = 0 the
+agents make 87 route changes (59 explore, 8 wander, 20 onto the exit), all 20
+with a detour into a dead-end room; the last leaves at 161.3 s, median path
+57 m. The discovery time has not converged with the grid (86.3 s at 0.25 m,
+108.4 s at 0.025 m, and at 0.1 m 4 agents deadlock in a doorway, #359;
+#168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
 
 > **Talk vs code.** The talk caption gives 35.1 s and 75.1 s. Those are results
 > from the deck before its rework in #99 (`docs/testing-familiarity.md`). The
