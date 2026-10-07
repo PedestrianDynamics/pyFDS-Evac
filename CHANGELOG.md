@@ -85,6 +85,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gets a finer grid, a build about four times slower, and walls 0.25 to
   0.5 m wide that may now block sight; pass `cell_size_m=0.5` to
   keep the old grid (#115).
+- Scenario key `routing.fallback_switch_margin` (default 0.2) now
+  compares optical depth `tau` instead of the worst extinction
+  `k_max_route`. Between two refused routes, under both cost models, an
+  agent leaves its exit, except for the existing must-flee override,
+  only for a rival whose `tau` is strictly more than the margin lower
+  (`tau < current × 0.8` by default) and differs from it by more than
+  1e-9; equality keeps the exit, also when both `tau` are 0. The same
+  rule replaces the travel-time anchor and the clean-route bypass
+  between two refused routes, which kept agents on a route with three
+  times the smoke. Configs that set the key still load; its effect
+  changes. In the S4 T-junction the four agents just inside the smoky
+  arm now turn back (8 → 12 switches). CI references move: four
+  fallback cases and the `tj_full_gate_fallback` and
+  `tj_discovery_gate_ramp` snapshots on both platforms. In the latter
+  agent 29 turns back late and is still in the building at the 60 s
+  horizon. Some returns to an abandoned exit remain; part of them come
+  from foresight that samples each leg at one instant (#650). The
+  `t_junction` FDS deck moves too: 1 → 3 switches; agent 21 now leaves
+  by exit B instead of A, and agent 22 by A instead of B (#458).
+- New scenario key `routing.fallback_return_lockout_s` (default 10 s;
+  0 turns it off). After an exit switch between two refused routes, a
+  switch straight back to the exit just left, again between two refused
+  routes, waits this long. A feasible route on either side, a must-flee
+  hazard and a third exit are never blocked. On the `t_junction` FDS
+  deck the 2 m route smoke sampling stepped over a narrow plume core and
+  swung agent 22's tau past the margin and back: B → A at 48 s, A → B at
+  50 s. The lockout keeps the agent on A; the sampling resolution is
+  tracked in #653. No CI reference, S4 count or other FDS deck checked
+  (`l_corridor_gate`, `world100_stream_east`, `world100_stream_oval`)
+  moves. A negative or non-numeric value stops the run (#458).
 
 ### Fixed
 

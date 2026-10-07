@@ -150,9 +150,8 @@ maximum over sampled cells is a step function of where the agent stands: one
 dense cell entering the sample swings the estimate by an order of magnitude
 between ticks, and measured on `world100` the same 28.9 m route reported 91 m of
 sight, then 8 m, then 91 m again on consecutive seconds, with the ordering
-flipping each time. `k_max_route` is still computed and reported, and still
-decides the all-refused fallback's switch margin, where the question is which
-walk is survivable rather than which is cleanest.
+flipping each time. `k_max_route` is still computed and reported, but since
+[#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458) it decides nothing: the all-refused fallback is held on `tau` too.
 
 **The line of sight is a diagnostic, not a gate.** fdsvismap's obstruction-aware
 sight line to an exit's own sign is the more faithful measurement of what an
@@ -480,16 +479,23 @@ Every tick re-decides from the current field; there is no permanent exit death.
 The agent still has to move. `rank_routes` re-sorts the refused routes by
 `(tau_route, rank_cost)` — least smoke to walk through, then quickest — and
 un-rejects the head with a `fallback:` prefix on its reason. The agent keeps its
-current target unless a rival's worst extinction is better by more than
-`fallback_switch_margin` (default 0.2), i.e. unless
+current target unless the rival's optical depth is more than
+`fallback_switch_margin` (default 0.2) lower, i.e. unless
 
 ```
-rival.k_max_route <= current.k_max_route * (1 - fallback_switch_margin)
+|rival.tau_route - current.tau_route| > EPS_TAU  (1e-9)
+and rival.tau_route < current.tau_route * (1 - fallback_switch_margin)
 ```
+
+Equality holds, and so does a tie: with both `tau` 0 the current exit stays.
+The anchor applies the same rule whenever two refused routes meet
+(`_fallback_rival_wins`, [#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Before 0.4.0 the fallback compared
+`k_max_route` and the anchor then compared travel time, so a rival with the
+same worst stretch and a third of the smoke never won.
 
 The fallback sort uses the **undiscounted** `tau_route`;
-`current_exit_discount` applies to the feasible ordering only, and the
-`fallback_switch_margin` on `k_max_route` is the hysteresis here instead.
+`current_exit_discount` applies to the feasible ordering only, and
+`fallback_switch_margin` is the hysteresis here instead.
 Ordering refused routes by `k_max` alone once put a 51 m route ahead of a 22 m
 one on 2.0 m of sight against 1.8 m — two tenths of a metre of visibility,
 neither usable, deciding a 29 m detour. `tau` carries the distance with it, so
@@ -505,9 +511,16 @@ the gate, `_anchor_allows` decides in this order (`25a6f8f`):
 
 1. The current exit is a "must flee" rejection — adopt. In practice only a
    dose rejection reaches this; see [limitations](#known-limitations).
-2. The rival is clean and the current exit is not — adopt.
-3. The rival is not `feasible` — fall through to the `rank_cost` comparison.
-4. Otherwise a **symmetric deadband** on `tau`, with
+2. Both the rival and the current exit are refused (not `feasible`) — adopt
+   only if the rival's `tau` is more than `fallback_switch_margin` lower, as in
+   the fallback above; the clean bypass below is not consulted ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
+   If the last exit switch was also between two refused routes, a return to
+   the exit it left is refused for `fallback_return_lockout_s` (10 s) after
+   it, including at exactly 10 s ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The lockout stands in for a
+   finer smoke sampling step ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+3. The rival is clean and the current exit is not — adopt.
+4. The rival is not `feasible` — fall through to the `rank_cost` comparison.
+5. Otherwise a **symmetric deadband** on `tau`, with
    `margin = tau_max * tau_deadband` (6 x 0.1 = 0.6):
 
 ```
@@ -647,7 +660,8 @@ Every key below is read from the scenario's `routing` block by
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
 | `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
-| `fallback_switch_margin` | `0.2` | Hysteresis when every route is refused. | active | inert |
+| `fallback_return_lockout_s` | `10.0` | After an exit switch between two refused routes, a switch straight back between two refused routes is blocked this many seconds; 0 turns it off. | active | active |
+| `fallback_switch_margin` | `0.2` | Hysteresis between two refused routes: a rival's `tau` must be more than this fraction lower. Compared `k_max_route` before 0.4.0 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). | active | active |
 | `w_smoke` | `1.0` | Smoke weight in the additive composite and its Dijkstra edge weights. Since `0d9bf79` the gate weights edges by their own `tau`, so neither weight reaches route choice under the gate; the composite is still reported. | **inert** (reported only) | active |
 | `w_fed` | `10.0` | FED weight. Same. | **inert** (reported only) | active |
 | `w_queue` | `0.0` | Congestion weight, off by default. | active (as `w_queue * queue_time_s` on the rank cost) | active (as distance-equivalent in the composite) |

@@ -1,15 +1,33 @@
 {
  "route_state": {
-  "current_exit": "east",
-  "current_path": [],
-  "last_eval_time_s": -Infinity,
+  "current_exit": "north",
+  "current_path": [
+   "spawn",
+   "north"
+  ],
+  "last_eval_time_s": 5.0,
   "wander_step": 0
  },
- "switch": null,
+ "switch": {
+  "agent_id": 7,
+  "new_cost": 50.7886,
+  "new_exit": "north",
+  "old_cost": 31.18,
+  "old_exit": "east",
+  "reason": "fallback",
+  "time_s": 5.0
+ },
  "wait_info": {
   "current_origin": "spawn",
-  "current_target_stage": "east",
-  "path_choices": {},
+  "current_target_stage": "north",
+  "path_choices": {
+   "spawn": [
+    [
+     "north",
+     100.0
+    ]
+   ]
+  },
   "state": "to_target"
  }
 }

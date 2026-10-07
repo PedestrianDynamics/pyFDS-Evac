@@ -20,6 +20,11 @@ position. Both sides therefore run every case with ``agent_position=None``,
 where #451 changes nothing; the behaviour with a position is pinned by the
 golden snapshots (``tests/test_rerouting_golden.py``) and by
 ``tests/test_gate_exit_pricing.py``.
+
+#458 changed the rule between two refused routes from k_max (fallback order)
+and travel time (exit anchor) to optical depth. The cases that reach that
+rule are listed in ``_DIVERGED_458`` and must differ from the frozen copy;
+their live decisions are pinned below and in ``tests/test_fallback_tau_hold.py``.
 """
 
 from __future__ import annotations
@@ -55,6 +60,33 @@ _DECISION_FUNCTIONS = (
     "_adoptable",
     "evaluate_and_reroute",
 )
+
+
+# Cases where two refused routes meet, decided on k_max or travel time by the
+# frozen copy and on tau by the live code (#458): intended divergences.
+_DIVERGED_458 = frozenset(
+    {
+        "additive_fed_fallback",
+        "gate_fallback_hold",
+        "gate_fallback_margin_keeps_current",
+        "gate_fallback_raw_tau",
+        "gate_fallback_slower_refused",
+        "gate_scan_lands_on_rejected",
+    }
+)
+
+
+def _case_names(cases: dict) -> list:
+    """Case names, each #458 divergence marked as a strict xfail."""
+    diverged = pytest.mark.xfail(
+        strict=True,
+        raises=AssertionError,
+        reason="#458: two refused routes are decided on tau, not k_max or time",
+    )
+    return [
+        pytest.param(name, marks=diverged) if name in _DIVERGED_458 else name
+        for name in sorted(cases)
+    ]
 
 
 # ── Recording samplers ────────────────────────────────────────────────
@@ -278,8 +310,8 @@ _EXTRA_RANK_CASES: dict[str, golden.RankCase] = {
     "additive_twin_paths_dose": golden.RankCase(
         golden._twin, golden._additive(), fed=_FedBelow(1.0), source="D0"
     ),
-    # Every route refused: the current exit leads on discounted tau, the rival
-    # on raw tau, which is what the fallback orders by.
+    # Every route refused: the rival's raw tau is lower, but not by
+    # fallback_switch_margin, so the current exit holds (#458).
     "gate_fallback_raw_tau": golden.RankCase(
         lambda: golden._star({"west": 24.0, "east": 20.0}),
         golden._gate(),
@@ -321,7 +353,7 @@ _ALL_RANK_CASES = {**golden.RANK_CASES, **_EXTRA_RANK_CASES}
 
 
 @pytest.mark.parametrize("variant", sorted(_VARIANTS))
-@pytest.mark.parametrize("name", sorted(_ALL_RANK_CASES))
+@pytest.mark.parametrize("name", _case_names(_ALL_RANK_CASES))
 def test_rank_routes_equivalent(name, variant):
     case = _ALL_RANK_CASES[name]
     _assert_rank_equal(replace(case, config=_VARIANTS[variant](case.config)))
@@ -350,9 +382,16 @@ def _reroute_world(case: golden.RerouteCase) -> dict:
     }
 
 
+# The return lockout's record (#458), which the frozen copy never writes; it
+# is pinned live in tests/test_fallback_tau_hold.py.
+_LOCKOUT_FIELDS = frozenset({"refused_switch_from", "refused_switch_time_s"})
+
+
 def _state_fields(route_state: AgentRouteState) -> dict:
     return {
-        f.name: copy.deepcopy(getattr(route_state, f.name)) for f in fields(route_state)
+        f.name: copy.deepcopy(getattr(route_state, f.name))
+        for f in fields(route_state)
+        if f.name not in _LOCKOUT_FIELDS
     }
 
 
@@ -415,7 +454,7 @@ _EXTRA_REROUTE_CASES: dict[str, golden.RerouteCase] = {
         fed=golden.ArmFed({"west": 4.0}),
         current_fed=0.2,
     ),
-    # All routes refused and the current exit kept by the fallback margin.
+    # All routes refused; the rival's tau is half the current one (#458).
     "gate_fallback_hold": golden.RerouteCase(
         _star2,
         golden._gate(),
@@ -474,7 +513,7 @@ _ALL_REROUTE_CASES = {**golden.REROUTE_CASES, **_EXTRA_REROUTE_CASES}
 
 
 @pytest.mark.parametrize("variant", sorted(_VARIANTS))
-@pytest.mark.parametrize("name", sorted(_ALL_REROUTE_CASES))
+@pytest.mark.parametrize("name", _case_names(_ALL_REROUTE_CASES))
 def test_evaluate_and_reroute_equivalent(name, variant):
     case = _ALL_REROUTE_CASES[name]
     _assert_reroute_equal(replace(case, config=_VARIANTS[variant](case.config)))
@@ -643,7 +682,7 @@ def test_ordering_cases_hit_their_branch():
     west, east = sorted(fallback, key=lambda rc: rc.exit_id != "west")
     assert west.tau_route < east.tau_route
     assert east.tau_route * 0.9 < west.tau_route
-    assert fallback[0].exit_id == "west"
+    assert fallback[0].exit_id == "east"
     assert fallback[0].rejection_reason.startswith("fallback: ")
     nonvisible = {rc.exit_id: rc for rc in ranked("gate_nonvisible_short_route")}
     assert not any(s.visible for s in nonvisible["west"].segments)
@@ -760,20 +799,8 @@ def _limit_cases() -> list[tuple[str, golden.RankCase]]:
                 ),
             )
         )
-    # Fallback: the rival's worst stretch exactly at the margin keeps nothing.
-    margin = 1.0 - golden._gate().fallback_switch_margin
-    for i, rival in enumerate(_around(0.5 * margin)):
-        cases.append(
-            (
-                f"fallback[{i}]",
-                golden.RankCase(
-                    _star2,
-                    golden._gate(),
-                    golden.ArmField({"west": rival, "east": 0.5}),
-                    current_exit="east",
-                ),
-            )
-        )
+    # The fallback margin is on tau since #458; its boundary is pinned live
+    # in test_fallback_boundary_is_hit.
     return cases + _margin_limit_cases()
 
 
@@ -893,24 +920,41 @@ def test_threshold_equality_rank_equivalent(name):
 
 
 def test_fallback_boundary_is_hit():
-    """At the exact margin the rival wins; one ulp above, the current holds."""
-    margin = 1.0 - golden._gate().fallback_switch_margin
-    _, exact, above = _around(0.5 * margin)
-    for rival, winner in ((exact, "west"), (above, "east")):
-        ranked = live.rank_routes(
-            _star2(),
-            "spawn",
-            0.0,
-            0.0,
-            golden.ArmField({"west": rival, "east": 0.5}),
-            None,
-            golden._gate(),
-            current_exit="east",
+    """At the exact tau margin the current holds; one ulp past, the rival wins.
+
+    Live only (#458). The margin is chosen so that the current route's tau
+    times ``1 - fallback_switch_margin`` is exactly the rival's tau.
+    """
+    field = golden.ArmField({"west": 0.8, "east": 0.5})
+    taus = {
+        rc.exit_id: rc.tau_route
+        for rc in live.rank_routes(
+            _star2(), "spawn", 0.0, 0.0, field, None, golden._gate()
         )
-        west = next(rc for rc in ranked if rc.exit_id == "west")
-        assert west.k_max_route == rival
+    }
+    exact = _scaled_limit(taus["west"], taus["east"])
+    assert exact is not None and 0.5 <= exact < 1.0
+    for factor, winner in ((exact, "east"), (math.nextafter(exact, 1.0), "west")):
+        config = golden._gate(fallback_switch_margin=1.0 - factor)
+        assert 1.0 - config.fallback_switch_margin == factor
+        ranked = live.rank_routes(
+            _star2(), "spawn", 0.0, 0.0, field, None, config, current_exit="east"
+        )
+        assert all(rc.feasible is False for rc in ranked)
         assert ranked[0].exit_id == winner
         assert ranked[0].rejection_reason.startswith("fallback: ")
+
+
+def test_fallback_hold_case_now_switches():
+    """gate_fallback_hold: the rival's tau is half the current one (#458)."""
+    case = _EXTRA_REROUTE_CASES["gate_fallback_hold"]
+    ranked = _ranked_for(case)
+    west, east = sorted(ranked, key=lambda rc: rc.exit_id != "west")
+    assert west.k_max_route == east.k_max_route
+    assert west.tau_route < 0.8 * east.tau_route
+    result = _reroute("live", case, True)
+    assert result["switch"].old_exit == "east"
+    assert result["switch"].new_exit == "west"
 
 
 def _rc(exit_id: str, **kw) -> RouteCost:
@@ -1098,14 +1142,12 @@ def test_fallback_promotes_the_current_record_by_identity():
     fallback is called directly: promoting by filtering on the exit id would
     drop the second record.
     """
-    rival = _rc("west", rejected=True, rejection_reason="tau r", tau_route=1.0)
-    rival = replace(rival, k_max_route=0.9)
+    rival = _rc("west", rejected=True, rejection_reason="tau r", tau_route=1.8)
     current = _rc(
         "east",
         rejected=True,
         rejection_reason="tau c1",
         tau_route=2.0,
-        k_max_route=1.0,
     )
     twin = _rc(
         "east",
@@ -1219,13 +1261,27 @@ def test_scan_stops_at_the_current_exit_and_keeps_the_best():
     assert result["route_state"]["last_eval_time_s"] == _SCAN_STOPS.time_s
 
 
+# A feasible but slower rank 1 inside a widened tau deadband, then a refused
+# rival whose tau is clearly below the refused current exit's: the anchor
+# lets the agent onto the rival under the frozen copy (time) and the live
+# code (tau, #458) alike.
+_SCAN_REFUSED = golden.RerouteCase(
+    golden._star3,
+    golden._gate(tau_deadband=0.5),
+    "spawn",
+    "east",
+    "east",
+    extinction=golden.ArmField({"west": 0.625, "east": 0.25, "north": 0.09}),
+)
+
+
 def test_scan_takes_a_rejected_route_and_returns_unstamped():
     """The scan does not filter refused routes; a refused best returns early.
 
     The early return comes before the evaluation is stamped, so the agent
     reevaluates on the next check instead of waiting an interval.
     """
-    case = golden.REROUTE_CASES["gate_scan_lands_on_rejected"]
+    case = _SCAN_REFUSED
     ranked = _ranked_for(case)
     assert [rc.exit_id for rc in ranked] == ["north", "west", "east"]
     rs = AgentRouteState(current_exit="east")
@@ -1449,7 +1505,10 @@ def _assignments(case: golden.RerouteCase) -> dict[str, list[str]]:
         world["route_state"] = states[side] = _AssignmentLog.of(world["route_state"])
 
     _both(case, on_world)
-    return {side: state.__dict__["_assigned"] for side, state in states.items()}
+    return {
+        side: [n for n in state.__dict__["_assigned"] if n not in _LOCKOUT_FIELDS]
+        for side, state in states.items()
+    }
 
 
 def test_same_exit_switch_does_not_assign_current_exit():

@@ -210,6 +210,8 @@ trace on a current run:
   `rank_cost`: ordering by `k_max` alone once sent an agent 29 m out of its way over 0.2 m
   of sighting distance, neither value usable.
 
+  > **Superseded 2026-10-06 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).** `fallback_switch_margin` now compares `tau_route`, not the worst-case K, and the anchor uses the same rule whenever two refused routes meet; see [Models › Routing › Switching rule](/models/routing.md#switching-rule).
+
 **The open question, and what it is not.** The presumed defect was mixed currency: the
 ordering is in `tau` while the anchor falls through to `rank_cost`, a travel time. Making
 `tau` the anchor's currency outright made it *worse* — l_corridor went from 51 returns to

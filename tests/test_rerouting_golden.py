@@ -295,7 +295,7 @@ _TJ_RAMP = (
 )
 # The right arm is hazy from the start, so agents take the left exit; then the
 # left arm fills at once and every route is refused, leaving the right exit as
-# the least-bad one -- and the quicker one, which the anchor needs.
+# the least-bad one; the switch needs its tau clearly lower (#458).
 _TJ_FALLBACK = (
     Blob(*_TJ_RIGHT, t_on=0.0, rate=100.0, cap=1.0),
     Blob(*_TJ_LEFT, t_on=12.0, rate=100.0, cap=5.0),
@@ -770,8 +770,8 @@ RANK_CASES: dict[str, RankCase] = {
     "gate_fallback_no_current": RankCase(
         _star2, _gate(), ArmField({"west": 0.5, "east": 0.5})
     ),
-    # Gate: everything refused, the rival's worst stretch is not 20 % milder:
-    # the current exit is kept as the fallback.
+    # Gate: everything refused, equal worst stretch; the rival's tau is half
+    # the current one, so it wins (#458; before, k_max kept the current).
     "gate_fallback_margin_keeps_current": RankCase(
         _star2, _gate(), ArmField({"west": 0.5, "east": 0.5}), current_exit="east"
     ),
@@ -874,6 +874,8 @@ RANK_CASES: dict[str, RankCase] = {
     "additive_fed_refuses": RankCase(
         _star2, _additive(), fed=ArmFed({"west": 4.0}), current_fed=0.2
     ),
+    # Additive: every route FED-refused, both taus 0: a tie keeps the
+    # current exit (#458; before, equal k_max let the quicker rival win).
     "additive_fed_fallback": RankCase(
         _star2,
         _additive(),
@@ -1164,7 +1166,8 @@ REROUTE_CASES: dict[str, RerouteCase] = {
         "east",
         extinction=ArmField({"west": 0.4, "east": 2.0}),
     ),
-    # Gate: every route refused; the fallback winner is slower: anchor refuses.
+    # Gate: every route refused; the fallback winner is slower, but its tau is
+    # clearly lower, so the anchor lets it through (#458).
     "gate_fallback_slower_refused": RerouteCase(
         _star2,
         _gate(),
@@ -1173,8 +1176,9 @@ REROUTE_CASES: dict[str, RerouteCase] = {
         "west",
         extinction=ArmField({"west": 2.0, "east": 0.2}),
     ),
-    # Gate: the fallback winner is refused, the next candidate is still
-    # rejected, and adopting a rejected route is not allowed.
+    # Gate: every route refused; the fallback winner's tau is clearly below
+    # the current exit's, so the agent takes it although it is slower (#458;
+    # before, the anchor refused it and the scan landed on a rejected route).
     "gate_scan_lands_on_rejected": RerouteCase(
         _star3,
         _gate(),

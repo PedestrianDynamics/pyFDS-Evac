@@ -133,6 +133,8 @@ Symbols used below:
    `rank_cost`, held by `fallback_switch_margin` (0.2) against the rival's
    worst-case K.
 
+   > **Superseded 2026-10-06 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).** `fallback_switch_margin` now compares `tau_route`, not the worst-case K, and the anchor uses the same rule whenever two refused routes meet; see [Models › Routing › Switching rule](/models/routing.md#switching-rule).
+
 10. **Agents re-choose periodically, staggered.**
     - `should_reevaluate()` (`route_graph.py`): re-run every
       `reevaluation_interval_s` (default 10 s).

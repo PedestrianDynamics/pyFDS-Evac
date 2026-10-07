@@ -10,9 +10,11 @@ passable.
 The cost of recomputing every tick is that in a fire smoky enough to refuse
 every route -- most of a real run, see docs/gate-model-review-notes.md -- the
 ordering follows the field second by second. Two things hold it steady: the
-all-refused fallback keeps the current exit unless a rival's worst stretch is
-clearly milder, and the exit-switch anchor keeps it unless a rival is clearly
-quicker. Under the gate model those are the only churn protection there is.
+all-refused fallback and the anchor between two refused routes keep the
+current exit unless a rival's optical depth is more than
+fallback_switch_margin lower (#458), and otherwise the exit-switch anchor keeps
+it unless a rival is clearly quicker. Under the gate model those are the only
+churn protection there is.
 
 Smoke decides which exits are available; among the survivors distance decides,
 and the visibility band takes no part in the ordering. It used to, and on
@@ -196,11 +198,15 @@ class TestFallbackStability:
         )
         assert ranked[0].exit_id == "near"
 
-    def test_the_current_exit_is_held_when_rivals_are_no_milder(self):
-        """Uniform smoke: k_max ties, so the margin must keep the incumbent."""
+    def test_the_current_exit_is_held_unless_the_rival_has_clearly_less_tau(self):
+        """Uniform smoke: equal k_max, but the near route has half the tau.
+
+        The margin is on tau (#458), so the near exit holds and an agent
+        heading far leaves for it.
+        """
         for held in ("near", "far"):
             ranked = self._all_refused(held)
-            assert ranked[0].exit_id == held, held
+            assert ranked[0].exit_id == "near", held
 
 
 class TestRankCostIsWhatOrders:

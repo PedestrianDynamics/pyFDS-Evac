@@ -230,6 +230,14 @@ the key it is `"gate"`. Any other value stops the run with a `ValueError`
 that lists the two names, also with `--no-enable-rerouting`, since the first
 exit choice uses the cost model too.
 
+`fallback_return_lockout_s` (seconds, default 10) holds an agent after an
+exit switch between two refused routes: a switch straight back to the exit
+it left, again between two refused routes, is blocked while at most that
+many seconds have passed (a return at exactly 10 s is still blocked) and
+allowed after; 0 turns it off.
+It must be a number ≥ 0, or the run stops with a `ValueError`, also with
+`--no-enable-rerouting`.
+
 The `routing` keys `alpha`, `beta`, `min_speed_factor` and
 `base_speed_m_per_s` only estimate travel time when a route is priced. They
 do not change how fast agents walk.

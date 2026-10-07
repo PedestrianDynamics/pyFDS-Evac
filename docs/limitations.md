@@ -222,8 +222,7 @@ a discovery agent is therefore not limited by what it has perceived.
 **Route choice.** Route choice has open limitations: switching can oscillate
 where two routes cross in cost ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)), routes are priced with smoke the agent
 cannot perceive ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)), one path is priced per exit ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)), the first-leg FED is taken pro rata from the first edge ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)), a real optical-depth
-difference inside the anchor's deadband can keep the current exit ranked first, so the anchor is never asked ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); round-off is a tie since [#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)), and the
-all-refused fallback holds the current exit on its worst extinction alone ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The full list, with
+difference inside the anchor's deadband can keep the current exit ranked first, so the anchor is never asked ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); round-off is a tie since [#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)). The full list, with
 one line per issue, is on
 [Models › Routing › Limitations](/models/routing.md#limitations).
 
