@@ -202,7 +202,10 @@ def main():
         np.ma.masked_invalid(k_map).T,
         cmap=smoke,
         vmin=0,
-        vmax=3,
+        # 90 % of corridor cells at t = 20 s are below 1 1/m; a wider scale
+        # washes out the smoke between the fire and the sign that the sight
+        # lines cross.
+        vmax=1,
         shading="nearest",
         rasterized=True,
         zorder=0,
