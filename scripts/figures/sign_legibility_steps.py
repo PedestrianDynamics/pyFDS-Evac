@@ -15,11 +15,12 @@ and the script asserts the class it labels each one with.
 Right, the steps the left panel is made of, with the equation numbers of
 Börger, Belt and Arnold (2024).
 
-Run from the repository root with a copy of
-``fds-evac-data/t_junction/fire_2MW_PVC`` (fdsreader writes a cache next to
-the files; never point it at the data store)::
+The extinction slices of the run are tracked in
+``assets/t_junction/fire_2MW_PVC_extinction`` (see its README), so the
+script runs without arguments. ``--fds-dir`` takes another copy of the run.
+Run from the repository root::
 
-    uv run python scripts/figures/sign_legibility_steps.py --fds-dir FDS
+    uv run python scripts/figures/sign_legibility_steps.py
 
 Writes ``site/static/images/wayfinding/sign_legibility_steps.png``.
 """
@@ -43,6 +44,9 @@ from pyfds_evac.core.visibility import (
     _extinction_slice_index,
     extract_sign_descriptors,
 )
+
+# fdsreader would otherwise write a pickle cache beside the tracked slices.
+fdsreader.settings.ENABLE_CACHING = False
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSET = ROOT / "assets" / "t_junction"
@@ -113,14 +117,15 @@ def main():
 
     Parameters
     ----------
-    --fds-dir : copy of the t_junction FDS output (fire_2MW_PVC).
+    --fds-dir : t_junction FDS output (fire_2MW_PVC); default: the tracked
+        extinction slices in assets/t_junction/fire_2MW_PVC_extinction.
 
     Saves
     -----
     site/static/images/wayfinding/sign_legibility_steps.png
     """
     ap = argparse.ArgumentParser()
-    ap.add_argument("--fds-dir", required=True, type=Path)
+    ap.add_argument("--fds-dir", default=ASSET / "fire_2MW_PVC_extinction", type=Path)
     args = ap.parse_args()
 
     # --- Data ---
@@ -128,7 +133,7 @@ def main():
         json.loads((ASSET / "config_full.json").read_text())
     )
     walls = wkt.loads((ASSET / "geometry.wkt").read_text())
-    fire = fire_box(next(args.fds_dir.glob("*.fds")))
+    fire = fire_box(ASSET / "t_junction.fds")
     vis = _build_vismap(str(args.fds_dir), signs, TIME_STEP_S, SLICE_HEIGHT_M)
     wp = list(signs).index(NODE)
     sign = signs[NODE]
