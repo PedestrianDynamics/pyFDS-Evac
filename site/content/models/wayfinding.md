@@ -126,10 +126,11 @@ it does in smoke.
 *(a) Sign B of `assets/t_junction` in the FDS run `fire_2MW_PVC` at
 t = 20 s, the first map time at which its legible area falls below half the
 clear-air area (31.2 of 92.3 m²). Every value is read from the VisMap of a
-run. Below the cap, the test \(V \ge L\) is \(\bar K L \le A\,C\): the
-smoke summed along the sight line decides, not the distance. Beyond the
-smoke, clear cells add little to that sum, so P, 29.5 m away, is legible
-while Q, 3 m from the sign, is not. (b) The steps, with the equation numbers
+run. For an unobstructed sight line (\(U = 1\)) below the cap, the test
+\(V \ge L\) is \(\bar K L \le A\,C\), where \(\bar K L\) approximates
+the extinction summed along the line; distance alone does not decide
+legibility. Beyond the smoke, clear cells add little to that sum, so P,
+29.5 m away, is legible while Q, 3 m from the sign, is not. (b) The steps, with the equation numbers
 of Börger et al. Script: `scripts/figures/sign_legibility_steps.py`.*
 
 ![Animation of a sign turning away from a standing agent. As the angle grows, the visibility curve falls; when it drops below the 6 m distance near 53°, the sight line turns from solid blue to dashed red and the heading changes from a filled blue "sign legible" to a hollow red "sign not legible"](/images/wayfinding/sign_rotation.gif)

@@ -5,8 +5,9 @@ the FDS run ``fire_2MW_PVC``. The legible cells, the mean extinction
 coefficient along each sight line, the capped visibility, the view-angle
 factor, the concealment and the distance are all read from the VisMap that
 pyFDS-Evac builds for a run (``_build_vismap``: fdsvismap with C = 3, the
-30 m reading distance, view angle and obstructions). Nothing is recomputed
-here. The time is fixed by a rule before plotting: the first map time at
+30 m reading distance, view angle and obstructions). V is the product of
+those arrays, as in ``get_sign_vismap``, and the script asserts that it
+reproduces the legible cells. The time is fixed by a rule before plotting: the first map time at
 which sign B's legible area is below half its clear-air area (t = 0). The
 three marked cells are picked by rule on the corridor axis and in the stem,
 and the script asserts the class it labels each one with.
@@ -74,7 +75,7 @@ def extinction_slice(fds_dir, time):
     sim = fdsreader.Simulation(str(fds_dir))
     slc = sim.slices[_extinction_slice_index(str(fds_dir), SLICE_HEIGHT_M)]
     data, coords = slc.to_global(masked=True, fill=np.nan, return_coordinates=True)
-    frame = data[int(np.argmin(np.abs(slc.times - time)))]
+    frame = data[slc.get_nearest_timestep(time)]
     return frame, coords["x"], coords["y"], float(slc.extent.z_start)
 
 
@@ -147,19 +148,26 @@ def main():
     kbar = vis._get_mean_extco_array_at_time(wp, t)
     v_cap = vis._get_visibility_array(wp, t)
     v = cos * v_cap * unconcealed
+    assert np.array_equal(legible, (v >= dist) & (v >= vis.min_vis)), (
+        "V does not reproduce get_sign_vismap"
+    )
     k_map, kx, ky, z_slice = extinction_slice(args.fds_dir, t)
 
     # P: the legible cell on the corridor axis farthest from the sign. Q: the
-    # nearest cell that faces the sign (cos θ > 0.9), is not concealed and is
-    # not legible, so smoke alone decides it. R: a cell in the stem.
+    # nearest cell that faces the sign (cos θ > 0.9), is not concealed and
+    # whose capped visibility is already below L, so smoke decides it before
+    # the angle applies. R: a cell in the stem.
     row = cell(xs, ys, 0, sign["y"])[0]
     p = (row, int(np.where(legible[row])[0].min()))
-    smoked = unconcealed & ~legible & (cos > 0.9) & (ys[:, None] >= 10.0)
+    smoked = (
+        unconcealed & ~legible & (cos > 0.9) & (v_cap < dist) & (ys[:, None] >= 10.0)
+    )
+    assert smoked.any(), "no cell is lost to smoke alone"
     q = np.unravel_index(np.argmin(np.where(smoked, dist, np.inf)), dist.shape)
     r = cell(xs, ys, 20.0, 3.0)
     assert legible[p] and unconcealed[p], "P must be legible"
     assert not legible[q] and unconcealed[q] and cos[q] > 0, "Q must be smoked out"
-    assert v[q] < dist[q], "Q must fail L <= V"
+    assert smoked[q] and v_cap[q] < dist[q], "Q must fail L <= min(C/K, Vmax)"
     assert not unconcealed[r] and not legible[r], "R must be concealed"
     print(
         f"t = {t:.0f} s, legible area {area[np.searchsorted(times, t)]:.1f} m² "
