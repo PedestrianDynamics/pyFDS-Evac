@@ -36,6 +36,8 @@ except ModuleNotFoundError:
 from shapely import wkt
 from shapely.geometry import Polygon
 
+from pyfds_evac.config import messages
+
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
@@ -58,7 +60,9 @@ from .agent_seed import (
     steering_seeds,
 )
 from .cognitive_map import (
+    DEFAULT_NO_KNOWN_EXIT,
     AgentCognitiveMap,
+    distribution_no_known_exit,
     expand_from_visibility,
     expand_on_arrival,
     init_cognitive_map,
@@ -1226,12 +1230,18 @@ def _check_run_modes(
     tenability_config,
     replay_exits: Mapping[SpawnKey, str] | None,
     stage_graph: "StageGraph | None",
+    no_known_exit: Mapping[str, str] | None = None,
 ) -> None:
-    """Reject a smoke-blind run that would let smoke act, or a bad replay."""
+    """Reject a smoke-blind run that would let smoke act, or a bad replay.
+
+    An opt-in ``no_known_exit`` mode acts at each re-evaluation, so a run
+    without a reroute pass (smoke-blind, or rerouting off) is rejected (D33).
+    """
     if smoke_blind and reroute_config is not None:
         raise ValueError("smoke_blind runs take no reroute_config")
     if smoke_blind and tenability_config is not None:
         raise ValueError("smoke_blind runs take no tenability_config")
+    _check_no_known_exit_modes(no_known_exit or {}, reroute_config, smoke_blind)
     if replay_exits is None:
         return
     if stage_graph is None:
@@ -1241,6 +1251,19 @@ def _check_run_modes(
         raise ValueError(
             f"--replay-exits names exits this scenario lacks: {', '.join(unknown)}"
         )
+
+
+def _check_no_known_exit_modes(
+    modes: Mapping[str, str], reroute_config, smoke_blind: bool
+) -> None:
+    """D33: an opt-in no_known_exit mode needs a reroute pass."""
+    if reroute_config is not None:
+        return
+    for dist_id, mode in modes.items():
+        if mode != DEFAULT_NO_KNOWN_EXIT:
+            raise ValueError(
+                messages.no_known_exit_needs_rerouting(dist_id, mode, smoke_blind)
+            )
 
 
 def _has_exit_schedule(stage_graph: "StageGraph | None") -> bool:
@@ -1684,8 +1707,14 @@ def run_scenario(
                     f"direct_steering={len(direct_steering_info)} "
                     f"wait_info={len(agent_wait_info)}"
                 )
+        no_known_exit_by_dist = distribution_no_known_exit(scenario.raw)
         _check_run_modes(
-            smoke_blind, reroute_config, tenability_config, replay_exits, stage_graph
+            smoke_blind,
+            reroute_config,
+            tenability_config,
+            replay_exits,
+            stage_graph,
+            no_known_exit_by_dist,
         )
         has_exit_schedule = _has_exit_schedule(stage_graph)
         _check_exit_schedule(has_exit_schedule, reroute_config, replay_exits)
@@ -1702,6 +1731,7 @@ def run_scenario(
             d.get("parameters", {}).get("entrance")
             for d in scenario.raw.get("distributions", {}).values()
         ]
+        dist_no_known_exit: list = list(no_known_exit_by_dist.values())
         # Weights for the opening choice. With rerouting on these are the same
         # weights the reroute pass uses, so turning rerouting off changes when
         # routes are re-ranked, not how they are scored.
@@ -2128,6 +2158,11 @@ def run_scenario(
                                             if _dist_idx < len(dist_entrance)
                                             else None
                                         )
+                                        path_state["no_known_exit"] = (
+                                            dist_no_known_exit[_dist_idx]
+                                            if _dist_idx < len(dist_no_known_exit)
+                                            else None
+                                        )
                                         _initial_exit_choice(
                                             agent_id,
                                             path_state,
@@ -2228,6 +2263,12 @@ def run_scenario(
                                             ]
                                             if flow_dist.get("dist_index", source_id)
                                             < len(dist_entrance)
+                                            else None,
+                                            "no_known_exit": dist_no_known_exit[
+                                                flow_dist.get("dist_index", source_id)
+                                            ]
+                                            if flow_dist.get("dist_index", source_id)
+                                            < len(dist_no_known_exit)
                                             else None,
                                         }
                                         _initial_exit_choice(

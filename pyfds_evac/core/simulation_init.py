@@ -904,6 +904,7 @@ def build_exit_path_state(
     *,
     familiarity: Any = "full",
     entrance: str | None = None,
+    no_known_exit: str | None = None,
 ) -> dict[str, Any]:
     """Build DS state that steers an agent straight to the exit *exit_id*.
 
@@ -949,6 +950,7 @@ def build_exit_path_state(
         **steering_seeds(seed, spawn_key),
         "familiarity": familiarity,
         "entrance": entrance,
+        "no_known_exit": no_known_exit,
     }
 
 
@@ -1224,6 +1226,7 @@ def _initialize_with_fallback(
                         # cognitive map from these two.
                         "familiarity": params.get("familiarity", "full"),
                         "entrance": params.get("entrance"),
+                        "no_known_exit": params.get("no_known_exit"),
                     }
                     _copy_premovement_offset(params, dist_params, dist_id)
 
@@ -1252,6 +1255,7 @@ def _initialize_with_fallback(
                 "premovement_seed": None,
                 "familiarity": "full",
                 "entrance": None,
+                "no_known_exit": None,
             }
         ]
         distribution_params[0].update(
@@ -1628,6 +1632,7 @@ def _initialize_with_fallback(
                 # and sign legibility can never bind.
                 "familiarity": spawn_data["params"].get("familiarity", "full"),
                 "entrance": spawn_data["params"].get("entrance"),
+                "no_known_exit": spawn_data["params"].get("no_known_exit"),
             }
 
             # Store premovement time and desired speed for this agent
@@ -1907,6 +1912,7 @@ def _process_distributions(
             "percentage": params.get("percentage", None),
             "familiarity": params.get("familiarity", "full"),
             "entrance": params.get("entrance"),
+            "no_known_exit": params.get("no_known_exit"),
         }
         _copy_premovement_offset(params, dist_params[dist_id], dist_id)
 
@@ -2795,6 +2801,9 @@ def _add_agents(
                                         path_state["entrance"] = spawn_params.get(
                                             "entrance"
                                         )
+                                        path_state["no_known_exit"] = spawn_params.get(
+                                            "no_known_exit"
+                                        )
                                         agent_wait_info[agent_id] = path_state
 
                                 agent_index += 1
@@ -2843,6 +2852,7 @@ def _add_agents(
                             key,
                             familiarity=spawn_params.get("familiarity", "full"),
                             entrance=spawn_params.get("entrance"),
+                            no_known_exit=spawn_params.get("no_known_exit"),
                         )
 
                     if use_premovement and agent_premovement_times is not None:

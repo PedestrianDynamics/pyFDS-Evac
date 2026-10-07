@@ -639,9 +639,48 @@ def speed_alias_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     return None
 
 
+def no_known_exit_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """A distribution's ``no_known_exit`` that is not a mode (#610)."""
+    from pyfds_evac.core.cognitive_map import distribution_no_known_exit
+
+    try:
+        distribution_no_known_exit(raw)
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
+def no_known_exit_issue(opts: Any, raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """D33: an opt-in ``no_known_exit`` mode in a run without a reroute pass.
+
+    ``explore``, ``return`` and ``stay`` act at each re-evaluation, which
+    --smoke-blind and --no-enable-rerouting turn off; the run rejects them.
+    """
+    from pyfds_evac.core.cognitive_map import (
+        DEFAULT_NO_KNOWN_EXIT,
+        distribution_no_known_exit,
+    )
+
+    blind = bool(option(opts, "smoke_blind"))
+    if not blind and option(opts, "enable_rerouting"):
+        return None
+    try:
+        modes = distribution_no_known_exit(raw)
+    except ValueError:
+        return None  # no_known_exit_value_issue reports it
+    for dist_id, mode in modes.items():
+        if mode != DEFAULT_NO_KNOWN_EXIT:
+            message = messages.no_known_exit_needs_rerouting(dist_id, mode, blind)
+            dest = "smoke_blind" if blind else "enable_rerouting"
+            return ConfigIssue("D33", dest, message, "S")
+    return None
+
+
 def scenario_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     """The first scenario error a run stops on, in the run's order."""
-    return speed_alias_issue(raw) or routing_issue(raw)
+    return (
+        speed_alias_issue(raw) or routing_issue(raw) or no_known_exit_value_issue(raw)
+    )
 
 
 # --- whether an option applies, at any value (#485 R1) ---------------------

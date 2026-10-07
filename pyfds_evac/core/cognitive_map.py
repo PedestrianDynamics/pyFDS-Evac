@@ -56,6 +56,45 @@ def familiarity_probability(value) -> float:
     return probability
 
 
+#: What an agent does while no exit is reachable in its known subgraph, set
+#: per distribution as ``no_known_exit`` (#610). ``default_route`` is the
+#: FDS+Evac counterpart (an agent with no known door follows the modeller's
+#: flow field): the distribution's journey, or else the nearest open exit by
+#: walking distance. The other three are opt-in: ``explore`` (frontier, then
+#: patrol), ``return`` (back over known legs to a node with a known exit) and
+#: ``stay`` (stand until an exit becomes known).
+NO_KNOWN_EXIT_MODES = ("default_route", "explore", "return", "stay")
+DEFAULT_NO_KNOWN_EXIT = "default_route"
+
+
+def no_known_exit_mode(value) -> str:
+    """Validate a ``no_known_exit`` value; None is the default mode."""
+    if value is None:
+        return DEFAULT_NO_KNOWN_EXIT
+    if value not in NO_KNOWN_EXIT_MODES:
+        raise ValueError(
+            f"unknown no_known_exit {value!r}: expected one of "
+            f"{', '.join(NO_KNOWN_EXIT_MODES)}"
+        )
+    return value
+
+
+def distribution_no_known_exit(raw) -> dict[str, str]:
+    """Each distribution's ``no_known_exit`` mode, by distribution id.
+
+    Raises ValueError naming the distribution whose value is not a mode.
+    """
+    modes: dict[str, str] = {}
+    for dist_id, dist in (raw.get("distributions") or {}).items():
+        params = dist.get("parameters") if isinstance(dist, dict) else None
+        value = params.get("no_known_exit") if isinstance(params, dict) else None
+        try:
+            modes[dist_id] = no_known_exit_mode(value)
+        except ValueError as exc:
+            raise ValueError(f"distribution {dist_id!r}: {exc}") from None
+    return modes
+
+
 def _learn_route_to(cmap: AgentCognitiveMap, graph, source: str, target: str) -> bool:
     """Add the shortest path to *target*, nodes and edges, to the map.
 
