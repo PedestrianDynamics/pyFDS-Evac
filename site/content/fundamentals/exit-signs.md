@@ -3,9 +3,9 @@ title: "Seeing and using exit signs"
 weight: 5
 ---
 
-A cue such as an exit sign must be perceived, paid attention to and
-comprehended before an occupant acts on it (Kuligowski and Kinateder
-2026, Ch. 65, p. 2113). [Visibility through smoke](/fundamentals/visibility.md) covers
+Information given to occupants must be perceived, paid attention to and
+comprehended before they act on it (Kuligowski and Kinateder 2026, Ch. 65,
+p. 2113); *our reading:* this applies to exit signs. [Visibility through smoke](/fundamentals/visibility.md) covers
 the first step: Jin's law *V* = *C*/*K* for the distance at which a sign is
 barely seen. This page covers the rest: the steps between seeing a sign and
 acting on it, the waypoint method that applies Jin's law along a line of
@@ -33,11 +33,14 @@ The sources use the same words for different thresholds. This page uses:
 
 ## From seeing a sign to using it
 
-The SFPE Handbook states the general rule for any cue: it "must be
+The SFPE Handbook states that information given to occupants "must be
 perceived (e.g., heard or seen), paid attention to, and then comprehended
 first before any actions take place" (Kuligowski and Kinateder 2026,
-Ch. 65, p. 2113). Its decision model puts the same three processes before
-any protective action (p. 2110).
+Ch. 65, p. 2113); *our reading:* this applies to exit signs. Its decision
+model puts the same three processes before any protective action
+(p. 2110). Xie et al. (2012, p. 368) split sign use into visibility,
+detection ('see the sign and correctly interpret the information') and
+acceptance (following it).
 
 No study measures all of these steps for one sign in smoke. Each measures
 one or two of them:
@@ -49,9 +52,11 @@ one or two of them:
 | Read | sign size, distance or smoke density at which the content is made out | Wong and Lo 2007; Xie et al. 2007; Cheung et al. 2026 (thresholds) |
 | Understood and followed | share of those who detected the sign and took its direction | Xie et al. 2012; Galea et al. 2014; Zhu et al. 2021 |
 
-*Our reading:* Xie et al. (2012) and Galea et al. (2014) report
-understanding and following together ("correctly interpret and follow"),
-so neither separates the two.
+*Our reading:* Xie et al. (2012) report interpretation and following
+together ("correctly interpret and follow", p. 375); Galea et al. (2014)
+report only that those who saw the sign "chose to go left following the
+direction indicated by the sign" (p. 1135). Neither separates
+understanding from following.
 
 ## The waypoint method
 
@@ -82,7 +87,10 @@ p. 4).
 **The view angle.** Signs are treated as Lambertian radiators, "although
 this assumption is highly simplified depending on the sign's light source
 and surface" (p. 4). The visual distance falls with cos θ, citing
-DIN ISO 3864-1, and a sign cannot be seen at θ ≥ 90° (Eq. 7, p. 4):
+DIN ISO 3864-1, and a sign cannot be seen at θ ≥ 90° (Eq. 7, p. 4).
+They motivate the factor by the smaller projected area of the sign at an
+angle, and hold it valid in smoke because Beer–Lambert attenuation is
+linear in intensity (p. 4):
 
 $$
 A_{i,j,k} = \max\!\left(0,\ \frac{\sin\alpha_k\,(X_i - X_k) + \cos\alpha_k\,(Y_j - Y_k)}{L_{i,j,k}}\right)
@@ -92,6 +100,23 @@ with \(\alpha_k\) the rotation angle of the sign's observation normal.
 Only the horizontal angle is taken into account. Signs above doors sit
 above the evaluation level, which the authors call "a particular though
 minor degree of uncertainty" (p. 5).
+
+The one regression of visibility on the angle in smoke that we found is
+reported second-hand in the SFPE Handbook (Yamada and Akizuki 2026,
+Ch. 68, Eq. 68.2, p. 2205), from Fujii et al. (2014, in Japanese; not
+read):
+
+$$
+V = -0.59 + \frac{3.68}{C_s} + 137.19\,S\cos\theta
+$$
+
+with *V* the visible distance [m], \(C_s\) the extinction coefficient
+[1/m], *S* the sign area [m²] and θ the yaw angle; adjusted
+\(R^2\) = 0.734. Twenty young volunteers with visual acuity above 1.0
+viewed a sign of 251 cd/m² in white smoke at 114 lx, at yaw angles of
+0–80° (Fig. 68.9). The angle enters through the sign-area term, added to
+the smoke term, so it reduces visibility much less than a factor
+cos θ on *C*/σ̄ would.
 
 **The obstruction.** \(U_{i,j,k}\) is 1 if the cell is not hidden from
 the sign by a wall, 0 otherwise. It comes from a ray cast from the sign
@@ -127,15 +152,16 @@ $$
 \(C_k\) is Jin's constant for the sign, "usually *C* = 3 for reflecting
 signs and *C* = 8 for light emitting signs" (Table 1, p. 5).
 
-**The cap.** \(V_{\max}\) is "usually 30 m" (p. 4). The authors call it "an
-arbitrary upper boundary value", set "since Jin's relation is purely
+**The cap.** \(V_{\max}\) is "usually 30 m" (p. 4). The authors write that "in performance based design,
+visibility is often limited to an arbitrary upper boundary value" of
+30 m, "since Jin's relation is purely
 empirical and would imply an infinite visibility in the absence of smoke",
 and add that "the exit signs have a maximum visual distance even in a
 smoke-free environment" (p. 5). They give no sign size, luminance or
 measurement for that distance. In their comparison, the FDS visibility
 slice "was calculated with *C* = 3 and truncated at a maximum boundary of
-30 m" (Fig. 6 caption, p. 7). *Our reading:* the paper does not name the
-FDS parameter behind that truncation.
+30 m" (Fig. 6 caption, p. 7). The paper names no FDS parameter and does not
+say whether FDS or the post-processing applied this truncation.
 
 **The plane.** The eye is assumed at the height of the signs, and the
 extinction is read from one horizontal slice "at a height of 2 m above
@@ -169,7 +195,7 @@ Building regulations implicitly treat the region from which a sign can be
 read, the visibility catchment area (VCA), as a semicircle centred on the
 sign, independent of the observation angle (pp. 48 and 62). Xie et al.
 assume instead that the eye resolves a fixed minimum angle; the VCA is
-then a circle tangent to the sign (Eq. 4, p. 47), with a diameter about
+then a circle approximately tangent to the sign (Eq. 4, p. 47; p. 48), with a diameter about
 equal to the radius of the regulatory semicircle (p. 48).
 
 Forty-eight volunteers, 29 men and 19 women, walked towards a sign in a
@@ -181,8 +207,11 @@ circle" (p. 53). The luminance of the signs was not considered (p. 49).
 
 *Our arithmetic:* for Sign 1, cos 60° × 23.38 m = 11.7 m, while
 14.82 m was measured (Table 2), so at large angles the data lie above a
-pure cos θ law. This is a reading threshold in clear air; it does not test
-the cos θ factor of the waypoint method, which applies to seeing in smoke.
+pure cos θ law. The authors find the data close to their theoretical
+circle (p. 53), which is itself a cos θ law (*our reading* of Eq. 4).
+This is a reading threshold in clear air; it does not test the cos θ
+factor of the waypoint method, which applies to seeing in smoke. For the
+angle in smoke, see Eq. 68.2 under [The view angle](#the-waypoint-method).
 
 ### Detected, identified, identified with confidence (Wong and Lo 2007)
 
@@ -194,13 +223,15 @@ measured quantity is the height of the sign content needed for each
 needed 30–40 mm; under emergency lighting, 5 lx, it needed 53–60 mm
 (p. 1840; lighting levels in the note to Table 3, p. 1839). Under
 emergency lighting, detection needed 31–37 mm (p. 1840), so the gap
-between seeing and reading the content was measured directly.
+between seeing and reading the content was measured directly. Their
+'detected' is a threshold for a sign at a known location, closer to
+*seen* above than to *detected* in the field studies.
 
 ### Detection and following in a building (Xie et al. 2012)
 
 Sixty-eight people, 41 unfamiliar and 27 familiar with the building, were
 told to leave a university building as quickly as possible, one at a time,
-by any route (p. 370). The signs were reflective, 0.1 × 0.3 m, in
+without running, by any route they chose (p. 370). The signs were reflective, 0.1 × 0.3 m, in
 well-lit areas above 100 lx (p. 369). Whether a person detected a sign was
 judged mainly from a questionnaire, checked against video (p. 371).
 
@@ -245,7 +276,8 @@ Kinateder 2026, Ch. 65, p. 2123).
 
 ### Exit choice with smoke and low signs (Kobes et al. 2010)
 
-Eighty-three hotel guests were woken at night by a phone call and told to
+Eighty-three volunteers staying overnight in the hotel (p. 540) were
+woken at night by a phone call and told to
 leave. The scenarios were: no smoke with ceiling-level signs (20 people),
 smoke poured into the corridor from a room with ceiling-level signs (39),
 and smoke with signs at floor level (24) (pp. 539–540, Table 1). The
@@ -288,8 +320,10 @@ Ch. 68, p. 2216).
   [Visibility › Known limits](/fundamentals/visibility.md#known-limits).
   Cheung et al. (thresholds) write that this may overestimate visibility
   (§4.1, p. 9).
-- **No threat of fire.** *Our reading:* instructed trials and drills
-  carry no real threat of fire, like the stated-choice studies on
+- **No threat of fire.** Xie et al. (2012, p. 370) state that their
+  method examines sign use "in ideal conditions", without fire effluent
+  or interaction with other occupants. *Our reading:* instructed trials
+  and drills carry no real threat of fire, like the stated-choice studies on
   [Exit choice › Known limits](/fundamentals/exit-choice.md#known-limits).
 - **Binary and graded outcomes.** Jin's threshold and the waypoint map are
   yes or no. Wong and Lo grade the response in three steps, and the field
@@ -345,12 +379,15 @@ How it is verified: [Familiarity](/verification/testing-familiarity.md).
   [doi:10.1002/fam.1095](https://doi.org/10.1002/fam.1095)
 - Yamada, T., & Akizuki, Y. (2026). *Visibility and human behavior in fire
   smoke*. SFPE Handbook of Fire Protection Engineering, 6th ed., Ch. 68,
-  p. 2216.
+  Eq. 68.2 and Fig. 68.9, p. 2205; p. 2216.
   [doi:10.1007/978-3-031-59212-6_68](https://doi.org/10.1007/978-3-031-59212-6_68)
 - Zhu, Y., Chen, T., Ding, N., Chraibi, M., & Fan, W.-C. (2021). *Follow
   people or signs? A novel way-finding method based on experiments and
   simulation*. Physica A, 573, 125926.
   [doi:10.1016/j.physa.2021.125926](https://doi.org/10.1016/j.physa.2021.125926)
+
+Cited through Ch. 68, not read: Fujii, Sano and Ohmiya (2014), Journal
+of Environmental Engineering (AIJ), 79(702), 639–648, in Japanese.
 
 Jin (1970, 1972, 1978) and Cheung et al. (2026, *Reappraisal of Jin's
 visibility through fire smoke experiment*) are listed on
