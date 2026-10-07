@@ -92,8 +92,9 @@ def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
     defaults; a key they do not set takes ``DEFAULT_SPAWN_PARAMS``. The same
     defaults apply with and without journeys, and nothing is taken from
     another distribution (#567). Numeric strings are converted, so both
-    initialisers see the same number. ``radius`` and ``v0`` must be finite
-    and > 0. Anything else raises ``ValueError`` naming the key.
+    initialisers see the same number. ``number`` must be >= 0, ``radius``
+    and ``v0`` finite and > 0, and a boolean is not a number (#649).
+    Anything else raises ``ValueError`` naming the key.
     """
     defaults = dict(DEFAULT_SPAWN_PARAMS)
     if global_parameters is None:
@@ -107,19 +108,54 @@ def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
 
 def _deck_spawn_value(key: str, value: Any) -> Any:
     """``simulationParams.<key>`` converted; a ``ValueError`` names the key."""
+    return _spawn_value(key, value, f"simulationParams.{key}")
+
+
+def _spawn_value(key: str, value: Any, name: str, zero_v0: bool = False) -> Any:
+    """*value* of spawn key *key* converted and range-checked (#567, #649).
+
+    ``number`` is read with ``int()`` and must be >= 0; ``radius`` and
+    ``v0`` with ``float()`` and must be finite and > 0, or for ``v0`` >= 0
+    when *zero_v0* (a spawn area of stationary agents). A boolean is not a
+    number. Anything else raises ``ValueError`` naming *name*.
+    """
+    if isinstance(value, bool):
+        raise ValueError(f"{name} must be a number, got {value!r}")
     try:
         converted = _SPAWN_DEFAULT_TYPES[key](value)
     except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError(
-            f"simulationParams.{key} must be a number, got {value!r}"
-        ) from error
+        raise ValueError(f"{name} must be a number, got {value!r}") from error
     if key == "number":
+        if converted < 0:
+            raise ValueError(f"{name} must be >= 0, got {value!r}")
         return converted
-    if not (math.isfinite(converted) and converted > 0):
-        raise ValueError(
-            f"simulationParams.{key} must be finite and > 0, got {value!r}"
-        )
+    allow_zero = zero_v0 and key == "v0"
+    in_range = converted >= 0 if allow_zero else converted > 0
+    if not (math.isfinite(converted) and in_range):
+        bound = ">= 0" if allow_zero else "> 0"
+        raise ValueError(f"{name} must be finite and {bound}, got {value!r}")
     return converted
+
+
+def _convert_distribution_spawn_values(params: dict[str, Any], dist_id: Any) -> None:
+    """Convert and range-check a distribution's own spawn values in place (#649).
+
+    The deck-wide rule of ``_deck_spawn_value``, except that ``v0`` may be
+    0: a spawn area of stationary agents sets it (the ISO 13571 stationary
+    FED checks do). Only keys the distribution sets are read. ``null`` is
+    unset, as for the deck-wide values: the key is removed, so the area
+    takes the deck default. A ``ValueError`` names the distribution and the
+    key the deck set (``desired_speed`` when that alias gave ``v0``).
+    """
+    for key in _SPAWN_DEFAULT_TYPES:
+        if key not in params:
+            continue
+        if params[key] is None:
+            del params[key]
+            continue
+        shown = "desired_speed" if key == "v0" and "desired_speed" in params else key
+        name = f"Distribution {dist_id!r}: {shown}"
+        params[key] = _spawn_value(key, params[key], name, zero_v0=True)
 
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
@@ -1194,6 +1230,7 @@ def _initialize_with_fallback(
                             params = json.loads(params)
                         except Exception:
                             params = {}
+                    _convert_distribution_spawn_values(params, dist_id)
                     params = _apply_default_premovement(params, dist_id)
 
                     # Use distribution-specific parameters or fall back to defaults
@@ -1933,6 +1970,7 @@ def _process_distributions(
                 params = {}
         elif not isinstance(params, dict):
             params = {}
+        _convert_distribution_spawn_values(params, dist_id)
         params = _apply_default_premovement(params, dist_id)
 
         dist_params[dist_id] = {
