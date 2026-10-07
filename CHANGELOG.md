@@ -145,6 +145,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An exploring agent no longer turns back at the door of the only exit
+  (#250, #387 a duplicate). A stage completes within 0.7 m of a random
+  point in it, which can be short of where the next sign is legible.
+  Before a patrol leg, the agent now walks until the node's routing point
+  lies within its radius and looks from there; an exit or frontier it
+  learns there is taken. The look writes no route-history row and leaves
+  the patrol rotation unchanged. Only runs that patrol change: the
+  `bs_discovery_gate_west` golden snapshot evacuates 10/10 by 29.0 s
+  instead of 9/10 at 60 s, with no `wander` row. `default_route` and full
+  familiarity runs are bit-identical.
+
 - Arriving at a node teaches the leg just walked, and its reverse where the
   graph has one (#468).
 

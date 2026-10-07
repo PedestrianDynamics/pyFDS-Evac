@@ -92,6 +92,12 @@ class StageGraph:
     # Kept so route evaluation can measure distances from an agent's actual
     # position along the walkable area, the same way edges are measured.
     routing_engine: object | None = None
+    # The walkable area, to check that an agent fits on a node point (#250),
+    # and whether it does, by (node, agent radius).
+    walkable_polygon: Polygon | None = None
+    node_point_fits: dict[tuple[str, float], bool] = field(
+        default_factory=dict, repr=False, compare=False
+    )
 
     @classmethod
     def from_scenario(
@@ -127,6 +133,7 @@ class StageGraph:
 
             routing_engine = jps.RoutingEngine(walkable_polygon)
         graph.routing_engine = routing_engine
+        graph.walkable_polygon = walkable_polygon
 
         # Add distribution nodes (not in direct_steering_info).
         if distributions:
@@ -366,7 +373,11 @@ def without_closed_stages(graph: StageGraph, time_s: float) -> StageGraph:
     closed = {nid for nid, node in graph.nodes.items() if not node.is_open(time_s)}
     if not closed:
         return graph
-    sub = StageGraph(routing_engine=graph.routing_engine)
+    sub = StageGraph(
+        routing_engine=graph.routing_engine,
+        walkable_polygon=graph.walkable_polygon,
+        node_point_fits=graph.node_point_fits,
+    )
     sub.nodes = {nid: n for nid, n in graph.nodes.items() if nid not in closed}
     sub.edges = {
         src: [e for e in edges if e.target not in closed]
@@ -1008,8 +1019,8 @@ class RouteAssessment:
 class RouteDecision:
     """What one reevaluation decided for an agent, before it is applied."""
 
-    # "keep", "switch", "fallback", "explore", "wander", "return", "stay"
-    # or "default_route".
+    # "keep", "switch", "fallback", "explore", "wander", "return", "stay",
+    # "default_route" or "look" (walk to the node point before a wander).
     kind: str
     path: list[str] | None = None
     old_exit: str | None = None
@@ -1021,6 +1032,8 @@ class RouteDecision:
     # Same-exit decisions: the path is recorded whether or not the switch
     # applies, and the exit is left as it is.
     update_cached_path: bool = False
+    # A look: the node point the agent walks to.
+    point: tuple[float, float] | None = None
 
 
 def _project_route_cost(assessment: RouteAssessment) -> RouteCost:
@@ -2859,6 +2872,8 @@ def _decide_explore(
 
     The one state change made here is the patrol step, which advances before
     the next stop is looked up and stays advanced whatever the lookup does.
+    Before a patrol leg the agent first looks from the node point (#250):
+    that decision leaves the patrol step as it is.
     """
     from .cognitive_map import nearest_frontier_target, wander_target
 
@@ -2866,16 +2881,27 @@ def _decide_explore(
     reason = "explore"
     frontier = nearest_frontier_target(cognitive_map, graph, source, agent_position)
     if frontier is None:
+        if looking(wait_info):
+            # Walking to the node point to look from there: no patrol leg
+            # pre-empts the look.
+            return RouteDecision(kind="keep")
         # Knowledge exhausted: every known node is visited and none of it
         # leads to an exit. Patrol the known nodes instead of standing --
         # perception runs from the agent's position, so a walked leg can
         # make a sign readable that never was from any node it stood on.
+        step = route_state.wander_step
         if idle and route_state.current_path:
             # The previous patrol leg was completed; move on to the next
             # stop, or a single-candidate rotation would re-offer the node
             # the agent is standing on the way to.
             route_state.wander_step += 1
         frontier = wander_target(cognitive_map, graph, source, route_state.wander_step)
+        if frontier is not None and idle:
+            point = _look_point(wait_info, graph, source, agent_position)
+            if point is not None:
+                # The patrol leg waits for the look; so does its step.
+                route_state.wander_step = step
+                return RouteDecision(kind="look", target_id=source, point=point)
         reason = "wander"
     if frontier is None:
         return RouteDecision(kind="keep")
@@ -2910,6 +2936,103 @@ def _decide_explore(
     )
 
 
+def looking(wait_info: dict) -> bool:
+    """Whether the agent walks to a node point to look from there (#250)."""
+    point = wait_info.get("look_point")
+    return (
+        point is not None
+        and wait_info.get("state") == "to_target"
+        and wait_info.get("target") == point
+    )
+
+
+def look_radius(wait_info: dict) -> float:
+    """The agent's body radius: a look ends with the node point under it."""
+    return float(wait_info.get("body_radius", 0.2))
+
+
+def _look_point(
+    wait_info: dict,
+    graph: StageGraph,
+    source: str,
+    agent_position: tuple[float, float] | None,
+) -> tuple[float, float] | None:
+    """The node point an agent about to patrol walks to first, or None.
+
+    An agent that completed its visit to *source* short of the node point,
+    where routing measures from and the node's sign hangs, may not have
+    seen what is visible from there (#250). Before patrolling, it walks
+    until the point lies under its body and looks again. None when it is
+    there already, has looked on this visit, *source* has no stage to steer
+    to, or the agent does not fit on the point.
+    """
+    if agent_position is None or wait_info.get("looked_node") == source:
+        return None
+    node = graph.nodes.get(source)
+    stage = wait_info.get("stage_configs", {}).get(source)
+    if node is None or stage is None or stage.get("polygon") is None:
+        return None
+    point = (node.centroid_x, node.centroid_y)
+    radius = look_radius(wait_info)
+    gap = math.hypot(agent_position[0] - point[0], agent_position[1] - point[1])
+    if gap <= radius or not _node_point_fits(graph, source, point, radius):
+        return None
+    return point
+
+
+def _node_point_fits(
+    graph: StageGraph, node_id: str, point: tuple[float, float], radius: float
+) -> bool:
+    """Whether an agent of *radius* fits on *node_id*'s node point.
+
+    Without a walkable area there is no way to tell, and no look. A point
+    the agent does not fit on is not replaced by another: the look point
+    must be the point routing measures from.
+    """
+    key = (node_id, radius)
+    fits = graph.node_point_fits.get(key)
+    if fits is not None:
+        return fits
+    walkable = graph.walkable_polygon
+    if walkable is None:
+        return False
+    from shapely.geometry import Point
+
+    fits = bool(walkable.buffer(-radius).covers(Point(point)))
+    if not fits:
+        _logger.warning(
+            "Node point (%.2f, %.2f) of stage %s leaves no room for an agent "
+            "of radius %.2f m: agents patrol from there without looking from it.",
+            point[0],
+            point[1],
+            node_id,
+            radius,
+        )
+    graph.node_point_fits[key] = fits
+    return fits
+
+
+def _start_look(wait_info: dict, node_id: str, point: tuple[float, float]) -> None:
+    """Send the agent to *node_id*'s node point, once per visit."""
+    wait_info["looked_node"] = node_id
+    wait_info["look_point"] = point
+    wait_info["current_origin"] = node_id
+    wait_info["current_target_stage"] = node_id
+    wait_info["target"] = point
+    wait_info["target_assigned"] = False
+    wait_info["state"] = "to_target"
+    wait_info["wait_until"] = None
+    wait_info["inside_since"] = None
+    wait_info.pop("look_deadline", None)
+
+
+def end_look(wait_info: dict) -> None:
+    """End a look: the agent stands at its node with no onward plan."""
+    wait_info.pop("look_point", None)
+    wait_info.pop("look_deadline", None)
+    wait_info["state"] = "idle"
+
+
 def _apply_decision(
     decision: RouteDecision,
     agent_id: int,
@@ -2929,6 +3052,16 @@ def _apply_decision(
         if decision.update_cached_path:
             route_state.current_path = decision.path
         return None
+    if decision.kind == "look":
+        # Not a route decision: no switch is recorded, and the patrol state
+        # is left for the decision after the look.
+        if decision.target_id is not None and decision.point is not None:
+            _start_look(wait_info, decision.target_id, decision.point)
+        return None
+    if looking(wait_info):
+        # A decision during the look replaces it, as it would have replaced
+        # the patrol of an agent standing at the node.
+        end_look(wait_info)
     if decision.kind == "stay":
         _stand(wait_info, route_state, decision.target_id)
         return _switch_record(decision, agent_id, current_time_s)

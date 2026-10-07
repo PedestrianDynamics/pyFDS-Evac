@@ -75,6 +75,8 @@ from .direct_steering_runtime import (
     ensure_agent_speed_state,
     extract_agent_xy,
     get_agent_desired_speed,
+    look_timeout_s,
+    reached_node_point,
     reached_stage,
     sample_wait_time,
     set_agent_desired_speed,
@@ -114,7 +116,10 @@ from .route_graph import (
     StageGraph,
     _reconstruct_committed_path,
     compute_eval_offset,
+    end_look,
     evaluate_and_reroute,
+    look_radius,
+    looking,
     rank_routes,
     reroute_agent,
     should_reevaluate,
@@ -1879,6 +1884,9 @@ def run_scenario(
             """
             cmap = cognitive_maps.get(agent_id)
             arrived = wait_info.get("current_target_stage")
+            if wait_info.get("looked_node") not in (None, arrived):
+                # A visit to another node: the next one may look again (#250).
+                wait_info.pop("looked_node")
             if (
                 cmap is not None
                 and stage_graph is not None
@@ -1895,6 +1903,58 @@ def run_scenario(
                     from_node=wait_info.get("current_origin"),
                 )
             advance_path_target(wait_info, may_enter=_may_enter(cmap, wait_info))
+
+        # Looks before a patrol (#250): completed, and given up at the timeout.
+        look_counts = {"looks": 0, "timeouts": 0}
+
+        def _step_look(
+            agent_id: int, agent, wait_info: dict, x, y, time_s: float
+        ) -> None:
+            """One step of the walk to a node point, ended once it is reached.
+
+            The agent's visit to the node is complete already, so its waiting
+            time, throughput limit and closure do not apply. It looks from
+            where it stands and goes idle, and the reroute pass decides.
+            """
+            point = wait_info["look_point"]
+            deadline = wait_info.get("look_deadline")
+            if deadline is None:
+                timeout = look_timeout_s(
+                    math.hypot(x - point[0], y - point[1]),
+                    ensure_agent_speed_state(agent_speed_state, agent_id, agent).get(
+                        "original_speed"
+                    ),
+                )
+                deadline = math.inf if timeout is None else time_s + timeout
+                wait_info["look_deadline"] = deadline
+            if reached_node_point(x, y, point, look_radius(wait_info)):
+                look_counts["looks"] += 1
+                node = wait_info.get("current_target_stage")
+                cmap = cognitive_maps.get(agent_id)
+                if cmap is not None and stage_graph is not None and node is not None:
+                    expand_on_arrival(
+                        cmap,
+                        node,
+                        stage_graph,
+                        vis_model=vis_model,
+                        time_s=time_s,
+                        ax=x,
+                        ay=y,
+                        from_node=node,
+                    )
+                end_look(wait_info)
+                return
+            if deadline is not None and time_s >= deadline:
+                look_counts["timeouts"] += 1
+                _logger.warning(
+                    "Agent %s gave up walking to the node point of %s at "
+                    "t=%.2f s, %.2f m short: it patrols from where it stands.",
+                    agent_id,
+                    wait_info.get("current_target_stage"),
+                    time_s,
+                    math.hypot(x - point[0], y - point[1]),
+                )
+                end_look(wait_info)
 
         def _seed_route_state(agent_id: int, wait_info: dict, key: SpawnKey) -> None:
             """Count a just-spawned path agent at its exit (rerouting on).
@@ -1937,6 +1997,8 @@ def run_scenario(
             # Spawn areas become steerable patrol stops for wander.
             for _dist_id, _cfg in distribution_stage_configs.items():
                 wait_info["stage_configs"].setdefault(_dist_id, _cfg)
+            # A look ends with the node point under the agent's body (#250).
+            wait_info.setdefault("body_radius", float(agent_radii.get(agent_id, 0.2)))
             # Initialize route state on first encounter.
             if agent_id not in agent_route_state:
                 agent_route_state[agent_id] = AgentRouteState(
@@ -3092,6 +3154,10 @@ def run_scenario(
                             assign_agent_target(agent, target)
                             wait_info["target_assigned"] = True
 
+                        if looking(wait_info):
+                            _step_look(agent_id, agent, wait_info, x, y, current_time)
+                            continue
+
                         stage_type = stage_cfg.get("stage_type")
                         reached_target = reached_stage(
                             x,
@@ -3226,6 +3292,12 @@ def run_scenario(
                 not_spawned=_not_spawned(
                     has_flow_spawning, num_agents_per_source, agent_counter_per_source
                 ),
+            )
+        if look_counts["looks"] or look_counts["timeouts"]:
+            _logger.info(
+                "Looks from a node point before a patrol: %d, given up: %d",
+                look_counts["looks"],
+                look_counts["timeouts"],
             )
         final_total_agents = initial_agent_count
         if has_flow_spawning:

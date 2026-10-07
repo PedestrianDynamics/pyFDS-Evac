@@ -123,6 +123,15 @@ TARGET_REACH_MARGIN_M = 0.5
 # agent beside a door does not leave through the wall (#349, #401).
 EXIT_REACH_TOLERANCE_M = 0.03
 
+# Time, beyond twice the free walk, after which a walk to a node point
+# before a patrol is given up (#250). A termination guard for a node point
+# held for ever, for example by agents deadlocked in a door, not a
+# behavioural parameter. The longest look observed in a 30-agent door crowd
+# (blind_spawn_discovery, C1) took 6 s; 10 s is also the stand length by
+# which a deadlock is detected, so a give-up coincides with one. Expected
+# give-ups on every shipped deck: none.
+LOOK_CROWD_ALLOWANCE_S = 10.0
+
 
 def reached_stage(x, y, target, stage_cfg, agent_radius):
     """Return whether an agent at (x, y) has reached its current stage.
@@ -140,6 +149,23 @@ def reached_stage(x, y, target, stage_cfg, agent_radius):
         return False
     reach_dist = float(agent_radius) + TARGET_REACH_MARGIN_M
     return math.hypot(x - float(target[0]), y - float(target[1])) <= reach_dist
+
+
+def reached_node_point(x, y, point, body_radius):
+    """Return whether the node point lies under the agent's body (#250)."""
+    return math.hypot(x - float(point[0]), y - float(point[1])) <= float(body_radius)
+
+
+def look_timeout_s(distance_m, desired_speed):
+    """Return how long a walk to a node point may take before it is given up.
+
+    Twice the free walk plus ``LOOK_CROWD_ALLOWANCE_S``, counted in
+    simulation time from the first step of the walk. None without a
+    positive desired speed.
+    """
+    if desired_speed is None or not float(desired_speed) > 0.0:
+        return None
+    return 2.0 * float(distance_m) / float(desired_speed) + LOOK_CROWD_ALLOWANCE_S
 
 
 def sample_wait_time(stage_cfg, base_seed, step_index):

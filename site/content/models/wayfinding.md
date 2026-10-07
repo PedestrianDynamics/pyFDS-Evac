@@ -288,13 +288,14 @@ Paths learned in steps 1 and 2 add forward edges only
   called at `scenario.py`, `run_scenario`). Without a visibility
   model, **every** neighbour is learned.
 
-The three places knowledge is sensed from:
+The four places knowledge is sensed from:
 
 | When | Sensing position | Code |
 |---|---|---|
 | Initialisation | spawn node's routing point | `cognitive_map.py`, `init_cognitive_map` |
 | Periodic learning | previous step's stored position | `scenario.py`, `run_scenario` |
 | Stage completion (arrival) | current position | `scenario.py`, `run_scenario` |
+| Look before a patrol | current position, within the agent's radius of the node's routing point | `scenario.py`, `run_scenario` |
 
 Learning is **limited to neighbours** of one node. A legible sign that belongs
 to any other node is not tested. An edge learned by either call also teaches
@@ -409,6 +410,30 @@ exit and the spawn area sets `no_known_exit` to `explore`,
    over known edges taken **in either direction**
    (`wander_target`, `_undirected_known_path`, `cognitive_map.py`).
    Logged as `reason="wander"`.
+
+   **Look before wander.** A stage completes within 0.7 m of a random point
+   in it (`reached_stage`, `direct_steering_runtime.py`), so an agent can
+   complete it short of the doorway from which the next sign is legible. Before it
+   leaves a node on a patrol, it first walks until the node's routing point
+   lies within its own body radius, the radius it was spawned with. From there it senses as on arrival, then
+   decides again: an exit or a frontier learned there is taken, otherwise
+   it patrols
+   ([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250);
+   `_look_point`, `route_graph.py`).
+   - The look happens once per visit. It writes no route-history row and
+     leaves the patrol rotation unchanged.
+   - Waiting time, throughput limits and stage closure do not apply to it.
+   - A decision made during the look replaces the look.
+   - There is no look when the agent's disc does not fit on the routing
+     point inside the walkable area; a warning names the stage. A run
+     whose stage graph has no walkable area has no such test, and no look.
+   - A guard ends a look whose routing point stays occupied, for example
+     by agents deadlocked in a door: a look not completed after twice the
+     free walking time plus 10 s of simulation time
+     (`LOOK_CROWD_ALLOWANCE_S`, `direct_steering_runtime.py`) is given up
+     with a warning, and the agent patrols from where it stands. It is not
+     a behavioural parameter: the longest look measured in a 30-agent door
+     crowd took 6 s, and no shipped deck is expected to reach it.
 3. **Stand.** When neither yields a target and the agent is walking towards a
    stage not in its map, it stops where it is. Logged as `reason="stay"`.
 
@@ -624,16 +649,18 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
 - **No per-exit familiarity**
   ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)). One
   \(p\) per group, plus one `entrance`.
-- **Discovery agents turn back at the door of the only exit**
-  ([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)).
 
-**Fixed behaviour.** Two earlier defects are fixed: discovery agents ranked
+**Fixed behaviour.** Three earlier defects are fixed: discovery agents ranked
 the first leg as a straight line through walls
 ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
-by #174), and clear-air travel time was under-priced when an agent was
+by #174), clear-air travel time was under-priced when an agent was
 farther from its next node than the route's origin
 ([#167](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/167), fixed
-by #170).
+by #170), and exploring agents turned back at the door of the only exit,
+having completed their visit short of where its sign is legible
+([#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250) and
+[#387](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/387), fixed
+by the look before wander).
 - **No sharing.** Maps are per agent; no agent learns from another.
 - **No individual variation** in *C*, eye height or the legibility threshold.
 
