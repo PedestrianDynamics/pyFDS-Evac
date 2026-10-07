@@ -222,14 +222,14 @@ map. Being legible is a state of the moment. Being known lasts.&lt;/p>
 &lt;h3>Routing on what is known&lt;span class="hx-absolute -hx-mt-20" id="routing-on-what-is-known">&lt;/span>
 &lt;a href="#routing-on-what-is-known" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The router ranks only routes over places the agent knows. An exit the agent
 has not learned is not a rejected option; for the router, it does not exist.
-If no known exit is reachable, the agent heads for a known place it has not
-been to yet, and when none is left, it walks between the places it knows,
-hoping to see a new sign on the way.&lt;/p>
-&lt;p>One exception matters when reading results. An agent that knows no exit and
-no other place does not explore. It keeps walking to the geometrically nearest
-exit, whether or not it has learned it. It may read that exit&amp;rsquo;s sign on the
-way and learn it then, but it walks there either way
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91" target="_blank" rel="noopener">#91&lt;/a>).&lt;/p>
+If no known exit is reachable, the spawn area&amp;rsquo;s &lt;code>no_known_exit&lt;/code> decides. By
+default the agent follows a default route, as in FDS+Evac: the journey of its
+spawn area, or without one the exit nearest it on foot. That exit need not be
+in its map, and the exit history flags it when the agent leaves through it
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610" target="_blank" rel="noopener">#610&lt;/a>). With
+&lt;code>explore&lt;/code>, the agent heads instead for a known place it has not been to yet,
+and when none is left, it walks between the places it knows, hoping to see a
+new sign on the way; with nowhere known to go it stands.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/sign_bearing.png" alt="Two 30 m corridors, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; left, the near sign faces the agents and they take the near exit; right, the near sign faces away and they walk to the far exit" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 5. One number flips the exit. A corridor with an exit at
 each end and 40 agents at familiarity 0. Only the bearing of the near exit&amp;rsquo;s

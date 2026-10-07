@@ -1,7 +1,7 @@
 <!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=robots content="index, follow"><link rel="icon shortcut" href=/pyFDS-Evac/favicon.ico sizes=32x32><link rel=icon href=/pyFDS-Evac/favicon.svg type=image/svg+xml><link rel=icon href=/pyFDS-Evac/favicon-dark.svg type=image/svg+xml media="(prefers-color-scheme: dark)"><link rel=icon href=/pyFDS-Evac/favicon-16x16.png type=image/png sizes=16x16><link rel=icon href=/pyFDS-Evac/favicon-32x32.png type=image/png sizes=32x32><link rel=apple-touch-icon href=/pyFDS-Evac/apple-touch-icon.png sizes=180x180><link fetchpriority=low href=/pyFDS-Evac/site.webmanifest rel=manifest><title>pyFDS-Evac – Wayfinding in practice</title>
 <meta name=description content=" Note
 This page shows the wayfinding model at work on the assets. For its definition, parameters, defaults and limitations, and the terms used here (legible, known, learn, visited, frontier), see Models › Wayfinding. The intuition is on Concepts › Wayfinding."><link rel=canonical href=https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/ itemprop=url><meta property="og:title" content="Wayfinding in practice"><meta property="og:description" content><meta property="og:type" content="website"><meta property="og:url" content="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/"><meta property="og:image" content="https://pedestriandynamics.org/pyFDS-Evac/images/brand/social-preview.png"><meta itemprop=name content="Wayfinding in practice"><meta itemprop=description content="Note
-This page shows the wayfinding model at work on the assets. For its definition, parameters, defaults and limitations, and the terms used here (legible, known, learn, visited, frontier), see Models › Wayfinding. The intuition is on Concepts › Wayfinding."><meta itemprop=dateModified content="2026-10-07T06:51:27+02:00"><meta itemprop=wordCount content="3355"><meta itemprop=image content="https://pedestriandynamics.org/pyFDS-Evac/images/brand/social-preview.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://pedestriandynamics.org/pyFDS-Evac/images/brand/social-preview.png"><meta name=twitter:title content="Wayfinding in practice"><meta name=twitter:description content="Note
+This page shows the wayfinding model at work on the assets. For its definition, parameters, defaults and limitations, and the terms used here (legible, known, learn, visited, frontier), see Models › Wayfinding. The intuition is on Concepts › Wayfinding."><meta itemprop=dateModified content="2026-10-07T17:51:13+02:00"><meta itemprop=wordCount content="3352"><meta itemprop=image content="https://pedestriandynamics.org/pyFDS-Evac/images/brand/social-preview.png"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://pedestriandynamics.org/pyFDS-Evac/images/brand/social-preview.png"><meta name=twitter:title content="Wayfinding in practice"><meta name=twitter:description content="Note
 This page shows the wayfinding model at work on the assets. For its definition, parameters, defaults and limitations, and the terms used here (legible, known, learn, visited, frontier), see Models › Wayfinding. The intuition is on Concepts › Wayfinding."><link rel=preload href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css as=style integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/compiled/main.min.53c9617cf9cb82685ec5af463dec3ecab7f3b4c3ad5c9cf22185fc7cf9b39519.css rel=stylesheet integrity="sha256-U8lhfPnLgmhexa9GPew+yrfztMOtXJzyIYX8fPmzlRk="><link href=/pyFDS-Evac/css/custom.min.b1d87507749d329c4a6c97ce03bd84b2563cd6cfc8c78b908805297bb13095e8.css rel=stylesheet integrity="sha256-sdh1B3SdMpxKbJfOA72EslY81s/Ix4uQiAUpe7Ewleg="><script>const defaultTheme="system",setDarkTheme=()=>{document.documentElement.classList.add("dark"),document.documentElement.style.colorScheme="dark"},setLightTheme=()=>{document.documentElement.classList.remove("dark"),document.documentElement.style.colorScheme="light"};"color-theme"in localStorage?localStorage.getItem("color-theme")==="dark"?setDarkTheme():setLightTheme():(defaultTheme==="dark"?setDarkTheme():setLightTheme(),defaultTheme==="system"&&(window.matchMedia("(prefers-color-scheme: dark)").matches?setDarkTheme():setLightTheme()))</script><script defer src=/pyFDS-Evac/js/scroll-regions.min.d1324303937b414b76a2d4e86b87c54408e8d5f0fb7a5168f9ce7b965beea512.js integrity="sha256-0TJDA5N7QUt2otToa4fFRAjo1fD7elFo+c57llvupRI="></script></head><body dir=ltr><div class="nav-container hx-sticky hx-top-0 hx-z-20 hx-w-full hx-bg-transparent print:hx-hidden"><div class="nav-container-blur hx-pointer-events-none hx-absolute hx-z-[-1] hx-h-full hx-w-full hx-bg-white dark:hx-bg-dark hx-shadow-[0_2px_4px_rgba(0,0,0,.02),0_1px_0_rgba(0,0,0,.06)] contrast-more:hx-shadow-[0_0_0_1px_#000] dark:hx-shadow-[0_-1px_0_rgba(255,255,255,.1)_inset] contrast-more:dark:hx-shadow-[0_0_0_1px_#fff]"></div><nav class="hx-mx-auto hx-flex hx-items-center hx-justify-end hx-gap-2 hx-h-16 hx-px-6 hx-max-w-[90rem]"><a class="hx-flex hx-items-center hover:hx-opacity-75 ltr:hx-mr-auto rtl:hx-ml-auto" href=/pyFDS-Evac/><img class="hx-block dark:hx-hidden" src=/pyFDS-Evac/images/brand/logo-mark.svg alt=pyFDS-Evac height=28 width=28>
 <img class="hx-hidden dark:hx-block" src=/pyFDS-Evac/images/brand/logo-mark.svg alt=pyFDS-Evac height=28 width=28>
 <span class="hx-mx-2 hx-font-extrabold hx-inline hx-select-none" title=pyFDS-Evac>pyFDS-Evac</span>
@@ -222,41 +222,40 @@ structure.</p><ul><li><strong>Perception.</strong> <code>node_is_visible</code>,
 (<code>cognitive_map.py</code>, <code>expand_on_arrival</code>, <code>_expand_visible</code>).</li><li><strong>Knowledge.</strong> <code>AgentCognitiveMap</code>: known nodes, known edges, visited nodes
 (<code>cognitive_map.py</code>, <code>AgentCognitiveMap</code>).</li><li><strong>Decision.</strong> <code>rank_routes</code> on <code>cognitive_subgraph(map, graph)</code>
 (<code>route_graph.py</code>, <code>rank_routes</code>), then the switching rules of
-<code>evaluate_and_reroute</code>. With no reachable known exit, exploration or the
-patrol (<code>route_graph.py</code>, <code>_decide_explore</code>).</li><li><strong>The loop.</strong> Moving changes the stored position that the next periodic
+<code>evaluate_and_reroute</code>. With no reachable known exit, the spawn area&rsquo;s
+<code>no_known_exit</code> mode: by default the default route, or exploration and the
+patrol (<code>route_graph.py</code>, <code>_decide_no_known_exit</code>).</li><li><strong>The loop.</strong> Moving changes the stored position that the next periodic
 learning uses (<code>scenario.py</code>, <code>run_scenario</code>), and advancing along the path
-triggers learning at the node left behind (<code>scenario.py</code>, <code>run_scenario</code>).</li></ul><p>The full contract, including the #91 exception, the difference between
+triggers learning at the node left behind (<code>scenario.py</code>, <code>run_scenario</code>).</li></ul><p>The full contract, including what an agent that knows no exit does, the difference between
 ranking and adoption, and the learning schedule, is on
 <a href=/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract>Models › Wayfinding §2</a>.</p><h2>4. An empty map<span class="hx-absolute -hx-mt-20" id=4-an-empty-map></span>
 <a href=#4-an-empty-map class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>The talk asks where an agent goes when it knows nothing and no sign is legible
 anywhere. Its intended answer: the agent has nothing to route to, explores,
 learns nothing new, and circles. That is why the map has to be filled by
-something, and the following slides show signs filling it.</p><p><strong>The code does not do this for a map that holds only the spawn node. This is
-a known defect, not intended behaviour</strong>
-(<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91 target=_blank rel=noopener>#91</a>): the agent
-keeps steering towards the geometrically nearest exit, which it does not know.
-The chain of code is under the exception in
-<a href=/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract>Models › Wayfinding §2.4</a>.</p><p>Two probes support this. In ours, we ran the three-exit corridor of
-<code>tests/test_initial_exit_from_cognitive_map.py</code> with 40 agents at familiarity
-0, no <code>entrance</code>, rerouting every 1 s and seed 7. We ran it first with no
-visibility model, and then with a clear-air model at 0.5 m in which every sign
-faced away from the crowd. In both runs every agent left by the geometrically
-nearest exit, and the route history recorded no switch. In the clear-air run,
-3 of the 40 agents learned that exit on the way. Our probe scripts are
-not in the repository. Figure 4 shows the same behaviour for one agent.</p><p>Circling needs a patrol target: at least one other known node reachable over
-known edges. Whether the agent then circles also depends on connectivity and
-steering. That is the smoke case of <code>assets/world_100</code> in #122.</p><blockquote><p><strong>Talk vs code.</strong> The slide says the map &ldquo;holds a single node&rdquo; and &ldquo;the agent
-circles&rdquo;. For a single node the code keeps the geometric target. No
-repository test pins either behaviour.</p></blockquote><p><img src=/pyFDS-Evac/images/wayfinding/empty_map_routes.png alt="Plan of a floor with two exits and one agent whose map holds only its spawn node; yellow cells mark where a sign is legible, none of them on the agent’s path, and the agent walks straight to the south exit, which is not in its map" loading=lazy></p><p><em>Figure 4. An empty map, as the code behaves on main. One agent at
-familiarity 0 with a clear-air visibility model. Yellow: cells from which a
-sign is legible. The south exit, 22.4 m from the start, has a sign facing out
-of the building; the west exit, 30.1 m away, has a sign facing along the
-corridor behind walls. The map holds only the spawn for the whole run, and the
-agent makes 0 route switches. After the default 10 s pre-movement it walks
-23.2 m to the geometrically nearest exit, the south one, which it does not
-know, and is out at 28.6 s. Nothing replaces the target it received at spawn
-(<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91 target=_blank rel=noopener>#91</a>). The
-intended behaviour is exploration. Script: <code>scripts/figures/empty_map_routes.py</code>.</em></p><h2>5. Per-agent cognitive maps<span class="hx-absolute -hx-mt-20" id=5-per-agent-cognitive-maps></span>
+something, and the following slides show signs filling it.</p><p><strong>The code does something else by default</strong>
+(<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610 target=_blank rel=noopener>#610</a>,
+<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91 target=_blank rel=noopener>#91</a>). An agent
+that knows no exit follows the default route, as an FDS+Evac agent with no
+known or visible door follows the flow field: the journey of its spawn area,
+or without one the exit nearest its start on foot. The exit history flags the
+exit it leaves through as not in its map. Exploration is an opt-in mode
+(<code>no_known_exit</code>), and so are returning and standing. The rule is in
+<a href=/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract>Models › Wayfinding §2.4</a>.</p><p>Circling needs a patrol target under <code>explore</code>: at least one other known node
+reachable over known edges. With a map that holds only the spawn node there is
+none, and the agent stands. Whether the agent circles also depends on
+connectivity and steering. That is the smoke case of <code>assets/world_100</code> in
+#122.</p><blockquote><p><strong>Talk vs code.</strong> The slide says the map &ldquo;holds a single node&rdquo; and &ldquo;the agent
+circles&rdquo;. By default the code sends that agent along the default route, and
+under <code>explore</code> it stands. <code>scripts/figures/empty_map_routes.py</code> checks both.</p></blockquote><p><img src=/pyFDS-Evac/images/wayfinding/empty_map_routes.png alt="Plan of a floor with two exits and one agent whose map holds only its spawn node; yellow cells mark where a sign is legible, none of them on the agent’s path, and the agent walks straight to the south exit, which is not in its map" loading=lazy></p><p><em>Figure 4. An empty map. One agent at familiarity 0 with a clear-air
+visibility model. Yellow: cells from which a sign is legible. The south exit,
+23.7 m on foot from the start to the middle of its doorway, has a sign facing
+out of the building; the west exit, 32.0 m on foot, has a sign facing along
+the corridor behind walls. The map holds only the spawn for the whole run.
+After the default 10 s pre-movement the agent takes the default route, the
+exit nearest on foot: it walks 22.1 m to the south exit, which it does not
+know, and is out at 27.7 s. The exit history flags that exit as not in its
+map. With <code>no_known_exit</code> set to <code>explore</code>, the agent has nothing to explore
+and stands. Script: <code>scripts/figures/empty_map_routes.py</code>.</em></p><h2>5. Per-agent cognitive maps<span class="hx-absolute -hx-mt-20" id=5-per-agent-cognitive-maps></span>
 <a href=#5-per-agent-cognitive-maps class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>The talk calls this slide &ldquo;staff know the building, visitors discover it&rdquo;.
 In the code there are no staff and no visitors. There is a familiarity value
 per group; at \(p = 1\) the agent is given the whole graph, which is an
@@ -331,7 +330,8 @@ ranks first. At that place before learning, the end exit ranked first. Each
 ranking is computed by <code>rank_routes</code>. Script: <code>scripts/figures/map_memory.py</code>.</em></p><h2>7. Full versus discovery<span class="hx-absolute -hx-mt-20" id=7-full-versus-discovery></span>
 <a href=#7-full-versus-discovery class=subheading-anchor aria-label="Permalink for this section"></a></h2><p>The talk compares the two tiers on the same geometry, seed and signs. One
 thing differs in the code, and until #174 a second one did:</p><ol><li><strong>The initial map.</strong> A fully familiar agent knows the whole graph. A
-discovery agent explores: it takes the frontier with the lowest path cost
+discovery agent of this deck explores (it sets <code>no_known_exit</code> to
+<code>explore</code>): it takes the frontier with the lowest path cost
 from its position, learns as the path advances, and, with no frontier left,
 patrols its known nodes (<code>cognitive_map.py</code>, <code>nearest_frontier_target</code>, <code>wander_target</code>). Route history logs
 <code>reason="explore"</code> and <code>reason="wander"</code> (<code>route_graph.py</code>, <code>_decide_explore</code>).</li><li><strong>The ranked length of the first leg</strong>
@@ -347,8 +347,8 @@ first leg&rsquo;s length
 over a few known nodes may never pass a legible new sign
 (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122 target=_blank rel=noopener>#122</a>).</p><p><strong>Discovery times depend on the grid.</strong> On
 <code>assets/familiarity_test_discovery</code>, seed 420, the runs of the
-<a href=/pyFDS-Evac/verification/testing-familiarity/>familiarity verification</a> (at <code>8c0c02d</code>) give the
-following discovery egress times:</p><table><thead><tr><th>Clear-air cell</th><th>Discovery egress</th></tr></thead><tbody><tr><td>0.25 m</td><td>68.1 s</td></tr><tr><td>0.1 m</td><td>226.0 s</td></tr><tr><td>0.05 m</td><td>109.7 s</td></tr><tr><td>0.025 m</td><td>149.8 s</td></tr></tbody></table><p>The fully familiar tier took 34.5 s. The code advises a cell smaller than the
+<a href=/pyFDS-Evac/verification/testing-familiarity/>familiarity verification</a> (at <code>82b7927c</code>) give the
+following discovery egress times:</p><table><thead><tr><th>Clear-air cell</th><th>Discovery egress</th></tr></thead><tbody><tr><td>0.25 m</td><td>86.3 s</td></tr><tr><td>0.1 m</td><td>16 of 20 out; 4 deadlocked in a doorway (<a href=https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359 target=_blank rel=noopener>#359</a>)</td></tr><tr><td>0.05 m</td><td>161.3 s</td></tr><tr><td>0.025 m</td><td>108.4 s</td></tr></tbody></table><p>The fully familiar tier took 34.8 s. The code advises a cell smaller than the
 thinnest wall and warns when it is not (<code>visibility.py</code>, <code>VisibilityModel.clear_air</code>). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
 change below that is not explained
@@ -358,16 +358,17 @@ plan of The Station (<code>assets/station_fahy</code>). With <code>--no-visibili
 from a node teaches every neighbour. With a visibility model, only neighbours
 with legible signs are learned, so walls and bearings cut the known set even
 in clear air. The talk&rsquo;s counts (8 of 11 and 3 of 11 nodes) were not
-reproduced for this page.</p><p><img src=/pyFDS-Evac/images/wayfinding/full_vs_discovery_paths.png alt="Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, most discovery agents detour through a dead-end room first" loading=lazy></p><p><em>Figure 7. Full versus discovery. <code>assets/familiarity_test_full</code> and
+reproduced for this page.</p><p><img src=/pyFDS-Evac/images/wayfinding/full_vs_discovery_paths.png alt="Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, all discovery agents detour through a dead-end room first" loading=lazy></p><p><em>Figure 7. Full versus discovery. <code>assets/familiarity_test_full</code> and
 <code>assets/familiarity_test_discovery</code>: 20 agents, seed 420, same geometry and
 signs; <code>familiarity</code> differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
-known from t = 0, no route changes; the last agent leaves at 34.5 s, median
-path 29 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
-end; the exit enters the maps at t = 15–97 s (median 42 s). After t = 0 the
-agents make 78 route changes (52 explore, 6 wander, 20 onto the exit), 16 of
-the 20 with a detour into a dead-end room; the last leaves at 109.8 s, median
-path 56 m. The discovery time has not converged with the grid (68.1 s at
-0.25 m, 226.0 s at 0.1 m, 149.8 s at 0.025 m; #168). This illustrates the mechanism; it is not a result. Script: <code>scripts/figures/full_vs_discovery_paths.py</code>.</em></p><blockquote><p><strong>Talk vs code.</strong> The talk caption gives 35.1 s and 75.1 s. Those are results
+known from t = 0, no route changes; the last agent leaves at 34.9 s, median
+path 28 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
+end; the exit enters the maps at t = 28–149 s (median 47 s). After t = 0 the
+agents make 87 route changes (59 explore, 8 wander, 20 onto the exit), all 20
+with a detour into a dead-end room; the last leaves at 161.3 s, median path
+57 m. The discovery time has not converged with the grid (86.3 s at 0.25 m,
+108.4 s at 0.025 m, and at 0.1 m 4 agents deadlock in a doorway, #359;
+#168). This illustrates the mechanism; it is not a result. Script: <code>scripts/figures/full_vs_discovery_paths.py</code>.</em></p><blockquote><p><strong>Talk vs code.</strong> The talk caption gives 35.1 s and 75.1 s. Those are results
 from the deck before its rework in #99 (<code>docs/testing-familiarity.md</code>). The
 world_100 clip (&ldquo;42 signs&rdquo;) and the Station clips were not reproduced for this
 page, and their decks and commits are not recorded.</p></blockquote><h2>References<span class="hx-absolute -hx-mt-20" id=references></span>
@@ -375,4 +376,4 @@ page, and their decks and commits are not recorded.</p></blockquote><h2>Referenc
 visibility in performance based fire safety design</em>. Fire Safety Journal,
 150, 104269.
 <a href=https://doi.org/10.1016/j.firesaf.2024.104269 target=_blank rel=noopener>doi:10.1016/j.firesaf.2024.104269</a></li><li>Haensel, D. (2014). <em>A knowledge-based routing framework for pedestrian
-dynamics simulation</em>. Diploma thesis, TU Dresden.</li></ul></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-10-07T06:51:27.000Z>October 7, 2026</time></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script><link type=text/css rel=stylesheet href=/pyFDS-Evac/lib/katex/katex.min.7e5db7914b97e596a36c1abb67ccc7f174f8bb71d38c9a88c55b262ed1737f97.css integrity="sha256-fl23kUuX5ZajbBq7Z8zH8XT4u3HTjJqIxVsmLtFzf5c="><script defer src=/pyFDS-Evac/lib/katex/katex.min.9f45307c5794ed247a0d095f3a62e52ef2215a67b2327203a7fd919959ae79d1.js integrity="sha256-n0UwfFeU7SR6DQlfOmLlLvIhWmeyMnIDp/2RmVmuedE="></script><script defer src=/pyFDS-Evac/lib/katex/auto-render.min.7b57d427ac6270677daf8d8380ded2cc73336f9149a167b8e1fe0d6ef66604ae.js integrity="sha256-e1fUJ6xicGd9r42DgN7SzHMzb5FJoWe44f4NbvZmBK4="></script><script defer src=/pyFDS-Evac/lib/katex/mhchem.min.f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b.js integrity="sha256-8MoD3xlLjD1gF/9FXbag75iFeQVmP6MRps3teIsVNAs="></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\begin{equation}",right:"\\end{equation}",display:!0},{left:"\\begin{align}",right:"\\end{align}",display:!0},{left:"\\begin{alignat}",right:"\\end{alignat}",display:!0},{left:"\\begin{gather}",right:"\\end{gather}",display:!0},{left:"\\begin{CD}",right:"\\end{CD}",display:!0},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script></body></html>
+dynamics simulation</em>. Diploma thesis, TU Dresden.</li></ul></div><div class="hx-mt-12 hx-mb-8 hx-block hx-text-xs hx-text-gray-500 ltr:hx-text-right rtl:hx-text-left dark:hx-text-gray-400">Last updated on <time datetime=2026-10-07T17:51:13.000Z>October 7, 2026</time></div></main></article></div><footer class="hextra-footer hx-bg-gray-100 hx-pb-[env(safe-area-inset-bottom)] dark:hx-bg-neutral-900 print:hx-bg-transparent"><div class="hx-max-w-screen-xl hx-mx-auto hx-flex hx-justify-center hx-py-12 hx-pl-[max(env(safe-area-inset-left),1.5rem)] hx-pr-[max(env(safe-area-inset-right),1.5rem)] hx-text-gray-600 dark:hx-text-gray-400 md:hx-justify-start"><div class="hx-flex hx-w-full hx-flex-col hx-items-center sm:hx-items-start"></div></div></footer><script defer src=/pyFDS-Evac/js/main.min.998f7d6b2520d6d9875145cbe14b35964b365b44b3b1bfa6b797a74a9c173b07.js integrity="sha256-mY99ayUg1tmHUUXL4Us1lks2W0Szsb+mt5enSpwXOwc="></script><script defer src=/pyFDS-Evac/lib/flexsearch/flexsearch.bundle.min.0425860527cc9968f9f049421c7a56b39327d475e2e3a8f550416be3a9134327.js integrity="sha256-BCWGBSfMmWj58ElCHHpWs5Mn1HXi46j1UEFr46kTQyc="></script><script defer src=/pyFDS-Evac/en.search.min.e94b9ab87af7e694584cf0f3e04ac9730f28249975a722351bf7ca00f4977934.js integrity="sha256-6UuauHr35pRYTPDz4ErJcw8oJJl1pyI1G/fKAPSXeTQ="></script><link type=text/css rel=stylesheet href=/pyFDS-Evac/lib/katex/katex.min.7e5db7914b97e596a36c1abb67ccc7f174f8bb71d38c9a88c55b262ed1737f97.css integrity="sha256-fl23kUuX5ZajbBq7Z8zH8XT4u3HTjJqIxVsmLtFzf5c="><script defer src=/pyFDS-Evac/lib/katex/katex.min.9f45307c5794ed247a0d095f3a62e52ef2215a67b2327203a7fd919959ae79d1.js integrity="sha256-n0UwfFeU7SR6DQlfOmLlLvIhWmeyMnIDp/2RmVmuedE="></script><script defer src=/pyFDS-Evac/lib/katex/auto-render.min.7b57d427ac6270677daf8d8380ded2cc73336f9149a167b8e1fe0d6ef66604ae.js integrity="sha256-e1fUJ6xicGd9r42DgN7SzHMzb5FJoWe44f4NbvZmBK4="></script><script defer src=/pyFDS-Evac/lib/katex/mhchem.min.f0ca03df194b8c3d6017ff455db6a0ef98857905663fa311a6cded788b15340b.js integrity="sha256-8MoD3xlLjD1gF/9FXbag75iFeQVmP6MRps3teIsVNAs="></script><script>document.addEventListener("DOMContentLoaded",function(){renderMathInElement(document.body,{delimiters:[{left:"$$",right:"$$",display:!0},{left:"$",right:"$",display:!1},{left:"\\(",right:"\\)",display:!1},{left:"\\begin{equation}",right:"\\end{equation}",display:!0},{left:"\\begin{align}",right:"\\end{align}",display:!0},{left:"\\begin{alignat}",right:"\\end{alignat}",display:!0},{left:"\\begin{gather}",right:"\\end{gather}",display:!0},{left:"\\begin{CD}",right:"\\end{CD}",display:!0},{left:"\\[",right:"\\]",display:!0}],throwOnError:!1})})</script></body></html>
