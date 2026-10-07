@@ -266,6 +266,26 @@ class TestRunModes:
         assert "clear-air run" in issue.message
         assert rules.no_known_exit_issue(Opts(), self._raw(None)) is None
 
+    def test_the_cli_and_tui_configuration_reports_it(self):
+        from argparse import Namespace
+
+        from pyfds_evac.config.effective import effective_configuration
+
+        cfg = effective_configuration(
+            Namespace(smoke_blind=True, scenario="deck.json"),
+            self._raw("explore"),
+            inspect_fds=False,
+        )
+        assert [e.rule for e in cfg.errors] == ["D33"]
+        assert "clear-air run" in cfg.errors[0].message
+
+    def test_the_gui_refuses_the_form(self):
+        from pyfds_evac.webapp.app import _resolve_form, _ScenarioError
+
+        form = {"scenario": "familiarity_test_discovery", "smoke_blind": "on"}
+        with pytest.raises(_ScenarioError, match="clear-air run"):
+            _resolve_form(form)
+
     def test_an_unknown_mode_names_its_distribution(self):
         with pytest.raises(ValueError, match="distribution 'd0'.*'wait'"):
             distribution_no_known_exit(self._raw("wait"))
@@ -376,5 +396,141 @@ def test_opt_in_modes_never_leave_by_an_unknown_exit(mode):
         assert result.metrics["agents_left_by_unknown_exit"] == 0
         assert result.exit_history == []
         assert {row["reason"] for row in result.route_history} == {"stay"}
+    finally:
+        result.cleanup()
+
+
+# --- C3 (#468): the walked leg is known ------------------------------------
+
+
+def test_arrival_teaches_the_leg_walked():
+    """AT2: arriving over S -> C makes (S, C) known."""
+    from pyfds_evac.core.cognitive_map import expand_on_arrival
+
+    graph = _graph()
+    cmap = _cmap({"S"})
+    expand_on_arrival(cmap, "C", graph, from_node="S")
+    assert ("S", "C") in cmap.known_edges
+    # The graph has no C -> S edge, so no reverse is invented.
+    assert ("C", "S") not in cmap.known_edges
+
+
+def test_arrival_teaches_the_reverse_when_the_graph_has_it():
+    from pyfds_evac.core.cognitive_map import expand_on_arrival
+
+    graph = StageGraph.from_scenario(
+        {k: dict(v) for k, v in STAGES.items()},
+        [{"from": "S", "to": "C"}, {"from": "C", "to": "S"}],
+        distributions={"S": {"polygon": box(-1, -1, 1, 1)}},
+    )
+    cmap = _cmap({"S"})
+    expand_on_arrival(cmap, "C", graph, from_node="S")
+    assert {("S", "C"), ("C", "S")} <= cmap.known_edges
+
+
+@pytest.mark.parametrize("mode", ["explore", "default_route"])
+def test_seeing_a_node_first_or_arriving_there_ends_the_same(mode):
+    """AT1 (F2): the agent that read C's sign on the way and the one that
+    learned C on arrival hold the same map after it and decide alike."""
+    from pyfds_evac.core.cognitive_map import expand_on_arrival
+
+    graph = _graph()
+    by_sign = _cmap({"S", "C"}, {("S", "C")})
+    on_arrival = _cmap({"S"})
+    decisions = []
+    for cmap in (by_sign, on_arrival):
+        expand_on_arrival(cmap, "C", graph, from_node="S")
+        wait_info = _wait_info(mode, current_origin="C", state="idle")
+        wait_info["current_target_stage"] = "C"
+        switch = _evaluate(wait_info, AgentRouteState(), cmap)
+        decisions.append(None if switch is None else (switch.reason, switch.new_exit))
+    assert by_sign.known_edges == on_arrival.known_edges
+    assert decisions[0] == decisions[1]
+
+
+def _journey_scenario() -> Scenario:
+    """S (west) -> checkpoint C (middle) -> exit E (east) in a 20 x 4 m hall."""
+    params = {
+        "number": 1,
+        "radius": 0.15,
+        "v0": 1.3,
+        "distribution_mode": "by_number",
+        "use_premovement": False,
+        "familiarity": "discovery",
+    }
+    transitions = [
+        {
+            "from": "jps-distributions_0",
+            "to": "jps-checkpoints_0",
+            "journey_id": "journey_0",
+        },
+        {"from": "jps-checkpoints_0", "to": "jps-exits_0", "journey_id": "journey_0"},
+    ]
+    sim_params = {"max_simulation_time": 30.0, "model_type": "CollisionFreeSpeedModel"}
+    raw = {
+        "project_version": "2.0",
+        "config": {
+            "simulation_settings": {
+                "simulationParams": sim_params,
+                "numberOfSimulations": 1,
+                "baseSeed": 3,
+            }
+        },
+        "exits": {
+            "jps-exits_0": {
+                "type": "polygon",
+                "coordinates": _coords(box(19.5, 1, 20, 3)),
+            }
+        },
+        "distributions": {
+            "jps-distributions_0": {
+                "type": "polygon",
+                "coordinates": _coords(box(1, 1, 3, 3)),
+                "parameters": params,
+            }
+        },
+        "checkpoints": {
+            "jps-checkpoints_0": {
+                "type": "polygon",
+                "coordinates": _coords(box(9, 1, 11, 3)),
+                "waiting_time": 0,
+            }
+        },
+        "zones": {},
+        "journeys": [
+            {
+                "id": "journey_0",
+                "stages": ["jps-distributions_0", "jps-checkpoints_0", "jps-exits_0"],
+                "transitions": transitions,
+            }
+        ],
+        "transitions": transitions,
+    }
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=box(0, 0, 20, 4).wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=3,
+        sim_params=sim_params,
+        source_path=None,
+    )
+
+
+def test_a_run_learns_the_leg_walked_to_a_checkpoint():
+    """AT2 in a run: no sight, so only arrival teaches; the leg S -> C is
+    walked and must be in the map afterwards (#468)."""
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(
+            _journey_scenario(),
+            seed=3,
+            reroute_config=RerouteConfig(reevaluation_interval_s=1.0),
+            collect_cognitive_map_history=True,
+        )
+    try:
+        final = result.cognitive_map_history[-1]
+        assert "jps-checkpoints_0" in final["known_nodes"]
+        assert ("jps-distributions_0", "jps-checkpoints_0") in {
+            tuple(edge) for edge in final["known_edges"]
+        }
     finally:
         result.cleanup()

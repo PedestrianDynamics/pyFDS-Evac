@@ -1892,6 +1892,7 @@ def run_scenario(
                     time_s=time_s,
                     ax=x,
                     ay=y,
+                    from_node=wait_info.get("current_origin"),
                 )
             advance_path_target(wait_info, may_enter=_may_enter(cmap, wait_info))
 
