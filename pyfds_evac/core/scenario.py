@@ -41,6 +41,7 @@ from pyfds_evac.config import messages
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
+from .agent_params import deck_default_number
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_FAMILIARITY,
@@ -328,14 +329,18 @@ def _normalized_flow_schedule(params: dict) -> list[dict]:
     return normalized
 
 
-def _distribution_agent_budget(dist: dict) -> int:
-    """Return the total number of agents implied by one distribution."""
+def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
+    """Return the total number of agents implied by one distribution.
+
+    *default_number* counts a distribution that sets no ``number``; the
+    views pass the run's default, :func:`deck_default_number` (#647).
+    """
     params = dist.get("parameters", {})
     schedule = _normalized_flow_schedule(params)
     if schedule:
         initial_number = int(params.get("initial_number", 0) or 0)
         return initial_number + sum(entry["number"] for entry in schedule)
-    return int(params.get("number", 0) or 0)
+    return int(params.get("number", default_number) or 0)
 
 
 # ---------------------------------------------------------------------------
@@ -404,8 +409,10 @@ class Scenario:
         params["model_type"] = self.model_type
 
     def summary(self) -> str:
+        default_number = deck_default_number(self.sim_params)
         total_agents = sum(
-            _distribution_agent_budget(d) for d in self.distributions.values()
+            _distribution_agent_budget(d, default_number)
+            for d in self.distributions.values()
         )
         journey_sequence = []
         journeys = self.raw.get("journeys", [])
@@ -444,7 +451,7 @@ class Scenario:
         for dist_id, dist in self.distributions.items():
             params = dist.get("parameters", {})
             flow = params.get("use_flow_spawning", False)
-            n = params.get("number", "?")
+            n = params.get("number", default_number)
             tag = (
                 f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)"
                 if flow
@@ -535,8 +542,9 @@ class Scenario:
                 zorder=3,
             )
 
+        default_number = deck_default_number(self.sim_params)
         for i, (did, d) in enumerate(self.distributions.items()):
-            n = _distribution_agent_budget(d)
+            n = _distribution_agent_budget(d, default_number)
             _plot_element(d["coordinates"], palette["distribution"], f"D{i}\n({n} ag)")
 
         for i, (eid, e) in enumerate(self.exits.items()):
@@ -640,13 +648,14 @@ class Scenario:
     def list_distributions(self) -> list[dict]:
         """Return a list of ``{"index", "id", "agents", "flow"}`` dicts."""
         result = []
+        default_number = deck_default_number(self.sim_params)
         for i, (did, d) in enumerate(self.distributions.items()):
             params = d.get("parameters", {})
             result.append(
                 {
                     "index": i,
                     "id": did,
-                    "agents": _distribution_agent_budget(d),
+                    "agents": _distribution_agent_budget(d, default_number),
                     "flow": params.get("use_flow_spawning", False)
                     or bool(params.get("flow_schedule")),
                 }

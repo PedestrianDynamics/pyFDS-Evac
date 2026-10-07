@@ -161,10 +161,19 @@ class ScenarioInfo:
 
     @property
     def agents(self) -> int | None:
-        """Agents the spawn areas ask for, when every one gives a number."""
+        """Agents the spawn areas ask for, when every count is an integer.
+
+        A spawn area without ``number`` counts the run's default (#647).
+        """
+        from pyfds_evac.core.agent_params import deck_default_number
+
+        try:
+            default = deck_default_number(self.sim_settings.get("simulationParams"))
+        except ValueError:
+            default = None
         total = 0
         for dist in (self.raw.get("distributions") or {}).values():
-            number = (dist.get("parameters") or {}).get("number")
+            number = (dist.get("parameters") or {}).get("number", default)
             if not isinstance(number, int):
                 return None
             total += number

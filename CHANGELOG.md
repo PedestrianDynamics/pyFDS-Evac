@@ -198,6 +198,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   failed inside pyFDS-Evac with a `TypeError`, and NaN or negative
   values were accepted or failed later without naming the key. No
   shipped deck changes (#649).
+- `Scenario.summary()`, `Scenario.plot()`, `Scenario.list_distributions()`
+  and the TUI's agent count show the count the run places for a spawn
+  area without `number`, `simulationParams.number` else 10, instead of 0
+  or `?`. An invalid `simulationParams.number` raises the run's
+  `ValueError` in the `Scenario` views; the TUI shows `?`. The defaults
+  move to `pyfds_evac.core.agent_params`, which does not import JuPedSim;
+  runs are unchanged (#647).
 - Sign visibility from an FDS run no longer stores a time point past the
   end of the FDS output when `--reroute-interval` does not divide `T_END`;
   the last stored point is `T_END`. It now raises `FdsHorizonError` only
