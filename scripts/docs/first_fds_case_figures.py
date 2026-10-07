@@ -362,11 +362,13 @@ def fig_evacuated(runs):
             fontweight="bold",
         )
         first = outcome if first is None else first
+        last = outcome
+    inside = int((last.exit == "inside").sum())
     spawned = np.searchsorted(np.sort(first.spawn_s.to_numpy()), t, side="right")
     ax.plot(t, spawned, color=INSIDE, lw=1.2, ls=":", label="agents spawned")
     ax.annotate(
-        "in the fire, half\nare still inside\nat 300 s",
-        (255, 86),
+        f"in the fire, {inside}\nare still inside\nat 300 s",
+        (255, 90),
         ha="center",
         va="center",
         color=TEXT,
