@@ -49,6 +49,8 @@ from .rules import (
     horizon_overrun,
     inactive_settings,
     integrated_intensity_issue,
+    no_known_exit_issue,
+    no_known_exit_value_issue,
     predict_mechanisms,
     routing_issue,
     speed_alias_issue,
@@ -514,6 +516,9 @@ def _errors(
     if issue is not None:
         errors.append(issue)
     issue = routing_issue(raw)
+    if issue is not None:
+        errors.append(issue)
+    issue = no_known_exit_value_issue(raw) or no_known_exit_issue(opts, raw)
     if issue is not None:
         errors.append(issue)
     return errors

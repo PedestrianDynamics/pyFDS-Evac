@@ -29,121 +29,13 @@
  },
  "switches": [
   {
-   "agent_id": 7,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 7.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 7.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 8.0
-  },
-  {
-   "agent_id": 2,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 9.0
-  },
-  {
-   "agent_id": 4,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 9.0
-  },
-  {
-   "agent_id": 7,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 9.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 9.0
-  },
-  {
-   "agent_id": 5,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 10.0
-  },
-  {
-   "agent_id": 8,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 10.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 11.0
-  },
-  {
-   "agent_id": 4,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 11.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 11.0
-  },
-  {
    "agent_id": 1,
    "new_cost": 0.0,
-   "new_exit": "C1",
+   "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "explore",
-   "time_s": 13.0
+   "reason": "stay",
+   "time_s": 0.0
   },
   {
    "agent_id": 2,
@@ -151,35 +43,8 @@
    "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 13.0
-  },
-  {
-   "agent_id": 5,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 13.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 13.0
-  },
-  {
-   "agent_id": 8,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 14.0
+   "reason": "stay",
+   "time_s": 0.0
   },
   {
    "agent_id": 3,
@@ -187,152 +52,8 @@
    "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 15.0
-  },
-  {
-   "agent_id": 1,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 16.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 17.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 21.0
-  },
-  {
-   "agent_id": 7,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 22.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 23.0
-  },
-  {
-   "agent_id": 4,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 24.0
-  },
-  {
-   "agent_id": 2,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 25.0
-  },
-  {
-   "agent_id": 5,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 25.0
-  },
-  {
-   "agent_id": 1,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 26.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 27.0
-  },
-  {
-   "agent_id": 8,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 27.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 28.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 30.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 33.0
-  },
-  {
-   "agent_id": 7,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 34.0
-  },
-  {
-   "agent_id": 1,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 36.0
+   "reason": "stay",
+   "time_s": 0.0
   },
   {
    "agent_id": 4,
@@ -340,8 +61,8 @@
    "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 36.0
+   "reason": "stay",
+   "time_s": 0.0
   },
   {
    "agent_id": 5,
@@ -349,17 +70,8 @@
    "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 37.0
-  },
-  {
-   "agent_id": 2,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 38.0
+   "reason": "stay",
+   "time_s": 0.0
   },
   {
    "agent_id": 6,
@@ -367,152 +79,8 @@
    "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 39.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 39.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 40.0
-  },
-  {
-   "agent_id": 8,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 40.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 43.0
-  },
-  {
-   "agent_id": 7,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 47.0
-  },
-  {
-   "agent_id": 1,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 48.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 48.0
-  },
-  {
-   "agent_id": 4,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 49.0
-  },
-  {
-   "agent_id": 5,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 49.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 49.0
-  },
-  {
-   "agent_id": 2,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 50.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 51.0
-  },
-  {
-   "agent_id": 8,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 51.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 53.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 57.0
-  },
-  {
-   "agent_id": 1,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 58.0
+   "reason": "stay",
+   "time_s": 0.0
   },
   {
    "agent_id": 7,
@@ -520,8 +88,35 @@
    "new_exit": "jps-distributions_0",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 59.0
+   "reason": "stay",
+   "time_s": 0.0
+  },
+  {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "stay",
+   "time_s": 0.0
+  },
+  {
+   "agent_id": 9,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "stay",
+   "time_s": 0.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 0.0,
+   "new_exit": "jps-distributions_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "stay",
+   "time_s": 0.0
   }
  ]
 }

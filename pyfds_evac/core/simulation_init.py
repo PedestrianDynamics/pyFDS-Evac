@@ -904,6 +904,7 @@ def build_exit_path_state(
     *,
     familiarity: Any = "full",
     entrance: str | None = None,
+    no_known_exit: str | None = None,
 ) -> dict[str, Any]:
     """Build DS state that steers an agent straight to the exit *exit_id*.
 
@@ -949,6 +950,7 @@ def build_exit_path_state(
         **steering_seeds(seed, spawn_key),
         "familiarity": familiarity,
         "entrance": entrance,
+        "no_known_exit": no_known_exit,
     }
 
 
@@ -1224,6 +1226,7 @@ def _initialize_with_fallback(
                         # cognitive map from these two.
                         "familiarity": params.get("familiarity", "full"),
                         "entrance": params.get("entrance"),
+                        "no_known_exit": params.get("no_known_exit"),
                     }
                     _copy_premovement_offset(params, dist_params, dist_id)
 
@@ -1252,12 +1255,16 @@ def _initialize_with_fallback(
                 "premovement_seed": None,
                 "familiarity": "full",
                 "entrance": None,
+                "no_known_exit": None,
             }
         ]
         distribution_params[0].update(
             _apply_default_premovement({}, "__walkable_area__")
         )
         total_agents = default_n_agents
+
+    # Walking distances for the nearest-exit assignment (#610, D4).
+    routing_engine = jps.RoutingEngine(walkable_area.polygon)
 
     # Step 3: Create a single global DS journey for all fallback agents
     global_ds_stage_id = simulation.add_direct_steering_stage()
@@ -1572,7 +1579,12 @@ def _initialize_with_fallback(
 
         # Add agents with nearest exit assignment — all on global DS journey
         for idx, pos in enumerate(positions):
-            nearest_exit_id = _find_nearest_exit(pos, exit_geometries=exit_geometries)
+            nearest_exit_id = _find_nearest_exit(
+                pos,
+                exit_geometries=exit_geometries,
+                routing_engine=routing_engine,
+                walkable=walkable_area.polygon,
+            )
             spawn_origin = spawn_key or nearest_exit_id
 
             agent_radius = float(sampled_radii[idx])
@@ -1628,6 +1640,7 @@ def _initialize_with_fallback(
                 # and sign legibility can never bind.
                 "familiarity": spawn_data["params"].get("familiarity", "full"),
                 "entrance": spawn_data["params"].get("entrance"),
+                "no_known_exit": spawn_data["params"].get("no_known_exit"),
             }
 
             # Store premovement time and desired speed for this agent
@@ -1677,13 +1690,48 @@ def _initialize_with_fallback(
     )
 
 
+def _exit_aim(exit_geom, walkable) -> tuple[float, float]:
+    """A point of the exit inside the walkable area, to measure a walk to.
+
+    An exit polygon can reach past the walkable boundary, and a routing
+    query to a point outside it falls back to a straight line.
+    """
+    inside = exit_geom.intersection(walkable) if walkable is not None else exit_geom
+    if inside.is_empty:
+        inside = exit_geom
+    point = inside.representative_point()
+    return (point.x, point.y)
+
+
+def _exit_distance(position: tuple, exit_geom, routing_engine, walkable) -> float:
+    """Walking distance from *position* to the exit, or straight-line without
+    a routing engine."""
+    if routing_engine is None:
+        return float(Point(position).distance(exit_geom))
+    from .route_graph import _walkable_distance
+
+    return _walkable_distance(
+        routing_engine, tuple(position), _exit_aim(exit_geom, walkable)
+    )
+
+
 def _find_nearest_exit(
     position: tuple,
     stage_map: dict | None = None,
     exits: list | None = None,
     exit_geometries: dict | None = None,
+    *,
+    routing_engine=None,
+    walkable=None,
 ):
-    """Find the key of the nearest exit to the given position."""
+    """Find the key of the nearest exit to the given position.
+
+    With *routing_engine* (a ``jupedsim.RoutingEngine`` over *walkable*)
+    exits in *exit_geometries* are compared by walking distance, so a wall
+    between an agent and an exit counts (#610, D4). This is the default
+    route of an agent of a distribution without a journey that knows no
+    exit.
+    """
 
     point = Point(position)
     min_distance = float("inf")
@@ -1691,7 +1739,7 @@ def _find_nearest_exit(
 
     if exit_geometries:
         for stage_id, exit_geom in exit_geometries.items():
-            distance = point.distance(exit_geom)
+            distance = _exit_distance(position, exit_geom, routing_engine, walkable)
             if distance < min_distance:
                 min_distance = distance
                 nearest_stage_id = stage_id
@@ -1907,6 +1955,7 @@ def _process_distributions(
             "percentage": params.get("percentage", None),
             "familiarity": params.get("familiarity", "full"),
             "entrance": params.get("entrance"),
+            "no_known_exit": params.get("no_known_exit"),
         }
         _copy_premovement_offset(params, dist_params[dist_id], dist_id)
 
@@ -2795,6 +2844,9 @@ def _add_agents(
                                         path_state["entrance"] = spawn_params.get(
                                             "entrance"
                                         )
+                                        path_state["no_known_exit"] = spawn_params.get(
+                                            "no_known_exit"
+                                        )
                                         agent_wait_info[agent_id] = path_state
 
                                 agent_index += 1
@@ -2843,6 +2895,7 @@ def _add_agents(
                             key,
                             familiarity=spawn_params.get("familiarity", "full"),
                             entrance=spawn_params.get("entrance"),
+                            no_known_exit=spawn_params.get("no_known_exit"),
                         )
 
                     if use_premovement and agent_premovement_times is not None:

@@ -82,6 +82,9 @@ def _load(config: str, max_time: float, agents: int | None = None):
     scenario.set_max_time(max_time)
     for dist in scenario.raw["distributions"].values():
         params = dist["parameters"]
+        # These runs have no reroute pass, which an opt-in no_known_exit
+        # mode needs (D33); the seeding does not depend on it.
+        params.pop("no_known_exit", None)
         if agents is not None:
             params["number"] = agents
         # Spawn the whole flow in the first third of the run.

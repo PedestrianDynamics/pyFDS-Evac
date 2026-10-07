@@ -33,7 +33,28 @@
  },
  "rankings": [
   [
+   46.0,
+   3,
+   "jps-checkpoints_3",
+   "",
+   "jps-exits_0:ok"
+  ],
+  [
+   47.0,
+   3,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
    51.0,
+   4,
+   "jps-checkpoints_3",
+   "",
+   "jps-exits_0:ok"
+  ],
+  [
+   52.0,
    4,
    "jps-checkpoints_3",
    "jps-exits_0",
@@ -43,25 +64,39 @@
    53.0,
    2,
    "jps-checkpoints_3",
-   "jps-exits_0",
+   "",
    "jps-exits_0:ok"
   ],
   [
    54.0,
-   3,
+   1,
+   "jps-checkpoints_3",
+   "",
+   "jps-exits_0:ok"
+  ],
+  [
+   54.0,
+   2,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   56.0,
+   55.0,
    1,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   59.0,
+   56.0,
+   5,
+   "jps-checkpoints_3",
+   "",
+   "jps-exits_0:ok"
+  ],
+  [
+   57.0,
    5,
    "jps-checkpoints_3",
    "jps-exits_0",
@@ -99,12 +134,21 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 4.0
+   "time_s": 3.34
   },
   {
    "agent_id": 3,
    "new_cost": 0.0,
    "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 6.67
+  },
+  {
+   "agent_id": 2,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -114,15 +158,6 @@
    "agent_id": 1,
    "new_cost": 0.0,
    "new_exit": "jps-checkpoints_2",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 8.0
-  },
-  {
-   "agent_id": 2,
-   "new_cost": 0.0,
-   "new_exit": "jps-checkpoints_1",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -144,7 +179,7 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 11.0
+   "time_s": 10.0
   },
   {
    "agent_id": 1,
@@ -162,21 +197,21 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 13.0
-  },
-  {
-   "agent_id": 4,
-   "new_cost": 0.0,
-   "new_exit": "jps-checkpoints_1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 14.0
+   "time_s": 12.0
   },
   {
    "agent_id": 5,
    "new_cost": 0.0,
    "new_exit": "jps-checkpoints_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 13.34
+  },
+  {
+   "agent_id": 4,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_1",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -198,7 +233,7 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 17.0
+   "time_s": 16.0
   },
   {
    "agent_id": 6,
@@ -207,7 +242,7 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 17.0
+   "time_s": 16.67
   },
   {
    "agent_id": 2,
@@ -237,6 +272,15 @@
    "time_s": 20.0
   },
   {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 23.0
+  },
+  {
    "agent_id": 5,
    "new_cost": 0.0,
    "new_exit": "jps-checkpoints_2",
@@ -244,15 +288,6 @@
    "old_exit": "",
    "reason": "explore",
    "time_s": 23.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "jps-checkpoints_3",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 24.0
   },
   {
    "agent_id": 6,
@@ -270,7 +305,7 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 29.0
+   "time_s": 28.0
   },
   {
    "agent_id": 5,
@@ -279,7 +314,7 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 30.0
+   "time_s": 29.0
   },
   {
    "agent_id": 6,
@@ -288,52 +323,52 @@
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 38.0
+   "time_s": 36.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 31.251,
+   "new_exit": "jps-exits_0",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
+   "time_s": 46.0
   },
   {
    "agent_id": 4,
-   "new_cost": 32.184,
+   "new_cost": 32.13,
    "new_exit": "jps-exits_0",
    "old_cost": null,
-   "old_exit": "jps-exits_0",
-   "reason": "smoke_reroute",
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 51.0
   },
   {
    "agent_id": 2,
-   "new_cost": 32.199,
+   "new_cost": 29.748,
    "new_exit": "jps-exits_0",
    "old_cost": null,
-   "old_exit": "jps-exits_0",
-   "reason": "smoke_reroute",
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 53.0
   },
   {
-   "agent_id": 3,
-   "new_cost": 32.529,
+   "agent_id": 1,
+   "new_cost": 30.061,
    "new_exit": "jps-exits_0",
    "old_cost": null,
-   "old_exit": "jps-exits_0",
-   "reason": "smoke_reroute",
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 54.0
   },
   {
-   "agent_id": 1,
-   "new_cost": 30.049,
-   "new_exit": "jps-exits_0",
-   "old_cost": null,
-   "old_exit": "jps-exits_0",
-   "reason": "smoke_reroute",
-   "time_s": 56.0
-  },
-  {
    "agent_id": 5,
-   "new_cost": 29.972,
+   "new_cost": 32.008,
    "new_exit": "jps-exits_0",
    "old_cost": null,
-   "old_exit": "jps-exits_0",
-   "reason": "smoke_reroute",
-   "time_s": 59.0
+   "old_exit": "",
+   "reason": "initial",
+   "time_s": 56.0
   }
  ]
 }

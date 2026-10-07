@@ -9,6 +9,7 @@ off, at the TUI's rates, with a frame after every step, and as the CLI.
 from __future__ import annotations
 
 import argparse
+import csv
 import shlex
 import sqlite3
 import subprocess
@@ -176,8 +177,8 @@ def _multi_agent_form(root: Path, seed: str = SEED) -> model.Form:
 
 
 def _exits(ns: argparse.Namespace) -> list[str]:
-    lines = Path(ns.output_exit_history).read_text().splitlines()[1:]
-    return [line.rsplit(",", 1)[1] for line in lines]
+    with Path(ns.output_exit_history).open(newline="") as handle:
+        return [row["exit_id"] for row in csv.DictReader(handle)]
 
 
 @pytest.mark.slow

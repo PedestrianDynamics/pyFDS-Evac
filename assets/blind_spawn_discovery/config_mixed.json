@@ -204,7 +204,8 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant",
-        "familiarity": 0.5
+        "familiarity": 0.5,
+        "no_known_exit": "explore"
       }
     }
   },

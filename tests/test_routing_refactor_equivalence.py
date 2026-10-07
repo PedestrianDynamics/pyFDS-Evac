@@ -372,6 +372,7 @@ def _reroute_world(case: golden.RerouteCase) -> dict:
             case.target,
             path_choices={k: list(v) for k, v in case.path_choices.items()},
             state=case.state,
+            no_known_exit=case.no_known_exit,
         ),
         "route_state": AgentRouteState(
             current_exit=case.current_exit,
@@ -506,6 +507,7 @@ _EXTRA_REROUTE_CASES: dict[str, golden.RerouteCase] = {
         current_path=("C0", "D0"),
         wander_step=1,
         cognitive_map=golden._exhausted_map,
+        no_known_exit="explore",
     ),
 }
 

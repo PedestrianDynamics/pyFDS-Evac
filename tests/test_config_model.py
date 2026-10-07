@@ -970,6 +970,9 @@ def test_manifest_records_what_a_direct_run_used(tmp_path):
     from pyfds_evac.core import run_scenario
 
     scenario = _load(DISCOVERY)
+    # The deck explores, which needs rerouting (D33); run it on the default.
+    for dist in scenario.raw["distributions"].values():
+        dist["parameters"].pop("no_known_exit")
     result = run_scenario(scenario, seed=7)
     manifest, section = _copied_configuration(
         tmp_path, scenario, result, _output_opts(tmp_path / "r.sqlite")

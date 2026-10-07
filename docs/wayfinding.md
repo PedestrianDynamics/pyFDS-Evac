@@ -170,13 +170,14 @@ structure.
   (`cognitive_map.py`, `AgentCognitiveMap`).
 - **Decision.** `rank_routes` on `cognitive_subgraph(map, graph)`
   (`route_graph.py`, `rank_routes`), then the switching rules of
-  `evaluate_and_reroute`. With no reachable known exit, exploration or the
-  patrol (`route_graph.py`, `_decide_explore`).
+  `evaluate_and_reroute`. With no reachable known exit, the spawn area's
+  `no_known_exit` mode: by default the default route, or exploration and the
+  patrol (`route_graph.py`, `_decide_no_known_exit`).
 - **The loop.** Moving changes the stored position that the next periodic
   learning uses (`scenario.py`, `run_scenario`), and advancing along the path
   triggers learning at the node left behind (`scenario.py`, `run_scenario`).
 
-The full contract, including the #91 exception, the difference between
+The full contract, including what an agent that knows no exit does, the difference between
 ranking and adoption, and the learning schedule, is on
 [Models › Wayfinding §2](/models/wayfinding.md#2-the-knowledge-contract).
 
@@ -191,42 +192,38 @@ anywhere. Its intended answer: the agent has nothing to route to, explores,
 learns nothing new, and circles. That is why the map has to be filled by
 something, and the following slides show signs filling it.
 
-**The code does not do this for a map that holds only the spawn node. This is
-a known defect, not intended behaviour**
-([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)): the agent
-keeps steering towards the geometrically nearest exit, which it does not know.
-The chain of code is under the exception in
+**The code does something else by default**
+([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610),
+[#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)). An agent
+that knows no exit follows the default route, as an FDS+Evac agent with no
+known or visible door follows the flow field: the journey of its spawn area,
+or without one the exit nearest its start on foot. The exit history flags the
+exit it leaves through as not in its map. Exploration is an opt-in mode
+(`no_known_exit`), and so are returning and standing. The rule is in
 [Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract).
 
-Two probes support this. In ours, we ran the three-exit corridor of
-`tests/test_initial_exit_from_cognitive_map.py` with 40 agents at familiarity
-0, no `entrance`, rerouting every 1 s and seed 7. We ran it first with no
-visibility model, and then with a clear-air model at 0.5 m in which every sign
-faced away from the crowd. In both runs every agent left by the geometrically
-nearest exit, and the route history recorded no switch. In the clear-air run,
-3 of the 40 agents learned that exit on the way. Our probe scripts are
-not in the repository. Figure 4 shows the same behaviour for one agent.
-
-Circling needs a patrol target: at least one other known node reachable over
-known edges. Whether the agent then circles also depends on connectivity and
-steering. That is the smoke case of `assets/world_100` in #122.
+Circling needs a patrol target under `explore`: at least one other known node
+reachable over known edges. With a map that holds only the spawn node there is
+none, and the agent stands. Whether the agent circles also depends on
+connectivity and steering. That is the smoke case of `assets/world_100` in
+#122.
 
 > **Talk vs code.** The slide says the map "holds a single node" and "the agent
-> circles". For a single node the code keeps the geometric target. No
-> repository test pins either behaviour.
+> circles". By default the code sends that agent along the default route, and
+> under `explore` it stands. `scripts/figures/empty_map_routes.py` checks both.
 
 ![Plan of a floor with two exits and one agent whose map holds only its spawn node; yellow cells mark where a sign is legible, none of them on the agent's path, and the agent walks straight to the south exit, which is not in its map](/images/wayfinding/empty_map_routes.png)
 
-*Figure 4. An empty map, as the code behaves on main. One agent at
-familiarity 0 with a clear-air visibility model. Yellow: cells from which a
-sign is legible. The south exit, 22.4 m from the start, has a sign facing out
-of the building; the west exit, 30.1 m away, has a sign facing along the
-corridor behind walls. The map holds only the spawn for the whole run, and the
-agent makes 0 route switches. After the default 10 s pre-movement it walks
-23.2 m to the geometrically nearest exit, the south one, which it does not
-know, and is out at 28.6 s. Nothing replaces the target it received at spawn
-([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)). The
-intended behaviour is exploration. Script: `scripts/figures/empty_map_routes.py`.*
+*Figure 4. An empty map. One agent at familiarity 0 with a clear-air
+visibility model. Yellow: cells from which a sign is legible. The south exit,
+23.7 m on foot from the start to the middle of its doorway, has a sign facing
+out of the building; the west exit, 32.0 m on foot, has a sign facing along
+the corridor behind walls. The map holds only the spawn for the whole run.
+After the default 10 s pre-movement the agent takes the default route, the
+exit nearest on foot: it walks 22.1 m to the south exit, which it does not
+know, and is out at 27.7 s. The exit history flags that exit as not in its
+map. With `no_known_exit` set to `explore`, the agent has nothing to explore
+and stands. Script: `scripts/figures/empty_map_routes.py`.*
 
 ## 5. Per-agent cognitive maps
 
@@ -361,7 +358,8 @@ The talk compares the two tiers on the same geometry, seed and signs. One
 thing differs in the code, and until #174 a second one did:
 
 1. **The initial map.** A fully familiar agent knows the whole graph. A
-   discovery agent explores: it takes the frontier with the lowest path cost
+   discovery agent of this deck explores (it sets `no_known_exit` to
+   `explore`): it takes the frontier with the lowest path cost
    from its position, learns as the path advances, and, with no frontier left,
    patrols its known nodes (`cognitive_map.py`, `nearest_frontier_target`, `wander_target`). Route history logs
    `reason="explore"` and `reason="wander"` (`route_graph.py`, `_decide_explore`).
@@ -384,17 +382,17 @@ over a few known nodes may never pass a legible new sign
 
 **Discovery times depend on the grid.** On
 `assets/familiarity_test_discovery`, seed 420, the runs of the
-[familiarity verification](testing-familiarity.md) (at `8c0c02d`) give the
+[familiarity verification](testing-familiarity.md) (at `82b7927c`) give the
 following discovery egress times:
 
 | Clear-air cell | Discovery egress |
 |---|---|
-| 0.25 m | 68.1 s |
-| 0.1 m | 226.0 s |
-| 0.05 m | 109.7 s |
-| 0.025 m | 149.8 s |
+| 0.25 m | 86.3 s |
+| 0.1 m | 16 of 20 out; 4 deadlocked in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
+| 0.05 m | 161.3 s |
+| 0.025 m | 108.4 s |
 
-The fully familiar tier took 34.5 s. The code advises a cell smaller than the
+The fully familiar tier took 34.8 s. The code advises a cell smaller than the
 thinnest wall and warns when it is not (`visibility.py`, `VisibilityModel.clear_air`). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
 change below that is not explained
@@ -408,18 +406,19 @@ with legible signs are learned, so walls and bearings cut the known set even
 in clear air. The talk's counts (8 of 11 and 3 of 11 nodes) were not
 reproduced for this page.
 
-![Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, most discovery agents detour through a dead-end room first](/images/wayfinding/full_vs_discovery_paths.png)
+![Two copies of a three-room floor plan side by side with the walked paths of 20 agents; left, fully familiar agents walk to the exit; right, all discovery agents detour through a dead-end room first](/images/wayfinding/full_vs_discovery_paths.png)
 
 *Figure 7. Full versus discovery. `assets/familiarity_test_full` and
 `assets/familiarity_test_discovery`: 20 agents, seed 420, same geometry and
 signs; `familiarity` differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
-known from t = 0, no route changes; the last agent leaves at 34.5 s, median
-path 29 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
-end; the exit enters the maps at t = 15–97 s (median 42 s). After t = 0 the
-agents make 78 route changes (52 explore, 6 wander, 20 onto the exit), 16 of
-the 20 with a detour into a dead-end room; the last leaves at 109.8 s, median
-path 56 m. The discovery time has not converged with the grid (68.1 s at
-0.25 m, 226.0 s at 0.1 m, 149.8 s at 0.025 m; #168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
+known from t = 0, no route changes; the last agent leaves at 34.9 s, median
+path 28 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
+end; the exit enters the maps at t = 28–149 s (median 47 s). After t = 0 the
+agents make 87 route changes (59 explore, 8 wander, 20 onto the exit), all 20
+with a detour into a dead-end room; the last leaves at 161.3 s, median path
+57 m. The discovery time has not converged with the grid (86.3 s at 0.25 m,
+108.4 s at 0.025 m, and at 0.1 m 4 agents deadlock in a doorway, #359;
+#168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
 
 > **Talk vs code.** The talk caption gives 35.1 s and 75.1 s. Those are results
 > from the deck before its rework in #99 (`docs/testing-familiarity.md`). The

@@ -340,7 +340,7 @@
    14.0,
    15,
    "jps-checkpoints_0",
-   "exit_B_right",
+   "",
    "exit_A_left:ok > exit_B_right:ok"
   ],
   [
@@ -480,7 +480,7 @@
    18.0,
    20,
    "jps-checkpoints_0",
-   "exit_B_right",
+   "",
    "exit_A_left:ok > exit_B_right:nonvisible"
   ],
   [
@@ -515,7 +515,7 @@
    20.0,
    27,
    "jps-checkpoints_0",
-   "exit_B_right",
+   "",
    "exit_A_left:ok > exit_B_right:nonvisible"
   ],
   [
@@ -571,14 +571,14 @@
    22.0,
    25,
    "jps-checkpoints_0",
-   "exit_B_right",
+   "",
    "exit_A_left:ok > exit_B_right:nonvisible"
   ],
   [
    22.0,
    26,
    "jps-checkpoints_0",
-   "exit_A_left",
+   "",
    "exit_A_left:ok > exit_B_right:nonvisible"
   ],
   [
@@ -591,6 +591,13 @@
   [
    23.0,
    25,
+   "jps-checkpoints_0",
+   "exit_A_left",
+   "exit_A_left:ok > exit_B_right:nonvisible"
+  ],
+  [
+   23.0,
+   26,
    "jps-checkpoints_0",
    "exit_A_left",
    "exit_A_left:ok > exit_B_right:nonvisible"
@@ -753,7 +760,7 @@
    26.0,
    29,
    "jps-checkpoints_0",
-   "exit_B_right",
+   "",
    "exit_A_left:ok > exit_B_right:ok"
   ],
   [
@@ -846,6 +853,15 @@
    "time_s": 8.0
   },
   {
+   "agent_id": 15,
+   "new_cost": 0.0,
+   "new_exit": "exit_B_right",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "default_route",
+   "time_s": 8.67
+  },
+  {
    "agent_id": 3,
    "new_cost": 11.122,
    "new_exit": "exit_B_right",
@@ -873,6 +889,15 @@
    "time_s": 10.0
   },
   {
+   "agent_id": 20,
+   "new_cost": 0.0,
+   "new_exit": "exit_B_right",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "default_route",
+   "time_s": 12.0
+  },
+  {
    "agent_id": 4,
    "new_cost": 26.903,
    "new_exit": "exit_A_left",
@@ -885,18 +910,54 @@
    "agent_id": 15,
    "new_cost": 18.659,
    "new_exit": "exit_A_left",
-   "old_cost": 32.557,
-   "old_exit": "exit_B_right",
-   "reason": "smoke_reroute",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 14.0
+  },
+  {
+   "agent_id": 25,
+   "new_cost": 0.0,
+   "new_exit": "exit_B_right",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "default_route",
+   "time_s": 15.34
+  },
+  {
+   "agent_id": 26,
+   "new_cost": 0.0,
+   "new_exit": "exit_A_left",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "default_route",
+   "time_s": 16.0
+  },
+  {
+   "agent_id": 27,
+   "new_cost": 0.0,
+   "new_exit": "exit_B_right",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "default_route",
+   "time_s": 16.67
+  },
+  {
+   "agent_id": 29,
+   "new_cost": 0.0,
+   "new_exit": "exit_B_right",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "default_route",
+   "time_s": 18.0
   },
   {
    "agent_id": 20,
    "new_cost": 19.2,
    "new_exit": "exit_A_left",
-   "old_cost": 83.664,
-   "old_exit": "exit_B_right",
-   "reason": "smoke_reroute",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 18.0
   },
   {
@@ -912,18 +973,27 @@
    "agent_id": 27,
    "new_cost": 19.602,
    "new_exit": "exit_A_left",
-   "old_cost": 103.936,
-   "old_exit": "exit_B_right",
-   "reason": "smoke_reroute",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 20.0
   },
   {
    "agent_id": 25,
    "new_cost": 48.263,
    "new_exit": "exit_A_left",
-   "old_cost": 128.691,
-   "old_exit": "exit_B_right",
-   "reason": "smoke_reroute",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
+   "time_s": 22.0
+  },
+  {
+   "agent_id": 26,
+   "new_cost": 48.258,
+   "new_exit": "exit_A_left",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 22.0
   },
   {
@@ -939,9 +1009,9 @@
    "agent_id": 29,
    "new_cost": 110.041,
    "new_exit": "exit_A_left",
-   "old_cost": 181.278,
-   "old_exit": "exit_B_right",
-   "reason": "smoke_reroute",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 26.0
   },
   {

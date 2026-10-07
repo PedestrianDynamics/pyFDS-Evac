@@ -356,8 +356,9 @@ DECKS: dict[str, Deck] = {
         flow_end_s=None,
         vis_extinction=0.0,
     ),
-    # Signs illegible everywhere: the map never grows past the first doorway,
-    # the frontier runs out, and agents patrol what they know.
+    # Signs illegible everywhere and nothing in sight from the spawn area: the
+    # deck explores (no_known_exit "explore"), so with nothing to explore the
+    # agents stand rather than walk to an exit they do not know (#610, C4).
     "bs_discovery_gate_fog": Deck(
         "blind_spawn_discovery/config_discovery.json",
         "gate",
@@ -938,6 +939,7 @@ def _wait_info(
     target: str,
     path_choices: dict | None = None,
     state: str = "to_target",
+    no_known_exit: str | None = None,
 ) -> dict:
     node = graph.nodes[target]
     return {
@@ -956,6 +958,7 @@ def _wait_info(
         "step_index": 0,
         "base_seed": 42,
         "agent_radius": 0.2,
+        "no_known_exit": no_known_exit,
     }
 
 
@@ -979,6 +982,8 @@ class RerouteCase:
     cognitive_map: Callable[[], AgentCognitiveMap] | None = None
     agent_position: tuple[float, float] | None = None
     anchor: float = 0.9
+    # The distribution's no_known_exit mode (#610); None is the default.
+    no_known_exit: str | None = None
 
 
 def _choices(*path: str) -> dict:
@@ -1027,6 +1032,7 @@ REROUTE_CASES: dict[str, RerouteCase] = {
         "D0",
         None,
         cognitive_map=_explore_map,
+        no_known_exit="explore",
     ),
     # Already walking to that frontier: no repeated switch.
     "explore_already_committed": RerouteCase(
@@ -1038,6 +1044,7 @@ REROUTE_CASES: dict[str, RerouteCase] = {
         current_path=("D0", "C0"),
         path_choices=_choices("D0", "C0"),
         cognitive_map=_explore_map,
+        no_known_exit="explore",
     ),
     # Frontier exhausted: patrol the known nodes.
     "wander_patrol": RerouteCase(
@@ -1049,9 +1056,16 @@ REROUTE_CASES: dict[str, RerouteCase] = {
         state="idle",
         current_path=("D0", "C0"),
         cognitive_map=_exhausted_map,
+        no_known_exit="explore",
     ),
     "wander_nowhere": RerouteCase(
-        _linear, _gate(), "D0", "D0", None, cognitive_map=_lonely_map
+        _linear,
+        _gate(),
+        "D0",
+        "D0",
+        None,
+        cognitive_map=_lonely_map,
+        no_known_exit="explore",
     ),
     # The first choice.
     "initial_gate": RerouteCase(_star2, _gate(), "spawn", "west", None),
@@ -1277,6 +1291,7 @@ def _evaluate(case: RerouteCase) -> dict:
         case.target,
         path_choices={k: list(v) for k, v in case.path_choices.items()},
         state=case.state,
+        no_known_exit=case.no_known_exit,
     )
     route_state = AgentRouteState(
         current_exit=case.current_exit,

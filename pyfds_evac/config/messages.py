@@ -155,3 +155,18 @@ def integrated_intensity_slice_missing(fds_dir: str) -> str:
         f"{fds_dir} has no INTEGRATED INTENSITY slice. Add "
         "`&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height."
     )
+
+
+def no_known_exit_needs_rerouting(dist_id: str, mode: str, smoke_blind: bool) -> str:
+    """D33: an opt-in no_known_exit mode in a run without a reroute pass."""
+    prefix = f"Distribution {dist_id!r} sets no_known_exit {mode!r}, which"
+    if smoke_blind:
+        return (
+            f"{prefix} --smoke-blind cannot honour: smoke-blind runs have no "
+            "re-evaluation; use a clear-air run (no --fds-dir) as the control "
+            "for this mode."
+        )
+    return (
+        f"{prefix} needs rerouting: the mode acts at each re-evaluation. "
+        "Turn rerouting on, or use the default no_known_exit 'default_route'."
+    )

@@ -56,6 +56,45 @@ def familiarity_probability(value) -> float:
     return probability
 
 
+#: What an agent does while no exit is reachable in its known subgraph, set
+#: per distribution as ``no_known_exit`` (#610). ``default_route`` is the
+#: FDS+Evac counterpart (an agent with no known door follows the modeller's
+#: flow field): the distribution's journey, or else the nearest open exit by
+#: walking distance. The other three are opt-in: ``explore`` (frontier, then
+#: patrol), ``return`` (back over known legs to a node with a known exit) and
+#: ``stay`` (stand until an exit becomes known).
+NO_KNOWN_EXIT_MODES = ("default_route", "explore", "return", "stay")
+DEFAULT_NO_KNOWN_EXIT = "default_route"
+
+
+def no_known_exit_mode(value) -> str:
+    """Validate a ``no_known_exit`` value; None is the default mode."""
+    if value is None:
+        return DEFAULT_NO_KNOWN_EXIT
+    if value not in NO_KNOWN_EXIT_MODES:
+        raise ValueError(
+            f"unknown no_known_exit {value!r}: expected one of "
+            f"{', '.join(NO_KNOWN_EXIT_MODES)}"
+        )
+    return str(value)
+
+
+def distribution_no_known_exit(raw) -> dict[str, str]:
+    """Each distribution's ``no_known_exit`` mode, by distribution id.
+
+    Raises ValueError naming the distribution whose value is not a mode.
+    """
+    modes: dict[str, str] = {}
+    for dist_id, dist in (raw.get("distributions") or {}).items():
+        params = dist.get("parameters") if isinstance(dist, dict) else None
+        value = params.get("no_known_exit") if isinstance(params, dict) else None
+        try:
+            modes[dist_id] = no_known_exit_mode(value)
+        except ValueError as exc:
+            raise ValueError(f"distribution {dist_id!r}: {exc}") from None
+    return modes
+
+
 def _learn_route_to(cmap: AgentCognitiveMap, graph, source: str, target: str) -> bool:
     """Add the shortest path to *target*, nodes and edges, to the map.
 
@@ -152,6 +191,28 @@ def _learn_edge(cmap: AgentCognitiveMap, graph, source: str, target: str) -> Non
         cmap.known_edges.add((target, source))
 
 
+def _has_edge(graph, source: str, target: str) -> bool:
+    return any(edge.target == target for edge in graph.edges.get(source, []))
+
+
+def _learn_walked_leg(
+    cmap: AgentCognitiveMap, graph, from_node: str | None, arrived_node: str
+) -> None:
+    """Learn the leg the agent just walked, in whichever direction the graph has.
+
+    A patrol or a return can walk an edge against its direction, so the
+    reverse edge is tried too.
+    """
+    if from_node is None or from_node == arrived_node or from_node not in graph.nodes:
+        return
+    if _has_edge(graph, from_node, arrived_node):
+        cmap.known_nodes.add(from_node)
+        _learn_edge(cmap, graph, from_node, arrived_node)
+    elif _has_edge(graph, arrived_node, from_node):
+        cmap.known_nodes.add(from_node)
+        _learn_edge(cmap, graph, arrived_node, from_node)
+
+
 def expand_on_arrival(
     cmap: AgentCognitiveMap,
     arrived_node: str,
@@ -160,8 +221,12 @@ def expand_on_arrival(
     time_s: float = 0.0,
     ax: float | None = None,
     ay: float | None = None,
+    from_node: str | None = None,
 ) -> None:
     """Expand map when the agent physically arrives at a node.
+
+    The leg walked from *from_node* becomes known, and its reverse when the
+    graph has one (#468): an agent knows the corridor it came along.
 
     Standing on a node does not mean seeing past its walls: auto-wired decks
     keep nodes graph-adjacent to stages in other rooms, so with a visibility
@@ -174,6 +239,7 @@ def expand_on_arrival(
         return
     cmap.known_nodes.add(arrived_node)
     cmap.visited_nodes.add(arrived_node)
+    _learn_walked_leg(cmap, graph, from_node, arrived_node)
     for edge in graph.edges.get(arrived_node, []):
         if (
             vis_model is not None

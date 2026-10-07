@@ -264,15 +264,14 @@ map. Being legible is a state of the moment. Being known lasts.
 
 The router ranks only routes over places the agent knows. An exit the agent
 has not learned is not a rejected option; for the router, it does not exist.
-If no known exit is reachable, the agent heads for a known place it has not
-been to yet, and when none is left, it walks between the places it knows,
-hoping to see a new sign on the way.
-
-One exception matters when reading results. An agent that knows no exit and
-no other place does not explore. It keeps walking to the geometrically nearest
-exit, whether or not it has learned it. It may read that exit's sign on the
-way and learn it then, but it walks there either way
-([#91](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/91)).
+If no known exit is reachable, the spawn area's `no_known_exit` decides. By
+default the agent follows a default route, as in FDS+Evac: the journey of its
+spawn area, or without one the exit nearest it on foot. That exit need not be
+in its map, and the exit history flags it when the agent leaves through it
+([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)). With
+`explore`, the agent heads instead for a known place it has not been to yet,
+and when none is left, it walks between the places it knows, hoping to see a
+new sign on the way; with nowhere known to go it stands.
 
 ![Two 30 m corridors, each with an exit at both ends and the cells from which the near sign is legible shaded yellow; left, the near sign faces the agents and they take the near exit; right, the near sign faces away and they walk to the far exit](/images/wayfinding/sign_bearing.png)
 

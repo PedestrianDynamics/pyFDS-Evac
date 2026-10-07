@@ -2708,6 +2708,8 @@ class TestExploreCommitmentIsNotReissued:
         return graph
 
     def _evaluate(self, graph, wait_info, route_state, cmap, t):
+        # Frontier and patrol are the opt-in explore mode (#610).
+        wait_info.setdefault("no_known_exit", "explore")
         return evaluate_and_reroute(
             agent_id=0,
             wait_info=wait_info,
@@ -2783,6 +2785,8 @@ class TestWanderWhenKnowledgeIsExhausted:
         return graph, cmap
 
     def _evaluate(self, graph, wait_info, route_state, cmap, t):
+        # Frontier and patrol are the opt-in explore mode (#610).
+        wait_info.setdefault("no_known_exit", "explore")
         return evaluate_and_reroute(
             agent_id=0,
             wait_info=wait_info,

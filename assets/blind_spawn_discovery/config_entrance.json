@@ -205,6 +205,7 @@
         "radius_distribution": "constant",
         "v0_distribution": "constant",
         "familiarity": "discovery",
+        "no_known_exit": "explore",
         "entrance": "E_west"
       }
     }

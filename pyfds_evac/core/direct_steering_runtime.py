@@ -420,8 +420,15 @@ def _weighted_choice(candidates: list, rng: random.Random) -> str:
     return candidates[-1][0]
 
 
-def advance_path_target(wait_info):
-    """Advance direct-steering state to the next stage target if available."""
+def advance_path_target(wait_info, may_enter=None):
+    """Advance direct-steering state to the next stage target if available.
+
+    *may_enter*, given a stage id, says whether the agent may walk to it. A
+    scripted leg to a stage it may not enter is not taken: the agent goes
+    idle where it is, as at the end of its plan, and the reroute pass
+    decides. Under the opt-in no_known_exit modes this keeps an agent off
+    stages absent from its map (#610).
+    """
     path_choices = wait_info.get("path_choices", {})
     stage_configs = wait_info.get("stage_configs", {})
     current_stage = wait_info.get("current_target_stage")
@@ -447,6 +454,10 @@ def advance_path_target(wait_info):
 
     if next_stage not in stage_configs:
         wait_info["state"] = "done"
+        return
+    if may_enter is not None and not may_enter(next_stage):
+        wait_info["current_origin"] = current_stage
+        wait_info["state"] = "idle"
         return
 
     wait_info["current_origin"] = current_stage

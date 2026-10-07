@@ -125,12 +125,18 @@ def _write_route_history_csv(rows, output_path: str) -> None:
 
 
 def _write_exit_history_csv(rows, output_path: str) -> None:
-    """Write per-agent exit rows to a CSV file."""
+    """Write per-agent exit rows to a CSV file.
+
+    ``exit_in_map`` says whether the exit was in the agent's map when it
+    left, or at the end for an agent still inside (#610).
+    """
     destination = pathlib.Path(output_path).resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(
-            handle, fieldnames=["agent_id", "origin", "spawn_index", "exit_id"]
+            handle,
+            fieldnames=["agent_id", "origin", "spawn_index", "exit_id", "exit_in_map"],
+            extrasaction="ignore",
         )
         writer.writeheader()
         for row in rows:
@@ -308,6 +314,12 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         _write_route_history_csv(result.route_history, opts.output_route_history)
         artifacts.append(f"Route history CSV: {opts.output_route_history}")
         log(f"Route switches: {len(result.route_history)}")
+    metrics = getattr(result, "metrics", None) or {}
+    unknown_exit = metrics.get("agents_left_by_unknown_exit")
+    if unknown_exit:
+        # Agents on the default route that left through an exit they never
+        # learned: modeller knowledge, not route choice (#610).
+        log(f"Agents that left by an exit not in their map: {unknown_exit}")
     if opts.output_route_cost_history and result.route_cost_history is not None:
         _write_route_cost_history_csv(
             result.route_cost_history, opts.output_route_cost_history

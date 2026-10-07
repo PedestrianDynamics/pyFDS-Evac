@@ -7,12 +7,16 @@ corridor, behind the rooms' walls. One agent, familiarity 0, spawns in the
 east of the hall. Sight is clear air (fdsvismap ray casting on the walkable
 polygon), and the shaded cells are those from which the model reads a sign.
 
-The script asserts what the figure claims (issue #91): the agent's map holds
-the spawn and nothing else for the whole run, it never re-decides its route,
-no exit sign is legible from any point of its walk, and it still leaves by
-the exit geometrically nearest its start. The scene is built here in code,
-not read from ``assets/``: the talk's version was hand-drawn over a video
-frame and has no deck to re-run.
+The script asserts what the figure claims (#91, #610): the agent's map holds
+the spawn and nothing else for the whole run and no exit sign is legible
+from any point of its walk. Under the default ``no_known_exit``,
+``default_route`` (the FDS+Evac counterpart), it takes the default route
+once -- for a spawn area without a journey, the exit nearest its start on
+foot -- and leaves by it, and the exit history flags that exit as absent
+from its map. The same scene with ``no_known_exit`` set to ``explore`` is
+also run: with nothing to explore the agent stands and never leaves. The
+scene is built here in code, not read from ``assets/``: the talk's version
+was hand-drawn over a video frame and has no deck to re-run.
 
 Run from the repository root::
 
@@ -26,6 +30,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import jupedsim as jps
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -36,6 +41,8 @@ from shapely.geometry import Point, box
 from shapely.ops import unary_union
 
 from pyfds_evac import RerouteConfig, VisibilityModel, load_scenario, run_scenario
+from pyfds_evac.core.route_graph import _walkable_distance
+from pyfds_evac.core.simulation_init import _exit_aim
 from pyfds_evac.core.visibility import extract_sign_descriptors
 
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "wayfinding"
@@ -94,15 +101,21 @@ def build_walls():
     return walls
 
 
-def write_deck(folder, walls):
+def walkable_area(walls):
+    return box(0, 0, SIZE, SIZE).difference(unary_union(walls))
+
+
+def write_deck(folder, walls, mode=None):
     """A scenario folder: walkable WKT and a one-agent discovery config."""
-    walkable = box(0, 0, SIZE, SIZE).difference(unary_union(walls))
+    walkable = walkable_area(walls)
     params = {
         "number": 1,
         "radius": 0.2,
         "distribution_mode": "by_number",
         "familiarity": 0.0,
     }
+    if mode is not None:
+        params["no_known_exit"] = mode
     exits = {
         name: {
             "type": "polygon",
@@ -145,11 +158,11 @@ def legible_cells(vis, node_id):
     return np.array([[vis.node_is_visible(0.0, x, y, node_id) for x in c] for y in c])
 
 
-def simulate(walls):
+def simulate(walls, mode=None):
     """Run the deck; return trajectory, map history, switches and sight."""
     folder = Path(tempfile.mkdtemp(prefix="empty_map_"))
     try:
-        write_deck(folder, walls)
+        write_deck(folder, walls, mode)
         scenario = load_scenario(str(folder))
         signs = extract_sign_descriptors(scenario.raw)
         vis = VisibilityModel.clear_air(
@@ -171,6 +184,8 @@ def simulate(walls):
             switches=list(result.route_history or []),
             evac_time=result.evacuation_time,
             evacuated=result.agents_evacuated,
+            exits=list(result.exit_history or []),
+            unknown_exit=result.metrics["agents_left_by_unknown_exit"],
             # every sampled position of the walk, asked of the same model
             seen=sorted(
                 {
@@ -188,25 +203,49 @@ def simulate(walls):
         shutil.rmtree(folder, ignore_errors=True)
 
 
-def check_claims(run):
-    """Fail loudly if the run no longer shows an empty map (#91)."""
+def walking_distances(walls, start):
+    """Walking distance from *start* to each exit, through the walkable area."""
+    walkable = walkable_area(walls)
+    engine = jps.RoutingEngine(walkable)
+    return {
+        name: _walkable_distance(engine, start, _exit_aim(box(*e["box"]), walkable))
+        for name, e in EXITS.items()
+    }
+
+
+def check_claims(run, walls):
+    """Fail loudly if the run no longer shows the default route (#91, #610)."""
     maps = {tuple(h["known_nodes"]) for h in run["history"]}
     if maps != {("spawn",)}:
         raise SystemExit(f"the map grew: {sorted(maps)}")
-    if run["switches"]:
-        raise SystemExit(f"the agent re-decided: {run['switches']}")
     if run["seen"]:
         raise SystemExit(f"signs legible from the walk: {run['seen']}")
     if not run["evacuated"]:
         raise SystemExit("the agent did not leave")
-    start, end = Point(*run["xy"][0]), Point(*run["xy"][-1])
-    polys = {name: box(*e["box"]) for name, e in EXITS.items()}
-    dist = {name: p.distance(start) for name, p in polys.items()}
-    taken = min(polys, key=lambda n: polys[n].distance(end))
+    dist = walking_distances(walls, tuple(run["xy"][0]))
     nearest = min(dist, key=dist.get)
+    reasons = [(s["reason"], s["new_exit"]) for s in run["switches"]]
+    if reasons != [("default_route", nearest)]:
+        raise SystemExit(f"expected one default route to {nearest}: {reasons}")
+    end = Point(*run["xy"][-1])
+    polys = {name: box(*e["box"]) for name, e in EXITS.items()}
+    taken = min(polys, key=lambda n: polys[n].distance(end))
     if taken != nearest:
-        raise SystemExit(f"left by {taken}, but {nearest} is nearest")
+        raise SystemExit(f"left by {taken}, but {nearest} is nearest on foot")
+    if [row["exit_in_map"] for row in run["exits"]] != [False]:
+        raise SystemExit(f"the exit is not flagged as absent: {run['exits']}")
+    if run["unknown_exit"] != 1:
+        raise SystemExit(f"run summary counts {run['unknown_exit']} unknown exits")
     return taken, dist
+
+
+def check_explore(run):
+    """Under ``explore`` the agent has nothing to explore: it stands."""
+    if run["evacuated"]:
+        raise SystemExit("under explore the agent left by an unknown exit")
+    reasons = {s["reason"] for s in run["switches"]}
+    if reasons != {"stay"}:
+        raise SystemExit(f"under explore the agent did not stand: {reasons}")
 
 
 def draw_floor(ax, walls):
@@ -271,7 +310,7 @@ def draw_exits(ax, taken, dist):
     ax.text(
         4.4,
         -0.3,
-        f"exit south, {dist['south']:.0f} m from the start\n"
+        f"exit south, {dist['south']:.0f} m on foot from the start\n"
         "sign faces out of the building",
         ha="left",
         va="top",
@@ -280,7 +319,7 @@ def draw_exits(ax, taken, dist):
     ax.text(
         1.6,
         29.2,
-        f"exit west, {dist['west']:.0f} m from the start\n"
+        f"exit west, {dist['west']:.0f} m on foot from the start\n"
         "sign faces along the corridor",
         ha="left",
         va="top",
@@ -297,17 +336,19 @@ def main():
     """
     walls = build_walls()
     run = simulate(walls)
-    taken, dist = check_claims(run)
+    taken, dist = check_claims(run, walls)
+    check_explore(simulate(walls, mode="explore"))
     xy, t = run["xy"], run["t"]
     steps = np.linalg.norm(np.diff(xy, axis=0), axis=1)
     walked = float(steps.sum())
     # pre-movement: the agent stands still until its first step
     t_move = float(t[int(np.argmax(steps > 1e-3))])
     print(
-        f"map = spawn only for {t[-1]:.1f} s, {len(run['switches'])} switches, "
-        f"starts at {t_move:.1f} s, left by {taken} at {run['evac_time']:.1f} s "
-        f"after {walked:.1f} m; "
-        f"start to exit: " + ", ".join(f"{k} {v:.1f} m" for k, v in dist.items())
+        f"map = spawn only for {t[-1]:.1f} s, default route to {taken}, "
+        f"starts at {t_move:.1f} s, left by {taken} (not in its map) at "
+        f"{run['evac_time']:.1f} s after {walked:.1f} m; start to exit on foot: "
+        + ", ".join(f"{k} {v:.1f} m" for k, v in dist.items())
+        + "; under explore it stands"
     )
 
     # --- Style Setup ---
@@ -415,9 +456,11 @@ def main():
     ax.text(
         0.5,
         -0.13,
-        f"The map holds only the spawn for all {t[-1]:.0f} s and the agent never "
-        f"re-decides,\nyet from t = {t_move:.0f} s it walks {walked:.0f} m to "
-        f"the nearest exit ({taken}) and is out at {run['evac_time']:.0f} s.",
+        f"The map holds only the spawn for all {t[-1]:.0f} s. By default it takes "
+        f"the FDS+Evac default route:\nfrom t = {t_move:.0f} s it walks "
+        f"{walked:.0f} m to the exit nearest on foot ({taken}), flagged as not in "
+        f"its map,\nand is out at {run['evac_time']:.0f} s. Set to explore, it "
+        "stands: it has nothing to explore.",
         transform=ax.transAxes,
         fontsize=8.5,
         color=TEXT,
