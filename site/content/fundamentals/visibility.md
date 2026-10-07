@@ -699,6 +699,10 @@ The Fire Dynamics Simulator (FDS) User's Guide (McGrattan et al. 2025,
 light-emitting and *C* = 3 for a light-reflecting sign, citing Mulholland
 (2002), and uses *C* = 3 by default (`VISIBILITY_FACTOR`). FDS reports
 visibility up to 30 m by default (`MAXIMUM_VISIBILITY`, §22.10.5).
+The SFPE Handbook chapter on CFD fire modelling (McGrattan and Merci 2026,
+Ch. 40, Eq. 40.22, p. 1206) gives the same constants, 3 for reflecting and
+8 for illuminated signs, citing the Jin and Mulholland chapters of the
+4th edition (2008).
 
 Two recent papers describe how the law is used. Börger, Belt and Arnold
 (2024, §1, p. 1) attribute the ranges 2–4 and 5–10 to Jin (1970), black
@@ -797,6 +801,10 @@ Read for this page:
   engineering: practitioner's perspectives from a global survey*. Fire
   Safety Journal, 165, 104938.
   [doi:10.1016/j.firesaf.2026.104938](https://doi.org/10.1016/j.firesaf.2026.104938)
+- McGrattan, K., & Merci, B. (2026). *Modeling fires using computational
+  fluid dynamics (CFD)*. SFPE Handbook of Fire Protection Engineering,
+  6th ed., Ch. 40, 1197–1221. Eq. 40.22, p. 1206.
+  [doi:10.1007/978-3-031-59212-6_40](https://doi.org/10.1007/978-3-031-59212-6_40)
 - Jin, T. (1976). *Visibility through fire smoke, Part 5: Allowable smoke
   density for escape from fire*. Report of Fire Research Institute of
   Japan, 42, 11–18. No DOI or public URL.
