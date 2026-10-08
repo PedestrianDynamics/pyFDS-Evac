@@ -773,7 +773,7 @@ branch commit that is not on main; its `pyfds_evac/` equals main at
 `100e91d`. Each run's manifest records that commit with `git_dirty: false`
 and `agent_seeding: spawn-key-blake2b-v2`. A re-run of all 160 evacuations
 on main at `449a755d` prints the same values for the headline, so cite
-`449a755d`. The results were not re-checked after the 0.4.0 routing changes. When the code
+`449a755d`. Not re-checked for 0.4.0. When the code
 changes, re-run the command into a new `RUNS` folder and compare the
 printed tables with this page.
 

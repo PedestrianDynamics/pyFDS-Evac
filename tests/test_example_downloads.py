@@ -221,6 +221,7 @@ NOT_RECHECKED = {
     "iso-test-19",
     "heat-radiometer",
     "study-schroeder2020",
+    "study-schroeder2015",
 }
 
 
@@ -229,7 +230,7 @@ def test_results_note_marks_the_results_not_rechecked_for_0_4():
     notes = {name: ex.get("results_note") for name, ex in SPEC.items()}
     assert {n for n, note in notes.items() if note} == NOT_RECHECKED
     for name in NOT_RECHECKED:
-        assert notes[name] == "Not re-checked since 0.3.x."
+        assert notes[name] == "Not re-checked for 0.4.0."
 
 
 def test_results_note_is_rendered_under_the_commit():
@@ -260,7 +261,7 @@ def test_results_note_appears_on_the_built_page(tmp_path):
     commit = SPEC["walkthrough"]["results_commit"]
     assert (
         f'made at commit <code>{commit}</code></span><br><span class="docs-files__note">'
-        "Not re-checked since 0.3.x.</span>"
+        "Not re-checked for 0.4.0.</span>"
     ) in page.read_text()
     quick = tmp_path / "docs" / "getting-started" / "quickstart" / "index.html"
     assert "Not re-checked" not in quick.read_text()
