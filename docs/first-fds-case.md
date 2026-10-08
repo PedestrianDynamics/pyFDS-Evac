@@ -42,7 +42,10 @@ evacuated: 144/150 in 300 s
 
 The scenario is a folder, `assets/t_junction`: a JuPedSim `config.json` and
 the walkable area as `geometry.wkt`. It sits beside the FDS deck that made its
-fire.
+fire. `pyfds-evac init assets/t_junction/t_junction.fds` derives the same
+150 m² walkable area from the deck; the rest of this scenario (journeys,
+signs, flow spawning) was written by hand
+([Start from your own FDS case](start-from-fds-deck.md)).
 
 ```bash
 uv run python run.py --scenario assets/t_junction --print-summary --export-only
@@ -655,6 +658,8 @@ decisions can differ slightly from these maps.
 
 ## What next
 
+- [Start from your own FDS case](start-from-fds-deck.md): check a deck and
+  turn it into a scenario with `pyfds-evac init`.
 - [What your FDS case must provide](fds-case-requirements.md), before you use
   your own FDS output.
 - [Real-FDS walkthrough](walkthrough.md): FED from FDS slices, and how to spot

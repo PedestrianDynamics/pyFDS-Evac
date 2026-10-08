@@ -64,7 +64,8 @@ pyfds-evac --help
 
 `pyfds-evac` runs a scenario; `python -m pyfds_evac` does the same.
 `pyfds-evac init deck.fds` starts a scenario from an FDS or
-FDS+Evac deck and reports what it could not carry over. The
+FDS+Evac deck and reports what it could not carry over
+([Start from your own FDS case](https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/)). The
 package contains no scenarios, examples or scripts. Each example page on the
 documentation site offers its input files as a zip, which unpacks into a
 folder of its own; run the commands from inside that folder. The

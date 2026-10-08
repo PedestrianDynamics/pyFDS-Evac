@@ -4,7 +4,8 @@ weight: 0
 ---
 
 Install pyFDS-Evac with pip, run one scenario to check the install, and know
-what else you need for your own FDS cases. To work on the code or run the
+what else you need for your own FDS cases
+([Start from your own FDS case](start-from-fds-deck.md)). To work on the code or run the
 examples and scripts of the repository, use the
 [source checkout](#install-from-the-repository).
 

@@ -5,7 +5,9 @@ weight: 4
 aliases: [/docs/fds-case-requirements/]
 ---
 
-Read this before pointing `--fds-dir` at a case for the first time.
+Read this before pointing `--fds-dir` at a case for the first time. To
+check a deck for these slices before FDS runs, and to build the scenario
+from it, see [Start from your own FDS case](start-from-fds-deck.md).
 
 **pyFDS-Evac never runs FDS.** It reads the output of a finished FDS run.
 A deck written for some other purpose usually will not work as-is: it has to

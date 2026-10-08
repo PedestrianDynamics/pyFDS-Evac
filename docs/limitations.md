@@ -169,7 +169,9 @@ polygon, and hazards are sampled from slices at one height
 connection and no speed reduction on inclines. `pyfds-evac init` imports one
 floor, and every `&OBST` in its walking band blocks, stair treads included; a
 staircase drawn into the walkable area by hand is flat floor that agents cross
-at full speed. A `zones` entry with a
+at full speed. A `&DOOR` to another floor becomes an exit, so "evacuated" on
+an imported upper floor means "reached the stair door"
+([Start from your own FDS case › Limits](start-from-fds-deck.md#limits)). A `zones` entry with a
 `speed_factor` can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.
 
