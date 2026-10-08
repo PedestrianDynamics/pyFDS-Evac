@@ -166,9 +166,10 @@ at full speed through a hot layer until the heat dose is reached.
 **Multi-floor buildings and stairs.** The walkable area is a single 2-D
 polygon, and hazards are sampled from slices at one height
 (`--smoke-slice-height`). There is no stair model, no floor-to-floor
-connection and no speed reduction on inclines. `generate_walkable_from_fds.py`
-treats stair treads and risers as floor, so a staircase in an FDS deck becomes
-flat floor that agents cross at full speed. A `zones` entry with a
+connection and no speed reduction on inclines. `pyfds-evac init` imports one
+floor, and every `&OBST` in its walking band blocks, stair treads included; a
+staircase drawn into the walkable area by hand is flat floor that agents cross
+at full speed. A `zones` entry with a
 `speed_factor` can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.
 

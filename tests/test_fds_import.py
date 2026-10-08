@@ -3,8 +3,8 @@
 Every deck here is a synthetic string written by the test (no file from
 examples/FDS-Evac-Guide, which is GPLv3). Expectations are closed form:
 axis-aligned rectangles, exact parameter mappings, exact integer shares.
-Each import passes ``walkable_wkt`` so the importer is tested apart from the
-walkable provider, except in the provider tests at the end.
+Most imports pass ``walkable_wkt`` so the importer is tested apart from the
+walkable provider; the walkable-provider tests derive the area.
 """
 
 from __future__ import annotations
@@ -19,18 +19,12 @@ from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon, box
 
 from pyfds_evac import cli, cli_init
-from pyfds_evac.core.fds_deck import parse_fds_deck
 from pyfds_evac.core.fds_import import import_fds_deck
 from pyfds_evac.core.fds_import_geometry import largest_remainder
 from pyfds_evac.core.premovement_distributions import (
     create_premovement_distribution,
 )
-from pyfds_evac.core.walkable_provider import (
-    FloorSpec,
-    WalkableError,
-    WalkableResult,
-    script_walkable,
-)
+from pyfds_evac.core.walkable_provider import WalkableResult
 
 AREA_TOL = 1e-9
 ROOM_WKT = "POLYGON((0 0,10 0,10 10,0 10,0 0))"
@@ -584,36 +578,211 @@ def test_provider_gets_the_floor_obstructions(tmp_path):
     assert result.report.walkable["source"] == "derived:test"
 
 
-# A room 2-8 x 2-8 inside a 10 x 10 mesh, walls 0.2 m thick, with a 1 x 1 m
-# obstruction whose CAD layer name says "door".
-CLOSED_ROOM = """\
-&HEAD CHID='closed' /
-&MESH IJK=100,100,24, XB=0,10,0,10,0,2.4 /
-&OBST XB=1.8,8.2,1.8,2.0,0,2.4 / A-WALL
-&OBST XB=1.8,8.2,8.0,8.2,0,2.4 / A-WALL
-&OBST XB=1.8,2.0,1.8,8.2,0,2.4 / A-WALL
-&OBST XB=8.0,8.2,1.8,8.2,0,2.4 / A-WALL
-&OBST XB=4,5,4,5,0,2.0 / door 1
+# Two 10 x 10 m rooms side by side (x 0-10 and 10-20), split by a
+# zero-thickness wall at x = 10 (widened to 0.1 m); one OPEN vent on x = 0.
+# {extra} adds records.
+TWO_ROOMS = """\
+&HEAD CHID='rooms' /
+&MESH IJK=50,50,15, XB=0,20,0,10,0,3 /
+&OBST XB=10,10,0,10,0,3 /
+&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /
+{extra}
 """
 
 
-def test_script_provider_layer_rules(tmp_path):
-    """Station layer rules are opt-in: by default every solid in band blocks."""
-    path = _deck(tmp_path, CLOSED_ROOM)
-    plain = import_fds_deck(path)
-    station = import_fds_deck(path, layer_rules="station")
-    area = {
-        r.report.walkable["source"]: r.report.walkable["area_m2"]
-        for r in (plain, station)
-    }
-    assert area == {"derived:script:none": 35.0, "derived:script:station": 36.0}
+def _two_rooms(tmp_path, *extra: str, **kwargs):
+    path = _deck(tmp_path, TWO_ROOMS.format(extra="\n".join(extra)))
+    return import_fds_deck(path, **kwargs)
 
 
-def test_script_provider_failure_names_the_deck_and_the_way_out(tmp_path):
-    path = _deck(tmp_path, MODERN.format(vents=""))
-    floor = FloorSpec(0.0, (0.1, 1.8), box(0, 0, 20, 10))
-    with pytest.raises(WalkableError, match="deck.fds.*--walkable FILE.wkt"):
-        script_walkable(parse_fds_deck(path), floor)
+def test_mesh_edge_is_a_wall_and_the_room_without_exit_is_dropped(tmp_path):
+    result = _two_rooms(tmp_path)
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    assert _same(walkable, box(0, 0, 9.95, 10))
+    assert result.report.walkable["source"] == "derived:deck"
+    assert result.report.walkable["kept_by"] == "spawn"
+    [dropped] = result.report.walkable["components_dropped"]
+    assert dropped["area_m2"] == pytest.approx(99.5)
+    assert dropped["bounds"] == [10.05, 0.0, 20.0, 10.0]
+    assert any("dropped: no spawn area" in i.message for i in _items(result, "A"))
+    assert result.report.runnable
+
+
+def test_hole_opens_the_wall(tmp_path):
+    result = _two_rooms(tmp_path, "&HOLE XB=9.9,10.1,4,6,0,2.5 /")
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    assert walkable.area == pytest.approx(200 - 0.1 * 8)
+    assert result.report.walkable["components"] == 1
+    assert result.report.walkable["kept_by"] == "single"
+
+
+def test_hole_above_the_walking_band_does_not_open_the_wall(tmp_path):
+    result = _two_rooms(tmp_path, "&HOLE XB=9.9,10.1,4,6,2,3 /")
+    assert result.report.walkable["area_m2"] == pytest.approx(99.5)
+
+
+def test_small_obstruction_is_filled_and_a_larger_one_kept(tmp_path):
+    result = _two_rooms(
+        tmp_path, "&OBST XB=2,2.4,2,2.4,0,3 /", "&OBST XB=5,6,5,6,0,3 /"
+    )
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    assert walkable.area == pytest.approx(99.5 - 1.0)
+    assert result.report.walkable["holes"] == 1
+
+
+def test_user_exit_keeps_its_room(tmp_path):
+    result = _two_rooms(tmp_path, exits=[(20, 2, 20, 3, 1)])
+    assert result.report.walkable["area_m2"] == pytest.approx(199.0)
+    assert sorted(result.raw["exits"]) == ["user_exit_1", "vent_1"]
+
+
+def test_without_spawn_or_exit_every_room_is_kept(tmp_path):
+    deck = TWO_ROOMS.replace("&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /", "")
+    result = import_fds_deck(_deck(tmp_path, deck.format(extra="")))
+    assert result.report.walkable["area_m2"] == pytest.approx(199.0)
+    assert result.report.walkable["kept_by"] == "all"
+    assert not result.report.runnable
+
+
+def test_multi_line_mesh_and_obst_are_read(tmp_path):
+    deck = (
+        "&HEAD CHID='ml' /\n&MESH IJK=50,50,15,\n      XB=0,20,0,10,0,3 /\n"
+        "&OBST\n  XB=10,10,0,10,0,3 /\n"
+        "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(99.5)
+
+
+def test_upper_storey_mesh_is_not_part_of_the_floor(tmp_path):
+    """A mesh above the walking band does not join the floor (200 -> 100 m2)."""
+    deck = (
+        "&HEAD CHID='stack' /\n"
+        "&MESH IJK=50,50,15, XB=0,10,0,10,0,3 /\n"
+        "&MESH IJK=50,50,15, XB=10,20,0,10,3,6, ID='Upper' /\n"
+        "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(100.0)
+    assert result.report.floor["meshes"] == [None]
+    [item] = [i for i in _items(result, "A", "MESH") if i.id == "Upper"]
+    assert "lies outside the walking band" in item.message
+    [spawn] = result.raw["distributions"].values()
+    assert max(x for x, _ in spawn["coordinates"]) == pytest.approx(10.0)
+
+
+def test_floor_split_into_stacked_meshes_is_one_floor(tmp_path):
+    """Meshes at z 0-1 and 1-3 over one footprint both meet the band."""
+    deck = (
+        "&HEAD CHID='split' /\n"
+        "&MESH IJK=50,50,5, XB=0,10,0,10,0,1 /\n"
+        "&MESH IJK=50,50,10, XB=0,10,0,10,1,3 /\n"
+        "&VENT XB=0,0,4,6,0,1, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(100.0)
+    assert len(result.report.floor["meshes"]) == 2
+    assert not [i for i in _items(result, "A", "MESH") if "walking band" in i.message]
+
+
+def test_low_single_mesh_imports(tmp_path):
+    """A 1.5 m high mesh only overlaps the 0.1-1.8 m band; it is the floor."""
+    deck = (
+        "&HEAD CHID='low' /\n"
+        "&MESH IJK=50,50,5, XB=0,10,0,10,0,1.5 /\n"
+        "&VENT XB=0,0,4,6,0,1.5, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(100.0)
+    assert result.report.runnable
+
+
+# An FDS+Evac room split by a thin wall at x = 5 (widened to 4.95..5.05),
+# its only exit at x = 0. {extra} adds records.
+SPLIT_ROOM = """\
+&HEAD CHID='split' /
+&MESH IJK=40,40,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,
+      EVAC_HUMANS=.TRUE., ID='Main' /
+&OBST XB=5,5,0,10,0,2.4 /
+&EXIT ID='West', IOR=-1, XB=0,0,4,6,0.4,1.6 /
+{extra}
+"""
+
+
+def _split_room(tmp_path, *extra: str, **kwargs):
+    path = _deck(tmp_path, SPLIT_ROOM.format(extra="\n".join(extra)))
+    return import_fds_deck(path, **kwargs)
+
+
+def test_evac_rectangle_is_clipped_to_the_kept_walkable_area(tmp_path):
+    evac = "&EVAC ID='g', XB=1,5,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /"
+    result = _split_room(tmp_path, evac)
+    spawn = _poly(result.raw["distributions"]["g"]["coordinates"])
+    assert _same(spawn, box(1, 1, 4.95, 9))
+    assert result.report.distributions[0]["area_m2"] == pytest.approx(3.95 * 8)
+
+
+def test_clipped_evac_pieces_share_the_agents_by_area(tmp_path):
+    records = (
+        "&OBST XB=1,4,4,5,0,2.4 /",
+        "&EVAC ID='g', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /",
+    )
+    result = _split_room(tmp_path, *records)
+    pieces = result.raw["distributions"]
+    areas = {k: _poly(v["coordinates"]).area for k, v in pieces.items()}
+    assert areas == pytest.approx({"g_1": 12.0, "g_2": 9.0})
+    numbers = {k: v["parameters"]["number"] for k, v in pieces.items()}
+    assert numbers == {"g_1": 6, "g_2": 4}
+
+
+def test_spawn_over_capacity_is_not_runnable(tmp_path):
+    """#606 B-1: the runtime would refuse 10 agents on 1 m2 (about 3 fit)."""
+    evac = "&EVAC ID='g', XB=1,2,1,2,1,1, NUMBER_INITIAL_PERSONS=10 /"
+    result = _split_room(tmp_path, evac)
+    [reason] = result.report.not_runnable
+    assert reason.startswith(
+        "spawn area g (1.000 m2) holds about 3 agents of radius 0.2 m, "
+        "but 10 are requested"
+    )
+    assert "NUMBER_INITIAL_PERSONS" in reason
+    status = cli_init.main(
+        [str(tmp_path / "deck.fds"), "-o", str(tmp_path / "out"), "--no-fds"]
+    )
+    assert status == cli_init.EXIT_NOT_RUNNABLE
+
+
+def test_placeholder_over_capacity_names_agents_option(tmp_path):
+    result = _two_rooms(tmp_path, agents=1000)
+    [reason] = result.report.not_runnable
+    assert "(98.500 m2) holds about 391 agents" in reason and "--agents" in reason
+
+
+def test_capacity_matches_the_runtime_estimate():
+    from pyfds_evac.core.fds_import import spawn_capacity
+    from pyfds_evac.core.simulation_init import _estimate_max_capacity
+
+    for area, radius in [
+        (1.0, 0.2),
+        (25.0, 0.2),
+        (15.0, 0.2),
+        (3.0, 0.05),
+        (99.5, 0.3),
+    ]:
+        assert spawn_capacity(area, radius) == _estimate_max_capacity(
+            box(0, 0, area, 1), radius
+        )
+
+
+def test_repo_t_junction_walkable_is_derived(tmp_path):
+    """#505: the derived area equals the asset's hand-written WKT."""
+    root = Path(__file__).resolve().parents[1] / "assets" / "t_junction"
+    drawn = shapely_wkt.loads((root / "geometry.wkt").read_text(encoding="utf-8"))
+    result = import_fds_deck(root / "t_junction.fds", agents=40)
+    derived = shapely_wkt.loads(result.walkable_wkt)
+    assert derived.area == pytest.approx(150.0)
+    assert _same(derived, drawn)
+    assert len(result.raw["exits"]) == 2
+    assert result.report.runnable
 
 
 # --- report details --------------------------------------------------------------

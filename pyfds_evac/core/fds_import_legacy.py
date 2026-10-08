@@ -458,8 +458,15 @@ def _evac_spawns(ctx, record, evhos, exit_ids) -> list[ImportedSpawn]:
     pers = _pers_record(ctx, record)
     params = _group_parameters(ctx, record, pers, exit_ids)
     params.update(_delay(ctx, pers, record))
-    pieces = _minus_evho(ctx, record, rect, evhos)
+    pieces = _minus_evho(ctx, record, _clipped(ctx, rect), evhos)
     return _share(ctx, record, pieces, number, params)
+
+
+def _clipped(ctx, rect):
+    """*rect* within the walkable area; unchanged when it lies inside."""
+    if rect.within(ctx.walkable):
+        return rect
+    return rect.intersection(ctx.walkable)
 
 
 def _rect(record: NamelistRecord) -> tuple[float, float, float, float]:
@@ -516,7 +523,7 @@ def _delay(ctx, pers, record) -> dict[str, Any]:
 
 def _minus_evho(ctx, record, rect, evhos) -> list:
     holes = [e for e in evhos if _evho_applies(e, record)]
-    if not holes:
+    if not holes and rect.geom_type == "Polygon" and not rect.interiors:
         return [rect]
     shape = rect.difference(union([box(*_rect(h)) for h in holes]))
     pieces = [p for poly in polygons_of(shape) for p in split_holes(poly)]

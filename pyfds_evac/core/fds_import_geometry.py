@@ -84,6 +84,23 @@ def _width_along(piece: Polygon, line: ExitLine) -> float:
     return maxy - miny if abs(line.normal[0]) > 0 else maxx - minx
 
 
+def widened_box(x0: float, x1: float, y0: float, y1: float, half: float) -> Polygon:
+    """Box over sorted ranges; a zero-width axis is widened by *half* each side."""
+    if x1 - x0 < _EPS:
+        x0, x1 = x0 - half, x1 + half
+    if y1 - y0 < _EPS:
+        y0, y1 = y0 - half, y1 + half
+    return box(x0, y0, x1, y1)
+
+
+def fill_small_rings(polygon: Polygon, min_area: float) -> Polygon:
+    """*polygon* with its interior rings below *min_area* filled."""
+    keep = [r for r in polygon.interiors if Polygon(r).area >= min_area]
+    if len(keep) == len(polygon.interiors):
+        return polygon
+    return Polygon(polygon.exterior, keep)
+
+
 def largest_polygon(geometry) -> Polygon | None:
     """The largest polygon of *geometry*, or None if it has no area."""
     polygons = polygons_of(geometry)
