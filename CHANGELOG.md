@@ -215,6 +215,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `pyfds-evac init` no longer says an exit "0.100 m wide" is below the
+  0.1 m minimum exit width. A dropped exit's width gets the decimals it
+  needs to read as below the minimum (0.0999 m), up to the full float for
+  a width short of it only by floating-point noise, as in
+  CorridorFlowExample (0.09999999999999964 m) (#682). Which exits are
+  dropped does not change.
 - Route foresight no longer stops a run that passes the FDS horizon
   check (#666). With `anticipate` on (the default) and without
   `--allow-fds-horizon-hold`, a leg foreseen past the last FDS frame

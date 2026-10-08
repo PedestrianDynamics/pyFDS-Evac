@@ -83,14 +83,28 @@ def strip_problem(line: ExitLine, depth: float, walkable) -> str:
     """Why :func:`exit_strip` returned None for *line*, for a drop message."""
     piece = largest_polygon(strip_box(line, depth).intersection(walkable))
     if piece is not None and piece.area > _EPS:
-        return (
-            f"its strip on the room side is {_width_along(piece, line):.3f} m wide, "
-            f"below the minimum exit width of {MIN_EXIT_WIDTH_M:g} m"
-        )
+        return _narrow_strip(_width_along(piece, line))
     distance = line.line.distance(walkable)
     return (
         "its strip on the room side is empty; the line is "
         f"{distance:.3f} m from the walkable area"
+    )
+
+
+def _narrow_strip(width: float) -> str:
+    """Drop message for a strip *width* below :data:`MIN_EXIT_WIDTH_M`.
+
+    The width gets the decimals it needs to read as below the minimum, up
+    to the full float when it falls short only by floating-point noise.
+    """
+    text = repr(width)
+    for decimals in range(3, 7):
+        if float(f"{width:.{decimals}f}") < MIN_EXIT_WIDTH_M:
+            text = f"{width:.{decimals}f}"
+            break
+    return (
+        f"its strip on the room side is {text} m wide, "
+        f"below the minimum exit width of {MIN_EXIT_WIDTH_M:g} m"
     )
 
 

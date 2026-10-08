@@ -983,6 +983,24 @@ def test_exits_narrower_than_the_minimum_name_flow_field_targets(tmp_path):
     assert "only as flow-field targets" in reason
 
 
+def test_exit_width_just_below_the_minimum_prints_below_it(tmp_path):
+    slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.0999,0.4,1.6 /"
+    result = _grid(tmp_path, slot)
+    [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
+    assert "0.0999 m wide, below the minimum exit width of 0.1 m" in item.message
+
+
+def test_exit_width_short_by_rounding_noise_prints_the_full_float(tmp_path):
+    # 4.1 - 4.0 is 0.09999999999999964 in floating point (CorridorFlowExample).
+    slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.1,0.4,1.6 /"
+    result = _grid(tmp_path, slot)
+    [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
+    assert (
+        "0.09999999999999964 m wide, below the minimum exit width of 0.1 m"
+        in item.message
+    )
+
+
 # --- report details --------------------------------------------------------------
 
 
