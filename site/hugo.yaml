@@ -42,6 +42,7 @@ module:
         - "quickstart.md"
         - "walkthrough.md"
         - "first-fds-case.md"
+        - "start-from-fds-deck.md"
         - "coming-from-fds-evac.md"
         - "concepts.md"
         - "limitations.md"
@@ -71,6 +72,7 @@ module:
         - "quickstart.md"
         - "walkthrough.md"
         - "first-fds-case.md"
+        - "start-from-fds-deck.md"
         - "coming-from-fds-evac.md"
     - source: ../docs
       target: content/docs/understanding
