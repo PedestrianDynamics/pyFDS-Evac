@@ -3,16 +3,24 @@
 Writes ``config.json``, ``geometry.wkt`` and ``import_report.json`` into DIR
 (default: ``<deck stem>_scenario/`` next to the deck), prints the import
 summary and the next steps: run FDS if its output is missing, run the
-scenario, refine it in JuPedSim Web or the TUI.
+scenario, refine it in JuPedSim Web or the TUI. The summary includes the
+check of the FDS output the run reads (slices, T_END); it never changes the
+files or the exit status.
 
 Exit status: 0 runnable; 3 written but not runnable (no exit, or no agents),
 or runnable with an input dropped at error level (an exit, a spawn area); 1
 the deck could not be imported, or an argument error (nothing written).
+
+``pyfds-evac init DECK.fds --check`` checks the deck only, before FDS runs,
+and writes nothing: exit 0 when the run will find the extinction, CO, CO2
+and O2 slices and ``&TIME T_END``; 3 when one is missing; 1 when the deck
+cannot be read or an argument is wrong.
 """
 
 from __future__ import annotations
 
 import argparse
+import math
 import sys
 from pathlib import Path
 
@@ -34,8 +42,11 @@ listed in import_report.json and on the screen."""
 _EPILOG = """\
 exit status: 0 runnable; 3 written, but not runnable or an input dropped
 with an error; 1 error (nothing written)
+with --check: 0 the deck has what the run reads; 3 a slice or T_END is
+missing; 1 error (nothing is ever written)
 
 examples:
+  pyfds-evac init room.fds --check    # before running FDS: check the slices
   pyfds-evac init room.fds            # writes room_scenario/ next to room.fds
   pyfds-evac init room.fds --walkable room.wkt --agents 40
   pyfds-evac init room.fds -o out/ --exit 0,4.4,0,5.6,-1"""
@@ -108,7 +119,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--exit-depth",
         type=float,
-        default=0.5,
         metavar="D",
         help="depth of an exit strip on the room side [m] (default 0.5)",
     )
@@ -129,7 +139,60 @@ def build_parser() -> argparse.ArgumentParser:
         help="leave --fds-dir out of the run command even when "
         "<CHID>.smv is next to the deck",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="check the deck for the slices and T_END the run reads, before "
+        "running FDS; write nothing (exit 0 ready, 3 not ready)",
+    )
+    parser.add_argument(
+        "--smoke-slice-height",
+        type=float,
+        metavar="Z",
+        help="with --check: absolute height [m] to check the slices at "
+        "(default: the one init writes, floor + HUMAN_SMOKE_HEIGHT or 1.6 m)",
+    )
     return parser
+
+
+#: Options that only shape the written scenario, so --check refuses them.
+_WRITE_ONLY = (
+    ("output", "-o/--output"),
+    ("walkable", "--walkable"),
+    ("exits", "--exit"),
+    ("agents", "--agents"),
+    ("exit_depth", "--exit-depth"),
+    ("force", "--force"),
+    ("no_fds", "--no-fds"),
+    ("verbose", "-v/--verbose"),
+)
+
+
+def _check_combination(args: argparse.Namespace) -> str | None:
+    """Why the options cannot go together, or None."""
+    if not args.check:
+        if args.smoke_slice_height is not None:
+            return "--smoke-slice-height needs --check"
+        return None
+    height = args.smoke_slice_height
+    if height is not None and not math.isfinite(height):
+        return f"--smoke-slice-height must be a finite number, got {height}"
+    given = [flag for name, flag in _WRITE_ONLY if _given(getattr(args, name))]
+    if given:
+        return f"--check writes nothing, so {', '.join(given)} cannot go with it"
+    return None
+
+
+def _given(value) -> bool:
+    """Whether an option was passed: a set flag, a non-empty list, any value.
+
+    Numbers count whatever their value, so ``--agents 0`` is given.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, list):
+        return bool(value)
+    return value is not None
 
 
 class _UsageError(Exception):
@@ -143,15 +206,29 @@ class _Parser(argparse.ArgumentParser):
 
 def main(argv: list[str] | None = None) -> int:
     """Run the init subcommand; returns the exit status."""
+    parser = build_parser()
     try:
-        args = build_parser().parse_args(argv)
+        args = parser.parse_args(argv)
     except _UsageError as exc:
         print(exc, file=sys.stderr)
         return EXIT_ERROR
+    problem = _check_combination(args)
+    if problem is not None:
+        print(
+            f"{parser.format_usage()}{parser.prog}: error: {problem}", file=sys.stderr
+        )
+        return EXIT_ERROR
+    if args.check:
+        return _check_only(args)
     if args.output is None:
         args.output = str(default_output(args.deck))
-    from pyfds_evac.core.fds_import import check_output_folder, import_fds_deck
+    from pyfds_evac.core.fds_import import (
+        EXIT_DEPTH_M,
+        check_output_folder,
+        import_fds_deck,
+    )
 
+    slices: list[str] = []
     try:
         check_output_folder(args.output, force=args.force)
         walkable = None if args.walkable is None else _read(args.walkable)
@@ -163,9 +240,13 @@ def main(argv: list[str] | None = None) -> int:
             walkable_wkt=walkable,
             agents=args.agents,
             exits=args.exits,
-            exit_depth=args.exit_depth,
+            exit_depth=EXIT_DEPTH_M if args.exit_depth is None else args.exit_depth,
+            on_slice_check=lambda check: slices.extend(check.lines(compact=True)),
         )
     except (ValueError, OSError) as exc:
+        if slices:
+            _emit(slices)
+            sys.stdout.flush()
         print(f"pyfds-evac init: error: {exc}", file=sys.stderr)
         return EXIT_ERROR
     if args.no_fds:
@@ -178,8 +259,36 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return EXIT_ERROR
-    _emit(summary_lines(result, args.output, args.no_fds, args.verbose))
+    _emit(summary_lines(result, args.output, args.no_fds, args.verbose, slices))
     return _status(result.report)
+
+
+def _check_only(args: argparse.Namespace) -> int:
+    """``init --check``: the deck's slice check, nothing written."""
+    from pyfds_evac.core.fds_import import check_fds_deck
+
+    try:
+        check = check_fds_deck(
+            args.deck,
+            floor=args.floor,
+            floor_z=args.floor_z,
+            z_band=tuple(args.z_band) if args.z_band else None,
+            smoke_slice_height=args.smoke_slice_height,
+        )
+    except (ValueError, OSError) as exc:
+        print(f"pyfds-evac init: error: {exc}", file=sys.stderr)
+        return EXIT_ERROR
+    lines = check.lines()
+    failed = len(check.failed)
+    if failed:
+        lines.append(
+            f"✗ {failed} item{'s' if failed != 1 else ''} missing: the deck is "
+            "not ready for a pyFDS-Evac run; fix it before running FDS."
+        )
+    else:
+        lines.append("✓ The deck has what a pyFDS-Evac run reads.")
+    _emit(lines)
+    return EXIT_NOT_RUNNABLE if failed else EXIT_OK
 
 
 def default_output(deck: str) -> Path:
@@ -201,7 +310,14 @@ def _emit(lines: list[str]) -> None:
     try:
         print(text)
     except UnicodeEncodeError:
-        for fancy, plain in (("→", "->"), ("✗", "x"), ("²", "2"), ("…", "...")):
+        for fancy, plain in (
+            ("→", "->"),
+            ("✗", "x"),
+            ("✓", "+"),
+            ("·", "-"),
+            ("²", "2"),
+            ("…", "..."),
+        ):
             text = text.replace(fancy, plain)
         print(text.encode("ascii", "replace").decode("ascii"))
 
