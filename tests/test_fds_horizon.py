@@ -426,7 +426,9 @@ _T_JUNCTION_FDS = Path(
     not (_T_JUNCTION_FDS / "t_junction.smv").is_file(),
     reason="t_junction FDS output absent",
 )
-def test_t_junction_runs_to_t_end_without_the_hold_flag(tmp_path, caplog):
+def test_t_junction_runs_to_t_end_without_the_hold_flag(
+    tmp_path, caplog, fds_read_only
+):
     """t_junction with fire_2MW_PVC: 300 s of FDS output, a 300 s run.
 
     The setup check passes, yet before #666 the run stopped at about 295.6 s
@@ -443,7 +445,12 @@ def test_t_junction_runs_to_t_end_without_the_hold_flag(tmp_path, caplog):
     shutil.copy(asset / "geometry.wkt", tmp_path / "geometry.wkt")
     scenario = load_scenario(str(tmp_path))
     opts = _build_parser().parse_args(
-        ["--scenario", str(tmp_path), "--fds-dir", str(_T_JUNCTION_FDS)]
+        [
+            "--scenario",
+            str(tmp_path),
+            "--fds-dir",
+            str(fds_read_only(_T_JUNCTION_FDS)),
+        ]
     )
     with caplog.at_level(logging.WARNING):
         result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
