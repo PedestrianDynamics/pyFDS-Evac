@@ -49,7 +49,17 @@ CP3 = "jps-checkpoints_3"
 
 
 def commit() -> str:
-    """The checked-out commit, with ``-dirty`` when the tree has changes."""
+    """The checked-out commit, with ``-dirty`` when the tree has changes.
+
+    ``unknown`` outside a git checkout, e.g. in an unpacked archive.
+    """
+    try:
+        return _git_commit()
+    except (OSError, subprocess.CalledProcessError):
+        return "unknown"
+
+
+def _git_commit() -> str:
     sha = subprocess.run(
         ["git", "rev-parse", "--short=8", "HEAD"],
         cwd=ROOT,
