@@ -257,3 +257,136 @@ def test_non_finite_or_non_positive_sim_param_names_the_key(
         ValueError, match=rf"simulationParams\.{key} must be finite and > 0"
     ):
         _spawn(asset, raw, tmp_path, **{key: value})
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    [
+        ("number", -1, "must be >= 0"),
+        ("number", "-2", "must be >= 0"),
+        ("number", True, "must be a number"),
+        ("v0", True, "must be a number"),
+        ("radius", False, "must be a number"),
+    ],
+)
+def test_negative_or_boolean_sim_param_names_the_key(
+    asset, key, value, message, tmp_path
+):
+    """A negative count and a boolean are rejected, not read as -1 or 1 (#649).
+
+    One agent per area otherwise, so a valid deck places them all.
+    """
+    raw, _ = _stripped_raw(asset, SPAWN_KEYS)
+    with pytest.raises(ValueError, match=rf"simulationParams\.{key} {message}"):
+        _spawn(asset, raw, tmp_path, **{"number": 1, key: value})
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+@pytest.mark.parametrize(
+    ("key", "value", "message"),
+    [
+        ("v0", float("nan"), "must be finite and >= 0"),
+        ("v0", float("inf"), "must be finite and >= 0"),
+        ("v0", "1e400", "must be finite and >= 0"),
+        ("v0", -0.5, "must be finite and >= 0"),
+        ("v0", "-0.5", "must be finite and >= 0"),
+        ("v0", True, "must be a number"),
+        ("v0", "fast", "must be a number"),
+        ("radius", float("nan"), "must be finite and > 0"),
+        ("radius", float("-inf"), "must be finite and > 0"),
+        ("radius", 0.0, "must be finite and > 0"),
+        ("radius", "0", "must be finite and > 0"),
+        ("radius", -0.2, "must be finite and > 0"),
+        ("radius", True, "must be a number"),
+        ("radius", [0.2], "must be a number"),
+        ("number", -1, "must be >= 0"),
+        ("number", "-1", "must be >= 0"),
+        ("number", True, "must be a number"),
+        ("number", "3.9", "must be a number"),
+    ],
+)
+def test_out_of_range_distribution_value_names_key_and_area(
+    asset, key, value, message, tmp_path
+):
+    """A spawn area's own value is read as a deck-wide one, v0 0 aside (#649).
+
+    The scenario is written with ``json.dumps``, so NaN and Infinity reach
+    the loader as the JSON literals ``json.loads`` accepts. One agent per
+    area otherwise, so the deck is valid without the injected value.
+    """
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    assert _spawn(asset, raw, tmp_path, number=1).count == len(keys)
+    dist = keys[0]
+    raw["distributions"][dist]["parameters"][key] = value
+    with pytest.raises(
+        ValueError, match=rf"Distribution '{dist}': {key} {message}, got "
+    ):
+        _spawn(asset, raw, tmp_path, number=1)
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_stationary_distribution_keeps_v0_zero(asset, tmp_path):
+    """v0 0 places agents that stand still, as the stationary FED checks use."""
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    raw["distributions"][keys[0]]["parameters"].update(number=1, v0=0)
+    spawned = _spawn(asset, raw, tmp_path, number=0)
+    assert spawned.count == 1
+    assert spawned.speeds == {0.0}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_distribution_numeric_strings_are_converted(asset, tmp_path):
+    """A spawn area's own numeric strings convert as the deck-wide ones do."""
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    for key in keys:
+        raw["distributions"][key]["parameters"]["number"] = 0
+    raw["distributions"][keys[0]]["parameters"].update(
+        number="2", v0="1.1", radius="0.25"
+    )
+    spawned = _spawn(asset, raw, tmp_path)
+    assert spawned.count == 2
+    assert spawned.speeds == {1.1}
+    assert spawned.radii == {0.25}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_valid_distribution_values_pass_unchanged(asset, tmp_path):
+    """Integer-valued floats, numeric-string counts and a count of 0 still run."""
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    for key in keys:
+        raw["distributions"][key]["parameters"]["number"] = 0
+    raw["distributions"][keys[0]]["parameters"].update(number="2", v0=1, radius=0.25)
+    spawned = _spawn(asset, raw, tmp_path)
+    assert spawned.count == 2
+    assert spawned.speeds == {1.0}
+    assert spawned.radii == {0.25}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+@pytest.mark.parametrize("key", ["number", "v0", "radius"])
+def test_null_distribution_value_takes_the_deck_default(asset, key, tmp_path):
+    """A spawn area's own ``null`` is unset, as a deck-wide ``null`` is."""
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    for dist in keys:
+        raw["distributions"][dist]["parameters"].update(number=0, v0=1.5, radius=0.15)
+    raw["distributions"][keys[0]]["parameters"].update({"number": 1, key: None})
+    spawned = _spawn(asset, raw, tmp_path, number=2, v0=1.1, radius=0.18)
+    expected = {
+        "number": (2, {1.5}, {0.15}),
+        "v0": (1, {1.1}, {0.15}),
+        "radius": (1, {1.5}, {0.18}),
+    }[key]
+    assert (spawned.count, spawned.speeds, spawned.radii) == expected
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_out_of_range_desired_speed_is_named(asset, tmp_path):
+    """The error names ``desired_speed`` when the deck set that alias."""
+    raw, keys = _stripped_raw(asset, SPAWN_KEYS)
+    raw["distributions"][keys[0]]["parameters"]["desired_speed"] = -1
+    with pytest.raises(
+        ValueError,
+        match=rf"Distribution '{keys[0]}': desired_speed must be finite and >= 0",
+    ):
+        _spawn(asset, raw, tmp_path, number=1)

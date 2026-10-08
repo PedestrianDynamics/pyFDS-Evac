@@ -183,6 +183,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to accept the deck. The check,
   `pyfds_evac.core.agent_params.check_speed_aliases`, does not import
   JuPedSim; runs are unchanged (#612).
+- A spawn area's own `number`, `radius` and `v0` are read as the
+  `simulationParams` values are: numeric strings are converted, a
+  boolean is not a number, `number` must be 0 or more and `radius` finite
+  and greater than 0. A spawn area's `v0` must be finite and 0 or more
+  (0 for agents that stand still); `simulationParams.v0` stays above 0.
+  `simulationParams.number` below 0 and a boolean `simulationParams`
+  value are rejected too. A value out of range stops the run with a
+  `ValueError` that names the key, and the distribution for a spawn
+  area's own value (`desired_speed` when the deck set that alias). A
+  spawn area's own `null` is unset and takes the deck-wide default, as a
+  deck-wide `null` does; it used to stop the run with a `TypeError`. A
+  boolean used to be read as 1 or 0, a numeric string `v0` or `radius`
+  failed inside pyFDS-Evac with a `TypeError`, and NaN or negative
+  values were accepted or failed later without naming the key. No
+  shipped deck changes (#649).
 - Sign visibility from an FDS run no longer stores a time point past the
   end of the FDS output when `--reroute-interval` does not divide `T_END`;
   the last stored point is `T_END`. It now raises `FdsHorizonError` only

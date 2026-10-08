@@ -57,7 +57,7 @@ Under `config.simulation_settings`.
 |---|---|---|
 | `simulationParams.max_simulation_time` | 300 s | The run stops here. An incapacitated agent keeps a run going until this time ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)). With `--fds-dir` it must not exceed the last FDS slice time by more than one output interval, unless `--allow-fds-horizon-hold` is given ([#340](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340)). |
 | `simulationParams.model_type` | `"CollisionFreeSpeedModel"` | The JuPedSim movement model. |
-| `simulationParams.number`, `.radius`, `.v0` | 10, 0.2 m, 1.25 m/s | Deck-wide defaults for a spawn area that does not set its own `number`, `radius` or `v0`, with and without journeys; see [Spawn areas](#spawn-areas-distributionsidparameters). A deck without spawn areas places `number` agents in the whole walkable area. `number` is read with Python's `int()` (3.9 and `"3"` give 3), `radius` and `v0` with `float()`, so numeric strings are accepted; `null` means unset. `radius` and `v0` must be finite and greater than 0. A value that does not convert, such as `"3.9"` for `number` or `"fast"` for `v0`, or a `radius` or `v0` of 0, below 0, infinite or NaN (`"1e400"`, `"nan"`), stops the run with a `ValueError` that names the key. |
+| `simulationParams.number`, `.radius`, `.v0` | 10, 0.2 m, 1.25 m/s | Deck-wide defaults for a spawn area that does not set its own `number`, `radius` or `v0`, with and without journeys; see [Spawn areas](#spawn-areas-distributionsidparameters). A deck without spawn areas places `number` agents in the whole walkable area. `number` is read with Python's `int()` (3.9 and `"3"` give 3), `radius` and `v0` with `float()`, so numeric strings are accepted; `null` means unset. `number` must be 0 or more, `radius` and `v0` finite and greater than 0, and `true` or `false` is not a number. A value that does not convert, such as `"3.9"` for `number` or `"fast"` for `v0`, a `number` below 0, a `radius` or `v0` of 0, below 0, infinite or NaN (`"1e400"`, `"nan"`), or a boolean, stops the run with a `ValueError` that names the key. |
 | `simulationParams.smoke_slice_height` | none (`--smoke-slice-height`, 1.6 m) | Absolute FDS slice height [m] for smoke, gases and sign legibility. `pyfds-evac --smoke-slice-height` overrides it; the run prints the value when it comes from here. `pyfds-evac init` writes the floor level plus `HUMAN_SMOKE_HEIGHT`. The GUI and TUI do not read it yet. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
 
@@ -96,10 +96,10 @@ manifest records what JuPedSim received under `sfm`.
 |---|---|---|---|
 | `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start. No value is taken from another spawn area. |
 | `distribution_mode` | `"by_number"` | `by_number`, `by_percentage` | `by_percentage` fills the polygon to `percentage` (1–100, default 50). |
-| `v0` | `simulationParams.v0`, else 1.25 m/s | — | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
+| `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |
-| `radius` | `simulationParams.radius`, else 0.2 m | — | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
+| `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
 | `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1, 1.0] m. |
 | `radius_std` | none | — | Spread of the Gaussian draw. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
@@ -112,6 +112,20 @@ manifest records what JuPedSim received under `sfm`.
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |
 | `entrance` | none | an exit id | One exit, reachable from the spawn area, that the agents know from the start. |
 | `no_known_exit` | `"default_route"` | `default_route`, `explore`, `return`, `stay` | What an agent does while no exit is reachable in its map. `default_route` (the FDS+Evac counterpart) follows the journey, or without one the nearest exit on foot, and flags leaving by an exit not in the map. `explore`, `return` and `stay` need rerouting and are refused with `--smoke-blind`; see [Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract). |
+
+A spawn area's own `number`, `radius` and `v0` are read as the
+`simulationParams` values are: `number` with `int()`, `radius` and `v0`
+with `float()`, so numeric strings are accepted, and `true` or `false` is
+not a number. The bounds are the same with one exception: a spawn area's
+`v0` may be 0, which places agents that stand still (the stationary FED
+verification cases use it), while `simulationParams.v0` must be greater
+than 0, since it is the speed of every spawn area that sets none. A value
+that does not convert or is out of range, such as `"-1"` for `number` or
+`"nan"` for `v0`, stops the run at the start with a `ValueError` that
+names the distribution and the key (`desired_speed` when the deck set that
+alias). `null` means unset, as for the `simulationParams` values: the
+spawn area takes the deck-wide default
+([#649](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/649)).
 
 `desired_speed`, `desired_speed_distribution` and `desired_speed_std` are
 aliases of `v0`, `v0_distribution` and `v0_std`. An alias set alone is used
