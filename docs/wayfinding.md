@@ -361,8 +361,12 @@ thing differs in the code, and until #174 a second one did:
    discovery agent of this deck explores (it sets `no_known_exit` to
    `explore`): it takes the frontier with the lowest path cost
    from its position, learns as the path advances, and, with no frontier left,
-   patrols its known nodes (`cognitive_map.py`, `nearest_frontier_target`, `wander_target`). Route history logs
+   first walks to its node's point and looks from there; only if that
+   teaches it nothing does it patrol its known nodes
+   ([Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract);
+   `cognitive_map.py`, `nearest_frontier_target`, `wander_target`). Route history logs
    `reason="explore"` and `reason="wander"` (`route_graph.py`, `_decide_explore`).
+   The look writes no row; in Figure 7 no agent patrols, so none logs `wander`.
 2. **The ranked length of the first leg**
    ([#172](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172), fixed
    by #174, now merged), measured as a straight line, even through walls, for

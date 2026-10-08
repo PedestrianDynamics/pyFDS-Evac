@@ -207,11 +207,12 @@ what makes the asset a test of issue #68 rather than of arithmetic.
 **Checkpoint boxes 2 m deep, not 0.4 m.** Direct steering walks each agent to a
 random point inside the stage polygon and counts arrival within 0.7 m of *that
 point*. A box only as deep as the wall gives thirty agents the same sliver to
-aim at. An explorer with nothing left to explore now first walks to the
-node's routing point and looks from there before it patrols
-([Models › Wayfinding §2.4](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract)). The builder asserts a minimum depth. (Related: `inside_since` and
+aim at. The builder asserts a minimum depth. (Related: `inside_since` and
 `reach_penetration` are written into `wait_info` and never read — arrival is
-proximity to a point, not containment in the polygon.)
+proximity to a point, not containment in the polygon.) An explorer with
+nothing left to explore first walks to the node's routing point and looks
+from there before it patrols
+([Models › Wayfinding §2.4](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract)).
 
 **No journeys or transitions.** The graph auto-wires and cost decides, which is
 what puts betweenness pruning on the critical path.
