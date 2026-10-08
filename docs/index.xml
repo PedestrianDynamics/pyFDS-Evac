@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5606e137a6386a900903632261c9de7fb88d3ff5a6d6d3581761a49faa9f285b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9b15554bf3f7fbed6035be8eab4e1d2bec137bee3dba3cefa301ca24e1687f1a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2021,7 +2021,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>828ae8c3&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2040,7 +2040,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0ece6c895e1c8cce5c44b77740bdfcadcfb9bd8324e05ecbf1291ab494c44492&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">1e4180e15b123a85604628ac4871e695f8b994c744671bf237642f80883fcdac&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -3904,7 +3904,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -3929,7 +3929,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8234e5d1cd9dbfafa87ba79ead6f9f76e7b24608acd01396e72b7c237c490eae&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">236f11e45c63e928f7a8b8d90878e9e33813f17d2b0795499c90054cd77ab0b5&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5303,7 +5303,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.614, additive 0.457&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.85 m (-1.12, -0.57)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.06 for starts 30-120 s, 0.90 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>2a94a8da&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -5334,7 +5334,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ecb0f2a14c7cfdd158768fbe58621dc38c80fb3f2a86e03f9ec13106192a6abd&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3512c1ba857549fc15a2741a3e9693aa530f65e73c136ecf78e88c193f0c4afb&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6649,7 +6649,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 93/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.27&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 11}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>828ae8c3&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6670,7 +6670,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e2efc2f34ac0cafe50f8d2698ee86e7e7fd9f83c0f90805e7b742c6be6e08203&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">202b23b6e27424b469c8ace98934fb98cd7d2c45e734ce3e9eb490e3b6d6ba99&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -8882,12 +8882,10 @@ the slices it lists: extinction coefficient, CO, CO2, O2 and
 &lt;code>TEMPERATURE&lt;/code>, with the &lt;code>&amp;amp;REAC&lt;/code> yields that produce the gases.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Put the slices at the height you will pass to &lt;code>--smoke-slice-height&lt;/code>.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Check that the building fits on one floor. Stairs and several floors
-are not supported. &lt;code>generate_walkable_from_fds.py&lt;/code> treats stair treads
-and risers as floor, so a staircase in the deck becomes flat floor
-walked at full speed.&lt;/li>
-&lt;li>&lt;input disabled="" type="checkbox"> Check the walkable polygon it produces (&lt;code>--plot&lt;/code>, &lt;code>--report&lt;/code>). The
-script decides what blocks from the CAD layer name in the comment after
-each &lt;code>&amp;amp;OBST&lt;/code>, so a deck without such comments needs checking by hand.&lt;/li>
+are not supported. &lt;code>pyfds-evac init&lt;/code> imports one floor, and every
+&lt;code>&amp;amp;OBST&lt;/code> in its walking band blocks, stair treads included.&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Check the walkable polygon it writes (&lt;code>geometry.wkt&lt;/code>) against the
+plan; &lt;code>import_report.json&lt;/code> lists the parts it dropped.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Translate pre-movement into one delay per agent (table above). Detection
 and reaction are no longer separate.&lt;/li>
 &lt;li>&lt;input disabled="" type="checkbox"> Decide what each group knows (&lt;code>familiarity&lt;/code>, &lt;code>entrance&lt;/code>).&lt;/li>
@@ -11297,28 +11295,18 @@ after the import against the deck.&lt;/p>
 &lt;strong class="hx-text-lg">Generating the walkable area from the deck&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>&lt;code>scripts/generate_walkable_from_fds.py&lt;/code> (source checkout only; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#walkable-area-from-fds-obstructions--generate_walkable_from_fdspy">Usage&lt;/a>)
-subtracts the blocking &lt;code>&amp;amp;OBST&lt;/code> records from the mesh footprint. It works only
-for a building fully enclosed inside a larger mesh, with single-line
-namelists and CAD layer names in the &lt;code>&amp;amp;OBST&lt;/code> comments. It ignores &lt;code>&amp;amp;HOLE&lt;/code>. On
-the 41 decks under &lt;code>assets/&lt;/code> it wrote a polygon for 10 and stopped on 31,
-among them the T-junction of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>, with:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>every free region touches the domain edge, so the interior cannot be told from the outdoors -- check the z band and the layer rules&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>A general tool is tracked in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/505" target="_blank" rel="noopener">#505&lt;/a>, and the
-consistency between deck and WKT in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26" target="_blank" rel="noopener">#26&lt;/a>.&lt;/p>
+&lt;code>pyfds-evac init DECK.fds&lt;/code> derives the walkable area from the deck and
+writes it to &lt;code>geometry.wkt&lt;/code> (see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#scenario-from-an-fds-deck--pyfds-evac-init">Usage&lt;/a>);
+&lt;code>scripts/generate_walkable_from_fds.py&lt;/code> writes the same polygon alone. The
+rule: the union of the floor&amp;rsquo;s mesh footprints, whose edge is a wall, minus
+the &lt;code>&amp;amp;OBST&lt;/code> records in the walking band, less their &lt;code>&amp;amp;HOLE&lt;/code> cuts; the parts
+that hold a spawn area, or without one an exit, are kept. For the T-junction
+of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> it gives the hand-drawn 150 m²
+polygon. Check the result against the plan: every &lt;code>&amp;amp;OBST&lt;/code> in the band
+blocks, and a mesh that reaches outdoors through an opening adds that
+outdoor space. The consistency between deck and WKT is tracked in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26" target="_blank" rel="noopener">#26&lt;/a>.
 &lt;/div>
 &lt;/details>
 &lt;h3>Walkable area first: generate the deck geometry&lt;span class="hx-absolute -hx-mt-20" id="walkable-area-first-generate-the-deck-geometry">&lt;/span>
@@ -13888,7 +13876,7 @@ command, only the list of what to fix.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
 [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-[--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force] [-v]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+[--exit-depth 0.5] [--no-fds] [--force] [-v]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -13907,10 +13895,14 @@ outside of its meshes between 0.1 and 1.8 m above the floor, plus any
 placeholder of 100 agents in all unless &lt;code>--agents&lt;/code> is given.&lt;/li>
 &lt;li>An exit is a strip of &lt;code>--exit-depth&lt;/code> metres on the room side of the exit
 line, so agents leave about 0.4 s before the line at 1.25 m/s.&lt;/li>
-&lt;li>The walkable area comes from &lt;code>scripts/generate_walkable_from_fds.py&lt;/code> (a
-source checkout only), or from &lt;code>--walkable&lt;/code>. The script fails on most decks
-whose mesh ends at the building wall; draw the polygon and pass it with
-&lt;code>--walkable&lt;/code> then.&lt;/li>
+&lt;li>The walkable area is derived from the deck: the union of the floor&amp;rsquo;s mesh
+footprints, whose edge is a wall, minus the &lt;code>&amp;amp;OBST&lt;/code> records in the walking
+band, less their &lt;code>&amp;amp;HOLE&lt;/code> cuts. Only the parts that hold a spawn area, or
+without one an exit, are kept; &lt;code>import_report.json&lt;/code> lists the dropped
+parts. &lt;code>--walkable FILE.wkt&lt;/code> replaces the derived polygon.&lt;/li>
+&lt;li>A spawn area that asks for more agents than the run can place (the same
+packing estimate the run uses) makes the scenario not runnable; the
+message gives the area, its capacity and the requested number.&lt;/li>
 &lt;li>When &lt;code>&amp;lt;CHID&amp;gt;.smv&lt;/code> lies next to a plain FDS deck, the run command gets
 &lt;code>--fds-dir&lt;/code>, and the output says so; &lt;code>--no-fds&lt;/code> leaves it out. An
 FDS+Evac deck needs the output of a fire-only run: the next steps say to
@@ -13950,13 +13942,11 @@ dropped, with its line number; &lt;code>-v&lt;/code>/&lt;code>--verbose&lt;/code
 &lt;/tbody>
 &lt;/table>
 &lt;h3>Walkable area from FDS obstructions — &lt;code>generate_walkable_from_fds.py&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="walkable-area-from-fds-obstructions--generate_walkable_from_fdspy">&lt;/span>
-&lt;a href="#walkable-area-from-fds-obstructions--generate_walkable_from_fdspy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Subtracts an FDS deck&amp;rsquo;s blocking &lt;code>&amp;amp;OBST&lt;/code> records from its mesh footprint and
-writes the interior as WKT for JuPedSim. See the script&amp;rsquo;s module docstring
-for the &lt;code>XB&lt;/code> axis-pairing pitfall, zero-thickness obstructions, and how the
-CAD layer name decides what blocks.&lt;/p>
+&lt;a href="#walkable-area-from-fds-obstructions--generate_walkable_from_fdspy" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Writes only the walkable area that &lt;code>pyfds-evac init&lt;/code> derives (above) as
+WKT, the same polygon as its &lt;code>geometry.wkt&lt;/code>.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>uv run python scripts/generate_walkable_from_fds.py DECK.fds -o out.wkt \
-[--z-band 0.1 1.8] [--min-hole 0.25] [--plot out.png] [--report]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+[--z-band 0.1 1.8]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -13984,23 +13974,7 @@ title="Copy code"
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--z-band LO HI&lt;/code>&lt;/td>
-&lt;td>Height band an upright occupant occupies (default 0.1 1.8).&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--half-cell M&lt;/code>&lt;/td>
-&lt;td>Half the grid spacing; widens zero-thickness obstructions (default 0.05).&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--min-hole M2&lt;/code>&lt;/td>
-&lt;td>Interior rings smaller than this are grid noise and get filled (default 0.25).&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--plot PNG&lt;/code>&lt;/td>
-&lt;td>Also render the walkable polygon.&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--report&lt;/code>&lt;/td>
-&lt;td>Print the per-layer blocked footprint and blocking verdict.&lt;/td>
+&lt;td>Absolute height band an upright occupant occupies (default: the evacuation mesh slab, or 0.1 to 1.8 m above the lowest mesh).&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -16270,9 +16244,10 @@ at full speed through a hot layer until the heat dose is reached.&lt;/p>
 &lt;p>&lt;strong>Multi-floor buildings and stairs.&lt;/strong> The walkable area is a single 2-D
 polygon, and hazards are sampled from slices at one height
 (&lt;code>--smoke-slice-height&lt;/code>). There is no stair model, no floor-to-floor
-connection and no speed reduction on inclines. &lt;code>generate_walkable_from_fds.py&lt;/code>
-treats stair treads and risers as floor, so a staircase in an FDS deck becomes
-flat floor that agents cross at full speed. A &lt;code>zones&lt;/code> entry with a
+connection and no speed reduction on inclines. &lt;code>pyfds-evac init&lt;/code> imports one
+floor, and every &lt;code>&amp;amp;OBST&lt;/code> in its walking band blocks, stair treads included; a
+staircase drawn into the walkable area by hand is flat floor that agents cross
+at full speed. A &lt;code>zones&lt;/code> entry with a
 &lt;code>speed_factor&lt;/code> can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.&lt;/p>
 &lt;p>&lt;strong>FED activity level.&lt;/strong> The CO term of the toxic dose uses one fixed
@@ -24097,7 +24072,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -24121,7 +24096,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c1498b0fac493f7d8e6dcdba13833edf8aed3699dd1d734d2bea493772badbca&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">fc01e22c486caded2fefcd36ad1b7a2b1ed9eada7a08939c9f6f1f5e72a53050&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -25311,7 +25286,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -25329,7 +25304,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ad9b803aca8bfebdf37e3553c1914e9ca72295fff7e2e147384e2a0c8e086899&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">cb63b463ddcdaa56e1941b56c3ee6eec2033f2d6cc8097825eac3630a5068c5e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -26692,7 +26667,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;/div>
 &lt;p class="docs-files__summary">The two scenarios, the FDS decks, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 45 s for the 16 runs and the figures&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -26716,7 +26691,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;li>&lt;code>assets/iso_table21_coupled/build_geometry.py&lt;/code>: writes the coupled deck, scenario and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table21_coupled/README.md&lt;/code>: what the coupled case is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">96ed1ea26b556dacaf866d39701a2ec8dc25867dae943526a4f2476fa7decc81&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">51a57a0692d938701db0bd719dc6d609cfe025e5df832a8d874cffd78b5d300c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The tests run both cases in about 20 s. They are weaker than this page: the
@@ -27144,7 +27119,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The four FDS decks and scenarios, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9a19782a8adb359c497c074c70aa140672c15ff6">&lt;code>9a19782&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 1 min for the four cases&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -27173,7 +27148,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/geometry.wkt&lt;/code>: the second version of this test, walkable area&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/README.md&lt;/code>: the second version of this test&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">73f164730c9cb9eca4e9fcb219e6a344a4cec606f64050bb18f7e99e09a5c9d2&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">dad29966aa4a599f2a793cf484cacdb4b660e5b44dbdf3bd8d55dd2c2a833bce&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output (slices only, 256 kB) is committed in

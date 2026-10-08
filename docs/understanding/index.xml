@@ -570,9 +570,10 @@ at full speed through a hot layer until the heat dose is reached.&lt;/p>
 &lt;p>&lt;strong>Multi-floor buildings and stairs.&lt;/strong> The walkable area is a single 2-D
 polygon, and hazards are sampled from slices at one height
 (&lt;code>--smoke-slice-height&lt;/code>). There is no stair model, no floor-to-floor
-connection and no speed reduction on inclines. &lt;code>generate_walkable_from_fds.py&lt;/code>
-treats stair treads and risers as floor, so a staircase in an FDS deck becomes
-flat floor that agents cross at full speed. A &lt;code>zones&lt;/code> entry with a
+connection and no speed reduction on inclines. &lt;code>pyfds-evac init&lt;/code> imports one
+floor, and every &lt;code>&amp;amp;OBST&lt;/code> in its walking band blocks, stair treads included; a
+staircase drawn into the walkable area by hand is flat floor that agents cross
+at full speed. A &lt;code>zones&lt;/code> entry with a
 &lt;code>speed_factor&lt;/code> can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.&lt;/p>
 &lt;p>&lt;strong>FED activity level.&lt;/strong> The CO term of the toxic dose uses one fixed
