@@ -43,8 +43,10 @@ Familiarity is \(p = 1\) (`full`) or \(p = 0\) (`discovery`)
   its current node when that node's sign becomes legible: on arrival at a
   node, and at each re-evaluation (every 1 s).
 - **Exploration.** With no exit known, it heads for the nearest known node it
-  has not visited (walking distance). With none left, it patrols the nodes it
-  knows (`wander`).
+  has not visited (walking distance). With none left, it looks from its
+  current node's point and then, if that teaches it nothing, patrols the
+  nodes it knows (`wander`;
+  [Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract)).
 
 **Legibility.** pyFDS-Evac hands the signs to
 [fdsvismap](https://github.com/FireDynamics/fdsvismap), the implementation of
@@ -139,7 +141,7 @@ first, and 19 follow the predicted tour. Agent 11 turns from CP1 to CP3
 without visiting CP2: CP2's sign was not in sight where it stood at CP1, the
 case criterion 4 allows. No agent turns back at CP3's door.
 
-![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery 19 on the predicted tour and one skipping CP2 on every grid finer than 0.25 m; at 0.1 m the curve stops at 16 of 20 out, because four agents are deadlocked in CP1's door](/images/verification/familiarity_egress.png)
+![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery at 0.25 m all on the tour; at 0.05 and 0.025 m 19 on the tour and one skipping CP2 because its sign was hidden at CP1. At 0.1 m the curve stops at 16 of 20 out, because four agents are deadlocked in CP1's door](/images/verification/familiarity_egress.png)
 
 | Check (0.05 m grid) | Expected | Simulated |
 |---|---|---|
