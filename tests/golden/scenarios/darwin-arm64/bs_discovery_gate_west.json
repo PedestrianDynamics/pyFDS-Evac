@@ -87,6 +87,13 @@
   ],
   [
    19.0,
+   3,
+   "C3",
+   "",
+   "E_east:ok"
+  ],
+  [
+   19.0,
    8,
    "C2",
    "",
@@ -95,6 +102,13 @@
   [
    20.0,
    2,
+   "C3",
+   "E_east",
+   "E_east:ok"
+  ],
+  [
+   20.0,
+   3,
    "C3",
    "E_east",
    "E_east:ok"
@@ -116,9 +130,9 @@
   [
    21.0,
    5,
-   "C3",
+   "C2",
    "",
-   "E_east:ok"
+   "E_west:fallback/tau"
   ],
   [
    21.0,
@@ -144,19 +158,19 @@
   [
    22.0,
    5,
-   "C3",
-   "E_east",
-   "E_east:ok"
+   "C2",
+   "E_west",
+   "E_west:fallback/tau"
   ],
   [
-   22.0,
+   23.0,
    6,
    "C2",
    "",
    "E_west:fallback/tau"
   ],
   [
-   23.0,
+   24.0,
    6,
    "C2",
    "E_west",
@@ -171,6 +185,13 @@
   ],
   [
    26.0,
+   5,
+   "C2",
+   "E_west",
+   "E_west:ok"
+  ],
+  [
+   27.0,
    6,
    "C2",
    "E_west",
@@ -178,8 +199,8 @@
   ]
  ],
  "summary": {
-  "agents_evacuated": 9,
-  "evacuation_time": 60.0,
+  "agents_evacuated": 10,
+  "evacuation_time": 29.04,
   "total_agents": 10
  },
  "switches": [
@@ -339,11 +360,11 @@
   {
    "agent_id": 3,
    "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
+   "new_exit": "C3",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 13.0
+   "reason": "explore",
+   "time_s": 14.0
   },
   {
    "agent_id": 5,
@@ -358,6 +379,15 @@
    "agent_id": 1,
    "new_cost": 0.0,
    "new_exit": "C3",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 15.0
+  },
+  {
+   "agent_id": 5,
+   "new_cost": 0.0,
+   "new_exit": "C2",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -410,7 +440,16 @@
   },
   {
    "agent_id": 2,
-   "new_cost": 5.508,
+   "new_cost": 5.505,
+   "new_exit": "E_east",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
+   "time_s": 19.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 6.177,
    "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
@@ -428,7 +467,7 @@
   },
   {
    "agent_id": 1,
-   "new_cost": 5.093,
+   "new_cost": 5.399,
    "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
@@ -437,57 +476,21 @@
   },
   {
    "agent_id": 5,
-   "new_cost": 5.813,
-   "new_exit": "E_east",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "initial",
-   "time_s": 21.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 6.659,
+   "new_cost": 6.896,
    "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
    "reason": "fallback",
-   "time_s": 22.0
+   "time_s": 21.0
   },
   {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "C1",
+   "agent_id": 6,
+   "new_cost": 6.519,
+   "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
-   "reason": "wander",
-   "time_s": 24.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 35.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "C1",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 46.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "jps-distributions_0",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "wander",
-   "time_s": 57.0
+   "reason": "fallback",
+   "time_s": 23.0
   }
  ]
 }
