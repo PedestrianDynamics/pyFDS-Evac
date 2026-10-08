@@ -49,8 +49,8 @@ expected = [
   "time ratio smoke/clear: 1.3174",
 ]
 expected_note = "The last line, manifest: <path>, names a new temporary file on every run."
-results_commit = "6f335a37"
-results_python = "3.12.13"
+results_commit = "828ae8c3"
+results_python = "3.13.4"
 results_machine = "Apple M3 Pro, macOS"
 
 [first-fds-case]
@@ -117,8 +117,8 @@ Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
 (93/150 evacuated, 57 remaining, 50 not spawned). and exits with status \
 2, as for every run that reaches its time limit with agents inside."""
-results_commit = "82b7927c"
-results_python = "3.12.13"
+results_commit = "828ae8c3"
+results_python = "3.13.4"
 results_machine = "Apple M3 Pro, macOS"
 
 [study-schroeder2015]
@@ -630,6 +630,6 @@ C [m²s]. They are the page's headline. The runs behind the page were made at \
 4a7142f; a re-run at 449a755d, without --release, prints the same \
 values. FDS output from another FDS build or machine can move them \
 slightly."""
-results_commit = "4a7142f"
+results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
