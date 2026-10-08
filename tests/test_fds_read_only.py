@@ -52,3 +52,4 @@ def test_mirror_copies_when_symlinks_are_denied(fds_read_only, fds_output, monke
     _check_mirror(fds_output, mirror, before)
     for name in ("case_1_1.sf", "sub/case_devc.csv"):
         assert not (mirror / name).is_symlink()
+        assert not os.path.samefile(fds_output / name, mirror / name)
