@@ -22,6 +22,9 @@ import pytest
 from pyfds_evac.config import events, frontend
 from pyfds_evac.tui import model
 
+# Child processes here open the FDS output under assets/; see conftest.py.
+pytestmark = pytest.mark.xdist_group("fds_assets_child")
+
 REPO = Path(__file__).resolve().parents[1]
 SCENARIO = REPO / "assets" / "iso_table21_coupled"
 SEED = "7"

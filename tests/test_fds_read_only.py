@@ -53,3 +53,17 @@ def test_mirror_copies_when_symlinks_are_denied(fds_read_only, fds_output, monke
     for name in ("case_1_1.sf", "sub/case_devc.csv"):
         assert not (mirror / name).is_symlink()
         assert not os.path.samefile(fds_output / name, mirror / name)
+
+
+@pytest.mark.skipif(
+    "PYTEST_XDIST_WORKER" not in os.environ, reason="needs an xdist worker"
+)
+def test_an_xdist_worker_keeps_the_fdsreader_cache_out_of_the_case(tmp_path):
+    """Under xdist, fdsreader's pickle goes to the worker's folder (conftest)."""
+    from fdsreader.simulation import Simulation
+
+    case = tmp_path / "case"
+    case.mkdir()
+    pickle = os.path.abspath(Simulation._get_pickle_filename(str(case), "case"))
+    assert os.path.basename(pickle) == "case.pickle"
+    assert os.path.commonpath([pickle, str(case)]) != str(case)
