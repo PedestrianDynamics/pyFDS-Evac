@@ -347,6 +347,8 @@ def load_run(run_dir):
     )
     con.close()
     routes = pd.read_csv(run_dir / "routes.csv")
+    manifest = json.loads((run_dir / "run.manifest.json").read_text())
+    traj.attrs["remaining"] = int(manifest["outcome"].get("agents_remaining", 0))
     routes["target"] = routes["new_exit"].map(short)
     maps = pd.read_csv(run_dir / "cognitive_map.csv", keep_default_na=False)
     maps["nodes"] = maps["known_nodes"].map(lambda s: {short(n) for n in s.split()})
@@ -395,9 +397,7 @@ def check_full(geo, polys, traj, routes, maps, edges, v0):
     rows = []
     for aid, g in traj.groupby("id"):
         xy = g[["x", "y"]].to_numpy()
-        entered = {
-            n for n in ("CP0", "CP1", "CP2", "CP3") if _enters(polys[n], xy[::5])
-        }
+        entered = {n for n in ("CP0", "CP1", "CP2", "CP3") if _enters(polys[n], xy)}
         lower = geo.to_polygon(tuple(xy[0]), polys["E"])
         steps = np.linalg.norm(np.diff(xy, axis=0), axis=1)
         walked = float(steps.sum())
@@ -779,17 +779,8 @@ def plot_paths(out, walkable, polys, runs, titles, n_turned, n_west):
         fontsize=9,
         color=TEXT,
     )
-    axes[1].annotate(
-        f"{n_turned} agents turn back\nat CP3's door (#250)",
-        xy=(16.9, 12.9),
-        xytext=(12.0, 10.2),
-        fontsize=9,
-        color=TEXT,
-        ha="center",
-        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.5),
-        arrowprops=dict(arrowstyle="->", color=TEXT, lw=0.9),
-        zorder=9,
-    )
+    if n_turned:
+        _turn_back_note(axes[1], n_turned)
     handles = [
         Line2D([0], [0], color=DEST[n], lw=2.0, label=f"heading for {lab}")
         for n, lab in (
@@ -801,19 +792,36 @@ def plot_paths(out, walkable, polys, runs, titles, n_turned, n_west):
             ("S", "spawn"),
         )
     ]
-    handles.append(
-        Line2D([0], [0], color=TEXT, lw=1.3, ls=(0, (2, 1.5)), label="patrol (wander)")
-    )
+    if any((runs[k]["why"] == "wander").any() for k in titles):
+        handles.append(
+            Line2D(
+                [0], [0], color=TEXT, lw=1.3, ls=(0, (2, 1.5)), label="patrol (wander)"
+            )
+        )
     fig.legend(
         handles=handles,
         loc="upper center",
         bbox_to_anchor=(0.5, 0.08),
-        ncol=7,
+        ncol=len(handles),
         fontsize=8,
         **LEGEND,
     )
     fig.savefig(out / "familiarity_paths.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
+
+
+def _turn_back_note(ax, n_turned):
+    ax.annotate(
+        f"{n_turned} agents turn back\nat CP3's door",
+        xy=(16.9, 12.9),
+        xytext=(12.0, 10.2),
+        fontsize=9,
+        color=TEXT,
+        ha="center",
+        bbox=dict(fc="white", ec="none", alpha=0.85, pad=1.5),
+        arrowprops=dict(arrowstyle="->", color=TEXT, lw=0.9),
+        zorder=9,
+    )
 
 
 def plot_door(out, walkable, polys, geo, signs, patrols, tol):
@@ -864,8 +872,8 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
     ax.fill_between(
         xs, y_edge - tol, y_edge + tol, color=EXIT, alpha=0.25, lw=0, zorder=1
     )
-    px = np.array([p[0] for _, _, p in patrols])
-    py = np.array([p[1] for _, _, p in patrols])
+    px = np.array([p[0] for _, _, p in patrols], dtype=float)
+    py = np.array([p[1] for _, _, p in patrols], dtype=float)
     near = (px > x_lo) & (px < x_hi) & (py > y_lo) & (py < y_hi)
     ax.scatter(
         px[near],
@@ -890,7 +898,7 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
     )
     ax.text(
         17.55,
-        13.5,
+        13.66,
         "CP3 box",
         fontsize=8.5,
         color=TEXT,
@@ -910,6 +918,8 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
         arrowprops=dict(arrowstyle="->", color=DEST["CP3"], lw=0.9),
         zorder=8,
     )
+    node = polys["CP3"].centroid
+    ax.scatter(node.x, node.y, s=40, marker="x", color=DEST["CP3"], lw=1.6, zorder=6)
     handles = [
         Patch(fc="none", ec=DEST["CP3"], hatch="////", label="CP3 box"),
         Line2D(
@@ -926,14 +936,26 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
             [0],
             [0],
             ls="none",
-            marker="o",
-            mfc=TURN,
-            mec="black",
-            label=f"{near.sum()} patrol decisions by "
-            f"{len({a for (a, _, _), n in zip(patrols, near) if n})} agents, "
-            "0.05 m grid",
+            marker="x",
+            color=DEST["CP3"],
+            mew=1.6,
+            label="CP3 node point",
         ),
     ]
+    if near.any():
+        handles.append(
+            Line2D(
+                [0],
+                [0],
+                ls="none",
+                marker="o",
+                mfc=TURN,
+                mec="black",
+                label=f"{near.sum()} patrol decisions by "
+                f"{len({a for (a, _, _), n in zip(patrols, near) if n})} agents, "
+                "0.05 m grid",
+            )
+        )
     ax.legend(
         handles=handles,
         loc="upper center",
@@ -960,37 +982,35 @@ def plot_egress(out, curves, refs, patterns, note):
         dpi=150,
         gridspec_kw=dict(width_ratios=[1.25, 1.0], wspace=0.55),
     )
-    for label, t in curves.items():
+    ends = []
+    for label, (t, t_end) in curves.items():
         st = GRID_STYLE.get(label, dict(color=FULL, lw=2.2, ls="-"))
         n = np.arange(1, len(t) + 1)
         name = "full" if label == "full" else f"discovery, {label} grid"
-        ax.step(np.r_[0.0, t], np.r_[0, n], where="post", label=name, **st)
-        ax.text(
-            t[-1],
-            20.4,
-            f"{label.removesuffix(' grid')}\n{t[-1]:.0f} s",
-            fontsize=7.5,
-            color=TEXT,
-            ha="center",
-            va="bottom",
+        ax.step(
+            np.r_[0.0, t, t_end], np.r_[0, n, len(t)], where="post", label=name, **st
         )
+        end = f"{t[-1]:.1f} s" if t_end == t[-1] else f"{len(t)}/20 out"
+        ends.append((t_end, f"{label}: {end}"))
+    _end_labels(ax, ends)
     for label, (tb, color) in refs.items():
         ax.axvline(tb, color=color, lw=0.9, ls="-.", zorder=1, label=label)
-    ax.text(
-        0.97,
-        0.55,
-        note,
-        transform=ax.transAxes,
-        fontsize=8,
-        color=TEXT,
-        ha="right",
-        va="top",
-    )
+    if note:
+        ax.text(
+            0.97,
+            0.55,
+            note,
+            transform=ax.transAxes,
+            fontsize=8,
+            color=TEXT,
+            ha="right",
+            va="top",
+        )
     ax.set_xlabel("time [s]", color=TEXT)
     ax.set_ylabel("agents out [-]", color=TEXT)
     ax.set_yticks([0, 5, 10, 15, 20])
     ax.set_ylim(0, 25.5)
-    ax.set_xlim(0, max(t[-1] for t in curves.values()) + 18)
+    ax.set_xlim(0, max(t_end for _, t_end in curves.values()) + 18)
     ax.legend(loc="lower right", fontsize=7.5, **LEGEND)
     ax.set_title("Agents out over time", loc="left", fontsize=10, color=TEXT)
     style_axes(ax)
@@ -999,6 +1019,8 @@ def plot_egress(out, curves, refs, patterns, note):
     left = np.zeros(len(labels))
     for name, color in PATTERN_COLORS.items():
         vals = np.array([patterns[k].get(name, 0) for k in labels])
+        if not vals.any():
+            continue
         hatch = "////" if "turned back" in name else None
         axb.barh(
             labels, vals, left=left, color=color, ec="white", hatch=hatch, label=name
@@ -1015,6 +1037,23 @@ def plot_egress(out, curves, refs, patterns, note):
     style_axes(axb, frame=False)
     fig.savefig(out / "familiarity_egress.png", dpi=150, bbox_inches="tight")
     plt.close(fig)
+
+
+def _end_labels(ax, ends, gap_s=55.0):
+    """Label each curve at its end; labels closer than gap_s in time stack."""
+    level, last = 0, -math.inf
+    for t, text in sorted(ends):
+        level = level + 1 if t - last < gap_s else 0
+        last = t
+        ax.text(
+            t,
+            20.4 + 1.3 * level,
+            text,
+            fontsize=7.5,
+            color=TEXT,
+            ha="center",
+            va="bottom",
+        )
 
 
 def _bar_labels(ax, left, vals, color):
@@ -1071,18 +1110,19 @@ def render_gif(out, walkable, polys, runs, titles, step_s=1.0, fps=10):
             ("S", "spawn"),
         )
     ]
-    handles.append(
-        Line2D(
-            [0],
-            [0],
-            ls="none",
-            marker="o",
-            mfc="#bdbdbd",
-            mec="black",
-            mew=1.6,
-            label="patrol: thick ring",
+    if any((runs[k]["why"] == "wander").any() for k in titles):
+        handles.append(
+            Line2D(
+                [0],
+                [0],
+                ls="none",
+                marker="o",
+                mfc="#bdbdbd",
+                mec="black",
+                mew=1.6,
+                label="patrol: thick ring",
+            )
         )
-    )
     fig.legend(
         handles=handles,
         title="heading for",
@@ -1208,15 +1248,17 @@ def main():
         f"{t_door[0]:.1f} to {t_door[-1]:.1f} s: {flow:.2f} 1/s = "
         f"{flow / 1.2:.2f} 1/(s m) of the 1.2 m door"
     )
-    curves = {"full": t_sorted}
+    curves = {"full": (t_sorted, t_sorted[-1])}
     patterns = {"full": {"direct: S-CP3-exit": 20}}
     calm_last, last_out, table = [], {}, []
+    n_turned_any = 0
     cells = sorted(
         float(p.name.removeprefix("discovery_cell"))
         for p in args.data.glob("discovery_cell*")
     )
     for cell in reversed(cells):
         traj, routes, maps = load_run(args.data / f"discovery_cell{cell:g}")
+        remaining = traj.attrs["remaining"]
         t_out = np.sort(traj.groupby("id")["frame"].max().to_numpy() / FPS)
         last_out[cell] = t_out[-1]
         wanderers = set(routes.loc[routes["reason"] == "wander", "agent_id"])
@@ -1231,7 +1273,7 @@ def main():
             name = route_class(node_sequence(routes, a), a in wanderers, a in skipped)
             pat[name] = pat.get(name, 0) + 1
         label = f"{cell:g} m"
-        curves[label] = t_out
+        curves[label] = (t_out[: len(t_out) - remaining], t_out[-1])
         row = f"discovery {cell:g} m"
         if cells_across(cell) == 0:
             row += "\n(sees through the walls)"
@@ -1239,6 +1281,7 @@ def main():
         last = traj.groupby("id")["frame"].max() / FPS
         calm = last.drop(index=list(wanderers), errors="ignore")
         calm_last.append(calm.max())
+        n_turned_any += len(wanderers)
         at_cp3 = [p[1] for _, _, p in r["patrols"] if math.dist(p, nodes["CP3"]) < 1.5]
         print(
             f"discovery {label} (T = {grid_tol(cell):.3f} m, cells across the "
@@ -1300,7 +1343,13 @@ def main():
             DISC,
         ),
     }
-    note = "agents that never turned back\nare out by " + calm_range + "\non every grid"
+    note = None
+    if n_turned_any:
+        note = (
+            "agents that never turned back\nare out by "
+            + calm_range
+            + "\non every grid"
+        )
     plot_egress(OUT, curves, refs, patterns, note)
     frames = render_gif(OUT, walkable, polys, runs, titles)
     size = (OUT / "familiarity.gif").stat().st_size / 1e6
