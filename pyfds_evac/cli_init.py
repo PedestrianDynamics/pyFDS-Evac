@@ -113,13 +113,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="depth of an exit strip on the room side [m] (default 0.5)",
     )
     parser.add_argument(
-        "--layer-rules",
-        choices=("none", "station"),
-        default="none",
-        help="obstruction layer rules of the walkable derivation; "
-        "'station' treats the Station deck's floor/door layers as free",
-    )
-    parser.add_argument(
         "--force",
         action="store_true",
         help="overwrite a config.json in the -o folder that the importer did not write",
@@ -171,7 +164,6 @@ def main(argv: list[str] | None = None) -> int:
             agents=args.agents,
             exits=args.exits,
             exit_depth=args.exit_depth,
-            layer_rules=args.layer_rules,
         )
     except (ValueError, OSError) as exc:
         print(f"pyfds-evac init: error: {exc}", file=sys.stderr)

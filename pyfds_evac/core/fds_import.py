@@ -27,7 +27,7 @@ import math
 import os
 import shutil
 import tempfile
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from functools import partial
 from pathlib import Path
@@ -67,7 +67,7 @@ from .walkable_provider import (
     FloorSpec,
     WalkableProvider,
     WalkableResult,
-    script_walkable,
+    deck_walkable,
 )
 
 __all__ = [
@@ -205,13 +205,13 @@ def import_fds_deck(
     agents: int | None = None,
     exits: Sequence[Sequence[float]] = (),
     exit_depth: float = EXIT_DEPTH_M,
-    layer_rules: str = "none",
 ) -> ImportResult:
     """Import the FDS deck at *path*; see the module docstring.
 
     ``walkable_wkt`` (WKT text) skips derivation; otherwise
-    ``derive_walkable`` (default: the walkable script with *layer_rules*)
-    makes the polygon. ``exits`` are extra exit lines
+    ``derive_walkable`` (default: :func:`deck_walkable`) makes the polygon,
+    and only its components holding a spawn area are kept (see
+    :func:`_select_components`). ``exits`` are extra exit lines
     ``(x0, y0, x1, y1[, ior])``. Raises :class:`FdsImportError` (or the
     parser's/provider's ``ValueError``) when nothing can be written.
     """
@@ -222,7 +222,7 @@ def import_fds_deck(
     kind = _classify(deck)
     report = ImportReport(deck=deck_path.name, chid=deck.chid, kind=kind)
     _parser_items(deck, report)
-    provider = derive_walkable or partial(script_walkable, layer_rules=layer_rules)
+    provider = derive_walkable or deck_walkable
     build = _import_legacy if kind == "legacy" else _import_modern
     return build(deck, deck_path, opts, report, walkable_wkt, provider)
 
@@ -348,11 +348,13 @@ def _modern_floor(deck: FdsDeck, opts: _Options) -> Floor:
     )
 
 
-def _floor_obstructions(deck: FdsDeck, floor: Floor, band, legacy: bool):
-    """``&OBST`` records of this floor: ``EVACUATION`` and ``MESH_ID`` honoured."""
+def _floor_obstructions(
+    deck: FdsDeck, floor: Floor, band, legacy: bool, group: str = "OBST"
+):
+    """*group* records of this floor: ``EVACUATION`` and ``MESH_ID`` honoured."""
     mesh_ids = {m.id for m in floor.meshes}
     out = []
-    for record in deck.group("OBST"):
+    for record in deck.group(group):
         if _obst_applies(record, mesh_ids, band, legacy):
             out.append(record)
     return tuple(out)
@@ -371,12 +373,45 @@ def _obst_applies(record: NamelistRecord, mesh_ids, band, legacy: bool) -> bool:
 
 # --- walkable ----------------------------------------------------------------
 
+#: Builds the exits and spawn areas of a floor on a walkable polygon.
+StageBuilder = Callable[[Any, ImportReport], tuple[list, list]]
 
-def _walkable(deck, floor_spec: FloorSpec, user_wkt, provider, report) -> Any:
+
+def _walkable_and_stages(
+    deck, spec: FloorSpec, user_wkt, provider, report, build: StageBuilder
+):
+    """The walkable polygon with the exits and spawn areas built on it.
+
+    A ``--walkable`` polygon is taken as given. A derived one keeps only the
+    components that hold a spawn area (or, with none, an exit); the stages
+    are then built again on the kept polygon, so strips and spawn pieces
+    are clipped to it.
+    """
     if user_wkt is not None:
         result = WalkableResult(_load_wkt(user_wkt), [], "user")
-    else:
-        result = provider(deck, floor_spec)
+        walkable = _checked(result)
+        _record_walkable(report, walkable, result)
+        return (walkable, *build(walkable, report))
+    result = provider(deck, spec)
+    derived = _checked(result)
+    if len(polygons_of(derived)) == 1:
+        _record_walkable(report, derived, result, kept_by="single")
+        return (derived, *build(derived, report))
+    scratch = ImportReport(report.deck, report.chid, report.kind)
+    exits, spawns = build(derived, scratch)
+    kept, dropped, rule = _select_components(derived, exits, spawns)
+    if not dropped:
+        _record_walkable(report, derived, result, kept_by=rule)
+        _note_all_kept(report, rule, len(kept))
+        report.items.extend(scratch.items)
+        return derived, exits, spawns
+    walkable = union(kept)
+    _record_walkable(report, walkable, result, kept_by=rule)
+    _report_dropped(report, dropped, rule, exits)
+    return (walkable, *build(walkable, report))
+
+
+def _checked(result: WalkableResult):
     polygon = result.polygon
     if polygon is None or polygon.is_empty or not polygon.is_valid or polygon.area <= 0:
         raise FdsImportError(
@@ -386,6 +421,10 @@ def _walkable(deck, floor_spec: FloorSpec, user_wkt, provider, report) -> Any:
         raise FdsImportError(
             f"the walkable area is a {polygon.geom_type}, not a polygon"
         )
+    return polygon
+
+
+def _record_walkable(report, polygon, result: WalkableResult, kept_by=None) -> None:
     parts = polygons_of(polygon)
     report.walkable = {
         "source": result.source,
@@ -394,7 +433,70 @@ def _walkable(deck, floor_spec: FloorSpec, user_wkt, provider, report) -> Any:
         "holes": sum(len(p.interiors) for p in parts),
         "diagnostics": list(result.diagnostics),
     }
-    return polygon
+    if kept_by is not None:
+        report.walkable["kept_by"] = kept_by
+        report.walkable["components_dropped"] = []
+
+
+def _select_components(walkable, exits, spawns) -> tuple[list, list, str]:
+    """Components holding a spawn area; without any, those holding an exit.
+
+    Exits given with ``--exit`` always keep their component. With neither a
+    spawn area nor an exit, every component is kept (rule ``"all"``).
+    """
+    parts = polygons_of(walkable)
+    user = [e.polygon for e in exits if e.source == "X3"]
+    anchors, rule = [s.polygon for s in spawns], "spawn"
+    if not anchors:
+        anchors, rule = [e.polygon for e in exits], "exit"
+    if not anchors:
+        return parts, [], "all"
+    anchors += user
+    kept = [p for p in parts if any(_overlaps(p, a) for a in anchors)]
+    if not kept:
+        return parts, [], "all"
+    return kept, [p for p in parts if not any(p is k for k in kept)], rule
+
+
+def _overlaps(component, shape) -> bool:
+    return bool(component.intersection(shape).area > 1e-9)
+
+
+def _note_all_kept(report, rule: str, count: int) -> None:
+    if rule != "all":
+        return
+    report.add(
+        "A",
+        "info",
+        "walkable",
+        f"no spawn area and no exit to choose the walkable components by: "
+        f"all {count} kept",
+        id="components",
+    )
+
+
+def _report_dropped(report, dropped, rule: str, exits) -> None:
+    what = "spawn area" if rule == "spawn" else "spawn area or exit"
+    for index, part in enumerate(dropped, 1):
+        inside = sorted(e.id for e in exits if _overlaps(part, e.polygon))
+        x0, y0, x1, y1 = part.bounds
+        report.walkable["components_dropped"].append(
+            {
+                "area_m2": rounded(part.area),
+                "bounds": [rounded(v) for v in (x0, y0, x1, y1)],
+                "reason": f"no {what} in it",
+                "exits": inside,
+            }
+        )
+        also = f"; its exits are dropped with it: {', '.join(inside)}" if inside else ""
+        report.add(
+            "A",
+            "warning",
+            "walkable",
+            f"walkable component of {part.area:.3f} m2 at x {x0:g}..{x1:g}, "
+            f"y {y0:g}..{y1:g} dropped: no {what} in it{also}",
+            id=f"component_{index}",
+        )
 
 
 def _load_wkt(text: str):
@@ -435,23 +537,13 @@ def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         domain,
         tuple(m.id or "" for m in floor.meshes),
         _floor_obstructions(deck, floor, band, legacy=True),
+        _floor_obstructions(deck, floor, band, legacy=True, group="HOLE"),
     )
-    walkable = _walkable(deck, spec, user_wkt, provider, report)
     tol = max(floor.dx or 0.0, 0.05)
-    time = deck.first("TIME")
-    ctx = LegacyContext(
-        deck,
-        floor,
-        floors,
-        walkable,
-        opts.depth,
-        tol,
-        report,
-        t_begin=time.num("T_BEGIN", 0.0) if time else 0.0,
-        t_end=time.number("T_END") if time else None,
+    build = partial(_legacy_stages, deck, floor, floors, opts, tol)
+    walkable, exits, spawns = _walkable_and_stages(
+        deck, spec, user_wkt, provider, report, build
     )
-    exits = _unique(legacy_exits(ctx) + _user_exits(opts, walkable, report), "EXIT")
-    spawns = _unique_spawns(legacy_spawns(ctx, [e.id for e in exits]))
     dropped_groups(deck, report)
     _floors_not_imported(deck, floors, floor, report)
     height = floor.z_floor + _human_smoke_height(deck)
@@ -468,6 +560,24 @@ def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         spawns,
         height,
     )
+
+
+def _legacy_stages(deck, floor, floors, opts, tol, walkable, report):
+    time = deck.first("TIME")
+    ctx = LegacyContext(
+        deck,
+        floor,
+        floors,
+        walkable,
+        opts.depth,
+        tol,
+        report,
+        t_begin=time.num("T_BEGIN", 0.0) if time else 0.0,
+        t_end=time.number("T_END") if time else None,
+    )
+    exits = _unique(legacy_exits(ctx) + _user_exits(opts, walkable, report), "EXIT")
+    spawns = _unique_spawns(legacy_spawns(ctx, [e.id for e in exits]))
+    return exits, spawns
 
 
 def _human_smoke_height(deck: FdsDeck) -> float:
@@ -520,12 +630,13 @@ def _import_modern(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         domain,
         None,
         _floor_obstructions(deck, floor, band, legacy=False),
+        _floor_obstructions(deck, floor, band, legacy=False, group="HOLE"),
     )
-    walkable = _walkable(deck, spec, user_wkt, provider, report)
     tol = max(floor.dx or 0.0, 0.05)
-    exits = _vent_exits(deck, floor, band, domain, walkable, opts.depth, report)
-    exits = _unique(exits + _user_exits(opts, walkable, report), "EXIT")
-    spawns = _modern_spawns(walkable, exits, opts.agents, report)
+    build = partial(_modern_stages, deck, floor, band, domain, opts)
+    walkable, exits, spawns = _walkable_and_stages(
+        deck, spec, user_wkt, provider, report, build
+    )
     _upper_floor_warnings(deck, floor, domain, report)
     return _finish(
         deck,
@@ -540,6 +651,13 @@ def _import_modern(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         spawns,
         floor.z_floor + HUMAN_SMOKE_HEIGHT_M,
     )
+
+
+def _modern_stages(deck, floor, band, domain, opts, walkable, report):
+    exits = _vent_exits(deck, floor, band, domain, walkable, opts.depth, report)
+    exits = _unique(exits + _user_exits(opts, walkable, report), "EXIT")
+    spawns = _modern_spawns(walkable, exits, opts.agents, report)
+    return exits, spawns
 
 
 def _vent_exits(deck, floor, band, domain, walkable, depth, report):

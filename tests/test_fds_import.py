@@ -3,8 +3,8 @@
 Every deck here is a synthetic string written by the test (no file from
 examples/FDS-Evac-Guide, which is GPLv3). Expectations are closed form:
 axis-aligned rectangles, exact parameter mappings, exact integer shares.
-Each import passes ``walkable_wkt`` so the importer is tested apart from the
-walkable provider, except in the provider tests at the end.
+Most imports pass ``walkable_wkt`` so the importer is tested apart from the
+walkable provider; the walkable-provider tests derive the area.
 """
 
 from __future__ import annotations
@@ -19,18 +19,12 @@ from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon, box
 
 from pyfds_evac import cli, cli_init
-from pyfds_evac.core.fds_deck import parse_fds_deck
 from pyfds_evac.core.fds_import import import_fds_deck
 from pyfds_evac.core.fds_import_geometry import largest_remainder
 from pyfds_evac.core.premovement_distributions import (
     create_premovement_distribution,
 )
-from pyfds_evac.core.walkable_provider import (
-    FloorSpec,
-    WalkableError,
-    WalkableResult,
-    script_walkable,
-)
+from pyfds_evac.core.walkable_provider import WalkableResult
 
 AREA_TOL = 1e-9
 ROOM_WKT = "POLYGON((0 0,10 0,10 10,0 10,0 0))"
@@ -584,36 +578,92 @@ def test_provider_gets_the_floor_obstructions(tmp_path):
     assert result.report.walkable["source"] == "derived:test"
 
 
-# A room 2-8 x 2-8 inside a 10 x 10 mesh, walls 0.2 m thick, with a 1 x 1 m
-# obstruction whose CAD layer name says "door".
-CLOSED_ROOM = """\
-&HEAD CHID='closed' /
-&MESH IJK=100,100,24, XB=0,10,0,10,0,2.4 /
-&OBST XB=1.8,8.2,1.8,2.0,0,2.4 / A-WALL
-&OBST XB=1.8,8.2,8.0,8.2,0,2.4 / A-WALL
-&OBST XB=1.8,2.0,1.8,8.2,0,2.4 / A-WALL
-&OBST XB=8.0,8.2,1.8,8.2,0,2.4 / A-WALL
-&OBST XB=4,5,4,5,0,2.0 / door 1
+# Two 10 x 10 m rooms side by side (x 0-10 and 10-20), split by a
+# zero-thickness wall at x = 10 (widened to 0.1 m); one OPEN vent on x = 0.
+# {extra} adds records.
+TWO_ROOMS = """\
+&HEAD CHID='rooms' /
+&MESH IJK=50,50,15, XB=0,20,0,10,0,3 /
+&OBST XB=10,10,0,10,0,3 /
+&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /
+{extra}
 """
 
 
-def test_script_provider_layer_rules(tmp_path):
-    """Station layer rules are opt-in: by default every solid in band blocks."""
-    path = _deck(tmp_path, CLOSED_ROOM)
-    plain = import_fds_deck(path)
-    station = import_fds_deck(path, layer_rules="station")
-    area = {
-        r.report.walkable["source"]: r.report.walkable["area_m2"]
-        for r in (plain, station)
-    }
-    assert area == {"derived:script:none": 35.0, "derived:script:station": 36.0}
+def _two_rooms(tmp_path, *extra: str, **kwargs):
+    path = _deck(tmp_path, TWO_ROOMS.format(extra="\n".join(extra)))
+    return import_fds_deck(path, **kwargs)
 
 
-def test_script_provider_failure_names_the_deck_and_the_way_out(tmp_path):
-    path = _deck(tmp_path, MODERN.format(vents=""))
-    floor = FloorSpec(0.0, (0.1, 1.8), box(0, 0, 20, 10))
-    with pytest.raises(WalkableError, match="deck.fds.*--walkable FILE.wkt"):
-        script_walkable(parse_fds_deck(path), floor)
+def test_mesh_edge_is_a_wall_and_the_room_without_exit_is_dropped(tmp_path):
+    result = _two_rooms(tmp_path)
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    assert _same(walkable, box(0, 0, 9.95, 10))
+    assert result.report.walkable["source"] == "derived:deck"
+    assert result.report.walkable["kept_by"] == "spawn"
+    [dropped] = result.report.walkable["components_dropped"]
+    assert dropped["area_m2"] == pytest.approx(99.5)
+    assert dropped["bounds"] == [10.05, 0.0, 20.0, 10.0]
+    assert any("dropped: no spawn area" in i.message for i in _items(result, "A"))
+    assert result.report.runnable
+
+
+def test_hole_opens_the_wall(tmp_path):
+    result = _two_rooms(tmp_path, "&HOLE XB=9.9,10.1,4,6,0,2.5 /")
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    assert walkable.area == pytest.approx(200 - 0.1 * 8)
+    assert result.report.walkable["components"] == 1
+    assert result.report.walkable["kept_by"] == "single"
+
+
+def test_hole_above_the_walking_band_does_not_open_the_wall(tmp_path):
+    result = _two_rooms(tmp_path, "&HOLE XB=9.9,10.1,4,6,2,3 /")
+    assert result.report.walkable["area_m2"] == pytest.approx(99.5)
+
+
+def test_small_obstruction_is_filled_and_a_larger_one_kept(tmp_path):
+    result = _two_rooms(
+        tmp_path, "&OBST XB=2,2.4,2,2.4,0,3 /", "&OBST XB=5,6,5,6,0,3 /"
+    )
+    walkable = shapely_wkt.loads(result.walkable_wkt)
+    assert walkable.area == pytest.approx(99.5 - 1.0)
+    assert result.report.walkable["holes"] == 1
+
+
+def test_user_exit_keeps_its_room(tmp_path):
+    result = _two_rooms(tmp_path, exits=[(20, 2, 20, 3, 1)])
+    assert result.report.walkable["area_m2"] == pytest.approx(199.0)
+    assert sorted(result.raw["exits"]) == ["user_exit_1", "vent_1"]
+
+
+def test_without_spawn_or_exit_every_room_is_kept(tmp_path):
+    deck = TWO_ROOMS.replace("&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /", "")
+    result = import_fds_deck(_deck(tmp_path, deck.format(extra="")))
+    assert result.report.walkable["area_m2"] == pytest.approx(199.0)
+    assert result.report.walkable["kept_by"] == "all"
+    assert not result.report.runnable
+
+
+def test_multi_line_mesh_and_obst_are_read(tmp_path):
+    deck = (
+        "&HEAD CHID='ml' /\n&MESH IJK=50,50,15,\n      XB=0,20,0,10,0,3 /\n"
+        "&OBST\n  XB=10,10,0,10,0,3 /\n"
+        "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(99.5)
+
+
+def test_repo_t_junction_walkable_is_derived(tmp_path):
+    """#505: the derived area equals the asset's hand-written WKT."""
+    root = Path(__file__).resolve().parents[1] / "assets" / "t_junction"
+    drawn = shapely_wkt.loads((root / "geometry.wkt").read_text(encoding="utf-8"))
+    result = import_fds_deck(root / "t_junction.fds", agents=40)
+    derived = shapely_wkt.loads(result.walkable_wkt)
+    assert derived.area == pytest.approx(150.0)
+    assert _same(derived, drawn)
+    assert len(result.raw["exits"]) == 2
+    assert result.report.runnable
 
 
 # --- report details --------------------------------------------------------------

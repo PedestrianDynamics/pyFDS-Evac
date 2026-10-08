@@ -361,21 +361,17 @@ from a CAD plan, the app can import the same DXF file; check the coordinates
 after the import against the deck.
 
 {{< details title="Generating the walkable area from the deck" closed="true" >}}
-`scripts/generate_walkable_from_fds.py` (source checkout only; see
-[Usage](usage.md#walkable-area-from-fds-obstructions--generate_walkable_from_fdspy))
-subtracts the blocking `&OBST` records from the mesh footprint. It works only
-for a building fully enclosed inside a larger mesh, with single-line
-namelists and CAD layer names in the `&OBST` comments. It ignores `&HOLE`. On
-the 41 decks under `assets/` it wrote a polygon for 10 and stopped on 31,
-among them the T-junction of [A crowd in a fire](first-fds-case.md), with:
-
-```text
-every free region touches the domain edge, so the interior cannot be told from the outdoors -- check the z band and the layer rules
-```
-
-A general tool is tracked in
-[#505](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/505), and the
-consistency between deck and WKT in
+`pyfds-evac init DECK.fds` derives the walkable area from the deck and
+writes it to `geometry.wkt` (see
+[Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init));
+`scripts/generate_walkable_from_fds.py` writes the same polygon alone. The
+rule: the union of the floor's mesh footprints, whose edge is a wall, minus
+the `&OBST` records in the walking band, less their `&HOLE` cuts; the parts
+that hold a spawn area, or without one an exit, are kept. For the T-junction
+of [A crowd in a fire](first-fds-case.md) it gives the hand-drawn 150 m²
+polygon. Check the result against the plan: every `&OBST` in the band
+blocks, and a mesh that reaches outdoors through an opening adds that
+outdoor space. The consistency between deck and WKT is tracked in
 [#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26).
 {{< /details >}}
 

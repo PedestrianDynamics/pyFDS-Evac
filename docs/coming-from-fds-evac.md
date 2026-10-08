@@ -252,12 +252,10 @@ agents walk.
       `TEMPERATURE`, with the `&REAC` yields that produce the gases.
 - [ ] Put the slices at the height you will pass to `--smoke-slice-height`.
 - [ ] Check that the building fits on one floor. Stairs and several floors
-      are not supported. `generate_walkable_from_fds.py` treats stair treads
-      and risers as floor, so a staircase in the deck becomes flat floor
-      walked at full speed.
-- [ ] Check the walkable polygon it produces (`--plot`, `--report`). The
-      script decides what blocks from the CAD layer name in the comment after
-      each `&OBST`, so a deck without such comments needs checking by hand.
+      are not supported. `pyfds-evac init` imports one floor, and every
+      `&OBST` in its walking band blocks, stair treads included.
+- [ ] Check the walkable polygon it writes (`geometry.wkt`) against the
+      plan; `import_report.json` lists the parts it dropped.
 - [ ] Translate pre-movement into one delay per agent (table above). Detection
       and reaction are no longer separate.
 - [ ] Decide what each group knows (`familiarity`, `entrance`).

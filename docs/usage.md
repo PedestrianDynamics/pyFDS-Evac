@@ -575,7 +575,7 @@ command, only the list of what to fix.
 ```
 pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-    [--exit-depth 0.5] [--layer-rules none|station] [--no-fds] [--force] [-v]
+    [--exit-depth 0.5] [--no-fds] [--force] [-v]
 ```
 
 - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
@@ -586,10 +586,11 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
   placeholder of 100 agents in all unless `--agents` is given.
 - An exit is a strip of `--exit-depth` metres on the room side of the exit
   line, so agents leave about 0.4 s before the line at 1.25 m/s.
-- The walkable area comes from `scripts/generate_walkable_from_fds.py` (a
-  source checkout only), or from `--walkable`. The script fails on most decks
-  whose mesh ends at the building wall; draw the polygon and pass it with
-  `--walkable` then.
+- The walkable area is derived from the deck: the union of the floor's mesh
+  footprints, whose edge is a wall, minus the `&OBST` records in the walking
+  band, less their `&HOLE` cuts. Only the parts that hold a spawn area, or
+  without one an exit, are kept; `import_report.json` lists the dropped
+  parts. `--walkable FILE.wkt` replaces the derived polygon.
 - When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
   `--fds-dir`, and the output says so; `--no-fds` leaves it out. An
   FDS+Evac deck needs the output of a fire-only run: the next steps say to
@@ -615,25 +616,19 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 
 ### Walkable area from FDS obstructions — `generate_walkable_from_fds.py`
 
-Subtracts an FDS deck's blocking `&OBST` records from its mesh footprint and
-writes the interior as WKT for JuPedSim. See the script's module docstring
-for the `XB` axis-pairing pitfall, zero-thickness obstructions, and how the
-CAD layer name decides what blocks.
+Writes only the walkable area that `pyfds-evac init` derives (above) as
+WKT, the same polygon as its `geometry.wkt`.
 
 ```
 uv run python scripts/generate_walkable_from_fds.py DECK.fds -o out.wkt \
-    [--z-band 0.1 1.8] [--min-hole 0.25] [--plot out.png] [--report]
+    [--z-band 0.1 1.8]
 ```
 
 | Flag | Purpose |
 |------|---------|
 | `deck` (positional) | FDS input file. |
 | `-o/--out` (required) | Output WKT path. |
-| `--z-band LO HI` | Height band an upright occupant occupies (default 0.1 1.8). |
-| `--half-cell M` | Half the grid spacing; widens zero-thickness obstructions (default 0.05). |
-| `--min-hole M2` | Interior rings smaller than this are grid noise and get filled (default 0.25). |
-| `--plot PNG` | Also render the walkable polygon. |
-| `--report` | Print the per-layer blocked footprint and blocking verdict. |
+| `--z-band LO HI` | Absolute height band an upright occupant occupies (default: the evacuation mesh slab, or 0.1 to 1.8 m above the lowest mesh). |
 
 ## Paper figures
 
