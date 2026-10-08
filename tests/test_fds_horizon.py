@@ -296,13 +296,16 @@ def test_foresight_past_the_last_frame_reads_the_last_frame(caplog):
 
     That is past the output (last frame 10 s, interval 1 s) and raised
     ``FdsHorizonError`` without --allow-fds-horizon-hold, mid-run (#666).
-    The leg now reads the last frame; the first leg keeps the decision time.
+    The leg now reads the last frame. The first leg starts at the decision
+    time; its samples 2 m on and beyond are reached after 10.5 s and read
+    the last frame too (#650).
     """
     with caplog.at_level(logging.WARNING):
         rc = _corridor_route(9.0)
     first, second = rc.segments
     assert first.arrival_time_s == 9.0
-    assert first.k_max == pytest.approx(0.09, rel=1e-12)
+    assert first.k_avg == pytest.approx((0.09 + 5 * 0.10) / 6, rel=1e-12)
+    assert first.k_max == pytest.approx(0.10, rel=1e-12)
     assert second.arrival_time_s == 10.0
     assert second.k_max == pytest.approx(0.10, rel=1e-12)
     assert len(_foresight_warnings(caplog)) == 1
@@ -360,7 +363,9 @@ def test_held_foresight_does_not_share_a_cache_bucket(order):
     Decided at 8 s, A reaches C0 -> E0 at 9.6 s (frame 9.5 s), B at 13 s,
     past the 10 s end. Holding B at 10 s put it in A's bucket, so the agent
     evaluated second read the other's frame. With the hold flag both read
-    what they read before #666, in either order: A k_max 0.19, B 0.20.
+    what they read before #666, in either order. Each sample is read when
+    the agent reaches it (#650), so A's samples past 10.5 s read the last
+    frame too: A k_max 0.20 (0.19 before #650), B 0.20.
     """
     from shapely.geometry import box
 
@@ -399,7 +404,7 @@ def test_held_foresight_does_not_share_a_cache_bucket(order):
             cached_segments=cache,
         )
 
-    expected_k_max = {"DA": 0.19, "DB": 0.20}
+    expected_k_max = {"DA": 0.20, "DB": 0.20}
     shared: dict = {}
     for src in order:
         cached = route(src, shared)

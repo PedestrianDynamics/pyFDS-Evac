@@ -125,11 +125,20 @@ sight line to the door (`See_door`, `:16486`) and the Euclidean distance
 graph is a pyFDS-Evac extension.
 
 Anticipation (`anticipate`, `foresight_horizon_s`) applies only to the path
-the search returns for each exit: each edge of that path is sampled at the
-time the agent would reach the edge's start, using unimpeded speed, and
-`tau`, travel time and projected FED are measured from those samples
-(`_measure_route`). A time past the earliest last frame of the routing
-FDS slices reads that frame, with one warning per run (#666).
+the search returns for each exit: every smoke sample on that path, the walk
+to the next node included, is read at the time the agent would reach it,
+`t_dec + min(s / base_speed_m_per_s, foresight_horizon_s)`, where `s` is the
+walk from the agent's position to the sample along the path and the speed is
+unimpeded. `tau`, travel time and projected FED are measured from those
+samples (`_measure_route`, `_ForesightClock`). The FED rate of each edge is
+one sample, at its midpoint, read when the agent reaches the edge's start.
+Reading the whole edge at its start instead made the cost of a route jump
+when the agent passed a node
+([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)). A
+time past the earliest last frame of the routing FDS slices reads that
+frame, with one warning per run (#666). Anticipation is a pyFDS-Evac extension with no FDS+Evac
+counterpart: FDS+Evac extrapolates from the conditions it observes when the
+agent decides (`docs/model-comparison.md`).
 
 **`"additive"`.** The original model: smoke is a toll per metre walked,
 `effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale
@@ -199,7 +208,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `clean_extinction_threshold` | `0.0` (off) | Extinction [1/m] of the smokiest leg at or below which an exit is in the clean tier |
 | `clean_exit_margin` | `0.1` | Hysteresis: the current exit stays clean up to `clean_extinction_threshold` / `clean_exit_margin` (FDS+Evac `FAC_DOOR_OLD`) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused |
-| `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time |
+| `anticipate` | `true` | Read every smoke sample on the path to each exit at the time the agent would reach it; the path search uses the smoke at decision time. No FDS+Evac counterpart |
 | `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
 | `fallback_return_lockout_s` | `10.0` | After an exit switch between two refused routes, how long a switch straight back to the exit just left, again between two refused routes, is blocked, in s; 0 turns it off ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
 | `fallback_switch_margin` | `0.2` | Between two refused routes, a rival's `tau` must be more than this fraction below the current exit's; differences up to 1e-9 are ties, which hold. Before 0.4.0 it compared worst extinction `k_max_route` ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
@@ -476,17 +485,18 @@ Exit throughput throttling has no general test yet
 - One path is priced per exit
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
 - The path to each exit is chosen on the smoke at decision time.
-  Anticipation applies only to that path, edge by edge at the arrival time at
-  the edge's start (`_generate_candidates`, `_measure_route`). Under
+  Anticipation applies only to that path, each sample at the time the agent
+  reaches it (`_generate_candidates`, `_measure_route`). Under
   `anticipate`, the search ranks on decision-time smoke, so its path can
   carry a higher `tau` on arrival than another path to the same exit.
 - The search never offers "walk back to the origin node, then on". When that
   is the only way round the smoke, the direct walk is priced on its own smoke.
 - The first-leg FED is a share of the first segment's FED growth, in
   proportion to the walk's length and at most the whole segment; the dose on
-  the walk itself is not sampled. Anticipated arrival times are counted from
-  the origin node along the whole first segment (`_measure_route`, `_arrival_time`;
-  [#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
+  the walk itself is not sampled
+  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
+  Anticipated times are counted from the agent's position
+  ([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)).
 - The ordering treats `tau` differences up to 1e-9 as ties, so round-off no
   longer decides it
   ([#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)).
@@ -516,7 +526,8 @@ The measurements behind these are in
 
 - S4 T-junction
   ([`tests/verification/test_s4_tjunction_reroute.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py)):
-  agents leave a smoke-blocked exit for the clear one.
+  without anticipation, agents leave a smoke-blocked exit for the clear one;
+  with it, they choose the clear one at spawn.
 - Golden rerouting
   ([`tests/test_rerouting_golden.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/test_rerouting_golden.py)):
   a regression check that decisions do not change unnoticed, not a

@@ -213,8 +213,8 @@ sampled along the whole route, including stretches it has never seen
 By default (`routing.anticipate` = true, `routing.foresight_horizon_s`
 unbounded), the path to each exit is found from the agent's position on the
 smoke at decision time,
-and each stretch of that path is then priced with the smoke that the
-finished FDS run holds for the time the agent would arrive there. Knowledge limits which
+and each point of that path is then priced with the smoke that the
+finished FDS run holds for the time the agent would arrive there (#650). Knowledge limits which
 routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.

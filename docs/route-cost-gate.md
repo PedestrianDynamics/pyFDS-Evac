@@ -599,13 +599,13 @@ on `l_corridor`, measured before `0d9bf79`), which is why it is off.
 ### Anticipation
 
 The path to each exit is found on the smoke at decision time, starting from
-the agent's position (`_generate_candidates`, `_first_hops`). With `anticipate` (default `true`), that path is
-then measured edge by edge at the time the agent would reach each edge's
-start (`_measure_route`):
+the agent's position (`_generate_candidates`, `_first_hops`). With `anticipate` (default `true`), every
+smoke sample on that path is then read at the time the agent would reach it
+(`_measure_route`), counted from the agent's position (#650):
 
 ```
-arrival_time = now + min(distance_walked_so_far / base_speed_m_per_s,
-                         foresight_horizon_s)
+t(p) = now + min(walked_from_agent_to_p / base_speed_m_per_s,
+                 foresight_horizon_s)
 ```
 
 The unimpeded `base_speed_m_per_s` is used, not the smoke-reduced speed: the
@@ -658,7 +658,7 @@ Every key below is read from the scenario's `routing` block by
 | `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16799` tests the raw value. | active | inert |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac 2.6.0's value is `0.03`. | active | inert |
 | `clean_exit_margin` | `0.1` | Divides the threshold for the exit the agent already heads for. FDS+Evac's `FAC_DOOR_OLD` is 0.1. | active | inert |
-| `anticipate` | `true` | Measure the path to each exit edge by edge at the agent's arrival time; the path search uses the smoke at decision time. | active | **active** |
+| `anticipate` | `true` | Read every smoke sample on the path to each exit at the time the agent would reach it; the path search uses the smoke at decision time. | active | **active** |
 | `foresight_horizon_s` | `inf` | Cap on how far ahead anticipation reaches, in seconds. | active | **active** |
 | `fallback_return_lockout_s` | `10.0` | After an exit switch between two refused routes, a switch straight back between two refused routes is blocked this many seconds; 0 turns it off. | active | active |
 | `fallback_switch_margin` | `0.2` | Hysteresis between two refused routes: a rival's `tau` must be more than this fraction lower. Compared `k_max_route` before 0.4.0 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). | active | active |
@@ -758,7 +758,7 @@ prediction from `evac.f90`, not a measured run of it.
   (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
   survives, and on the fires measured here FED never reaches its threshold, so
   in practice **nothing bypasses the anchor**.
-- **Anticipation samples the field too early.** Segments are priced at
+- **Anticipation samples the field too early.** Samples are read at
   `now + walked_so_far / base_speed_m_per_s`, the *unimpeded* speed, while an
   agent in smoke walks at as little as `min_speed_factor` = 0.1 of it. The
   clock therefore runs ahead of the agent systematically, and it runs furthest

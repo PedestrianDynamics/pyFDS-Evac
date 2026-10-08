@@ -269,9 +269,13 @@ class Deck:
     seed: int = 1
     # Overrides the deck's familiarity when set.
     familiarity: float | str | None = None
+    # Overrides the deck's routing anticipate when set; recorded only then.
+    anticipate: bool | None = None
 
     def describe(self) -> dict:
+        anticipate = {} if self.anticipate is None else {"anticipate": self.anticipate}
         return {
+            **anticipate,
             "config": self.config,
             "cost_model": self.cost_model,
             "blobs": [list(vars(b).values()) for b in self.blobs],
@@ -295,7 +299,9 @@ _TJ_RAMP = (
 )
 # The right arm is hazy from the start, so agents take the left exit; then the
 # left arm fills at once and every route is refused, leaving the right exit as
-# the least-bad one; the switch needs its tau clearly lower (#458).
+# the least-bad one; the switch needs its tau clearly lower (#458). Run
+# without anticipation: foreseeing the 12 s onset, agents take the right exit
+# from the start and the fallback is never reached (#650).
 _TJ_FALLBACK = (
     Blob(*_TJ_RIGHT, t_on=0.0, rate=100.0, cap=1.0),
     Blob(*_TJ_LEFT, t_on=12.0, rate=100.0, cap=5.0),
@@ -315,7 +321,9 @@ _EVA_NEAR = (Blob(0.0, 4.0, 0.0, 6.0, t_on=5.0, rate=0.3, cap=3.0),)
 DECKS: dict[str, Deck] = {
     "tj_full_gate_ramp": Deck("t_junction/config_full.json", "gate", _TJ_RAMP),
     "tj_full_additive_ramp": Deck("t_junction/config_full.json", "additive", _TJ_RAMP),
-    "tj_full_gate_fallback": Deck("t_junction/config_full.json", "gate", _TJ_FALLBACK),
+    "tj_full_gate_fallback": Deck(
+        "t_junction/config_full.json", "gate", _TJ_FALLBACK, anticipate=False
+    ),
     "tj_discovery_gate_ramp": Deck(
         "t_junction/config_discovery.json", "gate", _TJ_RAMP, vis_extinction=0.0
     ),
@@ -435,6 +443,8 @@ def _vis_model(scenario, extinction: float | None):
 def _run_deck(deck: Deck) -> dict:
     scenario = _prepare_scenario(deck)
     routing = {**scenario.raw.get("routing", {}), "cost_model": deck.cost_model}
+    if deck.anticipate is not None:
+        routing["anticipate"] = deck.anticipate
     cost_config = RouteCostConfig.from_routing_params(routing)
     smoke = SmokeSpeedModel(
         BlobField(deck.blobs), SmokeSpeedConfig(fds_dir=".", update_interval_s=1.0)

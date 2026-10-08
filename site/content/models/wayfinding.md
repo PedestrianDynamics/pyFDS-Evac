@@ -607,14 +607,16 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   not modelled ([#78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78)).
   The opt-in modes are mechanisms, not validated behaviour: we found no
   published data on how occupants explore unknown space.
-- **FED and arrival times on the first leg**
+- **FED on the first leg**
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
   The first-leg smoke and travel time follow the walked path at
   `sampling_step_m`, but the first-leg FED is a share of the first segment's
   FED growth, in proportion to the walk's length, so the dose over a walk
-  behind the route's origin node is not counted. Anticipated arrival times
-  are counted from the origin node (`route_graph.py`, `_measure_route`,
-  `_arrival_time`). See §2.4, "What route choice does not read".
+  behind the route's origin node is not counted. Anticipated times are
+  counted from the agent's position, and each smoke sample is read when the
+  agent reaches it (`route_graph.py`, `_measure_route`;
+  [#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)). See
+  §2.4, "What route choice does not read".
 - **A sign is never read beyond its reading distance.** \(V_{\max}\) is
   30 m by default ([#173](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/173)),
   so in clear air a sign farther away is illegible at any bearing, and a

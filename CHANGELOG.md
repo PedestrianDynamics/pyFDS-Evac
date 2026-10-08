@@ -74,6 +74,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Route foresight (`anticipate`, on by default) reads every smoke sample
+  at the time the agent would reach it, counted from the agent's position,
+  instead of each leg at the time the agent reaches its start, counted from
+  the route's origin node (#650; refs #171). The first leg starts where the
+  agent stands and was read at the decision time, so a route's optical
+  depth jumped when the agent passed a node: on `tj_full_gate_fallback`
+  route A fell from tau 72 to 0 as agents passed the checkpoint, and they
+  switched onto it and back. Every run with anticipation in a field that
+  changes in time moves; runs with `anticipate = false` and runs in a
+  field constant in time are bit-identical. The FED rate is still one
+  sample per leg, read at the leg's midpoint at the time the agent reaches
+  the leg's start. Ten of the fifteen CI scenario snapshots
+  move; `tj_full_gate_fallback` and the S4 rerouting arms now run with
+  `anticipate = false`, and S4 gains an arm on the spawn-time choice under
+  foresight. Anticipation has no FDS+Evac counterpart.
 - `tests/test_familiarity_no_journey.py` bounds the rate of doorway
   deadlocks (#359) instead of requiring every agent out: at most 4 of 30
   runs of 5 agents and 5 of 20 runs of 20 agents may end with up to 4
