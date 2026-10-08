@@ -239,6 +239,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   6 of `world100_stream_east` take another exit. CI goldens and snapshots
   are unchanged (#452).
 
+### Documentation
+
+- Verification › Familiarity and Wayfinding in practice restated at
+  `828ae8c3`: no patrols or turn-backs since #250, and criterion 6 is the
+  30-seed grid study of #168 (passes from 0.05 to 0.025 m, fails from 0.1
+  to 0.05 m because of #359 deadlocks); figure captions match the
+  regenerated figures (#463, #637).
+
 ## [0.3.1] - 2026-10-06
 
 ### Removed
