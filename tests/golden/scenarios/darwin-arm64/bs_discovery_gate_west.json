@@ -422,7 +422,7 @@
   },
   {
    "agent_id": 4,
-   "new_cost": 6.555,
+   "new_cost": 6.815,
    "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
@@ -431,7 +431,7 @@
   },
   {
    "agent_id": 9,
-   "new_cost": 5.98,
+   "new_cost": 6.205,
    "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
@@ -458,7 +458,7 @@
   },
   {
    "agent_id": 8,
-   "new_cost": 6.728,
+   "new_cost": 6.831,
    "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",

@@ -8,6 +8,7 @@ FED model (gas concentrations).
 from __future__ import annotations
 
 import logging
+from functools import cached_property
 
 import numpy as np
 
@@ -30,6 +31,12 @@ def _open_simulation(fds_dir):
 # of the smoke layer than the caller asked for, which silently changes every
 # extinction and gas reading downstream.
 _SLICE_HEIGHT_TOLERANCE_M = 0.5
+
+# Frame indices a sampler remembers by requested time. Route foresight reads
+# each sample at its own time (#650), so a single cached time misses on
+# nearly every call; the bound only limits memory, a cleared entry is looked
+# up again.
+_T_INDEX_CACHE_SIZE = 65536
 
 
 class FdsHorizonError(ValueError):
@@ -111,6 +118,7 @@ class SliceFieldSampler:
         self._last_subslice = None
         self._cached_time_s: float | None = None
         self._cached_t_index: int = 0
+        self._t_index_cache: dict[float, int] = {}
         self._axes_cache: dict[int, tuple[np.ndarray, np.ndarray]] = {}
 
     def _find_subslice(self, x: float, y: float):
@@ -216,12 +224,12 @@ class SliceFieldSampler:
         """A reader of this slice on a regular grid; see :class:`SliceGrid`."""
         return SliceGrid(self, x_centres, y_centres)
 
-    @property
+    @cached_property
     def end_time_s(self) -> float:
         """Return the time of the last slice frame [s]."""
         return float(self._slice.times[-1])
 
-    @property
+    @cached_property
     def output_interval_s(self) -> float:
         """Return the output interval of the slice frames [s]."""
         return _output_interval(self._slice.times)
@@ -247,6 +255,18 @@ class SliceFieldSampler:
             last,
         )
 
+    def _time_index(self, ts: float) -> int:
+        """The nearest frame of *ts*, horizon-checked the first time it is asked."""
+        t_index = self._t_index_cache.get(ts)
+        if t_index is not None:
+            return t_index
+        self._check_horizon(ts)
+        t_index = int(self._slice.get_nearest_timestep(ts))
+        if len(self._t_index_cache) >= _T_INDEX_CACHE_SIZE:
+            self._t_index_cache.clear()
+        self._t_index_cache[ts] = t_index
+        return t_index
+
     def sample(self, time_s: float, x: float, y: float) -> float:
         """Return the sampled scalar value at one time and x/y point.
 
@@ -255,9 +275,8 @@ class SliceFieldSampler:
         """
         ts = float(time_s)
         if ts != self._cached_time_s:
-            self._check_horizon(ts)
+            self._cached_t_index = self._time_index(ts)
             self._cached_time_s = ts
-            self._cached_t_index = int(self._slice.get_nearest_timestep(ts))
         t_index = self._cached_t_index
         subslice = self._find_subslice(float(x), float(y))
         if subslice is None:

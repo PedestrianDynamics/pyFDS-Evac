@@ -26,166 +26,124 @@
    1.0,
    1,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    2,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    3,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    4,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    5,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    6,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:tau"
   ],
   [
    1.0,
    7,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:tau"
   ],
   [
    1.0,
    8,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    9,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
+   "E_far",
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
    10,
    "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
-  ],
-  [
-   6.0,
-   4,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
-   5,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
-   6,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
-   7,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   6.0,
-   8,
-   "jps-distributions_0",
-   "E_near",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   7.0,
-   4,
-   "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
-  ],
-  [
-   7.0,
-   5,
-   "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:ok"
-  ],
-  [
-   7.0,
-   6,
-   "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:ok"
   ],
   [
-   7.0,
-   7,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   7.0,
-   8,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:ok"
-  ],
-  [
-   8.0,
-   4,
-   "jps-distributions_0",
-   "E_near",
-   "E_near:ok > E_far:tau"
-  ],
-  [
-   9.0,
-   6,
+   2.0,
+   1,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
   ],
   [
-   9.0,
-   7,
+   2.0,
+   2,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
   ],
   [
-   9.0,
+   2.0,
+   3,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   2.0,
+   4,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   2.0,
+   5,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   2.0,
    8,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   2.0,
+   9,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   3.0,
+   10,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
@@ -193,36 +151,8 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 24.15,
+  "evacuation_time": 18.94,
   "total_agents": 10
  },
- "switches": [
-  {
-   "agent_id": 6,
-   "new_cost": 18.553,
-   "new_exit": "E_far",
-   "old_cost": 3.586,
-   "old_exit": "E_near",
-   "reason": "smoke_reroute",
-   "time_s": 6.0
-  },
-  {
-   "agent_id": 7,
-   "new_cost": 16.992,
-   "new_exit": "E_far",
-   "old_cost": 5.121,
-   "old_exit": "E_near",
-   "reason": "smoke_reroute",
-   "time_s": 6.0
-  },
-  {
-   "agent_id": 8,
-   "new_cost": 18.125,
-   "new_exit": "E_far",
-   "old_cost": 4.047,
-   "old_exit": "E_near",
-   "reason": "smoke_reroute",
-   "time_s": 6.0
-  }
- ]
+ "switches": []
 }

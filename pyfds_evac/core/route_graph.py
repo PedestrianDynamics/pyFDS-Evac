@@ -35,10 +35,14 @@ def taus_tie(a: float, b: float) -> bool:
     return abs(a - b) <= EPS_TAU
 
 
-# A segment is cached per (source, target) and, when anticipating, per whole
-# second of arrival time -- the same edge costs differently to an agent that
-# reaches it a minute later.
-SegmentCacheKey = tuple[str, str] | tuple[str, str, int]
+# A segment is cached per (source, target) and, when anticipating, per exact
+# time the agent reaches its start and latest time foresight may read: every
+# sample on it is read at a time fixed by those two alone (#650), so a cached
+# segment is the one a fresh evaluation would measure.
+SegmentCacheKey = tuple[str, str] | tuple[str, str, float, float]
+# The walk of one agent to a node: at the decision time (the path search), or
+# foreseen, each point at the time the agent reaches it (#650).
+WalkKey = str | tuple[str, str]
 
 
 @dataclass(frozen=True)
@@ -571,12 +575,16 @@ def _los_stats(
     extinction_sampler: ExtinctionSampler,
     step_m: float,
     length: float,
+    clock: _ForesightClock | None = None,
 ) -> tuple[float, float]:
     """Mean and worst K sampled along a line of sight.
 
     The mean is what a route costs to walk; the worst is what stops an agent
     walking it, and averaging hides exactly the wall of smoke a person refuses
     to enter. Both come from one traverse.
+
+    Every sample is read at *time_s*, or with a *clock* at the time the agent
+    reaches it (#650).
     """
     n_samples = max(2, int(math.ceil(length / step_m)) + 1)
     total = 0.0
@@ -585,7 +593,8 @@ def _los_stats(
         t = i / (n_samples - 1)
         x = x_from + t * (x_to - x_from)
         y = y_from + t * (y_to - y_from)
-        k = extinction_sampler.sample_extinction(time_s, x, y)
+        ts = time_s if clock is None else clock.at(t * length)
+        k = extinction_sampler.sample_extinction(ts, x, y)
         total += k
         worst = max(worst, k)
     return total / n_samples, worst
@@ -620,6 +629,7 @@ def _polyline_stats(
     time_s: float,
     extinction_sampler: ExtinctionSampler,
     step_m: float,
+    clock: _ForesightClock | None = None,
 ) -> tuple[float, float]:
     """Mean and worst K along a polyline -- see :func:`_los_stats`.
 
@@ -644,17 +654,21 @@ def _polyline_stats(
     segment_means: list[tuple[float, float]] = []
     degenerate_ks: list[float] = []
     worst = 0.0
+    walked = 0.0
     for i in range(len(waypoints) - 1):
         x0, y0 = waypoints[i]
         x1, y1 = waypoints[i + 1]
         seg_len = _euclidean(x0, y0, x1, y1)
+        sub = None if clock is None else clock.shifted(walked)
+        walked += seg_len
         if seg_len < 1e-9:
-            k = extinction_sampler.sample_extinction(time_s, x0, y0)
+            ts = time_s if sub is None else sub.at(0.0)
+            k = extinction_sampler.sample_extinction(ts, x0, y0)
             degenerate_ks.append(k)
             worst = max(worst, k)
             continue
         mean, seg_worst = _los_stats(
-            x0, y0, x1, y1, time_s, extinction_sampler, step_m, seg_len
+            x0, y0, x1, y1, time_s, extinction_sampler, step_m, seg_len, sub
         )
         segment_means.append((mean, seg_len))
         worst = max(worst, seg_worst)
@@ -1069,6 +1083,7 @@ def _sample_segment_extinction(
     extinction_sampler: ExtinctionSampler,
     step_m: float,
     waypoints: list[tuple[float, float]] | None = None,
+    clock: _ForesightClock | None = None,
 ) -> tuple[float, float, float]:
     """Sample extinction along edge geometry.
 
@@ -1084,6 +1099,7 @@ def _sample_segment_extinction(
             time_s,
             extinction_sampler,
             step_m,
+            clock,
         )
     else:
         length = _euclidean(
@@ -1101,6 +1117,7 @@ def _sample_segment_extinction(
             extinction_sampler,
             step_m,
             length,
+            clock,
         )
     return length, k_avg, k_max
 
@@ -1163,6 +1180,59 @@ def _cap_at_fds_end(
     return cap
 
 
+@dataclass(frozen=True)
+class _ForesightClock:
+    """When the agent reaches the point *d* metres along a sampled geometry.
+
+    ``min(t0 + (d0 + d) / speed, horizon_end_s)``, held at the last FDS frame
+    (``_cap_at_fds_end``). *t0* is the time at the start of the geometry,
+    *horizon_end_s* the decision time plus the foresight horizon, and *d0*
+    the part of the geometry already walked, for a polyline sampled piece by
+    piece. The result is ``min(t0 + (d0 + d) / speed, limit)`` with
+    ``limit = min(horizon_end_s, max(decision_time_s, end_s))``: it depends
+    on *t0* and that limit alone, which is what the segment cache keys on.
+    """
+
+    t0: float
+    speed: float
+    horizon_end_s: float
+    decision_time_s: float
+    end_s: float
+    end_owner: object | None = field(default=None, compare=False)
+    d0: float = 0.0
+
+    def at(self, d: float) -> float:
+        """The time the agent reaches *d* metres along [s]."""
+        t = min(self.t0 + (self.d0 + d) / self.speed, self.horizon_end_s)
+        return _cap_at_fds_end(self.decision_time_s, t, self.end_s, self.end_owner)
+
+    def shifted(self, d: float) -> _ForesightClock:
+        """The clock of the geometry that starts *d* metres further on."""
+        return replace(self, d0=self.d0 + d)
+
+
+def _foresight_clock(
+    t_start: float,
+    time_s: float,
+    config: RouteCostConfig,
+    end_s: float,
+    end_owner: object | None,
+) -> _ForesightClock:
+    """The clock of a geometry the agent starts walking at *t_start* (#650).
+
+    *t_start* was itself foreseen from the decision time *time_s*; the
+    horizon runs from *time_s*.
+    """
+    return _ForesightClock(
+        t0=t_start,
+        speed=max(config.base_speed_m_per_s, 1e-9),
+        horizon_end_s=time_s + config.foresight_horizon_s,
+        decision_time_s=time_s,
+        end_s=end_s,
+        end_owner=end_owner,
+    )
+
+
 def evaluate_segment(
     graph: StageGraph,
     source: str,
@@ -1172,12 +1242,15 @@ def evaluate_segment(
     fed_rate_sampler: FedRateSampler | None,
     config: RouteCostConfig,
     arrival_time_s: float | None = None,
+    clock: _ForesightClock | None = None,
 ) -> SegmentCost:
     """Evaluate cost for one edge of a route.
 
     *arrival_time_s* is when the agent would reach this edge, so the smoke it
     is charged is the smoke it will meet rather than the smoke standing there
     while it decides. Defaults to *time_s*, which is the no-foresight answer.
+    With a *clock*, each extinction sample is read when the agent reaches it
+    instead (#650); the FED rate stays one sample at *arrival_time_s*.
     """
     if arrival_time_s is None:
         arrival_time_s = time_s
@@ -1198,6 +1271,7 @@ def evaluate_segment(
         extinction_sampler,
         config.sampling_step_m,
         waypoints=waypoints,
+        clock=clock,
     )
     sf = speed_factor_from_extinction(
         k_avg,
@@ -1252,16 +1326,20 @@ def _first_leg(
     time_s: float,
     extinction_sampler: ExtinctionSampler,
     config: RouteCostConfig,
-    walks: dict[str, _FirstLeg] | None = None,
+    walks: dict[WalkKey, _FirstLeg] | None = None,
+    clock: _ForesightClock | None = None,
 ) -> _FirstLeg:
     """The walk from *agent_position* to *node_id*, sampled for smoke at *time_s*.
 
+    With a *clock*, each point is sampled when the agent reaches it (#650).
     *walks* caches the walks of one agent at one evaluation, keyed on the
-    node. It must never be shared between agents: unlike ``cached_segments``
-    the walk starts where this agent stands.
+    node, and the foreseen walk apart from the one at the decision time. It
+    must never be shared between agents: unlike ``cached_segments`` the walk
+    starts where this agent stands.
     """
+    key: WalkKey = node_id if clock is None else (node_id, "foreseen")
     if walks is not None:
-        cached = walks.get(node_id)
+        cached = walks.get(key)
         if cached is not None and cached.time_s == time_s:
             return cached
     node = graph.nodes[node_id]
@@ -1271,11 +1349,11 @@ def _first_leg(
         (node.centroid_x, node.centroid_y),
     )
     k_avg, k_max = _polyline_stats(
-        waypoints, time_s, extinction_sampler, config.sampling_step_m
+        waypoints, time_s, extinction_sampler, config.sampling_step_m, clock
     )
     leg = _FirstLeg(waypoints, _polyline_length(waypoints), k_avg, k_max, time_s)
     if walks is not None:
-        walks[node_id] = leg
+        walks[key] = leg
     return leg
 
 
@@ -1374,7 +1452,7 @@ def _measure_route(
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     exit_counts: dict[str, int] | None = None,
     agent_position: tuple[float, float] | None = None,
-    walks: dict[str, _FirstLeg] | None = None,
+    walks: dict[WalkKey, _FirstLeg] | None = None,
 ) -> RouteMeasurements:
     """Measure a route: its segments, length, smoke, dose, time and queue.
 
@@ -1389,19 +1467,49 @@ def _measure_route(
         if config.anticipate
         else (math.inf, None)
     )
+    # With anticipation every sample is read when the agent reaches it, and
+    # the walk to it is counted from the agent, not from the route's origin
+    # node (#650, #171 item 3). Reading each leg at its start alone made the
+    # cost jump at every node boundary: the first leg, which starts where the
+    # agent stands, was read at the decision time. So the walk to the next
+    # node is foreseen first, and the node legs start where it ends.
+    foreseen_leg = None
+    if (
+        config.anticipate
+        and agent_position is not None
+        and len(path) >= 2
+        and graph.nodes.get(path[1]) is not None
+    ):
+        foreseen_leg = _first_leg(
+            graph,
+            agent_position,
+            path[1],
+            time_s,
+            extinction_sampler,
+            config,
+            walks,
+            clock=_foresight_clock(time_s, time_s, config, end_s, end_owner),
+        )
+    # The latest time any sample may be read at; it depends on the decision
+    # time when the horizon is finite or the decision is past the FDS output.
+    foresight_limit_s = min(time_s + config.foresight_horizon_s, max(time_s, end_s))
     for i in range(len(path) - 1):
-        cache_key = (path[i], path[i + 1])
+        if i == 1 and foreseen_leg is not None:
+            walked = foreseen_leg.length_m
+        cache_key: SegmentCacheKey = (path[i], path[i + 1])
         # With anticipation an edge costs what it costs *when you get there*,
         # so the same edge on two routes is two different questions and the
-        # cache has to key on both. Bucketed to the second: finer than the
-        # reroute interval, coarser than nothing, and well under the interval
-        # FDS writes slices at. Keyed on the arrival before the hold at the
-        # last FDS frame: a held time would share the bucket of arrivals just
-        # before the end and read their frame, or lend them the last one.
-        t_foreseen = _arrival_time(time_s, walked, config)
-        t_arrive = _cap_at_fds_end(time_s, t_foreseen, end_s, end_owner)
+        # cache has to key on both. On the exact start time, not a bucket:
+        # each sample is read when the agent reaches it, so two agents a
+        # fraction of a second apart can read other frames further along
+        # the edge, and one's measurement would stand in for the other's.
+        t_arrive = _cap_at_fds_end(
+            time_s, _arrival_time(time_s, walked, config), end_s, end_owner
+        )
+        clock = None
         if config.anticipate:
-            cache_key = (path[i], path[i + 1], round(t_foreseen))
+            cache_key = (path[i], path[i + 1], t_arrive, foresight_limit_s)
+            clock = _foresight_clock(t_arrive, time_s, config, end_s, end_owner)
         if cached_segments is not None and cache_key in cached_segments:
             seg = cached_segments[cache_key]
         else:
@@ -1414,6 +1522,7 @@ def _measure_route(
                 fed_rate_sampler,
                 config,
                 arrival_time_s=t_arrive,
+                clock=clock,
             )
             if cached_segments is not None:
                 cached_segments[cache_key] = seg
@@ -1428,9 +1537,9 @@ def _measure_route(
     first_share = 1.0
     # The walk from the agent to the next node, through the walkable area,
     # sampled for smoke when the first segment would be reached.
-    first_leg = None
+    first_leg = foreseen_leg
     if agent_position is not None and len(path) >= 2:
-        if graph.nodes.get(path[1]) is not None:
+        if first_leg is None and graph.nodes.get(path[1]) is not None:
             first_leg = _first_leg(
                 graph,
                 agent_position,
@@ -2070,7 +2179,7 @@ def _generate_candidates(
     cached_segments: dict[SegmentCacheKey, SegmentCost] | None = None,
     agent_position: tuple[float, float] | None = None,
     current_target: str | None = None,
-    walks: dict[str, _FirstLeg] | None = None,
+    walks: dict[WalkKey, _FirstLeg] | None = None,
 ) -> dict[str, tuple[float, list[str]]]:
     """The cheapest path from *source* to every reachable exit under *policy*.
 
@@ -2149,7 +2258,7 @@ def _first_hops(
     config: RouteCostConfig,
     policy: RouteModePolicy,
     edge_segments: dict[tuple[str, str], SegmentCost],
-    walks: dict[str, _FirstLeg] | None,
+    walks: dict[WalkKey, _FirstLeg] | None,
 ) -> dict[str, float]:
     """The cost of the walk from the agent to each node it can head for first.
 
@@ -2320,7 +2429,7 @@ def rank_routes(
     policy = policy_for(config)
     # The walks from this agent to the nodes it may head for, shared by the
     # search and the measurement below; never by another agent.
-    walks: dict[str, _FirstLeg] = {}
+    walks: dict[WalkKey, _FirstLeg] = {}
     all_paths = _generate_candidates(
         graph,
         source,

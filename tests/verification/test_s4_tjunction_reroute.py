@@ -23,7 +23,13 @@ The smoke starts at ``smoke_onset_s``, once the whole population is inside and
 still walking. That delay is what makes this a test of *re*-routing: the opening
 exit choice is itself ranked on the smoke field, so an agent spawning into smoke
 that is already there simply never picks the smoky route and has nothing to
-switch away from.
+switch away from. For the same reason these arms run without anticipation
+(``anticipate = false``): with it, the opening choice foresees the onset on
+every point of the right arm, and nobody takes that route to begin with (#650).
+That spawn-time choice is its own arm:
+
+- **foresight** (smoke in the right arm, ``anticipate`` at its default): agents
+  foresee the onset at spawn, take the left exit and never reroute.
 
 Assertions are aggregate (counts, directions, earliest-switch latency), never
 per-agent or trajectory-level -- the coupled run is not bit-reproducible (see
@@ -36,6 +42,8 @@ route evaluation entirely -- a verified limitation worth its own bug report).
 """
 
 from __future__ import annotations
+
+from dataclasses import replace
 
 import pytest
 from harness import (
@@ -76,7 +84,9 @@ def _reroute_config() -> RerouteConfig:
         # over a short window so that everyone is inside before the fire starts,
         # and at that density the queue term alone would shuffle agents between
         # exits -- real behaviour, but not what this scenario is measuring.
-        cost_config=RouteCostConfig(w_smoke=5.0, w_fed=10.0, w_queue=0.0),
+        cost_config=RouteCostConfig(
+            w_smoke=5.0, w_fed=10.0, w_queue=0.0, anticipate=False
+        ),
     )
 
 
@@ -215,3 +225,38 @@ def test_switch_outcome_stable_under_fixed_seed():
     second_count, second_dirs = _outcome()
     assert first_dirs == second_dirs == {(EXIT_RIGHT, EXIT_LEFT)}
     assert min(first_count, second_count) >= MIN_SWITCHES
+
+
+# Of the 20 agents, those that take the left exit when they foresee the onset
+# at spawn: 17 under seed 42 on darwin-arm64 and linux-x86_64. The other
+# three take the right exit and are out before the onset.
+MIN_LEFT_UNDER_FORESIGHT = 17
+
+
+def test_foresight_chooses_the_clear_exit_at_spawn():
+    """With anticipation the opening choice already avoids the smoky arm (#650).
+
+    Every sample of the right arm is read when the agent would reach it, after
+    the onset, so the smoky route is refused at spawn: nobody reroutes, and
+    the agents that would have entered the arm, the four at its entrance
+    included, leave by the left exit.
+    """
+    spec = TJunctionSpec(seed=42)
+    config = _reroute_config()
+    config = replace(config, cost_config=replace(config.cost_config, anticipate=True))
+    result = run_scenario(
+        t_junction_scenario(spec),
+        seed=spec.seed,
+        smoke_speed_model=_right_arm_smoke(spec),
+        reroute_config=config,
+    )
+    try:
+        exits = {
+            row["spawn_index"]: row["exit_id"] for row in result.exit_history or []
+        }
+        assert route_switch_count(result) == 0
+        assert sum(e == EXIT_LEFT for e in exits.values()) >= MIN_LEFT_UNDER_FORESIGHT
+        assert {exits[i] for i in ARM_ENTRANCE_SPAWN_INDICES} == {EXIT_LEFT}
+        assert result.metrics["agents_remaining"] == 0
+    finally:
+        result.cleanup()

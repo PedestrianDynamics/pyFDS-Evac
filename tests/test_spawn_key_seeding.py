@@ -14,6 +14,7 @@ import copy
 import io
 import json
 import sys
+from dataclasses import replace
 from pathlib import Path
 
 import jupedsim as jps
@@ -238,8 +239,9 @@ def test_incapacitation_thresholds_follow_the_key(monkeypatch):
 
 def test_same_run_in_one_process_repeats(monkeypatch):
     # The #198 reproduction: t_junction, 30 agents, gate model, synthetic
-    # ramp, seed 1, three times in one process.
-    deck = DECKS["tj_full_gate_ramp"]
+    # ramp, seed 1, three times in one process. Without anticipation, which
+    # foresees the ramp at spawn and leaves nothing to reroute (#650).
+    deck = replace(DECKS["tj_full_gate_ramp"], anticipate=False)
     runs = []
     for _ in range(3):
         result = _run_deck_keyed(deck)

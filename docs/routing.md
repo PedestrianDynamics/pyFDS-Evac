@@ -139,20 +139,26 @@ smoke at decision time and finds one path to each exit from the agent's
 position. Its first legs are the walks from the agent to each successor of
 its origin node and to its current target, weighted by the smoke on each walk
 (`_first_hops`); it never routes back through the origin node. With `anticipate` (default `true`, and **independent of
-`cost_model`**), that path is then measured edge by edge at the time the
-agent would reach each edge's start (`_measure_route`):
+`cost_model`**), every smoke sample on that path is then read at the time
+the agent would reach it (`_measure_route`, `_ForesightClock`):
 
 ```
-arrival_time = now + min(walked_so_far / base_speed_m_per_s,
-                         foresight_horizon_s)
+t(p) = now + min(s(p) / base_speed_m_per_s, foresight_horizon_s)
 ```
+
+`s(p)` is the walk from the agent's position to the sample `p`: the walk to
+the next node through the walkable area, then the node legs. Without an
+agent position it starts at the route's first node. Every leg is sampled
+this way, so the cost does not jump when the agent passes a node (#650;
+reading each edge at its start did, since the first leg starts where the
+agent stands). The sample positions are those of the decision-time
+measurement; only their times differ. The FED rate of an edge stays one
+sample, at its midpoint, read at `t` of the edge's start.
 
 The unimpeded `base_speed_m_per_s` is used, not the smoke-reduced speed.
-`foresight_horizon_s` defaults to infinity. An arrival time past the
-earliest last frame of the extinction and FED slices routing reads is held
-at that frame, with one warning per run: there is no record to foresee
-beyond it (#666). The segment cache keys on the arrival time before the
-hold. The decision time itself is
+`foresight_horizon_s` defaults to infinity. A time past the earliest last
+frame of the extinction and FED slices routing reads is held at that frame,
+with one warning per run: there is no record to foresee beyond it (#666). The decision time itself is
 not held, so the horizon check on the agent's own samples still applies.
 
 ### Composite cost
@@ -549,7 +555,13 @@ reused across route evaluations within the same timestep. This avoids
 redundant extinction sampling when multiple candidate routes share
 segments. Under `anticipate` the same edge on two routes is priced at
 two different arrival times, so the route measurement (`_measure_route`)
-keys on `(source, target, round(arrival_time_s))`. The path search keeps
+keys on `(source, target, arrival_time_s, limit)`, the exact time the agent
+reaches the edge and the latest time any sample may be read at,
+`min(now + foresight_horizon_s, max(now, last FDS frame))`. Every sample on
+the edge is read at a time fixed by those two (#650), so an entry is what a
+fresh measurement would give. A run uses one cache per decision time: the
+reroute pass clears it each pass and the opening choice of the agents placed
+at t = 0 shares one; a flow spawn ranks without it. The path search keeps
 the `(source, target)` key, since it prices every edge at decision time. The walks from the agent
 to the first nodes of its routes are deliberately not cached there: they belong
 to one agent's position, and the cache is shared across agents in a pass. They
@@ -583,7 +595,7 @@ Cost breakdown for one edge of a route:
 | `fed_growth`    | `float` | Estimated FED increase                  |
 | `visible`       | `bool`  | Whether `k_avg` is below `visibility_extinction_threshold` |
 | `k_max`         | `float` | Worst extinction sampled on the segment |
-| `arrival_time_s`| `float` | Time the segment was priced at (see anticipation) |
+| `arrival_time_s`| `float` | Time the agent would reach the segment's start; its FED rate is read then (see anticipation) |
 
 ### `RouteCost`
 
