@@ -1940,8 +1940,9 @@ placeholder of 100 agents in all unless &lt;code>--agents&lt;/code> is given.&lt
 &lt;li>An exit is a strip of &lt;code>--exit-depth&lt;/code> metres on the room side of the exit
 line, so agents leave about 0.4 s before the line at 1.25 m/s.&lt;/li>
 &lt;li>The walkable area is derived from the deck: the union of the floor&amp;rsquo;s mesh
-footprints, whose edge is a wall, minus the &lt;code>&amp;amp;OBST&lt;/code> records in the walking
-band, less their &lt;code>&amp;amp;HOLE&lt;/code> cuts. Only the parts that hold a spawn area, or
+footprints (the main evacuation meshes of an FDS+Evac deck), whose edge is
+a wall, minus the &lt;code>&amp;amp;OBST&lt;/code> records in the walking band, less their &lt;code>&amp;amp;HOLE&lt;/code>
+cuts. Only the parts that hold a spawn area, or
 without one an exit, are kept; &lt;code>import_report.json&lt;/code> lists the dropped
 parts. &lt;code>--walkable FILE.wkt&lt;/code> replaces the derived polygon.&lt;/li>
 &lt;li>A spawn area that asks for more agents than the run can place (the same
@@ -6516,7 +6517,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6fa4e2141ddfc64f5aae54f430ad9b8bddae1c26">&lt;code>6fa4e21&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/71bad0e357e93e0aa663dc402bf00ef9f6c660c8">&lt;code>71bad0e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -6540,7 +6541,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">fc01e22c486caded2fefcd36ad1b7a2b1ed9eada7a08939c9f6f1f5e72a53050&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ca082780bf1b7c2b88143fc35aa951ef1682ccdacc1c5a8bdccb2e7cce938a21&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
