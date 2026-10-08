@@ -494,8 +494,13 @@ All defaults that differ between `run.py` and `run_scenario()` are listed in
 
 The `--vis-cell-size` docstring advises a cell smaller than the thinnest wall
 (`visibility.py`, `VisibilityModel.clear_air`), and the build warns when it is
-not ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)). Results for discovery agents have not converged
-with the cell size ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
+not ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)). On the familiarity deck,
+over 30 seeds, the median discovery egress time changes by less than 1 % at
+both halvings. The P90 changes by +1.4 % from 0.05 to 0.025 m (90 % interval
+up to +10 %) and by −5.2 % from 0.1 to 0.05 m, because two runs at 0.1 m end
+in doorway deadlocks
+([criterion 6](/verification/testing-familiarity.md#pass-criteria);
+[#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
 
 ## Where it acts in the time step
 
@@ -655,7 +660,11 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   and in 5 of 60 runs of 20 agents (seeds 1–60; none before #250). That
   test bounds the rate.
 - **Discovery results depend on the clear-air grid**
-  ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). Do
+  ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). On
+  the familiarity deck the 30-seed criterion passes from 0.05 to 0.025 m on
+  this sample (the 90 % interval of the P90 change reaches +10 %) and
+  fails from 0.1 to 0.05 m because of #359 deadlocks; #168 stays open,
+  blocked on the #359 fix. Use a cell at most half the thinnest wall. Do
   not report a discovery egress time without its grid;
   [Wayfinding in practice](/docs/wayfinding.md) gives the measured spread.
 - **No per-exit familiarity**
@@ -753,13 +762,14 @@ Details, with line numbers:
 ## Verification
 
 These tests check implementation behaviour. They do not validate human
-wayfinding or evacuation times. The FDS-case check is
+wayfinding or evacuation times. The coupled check, in clear air, is
 [Verification › Familiarity](/verification/testing-familiarity.md): its
 criteria 1–5 pass, except criterion 4 on the 0.1 m grid, where 4 agents
-deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)),
-and the discovery egress time is not grid-converged
-([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168),
-[#250](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250)).
+deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
+Its grid-convergence criterion passes from 0.05 to 0.025 m on this 30-seed
+sample (the 90 % interval of the P90 change reaches +10 %) and fails from
+0.1 to 0.05 m because of #359 deadlocks
+([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), open).
 
 - `tests/test_exit_visibility_alpha.py` (`assets/exit_visibility_alpha`): the
   bearing of the near sign decides whether the near exit is learned; an
@@ -786,7 +796,8 @@ and the discovery egress time is not grid-converged
   leg is learned on arrival; the refusal with `--smoke-blind`.
 
 `tests/test_familiarity_routing.py::TestDiscoveryMeasuresAroundWalls` pins
-the #172 fix. No test pins convergence with the grid (#168).
+the #172 fix. No test pins convergence with the grid (#168); the grid study
+is a verification script (`scripts/verification/familiarity_grid_study.py`).
 
 ## Sources
 

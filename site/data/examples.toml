@@ -12,7 +12,9 @@
 #
 # Values that do not come from the repository or uv.lock are stated here
 # once: the FDS version and runtime, and the results the page shows with the
-# commit that produced them.
+# commit that produced them. The optional `results_note` is shown on the
+# page right under that commit, for a caveat on the results, such as a
+# release they were not re-checked for.
 
 [quickstart]
 title = "Quickstart"
@@ -49,8 +51,8 @@ expected = [
   "time ratio smoke/clear: 1.3174",
 ]
 expected_note = "The last line, manifest: <path>, names a new temporary file on every run."
-results_commit = "6f335a37"
-results_python = "3.12.13"
+results_commit = "828ae8c3"
+results_python = "3.13.4"
 results_machine = "Apple M3 Pro, macOS"
 
 [first-fds-case]
@@ -117,8 +119,8 @@ Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
 (93/150 evacuated, 57 remaining, 50 not spawned). and exits with status \
 2, as for every run that reaches its time limit with agents inside."""
-results_commit = "82b7927c"
-results_python = "3.12.13"
+results_commit = "828ae8c3"
+results_python = "3.13.4"
 results_machine = "Apple M3 Pro, macOS"
 
 [study-schroeder2015]
@@ -200,6 +202,7 @@ and before it writes the figures. The \
 evacuation runs are reproducible for a given seed; FDS output from \
 another FDS build or machine can move them slightly."""
 results_commit = "2a94a8da"
+results_note = "Not re-checked for 0.4.0."
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
@@ -264,6 +267,7 @@ byte, to the ones in the repository."""
 results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
+results_note = "Not re-checked for 0.4.0."
 
 [rset-ensemble]
 title = "Egress time from an ensemble of seeds"
@@ -323,6 +327,7 @@ page."""
 results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
+results_note = "Not re-checked for 0.4.0."
 
 [iso-test-18]
 title = "ISO 20414 Test 18: walking speed in smoke"
@@ -410,6 +415,7 @@ criterion fails."""
 results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
+results_note = "Not re-checked for 0.4.0."
 
 [iso-test-19]
 title = "ISO 20414 Test 19: incapacitation by toxic gases"
@@ -484,6 +490,7 @@ script stops at the first pass criterion that fails."""
 results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
+results_note = "Not re-checked for 0.4.0."
 
 [heat-radiometer]
 title = "Skin radiometer against integrated intensity"
@@ -539,6 +546,7 @@ repository."""
 results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
+results_note = "Not re-checked for 0.4.0."
 
 [study-schroeder2020]
 title = "ASET-RSET maps after Schröder et al. (2020)"
@@ -630,6 +638,7 @@ C [m²s]. They are the page's headline. The runs behind the page were made at \
 4a7142f; a re-run at 449a755d, without --release, prints the same \
 values. FDS output from another FDS build or machine can move them \
 slightly."""
-results_commit = "4a7142f"
+results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
+results_note = "Not re-checked for 0.4.0."
