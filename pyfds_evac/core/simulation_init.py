@@ -14,7 +14,13 @@ import pedpy
 import shapely
 from shapely.geometry import Point, Polygon
 
-from .agent_params import normalize_distribution_speed_aliases
+from .agent_params import (
+    _SPAWN_DEFAULT_TYPES,
+    DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
+    _deck_spawn_defaults,
+    _spawn_value,
+    normalize_distribution_speed_aliases,
+)
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_AGENT_VALUES,
@@ -74,67 +80,6 @@ def _placing(call, *args, **kwargs):
 
 DEFAULT_PREMOVEMENT_S = 10.0
 """Pre-movement time [s] used when a distribution sets none (FDS+Evac PRE_MEAN)."""
-
-DEFAULT_SPAWN_PARAMS: dict[str, Any] = {"number": 10, "radius": 0.2, "v0": 1.25}
-"""Agent count, radius [m] and clear-air speed [m/s] of a distribution that
-sets none and whose deck sets no ``simulationParams`` value (FDS+Evac
-VEL_MEAN for ``v0``)."""
-
-_SPAWN_DEFAULT_TYPES = {"number": int, "radius": float, "v0": float}
-"""How a ``simulationParams`` spawn default is read; ``int`` matches how a
-distribution's ``number`` is read when agents are placed."""
-
-
-def _deck_spawn_defaults(global_parameters) -> dict[str, Any]:
-    """``number``, ``radius`` and ``v0`` for a distribution that leaves one out.
-
-    ``simulationParams.number``, ``.radius`` and ``.v0`` are deck-wide
-    defaults; a key they do not set takes ``DEFAULT_SPAWN_PARAMS``. The same
-    defaults apply with and without journeys, and nothing is taken from
-    another distribution (#567). Numeric strings are converted, so both
-    initialisers see the same number. ``number`` must be >= 0, ``radius``
-    and ``v0`` finite and > 0, and a boolean is not a number (#649).
-    Anything else raises ``ValueError`` naming the key.
-    """
-    defaults = dict(DEFAULT_SPAWN_PARAMS)
-    if global_parameters is None:
-        return defaults
-    for key in _SPAWN_DEFAULT_TYPES:
-        value = getattr(global_parameters, key, None)
-        if value is not None:
-            defaults[key] = _deck_spawn_value(key, value)
-    return defaults
-
-
-def _deck_spawn_value(key: str, value: Any) -> Any:
-    """``simulationParams.<key>`` converted; a ``ValueError`` names the key."""
-    return _spawn_value(key, value, f"simulationParams.{key}")
-
-
-def _spawn_value(key: str, value: Any, name: str, zero_v0: bool = False) -> Any:
-    """*value* of spawn key *key* converted and range-checked (#567, #649).
-
-    ``number`` is read with ``int()`` and must be >= 0; ``radius`` and
-    ``v0`` with ``float()`` and must be finite and > 0, or for ``v0`` >= 0
-    when *zero_v0* (a spawn area of stationary agents). A boolean is not a
-    number. Anything else raises ``ValueError`` naming *name*.
-    """
-    if isinstance(value, bool):
-        raise ValueError(f"{name} must be a number, got {value!r}")
-    try:
-        converted = _SPAWN_DEFAULT_TYPES[key](value)
-    except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError(f"{name} must be a number, got {value!r}") from error
-    if key == "number":
-        if converted < 0:
-            raise ValueError(f"{name} must be >= 0, got {value!r}")
-        return converted
-    allow_zero = zero_v0 and key == "v0"
-    in_range = converted >= 0 if allow_zero else converted > 0
-    if not (math.isfinite(converted) and in_range):
-        bound = ">= 0" if allow_zero else "> 0"
-        raise ValueError(f"{name} must be finite and {bound}, got {value!r}")
-    return converted
 
 
 def _convert_distribution_spawn_values(params: dict[str, Any], dist_id: Any) -> None:
