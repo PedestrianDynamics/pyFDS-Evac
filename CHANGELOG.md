@@ -49,6 +49,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - A spawn area that asks for more agents than the run admits (the
     runtime's packing estimate) makes the scenario not runnable, with the
     area, the capacity, the requested number and what to change.
+  - An FDS+Evac deck's walkable area is the union of its floor's main
+    evacuation meshes, whose boundary is a wall; only `&EXIT` and `&DOOR`
+    records leave it (`walkable.source` is `derived:evac-mesh`). Touching
+    evacuation meshes of one floor are reported, a `COUNT_ONLY` exit is
+    listed as a counter, and a point or line `&EVAC` is named as the reason
+    when no agents can be placed (#672).
 - `--force` lets `pyfds-evac init` overwrite an output folder that holds a
   `config.json` it did not write; without it, such a folder is refused
   (#632).

@@ -106,6 +106,8 @@ COSMETIC = (
     "TITLE",
 )
 #: Groups that are dropped whole: single floor, no devices.
+#: Start of the item for an ``&EVAC`` whose ``XB`` is a point or a line.
+ZERO_WIDTH = "zero-width XB"
 DROPPED_GROUPS = {
     "CORR": "corridor between floors; one floor is imported",
     "STRS": "stairs; one floor is imported",
@@ -209,7 +211,14 @@ def legacy_exits(ctx: LegacyContext) -> list[ImportedExit]:
 def _exit_from(ctx: LegacyContext, record: NamelistRecord) -> ImportedExit | None:
     classify_keys(record, ctx.report)
     if record.flag("COUNT_ONLY", False):
-        ctx.add("D", "warning", "EXIT", "COUNT_ONLY counter: no counterpart", record)
+        ctx.add(
+            "D",
+            "warning",
+            "EXIT",
+            "COUNT_ONLY counter: not an exit (FDS+Evac makes no opening for it); "
+            "no counterpart",
+            record,
+        )
         return None
     if record.flag("KNOWN_DOOR", False) and record.id is not None:
         ctx.known_exits.append(record.id)
@@ -453,6 +462,16 @@ def _evac_spawns(ctx, record, evhos, exit_ids) -> list[ImportedSpawn]:
         ctx.add("D", "info", "EVAC", "NUMBER_INITIAL_PERSONS is 0: no agents", record)
         return []
     rect = box(*_rect(record))
+    if rect.area <= 0:
+        ctx.add(
+            "D",
+            "error",
+            "EVAC",
+            f"{ZERO_WIDTH} (a point or a line): no area to place the "
+            f"{number} agents in; group dropped",
+            record,
+        )
+        return []
     if not _inside_enough(ctx, record, rect):
         return []
     pers = _pers_record(ctx, record)

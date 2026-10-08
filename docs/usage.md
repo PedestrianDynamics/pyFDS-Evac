@@ -587,8 +587,9 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
 - An exit is a strip of `--exit-depth` metres on the room side of the exit
   line, so agents leave about 0.4 s before the line at 1.25 m/s.
 - The walkable area is derived from the deck: the union of the floor's mesh
-  footprints, whose edge is a wall, minus the `&OBST` records in the walking
-  band, less their `&HOLE` cuts. Only the parts that hold a spawn area, or
+  footprints (the main evacuation meshes of an FDS+Evac deck), whose edge is
+  a wall, minus the `&OBST` records in the walking band, less their `&HOLE`
+  cuts. Only the parts that hold a spawn area, or
   without one an exit, are kept; `import_report.json` lists the dropped
   parts. `--walkable FILE.wkt` replaces the derived polygon.
 - A spawn area that asks for more agents than the run can place (the same

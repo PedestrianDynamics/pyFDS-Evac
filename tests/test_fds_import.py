@@ -785,6 +785,96 @@ def test_repo_t_junction_walkable_is_derived(tmp_path):
     assert result.report.runnable
 
 
+# #672: a 10 x 10 m evacuation mesh split by a zero-thickness wall at x = 5
+# (widened to 0.1 m), an &EXIT on the mesh edge at x = 10 and a group at
+# x < 5. {extra} adds records.
+EVAC_MESH = """\
+&HEAD CHID='evac10' /
+&MESH IJK=40,40,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,
+      EVAC_HUMANS=.TRUE., ID='Main' /
+&OBST XB=5,5,0,10,0,2.4 /
+&EXIT ID='Out', IOR=+1, XB=10,10,4,6,0.4,1.6 /
+{extra}
+"""
+GROUP = "&EVAC ID='g', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /"
+WALL_HOLE = "&HOLE XB=4.9,5.1,4,5,0,2.4 /"
+
+
+def _evac_mesh(tmp_path, *extra: str, **kwargs):
+    path = _deck(tmp_path, EVAC_MESH.format(extra="\n".join(extra)))
+    return import_fds_deck(path, **kwargs)
+
+
+def test_evac_mesh_hole_joins_the_spawn_and_the_exit(tmp_path):
+    result = _evac_mesh(tmp_path, GROUP, WALL_HOLE)
+    assert result.report.walkable["source"] == "derived:evac-mesh"
+    assert result.report.walkable["area_m2"] == pytest.approx(100 - 1.0 + 0.1)
+    assert result.report.walkable["components"] == 1
+    assert list(result.raw["exits"]) == ["Out"]
+    assert result.report.runnable
+
+
+def test_evac_mesh_without_hole_drops_the_exit_side(tmp_path):
+    result = _evac_mesh(tmp_path, GROUP)
+    assert result.report.walkable["area_m2"] == pytest.approx(49.5)
+    [dropped] = result.report.walkable["components_dropped"]
+    assert dropped["exits"] == ["Out"]
+    assert dropped["reason"] == "no spawn area in it"
+    assert result.raw["exits"] == {}
+    assert not result.report.runnable
+
+
+def test_zero_width_evac_is_named_as_the_reason(tmp_path):
+    line = "&EVAC ID='line', XB=2,2,1,9,1,1, NUMBER_INITIAL_PERSONS=5 /"
+    result = _evac_mesh(tmp_path, line, WALL_HOLE)
+    [item] = [i for i in _items(result, "D", "EVAC") if i.id == "line"]
+    assert item.level == "error" and item.message.startswith("zero-width XB")
+    assert "walkable" not in item.message
+    [reason] = result.report.not_runnable
+    assert reason.startswith("no agents to place: 1 &EVAC record(s) have a zero-width")
+
+
+def test_touching_evacuation_meshes_are_reported(tmp_path):
+    second = (
+        "&MESH IJK=40,40,1, XB=10,20,0,10,0.4,1.6, EVACUATION=.TRUE.,\n"
+        "      EVAC_HUMANS=.TRUE., ID='East' /"
+    )
+    result = _evac_mesh(tmp_path, GROUP, WALL_HOLE, second)
+    [item] = [i for i in _items(result, "A", "MESH") if "touch" in i.message]
+    assert "'Main' and 'East'" in item.message
+    alone = _evac_mesh(tmp_path, GROUP, WALL_HOLE)
+    assert not [i for i in _items(alone, "A", "MESH") if "touch" in i.message]
+
+
+def test_only_exits_and_doors_open_the_evac_mesh_edge(tmp_path):
+    """An OPEN fire vent or an &ENTR on the mesh edge is not an exit."""
+    edge = (
+        "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /",
+        "&ENTR ID='In', IOR=+1, XB=0,0,1,2,0.4,1.6, MAX_FLOW=0.0 /",
+    )
+    result = _evac_mesh(tmp_path, GROUP, WALL_HOLE, *edge)
+    assert list(result.raw["exits"]) == ["Out"]
+    assert result.report.walkable["area_m2"] == pytest.approx(99.1)
+
+
+def test_count_only_exit_is_listed_as_a_counter(tmp_path):
+    counter = "&EXIT ID='C', IOR=+1, COUNT_ONLY=.TRUE., XB=10,10,7,8,0.4,1.6 /"
+    out = tmp_path / "out"
+    result = _evac_mesh(tmp_path, GROUP, WALL_HOLE, counter)
+    result.write(out)
+    report = json.loads((out / "import_report.json").read_text())
+    [item] = [i for i in report["items"] if i["id"] == "C"]
+    assert (item["status"], item["group"]) == ("D", "EXIT")
+    assert item["message"].startswith("COUNT_ONLY counter: not an exit")
+    assert list(result.raw["exits"]) == ["Out"]
+
+
+def test_user_exit_keeps_its_component_on_an_evac_mesh(tmp_path):
+    result = _evac_mesh(tmp_path, GROUP, exits=[(10, 1, 10, 2, 1)])
+    assert result.report.walkable["area_m2"] == pytest.approx(99.0)
+    assert sorted(result.raw["exits"]) == ["Out", "user_exit_1"]
+
+
 # --- report details --------------------------------------------------------------
 
 
