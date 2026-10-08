@@ -425,3 +425,45 @@ def test_a_look_that_never_arrives_is_given_up_into_the_patrol(monkeypatch, capl
         assert result.agents_evacuated == 0
     finally:
         result.cleanup()
+
+
+def test_a_new_visit_to_a_node_allows_a_new_look(monkeypatch):
+    """A look at the checkpoint, then a visit to the spawn area without a
+    look there, then back at the checkpoint: the agent looks again, since
+    the visit in between completed."""
+    from pyfds_evac.core import route_graph
+
+    checkpoint_id, spawn_id = "jps-checkpoints_0", "jps-distributions_0"
+    looks = []
+    start_look = route_graph._start_look
+
+    def recorded(wait_info, node_id, point):
+        looks.append(node_id)
+        start_look(wait_info, node_id, point)
+
+    fits = route_graph._node_point_fits
+
+    def spawn_unfit(graph, node_id, point, radius):
+        # No look at the spawn area: the visit there completes without one.
+        return node_id != spawn_id and fits(graph, node_id, point, radius)
+
+    monkeypatch.setattr(route_graph, "_start_look", recorded)
+    monkeypatch.setattr(route_graph, "_node_point_fits", spawn_unfit)
+    vis = _ExitSeenNearNodePoint(checkpoint_id, "never-seen")
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(
+            _scenario(),
+            seed=3,
+            reroute_config=RerouteConfig(reevaluation_interval_s=1.0),
+            vis_model=vis,
+        )
+    try:
+        rows = [(row["new_exit"], row["reason"]) for row in result.route_history]
+        assert rows[:3] == [
+            (checkpoint_id, "explore"),
+            (spawn_id, "wander"),
+            (checkpoint_id, "wander"),
+        ]
+        assert looks[:2] == [checkpoint_id, checkpoint_id]
+    finally:
+        result.cleanup()
