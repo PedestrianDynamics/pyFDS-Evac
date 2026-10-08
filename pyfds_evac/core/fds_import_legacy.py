@@ -8,6 +8,7 @@ non-exact mapping leaves a report item.
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -24,6 +25,7 @@ from .fds_import_geometry import (
     polygons_of,
     rounded,
     split_holes,
+    strip_problem,
     union,
 )
 from .fds_import_report import Floor, ImportedExit, ImportedSpawn, ImportReport
@@ -276,20 +278,13 @@ def _strip_exit(ctx, record: NamelistRecord, source: str) -> ImportedExit | None
     _check_reachable(ctx, record, line)
     strip = exit_strip(line, ctx.depth, ctx.walkable)
     if strip is None:
-        distance = line.line.distance(ctx.walkable)
-        ctx.add(
-            "D",
-            "error",
-            record.group,
-            "exit dropped: its strip on the room side "
-            f"is empty or narrower than 0.1 m; the line is {distance:.3f} m from "
-            "the walkable area",
-            record,
-        )
+        problem = strip_problem(line, ctx.depth, ctx.walkable)
+        ctx.add("D", "error", record.group, f"exit dropped: {problem}", record)
         return None
     exit_ = ImportedExit(
         record.id or "", strip, source, (line.x0, line.y0, line.x1, line.y1)
     )
+    exit_.fds_evac_segment = _grid_segment(ctx, record, line)
     exit_.sign = _sign(ctx, record)
     _schedule(ctx, record, exit_)
     ctx.add(
@@ -300,6 +295,55 @@ def _strip_exit(ctx, record: NamelistRecord, source: str) -> ImportedExit | None
         record,
     )
     return exit_
+
+
+def _grid_segment(ctx, record: NamelistRecord, line: ExitLine) -> list | None:
+    """The line where FDS+Evac puts it, when that differs by over 1e-4 m.
+
+    FDS+Evac clips an exit's ``XB`` to its evacuation mesh and moves it to
+    the nearest grid lines ("XB adjusted to mesh", ``evac.f90``). Reported
+    only; the exit here keeps the deck's position.
+    """
+    mesh = _mesh_of(ctx, record, line)
+    ijk = [] if mesh is None else mesh.values("IJK")
+    if mesh is None or len(ijk) != 3:
+        return None
+    xs, xf, ys, yf = mesh.box6()[:4]
+    dx, dy = (xf - xs) / float(ijk[0]), (yf - ys) / float(ijk[1])
+    x0, x1 = (_grid(v, xs, xf, dx) for v in (line.x0, line.x1))
+    y0, y1 = (_grid(v, ys, yf, dy) for v in (line.y0, line.y1))
+    moved = (x0, y0, x1, y1)
+    given = (line.x0, line.y0, line.x1, line.y1)
+    if max(abs(a - b) for a, b in zip(moved, given, strict=True)) <= 1e-4:
+        return None
+    ctx.add(
+        "A",
+        "info",
+        record.group,
+        f"FDS+Evac moves this line to its evacuation grid ({mesh.label}): "
+        f"x {x0:g}..{x1:g}, y {y0:g}..{y1:g}; the deck's position is kept here",
+        record,
+    )
+    return [rounded(v) for v in moved]
+
+
+def _mesh_of(ctx, record: NamelistRecord, line: ExitLine) -> NamelistRecord | None:
+    mesh_id = record.text("MESH_ID")
+    lo_x, hi_x = sorted((line.x0, line.x1))
+    lo_y, hi_y = sorted((line.y0, line.y1))
+    meshes: tuple[NamelistRecord, ...] = ctx.floor.meshes
+    for mesh in meshes:
+        xs, xf, ys, yf = mesh.box6()[:4]
+        inside = xs <= lo_x and hi_x <= xf and ys <= lo_y and hi_y <= yf
+        if inside and mesh_id in (None, mesh.id):
+            return mesh
+    return None
+
+
+def _grid(value: float, start: float, end: float, step: float) -> float:
+    """Fortran ``NINT`` of the cell index (half away from zero), as FDS+Evac."""
+    index = (min(max(value, start), end) - start) / step
+    return start + math.floor(index + 0.5) * step
 
 
 def _exit_line(ctx, record: NamelistRecord, outward: bool) -> ExitLine | None:

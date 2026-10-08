@@ -59,6 +59,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     axis (a 0.6 m square for a point), clipped to the walkable area; its
     agents are placed at random in it, and `import_report.json` records the
     expansion per group as `zero_width_expansion` (#675).
+  - An `&EXIT` or `&DOOR` keeps the deck's position; where FDS+Evac would
+    move it to its evacuation grid, `import_report.json` gives that
+    position as `fds_evac_segment`. A dropped exit's message says whether
+    its strip is empty (with the distance) or below the 0.1 m minimum width,
+    and a deck whose every exit is below it is named as using exits only
+    as flow-field targets (#673).
 - `--force` lets `pyfds-evac init` overwrite an output folder that holds a
   `config.json` it did not write; without it, such a folder is refused
   (#632).

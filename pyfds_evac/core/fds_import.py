@@ -39,6 +39,7 @@ from shapely.geometry import LineString, Point, box
 
 from .fds_deck import FdsDeck, NamelistRecord, parse_fds_deck
 from .fds_import_geometry import (
+    MIN_EXIT_WIDTH_M,
     ExitLine,
     exit_strip,
     ior_normal,
@@ -1135,6 +1136,7 @@ def _exit_report(exit_: ImportedExit) -> dict[str, Any]:
         "sign": exit_.sign,
         "open_from_s": exit_.open_from_s,
         "closed_after_s": exit_.closed_after_s,
+        "fds_evac_segment": exit_.fds_evac_segment,
     }
 
 
@@ -1237,10 +1239,28 @@ def _coverage(deck: FdsDeck, walkable, exits) -> dict[str, Any]:
 def _runnable(report, exits, spawns) -> None:
     if not exits:
         report.not_runnable.append(
-            "no exit found: add exits in JuPedSim Web or with --exit x0,y0,x1,y1[,ior]"
+            "no exit found"
+            + _flow_field_note(report)
+            + ": add exits in JuPedSim Web or with --exit x0,y0,x1,y1[,ior]"
         )
     if not any(s.parameters.get("number", 0) > 0 for s in spawns):
         report.not_runnable.append("no agents to place" + _zero_width_note(report))
+
+
+def _flow_field_note(report) -> str:
+    """Name decks whose every dropped exit is narrower than the minimum."""
+    drops = [
+        i.message
+        for i in report.items
+        if i.group in ("EXIT", "DOOR") and i.message.startswith("exit dropped")
+    ]
+    if not drops or not all("below the minimum exit width" in m for m in drops):
+        return ""
+    return (
+        f" (every &EXIT is narrower than the minimum exit width "
+        f"{MIN_EXIT_WIDTH_M:g} m: the deck uses its exits only as flow-field "
+        "targets, which pyFDS-Evac does not model)"
+    )
 
 
 def _zero_width_note(report) -> str:

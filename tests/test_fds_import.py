@@ -913,6 +913,61 @@ def test_user_exit_keeps_its_component_on_an_evac_mesh(tmp_path):
     assert sorted(result.raw["exits"]) == ["Out", "user_exit_1"]
 
 
+# #673: a 10 x 10 m evacuation mesh with dx = 0.25 m and one group.
+GRID = """\
+&HEAD CHID='grid' /
+&MESH IJK=40,40,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,
+      EVAC_HUMANS=.TRUE., ID='Main' /
+&EVAC ID='g', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /
+{extra}
+"""
+
+
+def _grid(tmp_path, *extra: str):
+    path = _deck(tmp_path, GRID.format(extra="\n".join(extra)))
+    return import_fds_deck(path)
+
+
+def test_exit_off_the_grid_is_kept_and_the_fds_evac_position_reported(tmp_path):
+    result = _grid(tmp_path, "&EXIT ID='E', IOR=+1, XB=9.9,9.9,4.1,6,0.4,1.6 /")
+    exit_ = result.raw["exits"]["E"]
+    assert _same(_poly(exit_["coordinates"]), box(9.4, 4.1, 9.9, 6))
+    [entry] = result.report.exits
+    assert entry["fds_evac_segment"] == [10.0, 4.0, 10.0, 6.0]
+    [item] = [i for i in _items(result, "A", "EXIT") if "evacuation grid" in i.message]
+    assert item.level == "info" and "x 10..10, y 4..6" in item.message
+
+
+def test_exit_on_the_grid_reports_no_fds_evac_position(tmp_path):
+    result = _grid(tmp_path, "&EXIT ID='E', IOR=+1, XB=10,10,4,6,0.4,1.6 /")
+    assert result.report.exits[0]["fds_evac_segment"] is None
+    assert not [i for i in _items(result, "A") if "evacuation grid" in i.message]
+
+
+def test_exit_behind_a_solid_strip_is_dropped_not_moved(tmp_path):
+    """No snapping (maintainer D5): the distance is in the message."""
+    records = (
+        "&OBST XB=9.4,10,0,10,0,2.4 /",
+        "&EXIT ID='E', IOR=+1, XB=10,10,4,6,0.4,1.6 /",
+    )
+    result = _grid(tmp_path, *records)
+    assert result.raw["exits"] == {}
+    [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
+    assert item.message == (
+        "exit dropped: its strip on the room side is empty; "
+        "the line is 0.600 m from the walkable area"
+    )
+
+
+def test_exits_narrower_than_the_minimum_name_flow_field_targets(tmp_path):
+    slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.05,0.4,1.6 /"
+    result = _grid(tmp_path, slot)
+    [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
+    assert "0.050 m wide, below the minimum exit width of 0.1 m" in item.message
+    [reason] = result.report.not_runnable
+    assert "only as flow-field targets" in reason
+
+
 # --- report details --------------------------------------------------------------
 
 
