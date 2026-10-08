@@ -1213,6 +1213,7 @@ def main():
     )
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
+    print(f"writing the figures to {OUT}, replacing the committed images")
 
     # --- Style Setup ---
     sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
@@ -1352,10 +1353,11 @@ def main():
             )
     fine = sorted(last_out)[:2]
     print(
-        "C6 grid convergence: last out "
+        "seed 420, last out by grid (reported; criterion 6 is the 30-seed "
+        "study of familiarity_grid_analysis.py): "
         + ", ".join(f"{c:g} m {last_out[c]:.1f} s" for c in sorted(last_out))
         + f"; |{fine[0]:g} m - {fine[1]:g} m| = "
-        f"{abs(last_out[fine[0]] - last_out[fine[1]]):.1f} s (tolerance 5 s)"
+        f"{abs(last_out[fine[0]] - last_out[fine[1]]):.1f} s"
     )
     calm_range = f"{min(calm_last):.0f}–{max(calm_last):.0f} s"
 
