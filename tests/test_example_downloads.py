@@ -212,3 +212,55 @@ def test_first_fds_case_fire_result():
     out = _run("examples/first_fds_case.py", str(T_JUNCTION_FDS))
     for line in SPEC["first-fds-case"]["expected"]:
         assert line in out
+
+
+NOT_RECHECKED = {
+    "walkthrough",
+    "rset-ensemble",
+    "iso-test-18",
+    "iso-test-19",
+    "heat-radiometer",
+    "study-schroeder2020",
+}
+
+
+def test_results_note_marks_the_results_not_rechecked_for_0_4():
+    """Results made before 0.4.0's routing changes say so on their page."""
+    notes = {name: ex.get("results_note") for name, ex in SPEC.items()}
+    assert {n for n, note in notes.items() if note} == NOT_RECHECKED
+    for name in NOT_RECHECKED:
+        assert notes[name] == "Not re-checked since 0.3.x."
+
+
+def test_results_note_is_rendered_under_the_commit():
+    """The shortcode shows the note right after "made at commit ..."."""
+    html = (ROOT / "site" / "layouts" / "shortcodes" / "example-files.html").read_text()
+    commit = "made at commit <code>{{ $ex.results_commit }}</code></span>"
+    note = (
+        '{{ with $ex.results_note }}<br><span class="docs-files__note">'
+        "{{ . }}</span>{{ end }}"
+    )
+    assert commit + note in html
+
+
+@pytest.mark.skipif(
+    subprocess.run(["which", "hugo"], capture_output=True).returncode != 0
+    or not (ROOT / "site" / "data" / "example_bundles.json").is_file(),
+    reason="needs hugo and the bundles of scripts/docs/bundle_examples.py",
+)
+def test_results_note_appears_on_the_built_page(tmp_path):
+    """Hugo renders the note on a noted page and nothing on the others."""
+    subprocess.run(
+        ["hugo", "--quiet", "--destination", str(tmp_path)],
+        cwd=ROOT / "site",
+        check=True,
+        capture_output=True,
+    )
+    page = tmp_path / "docs" / "getting-started" / "walkthrough" / "index.html"
+    commit = SPEC["walkthrough"]["results_commit"]
+    assert (
+        f'made at commit <code>{commit}</code></span><br><span class="docs-files__note">'
+        "Not re-checked since 0.3.x.</span>"
+    ) in page.read_text()
+    quick = tmp_path / "docs" / "getting-started" / "quickstart" / "index.html"
+    assert "Not re-checked" not in quick.read_text()

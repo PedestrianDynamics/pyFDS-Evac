@@ -26,7 +26,7 @@
     <div><dt>Built from</dt><dd>pyFDS-Evac <a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/{{ $facts.commit }}"><code>{{ substr $facts.commit 0 7 }}</code></a>; <code>requirements.txt</code> pins the packages of <code>uv.lock</code></dd></div>
     <div><dt>FDS</dt><dd>{{ with $ex.fds }}you run it; the page used <code>{{ . }}</code>, {{ $ex.fds_runtime }}{{ else }}not needed{{ end }}</dd></div>
     <div><dt>pyFDS-Evac run</dt><dd>{{ $ex.evac_runtime }}</dd></div>
-    <div><dt>Expected result</dt><dd>{{ range $i, $line := $ex.expected }}{{ if $i }}<br>{{ end }}<code>{{ $line }}</code>{{ end }}<br><span class="docs-files__note">made at commit <code>{{ $ex.results_commit }}</code></span></dd></div>
+    <div><dt>Expected result</dt><dd>{{ range $i, $line := $ex.expected }}{{ if $i }}<br>{{ end }}<code>{{ $line }}</code>{{ end }}<br><span class="docs-files__note">made at commit <code>{{ $ex.results_commit }}</code></span>{{ with $ex.results_note }}<br><span class="docs-files__note">{{ . }}</span>{{ end }}</dd></div>
     <div><dt>Licence</dt><dd>decks, scenario files and geometry <a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0</a>; code MIT</dd></div>
   </dl>
   <details class="docs-files__contents">
