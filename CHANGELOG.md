@@ -205,6 +205,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ValueError` in the `Scenario` views; the TUI shows `?`. The defaults
   move to `pyfds_evac.core.agent_params`, which does not import JuPedSim;
   runs are unchanged (#647).
+- A distribution whose `parameters` is a JSON-encoded string, which the
+  initialisers read, now works as the object form. The discovery check
+  behind `--show-config`, the TUI and every CLI or GUI run, the
+  familiarity and `entrance` lookup of `run_scenario`,
+  `Scenario.summary()`, `plot()` and `list_distributions()`, and the
+  TUI's agent count stopped with an `AttributeError`, and the string's
+  `no_known_exit` was ignored. `Scenario.set_agent_params()`,
+  `set_agent_count()` and `set_flow_schedule()` store the parsed object.
+  An unparseable string, `null`, or a value that is not an object
+  (`"[]"`, `"42"`) reads as no parameters everywhere, the initialisers
+  included; the fallback initialiser stopped on `null`, and both on an
+  encoded non-object, with an `AttributeError` (#644).
 - Sign visibility from an FDS run no longer stores a time point past the
   end of the FDS output when `--reroute-interval` does not divide `T_END`;
   the last stored point is `T_END`. It now raises `FdsHorizonError` only

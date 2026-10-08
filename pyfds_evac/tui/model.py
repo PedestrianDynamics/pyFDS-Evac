@@ -165,7 +165,7 @@ class ScenarioInfo:
 
         A spawn area without ``number`` counts the run's default (#647).
         """
-        from pyfds_evac.core.agent_params import deck_default_number
+        from pyfds_evac.core.agent_params import deck_default_number, parameters_as_dict
 
         try:
             default = deck_default_number(self.sim_settings.get("simulationParams"))
@@ -173,7 +173,8 @@ class ScenarioInfo:
             default = None
         total = 0
         for dist in (self.raw.get("distributions") or {}).values():
-            number = (dist.get("parameters") or {}).get("number", default)
+            params = parameters_as_dict(dist.get("parameters")) or {}
+            number = params.get("number", default)
             if not isinstance(number, int):
                 return None
             total += number

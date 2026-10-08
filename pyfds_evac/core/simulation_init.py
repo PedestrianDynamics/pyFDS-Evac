@@ -20,6 +20,7 @@ from .agent_params import (
     _deck_spawn_defaults,
     _spawn_value,
     normalize_distribution_speed_aliases,
+    parameters_as_dict,
 )
 from .agent_seed import (
     INITIAL_ORIGIN,
@@ -1169,12 +1170,7 @@ def _initialize_with_fallback(
                     distribution_keys.append(dist_id)
 
                     # Get parameters for this specific distribution
-                    params = dist_data.get("parameters", {})
-                    if isinstance(params, str):
-                        try:
-                            params = json.loads(params)
-                        except Exception:
-                            params = {}
+                    params = parameters_as_dict(dist_data.get("parameters")) or {}
                     _convert_distribution_spawn_values(params, dist_id)
                     params = _apply_default_premovement(params, dist_id)
 
@@ -1907,14 +1903,7 @@ def _process_distributions(
     for dist_id, dist_data in data.get("distributions", {}).items():
         dist_geom[dist_id] = dist_data["coordinates"]
 
-        params = dist_data.get("parameters", {})
-        if isinstance(params, str):
-            try:
-                params = json.loads(params)
-            except json.JSONDecodeError:
-                params = {}
-        elif not isinstance(params, dict):
-            params = {}
+        params = parameters_as_dict(dist_data.get("parameters")) or {}
         _convert_distribution_spawn_values(params, dist_id)
         params = _apply_default_premovement(params, dist_id)
 
