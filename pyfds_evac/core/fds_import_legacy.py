@@ -328,16 +328,26 @@ def _grid_segment(ctx, record: NamelistRecord, line: ExitLine) -> list | None:
 
 
 def _mesh_of(ctx, record: NamelistRecord, line: ExitLine) -> NamelistRecord | None:
+    """The evacuation mesh FDS+Evac would clip *record*'s line to.
+
+    An explicit ``MESH_ID`` names it. Without one, the mesh that contains
+    the whole line (as FDS+Evac requires) wins; failing that, the one mesh
+    the line touches. Several touched meshes are ambiguous: None.
+    """
+    meshes: tuple[NamelistRecord, ...] = ctx.floor.meshes
     mesh_id = record.text("MESH_ID")
+    if mesh_id is not None:
+        return next((m for m in meshes if m.id == mesh_id), None)
     lo_x, hi_x = sorted((line.x0, line.x1))
     lo_y, hi_y = sorted((line.y0, line.y1))
-    meshes: tuple[NamelistRecord, ...] = ctx.floor.meshes
+    touched = []
     for mesh in meshes:
         xs, xf, ys, yf = mesh.box6()[:4]
-        inside = xs <= lo_x and hi_x <= xf and ys <= lo_y and hi_y <= yf
-        if inside and mesh_id in (None, mesh.id):
+        if xs <= lo_x and hi_x <= xf and ys <= lo_y and hi_y <= yf:
             return mesh
-    return None
+        if lo_x <= xf and hi_x >= xs and lo_y <= yf and hi_y >= ys:
+            touched.append(mesh)
+    return touched[0] if len(touched) == 1 else None
 
 
 def _grid(value: float, start: float, end: float, step: float) -> float:

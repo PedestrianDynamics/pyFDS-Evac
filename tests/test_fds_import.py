@@ -938,6 +938,21 @@ def test_exit_off_the_grid_is_kept_and_the_fds_evac_position_reported(tmp_path):
     assert item.level == "info" and "x 10..10, y 4..6" in item.message
 
 
+def test_exit_beyond_its_named_mesh_is_clipped_in_the_report(tmp_path):
+    """MESH_ID names the mesh; FDS+Evac clips the line to it, then rounds."""
+    record = "&EXIT ID='E', MESH_ID='Main', IOR=+1, XB=10,10,-0.1,6.1,0.4,1.6 /"
+    result = _grid(tmp_path, record)
+    exit_ = result.raw["exits"]["E"]
+    assert _same(_poly(exit_["coordinates"]), box(9.5, 0, 10, 6.1))
+    assert result.report.exits[0]["fds_evac_segment"] == [10.0, 0.0, 10.0, 6.0]
+
+
+def test_exit_beyond_the_mesh_without_mesh_id_uses_the_one_it_touches(tmp_path):
+    record = "&EXIT ID='E', IOR=+1, XB=10,10,-0.1,6.1,0.4,1.6 /"
+    result = _grid(tmp_path, record)
+    assert result.report.exits[0]["fds_evac_segment"] == [10.0, 0.0, 10.0, 6.0]
+
+
 def test_exit_on_the_grid_reports_no_fds_evac_position(tmp_path):
     result = _grid(tmp_path, "&EXIT ID='E', IOR=+1, XB=10,10,4,6,0.4,1.6 /")
     assert result.report.exits[0]["fds_evac_segment"] is None
