@@ -22,6 +22,7 @@ import task record; this module imports neither JuPedSim nor fdsreader.
 
 from __future__ import annotations
 
+import itertools
 import json
 import math
 import os
@@ -48,6 +49,7 @@ from .fds_import_geometry import (
     union,
 )
 from .fds_import_legacy import (
+    ZERO_WIDTH,
     LegacyContext,
     dropped_groups,
     legacy_exits,
@@ -566,6 +568,7 @@ def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         )
     band = opts.z_band or floor.slab
     domain = union([_mesh_box(m) for m in floor.meshes])
+    _touching_meshes(floor, report)
     spec = FloorSpec(
         floor.z_floor,
         band,
@@ -595,6 +598,28 @@ def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
         spawns,
         height,
     )
+
+
+def _touching_meshes(floor: Floor, report: ImportReport) -> None:
+    """Warn when two evacuation meshes of the floor touch or overlap.
+
+    FDS+Evac keeps each main evacuation mesh sealed (agents cross only
+    through a ``&DOOR``); the walkable area is the union of the footprints,
+    so their shared edge is open here.
+    """
+    pairs = itertools.combinations(floor.meshes, 2)
+    for first, second in pairs:
+        if not _mesh_box(first).intersects(_mesh_box(second)):
+            continue
+        report.add(
+            "A",
+            "warning",
+            "MESH",
+            f"evacuation meshes {first.label} and {second.label} touch: "
+            "the walkable area joins them, so their shared edge is open; "
+            "FDS+Evac keeps it a wall",
+            first,
+        )
 
 
 def _legacy_stages(deck, floor, floors, opts, tol, walkable, report):
@@ -1212,7 +1237,19 @@ def _runnable(report, exits, spawns) -> None:
             "no exit found: add exits in JuPedSim Web or with --exit x0,y0,x1,y1[,ior]"
         )
     if not any(s.parameters.get("number", 0) > 0 for s in spawns):
-        report.not_runnable.append("no agents to place")
+        report.not_runnable.append("no agents to place" + _zero_width_note(report))
+
+
+def _zero_width_note(report) -> str:
+    count = sum(
+        i.group == "EVAC" and i.message.startswith(ZERO_WIDTH) for i in report.items
+    )
+    if not count:
+        return ""
+    return (
+        f": {count} &EVAC record(s) have a {ZERO_WIDTH} (a point or a line), "
+        "with no area to place agents in"
+    )
 
 
 #: Loader default agent radius [m] (docs/scenario-json.md).

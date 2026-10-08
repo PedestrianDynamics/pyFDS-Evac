@@ -13,8 +13,10 @@ The default provider, :func:`deck_walkable`, reads the deck through the
 in-repo namelist parser (multi-line records, ``MULT_ID``), so it works from
 an installed wheel:
 
-- the domain is the union of the floor's mesh footprints, and its edge is
-  a wall (the FDS default ``INERT`` boundary);
+- the domain is the union of the floor's mesh footprints (the evacuation
+  meshes of an FDS+Evac deck, source ``derived:evac-mesh``; otherwise the
+  fire meshes, ``derived:deck``), and its edge is a wall (the FDS default
+  ``INERT`` boundary);
 - solids are the floor's ``&OBST`` footprints minus its ``&HOLE``
   footprints; a zero-thickness record is widened by
   :data:`HALF_CELL_M` on each side;
@@ -111,4 +113,5 @@ def deck_walkable(deck: FdsDeck, floor: FloorSpec) -> WalkableResult:
         f"{len(parts)} free component(s); {small} part(s) of "
         f"<= {MIN_PART_M2:g} m2 dropped, {filled} hole(s) below it filled",
     ]
-    return WalkableResult(polygon, diagnostics, "derived:deck")
+    source = "derived:evac-mesh" if legacy else "derived:deck"
+    return WalkableResult(polygon, diagnostics, source)

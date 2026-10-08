@@ -56,6 +56,17 @@ keeps the evacuation namelists of one floor as exits and spawn areas, and
 writes a report of everything it approximated or dropped
 ([Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init)).
 
+In FDS+Evac the outer boundary of an evacuation mesh is solid by default
+(Korhonen, *FDS+Evac Technical Reference and User's Guide*, Evac 2.6.0-draft, 2021,
+ch. 8, p. 73). Agents leave a main evacuation mesh only through its EXITs and
+DOORs. FDS+Evac places an outflow vent at each of them automatically, and
+both the agents' wall forces and the guiding flow field treat that vent as
+the opening (FDS `read.f90` and `evac.f90`, firemodels/fds commit
+c9da70d7a0). pyFDS-Evac therefore treats the boundary of each main evacuation
+mesh as a wall. `&ENTR` records and the fire meshes' `SURF_ID='OPEN'` vents do
+not open it, and a `COUNT_ONLY` exit is a counter, not an exit: it is listed
+in `import_report.json` with no counterpart.
+
 A case therefore has three parts: the FDS output directory, a scenario JSON,
 and a walkable geometry as WKT (well-known text, a plain-text polygon format). `uv run python run.py --scenario <json|dir|zip> --fds-dir
 <fds output>` combines them.
@@ -120,7 +131,7 @@ or `app.py` in a source checkout) runs uploaded scenarios. It does not edit geom
 
 | FDS+Evac input | What it did | In pyFDS-Evac |
 |---|---|---|
-| Evacuation meshes (`&MESH EVACUATION=.TRUE.`, §8.1) | 2-D grids for movement, separate from the fire meshes | Replaced by one walkable polygon (WKT). `scripts/generate_walkable_from_fds.py` derives it from the `&OBST` lines of a deck (see [Usage](usage.md)). |
+| Evacuation meshes (`&MESH EVACUATION=.TRUE.`, §8.1) | 2-D grids for movement, separate from the fire meshes | Replaced by one walkable polygon (WKT). `pyfds-evac init` derives it from the union of the floor's main evacuation meshes minus their `&OBST` records, less the `&HOLE` cuts, and treats the boundary of each main evacuation mesh as a wall (see below and [Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init)). Two touching evacuation meshes of one floor are joined, with a warning in `import_report.json`. |
 | `EVAC_Z_OFFSET` (§8.1) | Distance from the mid height of an evacuation mesh down to its floor, which is the reference level for `HUMAN_SMOKE_HEIGHT` | No equivalent: pyFDS-Evac has no evacuation meshes. |
 | `HUMAN_SMOKE_HEIGHT` (§8.7) | Height above the floor at which smoke and FED are read, default 1.6 m (Guide §8.7 p. 81; VTT W119 p. 61) | `--smoke-slice-height` [m], default 1.6 as in FDS+Evac (2.0 before; pass `--smoke-slice-height 2.0` for it), an absolute z in the FDS domain rather than a height above the floor ([#157](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157)). It selects the extinction, gas and temperature slices closest to it, so the deck must contain an `&SLCF PBZ=` at that height. |
 | `&EVAC` (§8.8) | Places a group of agents in a rectangle | A `distributions` entry in the JSON: a polygon plus `parameters` (`number`, `v0`, `radius`, pre-movement, familiarity). |
