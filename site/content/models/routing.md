@@ -128,7 +128,8 @@ Anticipation (`anticipate`, `foresight_horizon_s`) applies only to the path
 the search returns for each exit: each edge of that path is sampled at the
 time the agent would reach the edge's start, using unimpeded speed, and
 `tau`, travel time and projected FED are measured from those samples
-(`_measure_route`).
+(`_measure_route`). A time past the earliest last frame of the routing
+FDS slices reads that frame, with one warning per run (#666).
 
 **`"additive"`.** The original model: smoke is a toll per metre walked,
 `effective_length * (1 + w_smoke * k_ave) + w_fed * fed_max`. Both terms scale

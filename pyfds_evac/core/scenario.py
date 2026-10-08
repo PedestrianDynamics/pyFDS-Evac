@@ -138,6 +138,11 @@ class _FedRateAdapter:
 
     def __init__(self, model):
         self._model = model
+        # The last frame of the FDS slices the model reads; route foresight
+        # reads no later (#666). A model on no FDS slice has no end.
+        self.end_time_s = min(
+            (s.end_time_s for s in model_samplers(model)), default=math.inf
+        )
 
     def sample_fed_rate(self, time_s: float, x: float, y: float) -> float:
         _, rate = self._model.sample_rate(time_s, x, y)

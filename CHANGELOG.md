@@ -152,6 +152,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Route foresight no longer stops a run that passes the FDS horizon
+  check (#666). With `anticipate` on (the default) and without
+  `--allow-fds-horizon-hold`, a leg foreseen past the last FDS frame
+  raised `FdsHorizonError` mid-run: t_junction with `fire_2MW_PVC`
+  (300 s of output, a 300 s run) stopped at 295.6 s. A foreseen time is
+  now held at the last frame, and the run logs it once. Samples at the
+  agent's own time keep the horizon check. Runs with the hold flag are
+  bit-identical when the slices routing reads share their last frame, as
+  in every reference deck: foresight is held at the earliest last frame of
+  those slices, where the flag holds each slice at its own.
 - An exploring agent no longer turns back at the door of the only exit
   (#250, #387 a duplicate). A stage completes within 0.7 m of a random
   point in it, which can be short of where the next sign is legible.
