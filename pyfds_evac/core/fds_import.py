@@ -331,7 +331,13 @@ def _choose_floor(floors: list[Floor], wanted: str | None) -> Floor:
     raise FdsImportError(f"--floor {wanted!r} names no evacuation mesh; known: {ids}")
 
 
-def _modern_floor(deck: FdsDeck, opts: _Options) -> Floor:
+def _modern_floor(deck: FdsDeck, opts: _Options, report: ImportReport) -> Floor:
+    """The floor of a deck without evacuation meshes.
+
+    Only the meshes whose z range overlaps the walking band make up the
+    floor; a mesh wholly above or below it (an upper storey) is left out
+    and reported, so its footprint does not join the walkable area.
+    """
     meshes = _meshes(deck, evacuation=False) or _meshes(deck, evacuation=True)
     if not meshes:
         raise FdsImportError("the deck has no &MESH with XB; nothing to import")
@@ -339,13 +345,42 @@ def _modern_floor(deck: FdsDeck, opts: _Options) -> Floor:
         opts.floor_z if opts.floor_z is not None else min(m.box6()[4] for m in meshes)
     )
     slab = (z_floor + MODERN_BAND_M[0], z_floor + MODERN_BAND_M[1])
+    band = opts.z_band or slab
+    on_floor = [m for m in meshes if _meets_band(m, band)]
+    if not on_floor:
+        raise FdsImportError(
+            f"no &MESH reaches the walking band z = {band[0]:g}..{band[1]:g} m; "
+            "pick the floor with --floor-z or the band with --z-band"
+        )
+    _meshes_off_floor(meshes, on_floor, band, report)
     return Floor(
         "lowest" if opts.floor_z is None else "floor_z",
-        tuple(meshes),
+        tuple(on_floor),
         z_floor,
         slab,
-        _min_dx(meshes),
+        _min_dx(on_floor),
     )
+
+
+def _meets_band(mesh: NamelistRecord, band: tuple[float, float]) -> bool:
+    z0, z1 = mesh.box6()[4:]
+    return z0 < band[1] - 1e-9 and z1 > band[0] + 1e-9
+
+
+def _meshes_off_floor(meshes, on_floor, band, report: ImportReport) -> None:
+    for mesh in meshes:
+        if mesh in on_floor:
+            continue
+        z0, z1 = mesh.box6()[4:]
+        report.add(
+            "A",
+            "warning",
+            "MESH",
+            f"mesh at z = {z0:g}..{z1:g} m lies outside the walking band "
+            f"z = {band[0]:g}..{band[1]:g} m: not part of the imported floor",
+            mesh,
+            id=mesh.id or f"MESH_{mesh.line}",
+        )
 
 
 def _floor_obstructions(
@@ -519,7 +554,7 @@ def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportR
             "evacuation namelists but no evacuation "
             "mesh: the floor is taken from the fire meshes",
         )
-        floors = [_modern_floor(deck, opts)]
+        floors = [_modern_floor(deck, opts, report)]
     floor = _choose_floor(floors, opts.floor)
     if opts.agents is not None:
         report.add(
@@ -621,7 +656,7 @@ def _floors_not_imported(deck, floors, chosen, report) -> None:
 
 
 def _import_modern(deck, deck_path, opts, report, user_wkt, provider) -> ImportResult:
-    floor = _modern_floor(deck, opts)
+    floor = _modern_floor(deck, opts, report)
     band = opts.z_band or floor.slab
     domain = union([_mesh_box(m) for m in floor.meshes])
     spec = FloorSpec(
@@ -962,6 +997,7 @@ def _finish(
     report.distributions = [_spawn_report(s, walkable) for s in spawns]
     _recommend(deck, deck_path, report, walkable, exits, height)
     _runnable(report, exits, spawns)
+    _check_capacity(report, walkable, spawns)
     raw = _raw(deck, report, exits, spawns, height)
     text = shapely_wkt.dumps(walkable, rounding_precision=6, trim=True)
     return ImportResult(raw, text, report, deck_path, spawns)
@@ -1177,6 +1213,62 @@ def _runnable(report, exits, spawns) -> None:
         )
     if not any(s.parameters.get("number", 0) > 0 for s in spawns):
         report.not_runnable.append("no agents to place")
+
+
+#: Loader default agent radius [m] (docs/scenario-json.md).
+DEFAULT_RADIUS_M = 0.2
+
+
+def spawn_capacity(area: float, max_radius: float) -> int:
+    """Agents the runtime admits in a spawn area of *area* m2.
+
+    The same packing estimate as ``simulation_init._estimate_max_capacity``
+    (half the area over a disc of *max_radius*, at least 0.1 m); the
+    runtime refuses to start when a spawn area asks for more. Kept here so
+    the importer does not import JuPedSim; a test pins the two together.
+    """
+    radius = max(max_radius, 0.1)
+    return max(1, math.floor(area / (math.pi * radius * radius) * 0.5))
+
+
+def _max_radius(params: dict[str, Any]) -> float:
+    """As ``simulation_init._get_max_agent_radius``."""
+    radius = float(params.get("radius", DEFAULT_RADIUS_M))
+    if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
+        return min(radius + 3 * float(params["radius_std"]), 1.0)
+    return radius
+
+
+def _check_capacity(report, walkable, spawns) -> None:
+    """Not runnable when a spawn area asks for more agents than the run admits.
+
+    Like the runtime, areas are clipped to the walkable polygon and the
+    groups that share one polygon are counted together; flow spawning is
+    left out. The deck is not changed.
+    """
+    groups: dict[str, list[ImportedSpawn]] = {}
+    for spawn in spawns:
+        if spawn.parameters.get("use_flow_spawning"):
+            continue
+        area = spawn.polygon.intersection(walkable)
+        groups.setdefault(area.wkt, []).append(spawn)
+    for members in groups.values():
+        area = members[0].polygon.intersection(walkable).area
+        total = sum(int(m.parameters.get("number", 0)) for m in members)
+        radius = max(_max_radius(m.parameters) for m in members)
+        capacity = spawn_capacity(area, radius)
+        if total <= capacity:
+            continue
+        hint = (
+            "lower NUMBER_INITIAL_PERSONS or enlarge the &EVAC area"
+            if report.kind == "legacy"
+            else "pass --agents N with a smaller N, or enlarge the walkable area"
+        )
+        names = ", ".join(m.id for m in members)
+        report.not_runnable.append(
+            f"spawn area {names} ({area:.3f} m2) holds about {capacity} agents "
+            f"of radius {radius:g} m, but {total} are requested: {hint}"
+        )
 
 
 def _raw(deck, report, exits, spawns, height) -> dict[str, Any]:

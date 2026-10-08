@@ -591,6 +591,9 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
   band, less their `&HOLE` cuts. Only the parts that hold a spawn area, or
   without one an exit, are kept; `import_report.json` lists the dropped
   parts. `--walkable FILE.wkt` replaces the derived polygon.
+- A spawn area that asks for more agents than the run can place (the same
+  packing estimate the run uses) makes the scenario not runnable; the
+  message gives the area, its capacity and the requested number.
 - When `<CHID>.smv` lies next to a plain FDS deck, the run command gets
   `--fds-dir`, and the output says so; `--no-fds` leaves it out. An
   FDS+Evac deck needs the output of a fire-only run: the next steps say to

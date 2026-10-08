@@ -654,6 +654,125 @@ def test_multi_line_mesh_and_obst_are_read(tmp_path):
     assert result.report.walkable["area_m2"] == pytest.approx(99.5)
 
 
+def test_upper_storey_mesh_is_not_part_of_the_floor(tmp_path):
+    """A mesh above the walking band does not join the floor (200 -> 100 m2)."""
+    deck = (
+        "&HEAD CHID='stack' /\n"
+        "&MESH IJK=50,50,15, XB=0,10,0,10,0,3 /\n"
+        "&MESH IJK=50,50,15, XB=10,20,0,10,3,6, ID='Upper' /\n"
+        "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(100.0)
+    assert result.report.floor["meshes"] == [None]
+    [item] = [i for i in _items(result, "A", "MESH") if i.id == "Upper"]
+    assert "lies outside the walking band" in item.message
+    [spawn] = result.raw["distributions"].values()
+    assert max(x for x, _ in spawn["coordinates"]) == pytest.approx(10.0)
+
+
+def test_floor_split_into_stacked_meshes_is_one_floor(tmp_path):
+    """Meshes at z 0-1 and 1-3 over one footprint both meet the band."""
+    deck = (
+        "&HEAD CHID='split' /\n"
+        "&MESH IJK=50,50,5, XB=0,10,0,10,0,1 /\n"
+        "&MESH IJK=50,50,10, XB=0,10,0,10,1,3 /\n"
+        "&VENT XB=0,0,4,6,0,1, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(100.0)
+    assert len(result.report.floor["meshes"]) == 2
+    assert not [i for i in _items(result, "A", "MESH") if "walking band" in i.message]
+
+
+def test_low_single_mesh_imports(tmp_path):
+    """A 1.5 m high mesh only overlaps the 0.1-1.8 m band; it is the floor."""
+    deck = (
+        "&HEAD CHID='low' /\n"
+        "&MESH IJK=50,50,5, XB=0,10,0,10,0,1.5 /\n"
+        "&VENT XB=0,0,4,6,0,1.5, SURF_ID='OPEN' /\n"
+    )
+    result = import_fds_deck(_deck(tmp_path, deck))
+    assert result.report.walkable["area_m2"] == pytest.approx(100.0)
+    assert result.report.runnable
+
+
+# An FDS+Evac room split by a thin wall at x = 5 (widened to 4.95..5.05),
+# its only exit at x = 0. {extra} adds records.
+SPLIT_ROOM = """\
+&HEAD CHID='split' /
+&MESH IJK=40,40,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,
+      EVAC_HUMANS=.TRUE., ID='Main' /
+&OBST XB=5,5,0,10,0,2.4 /
+&EXIT ID='West', IOR=-1, XB=0,0,4,6,0.4,1.6 /
+{extra}
+"""
+
+
+def _split_room(tmp_path, *extra: str, **kwargs):
+    path = _deck(tmp_path, SPLIT_ROOM.format(extra="\n".join(extra)))
+    return import_fds_deck(path, **kwargs)
+
+
+def test_evac_rectangle_is_clipped_to_the_kept_walkable_area(tmp_path):
+    evac = "&EVAC ID='g', XB=1,5,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /"
+    result = _split_room(tmp_path, evac)
+    spawn = _poly(result.raw["distributions"]["g"]["coordinates"])
+    assert _same(spawn, box(1, 1, 4.95, 9))
+    assert result.report.distributions[0]["area_m2"] == pytest.approx(3.95 * 8)
+
+
+def test_clipped_evac_pieces_share_the_agents_by_area(tmp_path):
+    records = (
+        "&OBST XB=1,4,4,5,0,2.4 /",
+        "&EVAC ID='g', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /",
+    )
+    result = _split_room(tmp_path, *records)
+    pieces = result.raw["distributions"]
+    areas = {k: _poly(v["coordinates"]).area for k, v in pieces.items()}
+    assert areas == pytest.approx({"g_1": 12.0, "g_2": 9.0})
+    numbers = {k: v["parameters"]["number"] for k, v in pieces.items()}
+    assert numbers == {"g_1": 6, "g_2": 4}
+
+
+def test_spawn_over_capacity_is_not_runnable(tmp_path):
+    """#606 B-1: the runtime would refuse 10 agents on 1 m2 (about 3 fit)."""
+    evac = "&EVAC ID='g', XB=1,2,1,2,1,1, NUMBER_INITIAL_PERSONS=10 /"
+    result = _split_room(tmp_path, evac)
+    [reason] = result.report.not_runnable
+    assert reason.startswith(
+        "spawn area g (1.000 m2) holds about 3 agents of radius 0.2 m, "
+        "but 10 are requested"
+    )
+    assert "NUMBER_INITIAL_PERSONS" in reason
+    status = cli_init.main(
+        [str(tmp_path / "deck.fds"), "-o", str(tmp_path / "out"), "--no-fds"]
+    )
+    assert status == cli_init.EXIT_NOT_RUNNABLE
+
+
+def test_placeholder_over_capacity_names_agents_option(tmp_path):
+    result = _two_rooms(tmp_path, agents=1000)
+    [reason] = result.report.not_runnable
+    assert "(98.500 m2) holds about 391 agents" in reason and "--agents" in reason
+
+
+def test_capacity_matches_the_runtime_estimate():
+    from pyfds_evac.core.fds_import import spawn_capacity
+    from pyfds_evac.core.simulation_init import _estimate_max_capacity
+
+    for area, radius in [
+        (1.0, 0.2),
+        (25.0, 0.2),
+        (15.0, 0.2),
+        (3.0, 0.05),
+        (99.5, 0.3),
+    ]:
+        assert spawn_capacity(area, radius) == _estimate_max_capacity(
+            box(0, 0, area, 1), radius
+        )
+
+
 def test_repo_t_junction_walkable_is_derived(tmp_path):
     """#505: the derived area equals the asset's hand-written WKT."""
     root = Path(__file__).resolve().parents[1] / "assets" / "t_junction"

@@ -42,8 +42,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     one an exit, are kept, and `import_report.json` lists the others.
     `--walkable FILE.wkt` replaces the derived polygon.
     `scripts/generate_walkable_from_fds.py` is a thin wrapper that writes
-    the same polygon; its Station layer rules and `--layer-rules` are
-    gone (#505).
+    the same polygon (#505).
+  - A plain deck's floor is made of the meshes that reach the walking band;
+    a mesh of another storey is reported, not joined. An `&EVAC` area is
+    clipped to the walkable area before its agents are shared out.
+  - A spawn area that asks for more agents than the run admits (the
+    runtime's packing estimate) makes the scenario not runnable, with the
+    area, the capacity, the requested number and what to change.
 - `--force` lets `pyfds-evac init` overwrite an output folder that holds a
   `config.json` it did not write; without it, such a folder is refused
   (#632).
