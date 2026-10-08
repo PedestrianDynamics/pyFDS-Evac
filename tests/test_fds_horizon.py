@@ -8,6 +8,7 @@ through ``--allow-fds-horizon-hold`` and logged once.
 """
 
 import logging
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -244,3 +245,211 @@ def test_flow_spawn_does_not_swallow_the_horizon():
     )
     with pytest.raises(FdsHorizonError):
         run_scenario(scenario, seed=42, smoke_speed_model=smoke)
+
+
+# --- #666: route foresight stops at the last FDS frame -------------------------
+
+
+class _CorridorSlice(_Slice):
+    """Slice over x 0..20 m, y -1..1 m, frames 0..10 s; K = 0.01 x frame index."""
+
+    def __init__(self):
+        super().__init__()
+        extent = SimpleNamespace(x_start=0.0, x_end=20.0, y_start=-1.0, y_end=1.0)
+        mesh = SimpleNamespace(
+            coordinates={"x": np.array([0.0, 20.0]), "y": np.array([-1.0, 1.0])}
+        )
+        data = 0.01 * np.arange(11.0)[:, None, None] * np.ones((1, 2, 2))
+        self.subslices = [
+            SimpleNamespace(extent=extent, mesh=mesh, cell_centered=False, data=data)
+        ]
+
+
+def _corridor_route(time_s, *, hold=False):
+    """D0 (0, 0) -> C0 (10, 0) -> E0 (20, 0) through the corridor slice at *time_s*."""
+    from shapely.geometry import box
+
+    from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, evaluate_route
+
+    stages = {
+        "C0": {"polygon": box(9, -1, 11, 1), "stage_type": "checkpoint"},
+        "E0": {"polygon": box(19, -1, 21, 1), "stage_type": "exit"},
+    }
+    dists = {"D0": {"coordinates": list(box(-1, -1, 1, 1).exterior.coords)}}
+    graph = StageGraph.from_scenario(
+        stages, [{"from": "D0", "to": "C0"}, {"from": "C0", "to": "E0"}], dists
+    )
+    field = ExtinctionField(
+        SliceFieldSampler(_CorridorSlice(), allow_horizon_hold=hold)
+    )
+    return evaluate_route(
+        graph, ["D0", "C0", "E0"], time_s, 0.0, field, None, RouteCostConfig()
+    )
+
+
+def _foresight_warnings(caplog):
+    return [r for r in caplog.records if "Route foresight" in r.getMessage()]
+
+
+def test_foresight_past_the_last_frame_reads_the_last_frame(caplog):
+    """Decided at 9 s, the second leg is reached at 9 + 10/1.3 = 16.7 s.
+
+    That is past the output (last frame 10 s, interval 1 s) and raised
+    ``FdsHorizonError`` without --allow-fds-horizon-hold, mid-run (#666).
+    The leg now reads the last frame; the first leg keeps the decision time.
+    """
+    with caplog.at_level(logging.WARNING):
+        rc = _corridor_route(9.0)
+    first, second = rc.segments
+    assert first.arrival_time_s == 9.0
+    assert first.k_max == pytest.approx(0.09, rel=1e-12)
+    assert second.arrival_time_s == 10.0
+    assert second.k_max == pytest.approx(0.10, rel=1e-12)
+    assert len(_foresight_warnings(caplog)) == 1
+    assert _horizon_warnings(caplog) == []
+
+
+def test_foresight_cap_reads_what_the_hold_flag_reads():
+    """With --allow-fds-horizon-hold the route is priced as before #666."""
+    capped = _corridor_route(9.0)
+    held = _corridor_route(9.0, hold=True)
+    assert [s.k_max for s in capped.segments] == [s.k_max for s in held.segments]
+    assert capped.tau_route == held.tau_route
+
+
+def test_foresight_cap_logs_once_per_field(caplog):
+    from pyfds_evac.core.route_graph import _cap_at_fds_end
+
+    field = ExtinctionField(SliceFieldSampler(_CorridorSlice()))
+    with caplog.at_level(logging.WARNING):
+        for t in (12.0, 14.0):
+            assert _cap_at_fds_end(9.0, t, field.end_time_s, field) == 10.0
+    assert len(_foresight_warnings(caplog)) == 1
+
+
+def test_decision_past_the_output_still_raises():
+    """The cap is on foresight only; the decision-time sample keeps its check."""
+    with pytest.raises(FdsHorizonError):
+        _corridor_route(30.0)
+
+
+class _HalfSecondSlice(_Slice):
+    """Frames every 0.5 s up to 10 s over x 0..30 m; K = 0.01 x frame index."""
+
+    def __init__(self):
+        super().__init__(times=np.arange(0.0, 10.01, 0.5))
+        extent = SimpleNamespace(x_start=0.0, x_end=30.0, y_start=-1.0, y_end=10.0)
+        mesh = SimpleNamespace(
+            coordinates={"x": np.array([0.0, 30.0]), "y": np.array([-1.0, 10.0])}
+        )
+        data = 0.01 * np.arange(float(len(self.times)))[:, None, None]
+        self.subslices = [
+            SimpleNamespace(
+                extent=extent,
+                mesh=mesh,
+                cell_centered=False,
+                data=data * np.ones((1, 2, 2)),
+            )
+        ]
+
+
+@pytest.mark.parametrize("order", [("DA", "DB"), ("DB", "DA")])
+def test_held_foresight_does_not_share_a_cache_bucket(order):
+    """A held time keeps its own segment-cache bucket (QA B1, #666).
+
+    Decided at 8 s, A reaches C0 -> E0 at 9.6 s (frame 9.5 s), B at 13 s,
+    past the 10 s end. Holding B at 10 s put it in A's bucket, so the agent
+    evaluated second read the other's frame. With the hold flag both read
+    what they read before #666, in either order: A k_max 0.19, B 0.20.
+    """
+    from shapely.geometry import box
+
+    from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, evaluate_route
+
+    field = ExtinctionField(
+        SliceFieldSampler(_HalfSecondSlice(), allow_horizon_hold=True)
+    )
+    stages = {
+        "C0": {"polygon": box(9, -1, 11, 1), "stage_type": "checkpoint"},
+        "E0": {"polygon": box(19, -1, 21, 1), "stage_type": "exit"},
+    }
+    dists = {
+        "DA": {"coordinates": list(box(7.42, -0.5, 8.42, 0.5).exterior.coords)},
+        "DB": {"coordinates": list(box(9.5, 6.0, 10.5, 7.0).exterior.coords)},
+    }
+    graph = StageGraph.from_scenario(
+        stages,
+        [
+            {"from": "DA", "to": "C0"},
+            {"from": "DB", "to": "C0"},
+            {"from": "C0", "to": "E0"},
+        ],
+        dists,
+    )
+
+    def route(src, cache):
+        return evaluate_route(
+            graph,
+            [src, "C0", "E0"],
+            8.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            cached_segments=cache,
+        )
+
+    expected_k_max = {"DA": 0.19, "DB": 0.20}
+    shared: dict = {}
+    for src in order:
+        cached = route(src, shared)
+        fresh = route(src, {})
+        assert cached.segments[1].k_max == pytest.approx(expected_k_max[src])
+        assert cached.tau_route == fresh.tau_route
+
+
+_T_JUNCTION_FDS = Path(
+    os.environ.get(
+        "T_JUNCTION_FDS",
+        Path.home()
+        / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
+        / "fds-evac-data"
+        / "t_junction"
+        / "fire_2MW_PVC",
+    )
+)
+
+
+@pytest.mark.slow
+@pytest.mark.external_data
+@pytest.mark.skipif(
+    not (_T_JUNCTION_FDS / "t_junction.smv").is_file(),
+    reason="t_junction FDS output absent",
+)
+def test_t_junction_runs_to_t_end_without_the_hold_flag(tmp_path, caplog):
+    """t_junction with fire_2MW_PVC: 300 s of FDS output, a 300 s run.
+
+    The setup check passes, yet before #666 the run stopped at about 295.6 s
+    with ``FdsHorizonError``: route foresight sampled smoke at 301.5 s.
+    """
+    import shutil
+
+    from pyfds_evac.core import load_scenario, run_scenario
+    from pyfds_evac.core.run_config import build_run_kwargs
+    from run import _build_parser
+
+    asset = _REPO / "assets" / "t_junction"
+    shutil.copy(asset / "config_full.json", tmp_path / "config.json")
+    shutil.copy(asset / "geometry.wkt", tmp_path / "geometry.wkt")
+    scenario = load_scenario(str(tmp_path))
+    opts = _build_parser().parse_args(
+        ["--scenario", str(tmp_path), "--fds-dir", str(_T_JUNCTION_FDS)]
+    )
+    with caplog.at_level(logging.WARNING):
+        result = run_scenario(scenario, **build_run_kwargs(scenario, opts))
+    try:
+        assert result.evacuation_time == pytest.approx(300.0, abs=0.1)
+        assert len(_foresight_warnings(caplog)) == 1
+        assert _horizon_warnings(caplog) == []
+    finally:
+        result.cleanup()

@@ -68,6 +68,18 @@ leave before `T_END`.
 the setup check into a logged warning and holds the last frame in the
 samplers, logging one warning per sampler the first time it happens.
 
+Route foresight (`anticipate`) samples smoke and FED at the time the agent
+would reach a leg, which can lie past the end of a run that passes the
+setup check. Such a time is held at the earliest last frame of the
+extinction and FED slices routing reads (`route_graph.py`, `_fds_end`,
+`_cap_at_fds_end`), with one warning per run, so foresight never raises
+`FdsHorizonError` (#666). The decision time is not held: a route decided
+past the window still raises without the flag. When those slices share
+their last frame, as in an FDS run that writes them all to `T_END`, a run
+with `--allow-fds-horizon-hold` reads the same frames as before and its
+results are unchanged. A slice that ends later is read at the earlier end
+time by foresight, where the flag alone would hold it at its own last frame.
+
 ### Outside the FDS slices
 
 A point is inside a slice when a subslice covers it; the subslice extents

@@ -5,6 +5,7 @@ from __future__ import annotations
 import heapq
 import logging
 import math
+import weakref
 from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import Protocol
@@ -1117,6 +1118,51 @@ def _arrival_time(time_s: float, walked_m: float, config: RouteCostConfig) -> fl
     return time_s + min(walked_m / speed, config.foresight_horizon_s)
 
 
+# The fields whose foresight cap has been logged. Every run builds its own
+# fields, so this logs once per run.
+_FORESIGHT_CAP_LOGGED: weakref.WeakSet = weakref.WeakSet()
+
+
+def _fds_end(*samplers: object) -> tuple[float, object | None]:
+    """The earliest last-frame time [s] of *samplers*, and the sampler.
+
+    A field read from FDS output reports ``end_time_s``; a constant or
+    synthetic field has none and does not bound foresight: ``(inf, None)``.
+    """
+    end_s, owner = math.inf, None
+    for sampler in samplers:
+        sampler_end = getattr(sampler, "end_time_s", None)
+        if sampler_end is not None and sampler_end < end_s:
+            end_s, owner = float(sampler_end), sampler
+    return end_s, owner
+
+
+def _cap_at_fds_end(
+    time_s: float, t_foreseen: float, end_s: float, owner: object | None
+) -> float:
+    """Hold a foreseen time at the last FDS frame *end_s* (#666).
+
+    Past the last frame there is no smoke record to foresee, so foresight
+    reads that frame, as a horizon ending there would, and the run logs it
+    once. A decision past *end_s* keeps its own time: the horizon check on
+    samples at the decision time (``FdsHorizonError`` or
+    ``--allow-fds-horizon-hold``) is unchanged.
+    """
+    cap = max(time_s, end_s)
+    if t_foreseen <= cap:
+        return t_foreseen
+    if owner is not None and owner not in _FORESIGHT_CAP_LOGGED:
+        _FORESIGHT_CAP_LOGGED.add(owner)
+        _logger.warning(
+            "Route foresight reaches beyond the earliest last FDS frame of "
+            "the routing fields (t=%.1f s > %.1f s): smoke and FED ahead are "
+            "read from that frame for the rest of the run.",
+            t_foreseen,
+            end_s,
+        )
+    return cap
+
+
 def evaluate_segment(
     graph: StageGraph,
     source: str,
@@ -1338,16 +1384,24 @@ def _measure_route(
     """
     segments: list[SegmentCost] = []
     walked = 0.0
+    end_s, end_owner = (
+        _fds_end(extinction_sampler, fed_rate_sampler)
+        if config.anticipate
+        else (math.inf, None)
+    )
     for i in range(len(path) - 1):
         cache_key = (path[i], path[i + 1])
         # With anticipation an edge costs what it costs *when you get there*,
         # so the same edge on two routes is two different questions and the
         # cache has to key on both. Bucketed to the second: finer than the
         # reroute interval, coarser than nothing, and well under the interval
-        # FDS writes slices at.
-        t_arrive = _arrival_time(time_s, walked, config)
+        # FDS writes slices at. Keyed on the arrival before the hold at the
+        # last FDS frame: a held time would share the bucket of arrivals just
+        # before the end and read their frame, or lend them the last one.
+        t_foreseen = _arrival_time(time_s, walked, config)
+        t_arrive = _cap_at_fds_end(time_s, t_foreseen, end_s, end_owner)
         if config.anticipate:
-            cache_key = (path[i], path[i + 1], round(t_arrive))
+            cache_key = (path[i], path[i + 1], round(t_foreseen))
         if cached_segments is not None and cache_key in cached_segments:
             seg = cached_segments[cache_key]
         else:

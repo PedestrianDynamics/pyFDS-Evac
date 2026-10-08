@@ -200,6 +200,11 @@ class ExtinctionField:
         """Return whether the extinction slice covers the x/y point."""
         return self._sampler.covers(x, y)
 
+    @property
+    def end_time_s(self) -> float:
+        """Return the time of the last extinction slice frame [s]."""
+        return self._sampler.end_time_s
+
     def samplers(self) -> list[SliceFieldSampler]:
         """Return the FDS slice samplers this field reads."""
         return [self._sampler]

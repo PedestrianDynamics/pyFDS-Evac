@@ -148,7 +148,12 @@ arrival_time = now + min(walked_so_far / base_speed_m_per_s,
 ```
 
 The unimpeded `base_speed_m_per_s` is used, not the smoke-reduced speed.
-`foresight_horizon_s` defaults to infinity.
+`foresight_horizon_s` defaults to infinity. An arrival time past the
+earliest last frame of the extinction and FED slices routing reads is held
+at that frame, with one warning per run: there is no record to foresee
+beyond it (#666). The segment cache keys on the arrival time before the
+hold. The decision time itself is
+not held, so the horizon check on the agent's own samples still applies.
 
 ### Composite cost
 

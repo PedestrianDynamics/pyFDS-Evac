@@ -358,7 +358,8 @@ PARAMETERS: tuple[Parameter, ...] = (
         GROUP_FDS,
         "Hold the last FDS frame when the run outlasts the FDS output "
         "(one warning per quantity). Without it, a max_simulation_time past "
-        "the FDS end time is an error at setup, and so is any sample past it.",
+        "the FDS end time is an error at setup, and so is any sample past it "
+        "except route foresight, which reads the last frame.",
         action="store_true",
         default=False,
         python="allow_horizon_hold of every field and VisibilityModel",
