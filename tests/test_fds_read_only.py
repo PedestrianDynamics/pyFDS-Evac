@@ -1,8 +1,23 @@
 """The fds_read_only mirror of external FDS output (#669)."""
 
+import importlib.util
 import os
+from pathlib import Path
 
 import pytest
+
+
+def _check_fdsreader_version(version):
+    """tests/conftest.py's check, loaded by path.
+
+    ``from conftest import`` can resolve to tests/verification/conftest.py,
+    whichever conftest module pytest imported first.
+    """
+    path = Path(__file__).with_name("conftest.py")
+    spec = importlib.util.spec_from_file_location("_tests_root_conftest", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.check_fdsreader_version(version)
 
 
 @pytest.fixture
@@ -71,14 +86,10 @@ def test_an_xdist_worker_keeps_the_fdsreader_cache_out_of_the_case(tmp_path):
 
 @pytest.mark.parametrize("version", ["1.11.6", "1.12.0", "2.0.0"])
 def test_the_worker_cache_patch_refuses_an_untested_fdsreader(version):
-    from conftest import check_fdsreader_version
-
     with pytest.raises(pytest.UsageError, match=f"found {version}"):
-        check_fdsreader_version(version)
+        _check_fdsreader_version(version)
 
 
 @pytest.mark.parametrize("version", ["1.11.7", "1.11.9"])
 def test_the_worker_cache_patch_accepts_fdsreader_1_11(version):
-    from conftest import check_fdsreader_version
-
-    check_fdsreader_version(version)
+    _check_fdsreader_version(version)
