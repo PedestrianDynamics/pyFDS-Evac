@@ -495,8 +495,10 @@ All defaults that differ between `run.py` and `run_scenario()` are listed in
 The `--vis-cell-size` docstring advises a cell smaller than the thinnest wall
 (`visibility.py`, `VisibilityModel.clear_air`), and the build warns when it is
 not ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)). On the familiarity deck,
-over 30 seeds, the discovery egress time changes by less than 5 % from 0.05 to
-0.025 m and by more from 0.1 to 0.05 m, because of doorway deadlocks at 0.1 m
+over 30 seeds, the median discovery egress time changes by less than 1 % at
+both halvings. The P90 changes by +1.4 % from 0.05 to 0.025 m (90 % interval
+up to +10 %) and by −5.2 % from 0.1 to 0.05 m, because two runs at 0.1 m end
+in doorway deadlocks
 ([criterion 6](/verification/testing-familiarity.md#pass-criteria);
 [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
 
@@ -659,7 +661,8 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   test bounds the rate.
 - **Discovery results depend on the clear-air grid**
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). On
-  the familiarity deck the 30-seed criterion passes from 0.05 to 0.025 m and
+  the familiarity deck the 30-seed criterion passes from 0.05 to 0.025 m on
+  this sample (the 90 % interval of the P90 change reaches +10 %) and
   fails from 0.1 to 0.05 m because of #359 deadlocks; #168 stays open,
   blocked on the #359 fix. Use a cell at most half the thinnest wall. Do
   not report a discovery egress time without its grid;
@@ -763,7 +766,8 @@ wayfinding or evacuation times. The coupled check, in clear air, is
 [Verification › Familiarity](/verification/testing-familiarity.md): its
 criteria 1–5 pass, except criterion 4 on the 0.1 m grid, where 4 agents
 deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
-Its grid-convergence criterion passes from 0.05 to 0.025 m and fails from
+Its grid-convergence criterion passes from 0.05 to 0.025 m on this 30-seed
+sample (the 90 % interval of the P90 change reaches +10 %) and fails from
 0.1 to 0.05 m because of #359 deadlocks
 ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), open).
 

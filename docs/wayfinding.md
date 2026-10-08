@@ -421,7 +421,8 @@ end; the exit enters the maps at t = 28–72 s (median 46 s). After t = 0 the
 agents make 79 route changes (59 explore, 20 onto the exit), all 20
 with a detour into a dead-end room; the last leaves at 84.6 s, median path
 57 m. Over 30 seeds the discovery time meets the convergence criterion from
-0.05 to 0.025 m but not from 0.1 to 0.05 m
+0.05 to 0.025 m on this sample (the 90 % interval of the P90 change reaches
++10 %) but not from 0.1 to 0.05 m
 ([criterion 6](testing-familiarity.md#pass-criteria); #168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
 
 > **Talk vs code.** The talk caption gives 35.1 s and 75.1 s. Those are results
