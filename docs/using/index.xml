@@ -2949,7 +2949,30 @@ so friction is always passed as 0, also when &lt;code>sfm_friction&lt;/code> is 
 A deck that declares &lt;code>sfm_friction&lt;/code> above 0 gets a warning. The run
 manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;h2>Spawn areas: &lt;code>distributions.&amp;lt;id&amp;gt;.parameters&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="spawn-areas-distributionsidparameters">&lt;/span>
-&lt;a href="#spawn-areas-distributionsidparameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
+&lt;a href="#spawn-areas-distributionsidparameters" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>parameters&lt;/code> is an object, or the same object as a JSON-encoded string;
+both read the same everywhere: the run, &lt;code>--show-config&lt;/code>, the TUI, the GUI
+and the &lt;code>Scenario&lt;/code> views
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/644" target="_blank" rel="noopener">#644&lt;/a>):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">20&lt;/span>, &lt;span style="color:#f92672">&amp;#34;v0&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">1.2&lt;/span>}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> &lt;span style="color:#e6db74">&amp;#34;{\&amp;#34;number\&amp;#34;: 20, \&amp;#34;v0\&amp;#34;: 1.2}&amp;#34;&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>A missing or &lt;code>null&lt;/code> &lt;code>parameters&lt;/code>, a string that is not valid JSON, and a
+string or value that is not an object (&lt;code>&amp;quot;null&amp;quot;&lt;/code>, &lt;code>&amp;quot;[]&amp;quot;&lt;/code>, &lt;code>&amp;quot;42&amp;quot;&lt;/code>, &lt;code>[]&lt;/code>)
+read as no parameters, so every key takes its default. The
+&lt;code>Scenario.set_agent_params()&lt;/code>, &lt;code>set_agent_count()&lt;/code> and
+&lt;code>set_flow_schedule()&lt;/code> setters store an object: a string is replaced by
+the object it encodes, with all its keys, and an unreadable value by an
+empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
+&lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>Key&lt;/th>
@@ -6517,7 +6540,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1611993352cd7facde099153b94de66c8185d477">&lt;code>1611993&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6541,7 +6564,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d8151fe4606c6f2541df016c6344ca62f51128863939d5e6040cafff8542a0c9&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c47f20b06bc0243c90b029f099c99999f86dce144397eae12fa1cf868800a3b0&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
