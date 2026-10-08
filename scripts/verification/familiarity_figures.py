@@ -97,6 +97,8 @@ PATTERN_COLORS = {
     "CP2 skipped: sign hidden at CP1": "#80cdc1",
     "CP1 and CP2 skipped: CP1 not learnt": "#dfc27d",
     "tour, turned back at CP3 (#250)": TURN,
+    "tour, then deadlocked (#359)": "#bababa",
+    "tour cut short: deadlocked (#359)": "#878787",
 }
 # discovery grids: one orange ramp, one dash per grid; 0.05 m is the reference
 GRID_STYLE = {
@@ -492,20 +494,44 @@ def check_decisions(geo, signs, traj, routes, tol):
         patrol_seen=patrol_seen,
         tour=tour,
         skipped=[(a, p) for a, k, p in skips if p is not None],
+        unexplained=[a for a, k, _ in skips if k == "unexplained"],
     )
 
 
-def route_class(seq, turned_back, skipped):
-    """One route category per agent; the categories do not overlap."""
+def route_class(seq, turned_back, skipped, stuck=False, unexplained=False):
+    """One route category per agent; the categories do not overlap.
+
+    An agent still inside at the end (``stuck``) is deadlocked (#359). Its
+    category follows criterion 4: a tour the criterion cannot explain
+    (``unexplained``) was cut short; any other tour was walked as predicted.
+    """
     if not seq:
         return "direct: S-CP3-exit"
     if turned_back:
         return "tour, turned back at CP3 (#250)"
+    if stuck:
+        if unexplained:
+            return "tour cut short: deadlocked (#359)"
+        return "tour, then deadlocked (#359)"
     if "CP3" in seq and "CP1" not in seq[: seq.index("CP3")]:
         return "CP1 and CP2 skipped: CP1 not learnt"
     if skipped:
         return "CP2 skipped: sign hidden at CP1"
     return "tour, then exit"
+
+
+def still_inside(traj, remaining):
+    """The agents still inside when an incomplete run ends: the last frame."""
+    if not remaining:
+        return set()
+    last = traj.groupby("id")["frame"].max()
+    inside = set(last.index[last == last.max()])
+    if len(inside) != remaining:
+        raise ValueError(
+            f"{len(inside)} agents in the last frame, the manifest says "
+            f"{remaining} remain"
+        )
+    return inside
 
 
 def door_crossings(traj, y_door=13.05, x_lo=17.0, x_hi=18.2):
@@ -1021,7 +1047,7 @@ def plot_egress(out, curves, refs, patterns, note):
         vals = np.array([patterns[k].get(name, 0) for k in labels])
         if not vals.any():
             continue
-        hatch = "////" if "turned back" in name else None
+        hatch = "////" if "turned back" in name or "deadlocked" in name else None
         axb.barh(
             labels, vals, left=left, color=color, ec="white", hatch=hatch, label=name
         )
@@ -1268,9 +1294,17 @@ def main():
             res[name] |= check_decisions(geo, signs, traj, routes, tol)
         r = res["T"]
         skipped = {a for a, _ in r["skipped"]}
+        unexplained = set(r["unexplained"])
+        stuck = still_inside(traj, remaining)
         pat = {}
         for a in routes["agent_id"].unique():
-            name = route_class(node_sequence(routes, a), a in wanderers, a in skipped)
+            name = route_class(
+                node_sequence(routes, a),
+                a in wanderers,
+                a in skipped,
+                stuck=a in stuck,
+                unexplained=a in unexplained,
+            )
             pat[name] = pat.get(name, 0) + 1
         label = f"{cell:g} m"
         curves[label] = (t_out[: len(t_out) - remaining], t_out[-1])

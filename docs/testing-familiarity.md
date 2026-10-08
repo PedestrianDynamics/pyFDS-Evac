@@ -141,7 +141,7 @@ first, and 19 follow the predicted tour. Agent 11 turns from CP1 to CP3
 without visiting CP2: CP2's sign was not in sight where it stood at CP1, the
 case criterion 4 allows. No agent turns back at CP3's door.
 
-![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery at 0.25 m all on the tour; at 0.05 and 0.025 m 19 on the tour and one skipping CP2 because its sign was hidden at CP1. At 0.1 m the curve stops at 16 of 20 out, because four agents are deadlocked in CP1's door](/images/verification/familiarity_egress.png)
+![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery at 0.25 m all on the tour; at 0.05 and 0.025 m 19 on the tour and one skipping CP2 because its sign was hidden at CP1. At 0.1 m the curve stops at 16 of 20 out, because four agents are deadlocked in CP1's door; its bar shows 15 on the tour, one skipping CP2, one deadlocked after the predicted tour and three whose tour the deadlock cut short](/images/verification/familiarity_egress.png)
 
 | Check (0.05 m grid) | Expected | Simulated |
 |---|---|---|

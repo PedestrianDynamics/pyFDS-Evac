@@ -64,3 +64,29 @@ def test_check_full_sees_a_box_crossed_between_half_second_samples():
     )
     df, _, _ = fig.check_full(fig.Geodesic(walkable), polys, traj, [], maps, edges, 1.3)
     assert df.loc[0, "entered"] == {"CP3"}
+
+
+def test_route_class_counts_deadlocked_agents_as_criterion_4_does():
+    """An agent still inside is deadlocked, never "tour, then exit" (#359).
+
+    Criterion 4 counts a tour cut short as unexplained and a full tour as
+    predicted; the bar categories split the deadlocked agents the same way.
+    """
+    fig = _figures_module()
+    tour = ["CP0", "CP1", "CP2", "CP3"]
+    assert fig.route_class(tour + ["E"], False, False) == "tour, then exit"
+    assert (
+        fig.route_class(tour, False, False, stuck=True)
+        == "tour, then deadlocked (#359)"
+    )
+    assert (
+        fig.route_class(["CP0", "CP1"], False, False, stuck=True, unexplained=True)
+        == "tour cut short: deadlocked (#359)"
+    )
+
+
+def test_still_inside_takes_the_agents_of_the_last_frame():
+    fig = _figures_module()
+    traj = pd.DataFrame({"id": [1, 1, 2, 2, 3], "frame": [0, 5, 0, 9, 9]})
+    assert fig.still_inside(traj, 0) == set()
+    assert fig.still_inside(traj, 2) == {2, 3}
