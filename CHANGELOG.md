@@ -221,6 +221,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a width short of it only by floating-point noise, as in
   CorridorFlowExample (0.09999999999999964 m) (#682). Which exits are
   dropped does not change.
+- On a plain FDS deck, `pyfds-evac init` no longer advises excluding a
+  fire surface from the walkable area "with &EVHO": an `&EVHO` turns the
+  deck into an FDS+Evac deck, and t_junction then lost both exits. It now
+  advises rerunning `init` with `--walkable FILE.wkt`, a walkable area
+  without the surface (agents then neither spawn nor walk on it), or, to
+  keep it walkable, cutting a notch around it from the edge of the spawn
+  polygon in `config.json`. FDS+Evac decks keep the `&EVHO` advice (#683).
 - Route foresight no longer stops a run that passes the FDS horizon
   check (#666). With `anticipate` on (the default) and without
   `--allow-fds-horizon-hold`, a leg foreseen past the last FDS frame

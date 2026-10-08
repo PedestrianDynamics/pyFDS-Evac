@@ -1144,8 +1144,19 @@ def _check_density(walkable, spawns, report) -> None:
 def _fire_surfaces(deck: FdsDeck, z_range, walkable, report) -> None:
     """Burning surfaces between the floor and the band top, in walkable space.
 
-    Reported, not excluded: FDS+Evac does not exclude them either.
+    Reported, not excluded: FDS+Evac does not exclude them either. The
+    advice names a way the deck kind supports: an ``&EVHO`` in a plain
+    deck would make it an FDS+Evac deck.
     """
+    if report.kind == "legacy":
+        advice = ", as in FDS+Evac; exclude it with &EVHO or the spawn polygon"
+    else:
+        advice = (
+            "; rerun init with --walkable FILE.wkt, a walkable area without it "
+            "(agents then neither spawn nor walk on it), or, to keep it walkable, "
+            "cut a notch around it from the edge of the spawn polygon in "
+            "distributions.<id>.coordinates of config.json"
+        )
     burning = {s.id for s in deck.group("SURF") if _burns(s)}
     for record in deck.group("VENT") + deck.group("OBST"):
         if not _burning_surface(record, burning):
@@ -1159,8 +1170,7 @@ def _fire_surfaces(deck: FdsDeck, z_range, walkable, report) -> None:
             "info",
             record.group,
             f"fire surface over {overlap:.3f} m2 "
-            "of the walkable area: agents may spawn on it, as in FDS+Evac; "
-            "exclude it with &EVHO or the spawn polygon",
+            f"of the walkable area: agents may spawn on it{advice}",
             record,
         )
 
