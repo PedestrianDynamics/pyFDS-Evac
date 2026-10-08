@@ -768,11 +768,12 @@ uv run python scripts/docs/schroeder_grid_figures.py --data DATA \
 `grid_perturbation.png` comes from the same grid script with
 `--family hrr060`.
 
-**Provenance.** The evacuation runs on this page come from commit
-`4a7142f` (main at `100e91d` with this page's scripts). Each run's manifest
-records that commit with `git_dirty: false` and
-`agent_seeding: spawn-key-blake2b-v2`. A re-run of all 160 evacuations
-on `449a755` prints the same values for the headline. When the code
+**Provenance.** The evacuation runs on this page were made at `4a7142f`, a
+branch commit that is not on main; its `pyfds_evac/` equals main at
+`100e91d`. Each run's manifest records that commit with `git_dirty: false`
+and `agent_seeding: spawn-key-blake2b-v2`. A re-run of all 160 evacuations
+on main at `449a755d` prints the same values for the headline, so cite
+`449a755d`. The results were not re-checked after the 0.4.0 routing changes. When the code
 changes, re-run the command into a new `RUNS` folder and compare the
 printed tables with this page.
 
