@@ -1013,6 +1013,21 @@ def test_fire_surface_in_walkable_space_is_reported(tmp_path):
     result = _room(tmp_path, DOOR, burner)
     [item] = [i for i in _items(result, "A", "VENT") if "fire surface" in i.message]
     assert "1.000 m2" in item.message
+    assert "&EVHO" in item.message
+
+
+def test_fire_surface_on_a_plain_deck_advises_a_supported_exclusion(tmp_path):
+    burner = (
+        "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /\n"
+        "&SURF ID='BURNER', HRRPUA=1000. /\n"
+        "&VENT XB=3,4,3,4,0,0, SURF_ID='BURNER' /"
+    )
+    result = _modern(tmp_path, burner)
+    [item] = [i for i in _items(result, "A", "VENT") if "fire surface" in i.message]
+    assert "&EVHO" not in item.message
+    advice = item.message.split("; ", 1)[1]
+    assert advice.startswith("rerun init with --walkable FILE.wkt")
+    assert "cut a notch around it from the edge of the spawn polygon" in advice
 
 
 def test_report_lists_the_loader_defaults(tmp_path):
