@@ -82,6 +82,9 @@ steps = [
   ["Check the scenario runs in clear air (about 5 s)", [
     "python examples/first_fds_case.py",
   ]],
+  ["Check the deck before FDS runs (writes nothing)", [
+    "pyfds-evac init assets/t_junction/t_junction.fds --check",
+  ]],
   ["Run FDS (about 20 min with 4 MPI processes)", [
     "mkdir -p fire && cp assets/t_junction/t_junction.fds fire/",
     "cd fire && mpiexec -n 4 fds t_junction.fds && cd ..",

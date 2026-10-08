@@ -53,6 +53,22 @@ extinction coefficient K [1/m] that the smoke-speed model actually needs.
 If your deck has `QUANTITY='EXTINCTION'` where you meant the extinction
 coefficient, fix it to `QUANTITY='EXTINCTION COEFFICIENT'` and rerun FDS.
 
+pyFDS-Evac reads `&SLCF` output only. `&DEVC` device output is listed by
+`--inspect-fds` but not read by the run.
+
+## Check the deck before you run FDS
+
+`pyfds-evac init DECK.fds --check` reads the deck, before FDS runs, and
+writes nothing. It applies the run's rule for choosing a slice and reports
+each slice of the table above, `&TIME T_END`, `DT_SLCF` and the `&REAC`
+yields, with the `&SLCF` line to add for each missing one. It exits with 0
+when the deck has the extinction coefficient, CO, CO2, O2 and `T_END`, with
+3 when one is missing, and with 1 when the deck cannot be read. The full
+list is in
+[Usage › init --check](usage.md#check-a-deck-before-running-fds--pyfds-evac-init---check),
+and [Start from your own FDS case](start-from-fds-deck.md) shows it on a
+ready deck and on one that fails.
+
 ## Declaring a slice is not enough
 
 The species also has to exist in the run. Under simple chemistry, `OXYGEN`,
