@@ -151,7 +151,12 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>The unimpeded &lt;code>base_speed_m_per_s&lt;/code> is used, not the smoke-reduced speed.
-&lt;code>foresight_horizon_s&lt;/code> defaults to infinity.&lt;/p>
+&lt;code>foresight_horizon_s&lt;/code> defaults to infinity. An arrival time past the
+earliest last frame of the extinction and FED slices routing reads is held
+at that frame, with one warning per run: there is no record to foresee
+beyond it (#666). The segment cache keys on the arrival time before the
+hold. The decision time itself is
+not held, so the horizon check on the agent&amp;rsquo;s own samples still applies.&lt;/p>
 &lt;h3>Composite cost&lt;span class="hx-absolute -hx-mt-20" id="composite-cost">&lt;/span>
 &lt;a href="#composite-cost" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The composite is the additive model&amp;rsquo;s ranking number. It is still
 computed and reported under the gate, where it does not rank:&lt;/p>
