@@ -50,6 +50,10 @@ CI runs the whole suite with the `gui` extra. It deselects the tests marked
 they skip themselves when that data is absent. See
 [`.github/workflows/tests.yml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/.github/workflows/tests.yml).
 
+CI runs the tests in parallel (`-n auto --dist loadgroup`). A test whose
+child process opens a tracked FDS case in `assets/` goes in the
+`fds_assets_child` xdist group: `@pytest.mark.xdist_group("fds_assets_child")`.
+
 ### Coverage
 
 CI measures line and branch coverage and reports it on

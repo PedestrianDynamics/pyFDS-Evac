@@ -13,6 +13,9 @@ from pathlib import Path
 
 import pytest
 
+# Child processes here open the FDS output under assets/; see conftest.py.
+pytestmark = pytest.mark.xdist_group("fds_assets_child")
+
 ROOT = Path(__file__).resolve().parents[1]
 
 PAGES = {

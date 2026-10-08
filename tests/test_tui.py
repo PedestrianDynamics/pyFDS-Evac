@@ -1977,6 +1977,7 @@ def test_fire_run_draws_smoke_and_replays_it(tmp_path, fds_read_only):
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group("fds_assets_child")
 def test_coupled_run_sends_grids_after_the_first_fds_frame(tmp_path):
     """In-repo FDS output: frames every simulated second, grids at t > 0."""
     from pyfds_evac.tui.runner import ProcessRunner
@@ -1997,6 +1998,7 @@ def test_coupled_run_sends_grids_after_the_first_fds_frame(tmp_path):
 
 
 @pytest.mark.slow
+@pytest.mark.xdist_group("fds_assets_child")
 def test_child_output_goes_to_child_log_not_the_terminal(tmp_path, monkeypatch, capfd):
     """Debug lines and warnings of the run never reach the TUI's terminal (#519)."""
     from pyfds_evac.tui.runner import ProcessRunner

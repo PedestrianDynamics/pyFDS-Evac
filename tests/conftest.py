@@ -1,10 +1,13 @@
 """Shared test setup."""
 
+import hashlib
 import os
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 SCIEBO = Path.home() / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
 # The external FDS output the ``external_data`` tests read, resolved as the
@@ -21,6 +24,59 @@ EXTERNAL_DATA = (
         )
     ),
 )
+
+
+#: fdsreader versions whose cache the worker patch below was checked against.
+FDSREADER_TESTED = (Version("1.11.7"), Version("1.12"))
+
+
+def check_fdsreader_version(version: str) -> None:
+    """Stop the run if the worker cache patch was not checked on *version*."""
+    low, high = FDSREADER_TESTED
+    if not low <= Version(version) < high:
+        raise pytest.UsageError(
+            "cannot move the fdsreader cache per xdist worker: the patch in "
+            f"tests/conftest.py was checked on fdsreader >={low},<{high}, "
+            f"found {version}"
+        )
+
+
+def pytest_configure(config):
+    """Give each xdist worker its own fdsreader cache.
+
+    fdsreader 1.11.7 writes ``<CHID>.pickle`` next to the ``.smv``,
+    rewrites it on every open after the first in a process, and deletes
+    a pickle it cannot read. Workers opening the same tracked case then
+    read each other's half-written pickle and race on deleting it
+    (FileNotFoundError). Each worker keeps the cache in its own folder.
+    Child processes, which this patch does not reach, open the tracked
+    cases only in tests marked ``xdist_group("fds_assets_child")``;
+    ``--dist loadgroup`` runs those one after another in one worker.
+    Upstream issue: none yet. Remove when fdsreader writes its cache
+    atomically or lets the cache folder be set.
+    """
+    worker = getattr(config, "workerinput", {}).get("workerid")
+    if worker is None:
+        return
+    import fdsreader
+    from fdsreader.simulation import Simulation
+
+    check_fdsreader_version(fdsreader.__version__)
+    if not hasattr(Simulation, "_get_pickle_filename"):
+        raise pytest.UsageError(
+            "cannot move the fdsreader cache per xdist worker: fdsreader "
+            f"{fdsreader.__version__} has no Simulation._get_pickle_filename"
+        )
+    cache = Path(tempfile.mkdtemp(prefix=f"fdsreader-{worker}-"))
+    config.add_cleanup(lambda: shutil.rmtree(cache, ignore_errors=True))
+
+    def pickle_filename(cls, root_path: str, chid: str) -> str:
+        key = hashlib.sha256(os.fsencode(os.path.abspath(root_path))).hexdigest()
+        folder = cache / key[:16]
+        folder.mkdir(exist_ok=True)
+        return str(folder / f"{chid}.pickle")
+
+    Simulation._get_pickle_filename = classmethod(pickle_filename)
 
 
 @pytest.fixture(autouse=True)

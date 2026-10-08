@@ -1,8 +1,23 @@
 """The fds_read_only mirror of external FDS output (#669)."""
 
+import importlib.util
 import os
+from pathlib import Path
 
 import pytest
+
+
+def _check_fdsreader_version(version):
+    """tests/conftest.py's check, loaded by path.
+
+    ``from conftest import`` can resolve to tests/verification/conftest.py,
+    whichever conftest module pytest imported first.
+    """
+    path = Path(__file__).with_name("conftest.py")
+    spec = importlib.util.spec_from_file_location("_tests_root_conftest", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    module.check_fdsreader_version(version)
 
 
 @pytest.fixture
@@ -53,3 +68,28 @@ def test_mirror_copies_when_symlinks_are_denied(fds_read_only, fds_output, monke
     for name in ("case_1_1.sf", "sub/case_devc.csv"):
         assert not (mirror / name).is_symlink()
         assert not os.path.samefile(fds_output / name, mirror / name)
+
+
+@pytest.mark.skipif(
+    "PYTEST_XDIST_WORKER" not in os.environ, reason="needs an xdist worker"
+)
+def test_an_xdist_worker_keeps_the_fdsreader_cache_out_of_the_case(tmp_path):
+    """Under xdist, fdsreader's pickle goes to the worker's folder (conftest)."""
+    from fdsreader.simulation import Simulation
+
+    case = tmp_path / "case"
+    case.mkdir()
+    pickle = os.path.abspath(Simulation._get_pickle_filename(str(case), "case"))
+    assert os.path.basename(pickle) == "case.pickle"
+    assert os.path.commonpath([pickle, str(case)]) != str(case)
+
+
+@pytest.mark.parametrize("version", ["1.11.6", "1.12.0", "2.0.0"])
+def test_the_worker_cache_patch_refuses_an_untested_fdsreader(version):
+    with pytest.raises(pytest.UsageError, match=f"found {version}"):
+        _check_fdsreader_version(version)
+
+
+@pytest.mark.parametrize("version", ["1.11.7", "1.11.9"])
+def test_the_worker_cache_patch_accepts_fdsreader_1_11(version):
+    _check_fdsreader_version(version)

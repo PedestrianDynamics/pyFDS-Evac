@@ -805,6 +805,7 @@ def _drain(queue, process) -> list:
     return received
 
 
+@pytest.mark.xdist_group("fds_assets_child")
 def test_a_child_process_streams_the_run(tmp_path, monkeypatch):
     """Order of the events, the result, and the CLI's SQLite."""
     # The geometry hash in frame_data follows the hash seed; both

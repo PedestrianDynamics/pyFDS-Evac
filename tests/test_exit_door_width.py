@@ -24,6 +24,9 @@ from pyfds_evac.core.direct_steering_runtime import (
 )
 from pyfds_evac.core.scenario import Scenario, run_scenario
 
+# One worker runs this module, so its module-scoped runs happen once.
+pytestmark = pytest.mark.xdist_group("test_exit_door_width")
+
 ROOM_M = 8.0
 DOOR_DEPTH_M = 1.0
 NUM_AGENTS = 80

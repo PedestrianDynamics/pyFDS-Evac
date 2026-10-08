@@ -38,6 +38,9 @@ from pyfds_evac.core.fed import default_fed_rate_per_minute
 from pyfds_evac.core.run_config import build_run_kwargs
 from pyfds_evac.core.scenario import load_scenario, run_scenario
 
+# One worker runs this module, so its module-scoped runs happen once.
+pytestmark = pytest.mark.xdist_group("test_iso_table22_coupled")
+
 ASSET = Path("assets/iso_table22_coupled")
 CASES = ("a", "b", "c", "d")
 

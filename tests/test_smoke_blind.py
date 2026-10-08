@@ -22,6 +22,9 @@ from pathlib import Path
 
 import pytest
 
+# One worker runs this module, so its module-scoped runs happen once.
+pytestmark = pytest.mark.xdist_group("test_smoke_blind")
+
 REPO = Path(__file__).resolve().parents[1]
 K_RIGHT_ARM = 2.0  # 1/m, enough for the route gate to refuse the right arm
 CO_RIGHT_ARM = 0.01  # volume fraction
