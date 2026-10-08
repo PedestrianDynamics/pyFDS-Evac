@@ -612,8 +612,8 @@ sampled along the whole route, including stretches it has never seen
 By default (&lt;code>routing.anticipate&lt;/code> = true, &lt;code>routing.foresight_horizon_s&lt;/code>
 unbounded), the path to each exit is found from the agent&amp;rsquo;s position on the
 smoke at decision time,
-and each stretch of that path is then priced with the smoke that the
-finished FDS run holds for the time the agent would arrive there. Knowledge limits which
+and each point of that path is then priced with the smoke that the
+finished FDS run holds for the time the agent would arrive there (#650). Knowledge limits which
 routes an agent ranks, and only fully familiar agents know the whole graph;
 it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.&lt;/p>
@@ -1123,7 +1123,7 @@ group. Per-exit familiarity is not supported
 &lt;tr>
 &lt;td>&lt;strong>Anticipation&lt;/strong>&lt;/td>
 &lt;td>&lt;code>FED_max_Door * dist / Speed&lt;/code>: extrapolation from presently observable conditions&lt;/td>
-&lt;td>the path to each exit is found on the smoke at decision time; &lt;code>anticipate&lt;/code> then prices each edge of that path at the agent&amp;rsquo;s arrival time from the FDS solution itself — an upper bound on foresight, not FDS+Evac&amp;rsquo;s model&lt;/td>
+&lt;td>the path to each exit is found on the smoke at decision time; &lt;code>anticipate&lt;/code> then prices each point of that path at the agent&amp;rsquo;s arrival time from the FDS solution itself (#650) — an upper bound on foresight, not FDS+Evac&amp;rsquo;s model&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Equilibrium&lt;/strong>&lt;/td>

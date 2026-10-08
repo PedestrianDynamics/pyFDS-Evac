@@ -136,11 +136,10 @@ smoke at decision time and finds one path to each exit from the agent&amp;rsquo;
 position. Its first legs are the walks from the agent to each successor of
 its origin node and to its current target, weighted by the smoke on each walk
 (&lt;code>_first_hops&lt;/code>); it never routes back through the origin node. With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of
-&lt;code>cost_model&lt;/code>&lt;/strong>), that path is then measured edge by edge at the time the
-agent would reach each edge&amp;rsquo;s start (&lt;code>_measure_route&lt;/code>):&lt;/p>
+&lt;code>cost_model&lt;/code>&lt;/strong>), every smoke sample on that path is then read at the time
+the agent would reach it (&lt;code>_measure_route&lt;/code>, &lt;code>_ForesightClock&lt;/code>):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>arrival_time = now &amp;#43; min(walked_so_far / base_speed_m_per_s,
-foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;pre>&lt;code>t(p) = now &amp;#43; min(s(p) / base_speed_m_per_s, foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -150,12 +149,18 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>&lt;code>s(p)&lt;/code> is the walk from the agent&amp;rsquo;s position to the sample &lt;code>p&lt;/code>: the walk to
+the next node through the walkable area, then the node legs. Without an
+agent position it starts at the route&amp;rsquo;s first node. Every leg is sampled
+this way, so the cost does not jump when the agent passes a node (#650;
+reading each edge at its start did, since the first leg starts where the
+agent stands). The sample positions are those of the decision-time
+measurement; only their times differ. The FED rate of an edge stays one
+sample, at its midpoint, read at &lt;code>t&lt;/code> of the edge&amp;rsquo;s start.&lt;/p>
 &lt;p>The unimpeded &lt;code>base_speed_m_per_s&lt;/code> is used, not the smoke-reduced speed.
-&lt;code>foresight_horizon_s&lt;/code> defaults to infinity. An arrival time past the
-earliest last frame of the extinction and FED slices routing reads is held
-at that frame, with one warning per run: there is no record to foresee
-beyond it (#666). The segment cache keys on the arrival time before the
-hold. The decision time itself is
+&lt;code>foresight_horizon_s&lt;/code> defaults to infinity. A time past the earliest last
+frame of the extinction and FED slices routing reads is held at that frame,
+with one warning per run: there is no record to foresee beyond it (#666). The decision time itself is
 not held, so the horizon check on the agent&amp;rsquo;s own samples still applies.&lt;/p>
 &lt;h3>Composite cost&lt;span class="hx-absolute -hx-mt-20" id="composite-cost">&lt;/span>
 &lt;a href="#composite-cost" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The composite is the additive model&amp;rsquo;s ranking number. It is still
@@ -691,7 +696,13 @@ reused across route evaluations within the same timestep. This avoids
 redundant extinction sampling when multiple candidate routes share
 segments. Under &lt;code>anticipate&lt;/code> the same edge on two routes is priced at
 two different arrival times, so the route measurement (&lt;code>_measure_route&lt;/code>)
-keys on &lt;code>(source, target, round(arrival_time_s))&lt;/code>. The path search keeps
+keys on &lt;code>(source, target, arrival_time_s, limit)&lt;/code>, the exact time the agent
+reaches the edge and the latest time any sample may be read at,
+&lt;code>min(now + foresight_horizon_s, max(now, last FDS frame))&lt;/code>. Every sample on
+the edge is read at a time fixed by those two (#650), so an entry is what a
+fresh measurement would give. A run uses one cache per decision time: the
+reroute pass clears it each pass and the opening choice of the agents placed
+at t = 0 shares one; a flow spawn ranks without it. The path search keeps
 the &lt;code>(source, target)&lt;/code> key, since it prices every edge at decision time. The walks from the agent
 to the first nodes of its routes are deliberately not cached there: they belong
 to one agent&amp;rsquo;s position, and the cache is shared across agents in a pass. They
@@ -773,7 +784,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>arrival_time_s&lt;/code>&lt;/td>
 &lt;td>&lt;code>float&lt;/code>&lt;/td>
-&lt;td>Time the segment was priced at (see anticipation)&lt;/td>
+&lt;td>Time the agent would reach the segment&amp;rsquo;s start; its FED rate is read then (see anticipation)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1547,11 +1558,11 @@ asymmetry, and it moved nothing: 34 returns before and after.&lt;/li>
 &lt;/ul>
 &lt;h3>Anticipation&lt;span class="hx-absolute -hx-mt-20" id="anticipation">&lt;/span>
 &lt;a href="#anticipation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path to each exit is found on the smoke at decision time, starting from
-the agent&amp;rsquo;s position (&lt;code>_generate_candidates&lt;/code>, &lt;code>_first_hops&lt;/code>). With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), that path is
-then measured edge by edge at the time the agent would reach each edge&amp;rsquo;s
-start (&lt;code>_measure_route&lt;/code>):&lt;/p>
+the agent&amp;rsquo;s position (&lt;code>_generate_candidates&lt;/code>, &lt;code>_first_hops&lt;/code>). With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>), every
+smoke sample on that path is then read at the time the agent would reach it
+(&lt;code>_measure_route&lt;/code>), counted from the agent&amp;rsquo;s position (#650):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>arrival_time = now &amp;#43; min(distance_walked_so_far / base_speed_m_per_s,
+&lt;pre>&lt;code>t(p) = now &amp;#43; min(walked_from_agent_to_p / base_speed_m_per_s,
 foresight_horizon_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -1672,7 +1683,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>anticipate&lt;/code>&lt;/td>
 &lt;td>&lt;code>true&lt;/code>&lt;/td>
-&lt;td>Measure the path to each exit edge by edge at the agent&amp;rsquo;s arrival time; the path search uses the smoke at decision time.&lt;/td>
+&lt;td>Read every smoke sample on the path to each exit at the time the agent would reach it; the path search uses the smoke at decision time.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>&lt;strong>active&lt;/strong>&lt;/td>
 &lt;/tr>
@@ -1855,7 +1866,7 @@ still takes a value and does nothing. &lt;code>visibility_extinction_threshold&l
 (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
 survives, and on the fires measured here FED never reaches its threshold, so
 in practice &lt;strong>nothing bypasses the anchor&lt;/strong>.&lt;/li>
-&lt;li>&lt;strong>Anticipation samples the field too early.&lt;/strong> Segments are priced at
+&lt;li>&lt;strong>Anticipation samples the field too early.&lt;/strong> Samples are read at
 &lt;code>now + walked_so_far / base_speed_m_per_s&lt;/code>, the &lt;em>unimpeded&lt;/em> speed, while an
 agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 of it. The
 clock therefore runs ahead of the agent systematically, and it runs furthest
