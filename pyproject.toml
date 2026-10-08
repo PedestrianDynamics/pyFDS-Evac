@@ -73,7 +73,6 @@ packages = ["pyfds_evac"]
 # use; the website, planning notes and literature summaries stay in git.
 exclude = [
     "/.github",
-    "/.opencode",
     "/.specify",
     "/artifacts",
     "/assets/fds_evac_guide",
