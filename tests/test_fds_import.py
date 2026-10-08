@@ -824,14 +824,52 @@ def test_evac_mesh_without_hole_drops_the_exit_side(tmp_path):
     assert not result.report.runnable
 
 
-def test_zero_width_evac_is_named_as_the_reason(tmp_path):
-    line = "&EVAC ID='line', XB=2,2,1,9,1,1, NUMBER_INITIAL_PERSONS=5 /"
-    result = _evac_mesh(tmp_path, line, WALL_HOLE)
-    [item] = [i for i in _items(result, "D", "EVAC") if i.id == "line"]
+def test_zero_width_evac_outside_the_walkable_area_is_named(tmp_path):
+    point = "&EVAC ID='out', XB=20,20,5,5,1,1, NUMBER_INITIAL_PERSONS=5 /"
+    result = _evac_mesh(tmp_path, point, WALL_HOLE)
+    [item] = [i for i in _items(result, "D", "EVAC") if i.id == "out"]
     assert item.level == "error" and item.message.startswith("zero-width XB")
-    assert "walkable" not in item.message
+    assert "band lies outside the walkable area" in item.message
     [reason] = result.report.not_runnable
     assert reason.startswith("no agents to place: 1 &EVAC record(s) have a zero-width")
+
+
+def test_line_evac_becomes_a_band(tmp_path):
+    """#675: a line grows to 0.6 m across its zero-width axis."""
+    line = "&EVAC ID='line', XB=2,2,1,9,1,1, NUMBER_INITIAL_PERSONS=5 /"
+    result = _evac_mesh(tmp_path, line, WALL_HOLE)
+    spawn = result.raw["distributions"]["line"]
+    assert _same(_poly(spawn["coordinates"]), box(1.7, 1, 2.3, 9))
+    assert spawn["parameters"]["number"] == 5
+    [report] = result.report.distributions
+    assert report["zero_width_expansion"] == {
+        "shape": "line",
+        "xb": [2.0, 2.0, 1.0, 9.0],
+        "band_m": 0.6,
+        "band_xb": [1.7, 2.3, 1.0, 9.0],
+        "walkable_area_m2": 4.8,
+    }
+    assert result.report.runnable
+    assert any(i.id == "line" for i in _items(result, "A", "EVAC"))
+
+
+def test_point_evac_becomes_a_square(tmp_path):
+    point = "&EVAC ID='p', XB=2,2,5,5,1,1, NUMBER_INITIAL_PERSONS=1 /"
+    result = _evac_mesh(tmp_path, point, WALL_HOLE)
+    spawn = result.raw["distributions"]["p"]
+    assert _same(_poly(spawn["coordinates"]), box(1.7, 4.7, 2.3, 5.3))
+    assert result.report.distributions[0]["zero_width_expansion"]["shape"] == "point"
+
+
+def test_band_is_clipped_to_the_walkable_area(tmp_path):
+    """A point by the wall: the band is cut by it into two pieces."""
+    point = "&EVAC ID='w', XB=4.9,4.9,8,8,1,1, NUMBER_INITIAL_PERSONS=2 /"
+    result = _evac_mesh(tmp_path, point, WALL_HOLE)
+    pieces = {k: v for k, v in result.raw["distributions"].items()}
+    assert sorted(pieces) == ["w_1", "w_2"]
+    areas = sorted(_poly(v["coordinates"]).area for v in pieces.values())
+    assert areas == pytest.approx([0.15 * 0.6, 0.35 * 0.6])
+    assert sum(v["parameters"]["number"] for v in pieces.values()) == 2
 
 
 def test_touching_evacuation_meshes_are_reported(tmp_path):

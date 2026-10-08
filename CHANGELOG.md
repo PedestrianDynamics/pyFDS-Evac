@@ -55,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     evacuation meshes of one floor are reported, a `COUNT_ONLY` exit is
     listed as a counter, and a point or line `&EVAC` is named as the reason
     when no agents can be placed (#672).
+  - A point or line `&EVAC` becomes a 0.6 m band across its zero-width
+    axis (a 0.6 m square for a point), clipped to the walkable area; its
+    agents are placed at random in it, and `import_report.json` records the
+    expansion per group as `zero_width_expansion` (#675).
 - `--force` lets `pyfds-evac init` overwrite an output folder that holds a
   `config.json` it did not write; without it, such a folder is refused
   (#632).

@@ -204,3 +204,5 @@ class ImportedSpawn:
     #: The deck record the area comes from, ("EVAC", line) or ("ENTR", line);
     #: None for an inferred area. Not written to any file.
     parent: tuple[str, int] | None = None
+    #: How a point or line ``&EVAC`` was grown to an area (import report).
+    expansion: dict[str, Any] | None = None

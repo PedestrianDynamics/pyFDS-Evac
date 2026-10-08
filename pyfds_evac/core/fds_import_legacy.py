@@ -22,6 +22,7 @@ from .fds_import_geometry import (
     largest_remainder,
     line_from_xb,
     polygons_of,
+    rounded,
     split_holes,
     union,
 )
@@ -108,6 +109,8 @@ COSMETIC = (
 #: Groups that are dropped whole: single floor, no devices.
 #: Start of the item for an ``&EVAC`` whose ``XB`` is a point or a line.
 ZERO_WIDTH = "zero-width XB"
+#: Width of the band a point or line ``&EVAC`` is expanded to [m].
+ZERO_WIDTH_BAND_M = 0.6
 DROPPED_GROUPS = {
     "CORR": "corridor between floors; one floor is imported",
     "STRS": "stairs; one floor is imported",
@@ -462,23 +465,64 @@ def _evac_spawns(ctx, record, evhos, exit_ids) -> list[ImportedSpawn]:
         ctx.add("D", "info", "EVAC", "NUMBER_INITIAL_PERSONS is 0: no agents", record)
         return []
     rect = box(*_rect(record))
+    expansion = None
     if rect.area <= 0:
-        ctx.add(
-            "D",
-            "error",
-            "EVAC",
-            f"{ZERO_WIDTH} (a point or a line): no area to place the "
-            f"{number} agents in; group dropped",
-            record,
-        )
-        return []
-    if not _inside_enough(ctx, record, rect):
+        rect, expansion = _zero_width_band(ctx, record, number)
+        if rect is None:
+            return []
+    elif not _inside_enough(ctx, record, rect):
         return []
     pers = _pers_record(ctx, record)
     params = _group_parameters(ctx, record, pers, exit_ids)
     params.update(_delay(ctx, pers, record))
     pieces = _minus_evho(ctx, record, _clipped(ctx, rect), evhos)
-    return _share(ctx, record, pieces, number, params)
+    spawns = _share(ctx, record, pieces, number, params)
+    for spawn in spawns:
+        spawn.expansion = expansion
+    return spawns
+
+
+def _zero_width_band(ctx, record, number: int) -> tuple[Any, dict | None]:
+    """A point or line ``XB`` grown to a band, clipped to the walkable area.
+
+    The band is :data:`ZERO_WIDTH_BAND_M` wide across each zero-width axis
+    (a square for a point); agents are placed at random in it as in any
+    spawn area.
+    """
+    x0, y0, x1, y1 = _rect(record)
+    flat_x, flat_y = x1 - x0 < 1e-9, y1 - y0 < 1e-9
+    kind = "point" if flat_x and flat_y else "line"
+    half = ZERO_WIDTH_BAND_M / 2
+    bx0, bx1 = (x0 - half, x1 + half) if flat_x else (x0, x1)
+    by0, by1 = (y0 - half, y1 + half) if flat_y else (y0, y1)
+    clipped = box(bx0, by0, bx1, by1).intersection(ctx.walkable)
+    if clipped.area <= 1e-9:
+        ctx.add(
+            "D",
+            "error",
+            "EVAC",
+            f"{ZERO_WIDTH} ({kind}): its {ZERO_WIDTH_BAND_M:g} m band lies "
+            f"outside the walkable area; the {number} agent(s) are dropped",
+            record,
+        )
+        return None, None
+    ctx.add(
+        "A",
+        "warning",
+        "EVAC",
+        f"{ZERO_WIDTH} ({kind}) expanded to a {ZERO_WIDTH_BAND_M:g} m band, "
+        f"{clipped.area:.3f} m2 of it walkable; the {number} agent(s) are "
+        "placed at random in it",
+        record,
+    )
+    expansion = {
+        "shape": kind,
+        "xb": [rounded(v) for v in (x0, x1, y0, y1)],
+        "band_m": ZERO_WIDTH_BAND_M,
+        "band_xb": [rounded(v) for v in (bx0, bx1, by0, by1)],
+        "walkable_area_m2": rounded(clipped.area),
+    }
+    return clipped, expansion
 
 
 def _clipped(ctx, rect):

@@ -104,3 +104,15 @@ def test_premovement_offset_delays_the_start(tmp_path):
     x_start, removed = _removal(load_scenario(str(config.parent)), seed=3)
     expected = 3.0 + (x_start - DEPTH - EXIT_REACH_TOLERANCE_M) / V0
     assert removed == pytest.approx(expected, abs=0.15)
+
+
+def test_point_evac_agent_is_placed_and_leaves(tmp_path):
+    """#675: a point &EVAC grows to a 0.6 m square the runtime can fill."""
+    deck = CORRIDOR.replace("XB=7.5,8.5,0.6,1.4,1,1", "XB=8,8,1,1,1,1")
+    path = tmp_path / "deck.fds"
+    path.write_text(deck, encoding="utf-8")
+    result = import_fds_deck(path, exit_depth=DEPTH)
+    assert result.report.runnable
+    scenario = load_scenario(str(result.write(tmp_path / "scenario")))
+    x_start, _ = _removal(scenario, seed=3)
+    assert 7.7 <= x_start <= 8.3
