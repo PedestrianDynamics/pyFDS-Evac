@@ -37,12 +37,14 @@ jobs:
       # The whole suite (testpaths in pyproject.toml). Tests that need FDS
       # output from the external data store carry the external_data marker
       # and are deselected here; locally they skip when the data is absent.
+      # pytest-xdist runs one worker per CPU; loadgroup keeps the tests
+      # marked xdist_group("fds_assets_child") in one worker (conftest.py).
       - name: Run the test suite
         if: env.COVERAGE_LEG != 'true'
-        run: uv run pytest -q -m "not external_data"
+        run: uv run pytest -q -m "not external_data" -n auto --dist loadgroup
       - name: Run the test suite with coverage
         if: env.COVERAGE_LEG == 'true'
-        run: uv run pytest -q -m "not external_data" --cov --cov-report=xml --cov-report=term
+        run: uv run pytest -q -m "not external_data" -n auto --dist loadgroup --cov --cov-report=xml --cov-report=term
       # The Textual snapshot report shows expected and actual screens of
       # a failed SVG snapshot side by side.
       - name: Upload the snapshot report
