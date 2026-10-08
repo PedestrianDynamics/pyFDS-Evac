@@ -65,6 +65,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     its strip is empty (with the distance) or below the 0.1 m minimum width,
     and a deck whose every exit is below it is named as using exits only
     as flow-field targets (#673).
+- `tests/test_init_deck_sweep.py` runs the deck importer of
+  `pyfds-evac init` on the 227 tracked decks (the FDS+Evac guide decks,
+  the `assets/` and `artifacts/` decks) and pins each deck's exit status,
+  walkable area, exit and agent counts, reason and `config.json` hash in
+  `tests/init_decks.tsv`, and its exit polygons in
+  `tests/init_deck_exits.json` (#606).
 - `--force` lets `pyfds-evac init` overwrite an output folder that holds a
   `config.json` it did not write; without it, such a folder is refused
   (#632).
