@@ -247,6 +247,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   where the 90 % interval of the P90 change reaches +10 %; fails from 0.1
   to 0.05 m because of #359 deadlocks); figure captions match the
   regenerated figures (#463, #637).
+- Verification scripts `scripts/verification/familiarity_grid_study.py`
+  and `familiarity_grid_analysis.py` rerun and judge the #168 grid study
+  (#168, #637).
+- `site/data/examples.toml` takes an optional `results_note`, shown under
+  the commit on the example's page; results not rerun for this release say
+  "Not re-checked for 0.4.0." (#463).
 
 ## [0.3.1] - 2026-10-06
 
