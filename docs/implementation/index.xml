@@ -405,7 +405,7 @@ Full runs of the asset follow the README&amp;rsquo;s recipe, which uses &lt;code
 legibility comes from the FDS vismap, not from clear air. In those runs all 40
 agents take the near exit when the sign faces them, and all 40 take the far
 exit when it faces away. With FDS 6.10.1 output of the smoke-free deck and
-seed 1904, at &lt;code>8bda7f7&lt;/code> (with &lt;code>--allow-fds-horizon-hold&lt;/code>, because the FDS run
+seed 1904, at &lt;code>828ae8c3&lt;/code> (with &lt;code>--allow-fds-horizon-hold&lt;/code>, because the FDS run
 of the deck ends at 120 s):&lt;/p>
 &lt;table>
 &lt;thead>
@@ -420,13 +420,13 @@ of the deck ends at 120 s):&lt;/p>
 &lt;tr>
 &lt;td>\(\alpha_s = 0\)&lt;/td>
 &lt;td>40 to &lt;code>E_near&lt;/code>&lt;/td>
-&lt;td>19.37 s&lt;/td>
+&lt;td>17.57 s&lt;/td>
 &lt;td>0&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>\(\alpha_s = 180\)&lt;/td>
 &lt;td>40 to &lt;code>E_far&lt;/code>&lt;/td>
-&lt;td>26.71 s&lt;/td>
+&lt;td>26.17 s&lt;/td>
 &lt;td>0&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -445,9 +445,9 @@ at y ≈ 15.0, midway between the two exits.&lt;/p>
 the near exit&amp;rsquo;s sign. Yellow: cells from which the near sign is legible. The
 far sign is legible for y = 0–29.2 m in both panels. (a) \(\alpha_s = 0\): the
 near sign is legible for y = 0.8–30.0 m; 40 of 40 agents take the near exit,
-median walk 8.9 m, out at 19.4 s. (b) \(\alpha_s = 180\): the near sign is
+median walk 8.7 m, out at 17.6 s. (b) \(\alpha_s = 180\): the near sign is
 legible only for y = 0–0.8 m; the near exit is never learned, and 40 of 40
-agents walk to the far exit, median walk 18.9 m, out at 26.7 s. Counts, walks
+agents walk to the far exit, median walk 19.1 m, out at 26.2 s. Counts, walks
 and times are computed from the runs. Script:
 &lt;code>scripts/figures/sign_bearing.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/wayfinding/exit_choice_map.png" alt="Two corridors side by side, each cell shaded by the exit a discovery agent standing there would take; left, blue for the near exit below y = 15 m and hatched orange for the far exit above it; right, hatched orange almost everywhere because the near exit is not in the map" loading="lazy" />&lt;/p>
@@ -477,7 +477,7 @@ above the near sign takes &lt;code>E_far&lt;/code>. The few near-exit cells at t
 &lt;p>&lt;em>Figure 3. What the agents did. Trajectories of the FDS-backed runs in the
 table above (FDS 6.10.1, clear air, seed 1904): 40 of 40 agents walk to
 &lt;code>E_near&lt;/code> when its sign faces them, and 40 of 40 to &lt;code>E_far&lt;/code> when it faces away.
-The trajectories are from those runs, at &lt;code>8bda7f7&lt;/code>; the clear-air runs of
+The trajectories are from those runs, at &lt;code>828ae8c3&lt;/code>; the clear-air runs of
 Figure 1 give the same counts and times. Script: &lt;code>scripts/plot_trajectories.py&lt;/code>
 on the runs&amp;rsquo; SQLite output.&lt;/em>&lt;/p>
 &lt;h2>3. What the agent knows&lt;span class="hx-absolute -hx-mt-20" id="3-what-the-agent-knows">&lt;/span>
@@ -688,8 +688,12 @@ thing differs in the code, and until #174 a second one did:&lt;/p>
 discovery agent of this deck explores (it sets &lt;code>no_known_exit&lt;/code> to
 &lt;code>explore&lt;/code>): it takes the frontier with the lowest path cost
 from its position, learns as the path advances, and, with no frontier left,
-patrols its known nodes (&lt;code>cognitive_map.py&lt;/code>, &lt;code>nearest_frontier_target&lt;/code>, &lt;code>wander_target&lt;/code>). Route history logs
-&lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code> and &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code> (&lt;code>route_graph.py&lt;/code>, &lt;code>_decide_explore&lt;/code>).&lt;/li>
+first walks to its node&amp;rsquo;s point and looks from there; only if that
+teaches it nothing does it patrol its known nodes
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>;
+&lt;code>cognitive_map.py&lt;/code>, &lt;code>nearest_frontier_target&lt;/code>, &lt;code>wander_target&lt;/code>). Route history logs
+&lt;code>reason=&amp;quot;explore&amp;quot;&lt;/code> and &lt;code>reason=&amp;quot;wander&amp;quot;&lt;/code> (&lt;code>route_graph.py&lt;/code>, &lt;code>_decide_explore&lt;/code>).
+The look writes no row; in Figure 7 no agent patrols, so none logs &lt;code>wander&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>The ranked length of the first leg&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/172" target="_blank" rel="noopener">#172&lt;/a>, fixed
 by #174, now merged), measured as a straight line, even through walls, for
@@ -706,41 +710,55 @@ first leg&amp;rsquo;s length
 over a few known nodes may never pass a legible new sign
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122" target="_blank" rel="noopener">#122&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Discovery times depend on the grid.&lt;/strong> On
-&lt;code>assets/familiarity_test_discovery&lt;/code>, seed 420, the runs of the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/">familiarity verification&lt;/a> (at &lt;code>82b7927c&lt;/code>) give the
-following discovery egress times:&lt;/p>
+&lt;code>assets/familiarity_test_discovery&lt;/code>, seeds 1–30, the grid study of the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/#pass-criteria">familiarity verification&lt;/a> (criterion
+6, at &lt;code>828ae8c3&lt;/code>) gives the following last-out times of the discovery tier,
+read from the simulation clock, with a run that does not finish counted as
+300 s:&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
 &lt;th>Clear-air cell&lt;/th>
-&lt;th>Discovery egress&lt;/th>
+&lt;th>Median&lt;/th>
+&lt;th>P90&lt;/th>
+&lt;th>Runs not finished (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>)&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>0.25 m&lt;/td>
-&lt;td>86.3 s&lt;/td>
+&lt;td>0.25 m (does not resolve the walls)&lt;/td>
+&lt;td>76.6 s&lt;/td>
+&lt;td>90.7 s&lt;/td>
+&lt;td>2 of 30&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.1 m&lt;/td>
-&lt;td>16 of 20 out; 4 deadlocked in a doorway (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>)&lt;/td>
+&lt;td>76.7 s&lt;/td>
+&lt;td>87.3 s&lt;/td>
+&lt;td>2 of 30&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.05 m&lt;/td>
-&lt;td>161.3 s&lt;/td>
+&lt;td>76.2 s&lt;/td>
+&lt;td>82.8 s&lt;/td>
+&lt;td>0 of 30&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.025 m&lt;/td>
-&lt;td>108.4 s&lt;/td>
+&lt;td>76.7 s&lt;/td>
+&lt;td>83.9 s&lt;/td>
+&lt;td>0 of 30&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The fully familiar tier took 34.8 s. The code advises a cell smaller than the
+&lt;p>The fully familiar tier took 34.9 s at seed 420. The code advises a cell smaller than the
 thinnest wall and warns when it is not (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>). The #168 investigation recommends at
-most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
-change below that is not explained
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>). Do not
-quote a discovery egress time without its grid.&lt;/p>
+most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. From
+0.05 to 0.025 m the median and the P90 change by less than 5 %, though the
+bootstrap 90 % interval of the P90 change reaches +10 %; from 0.1 to 0.05 m
+the P90 changes by −5.2 %, because of the two deadlocked runs at 0.1 m
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>, open).
+Do not quote a discovery egress time without its grid.&lt;/p>
 &lt;p>The talk also shows discovery with and without sign gating on the NIST floor
 plan of The Station (&lt;code>assets/station_fahy&lt;/code>). With &lt;code>--no-visibility&lt;/code>, advancing
 from a node teaches every neighbour. With a visibility model, only neighbours
@@ -753,12 +771,13 @@ reproduced for this page.&lt;/p>
 signs; &lt;code>familiarity&lt;/code> differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
 known from t = 0, no route changes; the last agent leaves at 34.9 s, median
 path 28 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
-end; the exit enters the maps at t = 28–149 s (median 47 s). After t = 0 the
-agents make 87 route changes (59 explore, 8 wander, 20 onto the exit), all 20
-with a detour into a dead-end room; the last leaves at 161.3 s, median path
-57 m. The discovery time has not converged with the grid (86.3 s at 0.25 m,
-108.4 s at 0.025 m, and at 0.1 m 4 agents deadlock in a doorway, #359;
-#168). This illustrates the mechanism; it is not a result. Script: &lt;code>scripts/figures/full_vs_discovery_paths.py&lt;/code>.&lt;/em>&lt;/p>
+end; the exit enters the maps at t = 28–72 s (median 46 s). After t = 0 the
+agents make 79 route changes (59 explore, 20 onto the exit), all 20
+with a detour into a dead-end room; the last leaves at 84.6 s, median path
+57 m. Over 30 seeds the discovery time meets the convergence criterion from
+0.05 to 0.025 m on this sample (the 90 % interval of the P90 change reaches
++10 %) but not from 0.1 to 0.05 m
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/#pass-criteria">criterion 6&lt;/a>; #168). This illustrates the mechanism; it is not a result. Script: &lt;code>scripts/figures/full_vs_discovery_paths.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;blockquote>
 &lt;p>&lt;strong>Talk vs code.&lt;/strong> The talk caption gives 35.1 s and 75.1 s. Those are results
 from the deck before its rework in #99 (&lt;code>docs/testing-familiarity.md&lt;/code>). The

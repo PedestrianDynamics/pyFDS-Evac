@@ -1284,10 +1284,10 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>4a7142f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c508762fd14b3e9bb4ec9547def764ec6c9e8c1c091dd05d78a9ba15f63e2fde&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3b7923cd32c0d20515c153918d1898dba244fa219eebc9bd4176a4b867f9b088&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1362,11 +1362,12 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>grid_perturbation.png&lt;/code> comes from the same grid script with
 &lt;code>--family hrr060&lt;/code>.&lt;/p>
-&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page come from commit
-&lt;code>4a7142f&lt;/code> (main at &lt;code>100e91d&lt;/code> with this page&amp;rsquo;s scripts). Each run&amp;rsquo;s manifest
-records that commit with &lt;code>git_dirty: false&lt;/code> and
-&lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. A re-run of all 160 evacuations
-on &lt;code>449a755&lt;/code> prints the same values for the headline. When the code
+&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page were made at &lt;code>4a7142f&lt;/code>, a
+branch commit that is not on main; its &lt;code>pyfds_evac/&lt;/code> equals main at
+&lt;code>100e91d&lt;/code>. Each run&amp;rsquo;s manifest records that commit with &lt;code>git_dirty: false&lt;/code>
+and &lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. A re-run of all 160 evacuations
+on main at &lt;code>449a755d&lt;/code> prints the same values for the headline, so cite
+&lt;code>449a755d&lt;/code>. Not re-checked for 0.4.0. When the code
 changes, re-run the command into a new &lt;code>RUNS&lt;/code> folder and compare the
 printed tables with this page.&lt;/p>
 &lt;h2>Setup, deviations and caveats&lt;span class="hx-absolute -hx-mt-20" id="setup-deviations-and-caveats">&lt;/span>
@@ -2020,10 +2021,10 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>6f335a37&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>828ae8c3&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -2039,7 +2040,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4bbe5f047cf4cc8a1bbc994fb2007cca6aa72f5c8647d3ed95a3ff54eca509c6&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">94d5a48a94b8b734ac54db5570e9628bc406d5e116c66ba5806de7dd55c9498d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -3903,10 +3904,10 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -3928,7 +3929,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f8952e14f6273fc23c534f9e927ef5acf90ec397354d577513d6edd5ab2ba548&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c85f1105078ebefa258b1b648612d2c25224cc920032de277a725b11b7a11695&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5302,10 +5303,10 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.614, additive 0.457&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.85 m (-1.12, -0.57)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.06 for starts 30-120 s, 0.90 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>2a94a8da&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.614, additive 0.457&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.85 m (-1.12, -0.57)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.06 for starts 30-120 s, 0.90 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>2a94a8da&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -5333,7 +5334,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">816616e3b4433efbddca52358ae4789f0c18059d2f5c7de1f3bbf8af1accb722&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">eeb608435bcebe6b43e2995eb4153825cf06642927f35b926a75ce995d2f8f6d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6648,10 +6649,10 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 93/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.27&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 11}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>82b7927c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 93/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.27&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 11}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>828ae8c3&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -6669,7 +6670,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ea20593c174b7b4979e3cd412f71cb0a1d45f9da98937eb2f3beedf5f112c222&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2819086e6772c0d6f678aae1ad836035ec4d514f0338c0fc94674f46ead2178e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -12375,8 +12376,13 @@ library use.&lt;/p>
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#python-api-and-command-line">Python API and command line&lt;/a>.&lt;/p>
 &lt;p>The &lt;code>--vis-cell-size&lt;/code> docstring advises a cell smaller than the thinnest wall
 (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>), and the build warns when it is
-not (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115" target="_blank" rel="noopener">#115&lt;/a>). Results for discovery agents have not converged
-with the cell size (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>).&lt;/p>
+not (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115" target="_blank" rel="noopener">#115&lt;/a>). On the familiarity deck,
+over 30 seeds, the median discovery egress time changes by less than 1 % at
+both halvings. The P90 changes by +1.4 % from 0.05 to 0.025 m (90 % interval
+up to +10 %) and by −5.2 % from 0.1 to 0.05 m, because two runs at 0.1 m end
+in doorway deadlocks
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/#pass-criteria">criterion 6&lt;/a>;
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>).&lt;/p>
 &lt;h2>Where it acts in the time step&lt;span class="hx-absolute -hx-mt-20" id="where-it-acts-in-the-time-step">&lt;/span>
 &lt;a href="#where-it-acts-in-the-time-step" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
 &lt;li>&lt;strong>Before the loop.&lt;/strong> The visibility model is built or loaded
@@ -12533,7 +12539,11 @@ agents left in 5 of 150 runs of 5 agents (seeds 1–150; 3 before #250)
 and in 5 of 60 runs of 20 agents (seeds 1–60; none before #250). That
 test bounds the rate.&lt;/li>
 &lt;li>&lt;strong>Discovery results depend on the clear-air grid&lt;/strong>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>). Do
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>). On
+the familiarity deck the 30-seed criterion passes from 0.05 to 0.025 m on
+this sample (the 90 % interval of the P90 change reaches +10 %) and
+fails from 0.1 to 0.05 m because of #359 deadlocks; #168 stays open,
+blocked on the #359 fix. Use a cell at most half the thinnest wall. Do
 not report a discovery egress time without its grid;
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/wayfinding/">Wayfinding in practice&lt;/a> gives the measured spread.&lt;/li>
 &lt;li>&lt;strong>No per-exit familiarity&lt;/strong>
@@ -12675,13 +12685,14 @@ behaviour. Exploration (&lt;code>explore&lt;/code>, &lt;code>return&lt;/code>) h
 &lt;p>&lt;a id="verification-familiarity-comparison">&lt;/a>&lt;a id="visualising-cognitive-map-evolution">&lt;/a>&lt;a id="diagnostic-scripts">&lt;/a>&lt;/p>
 &lt;h2>Verification&lt;span class="hx-absolute -hx-mt-20" id="verification">&lt;/span>
 &lt;a href="#verification" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These tests check implementation behaviour. They do not validate human
-wayfinding or evacuation times. The FDS-case check is
+wayfinding or evacuation times. The coupled check, in clear air, is
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/">Verification › Familiarity&lt;/a>: its
 criteria 1–5 pass, except criterion 4 on the 0.1 m grid, where 4 agents
-deadlock in a doorway (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>),
-and the discovery egress time is not grid-converged
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250" target="_blank" rel="noopener">#250&lt;/a>).&lt;/p>
+deadlock in a doorway (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>).
+Its grid-convergence criterion passes from 0.05 to 0.025 m on this 30-seed
+sample (the 90 % interval of the P90 change reaches +10 %) and fails from
+0.1 to 0.05 m because of #359 deadlocks
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>, open).&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>tests/test_exit_visibility_alpha.py&lt;/code> (&lt;code>assets/exit_visibility_alpha&lt;/code>): the
 bearing of the near sign decides whether the near exit is learned; an
@@ -12708,7 +12719,8 @@ flagged, while the opt-in modes never leave by an unknown exit; the walked
 leg is learned on arrival; the refusal with &lt;code>--smoke-blind&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;p>&lt;code>tests/test_familiarity_routing.py::TestDiscoveryMeasuresAroundWalls&lt;/code> pins
-the #172 fix. No test pins convergence with the grid (#168).&lt;/p>
+the #172 fix. No test pins convergence with the grid (#168); the grid study
+is a verification script (&lt;code>scripts/verification/familiarity_grid_study.py&lt;/code>).&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>Börger, K., Belt, A., &amp;amp; Arnold, L. (2024). &lt;em>A waypoint based approach to
@@ -18502,7 +18514,8 @@ spawn key, the same sweep scores 0.03 at 31.4 % and 0.024 at 33.4 % (31.6 % and
 has not been re-fitted. With the opening exit ranked from each agent&amp;rsquo;s position
 (#350), the sweep scores 0.03 at 33.0 % and 0.024 at 34.8 % (32.6 % and 35.0 %
 on main at &lt;code>81726ea&lt;/code>), within the spread between seeds. With every exit priced
-from the agent&amp;rsquo;s position (#451, &lt;code>2a94a8da&lt;/code>) it scores 0.03 at 33.2 % and 0.024
+from the agent&amp;rsquo;s position (#451; &lt;code>2a94a8da&lt;/code>, the head of its branch, not on
+main) it scores 0.03 at 33.2 % and 0.024
 at 34.7 %, run for run the same as main at &lt;code>22beb01c&lt;/code>: the deck has no fire.&lt;/p>
 &lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
 composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
@@ -24054,10 +24067,10 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -24078,7 +24091,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c47f20b06bc0243c90b029f099c99999f86dce144397eae12fa1cf868800a3b0&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6b0cd077a1f8179a920fbc4e61e38c08dc5ffc4c1ba60396d2085673c49d5349&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -25268,10 +25281,10 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -25286,7 +25299,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">265ca741401dbbd95e8396fd98fdc790fa9b42f762a068312e227f8992ad7b4c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4ed973bf34d93f5d910fc5092d0fb7d7b6a172faabd23b35c854515da37b3f5a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -25369,14 +25382,14 @@ the point devices; the script reads the point devices.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Status&lt;/strong>&lt;/td>
-&lt;td>criteria 1–3 and 5 pass on the 0.1, 0.05 and 0.025 m sight grids, and criterion 4 on 0.05 and 0.025 m; at 0.1 m 4 agents deadlock in CP1&amp;rsquo;s door (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>) and criterion 4 fails; the &lt;code>run.py&lt;/code> default of 0.25 m does not resolve the walls; criterion 6 fails: the discovery egress time is not grid-converged (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250" target="_blank" rel="noopener">#250&lt;/a>)&lt;/td>
+&lt;td>criteria 1–5 pass on the 0.05 and 0.025 m sight grids; at 0.1 m criteria 1–3 and 5 pass, and criterion 4 fails because 4 agents deadlock in CP1&amp;rsquo;s door (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>); the &lt;code>run.py&lt;/code> default of 0.25 m does not resolve the walls; criterion 6 (30 seeds) passes from 0.05 to 0.025 m on this sample (the 90 % interval of the P90 change reaches +10 %) and fails from 0.1 to 0.05 m, because of #359 deadlocks at 0.1 m (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity.gif" alt="Two copies of the same plan side by side. Left, 20 fully familiar agents walk straight to the one door in the partition and out. Right, 20 discovery agents first explore the dead-end rooms in the west, then walk to the door; some turn back at it and patrol. Agents are coloured by the node they are heading for; patrolling agents have a thick ring" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity.gif" alt="Two copies of the same plan side by side. Left, 20 fully familiar agents walk straight to the one door in the partition and out. Right, 20 discovery agents first explore the dead-end rooms in the west, then walk through the door and out. Agents are coloured by the node they are heading for" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Left: &lt;code>full&lt;/code>. Right: &lt;code>discovery&lt;/code>, 0.05 m sight grid. Colour: the node the
 agent is heading for (full: CP3 until it passes the door, then the exit;
-discovery: its current route target). Thick ring: a patrol (&lt;code>wander&lt;/code>).&lt;/em>&lt;/p>
+discovery: its current route target).&lt;/em>&lt;/p>
 &lt;h2>What is tested&lt;span class="hx-absolute -hx-mt-20" id="what-is-tested">&lt;/span>
 &lt;a href="#what-is-tested" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Whether &lt;code>familiarity&lt;/code> changes what an agent knows, and only that. The two
 decks share plan, signs, agents and seed; only the spawn group&amp;rsquo;s
@@ -25397,8 +25410,10 @@ whose sign is legible from where it stands. Later it learns a neighbour of
 its current node when that node&amp;rsquo;s sign becomes legible: on arrival at a
 node, and at each re-evaluation (every 1 s).&lt;/li>
 &lt;li>&lt;strong>Exploration.&lt;/strong> With no exit known, it heads for the nearest known node it
-has not visited (walking distance). With none left, it patrols the nodes it
-knows (&lt;code>wander&lt;/code>).&lt;/li>
+has not visited (walking distance). With none left, it looks from its
+current node&amp;rsquo;s point and then, if that teaches it nothing, patrols the
+nodes it knows (&lt;code>wander&lt;/code>;
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;p>&lt;strong>Legibility.&lt;/strong> pyFDS-Evac hands the signs to
 &lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>, the implementation of
@@ -25512,18 +25527,19 @@ point in its box
 arrival at CP3 can register from y = 12.52 m, still south of the door. There
 the exit sign is behind the jamb, and arriving teaches nothing. If the agent
 has stepped past the jamb by its next re-evaluation, it sees the exit and
-leaves. If not, it has no frontier left and starts a patrol. The plan cannot
-say which agents do what; the criteria test that each decision matches what
-the agent could see.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity_door.png" alt="Zoom on CP3’s door: the partition with its 1.2 m door, the CP3 box north of it, the dashed region within 0.7 m of the box where arrival can register, reaching south of the door, the green line above which the exit sign is legible, with its grid tolerance band, and the positions of the patrol decisions, all at or below that line" loading="lazy" />&lt;/p>
+leaves. If not, it has no frontier left. Before it patrols, it walks until
+CP3&amp;rsquo;s node point lies within its body radius, senses from there and decides
+again
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract">Models › Wayfinding §2.4&lt;/a>).
+The criteria test that each decision matches what the agent could see.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity_door.png" alt="Zoom on CP3’s door: the partition with its 1.2 m door, the CP3 box north of it, the dashed region within 0.7 m of the box where arrival can register, reaching south of the door, the green line above which the exit sign is legible, with its grid tolerance band, and the CP3 node point, marked with a cross inside the box" loading="lazy" />&lt;/p>
 &lt;h2>Result&lt;span class="hx-absolute -hx-mt-20" id="result">&lt;/span>
-&lt;a href="#result" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity_paths.png" alt="Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for, patrols dashed. Full agents go straight to CP3 and the exit; 19 discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit, one goes from CP1 back to CP3 without CP2; two turn back at CP3’s door and patrol" loading="lazy" />&lt;/p>
+&lt;a href="#result" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity_paths.png" alt="Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for. Full agents go straight to CP3 and the exit; 19 discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit, one goes from CP1 back to CP3 without CP2" loading="lazy" />&lt;/p>
 &lt;p>Full agents never enter the west rooms. All 20 discovery agents explore them
 first, and 19 follow the predicted tour. Agent 11 turns from CP1 to CP3
 without visiting CP2: CP2&amp;rsquo;s sign was not in sight where it stood at CP1, the
-case criterion 4 allows. The dashed legs are patrols: agents that turned back
-at CP3&amp;rsquo;s door.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity_egress.png" alt="Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery mostly the predicted tour, one skipping CP2, two to five turning back at CP3, and four deadlocked in CP1’s door at 0.1 m" loading="lazy" />&lt;/p>
+case criterion 4 allows. No agent turns back at CP3&amp;rsquo;s door.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/verification/familiarity_egress.png" alt="Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery at 0.25 m all on the tour; at 0.05 and 0.025 m 19 on the tour and one skipping CP2 because its sign was hidden at CP1. At 0.1 m the curve levels off at 16 of 20 out, because four agents are deadlocked in CP1’s door: the bar shows 15 on the tour, one skipping CP2, and four deadlocked: one whose route so far follows the predicted tour and three that had not finished it" loading="lazy" />&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -25581,7 +25597,7 @@ at CP3&amp;rsquo;s door.&lt;/p>
 &lt;tr>
 &lt;td>discovery: patrols started with the exit in sight&lt;/td>
 &lt;td>0&lt;/td>
-&lt;td>0 of 8; those at CP3 at y = 12.68–12.96 m&lt;/td>
+&lt;td>0; no agent starts a patrol&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>discovery: first agent out (sanity check)&lt;/td>
@@ -25591,7 +25607,7 @@ at CP3&amp;rsquo;s door.&lt;/p>
 &lt;tr>
 &lt;td>discovery: last agent out&lt;/td>
 &lt;td>no reference&lt;/td>
-&lt;td>161.3 s; 2 agents turned back at CP3&lt;/td>
+&lt;td>84.5 s; no agent turned back at CP3&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -25602,8 +25618,6 @@ at CP3&amp;rsquo;s door.&lt;/p>
 &lt;th>Sight grid&lt;/th>
 &lt;th>Cells across a 0.1 m wall&lt;/th>
 &lt;th>Last out&lt;/th>
-&lt;th>Turned back at CP3&lt;/th>
-&lt;th>Last out, never turned back&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
@@ -25611,29 +25625,21 @@ at CP3&amp;rsquo;s door.&lt;/p>
 &lt;td>0.25 m&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>86.3 s&lt;/td>
-&lt;td>0&lt;/td>
-&lt;td>86.3 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.1 m&lt;/td>
 &lt;td>1&lt;/td>
 &lt;td>16 of 20 out; 4 deadlocked in CP1&amp;rsquo;s door (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>)&lt;/td>
-&lt;td>2&lt;/td>
-&lt;td>–&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.05 m&lt;/td>
 &lt;td>2&lt;/td>
-&lt;td>161.3 s&lt;/td>
-&lt;td>2&lt;/td>
-&lt;td>87.6 s&lt;/td>
+&lt;td>84.5 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.025 m&lt;/td>
 &lt;td>4&lt;/td>
-&lt;td>108.4 s&lt;/td>
-&lt;td>5&lt;/td>
-&lt;td>92.6 s&lt;/td>
+&lt;td>84.3 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -25641,16 +25647,17 @@ at CP3&amp;rsquo;s door.&lt;/p>
 heading in opposite directions, and stand there to the end of the run: the
 doorway deadlock of
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>. Over
-seeds 1–60 and 420 on this grid it occurs only at seed 420. On the other
-grids the agents that never turn back are out by 86–93 s. The grid
-dependence is the turn-back at CP3
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250" target="_blank" rel="noopener">#250&lt;/a>). At
-0.25 m no cell centre falls inside the walls, so the sight grid sees through
-them: agents learn CP2 from the next room and the exit from south of the
-partition, and nobody turns back.&lt;/p>
+seeds 1–30 and 420 (the runs of criterion 6), a doorway deadlock ends 3 of
+31 runs at 0.1 m (seeds 20, 28 and 420), none at 0.05 or 0.025 m, and 2 of
+31 at 0.25 m (seeds 3 and 7). These counts are no evidence that a finer grid
+prevents the deadlock (2 of 30 against 0 of 30, Fisher exact p ≈ 0.49). On
+the other grids all agents are out by
+84.3–86.3 s, and no agent turns back at CP3. At 0.25 m no cell centre falls
+inside the walls, so the sight grid sees through them: agents learn CP2 from
+the next room and the exit from south of the partition.&lt;/p>
 &lt;h2>Pass criteria&lt;span class="hx-absolute -hx-mt-20" id="pass-criteria">&lt;/span>
 &lt;a href="#pass-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Grid tolerance.&lt;/strong> The sight grid moves the edge of the legible region. From
-the code of &lt;code>VisibilityModel.clear_air&lt;/code> and fdsvismap 0.3.1, each of four
+the code of &lt;code>VisibilityModel.clear_air&lt;/code> and fdsvismap 0.3.2, each of four
 errors shifts a sight line sideways by at most:&lt;/p>
 &lt;table>
 &lt;thead>
@@ -25690,8 +25697,8 @@ such point. The script samples that disc at its centre and at 48 points on
 three rings.&lt;/p>
 &lt;p>&lt;strong>Precondition.&lt;/strong> The grid resolves the walls: at least one cell centre lies
 inside each 0.1 m wall. At 0.25 m it does not, and the criteria below are not
-evaluated; there, with no tolerance, 35 learnt nodes had their sign hidden in
-exact geometry (11 of them CP2, learnt from the next room).&lt;/p>
+evaluated; there, with no tolerance, 36 learnt nodes had their sign hidden in
+exact geometry (12 of them CP2, learnt from the next room).&lt;/p>
 &lt;ol>
 &lt;li>&lt;strong>Full.&lt;/strong> Every full agent knows all 6 nodes and the 11 wired edges at
 t = 0 and learns nothing later; every trajectory enters CP3&amp;rsquo;s box and none
@@ -25707,13 +25714,28 @@ necessary condition only.&lt;/li>
 where CP2&amp;rsquo;s sign was not in sight when it chose CP3.&lt;/li>
 &lt;li>&lt;strong>No patrol in sight of the exit.&lt;/strong> No &lt;code>wander&lt;/code> decision is taken where
 the exit sign is in sight. This checks that a patrol is consistent with
-what the agent could see. It does not say that turning back at the only
-door is right; that is #250.&lt;/li>
-&lt;li>&lt;strong>Grid convergence of the discovery egress time.&lt;/strong> The last agent out on
-the 0.05 and 0.025 m grids differs by at most 5 s. Halving the cell moves
-each sight edge by at most &lt;em>T&lt;/em> = 0.15 m, which an agent at 1.3 m/s walks
-in about 0.1 s. So each of the 5 decisions of the tour may move by at most
-one re-evaluation (1 s).&lt;/li>
+what the agent could see. Here it holds trivially: no agent starts a
+patrol on any grid.&lt;/li>
+&lt;li>&lt;strong>Grid convergence of the discovery egress time.&lt;/strong> Seeds 1–30, the
+last agent out of each run, a run that does not finish counted as 300 s.
+At each halving of the sight grid, 0.1 → 0.05 m and 0.05 → 0.025 m, the
+median and the 90th percentile (P90) over the 30 seeds change by less
+than 5 %. The rule was fixed before the runs
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>).
+Unlike the tables above, which read the last trajectory frame, it uses
+the simulation clock at the end of the run.
+&lt;ul>
+&lt;li>0.05 → 0.025 m: median 76.2 → 76.7 s (+0.6 %), P90 82.8 → 83.9 s
+(+1.4 %): &lt;strong>passes&lt;/strong> on this sample. The bootstrap 90 % interval of
+the P90 change reaches +10 %, so the sample does not exclude a change
+above 5 %.&lt;/li>
+&lt;li>0.1 → 0.05 m: median 76.7 → 76.2 s (−0.6 %), P90 87.3 → 82.8 s
+(−5.2 %): &lt;strong>fails&lt;/strong>. The two runs at 0.1 m that do not finish (seeds 20
+and 28) are doorway deadlocks
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>)
+and count as 300 s; without them the P90 changes by −0.6 %.&lt;/li>
+&lt;/ul>
+&lt;/li>
 &lt;/ol>
 &lt;table>
 &lt;thead>
@@ -25744,7 +25766,7 @@ one re-evaluation (1 s).&lt;/li>
 &lt;td>pass&lt;/td>
 &lt;td>pass&lt;/td>
 &lt;td>pass&lt;/td>
-&lt;td>&lt;strong>fails&lt;/strong>: 161.3 vs 108.4 s&lt;/td>
+&lt;td>&lt;strong>fails&lt;/strong> vs 0.1 m (P90 −5.2 %, #359)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.025 m&lt;/td>
@@ -25753,7 +25775,7 @@ one re-evaluation (1 s).&lt;/li>
 &lt;td>pass&lt;/td>
 &lt;td>pass&lt;/td>
 &lt;td>pass&lt;/td>
-&lt;td>–&lt;/td>
+&lt;td>passes vs 0.05 m&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -25761,6 +25783,9 @@ one re-evaluation (1 s).&lt;/li>
 criterion 4 allows. At 0.1 m the tours of 3 of the 4 deadlocked agents end
 in CP1&amp;rsquo;s door, so they are not the predicted tour; the cause is the deadlock,
 not the map.&lt;/p>
+&lt;p>For seed 420, the run shown on this page, the clock gives 84.6 s at 0.05 m
+and 84.4 s at 0.025 m. #168 stays open: it is rerun with the same rule once
+the #359 deadlock is fixed.&lt;/p>
 &lt;p>With no tolerance (&lt;em>T&lt;/em> = 0), the results show how close to the edge some
 decisions fall. Criterion 3 flags 7 learnt nodes at 0.1 m, 5 at 0.05 m and
 none at 0.025 m. Criterion 5 flags no patrol. Criterion 4 is unchanged. Each
@@ -25794,8 +25819,35 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>Each run takes seconds. The script prints every number on this page. The
-numbers here come from these commands at commit &lt;code>82b7927c&lt;/code> (macOS arm64).&lt;/p>
+&lt;p>Each run takes seconds. The script prints every number on this page except
+those of criterion 6. The numbers here come from these commands at commit
+&lt;code>828ae8c3&lt;/code> with the fix to &lt;code>familiarity_figures.py&lt;/code> that tests criterion 1
+on every trajectory frame (Python 3.13.4, macOS arm64). At &lt;code>828ae8c3&lt;/code> itself
+the script prints &lt;code>19/20 pass CP3&lt;/code> for the full run.&lt;/p>
+&lt;p>Criterion 6 runs the discovery deck for seeds 1–30 and 420 on each grid,
+with the deck&amp;rsquo;s &lt;code>no_known_exit&lt;/code> and with &lt;code>default_route&lt;/code>, one grid and mode
+per process:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>S&lt;span style="color:#f92672">=&lt;/span>scripts/verification
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> c in 0.25 0.1 0.05 0.025; &lt;span style="color:#66d9ef">do&lt;/span> &lt;span style="color:#66d9ef">for&lt;/span> m in explore default_route; &lt;span style="color:#66d9ef">do&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PYTHONHASHSEED&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0&lt;/span> uv run python $S/familiarity_grid_study.py &lt;span style="color:#ae81ff">\
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --cell $c --mode $m --out &amp;lt;out&amp;gt;/results.jsonl &lt;span style="color:#66d9ef">$(&lt;/span>seq &lt;span style="color:#ae81ff">1&lt;/span> 30&lt;span style="color:#66d9ef">)&lt;/span> &lt;span style="color:#ae81ff">420&lt;/span> &amp;amp;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">done&lt;/span>; &lt;span style="color:#66d9ef">done&lt;/span>; wait
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>uv run python $S/familiarity_grid_analysis.py &amp;lt;out&amp;gt;/results.jsonl&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Each of the 248 runs takes seconds. The analysis prints the medians, P90s,
+changes, bootstrap intervals and verdicts quoted in criterion 6. The
+numbers are from commit &lt;code>828ae8c3&lt;/code>. Under &lt;code>default_route&lt;/code> the agents learn
+nothing after t = 0 on this deck, so the time (median 35.3 s, P90 36.2 s)
+is the same on every grid; that arm is not a convergence test.&lt;/p>
 &lt;p>Reruns on the same machine reproduce these numbers to the last digit. Across
 platforms they need not
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>); the
@@ -25805,14 +25857,19 @@ assert invariants, not trajectories.&lt;/p>
 movie.&lt;/p>
 &lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
 &lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;strong>The discovery egress time is not converged in the grid&lt;/strong>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>), and
-criterion 6 fails. The cause is agents turning back at the door of the
-only exit
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250" target="_blank" rel="noopener">#250&lt;/a>),
-because arrival registers before the door
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69" target="_blank" rel="noopener">#69&lt;/a>). Do not
-quote a discovery egress time without its grid.&lt;/li>
+&lt;li>&lt;strong>The discovery egress time is not shown to converge in the grid&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>).
+Criterion 6 passes from 0.05 to 0.025 m on this 30-seed sample (the 90 %
+interval of the P90 change reaches +10 %) and fails from 0.1 to 0.05 m,
+because of doorway deadlocks at 0.1 m
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>).
+#168 stays open, is blocked on the #359 fix and is then rerun with the
+same rule. Do not quote a discovery egress time without its grid, and on
+this deck use 0.05 m or finer.&lt;/li>
+&lt;li>&lt;strong>The look is not logged.&lt;/strong> The look from CP3&amp;rsquo;s node point writes no
+route-history row, so the outputs this page checks cannot show where an
+agent looked. The page checks its effect (no patrol, no turn-back), not
+the look itself.&lt;/li>
 &lt;li>&lt;strong>Grid.&lt;/strong> &lt;code>run.py&lt;/code> uses a 0.25 m sight grid by default. On this deck it
 sees through every wall, and the run logs a warning that the cell is not
 smaller than the thinnest wall
@@ -26594,10 +26651,10 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;/div>
 &lt;p class="docs-files__summary">The two scenarios, the FDS decks, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 45 s for the 16 runs and the figures&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -26618,7 +26675,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;li>&lt;code>assets/iso_table21_coupled/build_geometry.py&lt;/code>: writes the coupled deck, scenario and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table21_coupled/README.md&lt;/code>: what the coupled case is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7319164e0976939ccbfb9674fa9385d7b6e8946a49c2bb116788f4168c49038e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3ae4d7ad88f6708681965a720413f9c9022b4c3203cdb8fbda859d7e420c9b31&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The tests run both cases in about 20 s. They are weaker than this page: the
@@ -27046,10 +27103,10 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The four FDS decks and scenarios, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/285bc6d531e51eb7196eb0177653057b1d8ccd36">&lt;code>285bc6d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8c7db97acc9be336ac358b2ad68d9bb33cd39680">&lt;code>8c7db97&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 1 min for the four cases&lt;/dd>&lt;/div>
-&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
 &lt;/dl>
 &lt;details class="docs-files__contents">
@@ -27075,7 +27132,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/geometry.wkt&lt;/code>: the second version of this test, walkable area&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/README.md&lt;/code>: the second version of this test&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9c721c6880f5f7e3c020341a425a5b70918f3afcf3a9788a52ece5d4f98c290c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7ae0421cf88fac3ddda130c91e34f88d12e63768d1b2355114e3b9dc3da3f0c7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output (slices only, 256 kB) is committed in
