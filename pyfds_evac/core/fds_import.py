@@ -65,7 +65,7 @@ from .fds_import_report import (
     ImportReport,
     ReportItem,
 )
-from .fds_sampling import _SLICE_HEIGHT_TOLERANCE_M
+from .fds_import_slices import SliceCheck, check_slices
 from .walkable_provider import (
     FloorSpec,
     WalkableProvider,
@@ -76,6 +76,7 @@ from .walkable_provider import (
 __all__ = [
     "FdsImportError",
     "ImportResult",
+    "check_fds_deck",
     "import_fds_deck",
     "parse_fds_deck",
 ]
@@ -96,14 +97,6 @@ MODERN_BAND_M = (0.1, 1.8)
 DEFAULT_MAX_TIME_S = 300.0
 #: An OPEN vent wider than this is flagged as a possible open boundary [m].
 WIDE_OPENING_M = 5.0
-#: Slices pyFDS-Evac reads: (QUANTITY, SPEC_ID).
-NEEDED_SLICES = (
-    ("EXTINCTION COEFFICIENT", None),
-    ("VOLUME FRACTION", "CARBON MONOXIDE"),
-    ("VOLUME FRACTION", "CARBON DIOXIDE"),
-    ("VOLUME FRACTION", "OXYGEN"),
-    ("TEMPERATURE", None),
-)
 _FACES = ("XMIN", "XMAX", "YMIN", "YMAX", "ZMIN", "ZMAX")
 
 
@@ -208,6 +201,7 @@ def import_fds_deck(
     agents: int | None = None,
     exits: Sequence[Sequence[float]] = (),
     exit_depth: float = EXIT_DEPTH_M,
+    on_slice_check: Callable[[SliceCheck], None] | None = None,
 ) -> ImportResult:
     """Import the FDS deck at *path*; see the module docstring.
 
@@ -217,6 +211,11 @@ def import_fds_deck(
     :func:`_select_components`). ``exits`` are extra exit lines
     ``(x0, y0, x1, y1[, ior])``. Raises :class:`FdsImportError` (or the
     parser's/provider's ``ValueError``) when nothing can be written.
+
+    The slice check (:func:`check_fds_deck`) runs once the floor is chosen,
+    before the walkable step, at the height written to ``config.json``; its
+    result goes to ``recommendations`` and to *on_slice_check*, so a caller
+    has it even when a later step raises. It never changes what is written.
     """
     _check_options(exit_depth, agents)
     deck_path = Path(path)
@@ -226,8 +225,69 @@ def import_fds_deck(
     report = ImportReport(deck=deck_path.name, chid=deck.chid, kind=kind)
     _parser_items(deck, report)
     provider = derive_walkable or deck_walkable
+    floors, chosen, height = _deck_floor(deck, kind, opts, report)
+    check = check_slices(deck, rounded(height))
+    report.recommendations["slices"] = check.to_dict()
+    report.recommendations["slice_check_ok"] = check.ok
+    if on_slice_check is not None:
+        on_slice_check(check)
     build = _import_legacy if kind == "legacy" else _import_modern
-    return build(deck, deck_path, opts, report, walkable_wkt, provider)
+    return build(deck, deck_path, opts, report, walkable_wkt, provider, floors, chosen)
+
+
+def check_fds_deck(
+    path: str | Path,
+    *,
+    floor: str | None = None,
+    floor_z: float | None = None,
+    z_band: tuple[float, float] | None = None,
+    smoke_slice_height: float | None = None,
+) -> SliceCheck:
+    """Check the deck at *path* for the FDS output a run reads; write nothing.
+
+    The floor is chosen as :func:`import_fds_deck` chooses it, and the
+    height is the ``smoke_slice_height`` it would write unless
+    *smoke_slice_height* (absolute z [m]) is given. Raises like
+    :func:`import_fds_deck` when the deck or its floor cannot be read.
+    """
+    deck_path = Path(path)
+    deck = parse_fds_deck(deck_path)
+    opts = _Options(floor, floor_z, z_band, EXIT_DEPTH_M, None, ())
+    kind = _classify(deck)
+    scratch = ImportReport(deck=deck_path.name, chid=deck.chid, kind=kind)
+    if smoke_slice_height is not None and not math.isfinite(smoke_slice_height):
+        raise FdsImportError(
+            f"smoke slice height must be a finite number of metres, "
+            f"got {smoke_slice_height}"
+        )
+    _, _, height = _deck_floor(deck, kind, opts, scratch)
+    if smoke_slice_height is not None:
+        height = smoke_slice_height
+    return check_slices(deck, rounded(height))
+
+
+def _deck_floor(deck, kind: str, opts, report) -> tuple[list[Floor], Floor, float]:
+    """The floors, the chosen one and the smoke slice height above it.
+
+    Legacy: the evacuation floors (else the fire meshes' floor), picked
+    with ``--floor``, at the last ``HUMAN_SMOKE_HEIGHT``. Modern: the
+    floor at ``--floor-z`` or the lowest mesh, at 1.6 m.
+    """
+    if kind != "legacy":
+        floor = _modern_floor(deck, opts, report)
+        return [floor], floor, floor.z_floor + HUMAN_SMOKE_HEIGHT_M
+    floors = _evac_floors(deck, report)
+    if not floors:
+        report.add(
+            "A",
+            "warning",
+            "MESH",
+            "evacuation namelists but no evacuation "
+            "mesh: the floor is taken from the fire meshes",
+        )
+        floors = [_modern_floor(deck, opts, report)]
+    floor = _choose_floor(floors, opts.floor)
+    return floors, floor, floor.z_floor + _human_smoke_height(deck)
 
 
 def _check_options(depth: float, agents: int | None) -> None:
@@ -547,18 +607,9 @@ def _load_wkt(text: str):
 # --- legacy ------------------------------------------------------------------
 
 
-def _import_legacy(deck, deck_path, opts, report, user_wkt, provider) -> ImportResult:
-    floors = _evac_floors(deck, report)
-    if not floors:
-        report.add(
-            "A",
-            "warning",
-            "MESH",
-            "evacuation namelists but no evacuation "
-            "mesh: the floor is taken from the fire meshes",
-        )
-        floors = [_modern_floor(deck, opts, report)]
-    floor = _choose_floor(floors, opts.floor)
+def _import_legacy(
+    deck, deck_path, opts, report, user_wkt, provider, floors, floor
+) -> ImportResult:
     if opts.agents is not None:
         report.add(
             "D",
@@ -681,8 +732,9 @@ def _floors_not_imported(deck, floors, chosen, report) -> None:
 # --- modern ------------------------------------------------------------------
 
 
-def _import_modern(deck, deck_path, opts, report, user_wkt, provider) -> ImportResult:
-    floor = _modern_floor(deck, opts, report)
+def _import_modern(
+    deck, deck_path, opts, report, user_wkt, provider, floors, floor
+) -> ImportResult:
     band = opts.z_band or floor.slab
     domain = union([_mesh_box(m) for m in floor.meshes])
     spec = FloorSpec(
@@ -1182,7 +1234,6 @@ def _loader_defaults(params: dict[str, Any]) -> dict[str, str]:
 def _recommend(deck, deck_path, report, walkable, exits, height) -> None:
     rec = report.recommendations
     rec["smoke_slice_height"] = rounded(height)
-    rec["slices"] = _slice_availability(deck, height)
     rec["coverage"] = _coverage(deck, walkable, exits)
     rec["fds_meshes"] = len(_meshes(deck, evacuation=False))
     smv = deck_path.parent / f"{deck.chid}.smv" if deck.chid else None
@@ -1195,29 +1246,6 @@ def _recommend(deck, deck_path, report, walkable, exits, height) -> None:
             "it is FDS+Evac output, and pyFDS-Evac reads only the output of "
             "a fire-only run; fdsreader is not verified on FDS+Evac output"
         )
-
-
-def _slice_availability(deck: FdsDeck, height: float) -> dict[str, Any]:
-    out = {}
-    for quantity, spec in NEEDED_SLICES:
-        heights = [
-            z
-            for s in deck.group("SLCF")
-            if _slice_matches(s, quantity, spec) and (z := s.number("PBZ")) is not None
-        ]
-        nearest = min(heights, key=lambda z: abs(z - height)) if heights else None
-        ok = nearest is not None and abs(nearest - height) <= _SLICE_HEIGHT_TOLERANCE_M
-        out[quantity if spec is None else f"{quantity} {spec}"] = {
-            "nearest_pbz": nearest,
-            "ok": ok,
-        }
-    return out
-
-
-def _slice_matches(record: NamelistRecord, quantity: str, spec: str | None) -> bool:
-    if str(record.text("QUANTITY", "")).upper() != quantity:
-        return False
-    return spec is None or str(record.text("SPEC_ID", "")).upper() == spec
 
 
 def _coverage(deck: FdsDeck, walkable, exits) -> dict[str, Any]:

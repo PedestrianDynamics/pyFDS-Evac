@@ -258,15 +258,27 @@ def _step_lines(n: int, step: list[str]) -> list[str]:
     return [f"  {n}. {first}"] + [f"     {line}" for line in rest]
 
 
-def summary_lines(result: Any, out_dir: str, no_fds: bool, verbose: bool) -> list[str]:
-    """Everything ``pyfds-evac init`` prints after a successful write."""
+def summary_lines(
+    result: Any,
+    out_dir: str,
+    no_fds: bool,
+    verbose: bool,
+    slices: list[str] | None = None,
+) -> list[str]:
+    """Everything ``pyfds-evac init`` prints after a successful write.
+
+    *slices* is the printed slice check, shown after the header (after the
+    report with *verbose*).
+    """
     report = result.report
     if verbose:
         body = [report.summary_text()] + format_fds_output(
             report.recommendations, no_fds
         )
+        body += _section(list(slices or []))
     else:
         body = format_header(result, out_dir)
+        body += _section(list(slices or []))
         body += _section(format_errors(report.items))
         body += _section(format_notes(report.items))
         body += _section(format_fds_output(report.recommendations, no_fds))

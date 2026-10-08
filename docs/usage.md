@@ -618,6 +618,49 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | 3 | written, but not runnable (no exit or no agents; no `Run:` line is printed), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
 | 1 | an error, including an argument error or a refused `-o` folder; nothing written |
 
+#### Check a deck before running FDS — `pyfds-evac init --check`
+
+```
+pyfds-evac init DECK.fds --check [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
+    [--smoke-slice-height Z]
+```
+
+Reads the deck only, before FDS runs, and writes nothing. It chooses the
+floor as `init` does and checks, at the smoke slice height `init` would
+write (the floor plus the last `HUMAN_SMOKE_HEIGHT`, else 1.6 m;
+`--smoke-slice-height Z` checks another absolute z), the FDS output the run
+reads. It uses the run's rule: a horizontal slice (`PBZ`, or `XB` with equal
+z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie; slices with
+`EVACUATION=.TRUE.` do not count. Each line prints the requested and the
+chosen z, and the fix as a deck line.
+
+| Item | Fails the check (✗) | Reported only |
+|---|---|---|
+| `QUANTITY='EXTINCTION COEFFICIENT'`, no `SPEC_ID` or `SPEC_ID='SOOT'` (smoke speed, sign legibility) | none, or vertical only | nearest z more than 0.5 m away (`!`); `QUANTITY='EXTINCTION'` is a different quantity |
+| `QUANTITY='VOLUME FRACTION'` with `SPEC_ID` `'CARBON MONOXIDE'`, `'CARBON DIOXIDE'`, `'OXYGEN'` (FED needs all three) | any of them none, or vertical only | z more than 0.5 m away |
+| `&TIME T_END` | absent: FDS stops at its default of 1 s while `init` writes `max_simulation_time` 300 s | its value |
+| HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde | | those present, with z |
+| `TEMPERATURE`, `INTEGRATED INTENSITY` (heat FED, opt-in) | | their z; `!` when an `INTEGRATED INTENSITY` slice has no `TEMPERATURE` slice at its z |
+| `DT_SLCF` | | `&DUMP DT_SLCF`, else (T_END − T_BEGIN)/NFRAMES; `!` when coarser than 1 s, the run's smoke update interval |
+| `&REAC SOOT_YIELD`, `CO_YIELD` | | `!` when a simple-chemistry deck declares the slice but the yield is absent or 0 |
+
+The z is the deck's: FDS moves a slice to the nearest grid plane, up to half
+a cell away. `-o`, `--walkable`, `--exit`, `--agents`, `--exit-depth`,
+`--force`, `--no-fds` and `-v` shape the written scenario and are refused
+with `--check`.
+
+| Status | Meaning |
+|---|---|
+| 0 | no ✗: the deck has every required item |
+| 3 | at least one ✗: the deck is read, but not ready for a pyFDS-Evac run |
+| 1 | the deck cannot be read, the floor cannot be chosen, or an argument error |
+
+A plain `pyfds-evac init` runs the same check before it derives the walkable
+area, prints its ✓, ✗ and `!` lines, and records every item under
+`recommendations.slices` in `import_report.json`, with
+`recommendations.slice_check_ok`. The check never changes the written files
+or the exit status of `init`.
+
 ### Walkable area from FDS obstructions — `generate_walkable_from_fds.py`
 
 Writes only the walkable area that `pyfds-evac init` derives (above) as

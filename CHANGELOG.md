@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `pyfds-evac init DECK.fds --check` checks a deck before FDS runs and
+  writes nothing (#604). At the smoke slice height `init` writes, with the
+  run's selection rule (horizontal slice, nearest z, first declared on a
+  tie), it fails (exit 3) when the extinction-coefficient slice (no
+  `SPEC_ID` or `SPEC_ID='SOOT'`), a CO, CO2 or O2 volume-fraction slice, or
+  `&TIME T_END` is missing; vertical slices do not count. It reports the
+  optional FED gases, `TEMPERATURE` and `INTEGRATED INTENSITY` slices, the
+  effective `DT_SLCF` and absent simple-chemistry yields. Exit 1 when the
+  deck cannot be read. `--smoke-slice-height Z` checks another height.
+  - A plain `init` runs the same check after choosing the floor, prints
+    it (also when the walkable step then fails) and records it in
+    `import_report.json` (`recommendations.slices`, additive keys, and
+    `recommendations.slice_check_ok`). It never changes `config.json` or
+    the exit status. The check replaces the old slice listing, which read
+    `PBZ` only and counted `TEMPERATURE` as needed.
 - Scenario key `distributions.<id>.parameters.no_known_exit`: what an agent
   does while no exit is reachable in its map. `default_route` (default, the
   FDS+Evac counterpart) follows the journey, or without one the exit nearest
