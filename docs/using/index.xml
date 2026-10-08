@@ -2863,7 +2863,7 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.number&lt;/code>, &lt;code>.radius&lt;/code>, &lt;code>.v0&lt;/code>&lt;/td>
 &lt;td>10, 0.2 m, 1.25 m/s&lt;/td>
-&lt;td>Deck-wide defaults for a spawn area that does not set its own &lt;code>number&lt;/code>, &lt;code>radius&lt;/code> or &lt;code>v0&lt;/code>, with and without journeys; see &lt;a href="#spawn-areas-distributionsidparameters">Spawn areas&lt;/a>. A deck without spawn areas places &lt;code>number&lt;/code> agents in the whole walkable area. &lt;code>number&lt;/code> is read with Python&amp;rsquo;s &lt;code>int()&lt;/code> (3.9 and &lt;code>&amp;quot;3&amp;quot;&lt;/code> give 3), &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> with &lt;code>float()&lt;/code>, so numeric strings are accepted; &lt;code>null&lt;/code> means unset. &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> must be finite and greater than 0. A value that does not convert, such as &lt;code>&amp;quot;3.9&amp;quot;&lt;/code> for &lt;code>number&lt;/code> or &lt;code>&amp;quot;fast&amp;quot;&lt;/code> for &lt;code>v0&lt;/code>, or a &lt;code>radius&lt;/code> or &lt;code>v0&lt;/code> of 0, below 0, infinite or NaN (&lt;code>&amp;quot;1e400&amp;quot;&lt;/code>, &lt;code>&amp;quot;nan&amp;quot;&lt;/code>), stops the run with a &lt;code>ValueError&lt;/code> that names the key.&lt;/td>
+&lt;td>Deck-wide defaults for a spawn area that does not set its own &lt;code>number&lt;/code>, &lt;code>radius&lt;/code> or &lt;code>v0&lt;/code>, with and without journeys; see &lt;a href="#spawn-areas-distributionsidparameters">Spawn areas&lt;/a>. A deck without spawn areas places &lt;code>number&lt;/code> agents in the whole walkable area. &lt;code>number&lt;/code> is read with Python&amp;rsquo;s &lt;code>int()&lt;/code> (3.9 and &lt;code>&amp;quot;3&amp;quot;&lt;/code> give 3), &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> with &lt;code>float()&lt;/code>, so numeric strings are accepted; &lt;code>null&lt;/code> means unset. &lt;code>number&lt;/code> must be 0 or more, &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> finite and greater than 0, and &lt;code>true&lt;/code> or &lt;code>false&lt;/code> is not a number. A value that does not convert, such as &lt;code>&amp;quot;3.9&amp;quot;&lt;/code> for &lt;code>number&lt;/code> or &lt;code>&amp;quot;fast&amp;quot;&lt;/code> for &lt;code>v0&lt;/code>, a &lt;code>number&lt;/code> below 0, a &lt;code>radius&lt;/code> or &lt;code>v0&lt;/code> of 0, below 0, infinite or NaN (&lt;code>&amp;quot;1e400&amp;quot;&lt;/code>, &lt;code>&amp;quot;nan&amp;quot;&lt;/code>), or a boolean, stops the run with a &lt;code>ValueError&lt;/code> that names the key.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.smoke_slice_height&lt;/code>&lt;/td>
@@ -2974,7 +2974,7 @@ manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>v0&lt;/code>&lt;/td>
 &lt;td>&lt;code>simulationParams.v0&lt;/code>, else 1.25 m/s&lt;/td>
-&lt;td>—&lt;/td>
+&lt;td>finite, ≥ 0&lt;/td>
 &lt;td>Clear-air walking speed, for every movement model (FDS+Evac &lt;code>VEL_MEAN&lt;/code>; 1.2 before). Every smoke, irritant and zone factor multiplies this value.&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -2992,7 +2992,7 @@ manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
 &lt;td>&lt;code>simulationParams.radius&lt;/code>, else 0.2 m&lt;/td>
-&lt;td>—&lt;/td>
+&lt;td>finite, &amp;gt; 0&lt;/td>
 &lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it.&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -3069,6 +3069,19 @@ manifest records what JuPedSim received under &lt;code>sfm&lt;/code>.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>A spawn area&amp;rsquo;s own &lt;code>number&lt;/code>, &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code> are read as the
+&lt;code>simulationParams&lt;/code> values are: &lt;code>number&lt;/code> with &lt;code>int()&lt;/code>, &lt;code>radius&lt;/code> and &lt;code>v0&lt;/code>
+with &lt;code>float()&lt;/code>, so numeric strings are accepted, and &lt;code>true&lt;/code> or &lt;code>false&lt;/code> is
+not a number. The bounds are the same with one exception: a spawn area&amp;rsquo;s
+&lt;code>v0&lt;/code> may be 0, which places agents that stand still (the stationary FED
+verification cases use it), while &lt;code>simulationParams.v0&lt;/code> must be greater
+than 0, since it is the speed of every spawn area that sets none. A value
+that does not convert or is out of range, such as &lt;code>&amp;quot;-1&amp;quot;&lt;/code> for &lt;code>number&lt;/code> or
+&lt;code>&amp;quot;nan&amp;quot;&lt;/code> for &lt;code>v0&lt;/code>, stops the run at the start with a &lt;code>ValueError&lt;/code> that
+names the distribution and the key (&lt;code>desired_speed&lt;/code> when the deck set that
+alias). &lt;code>null&lt;/code> means unset, as for the &lt;code>simulationParams&lt;/code> values: the
+spawn area takes the deck-wide default
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/649" target="_blank" rel="noopener">#649&lt;/a>).&lt;/p>
 &lt;p>&lt;code>desired_speed&lt;/code>, &lt;code>desired_speed_distribution&lt;/code> and &lt;code>desired_speed_std&lt;/code> are
 aliases of &lt;code>v0&lt;/code>, &lt;code>v0_distribution&lt;/code> and &lt;code>v0_std&lt;/code>. An alias set alone is used
 as its &lt;code>v0*&lt;/code> key. An alias and its &lt;code>v0*&lt;/code> key with the same value are
@@ -6504,7 +6517,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/828ae8c36bcb931f7a238f007f4885a90f244787">&lt;code>828ae8c&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6ce64527b3118e6dfc9d82a8550ef89b16691c95">&lt;code>6ce6452&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6528,7 +6541,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b695cf579617e2c69ffc8d9dcad4e3df1f73596275d280e8814dd3f9cfefbd5e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4b47cfb3168de0179d4f73cc4a7ce63ad7283f42e30064c5bb9176bf785b074e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
