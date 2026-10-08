@@ -190,6 +190,8 @@ class ImportedExit:
     open_from_s: float | None = None
     closed_after_s: float | None = None
     role: str | None = None
+    #: Where FDS+Evac would put the line on its grid, when it differs.
+    fds_evac_segment: list[float] | None = None
 
 
 @dataclass

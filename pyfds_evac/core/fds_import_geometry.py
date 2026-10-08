@@ -79,6 +79,21 @@ def exit_strip(line: ExitLine, depth: float, walkable) -> Polygon | None:
     return piece
 
 
+def strip_problem(line: ExitLine, depth: float, walkable) -> str:
+    """Why :func:`exit_strip` returned None for *line*, for a drop message."""
+    piece = largest_polygon(strip_box(line, depth).intersection(walkable))
+    if piece is not None and piece.area > _EPS:
+        return (
+            f"its strip on the room side is {_width_along(piece, line):.3f} m wide, "
+            f"below the minimum exit width of {MIN_EXIT_WIDTH_M:g} m"
+        )
+    distance = line.line.distance(walkable)
+    return (
+        "its strip on the room side is empty; the line is "
+        f"{distance:.3f} m from the walkable area"
+    )
+
+
 def _width_along(piece: Polygon, line: ExitLine) -> float:
     minx, miny, maxx, maxy = piece.bounds
     return maxy - miny if abs(line.normal[0]) > 0 else maxx - minx
