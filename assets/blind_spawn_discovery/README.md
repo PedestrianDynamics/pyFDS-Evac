@@ -82,18 +82,28 @@ One geometry, four configs, each changing exactly one thing.
 
 | config | familiarity | entrance | egress | what it isolates |
 |---|---|---|---|---|
-| `config_discovery.json` | `discovery` | — | 36.1 s | the sequence above |
-| `config_full.json` | `full` | — | 42.2 s | straight out, 0 switches |
-| `config_entrance.json` | `discovery` | `E_west` | 42.2 s | seeding: knows one door at t=0 |
-| `config_mixed.json` | `0.5` | — | 36.3 s | scalar familiarity in a run |
+| `config_discovery.json` | `discovery` | — | 35.3 s | the sequence above |
+| `config_full.json` | `full` | — | 43.6 s | straight out, 0 switches |
+| `config_entrance.json` | `discovery` | `E_west` | 43.6 s | seeding: knows one door at t=0 |
+| `config_mixed.json` | `0.5` | — | 38.2 s | scalar familiarity in a run |
 
-All four evacuate 30/30. In the `full` and `entrance` runs all 30 agents
-leave by `E_west`; the two exits are equally far from the spawn centre, and
-the `discovery` and `mixed` crowds split between them (15/15 and 12/18), so
-they are out sooner. Measured with the recipe below (FDS 6 on
-`blind_spawn_discovery.fds`, `--allow-fds-horizon-hold` because the FDS run
-ends at 120 s) at `32d48dd`; the FDS output and the runs are in the project's
-data store under `blind_spawn_discovery/`.
+At the deck's seed, 1301, all four evacuate 30/30. In the `full` and
+`entrance` runs all 30 agents leave by `E_west`; the two exits are equally
+far from the spawn centre, and the `discovery` and `mixed` crowds split
+between them (west/east 14/16 and 11/19), so they are out sooner. The
+`discovery` run makes 90 route changes, `mixed` 24, the others none.
+Measured at commit `828ae8c3` (fdsvismap 0.3.2) with the `run.py` recipe
+below, one `--vis-cache` per config, on the FDS 6.10.1 output of
+`blind_spawn_discovery.fds`, with `--allow-fds-horizon-hold` because the
+FDS run ends at 120 s. The exit is the side of the agent's last position
+(x < 12 m: `E_west`).
+
+Not every seed finishes. In clear air (no `--fds-dir`, 0.25 m grid) at
+`828ae8c3`, `config_discovery` completes 41 of 41 runs (seeds 1–40 and
+1301), `config_mixed` 19 of 20 (seeds 1–20; seed 15 does not) and
+`config_entrance` 19 of 20 (seed 10 does not); in both, two agents block
+each other in a doorway
+([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
 
 `config_entrance.json` is the Station crush mechanism in miniature — everyone
 entered by one door, so everyone knows that door. It was wired through the code

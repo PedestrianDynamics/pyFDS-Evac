@@ -203,23 +203,22 @@ got out cannot pass for a clean result.
 
 | | `E_near` | `E_far` | egress |
 |---|---|---|---|
-| `config_visible.json` (alpha = 0) | 40 | 0 | 19.37 s |
-| `config_hidden.json` (alpha = 180) | 0 | 40 | 26.71 s |
+| `config_visible.json` (alpha = 0) | 40 | 0 | 17.57 s |
+| `config_hidden.json` (alpha = 180) | 0 | 40 | 26.17 s |
 
 ![trajectories, visible](trajectories_visible.png)
 ![trajectories, hidden](trajectories_hidden.png)
 
-Turning the near sign away costs 7.3 s and sends every agent past it, the
+Turning the near sign away costs 8.6 s and sends every agent past it, the
 extra 10 m to `E_far`. Neither run records a route switch: the initial exit is
 assigned from each agent's map at spawn, and in the hidden run the near exit
 never enters that map, so there is nothing to reconsider later.
 
 These runs used the FDS vismap of the deck (FDS 6.10.1, clear air) and
-`--output-route-history`; the FDS output, the SQLite files and the route
-histories are in the project's data store under `exit_visibility_alpha/`.
-The table and figures are from the rerun at `8bda7f7`, in
-`exit_visibility_alpha/rerun_8bda7f7/`, made with `--allow-fds-horizon-hold`
-because the deck's FDS run ends at 120 s.
+`--output-route-history`. The table and figures are from the recipe above
+at commit `828ae8c3` (fdsvismap 0.3.2), seed 1904 (the configs'
+baseSeed), with `--allow-fds-horizon-hold` because the deck's FDS run ends
+at 120 s.
 `scripts/figures/sign_bearing.py` reruns both configs with the clear-air
 model and gets the same counts and times.
 
