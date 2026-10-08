@@ -1141,7 +1141,7 @@ def _exit_report(exit_: ImportedExit) -> dict[str, Any]:
 def _spawn_report(spawn: ImportedSpawn, walkable) -> dict[str, Any]:
     area = spawn.polygon.intersection(walkable).area
     number = spawn.parameters.get("number", 0)
-    return {
+    out = {
         "id": spawn.id,
         "source": spawn.source,
         "number": number,
@@ -1151,6 +1151,9 @@ def _spawn_report(spawn: ImportedSpawn, walkable) -> dict[str, Any]:
         "loader_defaults": _loader_defaults(spawn.parameters),
         "placeholder": spawn.placeholder,
     }
+    if spawn.expansion is not None:
+        out["zero_width_expansion"] = spawn.expansion
+    return out
 
 
 #: What the loader applies to a spawn area that leaves a key out
@@ -1242,7 +1245,8 @@ def _runnable(report, exits, spawns) -> None:
 
 def _zero_width_note(report) -> str:
     count = sum(
-        i.group == "EVAC" and i.message.startswith(ZERO_WIDTH) for i in report.items
+        i.group == "EVAC" and i.level == "error" and i.message.startswith(ZERO_WIDTH)
+        for i in report.items
     )
     if not count:
         return ""
