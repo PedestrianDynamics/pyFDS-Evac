@@ -1,0 +1,80 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 100.0,
+        "smoke_slice_height": 1.6
+      }
+    }
+  },
+  "distributions": {
+    "EVAC_1mps": {
+      "coordinates": [
+        [
+          10.5,
+          1.0
+        ],
+        [
+          10.5,
+          2.0
+        ],
+        [
+          9.5,
+          2.0
+        ],
+        [
+          9.5,
+          1.0
+        ],
+        [
+          10.5,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 1.0,
+        "use_premovement": true,
+        "v0": 1.0,
+        "v0_distribution": "constant"
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "FinalExit": {
+      "coordinates": [
+        [
+          60.0,
+          0.5
+        ],
+        [
+          59.5,
+          0.5
+        ],
+        [
+          59.5,
+          2.5
+        ],
+        [
+          60.0,
+          2.5
+        ],
+        [
+          60.0,
+          0.5
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 59.5,
+        "y": 1.5
+      },
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}

@@ -1,0 +1,5003 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 300.0,
+        "smoke_slice_height": 1.6
+      }
+    }
+  },
+  "distributions": {
+    "EVACc11": {
+      "coordinates": [
+        [
+          0.7,
+          0.8
+        ],
+        [
+          0.7,
+          4.0
+        ],
+        [
+          0.1,
+          4.0
+        ],
+        [
+          0.1,
+          0.8
+        ],
+        [
+          0.7,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc12": {
+      "coordinates": [
+        [
+          0.7,
+          4.8
+        ],
+        [
+          0.7,
+          8.0
+        ],
+        [
+          0.1,
+          8.0
+        ],
+        [
+          0.1,
+          4.8
+        ],
+        [
+          0.7,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc13": {
+      "coordinates": [
+        [
+          0.7,
+          9.6
+        ],
+        [
+          0.7,
+          12.8
+        ],
+        [
+          0.1,
+          12.8
+        ],
+        [
+          0.1,
+          9.6
+        ],
+        [
+          0.7,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc14": {
+      "coordinates": [
+        [
+          0.7,
+          13.6
+        ],
+        [
+          0.7,
+          16.8
+        ],
+        [
+          0.1,
+          16.8
+        ],
+        [
+          0.1,
+          13.6
+        ],
+        [
+          0.7,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc15": {
+      "coordinates": [
+        [
+          0.7,
+          18.4
+        ],
+        [
+          0.7,
+          21.6
+        ],
+        [
+          0.1,
+          21.6
+        ],
+        [
+          0.1,
+          18.4
+        ],
+        [
+          0.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc21": {
+      "coordinates": [
+        [
+          4.7,
+          0.8
+        ],
+        [
+          4.7,
+          4.0
+        ],
+        [
+          4.1,
+          4.0
+        ],
+        [
+          4.1,
+          0.8
+        ],
+        [
+          4.7,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc22": {
+      "coordinates": [
+        [
+          4.7,
+          4.8
+        ],
+        [
+          4.7,
+          8.0
+        ],
+        [
+          4.1,
+          8.0
+        ],
+        [
+          4.1,
+          4.8
+        ],
+        [
+          4.7,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc23": {
+      "coordinates": [
+        [
+          4.7,
+          9.6
+        ],
+        [
+          4.7,
+          12.8
+        ],
+        [
+          4.1,
+          12.8
+        ],
+        [
+          4.1,
+          9.6
+        ],
+        [
+          4.7,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc24": {
+      "coordinates": [
+        [
+          4.7,
+          13.6
+        ],
+        [
+          4.7,
+          16.8
+        ],
+        [
+          4.1,
+          16.8
+        ],
+        [
+          4.1,
+          13.6
+        ],
+        [
+          4.7,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc25": {
+      "coordinates": [
+        [
+          4.7,
+          18.4
+        ],
+        [
+          4.7,
+          21.6
+        ],
+        [
+          4.1,
+          21.6
+        ],
+        [
+          4.1,
+          18.4
+        ],
+        [
+          4.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc31": {
+      "coordinates": [
+        [
+          8.7,
+          0.8
+        ],
+        [
+          8.7,
+          4.0
+        ],
+        [
+          8.1,
+          4.0
+        ],
+        [
+          8.1,
+          0.8
+        ],
+        [
+          8.7,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc32": {
+      "coordinates": [
+        [
+          8.7,
+          4.8
+        ],
+        [
+          8.7,
+          8.0
+        ],
+        [
+          8.1,
+          8.0
+        ],
+        [
+          8.1,
+          4.8
+        ],
+        [
+          8.7,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc33": {
+      "coordinates": [
+        [
+          8.7,
+          9.6
+        ],
+        [
+          8.7,
+          12.8
+        ],
+        [
+          8.1,
+          12.8
+        ],
+        [
+          8.1,
+          9.6
+        ],
+        [
+          8.7,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc34": {
+      "coordinates": [
+        [
+          8.7,
+          13.6
+        ],
+        [
+          8.7,
+          16.8
+        ],
+        [
+          8.1,
+          16.8
+        ],
+        [
+          8.1,
+          13.6
+        ],
+        [
+          8.7,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc35": {
+      "coordinates": [
+        [
+          8.7,
+          18.4
+        ],
+        [
+          8.7,
+          21.6
+        ],
+        [
+          8.1,
+          21.6
+        ],
+        [
+          8.1,
+          18.4
+        ],
+        [
+          8.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc41": {
+      "coordinates": [
+        [
+          12.7,
+          0.8
+        ],
+        [
+          12.7,
+          4.0
+        ],
+        [
+          12.1,
+          4.0
+        ],
+        [
+          12.1,
+          0.8
+        ],
+        [
+          12.7,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc42": {
+      "coordinates": [
+        [
+          12.7,
+          4.8
+        ],
+        [
+          12.7,
+          8.0
+        ],
+        [
+          12.1,
+          8.0
+        ],
+        [
+          12.1,
+          4.8
+        ],
+        [
+          12.7,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc43": {
+      "coordinates": [
+        [
+          12.7,
+          9.6
+        ],
+        [
+          12.7,
+          12.8
+        ],
+        [
+          12.1,
+          12.8
+        ],
+        [
+          12.1,
+          9.6
+        ],
+        [
+          12.7,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc44": {
+      "coordinates": [
+        [
+          12.7,
+          13.6
+        ],
+        [
+          12.7,
+          16.8
+        ],
+        [
+          12.1,
+          16.8
+        ],
+        [
+          12.1,
+          13.6
+        ],
+        [
+          12.7,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc45": {
+      "coordinates": [
+        [
+          12.7,
+          18.4
+        ],
+        [
+          12.7,
+          21.6
+        ],
+        [
+          12.1,
+          21.6
+        ],
+        [
+          12.1,
+          18.4
+        ],
+        [
+          12.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc51": {
+      "coordinates": [
+        [
+          17.2,
+          0.8
+        ],
+        [
+          17.2,
+          4.0
+        ],
+        [
+          16.4,
+          4.0
+        ],
+        [
+          16.4,
+          0.8
+        ],
+        [
+          17.2,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc52": {
+      "coordinates": [
+        [
+          17.2,
+          4.8
+        ],
+        [
+          17.2,
+          8.0
+        ],
+        [
+          16.4,
+          8.0
+        ],
+        [
+          16.4,
+          4.8
+        ],
+        [
+          17.2,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc53": {
+      "coordinates": [
+        [
+          17.2,
+          9.6
+        ],
+        [
+          17.2,
+          12.8
+        ],
+        [
+          16.4,
+          12.8
+        ],
+        [
+          16.4,
+          9.6
+        ],
+        [
+          17.2,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc54": {
+      "coordinates": [
+        [
+          17.2,
+          13.6
+        ],
+        [
+          17.2,
+          16.8
+        ],
+        [
+          16.4,
+          16.8
+        ],
+        [
+          16.4,
+          13.6
+        ],
+        [
+          17.2,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc55": {
+      "coordinates": [
+        [
+          17.2,
+          18.4
+        ],
+        [
+          17.2,
+          21.6
+        ],
+        [
+          16.4,
+          21.6
+        ],
+        [
+          16.4,
+          18.4
+        ],
+        [
+          17.2,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc61": {
+      "coordinates": [
+        [
+          21.5,
+          0.8
+        ],
+        [
+          21.5,
+          4.0
+        ],
+        [
+          20.9,
+          4.0
+        ],
+        [
+          20.9,
+          0.8
+        ],
+        [
+          21.5,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc62": {
+      "coordinates": [
+        [
+          21.5,
+          4.8
+        ],
+        [
+          21.5,
+          8.0
+        ],
+        [
+          20.9,
+          8.0
+        ],
+        [
+          20.9,
+          4.8
+        ],
+        [
+          21.5,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc63": {
+      "coordinates": [
+        [
+          21.5,
+          9.6
+        ],
+        [
+          21.5,
+          12.8
+        ],
+        [
+          20.9,
+          12.8
+        ],
+        [
+          20.9,
+          9.6
+        ],
+        [
+          21.5,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc64": {
+      "coordinates": [
+        [
+          21.5,
+          13.6
+        ],
+        [
+          21.5,
+          16.8
+        ],
+        [
+          20.9,
+          16.8
+        ],
+        [
+          20.9,
+          13.6
+        ],
+        [
+          21.5,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc65": {
+      "coordinates": [
+        [
+          21.5,
+          18.4
+        ],
+        [
+          21.5,
+          21.6
+        ],
+        [
+          20.9,
+          21.6
+        ],
+        [
+          20.9,
+          18.4
+        ],
+        [
+          21.5,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc71": {
+      "coordinates": [
+        [
+          25.5,
+          0.8
+        ],
+        [
+          25.5,
+          4.0
+        ],
+        [
+          24.9,
+          4.0
+        ],
+        [
+          24.9,
+          0.8
+        ],
+        [
+          25.5,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc72": {
+      "coordinates": [
+        [
+          25.5,
+          4.8
+        ],
+        [
+          25.5,
+          8.0
+        ],
+        [
+          24.9,
+          8.0
+        ],
+        [
+          24.9,
+          4.8
+        ],
+        [
+          25.5,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc73": {
+      "coordinates": [
+        [
+          25.5,
+          9.6
+        ],
+        [
+          25.5,
+          12.8
+        ],
+        [
+          24.9,
+          12.8
+        ],
+        [
+          24.9,
+          9.6
+        ],
+        [
+          25.5,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc74": {
+      "coordinates": [
+        [
+          25.5,
+          13.6
+        ],
+        [
+          25.5,
+          16.8
+        ],
+        [
+          24.9,
+          16.8
+        ],
+        [
+          24.9,
+          13.6
+        ],
+        [
+          25.5,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc75": {
+      "coordinates": [
+        [
+          25.5,
+          18.4
+        ],
+        [
+          25.5,
+          21.6
+        ],
+        [
+          24.9,
+          21.6
+        ],
+        [
+          24.9,
+          18.4
+        ],
+        [
+          25.5,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc81": {
+      "coordinates": [
+        [
+          29.5,
+          0.8
+        ],
+        [
+          29.5,
+          4.0
+        ],
+        [
+          28.9,
+          4.0
+        ],
+        [
+          28.9,
+          0.8
+        ],
+        [
+          29.5,
+          0.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc82": {
+      "coordinates": [
+        [
+          29.5,
+          4.8
+        ],
+        [
+          29.5,
+          8.0
+        ],
+        [
+          28.9,
+          8.0
+        ],
+        [
+          28.9,
+          4.8
+        ],
+        [
+          29.5,
+          4.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc83": {
+      "coordinates": [
+        [
+          29.5,
+          9.6
+        ],
+        [
+          29.5,
+          12.8
+        ],
+        [
+          28.9,
+          12.8
+        ],
+        [
+          28.9,
+          9.6
+        ],
+        [
+          29.5,
+          9.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc84": {
+      "coordinates": [
+        [
+          29.5,
+          13.6
+        ],
+        [
+          29.5,
+          16.8
+        ],
+        [
+          28.9,
+          16.8
+        ],
+        [
+          28.9,
+          13.6
+        ],
+        [
+          29.5,
+          13.6
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACc85": {
+      "coordinates": [
+        [
+          29.5,
+          18.4
+        ],
+        [
+          29.5,
+          21.6
+        ],
+        [
+          28.9,
+          21.6
+        ],
+        [
+          28.9,
+          18.4
+        ],
+        [
+          29.5,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd11": {
+      "coordinates": [
+        [
+          9.6,
+          36.0
+        ],
+        [
+          9.6,
+          37.2
+        ],
+        [
+          8.8,
+          37.2
+        ],
+        [
+          8.8,
+          36.0
+        ],
+        [
+          9.6,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd12": {
+      "coordinates": [
+        [
+          9.6,
+          32.0
+        ],
+        [
+          9.6,
+          35.2
+        ],
+        [
+          8.8,
+          35.2
+        ],
+        [
+          8.8,
+          32.0
+        ],
+        [
+          9.6,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd13": {
+      "coordinates": [
+        [
+          9.6,
+          27.2
+        ],
+        [
+          9.6,
+          30.4
+        ],
+        [
+          8.8,
+          30.4
+        ],
+        [
+          8.8,
+          27.2
+        ],
+        [
+          9.6,
+          27.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd14": {
+      "coordinates": [
+        [
+          9.6,
+          23.2
+        ],
+        [
+          9.6,
+          26.4
+        ],
+        [
+          8.8,
+          26.4
+        ],
+        [
+          8.8,
+          23.2
+        ],
+        [
+          9.6,
+          23.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd21": {
+      "coordinates": [
+        [
+          13.9,
+          36.0
+        ],
+        [
+          13.9,
+          39.2
+        ],
+        [
+          13.3,
+          39.2
+        ],
+        [
+          13.3,
+          36.0
+        ],
+        [
+          13.9,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd22": {
+      "coordinates": [
+        [
+          13.9,
+          32.0
+        ],
+        [
+          13.9,
+          35.2
+        ],
+        [
+          13.3,
+          35.2
+        ],
+        [
+          13.3,
+          32.0
+        ],
+        [
+          13.9,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd23": {
+      "coordinates": [
+        [
+          13.9,
+          27.2
+        ],
+        [
+          13.9,
+          30.4
+        ],
+        [
+          13.3,
+          30.4
+        ],
+        [
+          13.3,
+          27.2
+        ],
+        [
+          13.9,
+          27.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd24": {
+      "coordinates": [
+        [
+          13.9,
+          23.2
+        ],
+        [
+          13.9,
+          26.4
+        ],
+        [
+          13.3,
+          26.4
+        ],
+        [
+          13.3,
+          23.2
+        ],
+        [
+          13.9,
+          23.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd31": {
+      "coordinates": [
+        [
+          17.9,
+          36.0
+        ],
+        [
+          17.9,
+          39.2
+        ],
+        [
+          17.3,
+          39.2
+        ],
+        [
+          17.3,
+          36.0
+        ],
+        [
+          17.9,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd32": {
+      "coordinates": [
+        [
+          17.9,
+          32.0
+        ],
+        [
+          17.9,
+          35.2
+        ],
+        [
+          17.3,
+          35.2
+        ],
+        [
+          17.3,
+          32.0
+        ],
+        [
+          17.9,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd41": {
+      "coordinates": [
+        [
+          22.4,
+          36.0
+        ],
+        [
+          22.4,
+          39.2
+        ],
+        [
+          21.6,
+          39.2
+        ],
+        [
+          21.6,
+          36.0
+        ],
+        [
+          22.4,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd42": {
+      "coordinates": [
+        [
+          22.4,
+          32.0
+        ],
+        [
+          22.4,
+          35.2
+        ],
+        [
+          21.6,
+          35.2
+        ],
+        [
+          21.6,
+          32.0
+        ],
+        [
+          22.4,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd51": {
+      "coordinates": [
+        [
+          26.7,
+          36.0
+        ],
+        [
+          26.7,
+          39.2
+        ],
+        [
+          26.1,
+          39.2
+        ],
+        [
+          26.1,
+          36.0
+        ],
+        [
+          26.7,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd52": {
+      "coordinates": [
+        [
+          26.7,
+          32.0
+        ],
+        [
+          26.7,
+          35.2
+        ],
+        [
+          26.1,
+          35.2
+        ],
+        [
+          26.1,
+          32.0
+        ],
+        [
+          26.7,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd61": {
+      "coordinates": [
+        [
+          30.7,
+          36.0
+        ],
+        [
+          30.7,
+          39.2
+        ],
+        [
+          30.1,
+          39.2
+        ],
+        [
+          30.1,
+          36.0
+        ],
+        [
+          30.7,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd62": {
+      "coordinates": [
+        [
+          30.7,
+          32.0
+        ],
+        [
+          30.7,
+          35.2
+        ],
+        [
+          30.1,
+          35.2
+        ],
+        [
+          30.1,
+          32.0
+        ],
+        [
+          30.7,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd63": {
+      "coordinates": [
+        [
+          30.7,
+          27.2
+        ],
+        [
+          30.7,
+          30.4
+        ],
+        [
+          30.1,
+          30.4
+        ],
+        [
+          30.1,
+          27.2
+        ],
+        [
+          30.7,
+          27.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd64": {
+      "coordinates": [
+        [
+          30.7,
+          23.2
+        ],
+        [
+          30.7,
+          26.4
+        ],
+        [
+          30.1,
+          26.4
+        ],
+        [
+          30.1,
+          23.2
+        ],
+        [
+          30.7,
+          23.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd65": {
+      "coordinates": [
+        [
+          30.7,
+          18.4
+        ],
+        [
+          30.7,
+          21.6
+        ],
+        [
+          30.1,
+          21.6
+        ],
+        [
+          30.1,
+          18.4
+        ],
+        [
+          30.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd71": {
+      "coordinates": [
+        [
+          34.7,
+          36.0
+        ],
+        [
+          34.7,
+          39.2
+        ],
+        [
+          34.1,
+          39.2
+        ],
+        [
+          34.1,
+          36.0
+        ],
+        [
+          34.7,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd72": {
+      "coordinates": [
+        [
+          34.7,
+          32.0
+        ],
+        [
+          34.7,
+          35.2
+        ],
+        [
+          34.1,
+          35.2
+        ],
+        [
+          34.1,
+          32.0
+        ],
+        [
+          34.7,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd73": {
+      "coordinates": [
+        [
+          34.7,
+          27.2
+        ],
+        [
+          34.7,
+          30.4
+        ],
+        [
+          34.1,
+          30.4
+        ],
+        [
+          34.1,
+          27.2
+        ],
+        [
+          34.7,
+          27.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd74": {
+      "coordinates": [
+        [
+          34.7,
+          23.2
+        ],
+        [
+          34.7,
+          26.4
+        ],
+        [
+          34.1,
+          26.4
+        ],
+        [
+          34.1,
+          23.2
+        ],
+        [
+          34.7,
+          23.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd75": {
+      "coordinates": [
+        [
+          34.7,
+          18.4
+        ],
+        [
+          34.7,
+          21.6
+        ],
+        [
+          34.1,
+          21.6
+        ],
+        [
+          34.1,
+          18.4
+        ],
+        [
+          34.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd81": {
+      "coordinates": [
+        [
+          38.7,
+          36.0
+        ],
+        [
+          38.7,
+          39.2
+        ],
+        [
+          38.1,
+          39.2
+        ],
+        [
+          38.1,
+          36.0
+        ],
+        [
+          38.7,
+          36.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd82": {
+      "coordinates": [
+        [
+          38.7,
+          32.0
+        ],
+        [
+          38.7,
+          35.2
+        ],
+        [
+          38.1,
+          35.2
+        ],
+        [
+          38.1,
+          32.0
+        ],
+        [
+          38.7,
+          32.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd83": {
+      "coordinates": [
+        [
+          38.7,
+          27.2
+        ],
+        [
+          38.7,
+          30.4
+        ],
+        [
+          38.1,
+          30.4
+        ],
+        [
+          38.1,
+          27.2
+        ],
+        [
+          38.7,
+          27.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd84": {
+      "coordinates": [
+        [
+          38.7,
+          23.2
+        ],
+        [
+          38.7,
+          26.4
+        ],
+        [
+          38.1,
+          26.4
+        ],
+        [
+          38.1,
+          23.2
+        ],
+        [
+          38.7,
+          23.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACd85": {
+      "coordinates": [
+        [
+          38.7,
+          18.4
+        ],
+        [
+          38.7,
+          21.6
+        ],
+        [
+          38.1,
+          21.6
+        ],
+        [
+          38.1,
+          18.4
+        ],
+        [
+          38.7,
+          18.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr101": {
+      "coordinates": [
+        [
+          13.2,
+          39.3
+        ],
+        [
+          13.2,
+          39.9
+        ],
+        [
+          10.0,
+          39.9
+        ],
+        [
+          10.0,
+          39.3
+        ],
+        [
+          13.2,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr102": {
+      "coordinates": [
+        [
+          17.2,
+          39.3
+        ],
+        [
+          17.2,
+          39.9
+        ],
+        [
+          14.0,
+          39.9
+        ],
+        [
+          14.0,
+          39.3
+        ],
+        [
+          17.2,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr103": {
+      "coordinates": [
+        [
+          21.2,
+          39.3
+        ],
+        [
+          21.2,
+          39.9
+        ],
+        [
+          18.0,
+          39.9
+        ],
+        [
+          18.0,
+          39.3
+        ],
+        [
+          21.2,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr104": {
+      "coordinates": [
+        [
+          26.0,
+          39.3
+        ],
+        [
+          26.0,
+          39.9
+        ],
+        [
+          22.8,
+          39.9
+        ],
+        [
+          22.8,
+          39.3
+        ],
+        [
+          26.0,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr105": {
+      "coordinates": [
+        [
+          30.0,
+          39.3
+        ],
+        [
+          30.0,
+          39.9
+        ],
+        [
+          26.8,
+          39.9
+        ],
+        [
+          26.8,
+          39.3
+        ],
+        [
+          30.0,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr106": {
+      "coordinates": [
+        [
+          34.0,
+          39.3
+        ],
+        [
+          34.0,
+          39.9
+        ],
+        [
+          30.8,
+          39.9
+        ],
+        [
+          30.8,
+          39.3
+        ],
+        [
+          34.0,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr107": {
+      "coordinates": [
+        [
+          38.0,
+          39.3
+        ],
+        [
+          38.0,
+          39.9
+        ],
+        [
+          34.8,
+          39.9
+        ],
+        [
+          34.8,
+          39.3
+        ],
+        [
+          38.0,
+          39.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr11": {
+      "coordinates": [
+        [
+          4.0,
+          0.1
+        ],
+        [
+          4.0,
+          0.7
+        ],
+        [
+          0.8,
+          0.7
+        ],
+        [
+          0.8,
+          0.1
+        ],
+        [
+          4.0,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr12": {
+      "coordinates": [
+        [
+          8.0,
+          0.1
+        ],
+        [
+          8.0,
+          0.7
+        ],
+        [
+          4.8,
+          0.7
+        ],
+        [
+          4.8,
+          0.1
+        ],
+        [
+          8.0,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr13": {
+      "coordinates": [
+        [
+          12.0,
+          0.1
+        ],
+        [
+          12.0,
+          0.7
+        ],
+        [
+          8.8,
+          0.7
+        ],
+        [
+          8.8,
+          0.1
+        ],
+        [
+          12.0,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr14": {
+      "coordinates": [
+        [
+          16.0,
+          0.1
+        ],
+        [
+          16.0,
+          0.7
+        ],
+        [
+          12.8,
+          0.7
+        ],
+        [
+          12.8,
+          0.1
+        ],
+        [
+          16.0,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr15": {
+      "coordinates": [
+        [
+          20.8,
+          0.1
+        ],
+        [
+          20.8,
+          0.7
+        ],
+        [
+          17.6,
+          0.7
+        ],
+        [
+          17.6,
+          0.1
+        ],
+        [
+          20.8,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr16": {
+      "coordinates": [
+        [
+          24.8,
+          0.1
+        ],
+        [
+          24.8,
+          0.7
+        ],
+        [
+          21.6,
+          0.7
+        ],
+        [
+          21.6,
+          0.1
+        ],
+        [
+          24.8,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr17": {
+      "coordinates": [
+        [
+          28.8,
+          0.1
+        ],
+        [
+          28.8,
+          0.7
+        ],
+        [
+          25.6,
+          0.7
+        ],
+        [
+          25.6,
+          0.1
+        ],
+        [
+          28.8,
+          0.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr21": {
+      "coordinates": [
+        [
+          4.0,
+          4.1
+        ],
+        [
+          4.0,
+          4.7
+        ],
+        [
+          0.8,
+          4.7
+        ],
+        [
+          0.8,
+          4.1
+        ],
+        [
+          4.0,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr22": {
+      "coordinates": [
+        [
+          8.0,
+          4.1
+        ],
+        [
+          8.0,
+          4.7
+        ],
+        [
+          4.8,
+          4.7
+        ],
+        [
+          4.8,
+          4.1
+        ],
+        [
+          8.0,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr23": {
+      "coordinates": [
+        [
+          12.0,
+          4.1
+        ],
+        [
+          12.0,
+          4.7
+        ],
+        [
+          8.8,
+          4.7
+        ],
+        [
+          8.8,
+          4.1
+        ],
+        [
+          12.0,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr24": {
+      "coordinates": [
+        [
+          16.0,
+          4.1
+        ],
+        [
+          16.0,
+          4.7
+        ],
+        [
+          12.8,
+          4.7
+        ],
+        [
+          12.8,
+          4.1
+        ],
+        [
+          16.0,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr25": {
+      "coordinates": [
+        [
+          20.8,
+          4.1
+        ],
+        [
+          20.8,
+          4.7
+        ],
+        [
+          17.6,
+          4.7
+        ],
+        [
+          17.6,
+          4.1
+        ],
+        [
+          20.8,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr26": {
+      "coordinates": [
+        [
+          24.8,
+          4.1
+        ],
+        [
+          24.8,
+          4.7
+        ],
+        [
+          21.6,
+          4.7
+        ],
+        [
+          21.6,
+          4.1
+        ],
+        [
+          24.8,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr27": {
+      "coordinates": [
+        [
+          28.8,
+          4.1
+        ],
+        [
+          28.8,
+          4.7
+        ],
+        [
+          25.6,
+          4.7
+        ],
+        [
+          25.6,
+          4.1
+        ],
+        [
+          28.8,
+          4.1
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr31": {
+      "coordinates": [
+        [
+          4.0,
+          8.4
+        ],
+        [
+          4.0,
+          9.2
+        ],
+        [
+          0.8,
+          9.2
+        ],
+        [
+          0.8,
+          8.4
+        ],
+        [
+          4.0,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr32": {
+      "coordinates": [
+        [
+          8.0,
+          8.4
+        ],
+        [
+          8.0,
+          9.2
+        ],
+        [
+          4.8,
+          9.2
+        ],
+        [
+          4.8,
+          8.4
+        ],
+        [
+          8.0,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr33": {
+      "coordinates": [
+        [
+          12.0,
+          8.4
+        ],
+        [
+          12.0,
+          9.2
+        ],
+        [
+          8.8,
+          9.2
+        ],
+        [
+          8.8,
+          8.4
+        ],
+        [
+          12.0,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr34": {
+      "coordinates": [
+        [
+          16.0,
+          8.4
+        ],
+        [
+          16.0,
+          9.2
+        ],
+        [
+          12.8,
+          9.2
+        ],
+        [
+          12.8,
+          8.4
+        ],
+        [
+          16.0,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr35": {
+      "coordinates": [
+        [
+          20.8,
+          8.4
+        ],
+        [
+          20.8,
+          9.2
+        ],
+        [
+          17.6,
+          9.2
+        ],
+        [
+          17.6,
+          8.4
+        ],
+        [
+          20.8,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr36": {
+      "coordinates": [
+        [
+          24.8,
+          8.4
+        ],
+        [
+          24.8,
+          9.2
+        ],
+        [
+          21.6,
+          9.2
+        ],
+        [
+          21.6,
+          8.4
+        ],
+        [
+          24.8,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr37": {
+      "coordinates": [
+        [
+          28.8,
+          8.4
+        ],
+        [
+          28.8,
+          9.2
+        ],
+        [
+          25.6,
+          9.2
+        ],
+        [
+          25.6,
+          8.4
+        ],
+        [
+          28.8,
+          8.4
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr41": {
+      "coordinates": [
+        [
+          4.0,
+          12.9
+        ],
+        [
+          4.0,
+          13.5
+        ],
+        [
+          0.8,
+          13.5
+        ],
+        [
+          0.8,
+          12.9
+        ],
+        [
+          4.0,
+          12.9
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr42": {
+      "coordinates": [
+        [
+          8.0,
+          12.9
+        ],
+        [
+          8.0,
+          13.5
+        ],
+        [
+          4.8,
+          13.5
+        ],
+        [
+          4.8,
+          12.9
+        ],
+        [
+          8.0,
+          12.9
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr43": {
+      "coordinates": [
+        [
+          12.0,
+          12.9
+        ],
+        [
+          12.0,
+          13.5
+        ],
+        [
+          8.8,
+          13.5
+        ],
+        [
+          8.8,
+          12.9
+        ],
+        [
+          12.0,
+          12.9
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr44": {
+      "coordinates": [
+        [
+          16.0,
+          12.9
+        ],
+        [
+          16.0,
+          13.5
+        ],
+        [
+          12.8,
+          13.5
+        ],
+        [
+          12.8,
+          12.9
+        ],
+        [
+          16.0,
+          12.9
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr45": {
+      "coordinates": [
+        [
+          24.8,
+          12.9
+        ],
+        [
+          24.8,
+          13.5
+        ],
+        [
+          21.6,
+          13.5
+        ],
+        [
+          21.6,
+          12.9
+        ],
+        [
+          24.8,
+          12.9
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr46": {
+      "coordinates": [
+        [
+          28.8,
+          12.9
+        ],
+        [
+          28.8,
+          13.5
+        ],
+        [
+          25.6,
+          13.5
+        ],
+        [
+          25.6,
+          12.9
+        ],
+        [
+          28.8,
+          12.9
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr51": {
+      "coordinates": [
+        [
+          4.0,
+          17.2
+        ],
+        [
+          4.0,
+          18.0
+        ],
+        [
+          0.8,
+          18.0
+        ],
+        [
+          0.8,
+          17.2
+        ],
+        [
+          4.0,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr52": {
+      "coordinates": [
+        [
+          8.0,
+          17.2
+        ],
+        [
+          8.0,
+          18.0
+        ],
+        [
+          4.8,
+          18.0
+        ],
+        [
+          4.8,
+          17.2
+        ],
+        [
+          8.0,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr53": {
+      "coordinates": [
+        [
+          12.0,
+          17.2
+        ],
+        [
+          12.0,
+          18.0
+        ],
+        [
+          8.8,
+          18.0
+        ],
+        [
+          8.8,
+          17.2
+        ],
+        [
+          12.0,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr54": {
+      "coordinates": [
+        [
+          16.0,
+          17.2
+        ],
+        [
+          16.0,
+          18.0
+        ],
+        [
+          12.8,
+          18.0
+        ],
+        [
+          12.8,
+          17.2
+        ],
+        [
+          16.0,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr55": {
+      "coordinates": [
+        [
+          24.8,
+          17.2
+        ],
+        [
+          24.8,
+          18.0
+        ],
+        [
+          21.6,
+          18.0
+        ],
+        [
+          21.6,
+          17.2
+        ],
+        [
+          24.8,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr56": {
+      "coordinates": [
+        [
+          28.8,
+          17.2
+        ],
+        [
+          28.8,
+          18.0
+        ],
+        [
+          25.6,
+          18.0
+        ],
+        [
+          25.6,
+          17.2
+        ],
+        [
+          28.8,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr57": {
+      "coordinates": [
+        [
+          34.0,
+          17.2
+        ],
+        [
+          34.0,
+          18.0
+        ],
+        [
+          30.8,
+          18.0
+        ],
+        [
+          30.8,
+          17.2
+        ],
+        [
+          34.0,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr58": {
+      "coordinates": [
+        [
+          38.0,
+          17.2
+        ],
+        [
+          38.0,
+          18.0
+        ],
+        [
+          34.8,
+          18.0
+        ],
+        [
+          34.8,
+          17.2
+        ],
+        [
+          38.0,
+          17.2
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr61": {
+      "coordinates": [
+        [
+          4.0,
+          22.0
+        ],
+        [
+          4.0,
+          22.8
+        ],
+        [
+          0.8,
+          22.8
+        ],
+        [
+          0.8,
+          22.0
+        ],
+        [
+          4.0,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr62": {
+      "coordinates": [
+        [
+          8.0,
+          22.0
+        ],
+        [
+          8.0,
+          22.8
+        ],
+        [
+          4.8,
+          22.8
+        ],
+        [
+          4.8,
+          22.0
+        ],
+        [
+          8.0,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr63": {
+      "coordinates": [
+        [
+          12.0,
+          22.0
+        ],
+        [
+          12.0,
+          22.8
+        ],
+        [
+          8.8,
+          22.8
+        ],
+        [
+          8.8,
+          22.0
+        ],
+        [
+          12.0,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr64": {
+      "coordinates": [
+        [
+          16.0,
+          22.0
+        ],
+        [
+          16.0,
+          22.8
+        ],
+        [
+          12.8,
+          22.8
+        ],
+        [
+          12.8,
+          22.0
+        ],
+        [
+          16.0,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr65": {
+      "coordinates": [
+        [
+          24.8,
+          22.0
+        ],
+        [
+          24.8,
+          22.8
+        ],
+        [
+          21.6,
+          22.8
+        ],
+        [
+          21.6,
+          22.0
+        ],
+        [
+          24.8,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr66": {
+      "coordinates": [
+        [
+          28.8,
+          22.0
+        ],
+        [
+          28.8,
+          22.8
+        ],
+        [
+          25.6,
+          22.8
+        ],
+        [
+          25.6,
+          22.0
+        ],
+        [
+          28.8,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr67": {
+      "coordinates": [
+        [
+          34.0,
+          22.0
+        ],
+        [
+          34.0,
+          22.8
+        ],
+        [
+          30.8,
+          22.8
+        ],
+        [
+          30.8,
+          22.0
+        ],
+        [
+          34.0,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr68": {
+      "coordinates": [
+        [
+          38.0,
+          22.0
+        ],
+        [
+          38.0,
+          22.8
+        ],
+        [
+          34.8,
+          22.8
+        ],
+        [
+          34.8,
+          22.0
+        ],
+        [
+          38.0,
+          22.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr71": {
+      "coordinates": [
+        [
+          13.2,
+          26.5
+        ],
+        [
+          13.2,
+          27.1
+        ],
+        [
+          10.0,
+          27.1
+        ],
+        [
+          10.0,
+          26.5
+        ],
+        [
+          13.2,
+          26.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr72": {
+      "coordinates": [
+        [
+          34.0,
+          26.5
+        ],
+        [
+          34.0,
+          27.1
+        ],
+        [
+          30.8,
+          27.1
+        ],
+        [
+          30.8,
+          26.5
+        ],
+        [
+          34.0,
+          26.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr73": {
+      "coordinates": [
+        [
+          38.0,
+          26.5
+        ],
+        [
+          38.0,
+          27.1
+        ],
+        [
+          34.8,
+          27.1
+        ],
+        [
+          34.8,
+          26.5
+        ],
+        [
+          38.0,
+          26.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr81": {
+      "coordinates": [
+        [
+          13.2,
+          30.8
+        ],
+        [
+          13.2,
+          31.6
+        ],
+        [
+          10.0,
+          31.6
+        ],
+        [
+          10.0,
+          30.8
+        ],
+        [
+          13.2,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr82": {
+      "coordinates": [
+        [
+          17.2,
+          30.8
+        ],
+        [
+          17.2,
+          31.6
+        ],
+        [
+          14.0,
+          31.6
+        ],
+        [
+          14.0,
+          30.8
+        ],
+        [
+          17.2,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr83": {
+      "coordinates": [
+        [
+          21.2,
+          30.8
+        ],
+        [
+          21.2,
+          31.6
+        ],
+        [
+          18.0,
+          31.6
+        ],
+        [
+          18.0,
+          30.8
+        ],
+        [
+          21.2,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr84": {
+      "coordinates": [
+        [
+          26.0,
+          30.8
+        ],
+        [
+          26.0,
+          31.6
+        ],
+        [
+          22.8,
+          31.6
+        ],
+        [
+          22.8,
+          30.8
+        ],
+        [
+          26.0,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr85": {
+      "coordinates": [
+        [
+          30.0,
+          30.8
+        ],
+        [
+          30.0,
+          31.6
+        ],
+        [
+          26.8,
+          31.6
+        ],
+        [
+          26.8,
+          30.8
+        ],
+        [
+          30.0,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr86": {
+      "coordinates": [
+        [
+          34.0,
+          30.8
+        ],
+        [
+          34.0,
+          31.6
+        ],
+        [
+          30.8,
+          31.6
+        ],
+        [
+          30.8,
+          30.8
+        ],
+        [
+          34.0,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr87": {
+      "coordinates": [
+        [
+          38.0,
+          30.8
+        ],
+        [
+          38.0,
+          31.6
+        ],
+        [
+          34.8,
+          31.6
+        ],
+        [
+          34.8,
+          30.8
+        ],
+        [
+          38.0,
+          30.8
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr91": {
+      "coordinates": [
+        [
+          13.2,
+          35.3
+        ],
+        [
+          13.2,
+          35.9
+        ],
+        [
+          10.0,
+          35.9
+        ],
+        [
+          10.0,
+          35.3
+        ],
+        [
+          13.2,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr92": {
+      "coordinates": [
+        [
+          17.2,
+          35.3
+        ],
+        [
+          17.2,
+          35.9
+        ],
+        [
+          14.0,
+          35.9
+        ],
+        [
+          14.0,
+          35.3
+        ],
+        [
+          17.2,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr93": {
+      "coordinates": [
+        [
+          21.2,
+          35.3
+        ],
+        [
+          21.2,
+          35.9
+        ],
+        [
+          18.0,
+          35.9
+        ],
+        [
+          18.0,
+          35.3
+        ],
+        [
+          21.2,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr94": {
+      "coordinates": [
+        [
+          26.0,
+          35.3
+        ],
+        [
+          26.0,
+          35.9
+        ],
+        [
+          22.8,
+          35.9
+        ],
+        [
+          22.8,
+          35.3
+        ],
+        [
+          26.0,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr95": {
+      "coordinates": [
+        [
+          30.0,
+          35.3
+        ],
+        [
+          30.0,
+          35.9
+        ],
+        [
+          26.8,
+          35.9
+        ],
+        [
+          26.8,
+          35.3
+        ],
+        [
+          30.0,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr96": {
+      "coordinates": [
+        [
+          34.0,
+          35.3
+        ],
+        [
+          34.0,
+          35.9
+        ],
+        [
+          30.8,
+          35.9
+        ],
+        [
+          30.8,
+          35.3
+        ],
+        [
+          34.0,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EVACr97": {
+      "coordinates": [
+        [
+          38.0,
+          35.3
+        ],
+        [
+          38.0,
+          35.9
+        ],
+        [
+          34.8,
+          35.9
+        ],
+        [
+          34.8,
+          35.3
+        ],
+        [
+          38.0,
+          35.3
+        ]
+      ],
+      "parameters": {
+        "entrance": "Exit1",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 90.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "Exit1": {
+      "coordinates": [
+        [
+          18.6,
+          10.6
+        ],
+        [
+          18.1,
+          10.6
+        ],
+        [
+          18.1,
+          11.8
+        ],
+        [
+          18.6,
+          11.8
+        ],
+        [
+          18.6,
+          10.6
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 17.4,
+        "y": 11.0
+      },
+      "type": "polygon"
+    },
+    "Exit2": {
+      "coordinates": [
+        [
+          18.6,
+          27.6
+        ],
+        [
+          18.1,
+          27.6
+        ],
+        [
+          18.1,
+          28.8
+        ],
+        [
+          18.6,
+          28.8
+        ],
+        [
+          18.6,
+          27.6
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 17.4,
+        "y": 28.0
+      },
+      "type": "polygon"
+    },
+    "Exit3": {
+      "coordinates": [
+        [
+          28.0,
+          27.6
+        ],
+        [
+          27.5,
+          27.6
+        ],
+        [
+          27.5,
+          28.8
+        ],
+        [
+          28.0,
+          28.8
+        ],
+        [
+          28.0,
+          27.6
+        ]
+      ],
+      "open_from_s": 10000.0,
+      "sign": {
+        "c": 3,
+        "x": 26.8,
+        "y": 28.0
+      },
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}

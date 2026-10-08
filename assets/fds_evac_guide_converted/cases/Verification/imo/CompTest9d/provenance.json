@@ -1,0 +1,14 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Verification/imo/CompTest9d.fds",
+  "source_sha256": "951548e55e48ed321d681842358ac2819fe93346aa03b047bb26a98e609baab0",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); COUNT_ONLY counter: no counterpart; COUNT_ONLY counter: no counterpart; L_NON_SP has no counterpart; TDET_SMOKE_DENS has no counterpart; DENS_INIT has no counterpart; I_HERDING_TYPE has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; speed uniform -> Gaussian with the same mean and variance: v0=1.295, v0_std=0.187639; AGENT_TYPE has no counterpart",
+  "sampling_height_adjustment": null,
+  "fire_changes": [],
+  "files_sha256": {
+    "config.json": "9381116d2f6e6de209999720dbf64e350ff98d2b63c144f543f3ab29104e09c6",
+    "geometry.wkt": "0d93f9b2085d93991430cef0b25fc31ef532d5a893feac26ecdac6ed1cd7ba55"
+  }
+}
