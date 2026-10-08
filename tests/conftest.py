@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+from packaging.version import Version
 
 SCIEBO = Path.home() / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
 # The external FDS output the ``external_data`` tests read, resolved as the
@@ -23,6 +24,21 @@ EXTERNAL_DATA = (
         )
     ),
 )
+
+
+#: fdsreader versions whose cache the worker patch below was checked against.
+FDSREADER_TESTED = (Version("1.11.7"), Version("1.12"))
+
+
+def check_fdsreader_version(version: str) -> None:
+    """Stop the run if the worker cache patch was not checked on *version*."""
+    low, high = FDSREADER_TESTED
+    if not low <= Version(version) < high:
+        raise pytest.UsageError(
+            "cannot move the fdsreader cache per xdist worker: the patch in "
+            f"tests/conftest.py was checked on fdsreader >={low},<{high}, "
+            f"found {version}"
+        )
 
 
 def pytest_configure(config):
@@ -45,6 +61,7 @@ def pytest_configure(config):
     import fdsreader
     from fdsreader.simulation import Simulation
 
+    check_fdsreader_version(fdsreader.__version__)
     if not hasattr(Simulation, "_get_pickle_filename"):
         raise pytest.UsageError(
             "cannot move the fdsreader cache per xdist worker: fdsreader "

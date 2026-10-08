@@ -67,3 +67,18 @@ def test_an_xdist_worker_keeps_the_fdsreader_cache_out_of_the_case(tmp_path):
     pickle = os.path.abspath(Simulation._get_pickle_filename(str(case), "case"))
     assert os.path.basename(pickle) == "case.pickle"
     assert os.path.commonpath([pickle, str(case)]) != str(case)
+
+
+@pytest.mark.parametrize("version", ["1.11.6", "1.12.0", "2.0.0"])
+def test_the_worker_cache_patch_refuses_an_untested_fdsreader(version):
+    from conftest import check_fdsreader_version
+
+    with pytest.raises(pytest.UsageError, match=f"found {version}"):
+        check_fdsreader_version(version)
+
+
+@pytest.mark.parametrize("version", ["1.11.7", "1.11.9"])
+def test_the_worker_cache_patch_accepts_fdsreader_1_11(version):
+    from conftest import check_fdsreader_version
+
+    check_fdsreader_version(version)
