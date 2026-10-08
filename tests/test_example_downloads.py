@@ -207,9 +207,9 @@ def test_first_fds_case_clear_air_result():
     not (T_JUNCTION_FDS / "t_junction.smv").is_file(),
     reason="t_junction FDS output not available",
 )
-def test_first_fds_case_fire_result():
+def test_first_fds_case_fire_result(fds_read_only):
     """The fire result on the page and in the README, from the FDS output."""
-    out = _run("examples/first_fds_case.py", str(T_JUNCTION_FDS))
+    out = _run("examples/first_fds_case.py", str(fds_read_only(T_JUNCTION_FDS)))
     for line in SPEC["first-fds-case"]["expected"]:
         assert line in out
 

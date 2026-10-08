@@ -268,11 +268,12 @@ DATA_TIMES_S = (3.0, 6.0, 9.0)
 FACINGS = ("up", "px", "mx", "dn")
 
 
-def _radiometer(case: str) -> Path:
+def _radiometer(case: str, read_only=None) -> Path:
+    """The case folder; through *read_only* (``fds_read_only``) for fdsreader."""
     path = RADIOMETER_DATA / case
     if not (path / f"heat_radiometer_{case}_devc.csv").is_file():
         pytest.skip(f"#224 radiometer data not found under {RADIOMETER_DATA}")
-    return path
+    return path if read_only is None else read_only(path)
 
 
 def _gauge(devc, facing, k):
@@ -282,10 +283,10 @@ def _gauge(devc, facing, k):
 
 @pytest.mark.external_data
 @pytest.mark.parametrize("case", ["uniform", "layer"])
-def test_radiometer_slice_u_matches_devices(case):
+def test_radiometer_slice_u_matches_devices(case, fds_read_only):
     """Slice U at 1.6 m against the ``U_z16`` devices. The slice shows the
     ray effect of the 100-angle solver (about 2 % in the uniform room)."""
-    path = _radiometer(case)
+    path = _radiometer(case, fds_read_only)
     field = FdsHeatField.from_fds(  # type: ignore[call-arg]
         str(path), slice_height_m=1.6, integrated_intensity=True
     )
@@ -299,11 +300,11 @@ def test_radiometer_slice_u_matches_devices(case):
 
 
 @pytest.mark.external_data
-def test_radiometer_uniform_quarter_u_is_the_gauge():
+def test_radiometer_uniform_quarter_u_is_the_gauge(fds_read_only):
     """Isotropic room: f = 1/4 reproduces the FDS skin gauge in all four
     orientations (radiation in excess of the skin-temperature field, plus
     convection)."""
-    path = _radiometer("uniform")
+    path = _radiometer("uniform", fds_read_only)
     model = DefaultHeatFedModel(
         FdsHeatField.from_fds(  # type: ignore[call-arg]
             str(path), slice_height_m=1.6, integrated_intensity=True
