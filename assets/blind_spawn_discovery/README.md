@@ -143,7 +143,10 @@ each path are the two frontier hops.
 
 ## What this asset found
 
-Three engine defects. The first two made frontier exploration impossible in any
+Three engine defects. This section records what the runs showed when the
+asset was built (#66, `42fcbac2`, August 2026) and when the third defect was
+fixed (#70, `bec65fa9`); its counts, times and sequences are from those
+commits, not from current runs. The first two made frontier exploration impossible in any
 simulation while every unit test passed. The unit tests call
 `evaluate_and_reroute` directly; only a simulation runs the direct-steering loop
 that produces the state.
@@ -204,7 +207,9 @@ what makes the asset a test of issue #68 rather than of arithmetic.
 **Checkpoint boxes 2 m deep, not 0.4 m.** Direct steering walks each agent to a
 random point inside the stage polygon and counts arrival within 0.7 m of *that
 point*. A box only as deep as the wall gives thirty agents the same sliver to
-aim at. The builder asserts a minimum depth. (Related: `inside_since` and
+aim at. An explorer with nothing left to explore now first walks to the
+node's routing point and looks from there before it patrols
+([Models › Wayfinding §2.4](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract)). The builder asserts a minimum depth. (Related: `inside_since` and
 `reach_penetration` are written into `wait_info` and never read — arrival is
 proximity to a point, not containment in the polygon.)
 
