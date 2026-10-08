@@ -1948,11 +1948,11 @@ def _plan_shows_smoke(app, sim_time: float) -> tuple[float, float, int]:
 @pytest.mark.slow
 @pytest.mark.external_data
 @pytest.mark.skipif(not T_JUNCTION_FDS.is_dir(), reason="t_junction FDS output absent")
-def test_fire_run_draws_smoke_and_replays_it(tmp_path):
+def test_fire_run_draws_smoke_and_replays_it(tmp_path, fds_read_only):
     """t_junction + fire_2MW_PVC through the real child: smoke after 10 s."""
     work = tmp_path / "work"
     shutil.copytree(ASSETS / "t_junction", work / "assets" / "t_junction")
-    (work / "fire").symlink_to(T_JUNCTION_FDS)
+    (work / "fire").symlink_to(fds_read_only(T_JUNCTION_FDS))
 
     async def go():
         app = EvacTui(cwd=work, inspector=lambda path: None, debounce=0)
