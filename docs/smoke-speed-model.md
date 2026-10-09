@@ -193,7 +193,7 @@ verification against FDS+Evac.
 
 The comparison with the FDS+Evac guide test "Unimpeded walking speed vs
 smoke density" (Korhonen, FDS+Evac Technical Reference and User's Guide,
-FDS 6.7.6 / Evac 2.6.0, section "Component Testing") is in
+FDS 6.7.6, Evac 2.6.0-draft, section "Component Testing") is in
 [`tests/verification/test_fds_evac_guide_cases.py`](../tests/verification/test_fds_evac_guide_cases.py).
 With v0 = 1.5 m/s and the default floor of 0.1, which starts at
 K = 11.15 1/m (1281 mg/m³), the law gives at the densities the FDS run

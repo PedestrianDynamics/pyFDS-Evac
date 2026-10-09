@@ -307,7 +307,7 @@ dose. The chapter does not say which reading is intended.
   [iso.org/standard/65996](https://www.iso.org/standard/65996.html). Read
   from the public preview.
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
-  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft),
   §3.4. VTT Technical Research Centre of Finland.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
   Secondary source.

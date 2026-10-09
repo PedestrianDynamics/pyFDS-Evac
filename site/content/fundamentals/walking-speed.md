@@ -674,7 +674,7 @@ different Japanese title (煙中の視程について 第5報).
   Safety Journal, 159, 104573.
   [doi:10.1016/j.firesaf.2025.104573](https://doi.org/10.1016/j.firesaf.2025.104573)
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
-  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft). VTT
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft). VTT
   Technical Research Centre of Finland.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
   Secondary source for the fractional form.

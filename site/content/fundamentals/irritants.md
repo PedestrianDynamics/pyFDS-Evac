@@ -317,7 +317,7 @@ curve without fitted data and is defined only for FIC from 0 to 1.
   6th ed., Eq. 22.50 and Table 22.3, p. 390. NIST Special Publication 1019.
   [doi:10.6028/NIST.SP.1019](https://doi.org/10.6028/NIST.SP.1019)
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
-  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft),
   §3.4, Eq. 11, Table 2. VTT Technical Research Centre of Finland.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
   Secondary source.

@@ -1,7 +1,7 @@
 """Tier A verification against two FDS+Evac guide component tests.
 
 Source: T. Korhonen, *FDS+Evac Technical Reference and User's Guide*
-(FDS 6.7.6, Evac 2.6.0), section "Component Testing", the quantitative
+(FDS 6.7.6, Evac 2.6.0-draft), section "Component Testing", the quantitative
 cases "Unimpeded walking speed vs smoke density" (figure
 ``Fig_SmokeSpeedTest``) and "FED calculation" (figure ``Fig_FED_Test``).
 The FDS+Evac code is cited at git tag ``FDS6.7.6``: ``Source/evac.f90``
