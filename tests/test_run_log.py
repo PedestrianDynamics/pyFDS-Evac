@@ -16,6 +16,7 @@ from shapely.geometry import Polygon, box
 
 from pyfds_evac import cli
 from pyfds_evac.core.route_graph import RerouteConfig
+from pyfds_evac.core.run_outputs import _RepeatedFdsreaderWarning
 from pyfds_evac.core.scenario import Scenario, run_scenario
 
 LENGTH_M = 10.0
@@ -102,6 +103,11 @@ def restore_logging():
         model.level,
         model.propagate,
     )
+    # An earlier cli.main or run_stream call in this process leaves its filter
+    # installed, with the warnings it has already passed; start without it.
+    root.filters[:] = [
+        f for f in root.filters if not isinstance(f, _RepeatedFdsreaderWarning)
+    ]
     yield
     root.filters[:] = saved[0]
     model.handlers[:] = saved[1]
