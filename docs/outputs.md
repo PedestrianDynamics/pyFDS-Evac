@@ -166,7 +166,7 @@ change away from an exit that has closed, which is `exit_closed`.
 An `initial` row is written only when an agent that has no exit at a
 re-evaluation is given its first one. Agents that start with a journey exit
 get no row until they change target, so a run without any switch (such as the
-example above, `Route switches: 0`) writes a file with only its header. This
+example above, `Route history rows: 0`) writes a file with only its header. This
 does not mean rerouting was off.
 
 ## Route cost history

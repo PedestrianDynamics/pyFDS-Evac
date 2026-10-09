@@ -348,7 +348,7 @@ Configuring rerouting.
 Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 …
 Simulation incomplete: time limit reached after 1150.00 s (0/1 evacuated, 1 remaining).
-Route switches: 0
+Route history rows: 0
 Route cost samples: 1149
 ```
 

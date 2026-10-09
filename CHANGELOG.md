@@ -126,6 +126,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `run.py --output-route-history` prints `Route history rows: N` instead
+  of `Route switches: N`. N is the number of rows of the file, `initial`
+  and `default_route` rows included, not the number of route switches:
+  the first FDS case printed 161 with no switch at all.
 - Route foresight (`anticipate`, on by default) reads every smoke sample
   at the time the agent would reach it, counted from the agent's position,
   instead of each leg at the time the agent reaches its start, counted from
