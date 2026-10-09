@@ -386,7 +386,8 @@ has not been re-fitted. With the opening exit ranked from each agent&amp;rsquo;s
 on main at &lt;code>81726ea&lt;/code>), within the spread between seeds. With every exit priced
 from the agent&amp;rsquo;s position (#451; &lt;code>2a94a8da&lt;/code>, the head of its branch, not on
 main) it scores 0.03 at 33.2 % and 0.024
-at 34.7 %, run for run the same as main at &lt;code>22beb01c&lt;/code>: the deck has no fire.&lt;/p>
+at 34.7 %, run for run the same as main at &lt;code>22beb01c&lt;/code>: the deck has no fire.
+The sweep was not run again for 0.4.0.&lt;/p>
 &lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
 composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
 (&lt;code>w_queue * base_speed_m_per_s * queue_time&lt;/code>). Under the default gate model it

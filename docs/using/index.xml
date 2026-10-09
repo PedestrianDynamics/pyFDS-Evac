@@ -960,7 +960,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--reroute-interval S&lt;/code>&lt;/td>
 &lt;td>1.0 s&lt;/td>
-&lt;td>Seconds between per-agent reevaluations. With a smoke-aware visibility model it is also the time step at which sign legibility is computed.&lt;/td>
+&lt;td>Seconds between per-agent reevaluations. The reroute pass runs at most once per simulated second, so below 1 s agents still re-decide every 1 s (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660" target="_blank" rel="noopener">#660&lt;/a>). With a smoke-aware visibility model, S is also the time step at which sign legibility is computed.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-route-history CSV&lt;/code>&lt;/td>
@@ -6908,9 +6908,6 @@ off by default, as in FDS+Evac.&lt;/li>
 &lt;/table>
 &lt;h2>Known pitfalls&lt;span class="hx-absolute -hx-mt-20" id="known-pitfalls">&lt;/span>
 &lt;a href="#known-pitfalls" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;strong>Tied routes and &lt;code>PYTHONHASHSEED&lt;/code>.&lt;/strong> Set &lt;code>PYTHONHASHSEED&lt;/code> to a fixed value
-for bit-identical reruns of discovery agents
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#reproducibility">why&lt;/a>, #199).&lt;/li>
 &lt;li>&lt;strong>The progress line counts planned agents.&lt;/strong> With flow spawning it can show
 more agents than the final summary
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279" target="_blank" rel="noopener">#279&lt;/a>).&lt;/li>
@@ -6962,7 +6959,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9c820e0f606c01a2b4310aa5fd619085cc8bd98c">&lt;code>9c820e0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9ff544b0114af9965d93a6b9c28041d472b325eb">&lt;code>9ff544b&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -6986,7 +6983,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">483f8fc9a9cdd71fc5473c2933d6b0074a13d66c71c727b747503055554a2ec1&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">dc777d97560ac1bd4b37cc3d118316f63e9ef2e0a8894fdcc9027bcf78f20fd3&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

@@ -496,6 +496,16 @@ the fire meshes. Off the grid, pyFDS-Evac is therefore less conservative
 than FDS+Evac, and a discovery agent outside can learn an exit from a sign
 that the smoke between them would hide. See
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#off-the-fds-grid">Wayfinding › Off the FDS grid&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Sight lines that leave the FDS meshes.&lt;/strong> For an agent on the grid, the
+opposite happens. A sight line that crosses a cell outside every FDS mesh
+picks up an undefined extinction (NaN), and the sign is then unreadable from
+that cell, even where the walkable part of the line lies inside the domain
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454" target="_blank" rel="noopener">#454&lt;/a>). Here pyFDS-Evac is stricter than FDS+Evac, which reads
+&lt;em>K&lt;/em> = 0 outside its fire meshes. FDS meshes that cover the walkable area
+and the sight lines to the signs avoid it. The fix needs an fdsvismap release with
+&lt;a href="https://github.com/FireDynamics/fdsvismap/issues/89" target="_blank" rel="noopener">FireDynamics/fdsvismap#89&lt;/a>
+and &lt;a href="https://github.com/FireDynamics/fdsvismap/issues/90" target="_blank" rel="noopener">#90&lt;/a> and is planned
+for 0.5.0.&lt;/p>
 &lt;h2>Incapacitation is deterministic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-deterministic-by-default">&lt;/span>
 &lt;a href="#incapacitation-is-deterministic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
 (&lt;code>--incapacitation-mode deterministic&lt;/code>), every agent stops when its FED
@@ -667,6 +677,34 @@ and a radius of 0.2 m.&lt;/p>
 the building. In Wood&amp;rsquo;s UK survey, 43 % of those who had left the building
 re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of men and 34 % of women
 (Table 6.3, p. 87).&lt;/p>
+&lt;h2>Known defects&lt;span class="hx-absolute -hx-mt-20" id="known-defects">&lt;/span>
+&lt;a href="#known-defects" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>Doorway deadlocks of exploring agents&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>, planned for 0.5.0). Under &lt;code>no_known_exit: explore&lt;/code>, and
+&lt;code>return&lt;/code> when it explores, two agents that meet head-on in a door, or
+four jammed at a checkpoint, can stand there for the rest of the run. On &lt;code>familiarity_test_no_journey&lt;/code>
+(clear air, 0.05 m grid) up to 4 agents are left in 5 of 150 runs of 5
+agents and in 5 of 60 runs of 20 agents
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Re-evaluation at most once per second&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660" target="_blank" rel="noopener">#660&lt;/a>).
+&lt;code>run_scenario&lt;/code> runs the reroute pass at most once per simulated second, so
+a &lt;code>reevaluation_interval_s&lt;/code> (&lt;code>--reroute-interval&lt;/code>) below 1 s acts as 1 s.&lt;/li>
+&lt;li>&lt;strong>Stage reach assumes a 0.2 m radius&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/661" target="_blank" rel="noopener">#661&lt;/a>). For
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#which-agents-are-steered-directly">directly steered agents&lt;/a>,
+the distance at which a stage counts as reached and the clearance of the
+targets picked on the way use 0.2 m, whatever the agent&amp;rsquo;s &lt;code>radius&lt;/code>. On decks with
+another radius, such as &lt;code>world_100&lt;/code> (0.1 m), or with a radius
+distribution, agents reach stages at the wrong distance.&lt;/li>
+&lt;li>&lt;strong>&lt;code>init --check&lt;/code> ranks slices on the deck&amp;rsquo;s z&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687" target="_blank" rel="noopener">#687&lt;/a>, planned
+for 0.5.0). The check picks the slice nearest the requested height from
+the z in the deck; the run picks it after FDS has moved each slice to the
+mesh grid. Where the two differ, the check names another &lt;code>&amp;amp;SLCF&lt;/code> line or
+turns a pass into a warning, never into a failure.&lt;/li>
+&lt;li>&lt;strong>&lt;code>&amp;amp;EVHO&lt;/code> makes a plain deck an FDS+Evac deck&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/688" target="_blank" rel="noopener">#688&lt;/a>).
+&lt;code>pyfds-evac init&lt;/code> reads any deck with an &lt;code>&amp;amp;EVHO&lt;/code> as an FDS+Evac deck, also
+without an evacuation mesh. A plain deck with an &lt;code>&amp;amp;EVHO&lt;/code> then loses its
+exits, and &lt;code>init&lt;/code> ends with exit status 3.&lt;/li>
+&lt;/ul>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
 found that individual trajectories differ between runs with the same seed,
@@ -674,13 +712,12 @@ while aggregate outcomes (counts and fractions, such as the number of agents
 incapacitated or rerouted) reproduce. Report aggregate outcomes over several seeds, with their spread,
 and do not compare single trajectories between runs. See the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/" target="_blank" rel="noopener">verification page&lt;/a>.&lt;/p>
-&lt;p>One known cause makes results depend on more than the seed:&lt;/p>
-&lt;ul>
-&lt;li>&lt;strong>Python&amp;rsquo;s hash seed.&lt;/strong> For discovery agents, the order of tied routes can
-depend on &lt;code>PYTHONHASHSEED&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>). Set
-it to a fixed value for bit-identical reruns.&lt;/li>
-&lt;/ul>
+&lt;p>Routes that tie exactly rank in a fixed order: for a discovery agent the
+alphabetically first exit wins, and a fully familiar agent keeps the order of
+the scenario. Before 0.4.0, a discovery agent&amp;rsquo;s tie followed Python&amp;rsquo;s hash
+seed (&lt;code>PYTHONHASHSEED&lt;/code>;
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199" target="_blank" rel="noopener">#199&lt;/a>, fixed by
+#643).&lt;/p>
 &lt;p>Earlier runs in the same Python process do not change the results. Every
 per-agent draw is seeded from the seed and the agent&amp;rsquo;s spawn order, not from
 its JuPedSim id. The outputs still label agents by JuPedSim id, which is
