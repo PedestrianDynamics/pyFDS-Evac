@@ -234,7 +234,8 @@ error if a pass criterion fails. The runs behind
 this page, made on the branch of
 [#401](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401) at
 `8fc26b1` with a clean tree, are in the project's data folder
-(`fds-evac-data/iso_test_18/rerun_8fc26b1/`).
+(`fds-evac-data/iso_test_18/rerun_8fc26b1/`). The same commands on main
+at `9c820e0f` (Python 3.12.13) print the same table and figures.
 
 ## Limits
 

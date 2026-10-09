@@ -84,7 +84,7 @@ $$
   | d | 3.43 % | 0.1 % | 21 % | CO and CO₂ factor |
 
 - **Occupant:** one, near the centre (spawn box 4.4–5.6 m; it lands at
-  (4.78, 4.94) m), held in place by a pre-evacuation time
+  (4.92, 4.68) m), held in place by a pre-evacuation time
   drawn from [1.2 × 10⁷, 2 × 10⁷] s, the method ISO prescribes (> 10⁷ s).
 - **Runs:** one per case, `--incapacitation-mode deterministic` (the default,
   given explicitly), so the
