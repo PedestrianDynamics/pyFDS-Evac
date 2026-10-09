@@ -618,7 +618,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Status | Meaning |
 |---|---|
 | 0 | written and runnable, nothing dropped at error level |
-| 3 | written, but not runnable (no exit or no agents; no `Run:` line is printed), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
+| 3 | written, but not runnable (no exit, no agents or too many agents for a spawn area; the summary prints `✗ Not runnable` and no run command), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
 | 1 | an error, including an argument error or a refused `-o` folder; nothing written |
 
 #### What the importer derives

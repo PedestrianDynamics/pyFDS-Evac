@@ -63,7 +63,8 @@ writes nothing. It applies the run's rule for choosing a slice and reports
 each slice of the table above, `&TIME T_END`, `DT_SLCF` and the `&REAC`
 yields, with the `&SLCF` line to add for each missing one. It exits with 0
 when the deck has the extinction coefficient, CO, CO2, O2 and `T_END`, with
-3 when one is missing, and with 1 when the deck cannot be read. The full
+3 when one is missing, and with 1 when the deck cannot be read, the floor
+cannot be chosen or an argument is wrong. The full
 list is in
 [Usage › init --check](usage.md#check-a-deck-before-running-fds--pyfds-evac-init---check),
 and [Start from your own FDS case](start-from-fds-deck.md) shows it on a

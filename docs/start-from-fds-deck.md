@@ -71,7 +71,8 @@ the FDS+Evac head height, and takes the nearest horizontal slice, here 2.0 m.
 {{< checkpoint title="Deck ready" >}}
 The last line reads `✓ The deck has what a pyFDS-Evac run reads.` and
 `echo $?` prints `0`. A deck with a ✗ line gives `3`, as in
-[step 5](#5-an-fdsevac-deck); a deck that cannot be read gives `1`.
+[step 5](#5-an-fdsevac-deck); a deck that cannot be read, or a wrong
+argument, gives `1`.
 {{< /checkpoint >}}
 
 The full list of items is in
@@ -120,6 +121,10 @@ deck:
 | `config.json` | the JuPedSim scenario: exits, spawn area, agents, settings |
 | `geometry.wkt` | the walkable area |
 | `import_report.json` | every deck record that was mapped, approximated or dropped, with its line number |
+
+In `import_report.json`, `runnable` and `not_runnable_reasons` repeat the
+verdict, `items` with `level: error` are the inputs that were dropped, and
+`walkable.components_dropped` lists the pieces left out.
 
 What it derived:
 
@@ -173,7 +178,7 @@ All 40 agents leave, and `echo $?` prints `0`.
 **Try it:** import with `--agents 400` and run again. The 400 agents queue
 at the two exits, and the run ends with
 `Simulation finished in 121.45 s (400/400 evacuated).` With `--agents 600`
-the import stops with exit status 3:
+the import ends with exit status 3:
 
 ```text
   - spawn area spawn_1 (147.000 m2) holds about 584 agents of radius 0.2 m, but 600 are requested: pass --agents N with a smaller N, or enlarge the walkable area
@@ -185,7 +190,7 @@ with `--agents 40` before you go on.
 
 {{< details title="The run stopped with exit status 2" closed="true" >}}
 Status 2 means the run reached `max_simulation_time` with agents still
-inside ([Exit status](usage.md#exit-status)). It is not a setup error.
+inside ([Exit status](usage.md#exit-status)).
 `init` copies the deck's `&TIME T_END` into `max_simulation_time`, or 300 s
 without one, so a short `T_END` can cut the run off. Raise
 `simulationParams.max_simulation_time` in `config.json`.
@@ -259,6 +264,7 @@ pyfds-evac init assets/ISO-table21/ISO-table21.fds --exit 60,-1,60,1
 ```
 
 ```text
+…
 pyfds-evac init: error: --exit (60.0, -1.0, 60.0, 1.0): no walkable strip next to the line
 ```
 
@@ -282,7 +288,7 @@ A [source checkout](install.md#install-from-the-repository) has the same
 file in the folder
 [assets/fds_evac_guide/Examples](https://github.com/PedestrianDynamics/pyFDS-Evac/tree/main/assets/fds_evac_guide/Examples).
 
-**Check it.**
+### Check it
 
 ```bash
 pyfds-evac init evac_example1aA.fds --check
@@ -306,7 +312,7 @@ FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half
 The exit status is 3. The deck has no horizontal slice: a run on its output
 would have no smoke and no FED. Each ✗ line gives the `&SLCF` line to add.
 
-**Import it.**
+### Import it
 
 ```bash
 pyfds-evac init evac_example1aA.fds
@@ -360,7 +366,7 @@ An FDS+Evac deck carries its own exits and agents:
 them in a copy of the deck or in `config.json`. The mapping of each
 namelist is on [Coming from FDS+Evac](coming-from-fds-evac.md).
 
-**Run it in clear air.**
+### Run it in clear air
 
 ```bash
 pyfds-evac --scenario evac_example1aA_scenario --seed 1
@@ -373,7 +379,9 @@ cell, and ends with:
 Simulation finished in 51.85 s (100/100 evacuated).
 ```
 
-**Before you couple it to a fire**, three things the importer does not do:
+### Before you couple it to a fire
+
+Three things the importer does not do:
 
 1. Make the fire-only copy by hand: remove the namelists listed under
    `Next:` and every `&MESH` with `EVACUATION=.TRUE.`. pyFDS-Evac does not
@@ -404,8 +412,10 @@ Simulation finished in 43.47 s (40/40 evacuated).
 
 The smoke slows the agents: the same scenario took 34.70 s in clear air.
 The run samples the slices at 2.0 m, the nearest to the 1.6 m smoke slice
-height that `init` wrote. After the FDS run, `init` finds `t_junction.smv`
-next to the deck and adds `--fds-dir` to the run command it prints. [What your FDS case must provide](fds-case-requirements.md)
+height that `init` wrote. If you import again after the FDS run, keep
+`--agents 40`: `init` then prints `FDS output found:
+assets/t_junction/t_junction.smv; the run uses it` and leaves out the step
+that runs FDS. [What your FDS case must provide](fds-case-requirements.md)
 lists what else can go wrong between the deck and the run.
 
 ## 7. Refine the scenario
@@ -431,7 +441,8 @@ or any of `&EVAC`, `&EXIT`, `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVHO`,
   is the mesh mid-height minus `EVAC_Z_OFFSET` (default 1.0 m). Obstructions
   count within the evacuation mesh's own z range.
 - **Plain deck.** The floor is the lowest mesh z (or `--floor-z`).
-  Obstructions count between 0.1 and 1.8 m above it (or `--z-band LO HI`).
+  Obstructions count between 0.1 and 1.8 m above it (or `--z-band LO HI`,
+  absolute z).
   Only meshes that reach into this band form the floor; an upper storey is
   left out with a warning.
 {{< /details >}}
@@ -442,14 +453,15 @@ band, less their `&HOLE` cuts. The edge of the meshes is a wall. `MULT_ID`
 is expanded; `&GEOM` is not represented; a deck with `&CATF` is refused.
 
 When the result falls apart into pieces, `init` keeps the pieces that hold a
-spawn area; without spawn areas, those that hold an exit; an `--exit` always
-keeps its piece. `import_report.json` lists the dropped pieces with area and
+spawn area; without spawn areas, those that hold an exit; with neither, all
+are kept. An `--exit` always keeps its piece. `import_report.json` lists the dropped pieces with area and
 reason. `--walkable FILE.wkt` replaces all of this.
 
-On an FDS+Evac deck the outer boundary of an evacuation mesh is solid, and
-agents leave only through its `&EXIT`s and `&DOOR`s, as in FDS+Evac
-(Korhonen, *FDS+Evac Technical Reference and User's Guide*, Evac
-2.6.0-draft, 2021, ch. 8, p. 73). On a plain deck, a mesh that reaches
+On an FDS+Evac deck the outer boundary of an evacuation mesh is solid by
+default (Korhonen, *FDS+Evac Technical Reference and User's Guide*, Evac
+2.6.0-draft, 2021, ch. 8, p. 73), and agents leave a main evacuation mesh
+only through its `&EXIT`s and `&DOOR`s; `init` treats the boundary as a
+wall. On a plain deck, a mesh that reaches
 outdoors through an `OPEN` vent makes that outdoor space walkable.
 {{< /details >}}
 
@@ -476,7 +488,7 @@ with 3 although the scenario can run.
   grown to a 0.6 m band.
 - **Capacity.** A spawn area that asks for more agents than the run can
   place makes the scenario not runnable. The estimate is the run's own
-  packing rule, not an occupant density limit.
+  packing rule; no occupant density limit is applied.
 - **Settings.** `max_simulation_time` is `&TIME T_END`, or 300 s.
   `smoke_slice_height` is the floor plus `HUMAN_SMOKE_HEIGHT` (1.6 m by
   default, FDS+Evac guide §8.7). Keys the deck does not set fall to the
@@ -512,7 +524,12 @@ with 3 although the scenario can run.
   without the surface, or cut a notch around it from the edge of the spawn
   polygon in `config.json`. Do not add `&EVHO`: it turns the deck into an
   FDS+Evac deck.
-- **Exit status 0 means runnable, not checked.** Compare `geometry.wkt` with
+- **No cross-check after the run.** The derived area and the FDS domain are
+  not compared after the run
+  ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)); exit
+  signs are not placed at doorways automatically
+  ([#33](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/33)).
+- **Exit status 0 means the scenario can run.** Compare `geometry.wkt` with
   the plan and read `import_report.json` before you use the results.
 
 ## What next

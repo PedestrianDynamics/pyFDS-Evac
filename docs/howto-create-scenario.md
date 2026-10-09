@@ -367,6 +367,8 @@ writes it to `geometry.wkt`; `scripts/generate_walkable_from_fds.py` writes
 the same polygon alone. The rule is in
 [Usage › What the importer derives](usage.md#what-the-importer-derives), and
 [Start from your own FDS case](start-from-fds-deck.md) walks through it.
+The consistency between deck and WKT is tracked in
+[#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26).
 {{< /details >}}
 
 ### Walkable area first: generate the deck geometry
