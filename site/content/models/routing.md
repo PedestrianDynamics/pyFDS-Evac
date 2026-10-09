@@ -481,11 +481,15 @@ Exit throughput throttling has no general test yet
 
 - Switching can oscillate where two routes cross in cost
   ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)).
-  Pricing the first leg on the walk makes this more frequent near a smoky
-  door, because a short walk follows the field from one second to the next.
-  On the `l_corridor_gate` reference deck, switches went from 28 to 58 and
-  exit reversals from 16 to 40, 28 of them within 2 s. Each switch follows
-  the switching rule on correct prices.
+  Pricing the first leg on the walk
+  ([#451](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451)) made
+  this more frequent near a smoky door: on the `l_corridor_gate` reference
+  deck, switches went from 28 to 58 and exit reversals from 16 to 40, 28 of
+  them within 2 s. Reading each smoke sample at the time the agent reaches
+  it ([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650))
+  brought this down to 17 switches and 8 reversals, 5 within 2 s; the
+  oscillation is reduced, not removed. Each switch follows the switching
+  rule on correct prices.
 - Routes are priced with smoke the agent cannot perceive, including stretches
   it has never seen
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
