@@ -7,12 +7,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-09
+
+### Upgrading
+
+- Agents that know no exit follow the default route instead of
+  exploring. Set `"no_known_exit": "explore"` to keep the 0.3.1
+  behaviour; it needs rerouting on (#610).
+- Runs with route foresight (`anticipate`, on by default) in a smoke
+  field that changes in time give different results (#650). Between
+  two refused routes `fallback_switch_margin` compares `tau`, and a
+  switch straight back waits `fallback_return_lockout_s` (10 s) (#458).
+- A spawn area without `number` places `simulationParams.number`, else
+  10 agents, not 100 (#567). SocialForceModel runs read
+  `sfm_body_force` as the body force and pass friction as 0 (#611,
+  #635). `VisibilityModel.clear_air()` uses a 0.25 m grid; pass
+  `cell_size_m=0.5` for the old one (#115).
+- Spawn values out of range, booleans and conflicting `v0` aliases stop
+  the run with a `ValueError` that names the key (#612, #649).
+- `pyfds-evac --scenario` reads `simulationParams.smoke_slice_height`;
+  GUI, TUI and Python runs do not apply it (#632).
+- Scripts that parse the output: `Route switches: N` is now
+  `Route history rows: N`; the exit history has a column `exit_in_map`;
+  the route history has rows with reason `default_route`, and a first
+  choice is `initial`, not `smoke_reroute` (#610).
+- `scripts/generate_walkable_from_fds.py` takes only `-o` and
+  `--z-band`, whose default is now the evacuation-mesh slab; its other
+  options are removed (#505).
+- Vismap caches are rebuilt once (format 6, #510).
+
 ### Added
 
-- Docs: the page "Start from your own FDS case" (Getting started) checks
-  and imports two plain FDS decks and an FDS+Evac guide deck with
-  `pyfds-evac init`, and Usage lists what the importer derives, its
-  constants, its messages and the fields of `import_report.json` (#606).
+- `pyfds-evac init DECK.fds` starts a scenario from an FDS deck. It writes
+  `config.json`, `geometry.wkt` and `import_report.json` to
+  `<deck stem>_scenario/` next to the deck (`-o DIR` picks another folder),
+  prints a short summary and the next steps, and exits 0 when runnable, 3
+  when written but not runnable or an input was dropped at error level, and
+  1 on an error, with nothing written (#605, part of #606, #632).
+  - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR`
+    and `&PERS` records for one floor. Detection plus reaction becomes one
+    pre-movement delay with the same mean and variance, and no agent
+    starts before the earliest FDS+Evac start.
+  - A plain FDS deck gets exits from `SURF_ID='OPEN'` vents on the outside
+    of its meshes, or from `--exit`, and a flagged placeholder of 100
+    agents unless `--agents` is given.
+  - `import_report.json` lists every input that was imported, inferred,
+    approximated or dropped, with its deck line; `-v` prints all of it.
+  - The walkable area is derived inside the package, so `init` works from
+    an installed wheel: the union of the floor's mesh footprints, whose
+    edge is a wall, minus the `&OBST` records in the walking band less
+    their `&HOLE` cuts. Only the parts that hold a spawn area, or without
+    one an exit, are kept, and `import_report.json` lists the others.
+    `--walkable FILE.wkt` replaces the derived polygon.
+    `scripts/generate_walkable_from_fds.py` is a thin wrapper that writes
+    the same polygon. The script now takes only `-o` and `--z-band`, an
+    absolute band whose default is the evacuation-mesh slab or 0.1 to
+    1.8 m above the lowest mesh; `--half-cell`, `--min-hole`, `--plot`
+    and `--report` are removed, and the polygon follows the importer's
+    rule (#505).
+  - A plain deck's floor is made of the meshes that reach the walking band;
+    a mesh of another storey is reported, not joined. An `&EVAC` area is
+    clipped to the walkable area before its agents are shared out.
+  - A spawn area that asks for more agents than the run admits (the
+    runtime's packing estimate) makes the scenario not runnable, with the
+    area, the capacity, the requested number and what to change.
+  - An FDS+Evac deck's walkable area is the union of its floor's main
+    evacuation meshes, whose boundary is a wall; only `&EXIT` and `&DOOR`
+    records leave it (`walkable.source` is `derived:evac-mesh`). Touching
+    evacuation meshes of one floor are reported, a `COUNT_ONLY` exit is
+    listed as a counter, and a point or line `&EVAC` is named as the reason
+    when no agents can be placed (#672).
+  - A point or line `&EVAC` becomes a 0.6 m band across its zero-width
+    axis (a 0.6 m square for a point), clipped to the walkable area; its
+    agents are placed at random in it, and `import_report.json` records the
+    expansion per group as `zero_width_expansion` (#675).
+  - An `&EXIT` or `&DOOR` keeps the deck's position; where FDS+Evac would
+    move it to its evacuation grid, `import_report.json` gives that
+    position as `fds_evac_segment`. A dropped exit's message says whether
+    its strip is empty (with the distance) or below the 0.1 m minimum width,
+    and a deck whose every exit is below it is named as using exits only
+    as flow-field targets (#673).
+  - `--floor MESH_ID` imports another floor of an FDS+Evac deck,
+    `--floor-z Z` sets a plain deck's floor level (default: the lowest
+    mesh z), `--z-band LO HI` the height band whose obstructions block
+    walking, `--exit-depth D` the depth of an exit strip on the room side
+    (default 0.5 m), and `--no-fds` leaves `--fds-dir` out of the printed
+    run command.
 - `pyfds-evac init DECK.fds --check` checks a deck before FDS runs and
   writes nothing (#604). At the smoke slice height `init` writes, with the
   run's selection rule (horizontal slice, nearest z, first declared on a
@@ -37,53 +117,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   #610, #91).
 - Exit history rows carry `exit_in_map`, and the run metrics count
   `agents_left_by_unknown_exit`, the agents that left by an exit absent from
-  their map (#610).
-
-- `pyfds-evac init DECK.fds` starts a scenario from an FDS deck. It writes
-  `config.json`, `geometry.wkt` and `import_report.json` to
-  `<deck stem>_scenario/` next to the deck (`-o DIR` picks another folder),
-  prints a short summary and the next steps, and exits 0 when runnable, 3
-  when written but not runnable or an input was dropped at error level, and
-  1 on an error, with nothing written (#605, part of #606, #632).
-  - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR`
-    and `&PERS` records for one floor. Detection plus reaction becomes one
-    pre-movement delay with the same mean and variance, and no agent
-    starts before the earliest FDS+Evac start.
-  - A plain FDS deck gets exits from `SURF_ID='OPEN'` vents on the outside
-    of its meshes, or from `--exit`, and a flagged placeholder of 100
-    agents unless `--agents` is given.
-  - `import_report.json` lists every input that was imported, inferred,
-    approximated or dropped, with its deck line; `-v` prints all of it.
-  - The walkable area is derived inside the package, so `init` works from
-    an installed wheel: the union of the floor's mesh footprints, whose
-    edge is a wall, minus the `&OBST` records in the walking band less
-    their `&HOLE` cuts. Only the parts that hold a spawn area, or without
-    one an exit, are kept, and `import_report.json` lists the others.
-    `--walkable FILE.wkt` replaces the derived polygon.
-    `scripts/generate_walkable_from_fds.py` is a thin wrapper that writes
-    the same polygon (#505).
-  - A plain deck's floor is made of the meshes that reach the walking band;
-    a mesh of another storey is reported, not joined. An `&EVAC` area is
-    clipped to the walkable area before its agents are shared out.
-  - A spawn area that asks for more agents than the run admits (the
-    runtime's packing estimate) makes the scenario not runnable, with the
-    area, the capacity, the requested number and what to change.
-  - An FDS+Evac deck's walkable area is the union of its floor's main
-    evacuation meshes, whose boundary is a wall; only `&EXIT` and `&DOOR`
-    records leave it (`walkable.source` is `derived:evac-mesh`). Touching
-    evacuation meshes of one floor are reported, a `COUNT_ONLY` exit is
-    listed as a counter, and a point or line `&EVAC` is named as the reason
-    when no agents can be placed (#672).
-  - A point or line `&EVAC` becomes a 0.6 m band across its zero-width
-    axis (a 0.6 m square for a point), clipped to the walkable area; its
-    agents are placed at random in it, and `import_report.json` records the
-    expansion per group as `zero_width_expansion` (#675).
-  - An `&EXIT` or `&DOOR` keeps the deck's position; where FDS+Evac would
-    move it to its evacuation grid, `import_report.json` gives that
-    position as `fds_evac_segment`. A dropped exit's message says whether
-    its strip is empty (with the distance) or below the 0.1 m minimum width,
-    and a deck whose every exit is below it is named as using exits only
-    as flow-field targets (#673).
+  their map. `pyfds-evac`, `run.py` and the GUI log print `Agents that
+  left by an exit not in their map: N` when N is above 0 (#610).
+- The route history gains the reason `default_route`: an agent with no
+  known exit gets one row at spawn with the exit it is sent to. Outputs
+  and Routing in practice list the reason (#610).
 - `tests/test_init_deck_sweep.py` runs the deck importer of
   `pyfds-evac init` on the 227 tracked decks (the FDS+Evac guide decks,
   the `assets/` and `artifacts/` decks) and pins each deck's exit status,
@@ -123,14 +161,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not prove that every wall blocks sight: parts shorter than one cell are
   not reported. A junction of walls of different widths is measured per
   wall, and the width reported is that of the thinnest wall (#115).
+- `scripts/release_check.sh --keep` keeps each page's run outputs in
+  `<report>.work/` and the files the documented commands regenerate in
+  `<report>.changed/`, instead of removing them on exit (#697).
 
 ### Changed
 
-- `run.py --output-route-history` prints `Route history rows: N` instead
-  of `Route switches: N`. N is the number of rows of the file, `initial`
-  and `default_route` rows included, not the number of route switches:
-  the first FDS case printed 161, of which 150 are `default_route` rows
-  written at spawn.
+- `pyfds-evac`, `run.py` and the GUI log print `Route history rows: N`
+  with `--output-route-history`, instead of `Route switches: N`. N is the
+  number of rows of the file, `initial` and `default_route` rows
+  included, not the number of route switches: the first FDS case prints
+  161, of which 150 are `default_route` rows written at spawn.
+  `examples/first_fds_case.py` prints "route history rows by reason"
+  instead of "route changes" for the same count (#697).
 - Route foresight (`anticipate`, on by default) reads every smoke sample
   at the time the agent would reach it, counted from the agent's position,
   instead of each leg at the time the agent reaches its start, counted from
@@ -145,7 +188,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the leg's start. Ten of the fifteen CI scenario snapshots
   move; `tj_full_gate_fallback` and the S4 rerouting arms now run with
   `anticipate = false`, and S4 gains an arm on the spawn-time choice under
-  foresight. Anticipation has no FDS+Evac counterpart.
+  foresight. FDS decks: `l_corridor_gate` goes from 58 to 17 switches
+  and from 40 to 8 exit reversals, 5 of them within 2 s (28 before); the
+  oscillation near a smoky door (#124) is reduced, not removed.
+  `t_junction` goes from 3 to 5 switches, all fallback, and still
+  evacuates 93 of 150; `world77` from 0 to 1. Anticipation has no
+  FDS+Evac counterpart.
 - `tests/test_familiarity_no_journey.py` bounds the rate of doorway
   deadlocks (#359) instead of requiring every agent out: at most 4 of 30
   runs of 5 agents and 5 of 20 runs of 20 agents may end with up to 4
@@ -168,7 +216,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An agent's first choice of a known exit is logged as `initial`, not as a
   `smoke_reroute` away from an exit it never knew, and is adopted at once
   (#610).
-
 - `pyfds-evac --scenario` takes the slice height from the scenario's
   `smoke_slice_height` when `--smoke-slice-height` is not given, and says
   so. A scenario without the key runs as before (#632).
@@ -214,13 +261,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   0 turns it off). After an exit switch between two refused routes, a
   switch straight back to the exit just left, again between two refused
   routes, waits this long. A feasible route on either side, a must-flee
-  hazard and a third exit are never blocked. On the `t_junction` FDS
-  deck the 2 m route smoke sampling stepped over a narrow plume core and
-  swung agent 22's tau past the margin and back: B → A at 48 s, A → B at
-  50 s. The lockout keeps the agent on A; the sampling resolution is
-  tracked in #653. No CI reference, S4 count or other FDS deck checked
-  (`l_corridor_gate`, `world100_stream_east`, `world100_stream_oval`)
-  moves. A negative or non-numeric value stops the run (#458).
+  hazard and a third exit are never blocked. Before #650, on the
+  `t_junction` FDS deck the 2 m route smoke sampling stepped over a
+  narrow plume core and swung agent 22's tau past the margin and back:
+  B → A at 48 s, A → B at 50 s. The lockout keeps the agent on A; the
+  sampling resolution is tracked in #653. No CI reference, S4 count or
+  other FDS deck checked (`l_corridor_gate`, `world100_stream_east`,
+  `world100_stream_oval`) moves. A negative or non-numeric value stops
+  the run (#458).
 
 ### Fixed
 
@@ -231,7 +279,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (before: its index) and, when several distributions share one polygon,
   all of them. The error is `SpawnCapacityError`, a `ValueError`, on both
   placement paths (with and without journeys). Results do not change.
-
 - `pyfds-evac init` no longer says an exit "0.100 m wide" is below the
   0.1 m minimum exit width. A dropped exit's width gets the decimals it
   needs to read as below the minimum (0.0999 m), up to the full float for
@@ -265,10 +312,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `bs_discovery_gate_west` golden snapshot evacuates 10/10 by 29.0 s
   instead of 9/10 at 60 s, with no `wander` row. `default_route` and full
   familiarity runs are bit-identical.
-
 - Arriving at a node teaches the leg just walked, and its reverse where the
   graph has one (#468).
-
 - The SocialForceModel builder reads `sfm_body_force` (default 120000,
   JuPedSim's) as the body force *k* and passes it as `body_force=`. It
   used to pass `agent_strength` (2000) as *k* and `agent_range` (0.08)
@@ -276,10 +321,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `sfm_obstacle_scale` reaches the per-agent `obstacle_scale` (default
   2000). Negative, non-finite or non-numeric `sfm_body_force`,
   `sfm_friction` and `sfm_obstacle_scale` raise `ValueError`. The run
-  manifest records the effective values under `sfm`. Shipped decks in clear air and every
-  documented number are unchanged; the `ft_full_gate_detour` and
-  `ft_full_additive_detour` golden snapshots, with contact under
-  synthetic smoke, are regenerated (#611).
+  manifest records the effective values under `sfm`. Shipped decks in
+  clear air and every documented number are unchanged; the
+  `ft_full_gate_detour` and `ft_full_additive_detour` golden snapshots,
+  with contact under synthetic smoke, are regenerated (#611).
 - `--show-config`, the TUI and the GUI report a distribution whose
   `desired_speed`, `desired_speed_distribution` or `desired_speed_std`
   differs from its `v0*` key, with the error the run stops on. They used
@@ -344,6 +389,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Documentation
 
+- The page "Start from your own FDS case" (Getting started) checks
+  and imports two plain FDS decks and an FDS+Evac guide deck with
+  `pyfds-evac init`, and Usage lists what the importer derives, its
+  constants, its messages and the fields of `import_report.json` (#606).
 - Verification › Familiarity and Wayfinding in practice restated at
   `828ae8c3`: no patrols or turn-backs since #250, and criterion 6 is the
   30-seed grid study of #168 (passes from 0.05 to 0.025 m on this sample,
@@ -370,6 +419,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The steering-pass profiling on Models › Routing is dated to `4f859bf5`
   (#665), and the FDS+Evac guide is cited as "Evac 2.6.0-draft"
   throughout.
+- Fundamentals › Seeing and using exit signs states the waypoint method
+  of Börger, Belt and Arnold (2024, Eqs. 2-10), the steps from seeing a
+  sign to following it (SFPE Handbook, 6th ed., Ch. 65), and the
+  detection, reading and following studies with their settings and
+  values. "Seen" is Jin's obscuration threshold (#315).
+- Models › Wayfinding defines a legible sign as one barely seen at the
+  visibility distance (Jin's seeing threshold, C = 3); its words or arrow
+  need not be readable. A Deviations bullet states that the model treats
+  a seen sign as understood, and the #173 limitation states that the
+  30 m default lies outside Jin's data. The FED_DOOR_CRIT notes say that
+  only the form of Jin's law is borrowed; dated review notes carry
+  errata instead of rewrites (#287).
+- Fundamentals › Visibility cites McGrattan and Merci (SFPE Handbook,
+  6th ed., Ch. 40, Eq. 40.22, p. 1206) for C = 3 and C = 8, next to the
+  FDS User's Guide and Mulholland (2002) (#640).
+- Models › Wayfinding lists sign photometry as a limit: the luminance,
+  size and contrast of a sign, the ambient light and light scattered into
+  the line of sight enter only through C. A figure shows the
+  sign-legibility test step by step for sign B of `t_junction`
+  (`fire_2MW_PVC`, t = 20 s) from the run's VisMap, with the equation
+  numbers of Börger et al.; the extinction slices it reads are tracked in
+  `scripts/figures/data/` so the docs workflow regenerates it (#652,
+  #654, #655).
+- Studies › Schröder 2015 is rerun at `9c820e0f` (100 runs, seeds 1-10).
+  On the main fire the exit-E share is 0.642 under the gate (was 0.614)
+  and 0.452 under the additive model (was 0.457), with Δy = −1.08 m
+  (−1.53, −0.62) (was −0.85 m). The gate mechanism is rewritten: since
+  #650 every route is refused for the first hall agents at 130-134 s, the
+  fallback wave follows at 151-155 s, and exit E re-paths via door B at
+  152-156 s. The no-fire and smoke-blind arms are unchanged. The
+  figures, the GIF (median seed now 5) and the alt texts are regenerated
+  (#650, #697).
+- How-to › With and without the fire is rerun at `9c820e0f` with 320
+  runs (#697). C, U and S are unchanged. With smoke-aware routing
+  (arm R), 80 % of the agents take the far exit A with no pre-movement,
+  19 % with 30 s and none with 60 s, against 100 %, 88 % and 86 % in the
+  earlier runs. The page reports the cause as a finding: with
+  pre-movement both routes are refused before anyone walks, and since
+  #458 the lower optical depth decides, which picks the shorter route to
+  exit B past the burner. R's largest max FED rises from 0.17 to 0.24.
+  Whether this rule is right is open (#696).
+- Every example result is re-run or re-checked at `9c820e0f`, and no
+  page carries "Not re-checked for 0.4.0." any more: the walkthrough,
+  RSET ensemble, ISO Tests 18 and 19, heat radiometer, Schröder 2020
+  (160 runs), `cognitive_map_memory` and the first FDS case. ISO Test 19
+  now gives the occupant's spawn as (4.92, 4.68) m, the position since
+  #385; FED values and stop times are unchanged. The first FDS case
+  names fdsvismap 0.3.2 and explains its 161 route-history rows (#697).
+- The Terminal UI page's screenshots are recaptured on the `t_junction`
+  `fire_2MW_PVC` output (93 of 150 out), and the Review screen now lists
+  the O2 threshold, FIC off and the visibility time step (#697).
+- The landing page badge shows the released version, read from
+  `pyproject.toml`, instead of "Alpha" (#641).
 
 ## [0.3.1] - 2026-10-06
 
