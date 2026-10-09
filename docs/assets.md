@@ -41,10 +41,15 @@ conventions; what each one proves, and where that proof is checked, is below.
   map verification. Includes `config_full.json` and `config_discovery.json`
   for familiarity-tier comparison. The rerouting mechanism itself is verified by
   scenario **S4** in
-  [`tests/verification/test_s4_tjunction_reroute.py`](../tests/verification/test_s4_tjunction_reroute.py)
-  (control arm and null-field control both record zero switches; smoke forces
-  every agent B→A and never the reverse; reroute latency stays within the
-  configured interval; switch count is reproducible under a fixed seed). Note
+  [`tests/verification/test_s4_tjunction_reroute.py`](../tests/verification/test_s4_tjunction_reroute.py).
+  Its control arm and null-field control record zero switches. Without
+  anticipation, smoke in one arm moves at least 12 of 20 agents to the clear
+  exit and none the other way; the four just inside the smoky arm turn back
+  ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Reroute
+  latency stays within the configured interval, and under a fixed seed the
+  direction of the switches repeats; their count need not. With anticipation,
+  at least 17 of 20 agents take the clear exit at spawn and nobody reroutes
+  ([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)). Note
   that S4 builds its own T-corridor via `harness.t_junction_scenario()` with a
   synthetic smoke field rather than loading this asset, so the mechanism is
   covered but the deck and config here are not exercised by the suite. This

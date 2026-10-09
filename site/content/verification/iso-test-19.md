@@ -228,7 +228,7 @@ fails.
 - ISO 20414:2020. *Fire safety engineering — Verification and validation
   protocol for building fire evacuation models*, Table 22 (Test 19).
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
-  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft),
   §4.2, Fig. 8. VTT Technical Research Centre of Finland.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
 - Purser, D. A. (2008). Assessment of hazards to occupants from smoke,

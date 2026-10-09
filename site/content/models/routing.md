@@ -241,6 +241,10 @@ the agents walk with. Each agent re-decides every
 | `RerouteConfig()` built in Python | `10.0` s |
 | `run.py --reroute-interval` | `1.0` s |
 
+An interval below 1 s acts as 1 s: `run_scenario` runs the reroute pass at
+most once per simulated second
+([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
+
 The other defaults that differ between `run_scenario()` and `run.py` are
 listed in [Python API and command line](/docs/usage.md#python-api-and-command-line).
 
@@ -407,8 +411,10 @@ Each step, pyFDS-Evac iterates over the agents through JuPedSim's Python API,
 reads positions, tests stages and updates speeds. With native journeys, stage
 reaching and removal run inside `simulation.iterate()`.
 
-In two small clear-air runs, the per-step steering pass took about four times
-as long as `simulation.iterate()`:
+In two small clear-air runs at commit `4f859bf5`, before 0.2.0, the per-step
+steering pass took about four times as long as `simulation.iterate()`. The
+shares were not measured again for 0.4.0
+([#665](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/665)).
 
 | Case | Steering pass | `iterate()` | Rest of loop |
 |---|---|---|---|
@@ -435,8 +441,11 @@ These agent counts are small, so the shares can differ at higher density.
 - Four runs of each case; the table gives the range.
 - `familiarity_test_no_journey` uses `SocialForceModel` and `t_junction`
   uses `CollisionFreeSpeedModel`, as set in their decks.
-- `familiarity_test_no_journey` ends when every agent is out, at 34.9 s.
-  `t_junction` stops at its 300 s limit with 143 of 200 agents out.
+- At that commit, `familiarity_test_no_journey` ended when every agent was
+  out, at 34.9 s, and `t_junction` stopped at its 300 s limit with 143 of 200
+  agents out. Both outcomes predate #610 and #250.
+- Since #610 the call raises for `familiarity_test_no_journey`: the deck
+  sets `no_known_exit: explore`, which needs rerouting.
 - A `cProfile` run of `t_junction` attributes the largest part of the
   steering pass to `reached_stage` → `distance_to_polygon` (shapely `Point`
   construction and distance), more than to JuPedSim's agent iterator.
@@ -514,8 +523,6 @@ Exit throughput throttling has no general test yet
   with no empirical source; the field surveys give only self-estimated
   visibility at turn-back
   ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
-- For discovery agents, the order of tied routes depends on
-  `PYTHONHASHSEED` ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)).
 - Anticipation assumes unimpeded speed and, by default, perfect foresight of
   the finished FDS record.
 

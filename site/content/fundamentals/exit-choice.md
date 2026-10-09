@@ -106,7 +106,7 @@ exits are rarely used in many real evacuations because they are unfamiliar
   methods*. Transportation Research Part B: Methodological, 107, 253–294.
   [doi:10.1016/j.trb.2017.06.017](https://doi.org/10.1016/j.trb.2017.06.017)
 - Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
-  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0 draft),
+  Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft),
   §3.5. VTT Technical Research Centre of Finland.
   [github.com/tkorhon1/FDS-Evac-Guide](https://github.com/tkorhon1/FDS-Evac-Guide).
   Secondary source.

@@ -314,7 +314,7 @@ is the same on every grid; that arm is not a convergence test.
 
 Reruns on the same machine reproduce these numbers to the last digit. Across
 platforms they need not
-([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)); the
+([Limitations › Reproducibility](limitations.md#reproducibility)); the
 tests on generated worlds (`tests/test_generated_worlds.py`) therefore
 assert invariants, not trajectories.
 

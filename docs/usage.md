@@ -71,7 +71,7 @@ add and the failure modes that stay silent unless you read the warnings.
 | Flag | Default | Purpose |
 |------|---------|---------|
 | `--enable-rerouting` / `--no-enable-rerouting` | on | Let agents re-evaluate exits during the run. Needed by an exit with `open_from_s` or `closed_after_s` ([Scenario JSON](scenario-json.md#exits-exitsid)). |
-| `--reroute-interval S` | 1.0 s | Seconds between per-agent reevaluations. With a smoke-aware visibility model it is also the time step at which sign legibility is computed. |
+| `--reroute-interval S` | 1.0 s | Seconds between per-agent reevaluations. The reroute pass runs at most once per simulated second, so below 1 s agents still re-decide every 1 s ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)). With a smoke-aware visibility model, S is also the time step at which sign legibility is computed. |
 | `--output-route-history CSV` | none | Write route switches; see [Outputs](outputs.md#route-history). |
 | `--output-route-cost-history CSV` | none | Write ranked route cost snapshots; see [Outputs](outputs.md#route-cost-history). |
 | `--vis-cache NPZ` | none | Path to a vismap `.npz` cache — written if missing, loaded if present. Requires rerouting to be enabled (the run aborts otherwise). With `--fds-dir` that has an extinction slice it caches the smoke-aware vismap; otherwise the clear-air grid. |

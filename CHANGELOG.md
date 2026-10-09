@@ -351,6 +351,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `site/data/examples.toml` takes an optional `results_note`, shown under
   the commit on the example's page; results not rerun for this release say
   "Not re-checked for 0.4.0." (#463).
+- Limitations lists the open defects 0.4.0 ships with: sight lines through
+  cells outside the FDS meshes hide signs (#454), doorway deadlocks under
+  `explore` (#359), reevaluation intervals below 1 s act as 1 s (#660),
+  stage reach uses a 0.2 m radius (#661), `init --check` ranks slices on
+  the deck's z (#687), and `&EVHO` turns a plain deck into an FDS+Evac
+  deck (#688). Usage and Models › Routing state the 1 s floor of
+  `--reroute-interval`.
+- The tie order of discovery agents is no longer listed as depending on
+  `PYTHONHASHSEED` (#199, fixed by #643).
+- The assets page states what S4 asserts: at least 12 of 20 agents switch
+  without anticipation, and at least 17 of 20 take the clear exit at spawn
+  with it (#458, #650).
+- The steering-pass profiling on Models › Routing is dated to `4f859bf5`
+  (#665), and the FDS+Evac guide is cited as "Evac 2.6.0-draft"
+  throughout.
 
 ## [0.3.1] - 2026-10-06
 
