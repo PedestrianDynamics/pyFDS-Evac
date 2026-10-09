@@ -773,7 +773,7 @@ branch commit that is not on main; its `pyfds_evac/` equals main at
 `100e91d`. Each run's manifest records that commit with `git_dirty: false`
 and `agent_seeding: spawn-key-blake2b-v2`. A re-run of all 160 evacuations
 on main at `449a755d`, and again at `9c820e0f` (Python 3.12.13, through
-`scripts/release_check.sh --full --only study-schroeder2020`), prints the
+the release check, `release_check.sh --full --only study-schroeder2020`), prints the
 same values for the headline, so cite `9c820e0f`. When the code
 changes, re-run the command into a new `RUNS` folder and compare the
 printed tables with this page.

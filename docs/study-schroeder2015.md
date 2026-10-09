@@ -563,8 +563,8 @@ the repository root, or from the unpacked zip with `python` instead of
    `uv run python scripts/docs/schroeder2015_fire_figures.py --data "$DATA"`.
 
 **Provenance.** The evacuation runs on this page were made on main at
-`9c820e0f` by steps 2–4 above (seeds 1–10, Python 3.12.13), through
-`scripts/release_check.sh --full --only study-schroeder2015`; each run's
+`9c820e0f` by steps 2–4 above (seeds 1–10, Python 3.12.13), through the
+release check (`release_check.sh --full --only study-schroeder2015`); each run's
 manifest records the commit with `git_dirty: false` and
 `agent_seeding: spawn-key-blake2b-v2`. The no-fire and smoke-blind arms are
 identical to the earlier runs of `828ae8c3`, `7e9c4c30` and `d73c8ed4`. The FDS
