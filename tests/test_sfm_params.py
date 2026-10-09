@@ -106,9 +106,12 @@ def test_journey_path_reports_a_configuration_error_as_such(tmp_path):
 
 
 def test_journey_path_reports_an_overfull_area_as_placement(tmp_path):
-    with pytest.raises(Exception, match="spawn area is too small") as excinfo:
+    # The capacity check names the area's limit itself (#692).
+    with pytest.raises(
+        simulation_init.SpawnCapacityError,
+        match="requested 100000 agents but area can hold at most",
+    ):
         _initialize_t_junction(tmp_path, number=100000)
-    assert isinstance(excinfo.value.__cause__, Exception)
 
 
 def test_flow_spawning_with_sfm_keys_missing_spawns_agents():

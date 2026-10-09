@@ -219,6 +219,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A spawn area asked for more agents than it can hold stops
+  `pyfds-evac --scenario` with one line, exit 1, instead of a traceback
+  (#692): `pyfds-evac: error: Distribution '<id>': requested N agents but
+  area can hold at most ~C. ...`. The message names the distribution key
+  (before: its index) and, when several distributions share one polygon,
+  all of them. The error is `SpawnCapacityError`, a `ValueError`, on both
+  placement paths (with and without journeys). Results do not change.
+
 - `pyfds-evac init` no longer says an exit "0.100 m wide" is below the
   0.1 m minimum exit width. A dropped exit's width gets the decimals it
   needs to read as below the minimum (0.0999 m), up to the full float for

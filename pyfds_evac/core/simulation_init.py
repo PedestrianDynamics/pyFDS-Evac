@@ -68,7 +68,22 @@ JuPedSim 1.4.2: ``distribute_by_number`` raises the four distribution errors,
 
 
 class _AgentPlacementError(Exception):
-    """The capacity check, the position distribution or ``add_agent`` failed."""
+    """The position distribution or ``add_agent`` failed."""
+
+
+class SpawnCapacityError(ValueError):
+    """A distribution asks for more agents than its spawn area can hold."""
+
+
+def _capacity_error(dist_keys, requested, capacity) -> SpawnCapacityError:
+    """Name the distributions, the requested count and the capacity."""
+    names = ", ".join(f"'{key}'" for key in dist_keys)
+    label = "Distributions" if len(dist_keys) > 1 else "Distribution"
+    return SpawnCapacityError(
+        f"{label} {names}: requested {requested} agents "
+        f"but area can hold at most ~{capacity}. "
+        f"Reduce the number of agents or enlarge the distribution area."
+    )
 
 
 def _placing(call, *args, **kwargs):
@@ -417,11 +432,7 @@ def _seed_shared_areas(spawn_distributions, seed):
         total = sum(int(m["params"]["number"]) for m in members)
         capacity = _estimate_max_capacity(area, max_radius)
         if total > capacity:
-            raise ValueError(
-                f"Distribution {members[0]['index']}: requested {total} agents "
-                f"but area can hold at most ~{capacity}. "
-                f"Reduce the number of agents or enlarge the distribution area."
-            )
+            raise _capacity_error([m["dist_key"] for m in members], total, capacity)
         area_key = members[0]["dist_key"]
         positions = jps.distribute_by_number(
             polygon=area,
@@ -2631,11 +2642,7 @@ def _add_agents(
             requested_count = int(spawn_params.get("number", 0))
             max_capacity = _estimate_max_capacity(spawn_data["area"], max_radius)
             if requested_count > max_capacity:
-                raise _AgentPlacementError(
-                    f"Distribution '{dist_key}': requested {requested_count} agents "
-                    f"but area can hold at most ~{max_capacity}. "
-                    f"Reduce the number of agents or enlarge the distribution area."
-                )
+                raise _capacity_error([dist_key], requested_count, max_capacity)
             positions = _placing(
                 jps.distribute_by_number,
                 polygon=spawn_data["area"],
