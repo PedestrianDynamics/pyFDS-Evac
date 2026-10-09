@@ -514,7 +514,10 @@ with 3 although the scenario can run.
   represented, `&CATF` is refused, and obstructions with `DEVC_ID` or
   `CTRL_ID` are taken as written, without their time dependence.
 - **The check reads the deck.** FDS moves a slice to the nearest grid plane,
-  up to half a cell from the deck's z; the check cannot see that.
+  up to half a cell from the deck's z; the check cannot see that. It can
+  then name another `&SLCF` line than the run reads, or warn where the run
+  finds the slice, but it never fails a deck for it
+  ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687)).
 - **FDS+Evac output is not read.** Run FDS on a fire-only copy, written by
   hand.
 - **Touching evacuation meshes are joined.** FDS+Evac keeps their shared
@@ -523,7 +526,8 @@ with 3 although the scenario can run.
   plain deck, rerun `init` with `--walkable FILE.wkt`, a walkable area
   without the surface, or cut a notch around it from the edge of the spawn
   polygon in `config.json`. Do not add `&EVHO`: it turns the deck into an
-  FDS+Evac deck.
+  FDS+Evac deck, which loses its exits, and `init` ends with exit status 3
+  ([#688](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/688)).
 - **No cross-check after the run.** The derived area and the FDS domain are
   not compared after the run
   ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)); exit

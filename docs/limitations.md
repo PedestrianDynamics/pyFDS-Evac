@@ -82,6 +82,18 @@ than FDS+Evac, and a discovery agent outside can learn an exit from a sign
 that the smoke between them would hide. See
 [Wayfinding › Off the FDS grid](/models/wayfinding.md#off-the-fds-grid).
 
+**Sight lines that leave the FDS meshes.** For an agent on the grid, the
+opposite happens. A sight line that crosses a cell outside every FDS mesh
+picks up an undefined extinction (NaN), and the sign is then unreadable from
+that cell, even where the walkable part of the line lies inside the domain
+([#454](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454)). Here pyFDS-Evac is stricter than FDS+Evac, which reads
+*K* = 0 outside its fire meshes. FDS meshes that cover, in plan, one
+rectangle around the walkable area and every sign avoid it, because every
+sight line then stays inside them. The fix needs an fdsvismap release with
+[FireDynamics/fdsvismap#89](https://github.com/FireDynamics/fdsvismap/issues/89)
+and [#90](https://github.com/FireDynamics/fdsvismap/issues/90) and is planned
+for 0.5.0.
+
 ## Incapacitation is deterministic by default
 
 FED below means fractional effective dose. By default
@@ -276,6 +288,36 @@ and a radius of 0.2 m.
 the building. In Wood's UK survey, 43 % of those who had left the building
 re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of men and 34 % of women
 (Table 6.3, p. 87).
+
+## Known defects
+
+These are open issues that change results or messages in 0.4.0.
+
+- **Doorway deadlocks of exploring agents**
+  ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359), planned for 0.5.0). Under `no_known_exit: explore`, and
+  `return` when it explores, two agents that meet head-on in a door can
+  stand there for the rest of the run. On `familiarity_test_no_journey`
+  (clear air, 0.05 m grid) up to 4 agents are left in 5 of 150 runs of 5
+  agents and in 5 of 60 runs of 20 agents
+  ([Wayfinding › Limitations](/models/wayfinding.md#limitations)).
+- **Re-evaluation at most once per second** ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
+  `run_scenario` runs the reroute pass at most once per simulated second, so
+  a `reevaluation_interval_s` (`--reroute-interval`) below 1 s acts as 1 s.
+- **Stage reach assumes a 0.2 m radius** ([#661](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/661)). For
+  [directly steered agents](/models/routing.md#which-agents-are-steered-directly),
+  the distance at which a stage counts as reached and the clearance of its
+  target point use 0.2 m, whatever the agent's `radius`. On decks with
+  another radius, such as `world_100` (0.1 m), or with a radius
+  distribution, agents reach stages at the wrong distance.
+- **`init --check` ranks slices on the deck's z** ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687), planned
+  for 0.5.0). The check picks the slice nearest the requested height from
+  the z in the deck; the run picks it after FDS has moved each slice to the
+  mesh grid. Where the two differ, the check names another `&SLCF` line or
+  turns a pass into a warning, never into a failure.
+- **`&EVHO` makes a plain deck an FDS+Evac deck** ([#688](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/688)).
+  `pyfds-evac init` reads any deck with an `&EVHO` as an FDS+Evac deck, also
+  without an evacuation mesh. A plain deck with an `&EVHO` then loses its
+  exits, and `init` ends with exit status 3.
 
 ## Reproducibility
 
