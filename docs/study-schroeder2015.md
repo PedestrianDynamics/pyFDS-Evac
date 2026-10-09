@@ -333,7 +333,7 @@ Five facts of the `gate` code explain the pattern
   ([#451](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451)):
   the walk to each door is the first leg, charged the smoke on that walk.
   The smoke in the hall is nearly uniform at these times, so almost every
-  hall agent gets the same door for a given exit: from 50 to 144 s, 96–98 %
+  hall agent gets the same door for a given exit: from 50 to 144 s, 97–99 %
   of the hall agents' first-ranked routes are A→E, in every seed.
 - The search uses the smoke present at decision time
   (`_generate_candidates`). The τ of each candidate is read point by point
@@ -367,7 +367,7 @@ had left, none within 2 s. Between two refused routes the 20 % margin and the
 seeds (median 36 s later). The underlying sampling issue is
 [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653).
 
-![Three panels of route optical depth τ as the router computed it, gate arm, agents in the hall, 10 seeds, median and interquartile range per 5 s, on a log scale with lines at τ = 6 and 4.8. Main fire: B→F rises to about 0.1 at 35–45 s and disappears, replaced by A→F at about 1; a few agents rank B→F (up to about 3, 65–95 s) or B→E (up to about 1, 60–125 s) from where they stand; A→E stays at 0 until about 130 s, then jumps and passes 6 at about 140 s, together with B→E; afterwards every route lies above 6 and rises to about 100 by 200 s. The comparison fires show the same steps at other times: on a012_pvc_h30 A→E stays at 0 until about 150 s and passes 6 near 185 s.](/images/studies/schroeder2015/p1_tau.png)
+![Three panels of route optical depth τ as the router computed it, gate arm, agents in the hall, 10 seeds, median and interquartile range per 5 s, on a log scale with lines at τ = 6 and 4.8. Main fire: B→F rises to about 0.1 at 35–45 s and disappears, replaced by A→F at about 1; a few agents rank B→F (up to about 3, 65–95 s) or B→E (up to about 1, 60–125 s) from where they stand. A→E stays near 0 until about 130 s, then rises and crosses 6 at about 145–150 s. B→E, ranked by the few agents near door B, rises from about 130 s and crosses 6 at about 135–140 s, before A→E. When the hall re-paths E via door B at 152–156 s, B→E is already at τ 18–25. Afterwards every route lies above 6 and rises to about 100 by 200 s. The comparison fires show the same steps at other times: on a012_pvc_h30 A→E stays at 0 until about 150 s and passes 6 near 185 s.](/images/studies/schroeder2015/p1_tau.png)
 
 τ is read point by point at the time the agent would reach each point. A
 route appears only while the path search offers it for its exit to at
