@@ -87,9 +87,8 @@ opposite happens. A sight line that crosses a cell outside every FDS mesh
 picks up an undefined extinction (NaN), and the sign is then unreadable from
 that cell, even where the walkable part of the line lies inside the domain
 ([#454](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454)). Here pyFDS-Evac is stricter than FDS+Evac, which reads
-*K* = 0 outside its fire meshes. FDS meshes that cover, in plan, one
-rectangle around the walkable area and every sign avoid it, because every
-sight line then stays inside them. The fix needs an fdsvismap release with
+*K* = 0 outside its fire meshes. FDS meshes that cover the walkable area
+and the sight lines to the signs avoid it. The fix needs an fdsvismap release with
 [FireDynamics/fdsvismap#89](https://github.com/FireDynamics/fdsvismap/issues/89)
 and [#90](https://github.com/FireDynamics/fdsvismap/issues/90) and is planned
 for 0.5.0.
@@ -291,8 +290,6 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 
 ## Known defects
 
-These are open issues that change results or messages in 0.4.0.
-
 - **Doorway deadlocks of exploring agents**
   ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359), planned for 0.5.0). Under `no_known_exit: explore`, and
   `return` when it explores, two agents that meet head-on in a door can
@@ -305,8 +302,8 @@ These are open issues that change results or messages in 0.4.0.
   a `reevaluation_interval_s` (`--reroute-interval`) below 1 s acts as 1 s.
 - **Stage reach assumes a 0.2 m radius** ([#661](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/661)). For
   [directly steered agents](/models/routing.md#which-agents-are-steered-directly),
-  the distance at which a stage counts as reached and the clearance of its
-  target point use 0.2 m, whatever the agent's `radius`. On decks with
+  the distance at which a stage counts as reached and the clearance of the
+  targets picked on the way use 0.2 m, whatever the agent's `radius`. On decks with
   another radius, such as `world_100` (0.1 m), or with a radius
   distribution, agents reach stages at the wrong distance.
 - **`init --check` ranks slices on the deck's z** ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687), planned
