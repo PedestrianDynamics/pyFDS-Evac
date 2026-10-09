@@ -126,6 +126,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `run.py --output-route-history` prints `Route history rows: N` instead
+  of `Route switches: N`. N is the number of rows of the file, `initial`
+  and `default_route` rows included, not the number of route switches:
+  the first FDS case printed 161, of which 150 are `default_route` rows
+  written at spawn.
 - Route foresight (`anticipate`, on by default) reads every smoke sample
   at the time the agent would reach it, counted from the agent's position,
   instead of each leg at the time the agent reaches its start, counted from
@@ -349,8 +354,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and `familiarity_grid_analysis.py` rerun and judge the #168 grid study
   (#168, #637).
 - `site/data/examples.toml` takes an optional `results_note`, shown under
-  the commit on the example's page; results not rerun for this release say
-  "Not re-checked for 0.4.0." (#463).
+  the commit on the example's page (#463).
 - Limitations lists the open defects 0.4.0 ships with: sight lines through
   cells outside the FDS meshes hide signs (#454), doorway deadlocks under
   `explore` (#359), reevaluation intervals below 1 s act as 1 s (#660),

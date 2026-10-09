@@ -51,8 +51,8 @@ expected = [
   "time ratio smoke/clear: 1.3174",
 ]
 expected_note = "The last line, manifest: <path>, names a new temporary file on every run."
-results_commit = "828ae8c3"
-results_python = "3.13.4"
+results_commit = "9c820e0f"
+results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
 [first-fds-case]
@@ -114,7 +114,7 @@ evac_runtime = "about 10 s for the fire run"
 expected = [
   "evacuated: 93/150 in 300 s",
   "FED max:   0.27",
-  "route changes: {'default_route': 150, 'initial': 11}",
+  "route history rows by reason: {'default_route': 150, 'initial': 11}",
 ]
 expected_note = """\
 These are the last lines of python examples/first_fds_case.py "$FDS". \
@@ -122,8 +122,8 @@ Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
 (93/150 evacuated, 57 remaining, 50 not spawned). and exits with status \
 2, as for every run that reaches its time limit with agents inside."""
-results_commit = "828ae8c3"
-results_python = "3.13.4"
+results_commit = "9c820e0f"
+results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
 [study-schroeder2015]
@@ -180,7 +180,7 @@ steps = [
   ["Print the page's numbers and draw its evacuation figures (about 3 min)", [
     "python scripts/docs/schroeder2015_route.py --data \"$DATA\"",
   ]],
-  ["Draw the animation of smoke-blind and gate, seed 1 (about 1 min; ffmpeg reduces the GIF's colours)", [
+  ["Draw the animation of smoke-blind and gate, seed 5 (about 1 min; ffmpeg reduces the GIF's colours)", [
     "python scripts/docs/study_animations.py schroeder2015 --data \"$DATA\"",
   ]],
   ["Optional, for the fire-choice figures: write and run the other six fire decks (about 6 h in all)", [
@@ -195,17 +195,16 @@ fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS"
 evac_runtime = "about 25-40 s per run, 100 runs"
 expected = [
-  "main fire, exit-E share: no fire 0.520, gate 0.614, additive 0.457",
-  "main fire, additive dy: -0.85 m (-1.12, -0.57)",
-  "main fire, gate door-B share: 0.06 for starts 30-120 s, 0.90 for starts 150-300 s",
+  "main fire, exit-E share: no fire 0.520, gate 0.642, additive 0.452",
+  "main fire, additive dy: -1.08 m (-1.53, -0.62)",
+  "main fire, gate door-B share: 0.09 for starts 30-120 s, 0.87 for starts 150-300 s",
 ]
 expected_note = """\
 scripts/docs/schroeder2015_route.py prints these lines after its tables \
 and before it writes the figures. The \
 evacuation runs are reproducible for a given seed; FDS output from \
 another FDS build or machine can move them slightly."""
-results_commit = "2a94a8da"
-results_note = "Not re-checked for 0.4.0."
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
@@ -267,10 +266,9 @@ expected_note = """\
 python examples/walkthrough.py prints these lines among the others the \
 page shows. FDS 6.10.1 on the two decks writes slices identical, byte for \
 byte, to the ones in the repository."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [rset-ensemble]
 title = "Egress time from an ensemble of seeds"
@@ -327,10 +325,9 @@ expected_note = """\
 python examples/rset_ensemble.py prints these lines among the others the \
 page shows. The git: line names the commit you run and differs from the \
 page."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [iso-test-18]
 title = "ISO 20414 Test 18: walking speed in smoke"
@@ -412,13 +409,12 @@ scripts/verification/iso_test_18_figures.py prints the page's Result \
 table, one line per run. Above are its header, its rows K10 and \
 coupled_fds, and the verdict line; t_clear, t_smoke and t_pred are in \
 seconds. \
-The runs behind the page were made at 8fc26b1; a re-run at 449a755d \
-prints the same table. The script exits with an error if a pass \
+The runs behind the page were made at 8fc26b1; re-runs at 449a755d \
+and 9c820e0f print the same table. The script exits with an error if a pass \
 criterion fails."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [iso-test-19]
 title = "ISO 20414 Test 19: incapacitation by toxic gases"
@@ -490,10 +486,9 @@ case, t* by hand, the FDS device time and the simulated stop: 981.71, \
 1692.82, 1692.72 and 1693.00 s for c, 846.50, 846.45 and 847.00 s for d, \
 as on the page. Then one line per case, as above, and the verdict. The \
 script stops at the first pass criterion that fails."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [heat-radiometer]
 title = "Skin radiometer against integrated intensity"
@@ -546,10 +541,9 @@ above ambient. Above are its header and three of its rows. The page's \
 Result table gives the medians. The page also runs \
 tests/verification/test_heat_radiometer.py, which needs a clone of the \
 repository."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [study-schroeder2020]
 title = "ASET-RSET maps after Schröder et al. (2020)"
@@ -638,13 +632,12 @@ first line, and "DIFF measures, K ≥ 0.23, ∃ rule, ~1 s, pooling: \
 maximum over n = 10 seeds", the other three: remaining at 40 s and \
 80 s and the last one out; min DIFF [s], area with DIFF < 0 [m²] and \
 C [m²s]. They are the page's headline. The runs behind the page were made at \
-4a7142f; a re-run at 449a755d, without --release, prints the same \
-values. FDS output from another FDS build or machine can move them \
+4a7142f; re-runs at 449a755d and 9c820e0f, without --release, print \
+the same values. FDS output from another FDS build or machine can move them \
 slightly."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [start-from-fds-deck]
 title = "Start from your own FDS case"

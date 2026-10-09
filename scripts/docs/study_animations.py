@@ -484,12 +484,14 @@ def fire_blind(data, runs, pre=30):
 ROUTE_Z = 1.6  # m, the slice of routing, walking speed and gas dose
 ROUTE_STEP_S, ROUTE_FPS = 2.0, 8  # 16 s of simulation per second of GIF
 ROUTE_ARMS = {"sb": "(a) smoke-blind", "gate": "(b) gate"}
-# The three hall-wide re-path events of the gate arm, identical in all 10
-# seeds (page table "Why: three hall-wide re-path events").
+# Gate-arm events of seed 5, the seed the animation shows. Over the 10
+# seeds: F via A at 47 s in all; every route refused from 130-134 s;
+# fallback wave 151-155 s; E via door B at 152-156 s.
 ROUTE_EVENTS = (
-    (47.0, "47 s: F re-paths via door A,\nagents bound for F switch to E"),
-    (145.0, "145 s: E re-paths via door B"),
-    (160.0, "160 s: every route refused,\nthe fallback picks the exit"),
+    (47.0, "47 s: F re-paths via door A;\nhalf the agents bound for F\nswitch to E"),
+    (134.0, "134 s: first agents find\nevery route refused"),
+    (152.0, "152 s: fallback wave,\nagents bound for E\nswitch to F"),
+    (153.0, "153 s: E re-paths via door B,\nalready refused"),
 )
 WAIT = "black"  # open ring: filled dots are walking agents
 # Few colour classes, so the 40-colour GIF palette keeps them all and the

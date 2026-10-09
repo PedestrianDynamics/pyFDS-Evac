@@ -519,13 +519,16 @@ def test_import_report_written_in_the_fds_frame(tmp_path):
     assert json.loads((out / "import_report.json").read_text())["runnable"] is True
 
 
-def test_cli_init_runnable_and_error(tmp_path, capsys):
+def test_cli_init_runnable_and_error(tmp_path, capsys, monkeypatch):
+    # The printed command names the folder relative to the working directory
+    # when that is shorter, so fix the cwd to make the expected text exact.
+    monkeypatch.chdir(tmp_path)
     deck = _deck(tmp_path, ROOM.format(extra=DOOR + "\n" + EVAC.format(extra="")))
     walk = _wkt(tmp_path, ROOM_WKT)
     assert (
         cli_init.main([str(deck), "-o", str(tmp_path / "o"), "--walkable", walk]) == 0
     )
-    assert f"pyfds-evac --scenario {tmp_path / 'o'}" in capsys.readouterr().out
+    assert "pyfds-evac --scenario o " in capsys.readouterr().out
     bad = _deck(tmp_path, "&CATF OTHER_FILES='x.fds' /", name="bad.fds")
     assert cli_init.main([str(bad), "-o", str(tmp_path / "b")]) == 1
     assert not (tmp_path / "b").exists()
@@ -1238,7 +1241,8 @@ def _init(tmp_path, capsys, *extra: str, smv: bool = False) -> tuple[int, str]:
     return status, captured.out + captured.err
 
 
-def test_default_output_folder_is_next_to_the_deck(tmp_path, capsys):
+def test_default_output_folder_is_next_to_the_deck(tmp_path, capsys, monkeypatch):
+    monkeypatch.chdir(tmp_path)
     status, out = _init(tmp_path, capsys)
     folder = tmp_path / "plain_scenario"
     assert status == cli_init.EXIT_OK
@@ -1247,7 +1251,7 @@ def test_default_output_folder_is_next_to_the_deck(tmp_path, capsys):
         "geometry.wkt",
         "import_report.json",
     ]
-    assert f"pyfds-evac --scenario {folder}" in out
+    assert "pyfds-evac --scenario plain_scenario " in out
 
 
 def test_guard_applies_to_the_default_folder(tmp_path, capsys):

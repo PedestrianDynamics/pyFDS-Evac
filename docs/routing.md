@@ -541,6 +541,7 @@ Each `RouteSwitch` record includes a `reason` field:
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
+| `default_route` | Written once at spawn: the agent has no exit in its map and follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)) |
 | `smoke_reroute` | Best route is a different exit (lower `rank_cost`), or an idle agent is routed to its current exit |
 | `exit_closed`   | The agent's exit has closed on its schedule; the best open exit it knows |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |

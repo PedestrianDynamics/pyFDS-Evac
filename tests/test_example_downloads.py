@@ -217,15 +217,8 @@ def test_first_fds_case_fire_result(fds_read_only):
         assert line in out
 
 
-NOT_RECHECKED = {
-    "walkthrough",
-    "rset-ensemble",
-    "iso-test-18",
-    "iso-test-19",
-    "heat-radiometer",
-    "study-schroeder2020",
-    "study-schroeder2015",
-}
+# Every result was re-run or re-checked at 9c820e0f for 0.4.0.
+NOT_RECHECKED: set[str] = set()
 
 
 def test_results_note_marks_the_results_not_rechecked_for_0_4():
@@ -253,7 +246,7 @@ def test_results_note_is_rendered_under_the_commit():
     reason="needs hugo and the bundles of scripts/docs/bundle_examples.py",
 )
 def test_results_note_appears_on_the_built_page(tmp_path):
-    """Hugo renders the note on a noted page and nothing on the others."""
+    """Hugo renders the commit and, with no note set, no note."""
     subprocess.run(
         ["hugo", "--quiet", "--destination", str(tmp_path)],
         cwd=ROOT / "site",
@@ -262,9 +255,9 @@ def test_results_note_appears_on_the_built_page(tmp_path):
     )
     page = tmp_path / "docs" / "getting-started" / "walkthrough" / "index.html"
     commit = SPEC["walkthrough"]["results_commit"]
-    assert (
-        f'made at commit <code>{commit}</code></span><br><span class="docs-files__note">'
-        "Not re-checked for 0.4.0.</span>"
-    ) in page.read_text()
+    text = page.read_text()
+    assert f"made at commit <code>{commit}</code></span>" in text
+    assert f"<code>{commit}</code></span><br>" not in text
+    assert "Not re-checked" not in text
     quick = tmp_path / "docs" / "getting-started" / "quickstart" / "index.html"
     assert "Not re-checked" not in quick.read_text()

@@ -313,7 +313,7 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
     if opts.output_route_history and result.route_history is not None:
         _write_route_history_csv(result.route_history, opts.output_route_history)
         artifacts.append(f"Route history CSV: {opts.output_route_history}")
-        log(f"Route switches: {len(result.route_history)}")
+        log(f"Route history rows: {len(result.route_history)}")
     metrics = getattr(result, "metrics", None) or {}
     unknown_exit = metrics.get("agents_left_by_unknown_exit")
     if unknown_exit:

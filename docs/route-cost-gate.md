@@ -706,10 +706,13 @@ it alone.
   missing is *commitment* — hysteresis in time or in progress along a leg — not a
   bigger threshold. Three attempts are already recorded as failures below.
   Pricing the first leg on the walk from the agent's position
-  ([#451](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451)) makes
+  ([#451](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451)) made
   the crossover more frequent near a smoky door: on the `l_corridor_gate`
   reference deck (`scripts/golden_rerouting.py`) switches went from 28 to 58
-  and exit reversals from 16 to 40, 28 of them within 2 s.
+  and exit reversals from 16 to 40, 28 of them within 2 s. Since
+  [#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650), which
+  reads each sample at the agent's arrival time, the deck gives 17 switches
+  and 8 reversals, 5 within 2 s; the oscillation is reduced, not removed.
 - **[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) — route
   choice is not perception-limited.** See
   [Route choice is an optimality bound](#route-choice-is-an-optimality-bound-not-a-perception-limited-model).

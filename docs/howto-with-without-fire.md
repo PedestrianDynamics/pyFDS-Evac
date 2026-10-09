@@ -28,17 +28,21 @@ For this fire and this T-junction, with 100 people placed at t = 0:
   records the dose along those fire-free paths.
 - **RSET.** The uncoupled RSET is shorter than the speed-only coupled RSET
   in every seed. It is shorter than the fully coupled RSET in every seed
-  when people wait 30 or 60 s before moving, and in 17 of 20 seeds with no
-  wait, where the median gap is 3.7 s.
+  when people wait 30 or 60 s before moving, and in 19 of 20 seeds with no
+  wait, where the median gap is 6.4 s.
 - **Dose.** Whether the uncoupled run over- or under-states the dose
   depends on the metric (see [the dose table](#dose)).
-- **Exit usage** differs: without the fire everyone takes the near exit B;
-  with smoke-aware routing (arm R) most agents take exit A.
+- **Exit usage** differs: without the fire everyone takes the near exit B.
+  With smoke-aware routing (arm R), 80 % take the far exit A when people
+  move at once; with 30 s of pre-movement 19 % do, and with 60 s none: by
+  then every route is refused, and the router takes the one with the
+  lowest optical depth, the shorter route to exit B, although it passes
+  the densest smoke by the burner.
 - **The pass/fail verdict** at a fixed point is the same in every arm for
   visibility (fails), and in U, S, R and R-na for FED 0.3 (passes). For HCl
   with no wait, the verdict at ISO FEC 1 (not the design value 0.3) is
   knife-edge: a single uncoupled run can give either verdict. Summed over
-  seeds and points, U passes 35 times, R 26, R-na 20 and S 5.
+  seeds and points, U passes 35 times, R 22, R-na 20 and S 5.
 
 This fire has no margin to lose: at every point the visibility limit is
 reached before the last person gets out, in every arm and seed. So the
@@ -245,7 +249,7 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \
 ```
 
 ```text
-Simulation finished in 62.94 s (100/100 evacuated).
+Simulation finished in 64.60 s (100/100 evacuated).
 ```
 
 With `--debug`, C and R also print `Reroute debug` lines; they do not affect
@@ -263,13 +267,13 @@ Run the RSET snippet above with `("c", "u", "s", "r")`:
 C: RSET_last 55.1 s, p95 52.4 s, exits {'exit_B_right': 100}
 U: RSET_last 55.1 s, p95 52.4 s, exits {'exit_B_right': 100}
 S: RSET_last 67.9 s, p95 62.8 s, exits {'exit_B_right': 100}
-R: RSET_last 62.9 s, p95 61.0 s, exits {'exit_A_left': 100}
+R: RSET_last 64.5 s, p95 54.6 s, exits {'exit_A_left': 80, 'exit_B_right': 20}
 ```
 
-In this seed smoke slows S by 12.8 s (67.9 against 55.1 s). R is 7.8 s
-slower than U; across seeds R is later than U in 17 of 20 ([below](#rset)). Against S, which keeps exit B,
-R is faster because every agent went to the far exit A and avoided B's
-smoke. One seed says little: the study below runs 20 seeds with no
+In this seed smoke slows S by 12.8 s (67.9 against 55.1 s). R is 9.4 s
+slower than U; across seeds R is later than U in 19 of 20 ([below](#rset)).
+Against S, which keeps exit B, R is faster because 80 of its 100 agents
+went to the far exit A and avoided B's smoke. One seed says little: the study below runs 20 seeds with no
 pre-movement and 10 each with 30 and 60 s.
 
 **Reading the arms.** U → S isolates the effect of smoke on speed. S → R
@@ -278,7 +282,7 @@ ahead in time off, isolates that look ahead.
 
 ### Evacuation over time
 
-![Three panels, one per pre-movement of 0, 30 and 60 s, each showing agents out of 100 against time since ignition from 0 to 250 s for arms U (blue dashed), S (orange dash-dot) and R (red solid), with shaded min-max bands. Dotted vertical lines at 18, 24 and 45 s mark the location ASET for K at exit B, the junction and exit A. With no pre-movement the three curves overlap and end near 57 to 70 s. At 30 s, U ends first near 85 s, R near 117 s and S near 129 s. At 60 s, U ends near 115 s while S and R end near 187 to 193 s](/images/fire-blind/evacuated.png)
+![Three panels, one per pre-movement of 0, 30 and 60 s, each showing agents out of 100 against time since ignition from 0 to 250 s for arms U (blue dashed), S (orange dash-dot) and R (red solid), with shaded min-max bands. Dotted vertical lines at 18, 24 and 45 s mark the location ASET for K at exit B, the junction and exit A. With no pre-movement the three curves overlap and end near 57 to 70 s. At 30 s, U ends first near 85 s, R near 125 s and S near 129 s. At 60 s, U ends near 115 s while S and R end near 187 s and overlap for most of the run](/images/fire-blind/evacuated.png)
 
 *Agents out (of 100) against time since ignition [s], median over seeds
 (line) and min–max (band); n = 20 seeds with no pre-movement, 10 at 30 and
@@ -292,19 +296,19 @@ The last agent out, median [min, max] over seeds, seconds from ignition:
 |---|---|---|---|
 | U (= C) | 56.5 [52.2, 61.1] | 84.8 [82.2, 91.1] | 114.8 [112.2, 121.1] |
 | S | 70.0 [65.0, 98.5] | 129.4 [117.3, 151.0] | 187.0 [165.9, 227.1] |
-| R | 60.5 [56.2, 64.6] | 116.6 [102.1, 130.2] | 192.8 [169.6, 216.4] |
-| R-na | 62.0 [59.4, 66.6] | 116.6 [102.1, 130.2] | 192.8 [169.6, 216.4] |
+| R | 63.3 [55.3, 68.6] | 124.9 [115.2, 147.9] | 187.4 [170.4, 220.8] |
+| R-na | 62.5 [59.4, 66.7] | 124.6 [114.4, 146.9] | 191.8 [165.9, 227.1] |
 
 ### Exit usage
 
-![Three bar panels, one per pre-movement, showing the percentage of agents leaving by exit A for arms C, U, S, R, R-na, R-det, R-prob and R+FIC, with one dot per seed. C, U and S are at 0 percent in every panel. R, R-det, R-prob and R+FIC are near 100 percent with no pre-movement and R-na near 94 percent; at 30 and 60 s all R arms lie between 78 and 93 percent](/images/fire-blind/exit_usage.png)
+![Three bar panels, one per pre-movement, showing the percentage of agents leaving by exit A for arms C, U, S, R, R-na, R-det, R-prob and R+FIC, with one dot per seed. C, U and S are at 0 percent in every panel. With no pre-movement R, R-det and R-prob are near 80 percent, R+FIC near 77 percent and R-na near 93 percent. At 30 s the R arms lie between 12 and 44 percent: R-na near 44, R, R-det and R-prob near 19, R+FIC near 12. At 60 s every arm is at 0 percent, with single seeds at up to 3 percent. A note in the first panel says C, U and S send every agent to exit B, 10 m from the junction](/images/fire-blind/exit_usage.png)
 
 *Agents leaving by exit A [%], bar: median over seeds, dots: one seed each.
 Exit A is 20 m from the junction, exit B 10 m. Regenerated by
 `scripts/docs/fire_blind_vs_coupled.py`.*
 
-C, U and S send everyone to exit B, the nearer one. R sends 100 % [98, 100]
-to exit A with no pre-movement, 88 % [85, 92] at 30 s and 86 % [80, 89] at
+C, U and S send everyone to exit B, the nearer one. R sends 80 % [66, 90]
+to exit A with no pre-movement, 19 % [13, 22] at 30 s and 0 % [0, 3] at
 60 s. The initial exit is chosen in `_assign_initial_exit` (`scenario.py`),
 and R's route cost prices the smoke each route meets on the way. With
 foresight on (the default `"anticipate": true` of `RouteCostConfig`,
@@ -313,15 +317,29 @@ arrive at each point (`_arrival_time`), from the whole FDS record
 ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). No
 occupant could perceive that. With the look ahead off (R-na), the cost
 still reads the current smoke along the whole route, including parts no
-occupant could see. Most agents still end at exit A: 94 % [91, 97] with
-no pre-movement, and the same share as R at 30 and 60 s.
+occupant could see: 93 % [89, 96] go to exit A with no pre-movement,
+44 % [35, 47] at 30 s and 0 % [0, 1] at 60 s. R takes B more often than
+R-na because R also sees the smoke that will reach the long walk to A.
+
+{{< callout type="warning" >}}
+**When every route is refused before anyone moves, the router takes the
+route with the lowest optical depth τ.** With pre-movement, both routes are
+refused before anyone walks (pre-movement 60 s, seed 7, at 59–62 s: τ
+88–116 on the route to A, 65–80 on the route to B). Between two refused routes the lower τ decides
+([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Here that is the shorter route to exit B (17.7 m against
+24.7 m), although it passes the densest smoke near the burner (*k*<sub>max</sub>
+10.5–11.9 1/m on B against 4.7–5.4 on A). It is not the safer route: R's
+largest max FED is 0.24, against 0.17 in the earlier runs of this page
+(`f5c61f21`). Whether the rule
+should send everyone to the exit by the fire is open ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
+{{< /callout >}}
 
 ### U and R, animated
 
-![Animation of arms U (top) and R (bottom) in the T-junction at 8 times real time, pre-movement 30 s. In both, 100 blue dots wait in the dead-end branch while grey smoke spreads from the burner near exit B along the corridor. After 30 s the U dots walk right to exit B, through the smoke and past the burner, staying small and blue; the last leaves at about 83 s. Most R dots turn left to the far exit A; they grow and turn pale and red as the smoke slows them, 11 go right to B, and the last leaves at about 119 s.](/images/fire-blind/agents_smoke_u_vs_r.gif)
+![Animation of arms U (top) and R (bottom) in the T-junction at 8 times real time, pre-movement 30 s. In both, 100 blue dots wait in the dead-end branch while grey smoke spreads from the burner near exit B along the corridor. After 30 s the U dots walk right to exit B, through the smoke and past the burner, staying small and blue; all 100 leave by B, the last at about 91 s. In R, 20 dots turn left to the far exit A and 80 go right to B past the burner; they grow and turn pale and red as the smoke slows them, and the last leaves at about 125 s.](/images/fire-blind/agents_smoke_u_vs_r.gif)
 
-*Arms U (top) and R (bottom), pre-movement 30 s, seed 11 (R's last agent
-leaves at 118.7 s, the seed closest to the median of 116.6 s), 8 times real
+*Arms U (top) and R (bottom), pre-movement 30 s, seed 7 (R's last agent
+leaves at 124.9 s, the seed closest to the median of 124.9 s), 8 times real
 time. Background: K from the FDS output, log scale. Dots are coloured and
 sized by their speed factor, as in
 [The run, animated](first-fds-case.md#the-run-animated). Regenerated by
@@ -329,14 +347,14 @@ sized by their speed factor, as in
 
 Both crowds wait 30 s while the smoke spreads from the burner near exit B.
 U then walks at free speed through that smoke to exit B, all 100 agents, and
-the last is out at 82.7 s. In R, 89 agents turn to the far exit A, the smoke
-slows them, and the last is out at 118.7 s. The animation shows 30 s of
+the last is out at 91.1 s. In R, 20 agents turn to the far exit A and 80 go
+to B; the smoke slows them, and the last is out at 124.9 s. The animation shows 30 s of
 pre-movement because it shows both effects, the exit and the speed. With no
 wait, the two arms differ mainly in the exit.
 
 ### Pre-movement does not simply add
 
-![RSET_last against a constant pre-movement of 0, 30 and 60 s for arms U, S and R, medians with markers and one faint line per seed. A dashed line of slope 1 through U at 0 s lies on top of U. S and R rise more steeply: at 60 s U is near 115 s, S near 187 s and R near 193 s](/images/fire-blind/additivity.png)
+![RSET_last against a constant pre-movement of 0, 30 and 60 s for arms U, S and R, medians with markers and one faint line per seed. A dashed line of slope 1 through U at 0 s lies on top of U. S and R rise more steeply: at 0 s S is near 74 s and R near 63 s; at 30 s S near 130 s and R near 125 s; at 60 s U is near 115 s and S and R both near 187 s](/images/fire-blind/additivity.png)
 
 *RSET_last [s from ignition] against constant pre-movement [s], seeds
 shared by all three pre-movements (n = 10). Thick: median; faint: one seed.
@@ -348,7 +366,7 @@ For the same seed, RSET(pre) − pre − RSET(0) is exactly 0.00 s for U and C
 in every seed. That follows from how the run is built: the pre-movement is
 constant, everyone starts together, and nothing reacts to the fire. S adds
 22.4 s more than the pre-movement at 30 s and 46.5 s more at 60 s; R
-adds 26.4 s and 72.8 s (medians over seeds). That is not so in every
+adds 31.5 s and 68.3 s (medians over seeds). That is not so in every
 seed: one S seed adds only 0.1 s at 30 s, because its run with no wait was
 slow (98.5 s). The fire grows while people wait, so a later
 start meets thicker smoke. An uncoupled run cannot show that: waiting
@@ -380,7 +398,7 @@ treat p near 0.05 as no evidence.
 
 ### RSET
 
-![Three strip-plot panels, one per pre-movement, showing per-seed differences S minus U, R minus U and R-na minus U in seconds, with a zero line and a black median bar. With no pre-movement S minus U is above 0 in 20 of 20 seeds, R minus U in 17 of 20 with values from minus 3 to plus 10, R-na minus U in 19 of 20. At 30 and 60 s all differences are above 0 in 10 of 10 seeds, between 19 and 110 s](/images/fire-blind/rset_paired.png)
+![Three strip-plot panels, one per pre-movement, showing per-seed differences S minus U, R minus U and R-na minus U in seconds, with a zero line and a black median bar. With no pre-movement S minus U is above 0 in 20 of 20 seeds, R minus U in 19 of 20 with values from about 0 to plus 15, R-na minus U in 19 of 20. At 30 and 60 s all differences are above 0 in 10 of 10 seeds, between about 29 and 110 s](/images/fire-blind/rset_paired.png)
 
 *RSET_last difference per seed [s], same seed in both arms. Above 0: U gets
 out earlier. Black bar: median. Regenerated by
@@ -389,27 +407,29 @@ out earlier. Black bar: median. Regenerated by
 | Pair | pre-movement 0 s | 30 s | 60 s |
 |---|---|---|---|
 | S − U | +14.4 s; S > U in 20/20 | +43.4 s; 10/10 | +71.1 s; 10/10 |
-| R − U | +3.7 s [−3.1, +10.2]; R > U in 17/20 (p = 0.003) | +33.3 s; 10/10 | +76.4 s; 10/10 |
-| R − S | R < S in 20/20 | R < S in 10/10 | R < S in 4/10 (p = 0.75) |
-| R-na − R | +2.9 s [−2.5, +5.8]; R-na > R in 16/20 (p = 0.01) | identical | identical |
+| R − U | +6.4 s [−0.3, +15.0]; R > U in 19/20 (p < 0.001) | +38.6 s; 10/10 | +69.2 s; 10/10 |
+| R − S | R < S in 20/20 | R < S in 8/10 (p = 0.11) | R < S in 2/10, R > S in 5/10 (p = 0.45) |
+| R-na − R | −1.1 s [−5.4, +6.2]; R-na > R in 6/20, R-na < R in 13/20 (p = 0.17) | −1.6 s; R-na > R in 4/10 (p = 0.75) | −2.2 s; R-na > R in 3/10, R-na < R in 5/10 (p = 0.73) |
 
 - **Against S, U is not conservative** at any pre-movement: smoke slows
   people, and U leaves that out.
 - **Against R, U is not conservative at 30 and 60 s, and mostly not with
-  no pre-movement.** With no pre-movement R is later than U in 17 of 20
-  seeds, on the last agent out and on p95. The median gap, 3.7 s, is
-  smaller than the seed-to-seed spread of U itself (52.2–61.1 s).
+  no pre-movement.** With no pre-movement R is later than U in 19 of 20
+  seeds on the last agent out, but on p95 only in 11 of 20 (median 0.3 s).
+  The median gap on the last agent, 6.4 s, is smaller than the
+  seed-to-seed spread of U itself (52.2–61.1 s).
 - **The gap grows with pre-movement**, for R − U from a few seconds to
-  about 76 s and for S − U from 14 s to 71 s (medians), because the fire
-  grows while people wait. The largest single R − U, 104 s at 60 s, comes
-  from one R seed that ends at 216.4 s.
+  about 69 s and for S − U from 14 s to 71 s (medians), because the fire
+  grows while people wait. The largest single R − U, 103.8 s at 60 s, comes
+  from one R seed that ends at 220.8 s.
 - **R against S:** R is faster in 20 of 20 seeds with no pre-movement, by
-  avoiding exit B's smoke, and in 10 of 10 at 30 s (p = 0.002). At 60 s it
-  is not resolved: R is later in 6 of 10, paired median +5.1 s.
+  avoiding exit B's smoke, and in 8 of 10 at 30 s (p = 0.11). At 60 s R
+  and S take the same exit and are not resolved: R earlier in 2, later in
+  5 of 10 (p = 0.45).
 
 ### ASET − RSET at fixed points
 
-![A three-by-three grid of panels: rows are the criteria K 0.3 per metre, HCl 300 ppm and HCl 1000 ppm, columns the pre-movements 0, 30 and 60 s. Each panel shows location ASET minus RSET_last for exit A, branch mouth, junction and exit B, one marker per arm U, S, R and R-na with a min-max line, and a vertical line at 0. Almost every marker lies left of 0. With no pre-movement, in the HCl 1000 ppm row U reaches right of 0 at the junction and the branch mouth, R and R-na at the branch mouth, R's range crosses 0 at the junction, and S's range crosses 0 at the branch mouth; an annotation reads junction, seeds that pass of 20: U 15, S 0, R 6, R-na 0](/images/fire-blind/margins.png)
+![A three-by-three grid of panels: rows are the criteria K 0.3 per metre, HCl 300 ppm and HCl 1000 ppm, columns the pre-movements 0, 30 and 60 s. Each panel shows location ASET minus RSET_last for exit A, branch mouth, junction and exit B, one marker per arm U, S, R and R-na with a min-max line, and a vertical line at 0. Almost every marker lies left of 0. With no pre-movement, in the HCl 1000 ppm row U reaches right of 0 at the junction and the branch mouth, R and R-na at the branch mouth, R's range crosses 0 at the junction, and S's range crosses 0 at the branch mouth; an annotation reads junction, seeds that pass of 20: U 15, S 0, R 4, R-na 0](/images/fire-blind/margins.png)
 
 *Location ASET − RSET_last [s] at four fixed points, the same points for
 every arm; marker: median over seeds, line: min–max. Right of 0: the last
@@ -423,7 +443,7 @@ mouth / exit A. Bold: the most passes at that point where the arms differ.
 |---|---|---|---|---|---|
 | *K* ≥ 0.3 1/m | 0, 30, 60 s | 0/0/0/0 | 0/0/0/0 | 0/0/0/0 | 0/0/0/0 |
 | HCl ≥ 300 ppm | 0, 30, 60 s | 0/0/0/0 | 0/0/0/0 | 0/0/0/0 | 0/0/0/0 |
-| HCl ≥ 1000 ppm | 0 s | 0/**15**/**20**/0 of 20 | 0/0/5/0 | 0/6/**20**/0 | 0/0/**20**/0 |
+| HCl ≥ 1000 ppm | 0 s | 0/**15**/**20**/0 of 20 | 0/0/5/0 | 0/4/18/0 | 0/0/**20**/0 |
 | HCl ≥ 1000 ppm | 30, 60 s | 0/0/0/0 | 0/0/0/0 | 0/0/0/0 | 0/0/0/0 |
 | FED ≥ 0.3 | 0, 30, 60 s | all pass | all pass | all pass | all pass |
 
@@ -434,7 +454,7 @@ mouth / exit A. Bold: the most passes at that point where the arms differ.
 - **HCl with no pre-movement is knife-edge.** U's median margin at the
   junction under HCl 1000 ppm is about +2.5 s (59 − 56.5), inside the seed
   spread. So a single uncoupled run can give either verdict. The coupled
-  arms pass less often at this level (35 point-passes in U, 26 in R, 20 in
+  arms pass less often at this level (35 point-passes in U, 22 in R, 20 in
   R-na, 5 in S), and R keeps most of U's. At every point and criterion U
   passes at least as often as each coupled arm. These counts hold only to
   a few seeds: changing nothing but the per-agent random draws
@@ -444,13 +464,13 @@ mouth / exit A. Bold: the most passes at that point where the arms differ.
   probably overestimated (see [Limits](#limits)).
 
 **People inside when the junction reaches the visibility limit** (24 s):
-with no pre-movement a median of 73 in U, 73 in S, 83 in R and 88 in
-R-na; U has fewer than R in 20 of 20 seeds (median 10 fewer). At 30 and 60 s all
+with no pre-movement a median of 73 in U, 73 in S, 82 in R and 88 in
+R-na; U has fewer than R in 20 of 20 seeds (median 9 fewer). At 30 and 60 s all
 100 are inside in every arm. So U is not conservative on this count.
 
 ### Dose {#dose}
 
-![A three-by-three grid of cumulative distributions, rows for pre-movement 0, 30 and 60 s, columns for max FIC per agent, seconds at HCl 300 ppm or more, and seconds at K 0.3 per metre or more, for arms U, S and R. In the FIC column the R curve lies far left of U, and S right of U. In the two time columns S lies right of U in every row; R lies near U with no pre-movement, right of U at 30 s, and on top of S at 60 s](/images/fire-blind/exposure.png)
+![A three-by-three grid of cumulative distributions, rows for pre-movement 0, 30 and 60 s, columns for max FIC per agent, seconds at HCl 300 ppm or more, and seconds at K 0.3 per metre or more, for arms U, S and R. In the FIC column with no pre-movement the R curve lies left of U and S right of U; at 30 s R lies right of U and left of S, and at 60 s R lies on top of S, right of U. In the two time columns S lies right of U in every row; R lies near U with no pre-movement, between U and S at 30 s, and on top of S at 60 s](/images/fire-blind/exposure.png)
 
 *Share of agents with a value ≤ x, pooled over seeds (2,000 agents with no
 pre-movement, 1,000 at 30 and 60 s). Curve further right: more dose. Values
@@ -462,28 +482,31 @@ resolution. Seconds at *K* ≥ 0.3
 people who are not performing tasks (ISO 13571:2012, §4.5, note).
 Regenerated by `scripts/docs/fire_blind_vs_coupled.py`.*
 
-Per seed, U against R. R-na is identical to R at 30 and 60 s; with no
-pre-movement it differs (for example, U has fewer seconds at HCl ≥ 300 ppm
-than R-na in 16 of 20 seeds).
+Per seed, U against R. R-na differs from R at 30 s (44 % against 19 % at
+exit A) and gives the same exits at 60 s; with no pre-movement it also
+differs.
 
 | Dose metric | pre-movement 0 s | 30 s | 60 s |
 |---|---|---|---|
-| Median of the agents' peak FIC | U higher in 20/20 | U higher in 10/10 | U higher in 10/10 |
-| Agent-seconds at HCl ≥ 300 ppm | mixed: U higher in 11/20 | U lower in 10/10 | U lower in 10/10 |
-| Agent-seconds at HCl ≥ 1000 ppm | U higher in 20/20 | U lower in 10/10 | U lower in 10/10 |
-| Max FED | U higher in 18/20 | U lower in 10/10 | U lower in 10/10 |
+| Median of the agents' peak FIC | U higher in 20/20 | U lower in 8/10 | U lower in 10/10 |
+| Agent-seconds at HCl ≥ 300 ppm | U higher in 17/20 | U lower in 10/10 | U lower in 10/10 |
+| Agent-seconds at HCl ≥ 1000 ppm | U higher in 18/20 | U lower in 10/10 | U lower in 10/10 |
+| Max FED | U lower in 20/20 | U lower in 10/10 | U lower in 10/10 |
 | Agents past *K* 0.3 or HCl 300 ppm before getting out | U more in 20/20 | 100 in every arm | 100 in every arm |
 
-- **Against R, "conservative" depends on the metric.** U over-states the
-  peak FIC in every seed: U walks into exit B's HCl, which R avoids. At 30
-  and 60 s U under-states the time above both HCl levels and the max FED in
-  every seed, because R walks longer in thicker smoke.
+- **Against R, "conservative" depends on the metric.** With no
+  pre-movement U over-states the peak FIC (20 of 20) and the time above
+  both HCl levels (17 and 18 of 20) but under-states the max FED (20 of
+  20): U walks into exit B's HCl, which most R agents avoid, while R walks
+  longer. At 30 and 60 s, U under-states the peak FIC, the time above both
+  HCl levels and the max FED in every seed or nearly (8–10 of 10), because
+  R walks to B later, in thicker smoke.
 - **Against S, U under-states the run totals** in every seed, at every
   pre-movement: agent-seconds at HCl ≥ 300 and ≥ 1000 ppm and at *K* ≥ 0.3
   1/m, and max FED. On single agents it does not always: U's peak FIC is
   higher than S's for 633 of 2,000 agents with no pre-movement, 240 of 1,000 at
   30 s and 243 of 1,000 at 60 s.
-- The largest max FED of any agent is 0.06 in U, 0.17 in R and 0.31 in S,
+- The largest max FED of any agent is 0.06 in U, 0.24 in R and 0.31 in S,
   each at 60 s. FED 0.3 still passes at the four fixed points in every arm
   (table above), but in S one agent exceeds it on the way out. A FED
   below 0.3 or 1 is not a statement of tenability: FED 0.3 is a threshold for susceptible people, and FED < 1
@@ -495,16 +518,16 @@ exit, compared on the same agent (seed, origin, spawn order):
 
 | | pre-movement 0 s | 30 s | 60 s |
 |---|---|---|---|
-| Agents crossing in both U and R | 945 of 2,000 | 1,000 of 1,000 | 1,000 of 1,000 |
-| Median R − U among them | −6.0 s (R smaller in 743) | −10.8 s (902) | −34.2 s (993) |
+| Agents crossing in both U and R | 920 of 2,000 | 1,000 of 1,000 | 1,000 of 1,000 |
+| Median R − U among them | −3.8 s (R smaller in 615) | −10.2 s (885) | −35.9 s (999) |
 | Median S − U, crossing in both | −1.4 s (S smaller in 1,485 of 1,877) | −15.8 s (979) | −35.0 s (998) |
 
-With no pre-movement, 938 agents cross the limit in U but not in R, and
+With no pre-movement, 963 agents cross the limit in U but not in R, and
 none the other way round. Counting an agent that never crosses as having an
-infinite margin, R has the larger margin for 1,136 agents and U for 743. So
+infinite margin, R has the larger margin for 1,264 agents and U for 615. So
 with no pre-movement the direction depends on how agents who never cross
 are counted; at 30 and 60 s U's margin is larger (not conservative) for
-902 and 993 of 1,000 agents.
+885 and 999 of 1,000 agents.
 
 ### Is exit usage conservative?
 
@@ -512,7 +535,9 @@ Exit usage is not conservative or otherwise. Choosing exits is part of the
 scenario: each design fire scenario is analysed with design occupant
 scenarios, and the occupants' initial route choice is one of the
 variables of such a scenario (Nilsson and Fahy 2016, pp. 2047, 2061).
-Here the difference is large: exit B for everyone without the fire, exit A for 86–100 % with it. It also drives the
+Here the difference is large: exit B for everyone without the fire, exit
+A for 80 % with it when people move at once, and for few or none after 30
+or 60 s of waiting. It also drives the
 dose differences above.
 
 ### Sensitivity arms {#sensitivity-arms}
@@ -521,10 +546,10 @@ dose differences above.
 
 | Arm | Flags on top of R | Result |
 |---|---|---|
-| R-na | `"anticipate": false` in the scenario's `routing` block (see below) | Later than R with no pre-movement (+2.9 s, 16 of 20 seeds), with 94 % [91, 97] at exit A against 100 % in R. Identical to R at 30 and 60 s: same exits and same histories. |
+| R-na | `"anticipate": false` in the scenario's `routing` block (see below) | With no pre-movement 1.1 s earlier than R in median (R-na > R in 6 of 20, p = 0.17), with 93 % [89, 96] at exit A against 80 % in R. At 30 s: 44 % at A against 19 %, last out 1.6 s earlier in median. At 60 s: the same exits as R (0 % at A). |
 | R-det | tenability on (FED 1 incapacitates) | Identical to R: nobody reaches FED 1. |
-| R-prob | R-det with `--incapacitation-mode probabilistic` | At 60 s, 4 agents are incapacitated, one in each of 4 of 10 seeds, and 5 agents are inside at 270 s. RSET is censored (> 270 s) in those 4 seeds. The median last exit among the rest is 192.9 s, against 192.8 s in R. Their dose counts only until incapacitation. |
-| R+FIC | R-det with `--enable-fic-speed` | No pre-movement: RSET 119.9 s [100.5, 161.7], with 32 [22, 39] agents at the 0.3 speed floor. At 30 s: censored in 10 of 10 seeds, 117 of 1,000 agents inside at 270 s. At 60 s: censored in 10 of 10, 773 of 1,000 inside. Max FED reaches 0.45 and 0.44. |
+| R-prob | R-det with `--incapacitation-mode probabilistic` | At 30 s one agent is incapacitated and inside in one seed. At 60 s, 8 agents are incapacitated in 5 of 10 seeds and 10 are inside at 270 s; RSET is censored (> 270 s) in 5 seeds. The median last exit among the rest is 187.4 s, as in R. Their dose counts only until incapacitation. |
+| R+FIC | R-det with `--enable-fic-speed` | No pre-movement: RSET 146.8 s [104.5, 266.2], with 32 [20, 39] agents at the 0.3 speed floor. At 30 s: censored in 10 of 10 seeds, 28 of 1,000 agents inside at 270 s. At 60 s: 578 of 1,000 inside. Max FED reaches 0.48 (30 s) and 0.45 (60 s). |
 
 To build R-na, add the key to a copy of the scenario and save the copy
 next to a copy of `geometry.wkt`, which the scenario needs beside it:
@@ -546,10 +571,10 @@ uv run python run.py --scenario ww/na/config_initial_pre0.json --seed 4 \
 ```
 
 ```text
-Simulation finished in 63.82 s (100/100 evacuated).
+Simulation finished in 62.47 s (100/100 evacuated).
 ```
 
-95 leave by exit A and 5 by exit B; in R all 100 take exit A. The study script builds the same files
+93 leave by exit A and 7 by exit B; in R, 80 take exit A and 20 exit B. The study script builds the same files
 (`write_noanticipate`).
 
 A censored RSET is only known to exceed 270 s. It is never compared by size
@@ -574,11 +599,10 @@ at 30 and 60 s, one `run.py` process per arm and seed
 ([#198](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/198)). It
 skips runs that already exist, prints every number on this page, writes
 `summary_runs.csv` and `summary_agents.csv` into `RUNS`, and redraws the
-figures in `site/static/images/fire-blind/`. The 320 runs took 463 s
+figures in `site/static/images/fire-blind/`. The 320 runs took 481 s
 (about 8 min) of wall time on 8 workers, the default of `--workers`, on an
 Apple M3 Pro; the analysis alone takes about 20 s. Seeds 1–3 were used for
-a pilot and are left out. The maintainers keep the runs in their data
-store, `fds-evac-data/t_junction/fire_blind_runs_f5c61f21/`.
+a pilot and are left out.
 
 The animation above is drawn from the same `RUNS` folder:
 
@@ -587,7 +611,9 @@ uv run python scripts/docs/study_animations.py fire-blind --data "$FDS" --runs R
 ```
 
 **Provenance.** The numbers and figures on this page come from runs of
-commit `f5c61f21` on main, from a clean checkout. Each run's manifest
+commit `9c820e0f` on main, from a clean checkout, made with
+`scripts/release_check.sh --full --only howto-with-without-fire`
+(Python 3.12.13). Each run's manifest
 records that commit, `git_dirty: false` and
 `agent_seeding: spawn-key-blake2b-v2`. The seed-4 walkthrough above gives
 the same numbers as those study runs. When the code changes, re-run the
@@ -613,13 +639,13 @@ page.
   | Arm | pre-movement 0 s | 30 s | 60 s |
   |---|---|---|---|
   | S | 80 / 13 / 6 %, floor 3 % | 37 / 37 / 26 %, floor 14 % | 1 / 40 / 59 %, floor 24 % |
-  | R | 89 / 11 / 0 %, floor 0 % | 40 / 55 / 5 %, floor 2 % | 1 / 48 / 52 %, floor 7 % |
+  | R | 91 / 6 / 2 %, floor 1 % | 41 / 40 / 19 %, floor 10 % | 1 / 41 / 58 %, floor 24 % |
 
   Below 1.9 1/m the law is outside the data too. There it slows people by
   2.4 % at *K* = 0.3 1/m, the visibility limit, rising to about 15 % at
   1.9 1/m.
 
-  ![Left: the speed factor against the extinction coefficient K from 0 to 25 per metre, solid over the Frantzich and Nilsson data range 1.9 to 7.4, dashed outside it, falling from 1 at K 0 to the floor 0.1 at K 11.1 and flat after. Right: histograms of K at moving agents in arms S and R; the largest bin is below 0.5 per metre, with a tail beyond 11; an annotation gives S 30 percent above 7.4 and 13 percent at the floor, R 20 and 3 percent](/images/fire-blind/speed_extrapolation.png)
+  ![Left: the speed factor against the extinction coefficient K from 0 to 25 per metre, solid over the Frantzich and Nilsson data range 1.9 to 7.4, dashed outside it, falling from 1 at K 0 to the floor 0.1 at K 11.1 and flat after. Right: histograms of K at moving agents in arms S and R; the largest bin is below 0.5 per metre, with a tail beyond 11; an annotation gives S 30 percent above 7.4 and 13 percent at the floor, R 27 and 12 percent](/images/fire-blind/speed_extrapolation.png)
 
   *Left: speed factor v/v₀ [-] against K [1/m] of the default law;
   shaded: the data range. Right: K at the moving agent [1/m], share of
@@ -631,8 +657,16 @@ page.
   R's avoidance of exit B is therefore not a claim that people would see it
   coming. R-na removes only the look ahead in time: it still reads the
   current smoke along the whole route, including parts no occupant could
-  see. With no pre-movement it sends 94 % [91, 97] of the agents to exit A,
-  against 100 % in R; at 30 and 60 s it gives the same exits as R.
+  see. With no pre-movement it sends 93 % [89, 96] to exit A against 80 %
+  in R, and at 30 s 44 % against 19 %; at 60 s both send everyone to B.
+  Foresight therefore moves agents toward exit B, the exit by the fire,
+  when it sees smoke coming on the longer route.
+- **All routes refused before people move.** Then the router takes the
+  route with the lowest optical depth τ
+  ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)), here the shorter route to
+  exit B past the burner. It is not the safer route: R's largest max FED
+  is 0.24. Whether this rule is right is open
+  ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
 - **HCl is probably overestimated.** The deck has no HCl loss to walls
   ([A crowd in a fire › What this does not show](first-fds-case.md#what-this-does-not-show)).
   That makes the HCl crossings early and inflates R+FIC.

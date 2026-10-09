@@ -427,7 +427,11 @@ def _first_majority(h, exit_id, via_a):
 
 
 def switch_times(data):
-    """Hall-wide re-path and fallback times per fire, arm and seed."""
+    """Hall-wide re-path and all-refused times per fire, arm and seed.
+
+    ``all_refused``: the first pass in which a hall agent's first-ranked route
+    is a fallback, i.e. every route is refused.
+    """
     cols = ["time_s", "source", "route_rank", "exit_id", "path", "rejection_reason"]
     rows = []
     for fire in FIRES:
@@ -445,7 +449,7 @@ def switch_times(data):
                         seed=seed,
                         F_path_via_A=_first_majority(h, "exit_F", True),
                         E_path_via_B=_first_majority(h, "exit_E", False),
-                        first_fallback=fb.min() if len(fb) else np.nan,
+                        all_refused=fb.min() if len(fb) else np.nan,
                     )
                 )
     return pd.DataFrame(rows)
@@ -672,15 +676,17 @@ def report_door_by_start(sh, dp, sw):
     rows = []
     for (fire, arm), g in sw.groupby(["fire", "arm"], sort=False):
         cell = []
-        for c in ["F_path_via_A", "E_path_via_B", "first_fallback"]:
+        for c in ["F_path_via_A", "E_path_via_B", "all_refused"]:
             v = g[c].dropna()
             cell.append("–" if v.empty else f"{v.min():.0f}–{v.max():.0f} s")
         rows.append([fire, ARMS[arm], *cell])
-    md_table(["Fire", "Arm", "F via door A", "E via door B", "first fallback"], rows)
+    md_table(
+        ["Fire", "Arm", "F via door A", "E via door B", "every route refused"], rows
+    )
 
 
 def report_mechanism(data, ag, sw):
-    """The numbers of the 47 s and 145 s re-paths on the main fire (gate)."""
+    """The numbers of the two hall-wide re-paths on the main fire (gate)."""
     heading("Mechanism, main fire, gate")
     t1 = int(sw[(sw.fire == MAIN) & (sw.arm == "gate")].F_path_via_A.median())
     t2 = int(sw[(sw.fire == MAIN) & (sw.arm == "gate")].E_path_via_B.median())
@@ -994,13 +1000,13 @@ def fig_door_by_start(sh, sw):
     fig, axes = plt.subplots(2, 3, figsize=(14, 7.6), sharex=True, sharey=True)
     swg = (
         sw[sw.arm == "gate"]
-        .groupby("fire")[["F_path_via_A", "E_path_via_B", "first_fallback"]]
+        .groupby("fire")[["F_path_via_A", "E_path_via_B", "all_refused"]]
         .median()
     )
     names = {
         "F_path_via_A": "F via A",
         "E_path_via_B": "E via B",
-        "first_fallback": "fallback",
+        "all_refused": "all refused",
     }
     labels = iter("abcdef")
     arms = {"nf": "no fire (= smoke-blind)", "gate": "gate", "add": "additive"}
