@@ -114,7 +114,7 @@ evac_runtime = "about 10 s for the fire run"
 expected = [
   "evacuated: 93/150 in 300 s",
   "FED max:   0.27",
-  "route changes: {'default_route': 150, 'initial': 11}",
+  "route history rows by reason: {'default_route': 150, 'initial': 11}",
 ]
 expected_note = """\
 These are the last lines of python examples/first_fds_case.py "$FDS". \

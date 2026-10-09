@@ -47,7 +47,7 @@ print(f"evacuated: {result.agents_evacuated}/{result.total_agents} in 300 s")
 if FDS_DIR is not None:
     print(f"FED max:   {result.metrics['fed_max']:.2f}")
     reasons = Counter(r["reason"] for r in result.route_history)
-    print(f"route changes: {dict(reasons)}")
+    print(f"route history rows by reason: {dict(reasons)}")
 
 # %%
 result.cleanup()  # deletes the temporary trajectory file; copy it first to keep it

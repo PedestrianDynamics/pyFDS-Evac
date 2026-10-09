@@ -203,7 +203,7 @@ The run writes five files:
 | `tj_fire.manifest.json` | versions, seed, scenario, FDS directory and FDS version |
 | `tj_fire_smoke.csv` | per agent and second: position, extinction *K*, speed factor |
 | `tj_fire_fed.csv` | per agent and second: gas concentrations, FED, FIC, incapacitated |
-| `tj_fire_routes.csv` | every route change, with its time and reason |
+| `tj_fire_routes.csv` | every route change, with its time and reason, and the `default_route` row written at spawn for each agent that follows its default route |
 
 For the clear-air comparison below, run the same command without `--fds-dir`:
 
@@ -256,13 +256,13 @@ print(f"evacuated: {result.agents_evacuated}/{result.total_agents} in 300 s")
 if FDS_DIR is not None:
     print(f"FED max:   {result.metrics['fed_max']:.2f}")
     reasons = Counter(r["reason"] for r in result.route_history)
-    print(f"route changes: {dict(reasons)}")
+    print(f"route history rows by reason: {dict(reasons)}")
 ```
 
 ```text
 evacuated: 93/150 in 300 s
 FED max:   0.27
-route changes: {'default_route': 150, 'initial': 11}
+route history rows by reason: {'default_route': 150, 'initial': 11}
 ```
 
 ## 5. Results
