@@ -38,6 +38,21 @@ The `cost_model` and alias errors appear when the run starts, after the FDS
 output is read. `--show-config` prints `Errors: none` for such a deck
 ([#571](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571)).
 
+### `pyfds-evac init`
+
+| Command | Status | Meaning |
+|---|---|---|
+| `pyfds-evac init DECK.fds` | 0 | the scenario is written and runnable |
+| | 3 | written, but not runnable (no exit, no agents, too many agents for a spawn area), or runnable with an input dropped at error level |
+| | 1 | nothing written: the deck cannot be read, an argument is wrong, or `-o` holds a scenario the importer did not write |
+| `pyfds-evac init DECK.fds --check` | 0 | the deck has the extinction-coefficient, CO, CO2 and O2 slices and `&TIME T_END` |
+| | 3 | at least one of them is missing (a ✗ line names it and gives the `&SLCF` line to add) |
+| | 1 | the deck cannot be read, the floor cannot be chosen, or an argument is wrong |
+
+A plain `init` prints the same slice check, but its exit status ignores it.
+Each message, its cause and its fix are in
+[Usage › Messages and what to do](usage.md#messages-and-what-to-do).
+
 ## Warnings that change the result
 
 | Message starts with | What happened | Fix |

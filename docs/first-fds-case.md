@@ -42,7 +42,10 @@ evacuated: 144/150 in 300 s
 
 The scenario is a folder, `assets/t_junction`: a JuPedSim `config.json` and
 the walkable area as `geometry.wkt`. It sits beside the FDS deck that made its
-fire.
+fire. `pyfds-evac init assets/t_junction/t_junction.fds` derives the same
+150 m² walkable area from the deck; the rest of this scenario (journeys,
+signs, flow spawning) was written by hand
+([Start from your own FDS case](start-from-fds-deck.md)).
 
 ```bash
 uv run python run.py --scenario assets/t_junction --print-summary --export-only
@@ -75,6 +78,21 @@ The rules are on the [wayfinding](/models/wayfinding.md) page.
 
 The fire comes from FDS. pyFDS-Evac does not run FDS; it reads the slice
 files that FDS wrote.
+
+**Check the deck.** Before you spend 20 minutes on FDS, check that the deck
+asks for the slices the run reads:
+
+```bash
+uv run pyfds-evac init assets/t_junction/t_junction.fds --check
+```
+
+From the unpacked zip, drop `uv run`. The check writes nothing, prints one
+✓ line each for the extinction coefficient, CO, CO2, O2 and `T_END`, and
+ends with:
+
+```text
+✓ The deck has what a pyFDS-Evac run reads.
+```
 
 **Get the FDS output.** The deck is `assets/t_junction/t_junction.fds`: a
 2 MW PVC fire on a 2 m × 1 m burner, 300 s, four meshes. Either run it
@@ -348,7 +366,7 @@ reads the run files from step 4 and the FDS slices:
 uv run python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj
 ```
 
-From the unpacked zip, follow step 6 of its `README.txt` instead.
+From the unpacked zip, follow step 7 of its `README.txt` instead.
 
 It takes under a minute (about 8 s with the run files in place) and prints
 every number in this section. The report starts with:
@@ -655,6 +673,8 @@ decisions can differ slightly from these maps.
 
 ## What next
 
+- [Start from your own FDS case](start-from-fds-deck.md): check a deck and
+  turn it into a scenario with `pyfds-evac init`.
 - [What your FDS case must provide](fds-case-requirements.md), before you use
   your own FDS output.
 - [Real-FDS walkthrough](walkthrough.md): FED from FDS slices, and how to spot

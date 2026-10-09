@@ -564,6 +564,9 @@ uv run python scripts/animate_cognitive_map.py --scenario BUNDLE_DIR \
 
 ### Scenario from an FDS deck — `pyfds-evac init`
 
+[Start from your own FDS case](start-from-fds-deck.md) walks through this
+command on three decks.
+
 Writes `config.json`, `geometry.wkt` and `import_report.json` into a
 directory that `pyfds-evac --scenario` runs as it is, by default
 `<deck stem>_scenario/` next to the deck (`-o DIR` picks another). It prints
@@ -615,8 +618,123 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Status | Meaning |
 |---|---|
 | 0 | written and runnable, nothing dropped at error level |
-| 3 | written, but not runnable (no exit or no agents; no `Run:` line is printed), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
+| 3 | written, but not runnable (no exit, no agents or too many agents for a spawn area; the summary prints `✗ Not runnable` and no run command), or runnable with an input dropped at error level, such as an exit too far from the walkable area |
 | 1 | an error, including an argument error or a refused `-o` folder; nothing written |
+
+#### What the importer derives
+
+- **Deck type.** An FDS+Evac deck has a `&MESH` with `EVACUATION=.TRUE.`
+  or any of `&EVAC`, `&EXIT`, `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVHO`,
+  `&EVSS`, `&STRS`, `&EDEV`; any other deck is a plain FDS deck.
+- **Floor, FDS+Evac deck.** The main evacuation meshes (`EVAC_HUMANS=.TRUE.`,
+  else all evacuation meshes), grouped by overlapping z. The lowest group is
+  imported; `--floor MESH_ID` picks another. The floor level is the mesh
+  mid-height minus `EVAC_Z_OFFSET` (default 1.0 m); the walking band is the
+  evacuation mesh's own z range. `floors_not_imported` lists the other
+  floors with their agent, `&EVAC`, `&EXIT` and `&DOOR` counts.
+- **Floor, plain deck.** The floor level is the lowest mesh z (or
+  `--floor-z`); the walking band is 0.1 to 1.8 m above it (or `--z-band`,
+  absolute). Only meshes whose z range overlaps the band form the floor; a
+  mesh wholly above or below it is left out with a warning. A horizontal
+  `&OBST` over half the footprint, more than 2 m above the floor, is flagged
+  as a possible upper floor.
+- **Walkable area.** The union of the floor's mesh footprints (FDS+Evac:
+  the main evacuation meshes only), whose edge is a wall, minus the `&OBST`
+  footprints in the band, less the `&HOLE` footprints in the band. `MULT_ID`
+  is expanded; `MESH_ID` is honoured; on an FDS+Evac floor, records with
+  `EVACUATION=.FALSE.` are skipped. `&OBST` and `&HOLE` with `DEVC_ID` or
+  `CTRL_ID` are taken as written. `&GEOM` is not represented; `&CATF`
+  stops the import. Two touching evacuation meshes of one floor are joined,
+  with a warning (FDS+Evac keeps their shared edge a wall).
+- **Kept parts.** The parts of the walkable area that hold a spawn area are
+  kept; with no spawn area, those that hold an exit; a part with an
+  `--exit` is always kept; with neither, all parts are kept. Exits and spawn
+  areas are then rebuilt on the kept polygon, so an `&EVAC` rectangle can
+  split into numbered pieces. `--walkable FILE.wkt` is taken as given.
+- **Exits, plain deck.** Every `SURF_ID='OPEN'` vent (`XB`, or an `MB`/`DB`
+  face) on the outside of the mesh union that is vertical and meets the
+  walking band; each gets an omni-directional sign (c = 3) at its centre. An
+  `--exit` gets no sign. A vent wider than 5 m, or covering 80 % or more of
+  its face, is flagged as a possible open boundary.
+- **Exits, FDS+Evac deck.** The `&EXIT` and `&DOOR` lines of the floor. A
+  `&DOOR` that leads off the floor (to a `&CORR` or `&STRS`) is imported as
+  an exit. A `COUNT_ONLY` `&EXIT` is a counter, not an exit. The line stays
+  where the deck puts it; `exits[].fds_evac_segment` reports where FDS+Evac
+  would round it to its evacuation grid, without applying it.
+- **Exit strip.** Every exit is a strip `--exit-depth` deep on the room
+  side of its line, clipped to the walkable area. An exit is never moved; it
+  is dropped, at error level, when its strip is empty or narrower than
+  0.1 m.
+- **Agents, plain deck.** Each kept part with an exit, minus the exit
+  strips, is a spawn area; `--agents N` (or the placeholder of 100) is
+  shared between them by area. A part without an exit gets no agents.
+- **Agents, FDS+Evac deck.** `&EVAC` gives the spawn areas with
+  `NUMBER_INITIAL_PERSONS`, `&PERS` the speed and pre-movement
+  ([Coming from FDS+Evac](coming-from-fds-evac.md)); `--agents` is ignored.
+  `&EVHO` is cut out of the spawn areas. `&ENTR` becomes flow spawning; an
+  entry with `MAX_FLOW = 0` creates no agents. A point or line `&EVAC` is
+  grown to a 0.6 m band across each zero-width axis, clipped to the walkable
+  area (`distributions[].zero_width_expansion`).
+- **Capacity.** A spawn area (groups sharing one polygon counted together,
+  flow spawning left out) that asks for more agents than
+  N<sub>max</sub> = max(1, ⌊0.5 · A / (π r²)⌋) makes the scenario not
+  runnable, with A the area and r the largest agent radius, at least 0.1 m.
+  The run applies the same estimate before it starts.
+- **Settings.** `max_simulation_time` is `&TIME T_END`, or 300 s.
+  `smoke_slice_height` is the floor level plus `HUMAN_SMOKE_HEIGHT` (the last
+  `&PERS` value, else 1.6 m). Keys the deck does not set fall to the
+  scenario defaults, listed per group in `distributions[].loader_defaults`.
+- Fire surfaces (`HRRPUA`, `MLRPUA`) inside the walkable area are reported,
+  not cut out.
+
+| Constant | Value | Source |
+|---|---|---|
+| Walking band, plain deck | 0.1–1.8 m above the floor | assumption |
+| Widening of a zero-thickness `&OBST` or `&HOLE` | 0.05 m each side | assumption |
+| Free parts dropped and holes filled up to | 0.25 m² | assumption |
+| Exit strip depth (`--exit-depth`) | 0.5 m | assumption |
+| Minimum exit width | 0.1 m | assumption; below one agent diameter (0.4 m) |
+| Band for a point or line `&EVAC` | 0.6 m | assumption |
+| Placeholder agents, plain deck | 100 | flagged placeholder |
+| Time limit without `T_END` | 300 s | assumption |
+| Capacity packing | 0.5, r ≥ 0.1 m | the run's own estimate |
+| Spawn density flag | 4 /m² | flag threshold, unsourced |
+| Wide-opening flag | > 5 m, or ≥ 80 % of the face | assumption |
+| `HUMAN_SMOKE_HEIGHT` default | 1.6 m | FDS+Evac guide §8.7 |
+
+#### Messages and what to do
+
+| Message (start) | Status | Cause | Fix |
+|---|---|---|---|
+| `no exit found: add exits in JuPedSim Web or with --exit …` | 3 | A plain deck without an outside `OPEN` vent in the band. | `--exit x0,y0,x1,y1[,ior]`; give `ior` when the room side is ambiguous. |
+| `no exit found (every &EXIT is narrower than the minimum exit width 0.1 m: …` | 3 | The deck uses its exits only as flow-field targets, which pyFDS-Evac does not model. | None; draw real exits with `--exit` only if the building has them. |
+| `no agents to place` | 3 | A plain deck with no exit, or an FDS+Evac floor with no `&EVAC`. | Plain deck: add exits, `--agents`. FDS+Evac deck: read `floors_not_imported[].agents`, and use `--floor MESH_ID` only when another floor has agents. When every floor has 0, the agents enter only through `&ENTR` fed by stairs or doors, and the deck is out of scope. |
+| `spawn area X (A m2) holds about N agents of radius r m, but M are requested: …` | 3 | Capacity, see above. | Plain deck: a smaller `--agents` or a larger area. FDS+Evac deck: a lower `NUMBER_INITIAL_PERSONS` or a larger `&EVAC` area, in a copy of the deck. |
+| Error item `exit dropped: its strip on the room side is empty; the line is D m from the walkable area` | 3, runnable | The exit is not next to the kept walkable area. | Check the floor and the band (`--z-band`), or pass `--exit`. The run works without that exit. |
+| Error item `exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m` | 3, runnable | A slot narrower than 0.1 m. | Widen the exit in a copy of the deck, or pass `--exit`. |
+| `… holds a config.json that the importer did not write …` | 1 | `-o` points at an authored scenario. | Another `-o`, or `--force`. |
+| `no &MESH reaches the walking band z = LO..HI m; …` | 1 | Wrong `--floor-z` or `--z-band`. | As the message says. |
+| `--floor 'X' names no evacuation mesh; known: […]` | 1 | A wrong `--floor`. | Use a listed id. |
+| `--exit (…): no walkable strip next to the line` | 1 | The `--exit` line is not on the walkable boundary. | Put the line on a wall or a mesh edge next to walkable space. |
+| `argument --exit: need x0,y0,x1,y1[,ior]`, `the line must be parallel to x or y` | 1 | A malformed `--exit`. | Four or five numbers, the line parallel to x or y. |
+| A parser error, such as `&RADI (line 21): no closing '/' before &DUMP on line 23` | 1 | Deck syntax; also `&CATF`, an unknown `MULT_ID`, a malformed `XB`. | Fix the deck. |
+| `the walkable area (…) is empty or invalid`, `the deck has no &MESH with XB` | 1 | A degenerate deck or WKT. | Check the deck, or pass `--walkable`. |
+| `cannot read the walkable WKT: …` | 1 | A bad `--walkable` file. | Fix the WKT. |
+
+#### `import_report.json`
+
+| Key | What it holds |
+|---|---|
+| `deck`, `chid`, `kind` | the deck path, its `CHID`, and `legacy` (FDS+Evac) or `modern` (plain FDS) |
+| `floor` | `id`, `meshes`, `z_floor` and `z_band` of the imported floor |
+| `floors_not_imported` | the other floors of an FDS+Evac deck, with their agent, `&EVAC`, `&EXIT` and `&DOOR` counts |
+| `walkable` | `source` (`derived:deck`, `derived:evac-mesh` or `user`), `area_m2`, `components`, `holes`, `kept_by` (`single`, `spawn`, `exit` or `all`), `components_dropped` (area, bounds, reason), `diagnostics` |
+| `counts` | per namelist, the number of records supported (S), approximated (A), dropped (D) and cosmetic (C) |
+| `items` | one entry per record: `status` (S, A, D, C), `level` (info, warning, error), `group`, `id`, deck `line`, `message` |
+| `exits` | per exit: `id`, `source` (`X1` vent, `X3` `--exit`, `&EXIT`, `&DOOR`), `segment`, `strip_area_m2`, `sign`, `fds_evac_segment`, and `open_from_s`, `closed_after_s`, `role` |
+| `distributions` | per spawn area: `number`, `area_m2`, `density_per_m2`, `parameters_written`, `loader_defaults`, `placeholder`, `zero_width_expansion`, `source` |
+| `recommendations` | `smoke_slice_height`; `slices` (one entry per item of the check: `status`, `required`, `z_requested`, `nearest_pbz`, `orientation_found`, `ok`, `fix`, `message`); `slice_check_ok`; `coverage` (walkable area and exits outside the fire meshes); `fds_meshes`, `fds_output_found`, `fds_dir`, `run_command` |
+| `runnable`, `not_runnable_reasons` | whether `pyfds-evac --scenario` can run the folder, and why not |
 
 #### Check a deck before running FDS — `pyfds-evac init --check`
 

@@ -275,6 +275,8 @@ Also:
 
 - [A crowd in a fire](first-fds-case.md): 150 agents in a 2 MW FDS fire,
   with figures for every step.
+- [Start from your own FDS case](start-from-fds-deck.md): check an FDS or
+  FDS+Evac deck and turn it into a scenario.
 - [Create a scenario](howto-create-scenario.md): your own geometry, exits
   and agents, drawn in JuPedSim Web or copied from an example.
 - [What your FDS case must provide](fds-case-requirements.md), before you

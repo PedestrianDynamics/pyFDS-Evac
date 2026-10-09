@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Docs: the page "Start from your own FDS case" (Getting started) checks
+  and imports two plain FDS decks and an FDS+Evac guide deck with
+  `pyfds-evac init`, and Usage lists what the importer derives, its
+  constants, its messages and the fields of `import_report.json` (#606).
 - `pyfds-evac init DECK.fds --check` checks a deck before FDS runs and
   writes nothing (#604). At the smoke slice height `init` writes, with the
   run's selection rule (horizontal slice, nearest z, first declared on a

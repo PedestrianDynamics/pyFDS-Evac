@@ -6,13 +6,14 @@ aliases: [/docs/howto-create-scenario/]
 
 A scenario is two files: `config.json` (exits, spawn areas, agents, journeys,
 settings) and `geometry.wkt` (the walkable area). They sit in a folder or a
-ZIP, and `pyfds-evac --scenario` reads either. There are three ways to get
+ZIP, and `pyfds-evac --scenario` reads either. There are four ways to get
 them:
 
 | Route | Use it when |
 |---|---|
 | [Draw it in JuPedSim Web](#draw-it-in-jupedsim-web) | You start from a plan, a CAD drawing or nothing. |
 | [Start from an example](#start-from-an-example) | A small change to a working scenario is enough. |
+| [Start from the FDS deck](start-from-fds-deck.md) | You have an FDS or FDS+Evac deck: `pyfds-evac init DECK.fds` writes the scenario folder. |
 | [Match the FDS deck](#match-the-fds-deck) | You couple the run to FDS output. Do this in addition to one of the first two. |
 
 Whatever the route, [check the scenario](#check-the-scenario) before you
@@ -362,16 +363,11 @@ after the import against the deck.
 
 {{< details title="Generating the walkable area from the deck" closed="true" >}}
 `pyfds-evac init DECK.fds` derives the walkable area from the deck and
-writes it to `geometry.wkt` (see
-[Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init));
-`scripts/generate_walkable_from_fds.py` writes the same polygon alone. The
-rule: the union of the floor's mesh footprints, whose edge is a wall, minus
-the `&OBST` records in the walking band, less their `&HOLE` cuts; the parts
-that hold a spawn area, or without one an exit, are kept. For the T-junction
-of [A crowd in a fire](first-fds-case.md) it gives the hand-drawn 150 m²
-polygon. Check the result against the plan: every `&OBST` in the band
-blocks, and a mesh that reaches outdoors through an opening adds that
-outdoor space. The consistency between deck and WKT is tracked in
+writes it to `geometry.wkt`; `scripts/generate_walkable_from_fds.py` writes
+the same polygon alone. The rule is in
+[Usage › What the importer derives](usage.md#what-the-importer-derives), and
+[Start from your own FDS case](start-from-fds-deck.md) walks through it.
+The consistency between deck and WKT is tracked in
 [#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26).
 {{< /details >}}
 

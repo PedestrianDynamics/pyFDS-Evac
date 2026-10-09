@@ -82,6 +82,9 @@ steps = [
   ["Check the scenario runs in clear air (about 5 s)", [
     "python examples/first_fds_case.py",
   ]],
+  ["Check the deck before FDS runs (writes nothing)", [
+    "pyfds-evac init assets/t_junction/t_junction.fds --check",
+  ]],
   ["Run FDS (about 20 min with 4 MPI processes)", [
     "mkdir -p fire && cp assets/t_junction/t_junction.fds fire/",
     "cd fire && mpiexec -n 4 fds t_junction.fds && cd ..",
@@ -642,3 +645,50 @@ results_commit = "449a755d"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 results_note = "Not re-checked for 0.4.0."
+
+[start-from-fds-deck]
+title = "Start from your own FDS case"
+zip = "pyfds-evac-start-from-fds-deck.zip"
+page = "docs/getting-started/start-from-fds-deck/"
+source = "docs/start-from-fds-deck.md"
+summary = """\
+pyfds-evac init turns an FDS deck into a scenario folder. Check two plain \
+FDS decks before FDS runs, import them, add an exit and the agents, and \
+run them in clear air. The FDS+Evac guide deck of step 5 is GPL-3.0 and is \
+downloaded separately."""
+contents = """\
+Two FDS decks, the T-junction and the ISO 20414 corridor, the \
+hand-drawn walkable area of the T-junction, pinned package versions \
+and a README.txt with the commands and the expected result."""
+files = [
+  ["assets/t_junction/t_junction.fds", "plain FDS deck with two OPEN vents (steps 1 to 3)"],
+  ["assets/t_junction/geometry.wkt", "the hand-drawn walkable area, to compare with the derived one (step 2)"],
+  ["assets/ISO-table21/ISO-table21.fds", "plain FDS deck with no exit (step 4)"],
+]
+extra_packages = []
+steps = [
+  ["Check the deck before FDS runs", [
+    "pyfds-evac init assets/t_junction/t_junction.fds --check",
+  ]],
+  ["Import it with 40 agents and run in clear air", [
+    "pyfds-evac init assets/t_junction/t_junction.fds --agents 40",
+    "pyfds-evac --scenario assets/t_junction/t_junction_scenario --seed 1",
+  ]],
+  ["Add the missing exit of the corridor and run", [
+    "pyfds-evac init assets/ISO-table21/ISO-table21.fds --exit 50,-1,50,1 --agents 20",
+    "pyfds-evac --scenario assets/ISO-table21/ISO-table21_scenario --seed 1",
+  ]],
+]
+fds = ""
+fds_runtime = ""
+evac_runtime = "a few seconds per run"
+expected = [
+  "Simulation finished in 34.70 s (40/40 evacuated).",
+  "Simulation finished in 89.12 s (20/20 evacuated).",
+]
+expected_note = """\
+These are the last lines of the two runs. pyfds-evac init exits with \
+status 0 for both imports."""
+results_commit = "29be041c"
+results_python = "3.13.4"
+results_machine = "Apple M3 Pro, macOS"

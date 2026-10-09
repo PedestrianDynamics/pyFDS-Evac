@@ -1,6 +1,6 @@
 ---
 title: "Coming from FDS+Evac"
-weight: 4
+weight: 5
 aliases: [/docs/coming-from-fds-evac/]
 ---
 
@@ -10,7 +10,7 @@ lists what has no equivalent. FDS+Evac was removed from FDS in December 2021
 (FDS commit `6a1d48aa5e`). The last FDS release that contains it is FDS 6.7.7
 (November 2021, Evac 2.6.1). The link above and every `evac.f90:NNNN`
 reference in these docs point to FDS `6.7.6-404-gc9da70d7a` (August 2021,
-Evac 2.6.0), the version the 2021 guide describes. Read
+Evac 2.6.0-draft), the version the 2021 guide describes. Read
 [Limitations](limitations.md) before you rely on a result.
 
 pyFDS-Evac is research software, provided without warranty. It is not intended
@@ -55,6 +55,8 @@ equations.
 keeps the evacuation namelists of one floor as exits and spawn areas, and
 writes a report of everything it approximated or dropped
 ([Usage](usage.md#scenario-from-an-fds-deck--pyfds-evac-init)).
+[Start from your own FDS case](start-from-fds-deck.md#5-an-fdsevac-deck)
+walks through it on a guide deck.
 
 In FDS+Evac the outer boundary of an evacuation mesh is solid by default
 (Korhonen, *FDS+Evac Technical Reference and User's Guide*, Evac 2.6.0-draft, 2021,
@@ -138,7 +140,7 @@ or `app.py` in a source checkout) runs uploaded scenarios. It does not edit geom
 | `&PERS` (§8.7) | Agent type: body size, speed, pre-movement, force constants | Per distribution in the JSON: `v0` [m/s], `radius` [m] and the pre-movement keys below. There are no named agent types and no three-circle body; an agent is a circle. |
 | `&EVHO` (§8.9) | Area where no agents are placed | No JSON key. Draw the distribution polygon so that it excludes the area; `pyfds-evac init` does this by splitting the spawn area into pieces around the hole, sharing the agents by area. |
 | `&EXIT` (§8.10) | Line that removes agents | An `exits` entry in the JSON (a polygon). Optional `enable_throughput_throttling` and `max_throughput` cap the flow, and an optional `sign` feeds visibility. `pyfds-evac init` keeps the deck's line where it is: FDS+Evac moves it to the nearest evacuation grid lines, and `import_report.json` gives that position (`fds_evac_segment`) without applying it. An exit is not moved to reach the walkable area; one whose room-side strip is empty, or narrower than 0.1 m, is dropped with the reason. An exit used only as a flow-field target, such as the 0.1 m slots of `CorridorFlowExample`, is not imported. |
-| `&DOOR` (§8.12) | Moves agents to another part of the calculation | No door object. A doorway is a gap in the walkable polygon; an intermediate target is a `checkpoints` entry in a journey. |
+| `&DOOR` (§8.12) | Moves agents to another part of the calculation | No door object. A doorway is a gap in the walkable polygon; an intermediate target is a `checkpoints` entry in a journey. `pyfds-evac init` imports a `&DOOR` that leads off the floor, to a `&CORR` or `&STRS`, as an exit. |
 | `&ENTR` (§8.11) | Adds agents at a constant rate | Flow spawning on a distribution: `use_flow_spawning`, `flow_start_time`, `flow_end_time` [s]. |
 | `&CORR` (§8.13) | One-way corridor or stair between floors | Not supported. pyFDS-Evac is single-floor. |
 | `&STRS` (§8.15) | Whole staircase with its own mesh | Not supported. |
@@ -304,5 +306,5 @@ agents walk.
 ## References
 
 Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
-Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0). VTT Technical
+Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft). VTT Technical
 Research Centre of Finland.
