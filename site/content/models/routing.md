@@ -411,8 +411,10 @@ Each step, pyFDS-Evac iterates over the agents through JuPedSim's Python API,
 reads positions, tests stages and updates speeds. With native journeys, stage
 reaching and removal run inside `simulation.iterate()`.
 
-In two small clear-air runs, the per-step steering pass took about four times
-as long as `simulation.iterate()`:
+In two small clear-air runs at commit `4f859bf5`, before 0.2.0, the per-step
+steering pass took about four times as long as `simulation.iterate()`. The
+shares were not measured again for 0.4.0
+([#665](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/665)).
 
 | Case | Steering pass | `iterate()` | Rest of loop |
 |---|---|---|---|
@@ -439,8 +441,11 @@ These agent counts are small, so the shares can differ at higher density.
 - Four runs of each case; the table gives the range.
 - `familiarity_test_no_journey` uses `SocialForceModel` and `t_junction`
   uses `CollisionFreeSpeedModel`, as set in their decks.
-- `familiarity_test_no_journey` ends when every agent is out, at 34.9 s.
-  `t_junction` stops at its 300 s limit with 143 of 200 agents out.
+- At that commit, `familiarity_test_no_journey` ended when every agent was
+  out, at 34.9 s, and `t_junction` stopped at its 300 s limit with 143 of 200
+  agents out. Both outcomes predate #610 and #250.
+- Since #610 the call raises for `familiarity_test_no_journey`: the deck
+  sets `no_known_exit: explore`, which needs rerouting.
 - A `cProfile` run of `t_junction` attributes the largest part of the
   steering pass to `reached_stage` → `distance_to_polygon` (shapely `Point`
   construction and distance), more than to JuPedSim's agent iterator.
