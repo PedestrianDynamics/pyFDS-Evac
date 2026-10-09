@@ -122,7 +122,8 @@ the sign becomes readable. Agent 1 switches at t = 11 s, at x = 3.7,
 y = 18.9. Measured at `289b33d0` against the deck's FDS output, with
 `--allow-fds-horizon-hold` because the FDS run ends before the 300 s run
 time; the run files are in the project's data store under
-`cognitive_map_memory/rerun_289b33d0/`.
+`cognitive_map_memory/rerun_289b33d0/`. The same commands on main at
+`9c820e0f` give the same route history, trajectories and figure.
 
 The switch dots are spread over y ∈ [10.5, 18.9], 13 of 20 below 15,
 rather than lying on a line at y = 12.5. The window is derived for the
