@@ -51,8 +51,8 @@ expected = [
   "time ratio smoke/clear: 1.3174",
 ]
 expected_note = "The last line, manifest: <path>, names a new temporary file on every run."
-results_commit = "828ae8c3"
-results_python = "3.13.4"
+results_commit = "9c820e0f"
+results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
 [first-fds-case]
@@ -122,8 +122,8 @@ Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
 (93/150 evacuated, 57 remaining, 50 not spawned). and exits with status \
 2, as for every run that reaches its time limit with agents inside."""
-results_commit = "828ae8c3"
-results_python = "3.13.4"
+results_commit = "9c820e0f"
+results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
 
 [study-schroeder2015]
@@ -180,7 +180,7 @@ steps = [
   ["Print the page's numbers and draw its evacuation figures (about 3 min)", [
     "python scripts/docs/schroeder2015_route.py --data \"$DATA\"",
   ]],
-  ["Draw the animation of smoke-blind and gate, seed 1 (about 1 min; ffmpeg reduces the GIF's colours)", [
+  ["Draw the animation of smoke-blind and gate, seed 5 (about 1 min; ffmpeg reduces the GIF's colours)", [
     "python scripts/docs/study_animations.py schroeder2015 --data \"$DATA\"",
   ]],
   ["Optional, for the fire-choice figures: write and run the other six fire decks (about 6 h in all)", [
@@ -409,8 +409,8 @@ scripts/verification/iso_test_18_figures.py prints the page's Result \
 table, one line per run. Above are its header, its rows K10 and \
 coupled_fds, and the verdict line; t_clear, t_smoke and t_pred are in \
 seconds. \
-The runs behind the page were made at 8fc26b1; a re-run at 449a755d \
-prints the same table. The script exits with an error if a pass \
+The runs behind the page were made at 8fc26b1; re-runs at 449a755d \
+and 9c820e0f print the same table. The script exits with an error if a pass \
 criterion fails."""
 results_commit = "9c820e0f"
 results_python = "3.12.13"
@@ -632,8 +632,8 @@ first line, and "DIFF measures, K ≥ 0.23, ∃ rule, ~1 s, pooling: \
 maximum over n = 10 seeds", the other three: remaining at 40 s and \
 80 s and the last one out; min DIFF [s], area with DIFF < 0 [m²] and \
 C [m²s]. They are the page's headline. The runs behind the page were made at \
-4a7142f; a re-run at 449a755d, without --release, prints the same \
-values. FDS output from another FDS build or machine can move them \
+4a7142f; re-runs at 449a755d and 9c820e0f, without --release, print \
+the same values. FDS output from another FDS build or machine can move them \
 slightly."""
 results_commit = "9c820e0f"
 results_python = "3.12.13"

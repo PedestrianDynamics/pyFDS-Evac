@@ -665,7 +665,7 @@ page.
   route with the lowest optical depth τ
   ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)), here the shorter route to
   exit B past the burner. It is not the safer route: R's largest max FED
-  is 0.24, against 0.17 in the runs at `f5c61f21`. Whether this rule is right is open
+  is 0.24. Whether this rule is right is open
   ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
 - **HCl is probably overestimated.** The deck has no HCl loss to walls
   ([A crowd in a fire › What this does not show](first-fds-case.md#what-this-does-not-show)).

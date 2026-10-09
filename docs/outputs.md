@@ -155,7 +155,7 @@ The equations behind each rate are on [Models › FED](/models/fed.md) and
 | `time_s`, `agent_id` | when, and who |
 | `old_exit`, `new_exit` | exit before and after; `old_exit` is empty for the first assignment |
 | `old_cost`, `new_cost` | ranking cost of the two routes, rounded to 4 decimals; `old_cost` is empty when there was none |
-| `reason` | `initial`, `smoke_reroute`, `exit_closed`, `fallback`, `better_path`, `explore` or `wander` |
+| `reason` | `initial`, `default_route`, `smoke_reroute`, `exit_closed`, `fallback`, `better_path`, `explore` or `wander` |
 
 The reasons are defined on
 [Routing in practice](routing.md#route-switch-reasons). `smoke_reroute` labels
@@ -164,8 +164,10 @@ every change of exit, whatever caused it
 change away from an exit that has closed, which is `exit_closed`.
 
 An `initial` row is written only when an agent that has no exit at a
-re-evaluation is given its first one. Agents that start with a journey exit
-get no row until they change target, so a run without any switch (such as the
+re-evaluation is given its first one. A `default_route` row is written once
+at spawn for an agent with no exit in its map that follows its default
+route, the journey or the nearest exit on foot. Other agents that start with
+a journey exit get no row until they change target, so a run without any switch (such as the
 example above, `Route history rows: 0`) writes a file with only its header. This
 does not mean rerouting was off.
 
