@@ -4,7 +4,7 @@
 # Usage, from anywhere in the repository:
 #
 #   scripts/release_check.sh [--quick|--full] [--report FILE] [--gates LIST]
-#                            [--only PAGE ...] [PYTHON_VERSION ...]
+#                            [--only PAGE ...] [--keep] [PYTHON_VERSION ...]
 #
 #   --quick    analyses on the stored evacuation runs of the data store
 #              (default); the studies' run sets are not re-run
@@ -15,6 +15,10 @@
 #              (default: all five)
 #   --only     restrict the docs and bundles gates to these pages (names
 #              from scripts/release_check.toml or site/data/examples.toml)
+#   --keep     keep the outputs of the documented commands next to the
+#              report: <report>.work/ (each page's WORK) and
+#              <report>.changed/ (the files they wrote in the checkout,
+#              such as regenerated figures)
 #   PYTHON_VERSION  the versions to test (default: the Python classifiers of
 #              pyproject.toml that satisfy requires-python)
 #
@@ -45,6 +49,7 @@ MODE=quick
 REPORT=
 GATES=tests,install,bundles,docs,site
 ONLY=()
+KEEP=
 VERSIONS=()
 while [ $# -gt 0 ]; do
   case $1 in
@@ -52,6 +57,7 @@ while [ $# -gt 0 ]; do
     --full) MODE=full ;;
     --report) REPORT=$2; shift ;;
     --gates) GATES=$2; shift ;;
+    --keep) KEEP=1 ;;
     --only) shift; while [ $# -gt 0 ] && [ "${1#--}" = "$1" ] && ! [[ $1 =~ ^3\.[0-9]+$ ]]; do ONLY+=("$1"); shift; done; continue ;;
     -h|--help) sed -n '2,/^set -uo/p' "$0" | sed '$d'; exit 0 ;;
     3.*) VERSIONS+=("$1") ;;
@@ -76,10 +82,23 @@ TMP=$(mktemp -d "${TMPDIR:-/tmp}/release-check.XXXXXX")
 REPO=$TMP/repo
 RESULTS=$TMP/results.tsv
 rm -rf "$LOGS"; mkdir -p "$LOGS"; : > "$RESULTS"
+[ -z "$KEEP" ] || rm -rf "${REPORT%.md}.work" "${REPORT%.md}.changed"
 
 has_gate() { [[ ",$GATES," == *",$1,"* ]]; }
 row() { printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$@" >> "$RESULTS"; echo "[$4] $1 / $2 / $3  $6"; }
+keep_outputs() {
+  [ ! -d "$TMP/work" ] || mv "$TMP/work" "${REPORT%.md}.work"
+  [ -d "$REPO" ] || return 0
+  git -C "$REPO" -c core.quotePath=false status --porcelain -z --untracked-files=all \
+    | while IFS= read -r -d '' entry; do
+        file=${entry:3}
+        [ -f "$REPO/$file" ] || continue
+        mkdir -p "$(dirname "${REPORT%.md}.changed/$file")"
+        cp -p "$REPO/$file" "${REPORT%.md}.changed/$file"
+      done
+}
 cleanup() {
+  [ -z "$KEEP" ] || keep_outputs
   git -C "$SRC" worktree remove --force "$REPO" >/dev/null 2>&1
   rm -rf "$TMP"
 }
