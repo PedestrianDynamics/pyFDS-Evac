@@ -292,8 +292,8 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 
 - **Doorway deadlocks of exploring agents**
   ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359), planned for 0.5.0). Under `no_known_exit: explore`, and
-  `return` when it explores, two agents that meet head-on in a door can
-  stand there for the rest of the run. On `familiarity_test_no_journey`
+  `return` when it explores, two agents that meet head-on in a door, or
+  four jammed at a checkpoint, can stand there for the rest of the run. On `familiarity_test_no_journey`
   (clear air, 0.05 m grid) up to 4 agents are left in 5 of 150 runs of 5
   agents and in 5 of 60 runs of 20 agents
   ([Wayfinding › Limitations](/models/wayfinding.md#limitations)).

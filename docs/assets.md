@@ -47,7 +47,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   exit and none the other way; the four just inside the smoky arm turn back
   ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Reroute
   latency stays within the configured interval, and under a fixed seed the
-  direction of the switches repeats, but not their count. With anticipation,
+  direction of the switches repeats; their count need not. With anticipation,
   at least 17 of 20 agents take the clear exit at spawn and nobody reroutes
   ([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)). Note
   that S4 builds its own T-corridor via `harness.t_junction_scenario()` with a
