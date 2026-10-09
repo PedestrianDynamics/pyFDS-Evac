@@ -665,6 +665,10 @@ though the path to it may still be rewritten, which is recorded as
 &lt;td>Agent had no previous exit assignment&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>default_route&lt;/code>&lt;/td>
+&lt;td>Written once at spawn: the agent has no exit in its map and follows its default route, the journey or the nearest exit on foot (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610" target="_blank" rel="noopener">#610&lt;/a>)&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>smoke_reroute&lt;/code>&lt;/td>
 &lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>), or an idle agent is routed to its current exit&lt;/td>
 &lt;/tr>
@@ -1815,10 +1819,13 @@ hysteresis constant that would not also blind the model to real change. What is
 missing is &lt;em>commitment&lt;/em> — hysteresis in time or in progress along a leg — not a
 bigger threshold. Three attempts are already recorded as failures below.
 Pricing the first leg on the walk from the agent&amp;rsquo;s position
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451" target="_blank" rel="noopener">#451&lt;/a>) makes
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/451" target="_blank" rel="noopener">#451&lt;/a>) made
 the crossover more frequent near a smoky door: on the &lt;code>l_corridor_gate&lt;/code>
 reference deck (&lt;code>scripts/golden_rerouting.py&lt;/code>) switches went from 28 to 58
-and exit reversals from 16 to 40, 28 of them within 2 s.&lt;/li>
+and exit reversals from 16 to 40, 28 of them within 2 s. Since
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650" target="_blank" rel="noopener">#650&lt;/a>, which
+reads each sample at the agent&amp;rsquo;s arrival time, the deck gives 17 switches
+and 8 reversals, 5 within 2 s; the oscillation is reduced, not removed.&lt;/li>
 &lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a> — route
 choice is not perception-limited.&lt;/strong> See
 &lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>.
