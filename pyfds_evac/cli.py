@@ -169,6 +169,16 @@ def _apply_scenario_settings(scenario, args) -> None:
     )
 
 
+def _run_or_exit(scenario, run_kwargs):
+    """Run the scenario; report an over-full spawn area in one line (#692)."""
+    from pyfds_evac.core.simulation_init import SpawnCapacityError
+
+    try:
+        return run_scenario(scenario, **run_kwargs)
+    except SpawnCapacityError as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     if sys.argv[1:2] == ["init"]:
@@ -210,7 +220,7 @@ def main() -> int:
     print("Initialization finished.")
     print("Simulation started.")
 
-    result = run_scenario(scenario, **run_kwargs)
+    result = _run_or_exit(scenario, run_kwargs)
     # The temporary trajectory is unreachable once main returns: remove it
     # after the outputs are written, or when writing them fails (#524).
     try:

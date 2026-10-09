@@ -88,6 +88,21 @@ def test_placements_are_independent_across_consecutive_seeds(seed):
     assert _shared_area_positions(seed) == (room_0, room_1)
 
 
+def test_over_full_shared_area_names_every_distribution():
+    """Profiles sharing one polygon are counted together, so all are named (#692)."""
+    params = {"number": 300, "radius": 0.2}
+    spawns = [
+        {"area": box(0, 0, 4, 4), "params": params, "index": i, "dist_key": key}
+        for i, key in enumerate(KEYS[:2])
+    ]
+    with pytest.raises(
+        ValueError,
+        match=rf"^Distributions '{KEYS[0]}', '{KEYS[1]}': requested 600 agents "
+        r"but area can hold at most ~\d+\.",
+    ):
+        _seed_shared_areas(spawns, 1)
+
+
 def _record_streams(monkeypatch, config, walkable, seed):
     """Initialise *asset* and return the seed of every per-distribution stream."""
     streams = []

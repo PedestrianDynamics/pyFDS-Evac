@@ -266,10 +266,10 @@ Simulation finished in 80.11 s (3/3 evacuated).
 {{< details title="If the run stops with \"requested 20 agents but area can hold at most ~6\"" closed="true" >}}
 The spawn area of ISO-table21 is about 0.94 m × 1.81 m. With `"number": 20`
 the summary still reads `Agents: ~20`, but the run stops with exit status 1
-and a traceback ending in:
+and prints:
 
 ```text
-ValueError: Distribution 0: requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.
+pyfds-evac: error: Distribution 'jps-distributions_0': requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.
 ```
 
 The estimate is an upper bound. With `"number": 5` the traceback ends in:
