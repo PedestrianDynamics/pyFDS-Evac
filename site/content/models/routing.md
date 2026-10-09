@@ -241,6 +241,10 @@ the agents walk with. Each agent re-decides every
 | `RerouteConfig()` built in Python | `10.0` s |
 | `run.py --reroute-interval` | `1.0` s |
 
+An interval below 1 s acts as 1 s: `run_scenario` runs the reroute pass at
+most once per simulated second
+([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
+
 The other defaults that differ between `run_scenario()` and `run.py` are
 listed in [Python API and command line](/docs/usage.md#python-api-and-command-line).
 
