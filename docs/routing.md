@@ -354,6 +354,7 @@ on main at `81726ea`), within the spread between seeds. With every exit priced
 from the agent's position (#451; `2a94a8da`, the head of its branch, not on
 main) it scores 0.03 at 33.2 % and 0.024
 at 34.7 %, run for run the same as main at `22beb01c`: the deck has no fire.
+The sweep was not run again for 0.4.0.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*
