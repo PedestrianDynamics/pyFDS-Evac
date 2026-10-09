@@ -94,9 +94,6 @@ Messages of `pyfds-evac-tui`. How the terminal UI works is on
 
 ## Known pitfalls
 
-- **Tied routes and `PYTHONHASHSEED`.** Set `PYTHONHASHSEED` to a fixed value
-  for bit-identical reruns of discovery agents
-  ([why](limitations.md#reproducibility), #199).
 - **The progress line counts planned agents.** With flow spawning it can show
   more agents than the final summary
   ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).

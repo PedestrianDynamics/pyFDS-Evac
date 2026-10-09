@@ -514,8 +514,6 @@ Exit throughput throttling has no general test yet
   with no empirical source; the field surveys give only self-estimated
   visibility at turn-back
   ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
-- For discovery agents, the order of tied routes depends on
-  `PYTHONHASHSEED` ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)).
 - Anticipation assumes unimpeded speed and, by default, perfect foresight of
   the finished FDS record.
 

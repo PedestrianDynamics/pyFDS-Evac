@@ -286,12 +286,12 @@ incapacitated or rerouted) reproduce. Report aggregate outcomes over several see
 and do not compare single trajectories between runs. See the
 [verification page](https://pedestriandynamics.org/pyFDS-Evac/verification/).
 
-One known cause makes results depend on more than the seed:
-
-- **Python's hash seed.** For discovery agents, the order of tied routes can
-  depend on `PYTHONHASHSEED`
-  ([#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199)). Set
-  it to a fixed value for bit-identical reruns.
+Routes that tie exactly rank in a fixed order: for a discovery agent the
+alphabetically first exit wins, and a fully familiar agent keeps the order of
+the scenario. Before 0.4.0, a discovery agent's tie followed Python's hash
+seed (`PYTHONHASHSEED`;
+[#199](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/199), fixed by
+#643).
 
 Earlier runs in the same Python process do not change the results. Every
 per-agent draw is seeded from the seed and the agent's spawn order, not from
