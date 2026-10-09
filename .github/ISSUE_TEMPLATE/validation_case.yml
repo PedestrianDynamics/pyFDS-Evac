@@ -1,0 +1,43 @@
+name: Validation case
+description: Propose an experiment or standard test case to check pyFDS-Evac against.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: >
+        The paper, report, dataset or standard (for example an ISO 20414 or IMO test), with
+        a DOI or link and the table or figure that holds the measurements.
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup
+      description: Geometry, number of people, exits, and fire or smoke conditions, as far as the source gives them.
+    validations:
+      required: true
+  - type: textarea
+    id: quantities
+    attributes:
+      label: Measured quantities
+      description: What was measured (evacuation times, flows, exit choice, dose ...) and with what uncertainty.
+    validations:
+      required: true
+  - type: dropdown
+    id: data
+    attributes:
+      label: Data availability
+      options:
+        - Public dataset
+        - Published tables or figures only
+        - Available on request
+        - Not available
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Input files
+      description: An FDS or FDS+Evac deck for the case, if one exists. Attach it or link it.

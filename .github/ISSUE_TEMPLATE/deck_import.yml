@@ -1,0 +1,49 @@
+name: Deck import problem
+description: pyfds-evac init reads an FDS or FDS+Evac deck wrongly.
+labels: ["bug", "backend"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Attach the deck (`.fds`) so the import can be reproduced. If you cannot share it, a
+        reduced deck that shows the same problem is enough. FDS output is not needed.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The `Version:` line of `pip show pyfds-evac`, or the commit.
+    validations:
+      required: true
+  - type: textarea
+    id: deck
+    attributes:
+      label: Deck
+      description: Attach the `.fds` file, or paste a reduced deck. Say where the deck comes from.
+    validations:
+      required: true
+  - type: textarea
+    id: command
+    attributes:
+      label: Exact command
+      render: shell
+      placeholder: pyfds-evac init my_case.fds
+    validations:
+      required: true
+  - type: textarea
+    id: output
+    attributes:
+      label: init output
+      description: What `pyfds-evac init` printed, and its exit code. Attach `import_report.json` if it was written.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What is wrong
+      description: >
+        Which part of the scenario is wrong (floor, exits, doors, agents, times) and what it
+        should be, with the deck lines that define it. If the scenario runs but does not finish,
+        say how many agents stay inside.
+    validations:
+      required: true
