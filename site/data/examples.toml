@@ -635,10 +635,9 @@ C [m²s]. They are the page's headline. The runs behind the page were made at \
 4a7142f; a re-run at 449a755d, without --release, prints the same \
 values. FDS output from another FDS build or machine can move them \
 slightly."""
-results_commit = "449a755d"
+results_commit = "9c820e0f"
 results_python = "3.12.13"
 results_machine = "Apple M3 Pro, macOS"
-results_note = "Not re-checked for 0.4.0."
 
 [start-from-fds-deck]
 title = "Start from your own FDS case"
