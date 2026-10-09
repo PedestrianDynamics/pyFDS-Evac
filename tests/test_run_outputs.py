@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import ast
 import pathlib
+from types import SimpleNamespace
 
 import pytest
 
@@ -94,3 +95,48 @@ def test_import_check_ignores_other_modules():
 )
 def test_cli_reexports_the_core_objects(cli_name, core_name):
     assert getattr(cli, cli_name) is getattr(run_outputs, core_name)
+
+
+def test_route_history_count_is_labelled_as_rows(tmp_path):
+    """The printed count is the number of route-history rows, not switches."""
+    rows = [
+        {
+            "time_s": 0.0,
+            "agent_id": a,
+            "old_exit": "",
+            "new_exit": "B",
+            "old_cost": 0.0,
+            "new_cost": 0.0,
+            "reason": "default_route",
+        }
+        for a in (1, 2)
+    ] + [
+        {
+            "time_s": 5.0,
+            "agent_id": 1,
+            "old_exit": "",
+            "new_exit": "A",
+            "old_cost": 0.0,
+            "new_cost": 0.0,
+            "reason": "initial",
+        }
+    ]
+    result = SimpleNamespace(
+        smoke_history=None,
+        fed_history=None,
+        route_history=rows,
+        route_cost_history=None,
+        exit_history=None,
+        metrics={},
+        sqlite_file=None,
+    )
+    opts = SimpleNamespace(
+        output_smoke_history=None,
+        output_fed_history=None,
+        output_route_history=str(tmp_path / "routes.csv"),
+        output_route_cost_history=None,
+        output_sqlite=None,
+    )
+    lines: list[str] = []
+    run_outputs.apply_outputs(result, None, opts, log=lines.append)
+    assert lines == ["Route history rows: 3"]
