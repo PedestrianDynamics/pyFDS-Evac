@@ -680,7 +680,7 @@ def report_door_by_start(sh, dp, sw):
 
 
 def report_mechanism(data, ag, sw):
-    """The numbers of the 47 s and 145 s re-paths on the main fire (gate)."""
+    """The numbers of the two hall-wide re-paths on the main fire (gate)."""
     heading("Mechanism, main fire, gate")
     t1 = int(sw[(sw.fire == MAIN) & (sw.arm == "gate")].F_path_via_A.median())
     t2 = int(sw[(sw.fire == MAIN) & (sw.arm == "gate")].E_path_via_B.median())
