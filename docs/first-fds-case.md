@@ -172,9 +172,14 @@ Initialization finished.
 Simulation started.
 …
 Simulation incomplete: time limit reached after 300.00 s (93/150 evacuated, 57 remaining, 50 not spawned).
-Route switches: 161
+Route history rows: 161
 Agents that left by an exit not in their map: 82
 ```
+
+`Route history rows` counts the rows of `tj_fire_routes.csv`, not route
+switches: one `default_route` row per agent at spawn (150) and 11
+`initial` rows, the agents that choose exit A once they see its sign
+([Exit usage](#exit-usage)).
 
 The run reaches the 300 s time limit with agents still inside or still to
 enter, so it is incomplete and `run.py` exits with status 2
@@ -615,7 +620,7 @@ the readers the engine uses. It first asserts that the extinction, HCl and CO
 slices are at z = 2.0 m. The FED column adds `DefaultFedModel.sample_rate`
 × 1 s / 60 from t = 0.
 
-**Sign visibility.** fdsvismap 0.3.1, with the three signs of
+**Sign visibility.** fdsvismap 0.3.2, with the three signs of
 `config.json` (*c* = 3, their positions and directions), visibility between
 0 and 30 m, and one time point per second. Route A is spawn → junction →
 exit A with the junction and exit A signs; route B likewise. The engine
@@ -652,8 +657,8 @@ decisions can differ slightly from these maps.
 - Engineers Australia Society of Fire Safety (2014). *Practice note for
   tenability criteria in building fires*, version 2.0, §5.2 and Fig. 8,
   p. 15. Full reference on [ASET and RSET](/fundamentals/aset-rset.md).
-- fdsvismap, release 0.3.1
-  ([PyPI](https://pypi.org/project/fdsvismap/0.3.1/)).
+- fdsvismap, release 0.3.2
+  ([PyPI](https://pypi.org/project/fdsvismap/0.3.2/)).
 - ISO 13571:2012, §4.2.1, §4.5 (note), §4.6 f (p. 3), §5.2 (p. 4), §5.4,
   §6.2.1 (p. 7), clause 9 (pp. 11–12) and A.5.2 (p. 18), and ISO/TR
   16738:2009:
