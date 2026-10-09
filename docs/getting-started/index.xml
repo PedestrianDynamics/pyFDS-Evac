@@ -30,7 +30,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29be041c16545eebc346b8a81d48a13e6e0af029">&lt;code>29be041&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a21688cfe78d5649e155364e28d062cab451461d">&lt;code>a21688c&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>828ae8c3&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -49,7 +49,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">95c24474b17ef86157e5261ea77ba878d34f710cb176f8f8749375d835f94ac2&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">79bb7217d4db6a55bcfc4b9612e7007af3975c3abc3622633fee9d80bec60b36&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -469,6 +469,8 @@ class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hid
 &lt;ul>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: 150 agents in a 2 MW FDS fire,
 with figures for every step.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a>: check an FDS or
+FDS+Evac deck and turn it into a scenario.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/">Create a scenario&lt;/a>: your own geometry, exits
 and agents, drawn in JuPedSim Web or copied from an example.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>, before you
@@ -512,7 +514,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29be041c16545eebc346b8a81d48a13e6e0af029">&lt;code>29be041&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a21688cfe78d5649e155364e28d062cab451461d">&lt;code>a21688c&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -537,7 +539,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">85371cead936cb9c602b20ceb4f990e53cd7534e3a821d3599ec5f399a75756e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f19e6a160f7340635f3c21b2e353e7cd656f38824d1e7cd9725a8e189c5cf3f1&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -982,7 +984,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29be041c16545eebc346b8a81d48a13e6e0af029">&lt;code>29be041&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a21688cfe78d5649e155364e28d062cab451461d">&lt;code>a21688c&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 93/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.27&lt;/code>&lt;br>&lt;code>route changes: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 11}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>828ae8c3&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1003,7 +1005,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b3500ab5d143cbd9ef239276aab3451ba390e9bc428d4b130b5939a95bdce4fe&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a0aa25db6ec7c2091bd7665c2cb7949c76596eedf9831429440b4b99713075ea&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -1040,7 +1042,10 @@ title="Copy code"
 &lt;h2>2. The scenario&lt;span class="hx-absolute -hx-mt-20" id="2-the-scenario">&lt;/span>
 &lt;a href="#2-the-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The scenario is a folder, &lt;code>assets/t_junction&lt;/code>: a JuPedSim &lt;code>config.json&lt;/code> and
 the walkable area as &lt;code>geometry.wkt&lt;/code>. It sits beside the FDS deck that made its
-fire.&lt;/p>
+fire. &lt;code>pyfds-evac init assets/t_junction/t_junction.fds&lt;/code> derives the same
+150 m² walkable area from the deck; the rest of this scenario (journeys,
+signs, flow spawning) was written by hand
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a>).&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction --print-summary --export-only&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -1081,6 +1086,33 @@ The rules are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/model
 &lt;h2>3. The fire&lt;span class="hx-absolute -hx-mt-20" id="3-the-fire">&lt;/span>
 &lt;a href="#3-the-fire" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The fire comes from FDS. pyFDS-Evac does not run FDS; it reads the slice
 files that FDS wrote.&lt;/p>
+&lt;p>&lt;strong>Check the deck.&lt;/strong> Before you spend 20 minutes on FDS, check that the deck
+asks for the slices the run reads:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run pyfds-evac init assets/t_junction/t_junction.fds --check&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>From the unpacked zip, drop &lt;code>uv run&lt;/code>. The check writes nothing, prints one
+✓ line each for the extinction coefficient, CO, CO2, O2 and &lt;code>T_END&lt;/code>, and
+ends with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>✓ The deck has what a pyFDS-Evac run reads.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
 &lt;p>&lt;strong>Get the FDS output.&lt;/strong> The deck is &lt;code>assets/t_junction/t_junction.fds&lt;/code>: a
 2 MW PVC fire on a 2 m × 1 m burner, 300 s, four meshes. Either run it
 yourself:&lt;/p>
@@ -1426,7 +1458,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>From the unpacked zip, follow step 6 of its &lt;code>README.txt&lt;/code> instead.&lt;/p>
+&lt;p>From the unpacked zip, follow step 7 of its &lt;code>README.txt&lt;/code> instead.&lt;/p>
 &lt;p>It takes under a minute (about 8 s with the run files in place) and prints
 every number in this section. The report starts with:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -1845,6 +1877,8 @@ the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154.
 &lt;/details>
 &lt;h2>What next&lt;span class="hx-absolute -hx-mt-20" id="what-next">&lt;/span>
 &lt;a href="#what-next" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a>: check a deck and
+turn it into a scenario with &lt;code>pyfds-evac init&lt;/code>.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>, before you use
 your own FDS output.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>: FED from FDS slices, and how to spot
@@ -1862,6 +1896,730 @@ models are checked against.&lt;/li>
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">asphyxiant FED&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">visibility&lt;/a>.&lt;/li>
 &lt;/ul>
+&lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Start from your own FDS case</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/</guid><description>
+&lt;p>&lt;code>pyfds-evac init&lt;/code> reads an FDS deck and writes a scenario folder that
+&lt;code>pyfds-evac&lt;/code> runs. It works on a plain FDS deck and on an FDS+Evac deck. It
+also writes a report of everything it guessed, approximated or dropped.&lt;/p>
+&lt;p>On this page you check a deck before FDS runs, import a plain deck, add an
+exit the deck lacks, and import an FDS+Evac deck. Each step shows the command
+and its output.&lt;/p>
+&lt;p class="docs-files__jump">&lt;a href="#files-start-from-fds-deck">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (6 kB zip)&lt;/a>&lt;/p>
+&lt;h2>Before you start&lt;span class="hx-absolute -hx-mt-20" id="before-you-start">&lt;/span>
+&lt;a href="#before-you-start" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;aside class="docs-files" aria-labelledby="files-start-from-fds-deck">
+&lt;div class="docs-files__head">
+&lt;p class="docs-files__title" id="files-start-from-fds-deck">Download the files for this page&lt;/p>
+&lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-start-from-fds-deck.zip" download>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-start-from-fds-deck.zip &lt;span class="docs-files__size">(6 kB)&lt;/span>
+&lt;/a>
+&lt;/div>
+&lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
+&lt;dl class="docs-files__facts">
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a21688cfe78d5649e155364e28d062cab451461d">&lt;code>a21688c&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Licence&lt;/dt>&lt;dd>decks, scenario files and geometry &lt;a href="https://creativecommons.org/licenses/by/4.0/">CC-BY-4.0&lt;/a>; code MIT&lt;/dd>&lt;/div>
+&lt;/dl>
+&lt;details class="docs-files__contents">
+&lt;summary>What is inside (6 files)&lt;/summary>
+&lt;ul>
+&lt;li>&lt;code>README.txt&lt;/code>: this file&lt;/li>
+&lt;li>&lt;code>LICENSE&lt;/code>: MIT licence of the code&lt;/li>
+&lt;li>&lt;code>requirements.txt&lt;/code>: pinned Python packages, from uv.lock&lt;/li>
+&lt;li>&lt;code>assets/t_junction/t_junction.fds&lt;/code>: plain FDS deck with two OPEN vents (steps 1 to 3)&lt;/li>
+&lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
+&lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
+&lt;/ul>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">11b8c8b57a1346f05a3916fa7194f33d406bd6be23220c281c705fc400540373&lt;/code>&lt;/p>
+&lt;/details>
+&lt;/aside>
+&lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
+pyFDS-Evac at the commit the zip was built from
+(&lt;code>pip install -r requirements.txt&lt;/code>, see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/">Install&lt;/a>), and run
+every command from the unpacked zip. Steps 1 to 5 need no FDS; step 6
+runs it.&lt;/p>
+&lt;p>The workflow, for any deck:&lt;/p>
+&lt;ul>
+&lt;li>check the deck: &lt;code>pyfds-evac init DECK.fds --check&lt;/code>;&lt;/li>
+&lt;li>import it: &lt;code>pyfds-evac init DECK.fds&lt;/code>;&lt;/li>
+&lt;li>read the summary and the exit status, supply what the deck lacks
+(&lt;code>--agents&lt;/code>, &lt;code>--exit&lt;/code>, &lt;code>--walkable&lt;/code>), and import again;&lt;/li>
+&lt;li>run the scenario in clear air;&lt;/li>
+&lt;li>run FDS, then run the scenario on its output;&lt;/li>
+&lt;li>refine the scenario in JuPedSim Web or the terminal UI.&lt;/li>
+&lt;/ul>
+&lt;h2>1. Check the deck before you run FDS&lt;span class="hx-absolute -hx-mt-20" id="1-check-the-deck-before-you-run-fds">&lt;/span>
+&lt;a href="#1-check-the-deck-before-you-run-fds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An FDS run can take hours. The run of pyFDS-Evac then reads a few slices of
+its output. Check that the deck asks for them first:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init assets/t_junction/t_junction.fds --check&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ Extinction z 2 m (requested 1.6 m, line 73); smoke speed and sign legibility read it
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO z 2 m (requested 1.6 m, line 76)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO2 z 2 m (requested 1.6 m, line 77)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ O2 z 2 m (requested 1.6 m, line 78)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · Other gases HYDROGEN CHLORIDE z 2 m (FED adds the ones present)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · Temperature none; needed for --enable-heat-fed or --heat-regime layer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · Intensity none; needed for --heat-radiant-source integrated-intensity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ T_END 300 s; init writes max_simulation_time 300 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · DT_SLCF 1 s (&amp;amp;DUMP DT_SLCF)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>✓ The deck has what a pyFDS-Evac run reads.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The check reads the deck only and writes nothing. It looks for what the run
+reads by default: the extinction coefficient (smoke slows the agents and
+hides signs), CO, CO2 and O2 (the toxic dose, FED), and &lt;code>&amp;amp;TIME T_END&lt;/code>.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>✓&lt;/strong> the deck has it. &lt;strong>✗&lt;/strong> it is missing, with the &lt;code>&amp;amp;SLCF&lt;/code> line to add.&lt;/li>
+&lt;li>&lt;strong>·&lt;/strong> information, such as the heat slices, which only opt-in flags read.&lt;/li>
+&lt;li>&lt;strong>!&lt;/strong> a warning that does not fail the check.&lt;/li>
+&lt;/ul>
+&lt;p>The deck asks for its slices at z = 2.0 m. The run samples smoke at 1.6 m,
+the FDS+Evac head height, and takes the nearest horizontal slice, here 2.0 m.&lt;/p>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: Deck ready">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Deck ready&lt;/p>
+&lt;div class="docs-checkpoint__body">
+The last line reads &lt;code>✓ The deck has what a pyFDS-Evac run reads.&lt;/code> and
+&lt;code>echo $?&lt;/code> prints &lt;code>0&lt;/code>. A deck with a ✗ line gives &lt;code>3&lt;/code>, as in
+&lt;a href="#5-an-fdsevac-deck">step 5&lt;/a>; a deck that cannot be read, or a wrong
+argument, gives &lt;code>1&lt;/code>.
+&lt;/div>
+&lt;/aside>
+&lt;p>The full list of items is in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#check-a-deck-before-running-fds--pyfds-evac-init---check">Usage › init &amp;ndash;check&lt;/a>.&lt;/p>
+&lt;h2>2. Import a plain FDS deck&lt;span class="hx-absolute -hx-mt-20" id="2-import-a-plain-fds-deck">&lt;/span>
+&lt;a href="#2-import-a-plain-fds-deck" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>t_junction.fds&lt;/code> is the fire of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: a
+T-shaped corridor on four meshes of 30 m × 13 m, two &lt;code>&amp;amp;OBST&lt;/code> blocks, a burner
+and two &lt;code>SURF_ID='OPEN'&lt;/code> vents at the corridor ends.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init assets/t_junction/t_junction.fds&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>assets/t_junction/t_junction.fds → assets/t_junction/t_junction_scenario/ (FDS deck)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Walkable 150.0 m², 1 area Exits 2 of 2 (vent_2, vent_3)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Spawn 1 area (100 placeholder agents) Floor z = 0 m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ Extinction z 2 m (requested 1.6 m, line 73); smoke speed and sign legibility read it
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO z 2 m (requested 1.6 m, line 76)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO2 z 2 m (requested 1.6 m, line 77)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ O2 z 2 m (requested 1.6 m, line 78)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ T_END 300 s; init writes max_simulation_time 300 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>! 2 approximations (details: import_report.json)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> placeholder: 100 agents 1 record
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fire surface over 2.000 m2 of the walkable area: agents may spawn on it 1 vent
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Next:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 1. Run FDS:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> cd assets/t_junction &amp;amp;&amp;amp; mpiexec -n 4 fds t_junction.fds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 2. pyfds-evac --scenario assets/t_junction/t_junction_scenario --fds-dir assets/t_junction
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (clear air: drop --fds-dir)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 3. Refine in JuPedSim Web (https://app.jupedsim.org) or pyfds-evac-tui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>&lt;code>init&lt;/code> wrote three files into the folder &lt;code>t_junction_scenario&lt;/code> next to the
+deck:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>File&lt;/th>
+&lt;th>What it holds&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>config.json&lt;/code>&lt;/td>
+&lt;td>the JuPedSim scenario: exits, spawn area, agents, settings&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>geometry.wkt&lt;/code>&lt;/td>
+&lt;td>the walkable area&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>import_report.json&lt;/code>&lt;/td>
+&lt;td>every deck record that was mapped, approximated or dropped, with its line number&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>In &lt;code>import_report.json&lt;/code>, &lt;code>runnable&lt;/code> and &lt;code>not_runnable_reasons&lt;/code> repeat the
+verdict, &lt;code>items&lt;/code> with &lt;code>level: error&lt;/code> are the inputs that were dropped, and
+&lt;code>walkable.components_dropped&lt;/code> lists the pieces left out.&lt;/p>
+&lt;p>What it derived:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Walkable area, 150.0 m².&lt;/strong> The four mesh footprints (390 m²) minus the
+two &lt;code>&amp;amp;OBST&lt;/code> blocks (170 m² and 70 m²). This is the polygon of
+&lt;code>assets/t_junction/geometry.wkt&lt;/code>, drawn by hand for A crowd in a fire.&lt;/li>
+&lt;li>&lt;strong>Two exits&lt;/strong>, &lt;code>vent_2&lt;/code> and &lt;code>vent_3&lt;/code>, one per &lt;code>OPEN&lt;/code> vent. Each is a strip
+0.5 m deep on the room side of the vent, with an exit sign.&lt;/li>
+&lt;li>&lt;strong>One spawn area&lt;/strong> of 147.0 m²: the walkable area minus the two exit strips.&lt;/li>
+&lt;li>&lt;strong>100 agents&lt;/strong>, a placeholder. The deck has no occupant count.&lt;/li>
+&lt;li>&lt;strong>The burner&lt;/strong> lies inside the walkable area. &lt;code>init&lt;/code> reports it and does
+not cut it out: agents may spawn on it.&lt;/li>
+&lt;/ul>
+&lt;p>The FDS output check of step 1 runs again inside &lt;code>init&lt;/code>. Its result never
+changes the exit status of a plain &lt;code>init&lt;/code>: the scenario can run in clear air
+without FDS output.&lt;/p>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: Scenario written">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Scenario written&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;code>echo $?&lt;/code> prints &lt;code>0&lt;/code>: the scenario is written and can run. Open
+&lt;code>geometry.wkt&lt;/code> in JuPedSim Web or any WKT viewer and compare it with the
+plan. Every &lt;code>&amp;amp;OBST&lt;/code> between 0.1 and 1.8 m above the floor blocks walking.
+&lt;/div>
+&lt;/aside>
+&lt;p>Only the walkable area matches the scenario of A crowd in a fire. The
+imported scenario has no journey and no junction checkpoint, it places 100
+agents at once instead of letting them enter over time, every agent knows
+both exits, and every agent waits a constant 10 s before moving.&lt;/p>
+&lt;h2>3. Set the number of agents and run in clear air&lt;span class="hx-absolute -hx-mt-20" id="3-set-the-number-of-agents-and-run-in-clear-air">&lt;/span>
+&lt;a href="#3-set-the-number-of-agents-and-run-in-clear-air" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Replace the placeholder with &lt;code>--agents&lt;/code> and import again. &lt;code>init&lt;/code> overwrites
+a folder it wrote before, without asking.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init assets/t_junction/t_junction.fds --agents &lt;span style="color:#ae81ff">40&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario assets/t_junction/t_junction_scenario --seed &lt;span style="color:#ae81ff">1&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The summary now reads &lt;code>Spawn 1 area (40 agents)&lt;/code>. The run prints a
+warning that the scenario sets no pre-movement, so every agent waits the
+FDS+Evac default of 10 s, and ends with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 34.70 s (40/40 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: Clear-air run completed">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Clear-air run completed&lt;/p>
+&lt;div class="docs-checkpoint__body">
+All 40 agents leave, and &lt;code>echo $?&lt;/code> prints &lt;code>0&lt;/code>.
+&lt;/div>
+&lt;/aside>
+&lt;p>&lt;strong>Try it:&lt;/strong> import with &lt;code>--agents 400&lt;/code> and run again. The 400 agents queue
+at the two exits, and the run ends with
+&lt;code>Simulation finished in 121.45 s (400/400 evacuated).&lt;/code> With &lt;code>--agents 600&lt;/code>
+the import ends with exit status 3:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span> - spawn area spawn_1 (147.000 m2) holds about 584 agents of radius 0.2 m, but 600 are requested: pass --agents N with a smaller N, or enlarge the walkable area&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The capacity is the run&amp;rsquo;s own estimate of how many agents it can place in
+the area. The folder is still written, and the run refuses it. Import again
+with &lt;code>--agents 40&lt;/code> before you go on.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">The run stopped with exit status 2&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+Status 2 means the run reached &lt;code>max_simulation_time&lt;/code> with agents still
+inside (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#exit-status">Exit status&lt;/a>).
+&lt;code>init&lt;/code> copies the deck&amp;rsquo;s &lt;code>&amp;amp;TIME T_END&lt;/code> into &lt;code>max_simulation_time&lt;/code>, or 300 s
+without one, so a short &lt;code>T_END&lt;/code> can cut the run off. Raise
+&lt;code>simulationParams.max_simulation_time&lt;/code> in &lt;code>config.json&lt;/code>.
+&lt;/div>
+&lt;/details>
+&lt;h2>4. A deck with no exit&lt;span class="hx-absolute -hx-mt-20" id="4-a-deck-with-no-exit">&lt;/span>
+&lt;a href="#4-a-deck-with-no-exit" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>ISO-table21.fds&lt;/code> is the corridor of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/">Quickstart&lt;/a>, 100 m
+× 2 m, closed by four &lt;code>&amp;amp;OBST&lt;/code> walls. It has no &lt;code>OPEN&lt;/code> vent.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init assets/ISO-table21/ISO-table21.fds&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>assets/ISO-table21/ISO-table21.fds → assets/ISO-table21/ISO-table21_scenario/ (FDS deck)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Walkable 200.0 m², 1 area Exits 0 of 0
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Spawn 0 areas (0 agents) Floor z = 0 m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ Extinction z 2 m (requested 1.6 m, line 20); smoke speed and sign legibility read it
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO z 2 m (requested 1.6 m, line 21)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ CO2 z 2 m (requested 1.6 m, line 22)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ O2 z 2 m (requested 1.6 m, line 23)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ T_END 120 s; init writes max_simulation_time 120 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ! DT_SLCF 2 s (&amp;amp;DUMP DT_SLCF), coarser than the run&amp;#39;s smoke update interval of 1 s; fix: set &amp;amp;DUMP DT_SLCF=1 /
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>! 2 approximations (details: import_report.json)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> walkable component 0 (200.000 m2) has no exit: no agents placed there 1 record
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fire surface over 0.250 m2 of the walkable area: agents may spawn on it 1 vent
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>✗ Not runnable, so no run command:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - no exit found: add exits in JuPedSim Web or with --exit x0,y0,x1,y1[,ior]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> - no agents to place
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Fix these (or pass --walkable, --exit, --agents), then run pyfds-evac init again.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The exit status is 3: the folder is written, but the scenario cannot run.
+Without an exit there is no spawn area, so there are no agents either.&lt;/p>
+&lt;p>The &lt;code>!&lt;/code> line is a warning. FDS writes a slice frame every 2 s; the run
+updates the smoke every 1 s and takes the nearest frame, so the smoke the
+agents see changes only every 2 s. &lt;code>&amp;amp;DUMP DT_SLCF=1 /&lt;/code> in the deck removes
+the warning.&lt;/p>
+&lt;p>Add the exit as a line, &lt;code>--exit x0,y0,x1,y1&lt;/code>. The corridor ends at x = 50 m,
+between y = −1 and 1 m:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init assets/ISO-table21/ISO-table21.fds --exit 50,-1,50,1 --agents &lt;span style="color:#ae81ff">20&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario assets/ISO-table21/ISO-table21_scenario --seed &lt;span style="color:#ae81ff">1&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The import exits with 0, and the run ends with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 89.12 s (20/20 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>An exit added with &lt;code>--exit&lt;/code> gets no exit sign. The line must be parallel to
+x or y and lie on a wall or a mesh edge next to walkable space. Add a fifth
+number, the &lt;code>IOR&lt;/code> of FDS &lt;code>&amp;amp;EXIT&lt;/code>, when the room side is ambiguous.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">The exit line is in the wrong place&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>A line with no walkable space next to it stops the import with status 1,
+and nothing is written:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init assets/ISO-table21/ISO-table21.fds --exit 60,-1,60,1&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>…
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac init: error: --exit (60.0, -1.0, 60.0, 1.0): no walkable strip next to the line&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>x = 60 m lies outside the corridor. Read the extent of the meshes from
+&lt;code>&amp;amp;MESH XB&lt;/code> in the deck.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;h2>5. An FDS+Evac deck&lt;span class="hx-absolute -hx-mt-20" id="5-an-fdsevac-deck">&lt;/span>
+&lt;a href="#5-an-fdsevac-deck" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>evac_example1aA.fds&lt;/code> is an example of the FDS+Evac guide: one room, two
+exits, four groups of 25 agents. The deck is GPL-3.0 and not in the zip.
+Download it from
+&lt;a href="https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Examples/evac_example1aA.fds" target="_blank" rel="noopener">tkorhon1/FDS-Evac-Guide&lt;/a>
+(commit &lt;code>10eb1a44&lt;/code>) into the unpacked folder:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>curl -LO https://raw.githubusercontent.com/tkorhon1/FDS-Evac-Guide/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Examples/evac_example1aA.fds&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>A &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/#install-from-the-repository">source checkout&lt;/a> has the same
+file in the folder
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/tree/main/assets/fds_evac_guide/Examples" target="_blank" rel="noopener">assets/fds_evac_guide/Examples&lt;/a>.&lt;/p>
+&lt;h3>Check it&lt;span class="hx-absolute -hx-mt-20" id="check-it">&lt;/span>
+&lt;a href="#check-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init evac_example1aA.fds --check&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✗ Extinction none (requested z 1.6 m); the run has no smoke slowdown and no smoke on signs; fix: add &amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;EXTINCTION COEFFICIENT&amp;#39; /
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✗ CO none (requested z 1.6 m); fix: add &amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON MONOXIDE&amp;#39; /
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✗ CO2 none (requested z 1.6 m); fix: add &amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;CARBON DIOXIDE&amp;#39; /
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✗ O2 none (requested z 1.6 m); fix: add &amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;VOLUME FRACTION&amp;#39;, SPEC_ID=&amp;#39;OXYGEN&amp;#39; /
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · Other gases none (FED adds the ones present)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · Temperature vertical only; needed for --enable-heat-fed or --heat-regime layer
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · Intensity none; needed for --heat-radiant-source integrated-intensity
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✓ T_END 200 s; init writes max_simulation_time 200 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> · DT_SLCF 1 s (&amp;amp;DUMP DT_SLCF)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> FED needs CO, CO2 and O2 slices together; without all three the run has no toxic FED
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>✗ 4 items missing: the deck is not ready for a pyFDS-Evac run; fix it before running FDS.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The exit status is 3. The deck has no horizontal slice: a run on its output
+would have no smoke and no FED. Each ✗ line gives the &lt;code>&amp;amp;SLCF&lt;/code> line to add.&lt;/p>
+&lt;h3>Import it&lt;span class="hx-absolute -hx-mt-20" id="import-it">&lt;/span>
+&lt;a href="#import-it" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac init evac_example1aA.fds&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>evac_example1aA.fds → evac_example1aA_scenario/ (FDS+Evac deck)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Walkable 120.4 m², 1 area Exits 2 of 2 (LeftExit, RightExit)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> Groups 4 (100 agents) Floor z = 0 m
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> ✗ Extinction none (requested z 1.6 m); the run has no smoke slowdown and no smoke on signs; fix: add &amp;amp;SLCF PBZ=1.6, QUANTITY=&amp;#39;EXTINCTION COEFFICIENT&amp;#39; /
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> …
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> The scenario is still written; the ✗ lines say what the run will lack. Details: pyfds-evac init DECK --check
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>! 9 approximations (details: import_report.json)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> XYZ -&amp;gt; omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor) 2 exits
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> COUNT_ONLY counter: not an exit (FDS+Evac makes no opening for it) 1 exit
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> …
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s 4 groups
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> e.g. subtracted from &amp;amp;EVAC &amp;#39;HumanLeftDoorKnown&amp;#39; 1 hole
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> no known doors -&amp;gt; familiarity &amp;#39;discovery&amp;#39; 1 group
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Next:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 1. Run FDS on a fire-only copy of the deck: remove the evacuation namelists and meshes
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (&amp;amp;EVAC, &amp;amp;PERS, &amp;amp;EXIT, &amp;amp;DOOR, &amp;amp;ENTR, &amp;amp;EVHO, &amp;amp;CORR, &amp;amp;STRS, &amp;amp;EVSS, &amp;amp;EDEV and every &amp;amp;MESH with EVACUATION=.TRUE.), then
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fds &amp;lt;fire-only copy&amp;gt;.fds
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 2. pyfds-evac --scenario evac_example1aA_scenario --fds-dir &amp;lt;folder of the fire-only run&amp;gt;
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> (clear air: drop --fds-dir)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> 3. Refine in JuPedSim Web (https://app.jupedsim.org) or pyfds-evac-tui&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The exit status is 0, although the slice check failed: the slices never
+change the exit status of a plain &lt;code>init&lt;/code>, only that of &lt;code>init --check&lt;/code>.&lt;/p>
+&lt;p>An FDS+Evac deck carries its own exits and agents:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Floor and walkable area.&lt;/strong> The floor is the evacuation mesh
+&lt;code>MainEvacGrid&lt;/code>. The walkable area, 120.4 m², is its footprint minus seven
+&lt;code>&amp;amp;OBST&lt;/code> walls, with two &lt;code>&amp;amp;HOLE&lt;/code> doorways cut back into them. Without the
+&lt;code>&amp;amp;HOLE&lt;/code> cuts, RightExit would lie behind a wall.&lt;/li>
+&lt;li>&lt;strong>Exits.&lt;/strong> &lt;code>&amp;amp;EXIT&lt;/code> LeftExit and RightExit, each with a sign. RightCounter
+is a &lt;code>COUNT_ONLY&lt;/code> counter and is not an exit.&lt;/li>
+&lt;li>&lt;strong>Agents.&lt;/strong> Four &lt;code>&amp;amp;EVAC&lt;/code> groups, 100 agents. The &lt;code>&amp;amp;EVHO&lt;/code> area is cut out,
+which splits each group into two pieces. The &lt;code>&amp;amp;PERS&lt;/code> pre-movement becomes
+10 s plus a gamma-distributed reaction, mean 20 s. The group that knows no
+door gets familiarity &lt;code>discovery&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>--agents&lt;/code> has no effect here: the &lt;code>&amp;amp;EVAC&lt;/code> records set the numbers. Change
+them in a copy of the deck or in &lt;code>config.json&lt;/code>. The mapping of each
+namelist is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/">Coming from FDS+Evac&lt;/a>.&lt;/p>
+&lt;h3>Run it in clear air&lt;span class="hx-absolute -hx-mt-20" id="run-it-in-clear-air">&lt;/span>
+&lt;a href="#run-it-in-clear-air" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario evac_example1aA_scenario --seed &lt;span style="color:#ae81ff">1&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The run warns that a 0.2 m wall is not wider than the 0.25 m visibility
+cell, and ends with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 51.85 s (100/100 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>Before you couple it to a fire&lt;span class="hx-absolute -hx-mt-20" id="before-you-couple-it-to-a-fire">&lt;/span>
+&lt;a href="#before-you-couple-it-to-a-fire" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Three things the importer does not do:&lt;/p>
+&lt;ol>
+&lt;li>Make the fire-only copy by hand: remove the namelists listed under
+&lt;code>Next:&lt;/code> and every &lt;code>&amp;amp;MESH&lt;/code> with &lt;code>EVACUATION=.TRUE.&lt;/code>. pyFDS-Evac does not
+read FDS+Evac output.&lt;/li>
+&lt;li>Add the slices of the ✗ lines
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>).&lt;/li>
+&lt;li>Check &lt;code>recommendations.coverage&lt;/code> in &lt;code>import_report.json&lt;/code>. Here 17.04 m²
+of the walkable area and RightExit lie outside the fire mesh, where the
+run has no smoke data.&lt;/li>
+&lt;/ol>
+&lt;h2>6. Run FDS and couple&lt;span class="hx-absolute -hx-mt-20" id="6-run-fds-and-couple">&lt;/span>
+&lt;a href="#6-run-fds-and-couple" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>init&lt;/code> prints the FDS command under &lt;code>Next:&lt;/code>, with &lt;code>mpiexec -n N&lt;/code> for a deck
+of N meshes. For &lt;code>t_junction.fds&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>cd assets/t_junction &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> mpiexec -n &lt;span style="color:#ae81ff">4&lt;/span> fds t_junction.fds &lt;span style="color:#f92672">&amp;amp;&amp;amp;&lt;/span> cd ../..
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pyfds-evac --scenario assets/t_junction/t_junction_scenario --fds-dir assets/t_junction --seed &lt;span style="color:#ae81ff">1&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>FDS takes about 20 minutes on four processes; A crowd in a fire,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#3-the-fire">step 3&lt;/a>, shows what the output contains. With
+the 40 agents of step 3 the run ends with:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 43.47 s (40/40 evacuated).&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The smoke slows the agents: the same scenario took 34.70 s in clear air.
+The run samples the slices at 2.0 m, the nearest to the 1.6 m smoke slice
+height that &lt;code>init&lt;/code> wrote. If you import again after the FDS run, keep
+&lt;code>--agents 40&lt;/code>: &lt;code>init&lt;/code> then prints &lt;code>FDS output found: assets/t_junction/t_junction.smv; the run uses it&lt;/code> and leaves out the step
+that runs FDS. &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>
+lists what else can go wrong between the deck and the run.&lt;/p>
+&lt;h2>7. Refine the scenario&lt;span class="hx-absolute -hx-mt-20" id="7-refine-the-scenario">&lt;/span>
+&lt;a href="#7-refine-the-scenario" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>init&lt;/code> gives a starting point. Add journeys, checkpoints, signs, groups
+with their own speeds, and flow spawning in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/#draw-it-in-jupedsim-web">JuPedSim Web&lt;/a> or the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/terminal-ui/">terminal UI&lt;/a>. Neither has an entry to start from a deck
+yet.&lt;/p>
+&lt;h2>How the import works&lt;span class="hx-absolute -hx-mt-20" id="how-the-import-works">&lt;/span>
+&lt;a href="#how-the-import-works" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The rules in short; &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#scenario-from-an-fds-deck--pyfds-evac-init">Usage › pyfds-evac init&lt;/a>
+has every flag, constant, message and report field.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Deck type and floor&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>A deck is an FDS+Evac deck when it has a &lt;code>&amp;amp;MESH&lt;/code> with &lt;code>EVACUATION=.TRUE.&lt;/code>
+or any of &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;PERS&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code>, &lt;code>&amp;amp;ENTR&lt;/code>, &lt;code>&amp;amp;CORR&lt;/code>, &lt;code>&amp;amp;EVHO&lt;/code>,
+&lt;code>&amp;amp;EVSS&lt;/code>, &lt;code>&amp;amp;STRS&lt;/code>, &lt;code>&amp;amp;EDEV&lt;/code>; otherwise it is a plain deck.&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>FDS+Evac deck.&lt;/strong> The floor is a group of main evacuation meshes at one
+height, the lowest by default; &lt;code>--floor MESH_ID&lt;/code> picks another. Its level
+is the mesh mid-height minus &lt;code>EVAC_Z_OFFSET&lt;/code> (default 1.0 m). Obstructions
+count within the evacuation mesh&amp;rsquo;s own z range.&lt;/li>
+&lt;li>&lt;strong>Plain deck.&lt;/strong> The floor is the lowest mesh z (or &lt;code>--floor-z&lt;/code>).
+Obstructions count between 0.1 and 1.8 m above it (or &lt;code>--z-band LO HI&lt;/code>,
+absolute z).
+Only meshes that reach into this band form the floor; an upper storey is
+left out with a warning.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Walkable area&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>The union of the floor&amp;rsquo;s mesh footprints, minus the &lt;code>&amp;amp;OBST&lt;/code> records in the
+band, less their &lt;code>&amp;amp;HOLE&lt;/code> cuts. The edge of the meshes is a wall. &lt;code>MULT_ID&lt;/code>
+is expanded; &lt;code>&amp;amp;GEOM&lt;/code> is not represented; a deck with &lt;code>&amp;amp;CATF&lt;/code> is refused.&lt;/p>
+&lt;p>When the result falls apart into pieces, &lt;code>init&lt;/code> keeps the pieces that hold a
+spawn area; without spawn areas, those that hold an exit; with neither, all
+are kept. An &lt;code>--exit&lt;/code> always keeps its piece. &lt;code>import_report.json&lt;/code> lists the dropped pieces with area and
+reason. &lt;code>--walkable FILE.wkt&lt;/code> replaces all of this.&lt;/p>
+&lt;p>On an FDS+Evac deck the outer boundary of an evacuation mesh is solid by
+default (Korhonen, &lt;em>FDS+Evac Technical Reference and User&amp;rsquo;s Guide&lt;/em>, Evac
+2.6.0-draft, 2021, ch. 8, p. 73), and agents leave a main evacuation mesh
+only through its &lt;code>&amp;amp;EXIT&lt;/code>s and &lt;code>&amp;amp;DOOR&lt;/code>s; &lt;code>init&lt;/code> treats the boundary as a
+wall. On a plain deck, a mesh that reaches
+outdoors through an &lt;code>OPEN&lt;/code> vent makes that outdoor space walkable.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Exits&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;ul>
+&lt;li>&lt;strong>Plain deck:&lt;/strong> every &lt;code>SURF_ID='OPEN'&lt;/code> vent on the outside of the meshes
+that is vertical and meets the walking band. A vent wider than 5 m, or
+covering 80 % or more of a face, is flagged as a possible open boundary.&lt;/li>
+&lt;li>&lt;strong>FDS+Evac deck:&lt;/strong> the &lt;code>&amp;amp;EXIT&lt;/code> and &lt;code>&amp;amp;DOOR&lt;/code> lines of the floor. A &lt;code>&amp;amp;DOOR&lt;/code>
+that leads off the floor, to a &lt;code>&amp;amp;CORR&lt;/code> or &lt;code>&amp;amp;STRS&lt;/code>, becomes an exit.
+&lt;code>COUNT_ONLY&lt;/code> exits are counters and are not imported.&lt;/li>
+&lt;/ul>
+&lt;p>Every exit is a strip 0.5 m deep (&lt;code>--exit-depth&lt;/code>) on the room side of its
+line. An exit is never moved to reach the walkable area. One whose strip is
+empty, or narrower than 0.1 m, is dropped at error level, and &lt;code>init&lt;/code> exits
+with 3 although the scenario can run.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Agents and settings&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;ul>
+&lt;li>&lt;strong>Plain deck:&lt;/strong> each walkable piece with an exit, minus the exit strips,
+is a spawn area. &lt;code>--agents N&lt;/code> shares N agents between them by area;
+without it, 100 placeholder agents.&lt;/li>
+&lt;li>&lt;strong>FDS+Evac deck:&lt;/strong> &lt;code>&amp;amp;EVAC&lt;/code> gives the spawn areas and numbers, &lt;code>&amp;amp;PERS&lt;/code> the
+speed and pre-movement, &lt;code>&amp;amp;ENTR&lt;/code> flow spawning. A point or line &lt;code>&amp;amp;EVAC&lt;/code> is
+grown to a 0.6 m band.&lt;/li>
+&lt;li>&lt;strong>Capacity.&lt;/strong> A spawn area that asks for more agents than the run can
+place makes the scenario not runnable. The estimate is the run&amp;rsquo;s own
+packing rule; no occupant density limit is applied.&lt;/li>
+&lt;li>&lt;strong>Settings.&lt;/strong> &lt;code>max_simulation_time&lt;/code> is &lt;code>&amp;amp;TIME T_END&lt;/code>, or 300 s.
+&lt;code>smoke_slice_height&lt;/code> is the floor plus &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> (1.6 m by
+default, FDS+Evac guide §8.7). Keys the deck does not set fall to the
+scenario defaults, listed per group in &lt;code>import_report.json&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
+&lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>One floor per import.&lt;/strong> &lt;code>&amp;amp;CORR&lt;/code>, &lt;code>&amp;amp;STRS&lt;/code> and &lt;code>&amp;amp;EVSS&lt;/code> have no
+counterpart, and a &lt;code>&amp;amp;DOOR&lt;/code> to another floor becomes an exit, so
+&amp;ldquo;evacuated&amp;rdquo; on an imported upper floor means &amp;ldquo;reached the stair door&amp;rdquo;.
+Multi-floor FDS+Evac decks whose lowest floor has no &lt;code>&amp;amp;EVAC&lt;/code> end with
+&amp;ldquo;no agents to place&amp;rdquo;; when agents enter only through stairs, no floor
+has any (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Stairs.&lt;/strong> Every &lt;code>&amp;amp;OBST&lt;/code> in the band blocks, stair treads included;
+there is no speed reduction on inclines.&lt;/li>
+&lt;li>&lt;strong>Exits narrower than 0.1 m&lt;/strong> are dropped. Exits used only as flow-field
+targets, as in the guide&amp;rsquo;s &lt;code>CorridorFlowExample&lt;/code>, are not modelled.&lt;/li>
+&lt;li>&lt;strong>Exits stay where the deck puts them.&lt;/strong> FDS+Evac rounds an exit to its
+evacuation grid; &lt;code>import_report.json&lt;/code> gives that position
+(&lt;code>fds_evac_segment&lt;/code>) without applying it.&lt;/li>
+&lt;li>&lt;strong>The deck is read by pyFDS-Evac&amp;rsquo;s own parser.&lt;/strong> &lt;code>&amp;amp;GEOM&lt;/code> is not
+represented, &lt;code>&amp;amp;CATF&lt;/code> is refused, and obstructions with &lt;code>DEVC_ID&lt;/code> or
+&lt;code>CTRL_ID&lt;/code> are taken as written, without their time dependence.&lt;/li>
+&lt;li>&lt;strong>The check reads the deck.&lt;/strong> FDS moves a slice to the nearest grid plane,
+up to half a cell from the deck&amp;rsquo;s z; the check cannot see that.&lt;/li>
+&lt;li>&lt;strong>FDS+Evac output is not read.&lt;/strong> Run FDS on a fire-only copy, written by
+hand.&lt;/li>
+&lt;li>&lt;strong>Touching evacuation meshes are joined.&lt;/strong> FDS+Evac keeps their shared
+edge a wall; a warning names them.&lt;/li>
+&lt;li>&lt;strong>Fire surfaces&lt;/strong> in the walkable area are reported, not cut out. On a
+plain deck, rerun &lt;code>init&lt;/code> with &lt;code>--walkable FILE.wkt&lt;/code>, a walkable area
+without the surface, or cut a notch around it from the edge of the spawn
+polygon in &lt;code>config.json&lt;/code>. Do not add &lt;code>&amp;amp;EVHO&lt;/code>: it turns the deck into an
+FDS+Evac deck.&lt;/li>
+&lt;li>&lt;strong>No cross-check after the run.&lt;/strong> The derived area and the FDS domain are
+not compared after the run
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26" target="_blank" rel="noopener">#26&lt;/a>); exit
+signs are not placed at doorways automatically
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/33" target="_blank" rel="noopener">#33&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Exit status 0 means the scenario can run.&lt;/strong> Compare &lt;code>geometry.wkt&lt;/code> with
+the plan and read &lt;code>import_report.json&lt;/code> before you use the results.&lt;/li>
+&lt;/ul>
+&lt;h2>What next&lt;span class="hx-absolute -hx-mt-20" id="what-next">&lt;/span>
+&lt;a href="#what-next" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-cards hx-mt-4 hx-gap-4 hx-grid not-prose" style="--hextra-cards-grid-cols: 3;">
+&lt;a
+class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="../first-fds-case/"
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">A crowd in a fire&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">The T-junction with journeys, signs and flow spawning, coupled to its FDS fire.&lt;/div>&lt;/a>
+&lt;a
+class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="../coming-from-fds-evac/"
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Coming from FDS&amp;#43;Evac&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Where each FDS+Evac input goes, and what has no equivalent.&lt;/div>&lt;/a>
+&lt;a
+class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="../../using/fds-case-requirements/"
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">What your FDS case must provide&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">The slices, their height, and the failures to watch for.&lt;/div>&lt;/a>
+&lt;a
+class="hextra-card hx-group hx-flex hx-flex-col hx-justify-start hx-overflow-hidden hx-rounded-lg hx-border hx-border-gray-200 hx-text-current hx-no-underline dark:hx-shadow-none hover:hx-shadow-gray-100 dark:hover:hx-shadow-none hx-shadow-gray-100 active:hx-shadow-sm active:hx-shadow-gray-200 hx-transition-all hx-duration-200 hover:hx-border-gray-300 hx-bg-transparent hx-shadow-sm dark:hx-border-neutral-800 hover:hx-bg-slate-50 hover:hx-shadow-md dark:hover:hx-border-neutral-700 dark:hover:hx-bg-neutral-900"href="../../using/howto-create-scenario/"
+>&lt;span class="hextra-card-icon hx-flex hx-font-semibold hx-items-start hx-gap-2 hx-pt-4 hx-px-4 hx-text-gray-700 hover:hx-text-gray-900 dark:hx-text-neutral-200 dark:hover:hx-text-neutral-50">Create a scenario&lt;/span>&lt;div class="hextra-card-subtitle hx-line-clamp-3 hx-text-sm hx-font-normal hx-text-gray-500 dark:hx-text-gray-400 hx-px-4 hx-mb-4 hx-mt-2">Draw or edit a scenario in JuPedSim Web.&lt;/div>&lt;/a>
+&lt;/div>
 &lt;p>pyFDS-Evac is research software, provided without warranty.&lt;/p></description></item><item><title>Coming from FDS+Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/</guid><description>
 &lt;p>This page is for engineers who have an &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> input file and want to run the
 same case in pyFDS-Evac. It maps each FDS+Evac input to its place here, and it
@@ -1869,7 +2627,7 @@ lists what has no equivalent. FDS+Evac was removed from FDS in December 2021
 (FDS commit &lt;code>6a1d48aa5e&lt;/code>). The last FDS release that contains it is FDS 6.7.7
 (November 2021, Evac 2.6.1). The link above and every &lt;code>evac.f90:NNNN&lt;/code>
 reference in these docs point to FDS &lt;code>6.7.6-404-gc9da70d7a&lt;/code> (August 2021,
-Evac 2.6.0), the version the 2021 guide describes. Read
+Evac 2.6.0-draft), the version the 2021 guide describes. Read
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a> before you rely on a result.&lt;/p>
 &lt;p>pyFDS-Evac is research software, provided without warranty. It is not intended
 for regulatory or design use.&lt;/p>
@@ -1906,7 +2664,9 @@ equations.&lt;/p>
 &lt;p>&lt;code>pyfds-evac init deck.fds&lt;/code> does much of this for you. It
 keeps the evacuation namelists of one floor as exits and spawn areas, and
 writes a report of everything it approximated or dropped
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#scenario-from-an-fds-deck--pyfds-evac-init">Usage&lt;/a>).&lt;/p>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#scenario-from-an-fds-deck--pyfds-evac-init">Usage&lt;/a>).
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/#5-an-fdsevac-deck">Start from your own FDS case&lt;/a>
+walks through it on a guide deck.&lt;/p>
 &lt;p>In FDS+Evac the outer boundary of an evacuation mesh is solid by default
 (Korhonen, &lt;em>FDS+Evac Technical Reference and User&amp;rsquo;s Guide&lt;/em>, Evac 2.6.0-draft, 2021,
 ch. 8, p. 73). Agents leave a main evacuation mesh only through its EXITs and
@@ -2067,7 +2827,7 @@ or &lt;code>app.py&lt;/code> in a source checkout) runs uploaded scenarios. It d
 &lt;tr>
 &lt;td>&lt;code>&amp;amp;DOOR&lt;/code> (§8.12)&lt;/td>
 &lt;td>Moves agents to another part of the calculation&lt;/td>
-&lt;td>No door object. A doorway is a gap in the walkable polygon; an intermediate target is a &lt;code>checkpoints&lt;/code> entry in a journey.&lt;/td>
+&lt;td>No door object. A doorway is a gap in the walkable polygon; an intermediate target is a &lt;code>checkpoints&lt;/code> entry in a journey. &lt;code>pyfds-evac init&lt;/code> imports a &lt;code>&amp;amp;DOOR&lt;/code> that leads off the floor, to a &lt;code>&amp;amp;CORR&lt;/code> or &lt;code>&amp;amp;STRS&lt;/code>, as an exit.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>&amp;amp;ENTR&lt;/code> (§8.11)&lt;/td>
@@ -2320,10 +3080,11 @@ in the psychological sense.&lt;/li>
 &lt;/ul>
 &lt;/blockquote>&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
 &lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Korhonen, T. (2021). &lt;em>Fire Dynamics Simulator with Evacuation: FDS+Evac.
-Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0). VTT Technical
+Technical Reference and User&amp;rsquo;s Guide&lt;/em> (FDS 6.7.6, Evac 2.6.0-draft). VTT Technical
 Research Centre of Finland.&lt;/p></description></item><item><title>Install</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/install/</guid><description>
 &lt;p>Install pyFDS-Evac with pip, run one scenario to check the install, and know
-what else you need for your own FDS cases. To work on the code or run the
+what else you need for your own FDS cases
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a>). To work on the code or run the
 examples and scripts of the repository, use the
 &lt;a href="#install-from-the-repository">source checkout&lt;/a>.&lt;/p>
 &lt;h2>Requirements&lt;span class="hx-absolute -hx-mt-20" id="requirements">&lt;/span>

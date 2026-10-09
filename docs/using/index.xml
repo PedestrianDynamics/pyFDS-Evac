@@ -1,5 +1,7 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>pyFDS-Evac – Using pyFDS-Evac</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/</link><description>Recent content in Using pyFDS-Evac on pyFDS-Evac</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><atom:link href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/index.xml" rel="self" type="application/rss+xml"/><item><title>What your FDS case must provide</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/</guid><description>
-&lt;p>Read this before pointing &lt;code>--fds-dir&lt;/code> at a case for the first time.&lt;/p>
+&lt;p>Read this before pointing &lt;code>--fds-dir&lt;/code> at a case for the first time. To
+check a deck for these slices before FDS runs, and to build the scenario
+from it, see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>pyFDS-Evac never runs FDS.&lt;/strong> It reads the output of a finished FDS run.
 A deck written for some other purpose usually will not work as-is: it has to
 be told to dump the specific slices this tool samples.&lt;/p>
@@ -73,6 +75,20 @@ no fuel or oxidizer. &lt;code>EXTINCTION COEFFICIENT&lt;/code> (Sec. 22.10.5) is
 extinction coefficient K [1/m] that the smoke-speed model actually needs.
 If your deck has &lt;code>QUANTITY='EXTINCTION'&lt;/code> where you meant the extinction
 coefficient, fix it to &lt;code>QUANTITY='EXTINCTION COEFFICIENT'&lt;/code> and rerun FDS.&lt;/p>
+&lt;p>pyFDS-Evac reads &lt;code>&amp;amp;SLCF&lt;/code> output only. &lt;code>&amp;amp;DEVC&lt;/code> device output is listed by
+&lt;code>--inspect-fds&lt;/code> but not read by the run.&lt;/p>
+&lt;h2>Check the deck before you run FDS&lt;span class="hx-absolute -hx-mt-20" id="check-the-deck-before-you-run-fds">&lt;/span>
+&lt;a href="#check-the-deck-before-you-run-fds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>pyfds-evac init DECK.fds --check&lt;/code> reads the deck, before FDS runs, and
+writes nothing. It applies the run&amp;rsquo;s rule for choosing a slice and reports
+each slice of the table above, &lt;code>&amp;amp;TIME T_END&lt;/code>, &lt;code>DT_SLCF&lt;/code> and the &lt;code>&amp;amp;REAC&lt;/code>
+yields, with the &lt;code>&amp;amp;SLCF&lt;/code> line to add for each missing one. It exits with 0
+when the deck has the extinction coefficient, CO, CO2, O2 and &lt;code>T_END&lt;/code>, with
+3 when one is missing, and with 1 when the deck cannot be read, the floor
+cannot be chosen or an argument is wrong. The full
+list is in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#check-a-deck-before-running-fds--pyfds-evac-init---check">Usage › init &amp;ndash;check&lt;/a>,
+and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a> shows it on a
+ready deck and on one that fails.&lt;/p>
 &lt;h2>Declaring a slice is not enough&lt;span class="hx-absolute -hx-mt-20" id="declaring-a-slice-is-not-enough">&lt;/span>
 &lt;a href="#declaring-a-slice-is-not-enough" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The species also has to exist in the run. Under simple chemistry, &lt;code>OXYGEN&lt;/code>,
 &lt;code>NITROGEN&lt;/code>, &lt;code>WATER VAPOR&lt;/code> and &lt;code>CARBON DIOXIDE&lt;/code> are always present, but
@@ -210,7 +226,7 @@ title="Copy code"
 are listed on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>.&lt;/p></description></item><item><title>Create a scenario</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/</guid><description>
 &lt;p>A scenario is two files: &lt;code>config.json&lt;/code> (exits, spawn areas, agents, journeys,
 settings) and &lt;code>geometry.wkt&lt;/code> (the walkable area). They sit in a folder or a
-ZIP, and &lt;code>pyfds-evac --scenario&lt;/code> reads either. There are three ways to get
+ZIP, and &lt;code>pyfds-evac --scenario&lt;/code> reads either. There are four ways to get
 them:&lt;/p>
 &lt;table>
 &lt;thead>
@@ -227,6 +243,10 @@ them:&lt;/p>
 &lt;tr>
 &lt;td>&lt;a href="#start-from-an-example">Start from an example&lt;/a>&lt;/td>
 &lt;td>A small change to a working scenario is enough.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from the FDS deck&lt;/a>&lt;/td>
+&lt;td>You have an FDS or FDS+Evac deck: &lt;code>pyfds-evac init DECK.fds&lt;/code> writes the scenario folder.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;a href="#match-the-fds-deck">Match the FDS deck&lt;/a>&lt;/td>
@@ -710,16 +730,11 @@ after the import against the deck.&lt;/p>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;code>pyfds-evac init DECK.fds&lt;/code> derives the walkable area from the deck and
-writes it to &lt;code>geometry.wkt&lt;/code> (see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#scenario-from-an-fds-deck--pyfds-evac-init">Usage&lt;/a>);
-&lt;code>scripts/generate_walkable_from_fds.py&lt;/code> writes the same polygon alone. The
-rule: the union of the floor&amp;rsquo;s mesh footprints, whose edge is a wall, minus
-the &lt;code>&amp;amp;OBST&lt;/code> records in the walking band, less their &lt;code>&amp;amp;HOLE&lt;/code> cuts; the parts
-that hold a spawn area, or without one an exit, are kept. For the T-junction
-of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> it gives the hand-drawn 150 m²
-polygon. Check the result against the plan: every &lt;code>&amp;amp;OBST&lt;/code> in the band
-blocks, and a mesh that reaches outdoors through an opening adds that
-outdoor space. The consistency between deck and WKT is tracked in
+writes it to &lt;code>geometry.wkt&lt;/code>; &lt;code>scripts/generate_walkable_from_fds.py&lt;/code> writes
+the same polygon alone. The rule is in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#what-the-importer-derives">Usage › What the importer derives&lt;/a>, and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a> walks through it.
+The consistency between deck and WKT is tracked in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26" target="_blank" rel="noopener">#26&lt;/a>.
 &lt;/div>
 &lt;/details>
@@ -1910,7 +1925,9 @@ title="Copy code"
 &lt;/table>
 &lt;h2>Deriving inputs from an FDS deck&lt;span class="hx-absolute -hx-mt-20" id="deriving-inputs-from-an-fds-deck">&lt;/span>
 &lt;a href="#deriving-inputs-from-an-fds-deck" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Scenario from an FDS deck — &lt;code>pyfds-evac init&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="scenario-from-an-fds-deck--pyfds-evac-init">&lt;/span>
-&lt;a href="#scenario-from-an-fds-deck--pyfds-evac-init" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Writes &lt;code>config.json&lt;/code>, &lt;code>geometry.wkt&lt;/code> and &lt;code>import_report.json&lt;/code> into a
+&lt;a href="#scenario-from-an-fds-deck--pyfds-evac-init" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from your own FDS case&lt;/a> walks through this
+command on three decks.&lt;/p>
+&lt;p>Writes &lt;code>config.json&lt;/code>, &lt;code>geometry.wkt&lt;/code> and &lt;code>import_report.json&lt;/code> into a
 directory that &lt;code>pyfds-evac --scenario&lt;/code> runs as it is, by default
 &lt;code>&amp;lt;deck stem&amp;gt;_scenario/&lt;/code> next to the deck (&lt;code>-o DIR&lt;/code> picks another). It prints
 the summary and the next steps: run FDS when its output is missing (with
@@ -1978,11 +1995,296 @@ dropped, with its line number; &lt;code>-v&lt;/code>/&lt;code>--verbose&lt;/code
 &lt;/tr>
 &lt;tr>
 &lt;td>3&lt;/td>
-&lt;td>written, but not runnable (no exit or no agents; no &lt;code>Run:&lt;/code> line is printed), or runnable with an input dropped at error level, such as an exit too far from the walkable area&lt;/td>
+&lt;td>written, but not runnable (no exit, no agents or too many agents for a spawn area; the summary prints &lt;code>✗ Not runnable&lt;/code> and no run command), or runnable with an input dropped at error level, such as an exit too far from the walkable area&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>1&lt;/td>
 &lt;td>an error, including an argument error or a refused &lt;code>-o&lt;/code> folder; nothing written&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h4>What the importer derives&lt;span class="hx-absolute -hx-mt-20" id="what-the-importer-derives">&lt;/span>
+&lt;a href="#what-the-importer-derives" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;ul>
+&lt;li>&lt;strong>Deck type.&lt;/strong> An FDS+Evac deck has a &lt;code>&amp;amp;MESH&lt;/code> with &lt;code>EVACUATION=.TRUE.&lt;/code>
+or any of &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;PERS&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code>, &lt;code>&amp;amp;ENTR&lt;/code>, &lt;code>&amp;amp;CORR&lt;/code>, &lt;code>&amp;amp;EVHO&lt;/code>,
+&lt;code>&amp;amp;EVSS&lt;/code>, &lt;code>&amp;amp;STRS&lt;/code>, &lt;code>&amp;amp;EDEV&lt;/code>; any other deck is a plain FDS deck.&lt;/li>
+&lt;li>&lt;strong>Floor, FDS+Evac deck.&lt;/strong> The main evacuation meshes (&lt;code>EVAC_HUMANS=.TRUE.&lt;/code>,
+else all evacuation meshes), grouped by overlapping z. The lowest group is
+imported; &lt;code>--floor MESH_ID&lt;/code> picks another. The floor level is the mesh
+mid-height minus &lt;code>EVAC_Z_OFFSET&lt;/code> (default 1.0 m); the walking band is the
+evacuation mesh&amp;rsquo;s own z range. &lt;code>floors_not_imported&lt;/code> lists the other
+floors with their agent, &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code> and &lt;code>&amp;amp;DOOR&lt;/code> counts.&lt;/li>
+&lt;li>&lt;strong>Floor, plain deck.&lt;/strong> The floor level is the lowest mesh z (or
+&lt;code>--floor-z&lt;/code>); the walking band is 0.1 to 1.8 m above it (or &lt;code>--z-band&lt;/code>,
+absolute). Only meshes whose z range overlaps the band form the floor; a
+mesh wholly above or below it is left out with a warning. A horizontal
+&lt;code>&amp;amp;OBST&lt;/code> over half the footprint, more than 2 m above the floor, is flagged
+as a possible upper floor.&lt;/li>
+&lt;li>&lt;strong>Walkable area.&lt;/strong> The union of the floor&amp;rsquo;s mesh footprints (FDS+Evac:
+the main evacuation meshes only), whose edge is a wall, minus the &lt;code>&amp;amp;OBST&lt;/code>
+footprints in the band, less the &lt;code>&amp;amp;HOLE&lt;/code> footprints in the band. &lt;code>MULT_ID&lt;/code>
+is expanded; &lt;code>MESH_ID&lt;/code> is honoured; on an FDS+Evac floor, records with
+&lt;code>EVACUATION=.FALSE.&lt;/code> are skipped. &lt;code>&amp;amp;OBST&lt;/code> and &lt;code>&amp;amp;HOLE&lt;/code> with &lt;code>DEVC_ID&lt;/code> or
+&lt;code>CTRL_ID&lt;/code> are taken as written. &lt;code>&amp;amp;GEOM&lt;/code> is not represented; &lt;code>&amp;amp;CATF&lt;/code>
+stops the import. Two touching evacuation meshes of one floor are joined,
+with a warning (FDS+Evac keeps their shared edge a wall).&lt;/li>
+&lt;li>&lt;strong>Kept parts.&lt;/strong> The parts of the walkable area that hold a spawn area are
+kept; with no spawn area, those that hold an exit; a part with an
+&lt;code>--exit&lt;/code> is always kept; with neither, all parts are kept. Exits and spawn
+areas are then rebuilt on the kept polygon, so an &lt;code>&amp;amp;EVAC&lt;/code> rectangle can
+split into numbered pieces. &lt;code>--walkable FILE.wkt&lt;/code> is taken as given.&lt;/li>
+&lt;li>&lt;strong>Exits, plain deck.&lt;/strong> Every &lt;code>SURF_ID='OPEN'&lt;/code> vent (&lt;code>XB&lt;/code>, or an &lt;code>MB&lt;/code>/&lt;code>DB&lt;/code>
+face) on the outside of the mesh union that is vertical and meets the
+walking band; each gets an omni-directional sign (c = 3) at its centre. An
+&lt;code>--exit&lt;/code> gets no sign. A vent wider than 5 m, or covering 80 % or more of
+its face, is flagged as a possible open boundary.&lt;/li>
+&lt;li>&lt;strong>Exits, FDS+Evac deck.&lt;/strong> The &lt;code>&amp;amp;EXIT&lt;/code> and &lt;code>&amp;amp;DOOR&lt;/code> lines of the floor. A
+&lt;code>&amp;amp;DOOR&lt;/code> that leads off the floor (to a &lt;code>&amp;amp;CORR&lt;/code> or &lt;code>&amp;amp;STRS&lt;/code>) is imported as
+an exit. A &lt;code>COUNT_ONLY&lt;/code> &lt;code>&amp;amp;EXIT&lt;/code> is a counter, not an exit. The line stays
+where the deck puts it; &lt;code>exits[].fds_evac_segment&lt;/code> reports where FDS+Evac
+would round it to its evacuation grid, without applying it.&lt;/li>
+&lt;li>&lt;strong>Exit strip.&lt;/strong> Every exit is a strip &lt;code>--exit-depth&lt;/code> deep on the room
+side of its line, clipped to the walkable area. An exit is never moved; it
+is dropped, at error level, when its strip is empty or narrower than
+0.1 m.&lt;/li>
+&lt;li>&lt;strong>Agents, plain deck.&lt;/strong> Each kept part with an exit, minus the exit
+strips, is a spawn area; &lt;code>--agents N&lt;/code> (or the placeholder of 100) is
+shared between them by area. A part without an exit gets no agents.&lt;/li>
+&lt;li>&lt;strong>Agents, FDS+Evac deck.&lt;/strong> &lt;code>&amp;amp;EVAC&lt;/code> gives the spawn areas with
+&lt;code>NUMBER_INITIAL_PERSONS&lt;/code>, &lt;code>&amp;amp;PERS&lt;/code> the speed and pre-movement
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/">Coming from FDS+Evac&lt;/a>); &lt;code>--agents&lt;/code> is ignored.
+&lt;code>&amp;amp;EVHO&lt;/code> is cut out of the spawn areas. &lt;code>&amp;amp;ENTR&lt;/code> becomes flow spawning; an
+entry with &lt;code>MAX_FLOW = 0&lt;/code> creates no agents. A point or line &lt;code>&amp;amp;EVAC&lt;/code> is
+grown to a 0.6 m band across each zero-width axis, clipped to the walkable
+area (&lt;code>distributions[].zero_width_expansion&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Capacity.&lt;/strong> A spawn area (groups sharing one polygon counted together,
+flow spawning left out) that asks for more agents than
+N&lt;sub>max&lt;/sub> = max(1, ⌊0.5 · A / (π r²)⌋) makes the scenario not
+runnable, with A the area and r the largest agent radius, at least 0.1 m.
+The run applies the same estimate before it starts.&lt;/li>
+&lt;li>&lt;strong>Settings.&lt;/strong> &lt;code>max_simulation_time&lt;/code> is &lt;code>&amp;amp;TIME T_END&lt;/code>, or 300 s.
+&lt;code>smoke_slice_height&lt;/code> is the floor level plus &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> (the last
+&lt;code>&amp;amp;PERS&lt;/code> value, else 1.6 m). Keys the deck does not set fall to the
+scenario defaults, listed per group in &lt;code>distributions[].loader_defaults&lt;/code>.&lt;/li>
+&lt;li>Fire surfaces (&lt;code>HRRPUA&lt;/code>, &lt;code>MLRPUA&lt;/code>) inside the walkable area are reported,
+not cut out.&lt;/li>
+&lt;/ul>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Constant&lt;/th>
+&lt;th>Value&lt;/th>
+&lt;th>Source&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Walking band, plain deck&lt;/td>
+&lt;td>0.1–1.8 m above the floor&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Widening of a zero-thickness &lt;code>&amp;amp;OBST&lt;/code> or &lt;code>&amp;amp;HOLE&lt;/code>&lt;/td>
+&lt;td>0.05 m each side&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Free parts dropped and holes filled up to&lt;/td>
+&lt;td>0.25 m²&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Exit strip depth (&lt;code>--exit-depth&lt;/code>)&lt;/td>
+&lt;td>0.5 m&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Minimum exit width&lt;/td>
+&lt;td>0.1 m&lt;/td>
+&lt;td>assumption; below one agent diameter (0.4 m)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Band for a point or line &lt;code>&amp;amp;EVAC&lt;/code>&lt;/td>
+&lt;td>0.6 m&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Placeholder agents, plain deck&lt;/td>
+&lt;td>100&lt;/td>
+&lt;td>flagged placeholder&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Time limit without &lt;code>T_END&lt;/code>&lt;/td>
+&lt;td>300 s&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Capacity packing&lt;/td>
+&lt;td>0.5, r ≥ 0.1 m&lt;/td>
+&lt;td>the run&amp;rsquo;s own estimate&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Spawn density flag&lt;/td>
+&lt;td>4 /m²&lt;/td>
+&lt;td>flag threshold, unsourced&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Wide-opening flag&lt;/td>
+&lt;td>&amp;gt; 5 m, or ≥ 80 % of the face&lt;/td>
+&lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>HUMAN_SMOKE_HEIGHT&lt;/code> default&lt;/td>
+&lt;td>1.6 m&lt;/td>
+&lt;td>FDS+Evac guide §8.7&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h4>Messages and what to do&lt;span class="hx-absolute -hx-mt-20" id="messages-and-what-to-do">&lt;/span>
+&lt;a href="#messages-and-what-to-do" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Message (start)&lt;/th>
+&lt;th>Status&lt;/th>
+&lt;th>Cause&lt;/th>
+&lt;th>Fix&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>no exit found: add exits in JuPedSim Web or with --exit …&lt;/code>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>A plain deck without an outside &lt;code>OPEN&lt;/code> vent in the band.&lt;/td>
+&lt;td>&lt;code>--exit x0,y0,x1,y1[,ior]&lt;/code>; give &lt;code>ior&lt;/code> when the room side is ambiguous.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>no exit found (every &amp;amp;EXIT is narrower than the minimum exit width 0.1 m: …&lt;/code>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>The deck uses its exits only as flow-field targets, which pyFDS-Evac does not model.&lt;/td>
+&lt;td>None; draw real exits with &lt;code>--exit&lt;/code> only if the building has them.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>no agents to place&lt;/code>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>A plain deck with no exit, or an FDS+Evac floor with no &lt;code>&amp;amp;EVAC&lt;/code>.&lt;/td>
+&lt;td>Plain deck: add exits, &lt;code>--agents&lt;/code>. FDS+Evac deck: read &lt;code>floors_not_imported[].agents&lt;/code>, and use &lt;code>--floor MESH_ID&lt;/code> only when another floor has agents. When every floor has 0, the agents enter only through &lt;code>&amp;amp;ENTR&lt;/code> fed by stairs or doors, and the deck is out of scope.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>spawn area X (A m2) holds about N agents of radius r m, but M are requested: …&lt;/code>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>Capacity, see above.&lt;/td>
+&lt;td>Plain deck: a smaller &lt;code>--agents&lt;/code> or a larger area. FDS+Evac deck: a lower &lt;code>NUMBER_INITIAL_PERSONS&lt;/code> or a larger &lt;code>&amp;amp;EVAC&lt;/code> area, in a copy of the deck.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Error item &lt;code>exit dropped: its strip on the room side is empty; the line is D m from the walkable area&lt;/code>&lt;/td>
+&lt;td>3, runnable&lt;/td>
+&lt;td>The exit is not next to the kept walkable area.&lt;/td>
+&lt;td>Check the floor and the band (&lt;code>--z-band&lt;/code>), or pass &lt;code>--exit&lt;/code>. The run works without that exit.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Error item &lt;code>exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m&lt;/code>&lt;/td>
+&lt;td>3, runnable&lt;/td>
+&lt;td>A slot narrower than 0.1 m.&lt;/td>
+&lt;td>Widen the exit in a copy of the deck, or pass &lt;code>--exit&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>… holds a config.json that the importer did not write …&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>&lt;code>-o&lt;/code> points at an authored scenario.&lt;/td>
+&lt;td>Another &lt;code>-o&lt;/code>, or &lt;code>--force&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>no &amp;amp;MESH reaches the walking band z = LO..HI m; …&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>Wrong &lt;code>--floor-z&lt;/code> or &lt;code>--z-band&lt;/code>.&lt;/td>
+&lt;td>As the message says.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--floor 'X' names no evacuation mesh; known: […]&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>A wrong &lt;code>--floor&lt;/code>.&lt;/td>
+&lt;td>Use a listed id.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--exit (…): no walkable strip next to the line&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>The &lt;code>--exit&lt;/code> line is not on the walkable boundary.&lt;/td>
+&lt;td>Put the line on a wall or a mesh edge next to walkable space.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>argument --exit: need x0,y0,x1,y1[,ior]&lt;/code>, &lt;code>the line must be parallel to x or y&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>A malformed &lt;code>--exit&lt;/code>.&lt;/td>
+&lt;td>Four or five numbers, the line parallel to x or y.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>A parser error, such as &lt;code>&amp;amp;RADI (line 21): no closing '/' before &amp;amp;DUMP on line 23&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>Deck syntax; also &lt;code>&amp;amp;CATF&lt;/code>, an unknown &lt;code>MULT_ID&lt;/code>, a malformed &lt;code>XB&lt;/code>.&lt;/td>
+&lt;td>Fix the deck.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>the walkable area (…) is empty or invalid&lt;/code>, &lt;code>the deck has no &amp;amp;MESH with XB&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>A degenerate deck or WKT.&lt;/td>
+&lt;td>Check the deck, or pass &lt;code>--walkable&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>cannot read the walkable WKT: …&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>A bad &lt;code>--walkable&lt;/code> file.&lt;/td>
+&lt;td>Fix the WKT.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h4>&lt;code>import_report.json&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="import_reportjson">&lt;/span>
+&lt;a href="#import_reportjson" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>What it holds&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>deck&lt;/code>, &lt;code>chid&lt;/code>, &lt;code>kind&lt;/code>&lt;/td>
+&lt;td>the deck path, its &lt;code>CHID&lt;/code>, and &lt;code>legacy&lt;/code> (FDS+Evac) or &lt;code>modern&lt;/code> (plain FDS)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>floor&lt;/code>&lt;/td>
+&lt;td>&lt;code>id&lt;/code>, &lt;code>meshes&lt;/code>, &lt;code>z_floor&lt;/code> and &lt;code>z_band&lt;/code> of the imported floor&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>floors_not_imported&lt;/code>&lt;/td>
+&lt;td>the other floors of an FDS+Evac deck, with their agent, &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code> and &lt;code>&amp;amp;DOOR&lt;/code> counts&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>walkable&lt;/code>&lt;/td>
+&lt;td>&lt;code>source&lt;/code> (&lt;code>derived:deck&lt;/code>, &lt;code>derived:evac-mesh&lt;/code> or &lt;code>user&lt;/code>), &lt;code>area_m2&lt;/code>, &lt;code>components&lt;/code>, &lt;code>holes&lt;/code>, &lt;code>kept_by&lt;/code> (&lt;code>single&lt;/code>, &lt;code>spawn&lt;/code>, &lt;code>exit&lt;/code> or &lt;code>all&lt;/code>), &lt;code>components_dropped&lt;/code> (area, bounds, reason), &lt;code>diagnostics&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>counts&lt;/code>&lt;/td>
+&lt;td>per namelist, the number of records supported (S), approximated (A), dropped (D) and cosmetic (C)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>items&lt;/code>&lt;/td>
+&lt;td>one entry per record: &lt;code>status&lt;/code> (S, A, D, C), &lt;code>level&lt;/code> (info, warning, error), &lt;code>group&lt;/code>, &lt;code>id&lt;/code>, deck &lt;code>line&lt;/code>, &lt;code>message&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exits&lt;/code>&lt;/td>
+&lt;td>per exit: &lt;code>id&lt;/code>, &lt;code>source&lt;/code> (&lt;code>X1&lt;/code> vent, &lt;code>X3&lt;/code> &lt;code>--exit&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code>), &lt;code>segment&lt;/code>, &lt;code>strip_area_m2&lt;/code>, &lt;code>sign&lt;/code>, &lt;code>fds_evac_segment&lt;/code>, and &lt;code>open_from_s&lt;/code>, &lt;code>closed_after_s&lt;/code>, &lt;code>role&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>distributions&lt;/code>&lt;/td>
+&lt;td>per spawn area: &lt;code>number&lt;/code>, &lt;code>area_m2&lt;/code>, &lt;code>density_per_m2&lt;/code>, &lt;code>parameters_written&lt;/code>, &lt;code>loader_defaults&lt;/code>, &lt;code>placeholder&lt;/code>, &lt;code>zero_width_expansion&lt;/code>, &lt;code>source&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>recommendations&lt;/code>&lt;/td>
+&lt;td>&lt;code>smoke_slice_height&lt;/code>; &lt;code>slices&lt;/code> (one entry per item of the check: &lt;code>status&lt;/code>, &lt;code>required&lt;/code>, &lt;code>z_requested&lt;/code>, &lt;code>nearest_pbz&lt;/code>, &lt;code>orientation_found&lt;/code>, &lt;code>ok&lt;/code>, &lt;code>fix&lt;/code>, &lt;code>message&lt;/code>); &lt;code>slice_check_ok&lt;/code>; &lt;code>coverage&lt;/code> (walkable area and exits outside the fire meshes); &lt;code>fds_meshes&lt;/code>, &lt;code>fds_output_found&lt;/code>, &lt;code>fds_dir&lt;/code>, &lt;code>run_command&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>runnable&lt;/code>, &lt;code>not_runnable_reasons&lt;/code>&lt;/td>
+&lt;td>whether &lt;code>pyfds-evac --scenario&lt;/code> can run the folder, and why not&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -6447,6 +6749,51 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;p>The &lt;code>cost_model&lt;/code> and alias errors appear when the run starts, after the FDS
 output is read. &lt;code>--show-config&lt;/code> prints &lt;code>Errors: none&lt;/code> for such a deck
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/571" target="_blank" rel="noopener">#571&lt;/a>).&lt;/p>
+&lt;h3>&lt;code>pyfds-evac init&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="pyfds-evac-init">&lt;/span>
+&lt;a href="#pyfds-evac-init" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Command&lt;/th>
+&lt;th>Status&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac init DECK.fds&lt;/code>&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>the scenario is written and runnable&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>written, but not runnable (no exit, no agents, too many agents for a spawn area), or runnable with an input dropped at error level&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>nothing written: the deck cannot be read, an argument is wrong, or &lt;code>-o&lt;/code> holds a scenario the importer did not write&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac init DECK.fds --check&lt;/code>&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>the deck has the extinction-coefficient, CO, CO2 and O2 slices and &lt;code>&amp;amp;TIME T_END&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;/td>
+&lt;td>3&lt;/td>
+&lt;td>at least one of them is missing (a ✗ line names it and gives the &lt;code>&amp;amp;SLCF&lt;/code> line to add)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>the deck cannot be read, the floor cannot be chosen, or an argument is wrong&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>A plain &lt;code>init&lt;/code> prints the same slice check, but its exit status ignores it.
+Each message, its cause and its fix are in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#messages-and-what-to-do">Usage › Messages and what to do&lt;/a>.&lt;/p>
 &lt;h2>Warnings that change the result&lt;span class="hx-absolute -hx-mt-20" id="warnings-that-change-the-result">&lt;/span>
 &lt;a href="#warnings-that-change-the-result" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -6615,7 +6962,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29be041c16545eebc346b8a81d48a13e6e0af029">&lt;code>29be041&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a21688cfe78d5649e155364e28d062cab451461d">&lt;code>a21688c&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>449a755d&lt;/code>&lt;/span>&lt;br>&lt;span class="docs-files__note">Not re-checked for 0.4.0.&lt;/span>&lt;/dd>&lt;/div>
@@ -6639,7 +6986,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9c7538a3549abddde69a6ef22d0ef3494f96c7a5ea47e927751f35ab8769f611&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">639fe9935c3029677bc4c6c3f92e035ff4ba92c71555c5e8ac4a469d900728f0&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
