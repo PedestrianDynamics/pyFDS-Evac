@@ -815,8 +815,8 @@ class RouteCostConfig:
     # The route the agent will accept, as an optical depth: tau = K_ave * L,
     # the soot column it walks through. Refused above this.
     #
-    # 6 is FDS+Evac's own threshold, not an analogy: evac.f90:16458 computes
-    # L2_tmp = d * 0.5 / (3/K_ave) = K_ave * d / 6, and :16463 refuses the door
+    # 6 is FDS+Evac's own threshold, not an analogy: evac.f90:16794 computes
+    # L2_tmp = d * 0.5 / (3/K_ave) = K_ave * d / 6, and :16799 refuses the door
     # at L2_tmp >= 1, which is tau >= 6. Writing it as an optical depth is what
     # made that visible.
     #
@@ -825,19 +825,19 @@ class RouteCostConfig:
     # sight), the scope (there it is a last-resort branch over known-or-visible
     # doors), and the memory (there a strike-out lasts one call; the only
     # lasting mark is on a lone agent's previous target once K_ave >= 0.3 /m,
-    # evac.f90:16292-16301, and it acts weakly -- see docs/model-comparison.md).
+    # evac.f90:16628-16637, and it acts weakly -- see docs/model-comparison.md).
     # Citable as a threshold, uncalibrated as an exposure budget --
     # docs/gate-model-review-notes.md.
     tau_max: float = 6.0
     # How far apart two routes' optical depths must be before the difference
     # overrides the exit an agent already walks to. Ours: the reference applies
-    # no hysteresis to this veto (evac.f90:16463 tests the raw value).
+    # no hysteresis to this veto (evac.f90:16799 tests the raw value).
     tau_deadband: float = 0.1
     current_exit_discount: float = 0.9
     # A rival exit must come in under tau_max * this before an agent switches
     # onto it, so a route sitting near the budget does not toggle. Ours: the
-    # reference applies no hysteresis to this veto (evac.f90:16463 tests the
-    # raw value); its 0.1 hysteresis is on the tier-1 test at :16255.
+    # reference applies no hysteresis to this veto (evac.f90:16799 tests the
+    # raw value); its 0.1 hysteresis is on the tier-1 test at :16591.
     tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
     # rather than the smoke standing there while it decides.
@@ -2178,7 +2178,7 @@ class GatePolicy(_AnchoredPolicy):
         # The exit the agent already walks to has its optical depth discounted,
         # so it keeps its place unless a rival is clearly cleaner rather than
         # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
-        # (evac.f90:1507), applied at :16467 inside the IF that ranks doors --
+        # (evac.f90:1572), applied at :16803 inside the IF that ranks doors --
         # the same position, not a separate veto afterwards. Hysteresis belongs
         # in the ordering: bolted on after it, the ordering and the veto
         # disagree and the agent oscillates between what each of them prefers.
