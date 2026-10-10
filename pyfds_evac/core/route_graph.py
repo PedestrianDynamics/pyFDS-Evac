@@ -1670,9 +1670,12 @@ def _measure_route(
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         walk_time = _leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]
         travel_time = sum([walk_time] + [s.travel_time_s for s in segments[1:]])
-        fed_growth = _first_leg_dose(
+        first_dose = _first_leg_dose(
             first_leg, walk_time, segments[0], time_s, fed_rate_sampler, config
-        ) + sum(s.fed_growth for s in segments[1:])
+        )
+        # Summed in the order of the pro-rata sum below, so an agent on or
+        # ahead of the origin gets bit-identically the same dose.
+        fed_growth = sum([first_dose] + [s.fed_growth for s in segments[1:]])
         clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)

@@ -28,6 +28,7 @@ from pyfds_evac.core.route_graph import (
     evaluate_route,
     policy_for,
 )
+from pyfds_evac.core.smoke_speed import speed_factor_from_extinction
 
 _PATH = ["D0", "C0", "E0"]
 _LEG_S = 10.0 / 1.3  # one node leg
@@ -70,13 +71,20 @@ def _config(model: str) -> RouteCostConfig:
     return RouteCostConfig(cost_model=model, base_speed_m_per_s=1.3, anticipate=False)
 
 
-def _route(position, model="gate", fed=_UniformFed()):
+class _Smoke:
+    """Extinction 2 /m everywhere."""
+
+    def sample_extinction(self, time_s, x, y):
+        return 2.0
+
+
+def _route(position, model="gate", fed=_UniformFed(), smoke=_Clear()):
     return evaluate_route(
         golden._linear(),
         _PATH,
         0.0,
         0.0,
-        _Clear(),
+        smoke,
         fed,
         _config(model),
         agent_position=position,
@@ -138,6 +146,35 @@ def test_one_hot_cell_does_not_make_the_dose_of_the_stretch():
     background = 0.1 * (2 * _LEG_S + _BACK_S) / 60.0
     assert rc.fed_max_route == pytest.approx(background, abs=1e-9)
     assert rc.fed_max_route < 0.1 * 2 * _LEG_S / 60.0 + 1.3 * _BACK_S / 60.0
+
+
+def test_stretch_behind_the_origin_is_timed_at_the_walk_pace():
+    """In smoke the 5 m back to D0 takes 5 / (1.3 sf) s, not 5 / 1.3 s.
+
+    Every leg is walked at 1.3 sf m/s, so the 25 m take 25 / (1.3 sf) s at
+    0.1 FED per metre in clear air: 2.5 / sf.
+    """
+    config = _config("gate")
+    sf = speed_factor_from_extinction(
+        2.0,
+        alpha=config.alpha,
+        beta=config.beta,
+        min_speed_factor=config.min_speed_factor,
+    )
+    assert sf < 0.9
+    rc = _route((-5.0, 0.0), smoke=_Smoke())
+    assert rc.fed_max_route == pytest.approx(2.5 / sf, abs=1e-9)
+
+
+def test_a_walk_within_the_tolerance_of_the_segment_is_on_the_origin():
+    """1e-7 m behind D0 is on it: the pro-rata dose, bit for bit.
+
+    1e-5 m behind it, the stretch is charged: 2.0 + 0.1 x 1e-5.
+    """
+    on_origin = _route((0.0, 0.0)).fed_max_route
+    assert _route((-1e-7, 0.0)).fed_max_route == on_origin
+    behind = _route((-1e-5, 0.0)).fed_max_route
+    assert behind == pytest.approx(2.0 + 1e-6, abs=1e-12)
 
 
 def test_no_rate_is_no_dose_even_over_an_infinite_walk():
