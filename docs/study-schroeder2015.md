@@ -367,6 +367,14 @@ Y→X of the same agent 56 times in 10 seeds (median 34 s later). Route smoke
 is read once per grid cell since [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653) (0.5.0), and the returns
 remain with it.
 
+These counts, the 28 later `shorter_path` changes, the 307 fallback
+switches in 151–155 s and the time windows of the `smoke_reroute` and
+`better_path` changes in the table are post hoc: they were read from the
+gate route histories (`gate_s*_rh.csv`) with a separate script, and
+`schroeder2015_route.py` does not print them. A return is an exit change
+to an exit the agent left earlier; an undone fallback is a fallback X→Y
+followed later by Y→X of the same agent.
+
 ![Three panels of route optical depth τ as the router computed it, gate arm, agents in the hall, 10 seeds, median and interquartile range per 5 s, on a log scale with lines at τ = 6 and 4.8. Main fire: B→F rises to about 0.1–0.3 at 30–45 s and disappears, replaced by A→F at about 0.7, which rises to about 2 by 110 s; a few agents rank B→E (below 0.05, 90–125 s) from where they stand. A→E stays near 0 until about 130 s, then rises steeply and crosses 6 at about 140 s. B→E, ranked by the few agents near door B, rises with it and crosses 6 just before A→E. When the hall re-paths E via door B at 156–164 s, B→E is already above τ 20. Afterwards every route lies above 6 and rises to about 100–250 by 300 s. The comparison fires show the same steps at other times: on a012_pvc_h30 A→E stays at 0 until about 145 s and passes 6 near 185 s.](/images/studies/schroeder2015/p1_tau.png)
 
 τ is read point by point at the time the agent would reach each point. A
@@ -442,11 +450,14 @@ the 1.6 m slice.
   seen (114, 137 and 99 via E for smoke-blind, gate and additive, in the first runs), and
   those counts already gave its sign. The sign test, the door share by
   start, the predictor table and the boundary validity count are post hoc.
-- **Clear air.** The no-fire arm reproduces the earlier clear-air runs
-  exactly, and smoke-blind runs are identical to no fire on all three
+- **Clear air.** Smoke-blind runs are identical to no fire on all three
   fires. Start positions are the same in every arm, so the comparisons are
-  paired by seed. The deck's radius is 0.15 m, so [#408](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/408) (stage reach from
-  the agent's own radius, 0.5.0) could have moved these arms; it did not. The clear-air boundary, 12.54 m per seed (12.56 m
+  paired by seed. The deck's radius is 0.15 m, so 0.5.0
+  ([#408](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/408),
+  stage reach from the agent's own radius) moves the clear-air walks:
+  against the runs of `2a94a8da`, every agent keeps its exit, but exit
+  times differ by up to 22.3 s. The E share (0.520), the door counts
+  (104 / 96) and the boundary are unchanged. The clear-air boundary, 12.54 m per seed (12.56 m
   pooled), lies −0.05 m from the shortest-path boundary at 12.60 m. Before
   the fix of [#350](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350)
   and [#401](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401)
@@ -557,7 +568,8 @@ the repository root, or from the unpacked zip with `python` instead of
    uv run python scripts/docs/schroeder2015_route.py --data "$DATA"
    ```
 
-   It prints every evacuation number on this page as Markdown tables,
+   It prints the evacuation numbers on this page as Markdown tables
+   (except the post hoc route-history counts below the event table),
    then this summary, then writes the figures:
 
    ```text
@@ -589,8 +601,9 @@ the repository root, or from the unpacked zip with `python` instead of
 `c619a046` by steps 2–4 above (seeds 1–10, Python 3.13.4), run by hand from
 a clean checkout; each run's manifest records the commit with
 `git_dirty: false` and `agent_seeding: spawn-key-blake2b-v2`. The no-fire
-and smoke-blind arms give the same numbers as the earlier runs of
-`9c820e0f`, `2a94a8da` and `828ae8c3`. The FDS
+and smoke-blind arms give the same E share, door counts and boundary as
+the earlier runs of `9c820e0f`, `2a94a8da` and `828ae8c3`; their
+trajectories differ (see *Clear air* above). The FDS
 runs used `FDS-6.10.1-0-g12efa16-release`.
 
 ## Limits and open issues
