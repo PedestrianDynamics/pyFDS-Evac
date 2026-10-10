@@ -219,6 +219,7 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 | `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
 | `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
+| `metrics["route_switches"]` | route-history rows that change an agent's target; a row that gives an agent its first exit (`initial`, or `default_route` with an empty `old_exit`) is not counted (#733). Present when the route history has rows, so it can be 0 |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran |
 

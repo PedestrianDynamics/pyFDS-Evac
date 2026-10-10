@@ -6,9 +6,9 @@ import heapq
 import logging
 import math
 import weakref
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import Protocol
+from typing import Any, Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
@@ -2953,6 +2953,27 @@ SWITCH_REASONS = (
     "return",
     "stay",
 )
+
+#: Reasons of a route-history row that gives an agent its first exit, when
+#: the row has no old exit. A ``default_route`` row with an old exit is a
+#: change of exit (the agent's known exits closed).
+FIRST_ASSIGNMENT_REASONS = frozenset({"initial", "default_route"})
+
+
+def is_route_switch(row: Mapping[str, Any]) -> bool:
+    """Whether a route-history *row* changes a target, not assigns a first exit.
+
+    *row* is a route-history row as in ``ScenarioResult.route_history``: an
+    empty, ``None`` or missing ``old_exit`` means the agent had no exit.
+    """
+    if row.get("reason") not in FIRST_ASSIGNMENT_REASONS:
+        return True
+    return bool(row.get("old_exit"))
+
+
+def count_route_switches(rows: Iterable[Mapping[str, Any]]) -> int:
+    """Number of *rows* that are route switches, see :func:`is_route_switch`."""
+    return sum(1 for row in rows if is_route_switch(row))
 
 
 def compute_eval_offset(

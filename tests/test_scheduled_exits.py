@@ -929,3 +929,46 @@ def test_exit_history_of_agents_still_inside_names_the_exit_walked_to(mode):
     assert inside, "every re-routed agent left before the end"
     assert set(inside.values()) == {"east"}
     assert {aid: run["exits"][aid] for aid in inside} == inside
+
+
+# ── The route_switches metric (#733) ──
+
+
+def _route_metric(scenario: Scenario) -> tuple[int, int]:
+    """``metrics["route_switches"]`` and the number of route-history rows."""
+    result = run_scenario(scenario, seed=SEED, reroute_config=REROUTE)
+    try:
+        return result.metrics["route_switches"], len(result.route_history or [])
+    finally:
+        result.cleanup()
+
+
+def test_route_switches_leaves_out_first_assignments():
+    """No exit is open at spawn: each agent's only row is its first exit.
+
+    Every agent gets a spawn-time ``default_route`` row with no old exit and
+    keeps that exit, so the history has rows but no agent switched.
+    """
+    schedule = {"open_from_s": T_OPEN_S}
+    switches, rows = _route_metric(_scenario({"west": schedule, "east": schedule}))
+    assert rows == NUM_AGENTS
+    assert switches == 0
+
+
+def test_route_switches_counts_default_route_after_a_closure():
+    """A ``default_route`` row with an old exit is a switch, not a first exit.
+
+    The agents know only the west door; at each closure they leave the exit
+    they walk to for the default route, so every row is a switch. Counting
+    by reason alone would report none.
+    """
+    doors = {**DOORS, "north": NORTH_DOOR}
+    scenario = _scenario(
+        {"west": {"closed_after_s": T_CLOSE_S}, "north": {"closed_after_s": 9.0}},
+        doors=doors,
+        familiarity=0.0,
+        entrance="west",
+    )
+    switches, rows = _route_metric(scenario)
+    assert rows > 0
+    assert switches == rows

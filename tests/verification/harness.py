@@ -42,6 +42,7 @@ from pyfds_evac.core.fed import (
     FdsHeatField,
     TenabilityConfig,
 )
+from pyfds_evac.core.route_graph import count_route_switches, is_route_switch
 from pyfds_evac.core.scenario import Scenario
 from pyfds_evac.core.smoke_speed import (
     ExtinctionField,
@@ -530,19 +531,19 @@ def t_junction_scenario(spec: TJunctionSpec) -> Scenario:
 
 
 def route_switch_count(result) -> int:
-    """Number of reroutes. Robust to the metric key being absent when zero.
+    """Number of reroutes, first exit assignments excluded.
 
-    ``run_scenario`` only writes ``metrics["route_switches"]`` when at least one
-    switch occurred, so read the history list directly (it is ``[]``, never
+    ``run_scenario`` writes ``metrics["route_switches"]`` only when the route
+    history has rows, so count the history list directly (it is ``[]``, never
     missing, whenever rerouting is enabled).
     """
-    return len(result.route_history or [])
+    return count_route_switches(result.route_history or [])
 
 
 def route_switch_directions(result) -> dict[tuple[str, str], int]:
     """Count ``(old_exit, new_exit)`` reroute pairs from ``route_history``."""
     counts: dict[tuple[str, str], int] = {}
-    for switch in result.route_history or []:
+    for switch in filter(is_route_switch, result.route_history or []):
         key = (switch["old_exit"], switch["new_exit"])
         counts[key] = counts.get(key, 0) + 1
     return counts
