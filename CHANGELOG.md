@@ -353,12 +353,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whose agents can be numbered differently. `l_corridor` and the three
   flow configs of `t_junction` (seeds 1 and 42) add the same agents at
   the same times and positions, with the same ids and metrics, but for
-  one agent of `t_junction/config_full.json` under seed 42: at t = 222 s
-  it entered 0.296 m from another agent, where 0.3 m is kept now, and
+  one agent of `t_junction/config_full.json` under seed 42, run in clear
+  air (without its fire): at t = 222 s it entered 0.296 m from another agent, where 0.3 m is kept now, and
   enters at the next free position. Of the rerouting goldens only
   `ft_full_gate_detour` and `ft_full_additive_detour`
   (`SocialForceModel`, a 0.2 m flow) move: 5 of their 30 agents entered
-  0.19 m from another, now none closer than 0.4 m; all 30 still get
+  0.19 to 0.37 m from another, now none closer than 0.4 m; all 30 still get
   out, at 58.18 s instead of 54.39 s and at 48.33 s instead of 48.35 s.
 - An applied route is walked as it was priced (#445). A route is priced
   from the node the agent last left, through the node after it. When
