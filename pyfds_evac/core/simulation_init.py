@@ -19,6 +19,7 @@ from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
     DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
     _deck_spawn_defaults,
+    _normalized_flow_schedule,
     _spawn_value,
     normalize_distribution_speed_aliases,
     parameters_as_dict,
@@ -26,6 +27,8 @@ from .agent_params import (
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_AGENT_VALUES,
+    PURPOSE_FLOW_POSITIONS,
+    PURPOSE_FLOW_SHUFFLE,
     PURPOSE_PATH_CHOICE,
     PURPOSE_POSITIONS,
     PURPOSE_PREMOVEMENT,
@@ -150,6 +153,24 @@ def _convert_distribution_spawn_values(params: dict[str, Any], dist_id: Any) -> 
         shown = "desired_speed" if key == "v0" and "desired_speed" in params else key
         name = f"Distribution {dist_id!r}: {shown}"
         params[key] = _spawn_value(key, params[key], name, zero_v0=True)
+
+
+def _convert_flow_schedule(params: dict[str, Any], dist_id: Any) -> None:
+    """Normalise a distribution's ``flow_schedule`` and ``initial_number`` (#390).
+
+    The schedule is read as ``Scenario.set_flow_schedule`` reads it, alias
+    keys and all, and sorted. ``initial_number`` is read as ``number``;
+    ``null`` is unset. A ``ValueError`` names the distribution and the key.
+    """
+    try:
+        params["flow_schedule"] = _normalized_flow_schedule(params)
+    except ValueError as error:
+        raise ValueError(f"Distribution {dist_id!r}: flow_schedule: {error}") from error
+    if params.get("initial_number") is None:
+        params.pop("initial_number", None)
+        return
+    name = f"Distribution {dist_id!r}: initial_number"
+    params["initial_number"] = _spawn_value("number", params["initial_number"], name)
 
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
@@ -726,8 +747,8 @@ def _initial_spawn_count(params) -> int | None:
     nobody there at the start.
     """
     mode, requested = _get_distribution_mode_and_count(params)
-    flow_schedule = _normalize_flow_schedule_entries(params)
-    initial = int(params.get("initial_number", 0 if flow_schedule else requested) or 0)
+    flow_schedule = _normalized_flow_schedule(params)
+    initial = _initial_number(params, flow_schedule, requested)
     if mode == "by_number" and requested <= 0 and initial <= 0 and not flow_schedule:
         return None
     if flow_schedule:
@@ -735,6 +756,16 @@ def _initial_spawn_count(params) -> int | None:
     if params.get("use_flow_spawning", False):
         return None
     return int(params.get("number", 0))
+
+
+def _initial_number(params, flow_schedule, requested: int) -> int:
+    """Agents placed at the start: ``initial_number`` beside a schedule, else *requested*.
+
+    ``initial_number`` is not read without a schedule (#390).
+    """
+    if flow_schedule:
+        return int(params.get("initial_number") or 0)
+    return requested
 
 
 def _uses_fallback(data) -> bool:
@@ -810,43 +841,6 @@ def _get_distribution_percentage(params):
     except (TypeError, ValueError):
         percentage = default_percentage
     return max(1, min(100, percentage))
-
-
-def _normalize_flow_schedule_entries(params):
-    """Return validated scheduled flow windows for a distribution."""
-    raw_schedule = params.get("flow_schedule", [])
-    if not raw_schedule:
-        return []
-
-    normalized = []
-    for entry in raw_schedule:
-        start_time = entry.get("flow_start_time", entry.get("start_time_s"))
-        end_time = entry.get("flow_end_time", entry.get("end_time_s"))
-        number = entry.get("number", entry.get("sim_count"))
-        if start_time is None or end_time is None or number is None:
-            raise ValueError(
-                "flow_schedule entries must define start/end time and number"
-            )
-
-        start_time = max(0.0, float(start_time))
-        end_time = float(end_time)
-        number = int(number)
-        if end_time <= start_time:
-            raise ValueError(f"Invalid flow_schedule window [{start_time}, {end_time}]")
-        if number <= 0:
-            continue
-        normalized.append(
-            {
-                "flow_start_time": start_time,
-                "flow_end_time": end_time,
-                "number": number,
-            }
-        )
-
-    normalized.sort(
-        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
-    )
-    return normalized
 
 
 def _sample_agent_values(params, n_agents, rng):
@@ -1511,13 +1505,9 @@ def _initialize_with_fallback(
         dist_key_str = distribution_keys[i]
         use_flow_spawning = dist_params.get("use_flow_spawning", False)
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(dist_params)
-        flow_schedule = _normalize_flow_schedule_entries(dist_params)
-        initial_n_agents = int(
-            dist_params.get(
-                "initial_number",
-                0 if flow_schedule else requested_n_agents,
-            )
-            or 0
+        flow_schedule = _normalized_flow_schedule(dist_params)
+        initial_n_agents = _initial_number(
+            dist_params, flow_schedule, requested_n_agents
         )
 
         if (
@@ -1571,10 +1561,10 @@ def _initialize_with_fallback(
                     polygon=clean_dist_area,
                     distance_to_agents=2 * max_radius,
                     distance_to_polygon=max_radius,
-                    seed=distribution_seed(seed, dist_key_str, PURPOSE_POSITIONS),
+                    seed=distribution_seed(seed, dist_key_str, PURPOSE_FLOW_POSITIONS),
                 )
                 shuffle_rng = random.Random(
-                    distribution_seed(seed, dist_key_str, PURPOSE_SHUFFLE)
+                    distribution_seed(seed, dist_key_str, PURPOSE_FLOW_SHUFFLE)
                 )
                 shuffle_rng.shuffle(positions)
                 starting_pos_per_source.append(positions)
@@ -2150,6 +2140,7 @@ def _distribution_params(dist_id, dist_data, spawn_defaults, premovement_default
     """The spawn parameters of one distribution, as both set-up paths read them."""
     params = parameters_as_dict(dist_data.get("parameters")) or {}
     _convert_distribution_spawn_values(params, dist_id)
+    _convert_flow_schedule(params, dist_id)
     if premovement_default:
         params = _apply_default_premovement(params, dist_id)
     spawn_params = _spawn_params(params, spawn_defaults)
@@ -2166,6 +2157,10 @@ def _spawn_params(params: dict[str, Any], spawn_defaults) -> dict[str, Any]:
         "use_flow_spawning": params.get("use_flow_spawning", False),
         "flow_start_time": params.get("flow_start_time", 0),
         "flow_end_time": params.get("flow_end_time", 10),
+        # Scheduled windows replace the single flow window; initial_number is
+        # the count placed at the start beside them, unused without them.
+        "flow_schedule": params.get("flow_schedule", []),
+        "initial_number": params.get("initial_number", 0),
         "use_premovement": params.get("use_premovement", False),
         "premovement_distribution": params.get("premovement_distribution", "gamma"),
         "premovement_param_a": params.get("premovement_param_a", None),
@@ -2746,14 +2741,8 @@ def _add_agents(
         params = dist_params[dist_key]
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(params)
         use_flow_spawning = params.get("use_flow_spawning", False)
-        flow_schedule = _normalize_flow_schedule_entries(params)
-        initial_n_agents = int(
-            params.get(
-                "initial_number",
-                0 if flow_schedule else requested_n_agents,
-            )
-            or 0
-        )
+        flow_schedule = _normalized_flow_schedule(params)
+        initial_n_agents = _initial_number(params, flow_schedule, requested_n_agents)
 
         if (
             dist_mode == "by_number"
@@ -2788,10 +2777,10 @@ def _add_agents(
                 polygon=dist_area,
                 distance_to_agents=2 * max_radius,
                 distance_to_polygon=max_radius,
-                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+                seed=distribution_seed(seed, dist_key, PURPOSE_FLOW_POSITIONS),
             )
             shuffle_rng = random.Random(
-                distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
+                distribution_seed(seed, dist_key, PURPOSE_FLOW_SHUFFLE)
             )
             shuffle_rng.shuffle(positions)
 

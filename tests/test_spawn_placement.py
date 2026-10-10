@@ -27,7 +27,6 @@ import pedpy
 import pytest
 from shapely.geometry import MultiPolygon, Point, Polygon, box
 
-from pyfds_evac.core import simulation_init
 from pyfds_evac.core.simulation_init import (
     _find_nearest_exit,
     _get_distribution_mode_and_count,
@@ -446,20 +445,11 @@ def _journey_deck(distributions: dict) -> dict:
     )
 
 
-def test_scheduled_spawn_area_places_its_initial_agents(tmp_path, monkeypatch):
+def test_scheduled_spawn_area_places_its_initial_agents(tmp_path):
     """Initial agents beside a flow schedule start on the journey (#118).
 
     The area is nearer E1, so an agent left without its journey heads there.
     """
-    spawn_params = simulation_init._spawn_params
-
-    def with_schedule(params, spawn_defaults):
-        # The scenario JSON does not carry these two keys to the set-up (#390).
-        out = spawn_params(params, spawn_defaults)
-        out.update({k: params[k] for k in ("flow_schedule", "initial_number")})
-        return out
-
-    monkeypatch.setattr(simulation_init, "_spawn_params", with_schedule)
     window = {"flow_start_time": 0, "flow_end_time": 10, "number": 4}
     params = _params(0, initial_number=3, flow_schedule=[window])
     data = _journey_deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
@@ -468,6 +458,89 @@ def test_scheduled_spawn_area_places_its_initial_agents(tmp_path, monkeypatch):
     targets = [s["current_target_stage"] for s in info["agent_wait_info"].values()]
     assert targets == ["E2"] * 3
     assert info["num_agents_per_source"] == [4]
+
+
+_SCHEDULE = [
+    {"start_time_s": 20, "end_time_s": 30, "sim_count": 5},
+    {"flow_start_time": 0, "flow_end_time": 10, "number": 4},
+]
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_flow_schedule_and_initial_number_reach_the_set_up(tmp_path, with_journeys):
+    """The scenario JSON's schedule and initial count are what is placed (#390).
+
+    ``number`` (9) is what ``set_flow_schedule`` stores, the scheduled sum;
+    it is not placed on its own.
+    """
+    params = _params(
+        9, use_flow_spawning=True, initial_number=3, flow_schedule=_SCHEDULE
+    )
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), params)}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 3
+    assert info["num_agents_per_source"] == [4, 5]
+    windows = [(f["start_time"], f["end_time"]) for f in info["flow_distributions"]]
+    assert windows == [(0.0, 10.0), (20.0, 30.0)]
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
+    """A stray ``initial_number`` changes nothing without ``flow_schedule`` (#390).
+
+    D0, with ``number`` 0, lies inside D1, whose 120 agents leave no room;
+    it places nobody, as without ``initial_number``, instead of failing to
+    place 0 agents.
+    """
+    placed = []
+    for extra in ({}, {"initial_number": 3}):
+        area = {
+            D1: (box(2.0, 2.0, 8.0, 8.0), _params(120)),
+            D0: (box(4.0, 4.0, 5.0, 5.0), _params(0, **extra)),
+        }
+        data = _journey_deck(area) if with_journeys else _deck(area)
+        simulation, _, positions, _ = _initialize(data, tmp_path)
+        assert simulation.agent_count() == 120
+        placed.append(positions)
+    assert placed[0] == placed[1]
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        (
+            {
+                "flow_schedule": [
+                    {"flow_start_time": -1, "flow_end_time": 5, "number": 2}
+                ]
+            },
+            r"Distribution 'jps-distributions_0': flow_schedule: Invalid flow window",
+        ),
+        (
+            {
+                "flow_schedule": [
+                    {"flow_start_time": 0, "flow_end_time": 5, "number": 0}
+                ]
+            },
+            r"Distribution 'jps-distributions_0': flow_schedule: .*positive integers",
+        ),
+        (
+            {"flow_schedule": _SCHEDULE, "initial_number": "three"},
+            r"Distribution 'jps-distributions_0': initial_number must be a number",
+        ),
+    ],
+    ids=["negative-start", "empty-window", "initial-not-a-number"],
+)
+def test_invalid_flow_schedule_stops_the_set_up(
+    tmp_path, with_journeys, extra, message
+):
+    """The run reads a schedule as ``Scenario.set_flow_schedule`` does (#390)."""
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), _params(0, **extra))}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    with pytest.raises(ValueError, match=message):
+        _initialize(data, tmp_path)
 
 
 def test_invalid_spawn_polygon_is_skipped_with_a_warning(tmp_path):

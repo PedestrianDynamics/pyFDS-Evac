@@ -12,7 +12,9 @@ the scenario untouched. Imports stay light: no JuPedSim, pedpy or shapely,
 so ``--show-config``, the TUI and the GUI can call it (#612).
 
 The deck-wide spawn defaults live here too, so the inspection views
-show the count the run places (#647).
+show the count the run places (#647), and so does the flow-schedule
+normaliser that ``Scenario.set_flow_schedule``, the views and the run
+share (#390).
 """
 
 from __future__ import annotations
@@ -172,6 +174,50 @@ def _spawn_value(key: str, value: Any, name: str, zero_v0: bool = False) -> Any:
         bound = ">= 0" if allow_zero else "> 0"
         raise ValueError(f"{name} must be finite and {bound}, got {value!r}")
     return converted
+
+
+def _normalize_flow_schedule_entry(entry: dict) -> dict:
+    """Normalize one configured flow schedule entry to canonical keys."""
+    start_time = entry.get("flow_start_time", entry.get("start_time_s"))
+    end_time = entry.get("flow_end_time", entry.get("end_time_s"))
+    number = entry.get("number", entry.get("sim_count"))
+
+    if start_time is None or end_time is None or number is None:
+        raise ValueError(
+            "Each flow schedule entry must define start/end time and number. "
+            "Accepted keys: flow_start_time|start_time_s, flow_end_time|end_time_s, number|sim_count."
+        )
+
+    start_time = float(start_time)
+    end_time = float(end_time)
+    number = int(number)
+
+    if start_time < 0 or end_time <= start_time:
+        raise ValueError(
+            f"Invalid flow window [{start_time}, {end_time}] - end_time must be greater than start_time."
+        )
+    if number <= 0:
+        raise ValueError(
+            f"Flow schedule numbers must be positive integers, got {number!r}"
+        )
+
+    return {
+        "flow_start_time": start_time,
+        "flow_end_time": end_time,
+        "number": number,
+    }
+
+
+def _normalized_flow_schedule(params: dict) -> list[dict]:
+    """Return the sorted flow schedule for one distribution."""
+    raw_schedule = params.get("flow_schedule", [])
+    if not raw_schedule:
+        return []
+    normalized = [_normalize_flow_schedule_entry(entry) for entry in raw_schedule]
+    normalized.sort(
+        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
+    )
+    return normalized
 
 
 def deck_default_number(sim_params: Any) -> int:

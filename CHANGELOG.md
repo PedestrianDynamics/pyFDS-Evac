@@ -36,6 +36,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   other error while setting up a spawn area also stops the run instead
   of skipping the area. No shipped asset is affected.
 
+- A scenario with a `flow_schedule` now runs that schedule (#390):
+  `initial_number` agents at the start, then each window's `number`
+  agents over the window, instead of `number` agents over
+  `flow_start_time`–`flow_end_time`. Results of such scenarios change;
+  no shipped asset, example or documented scenario sets
+  `flow_schedule`. A window that starts below 0 or has no agents now
+  stops the run with a `ValueError` naming the distribution, as
+  `set_flow_schedule()` did; the run had clamped the start to 0 and
+  dropped the window. The scheduled agents' candidate positions are
+  drawn from their own streams (`flow_positions`, `flow_shuffle`),
+  apart from the initial agents'.
+
 ### Added
 
 - The FDS coverage warning names the frame (#26): when part of the
@@ -183,6 +195,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   distribution ...` and skips it: only coordinates that make no valid
   polygon, such as a self-intersecting one, are skipped that way, as
   `--export-only` does.
+
+- A spawn area's `flow_schedule` and `initial_number`, written by
+  `Scenario.set_flow_schedule()` or by hand, never reached the run,
+  which spawned `number` agents over `flow_start_time`–`flow_end_time`
+  instead, while `--print-summary` counted `initial_number` plus the
+  scheduled agents (#390). The run now places `initial_number` agents at
+  the start and adds each window's agents over that window, with and
+  without journeys; `--print-summary`, `--export-only`'s capacity check
+  and the run count the same agents, and the summary lists each spawn
+  area's initial and scheduled agents. The setter and the run read a
+  schedule with one normaliser.
 
 ### Documentation
 

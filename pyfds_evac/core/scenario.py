@@ -41,7 +41,12 @@ from pyfds_evac.config import messages
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
-from .agent_params import deck_default_number, parameters_as_dict
+from .agent_params import (
+    _normalize_flow_schedule_entry,
+    _normalized_flow_schedule,
+    deck_default_number,
+    parameters_as_dict,
+)
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_FAMILIARITY,
@@ -294,50 +299,6 @@ def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
     return max(1, math.floor(theoretical * 0.5))
 
 
-def _normalize_flow_schedule_entry(entry: dict) -> dict:
-    """Normalize one configured flow schedule entry to canonical keys."""
-    start_time = entry.get("flow_start_time", entry.get("start_time_s"))
-    end_time = entry.get("flow_end_time", entry.get("end_time_s"))
-    number = entry.get("number", entry.get("sim_count"))
-
-    if start_time is None or end_time is None or number is None:
-        raise ValueError(
-            "Each flow schedule entry must define start/end time and number. "
-            "Accepted keys: flow_start_time|start_time_s, flow_end_time|end_time_s, number|sim_count."
-        )
-
-    start_time = float(start_time)
-    end_time = float(end_time)
-    number = int(number)
-
-    if start_time < 0 or end_time <= start_time:
-        raise ValueError(
-            f"Invalid flow window [{start_time}, {end_time}] - end_time must be greater than start_time."
-        )
-    if number <= 0:
-        raise ValueError(
-            f"Flow schedule numbers must be positive integers, got {number!r}"
-        )
-
-    return {
-        "flow_start_time": start_time,
-        "flow_end_time": end_time,
-        "number": number,
-    }
-
-
-def _normalized_flow_schedule(params: dict) -> list[dict]:
-    """Return the sorted flow schedule for one distribution."""
-    raw_schedule = params.get("flow_schedule", [])
-    if not raw_schedule:
-        return []
-    normalized = [_normalize_flow_schedule_entry(entry) for entry in raw_schedule]
-    normalized.sort(
-        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
-    )
-    return normalized
-
-
 def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
     """Return the total number of agents implied by one distribution.
 
@@ -472,12 +433,20 @@ class Scenario:
         for dist_id, dist in self.distributions.items():
             params = parameters_as_dict(dist.get("parameters")) or {}
             flow = params.get("use_flow_spawning", False)
-            n = params.get("number", default_number)
+            n = _distribution_agent_budget(dist, default_number)
             tag = (
                 f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)"
                 if flow
                 else ""
             )
+            schedule = _normalized_flow_schedule(params)
+            if schedule:
+                initial = int(params.get("initial_number") or 0)
+                windows = ", ".join(
+                    f"{w['number']} in {w['flow_start_time']:g}-{w['flow_end_time']:g}s"
+                    for w in schedule
+                )
+                tag = f" ({initial} at the start, flow: {windows})"
             lines.append(f"    {dist_id}: {n} agents{tag}")
         return "\n".join(lines)
 

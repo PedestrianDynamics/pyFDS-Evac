@@ -203,6 +203,27 @@ def test_export_only_checks_the_stored_number_of_a_fill_area_spawn(
     assert export == run
 
 
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_export_only_checks_the_initial_agents_of_a_flow_schedule(
+    monkeypatch, with_journeys
+):
+    """Both check ``initial_number`` beside a schedule, not ``number`` (#390)."""
+
+    def scheduled():
+        scenario = _over_full(with_journeys)
+        scenario.set_flow_schedule(
+            D,
+            [{"flow_start_time": 0, "flow_end_time": 600, "number": 5}],
+            keep_initial_agents=True,
+        )
+        return scenario
+
+    assert scheduled().distributions[D]["parameters"]["number"] == 5
+    export, run = _export_and_run_messages(monkeypatch, scheduled)
+    assert re.match(PATTERN, export), export
+    assert export == run
+
+
 def test_export_only_checks_the_walkable_area_of_a_deck_without_spawn_areas(
     monkeypatch,
 ):
