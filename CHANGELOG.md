@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- `fed_max_route` in the route-cost history moves in runs with a FED
+  field (#171): it rises for an agent behind its route's origin node and
+  moves either way in a non-uniform field. Under `additive` the route
+  cost moves by `w_fed` times that change, so near-tied choices can
+  change. Under `gate` a route whose dose now reaches
+  `fed_rejection_threshold` is refused, so choices can change too: in
+  the t_junction golden deck 12 more agents switch by fallback and the
+  last one leaves at 204.6 s instead of 179.0 s. Runs without a FED
+  field are unchanged.
+
 - Route history (`--output-route-history`, `result.route_history`):
   `smoke_reroute` now counts only the exit changes smoke caused (#92).
   Other changes of exit, labelled `smoke_reroute` before, are
@@ -131,6 +141,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flee behind every route it need not flee. The `rejection_reason` text
   and the CSV outputs are unchanged. No shipped deck changes: the
   largest route FED in their outputs is 0.565, below the limit.
+- The dose of a route's first leg is that of the agent's walk to the
+  route's next node, read at the walk's midpoint over its travel time,
+  as the leg's smoke and time already were (#171). Before, it was the
+  first segment's dose pro rata to what is left of it, which charged no
+  dose for the walk back to the route's origin node of an agent behind
+  it, and read the segment's rate, not the walk's. The candidate search
+  weighs the walk to each first node the same way.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not
