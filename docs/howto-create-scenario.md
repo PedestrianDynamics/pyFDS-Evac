@@ -294,7 +294,9 @@ Three checks, from weakest to strongest:
    than its capacity estimate stops it with the run's error line and exit
    status 1. It does not catch an agent that never moves, a count within the
    estimate that JuPedSim cannot place, or a polygon outside the walkable
-   area.
+   area. Each spawn area is checked on its own, so it also misses spawn
+   areas that overlap: the agents placed in one take room from the other,
+   and the run can still stop with `could not place the N requested agents`.
 2. **The scenario runs.** Run it without `--export-only`. Set a small
    `max_simulation_time` first if the full run is long. A complete run ends
    with `Simulation finished in … s (N/N evacuated).` and exit status 0.
