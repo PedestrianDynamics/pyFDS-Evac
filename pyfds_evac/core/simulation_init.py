@@ -2149,6 +2149,7 @@ def _add_stages(
             "enable_throughput_throttling": enable_throttling,
             "max_throughput": float(exit_data.get("max_throughput", 0.0)),
             "stage_type": "exit",
+            "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
             **_exit_schedule(exit_id, exit_data),
         }
 

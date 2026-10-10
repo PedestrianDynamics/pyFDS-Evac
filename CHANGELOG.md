@@ -36,6 +36,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get out
   instead of 100, FED max 0.23 instead of 0.24.
 
+- Decks with journeys and an exit `capacity_agents_per_s` now price
+  that exit's queue with it (#394), as decks without journeys did;
+  it was priced at `routing.default_exit_capacity` (1.3 agents/s).
+  Only runs with `routing.w_queue` > 0 change. No shipped deck sets
+  `capacity_agents_per_s`, so no golden or asset result moves.
+
 - `fed_max_route` in the route-cost history rises for an agent behind
   its route's origin node in runs with a FED field (#171). Under
   `additive` the route cost rises by `w_fed` times that change, so
@@ -159,6 +165,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   read with a 0.2 m default but never written, so stage reach
   (radius + 0.5 m of the target point) and target clearance used 0.2 m
   whatever the agent's radius.
+
+- The set-up with journeys passes each exit's `capacity_agents_per_s`
+  to route pricing (#394). It was dropped, so the queue term priced
+  every exit of a journey deck at the 1.3 agents/s default.
 
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or
