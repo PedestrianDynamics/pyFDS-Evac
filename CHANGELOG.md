@@ -28,6 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
   deadlock at doors and narrow gaps in some seeds (#706).
 
+- Results change for runs with same-exit `better_path` switches, and
+  for any rerouting run in which an agent switches to a route that
+  reaches its current target by a detour (#445): the agent now walks the
+  detour. On the golden decks only `better_path` switches are affected.
+  On the golden deck `ft_full_gate_detour` (darwin-arm64) the
+  evacuation time goes from 49.43 s to 54.92 s and the `better_path`
+  rows of `route_history.csv` from 24 to 17.
+
 ### Added
 
 - The FDS coverage warning names the frame (#26): when part of the
@@ -157,6 +165,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   among the pieces by their capacity; when the pieces cannot seat them
   all, or nothing is left free, the run stops with `SpawnCapacityError`.
   Flow-spawned agents are not covered.
+- An applied route is walked as it was priced (#445). A route is priced
+  from the node the agent last left, through the node after it. When
+  the agent's current target was further along the new route, the agent
+  kept walking to it: it stayed on a leg the gate had refused
+  (τ > `tau_max`), and the same `better_path` switch was logged again at
+  every re-evaluation. The agent now heads for the node after the one it
+  last left. This holds for every kind of switch, exit changes included.
 
 ### Documentation
 

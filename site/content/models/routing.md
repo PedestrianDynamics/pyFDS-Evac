@@ -303,9 +303,12 @@ must-flee bypass
 
 A new path to the **same** exit is taken when its `rank_cost` is below
 `_PATH_IMPROVEMENT_THRESHOLD` × the walked path's, or when the walked path is
-refused and the new one is not (reason `better_path`). When every route is
-refused, the least-smoky one is un-refused as a fallback. The full decision
-table is in [Routing in practice](/docs/routing.md#rerouting-decision-flow).
+refused and the new one is not (reason `better_path`). Every route is priced
+from the node the agent last left, so an applied route sends the agent to the
+node after that one, even when its current target lies further along the route
+([#445](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/445)). When
+every route is refused, the least-smoky one is un-refused as a fallback. The
+full decision table is in [Routing in practice](/docs/routing.md#rerouting-decision-flow).
 
 ### Code structure
 
