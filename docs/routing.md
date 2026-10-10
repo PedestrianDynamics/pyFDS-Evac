@@ -302,13 +302,15 @@ count as the current route. Under `"hold"`:
 effect. On `t_junction` (`fire_2MW_PVC`, R arm of
 [Evacuation with and without the fire](howto-with-without-fire.md), seeds
 4–23 with no pre-movement and 4–13 at 30 and 60 s, at `c619a046`) the two
-rules give, for pre-movement 0 / 30 / 60 s:
+rules give the following. Each cell lists the agents to exit A, median
+[min, max] over seeds; the median of the largest max FED; and the
+fallback exit changes per run, median (max).
 
-| | `"tau"` | `"hold"` |
+| Pre-movement | `"tau"` | `"hold"` |
 |---|---|---|
-| Agents to exit A, median [min, max] | 100 [94, 100] / 51 [49, 55] / 3 [0, 6] % | 100 [100, 100] % at each |
-| Largest max FED, median | 0.006 / 0.070 / 0.178 | 0.006 / 0.024 / 0.100 |
-| Fallback exit changes per run, median (max) | 0 (6) / 195 (201) / 267 (278) | 0 at each |
+| 0 s | 100 [94, 100] %; 0.006; 0 (6) | 100 [100, 100] %; 0.006; 0 (0) |
+| 30 s | 51 [49, 55] %; 0.070; 195 (201) | 100 [100, 100] %; 0.024; 0 (0) |
+| 60 s | 3 [0, 6] %; 0.178; 267 (278) | 100 [100, 100] %; 0.100; 0 (0) |
 
 This is one deck and one fire, and the evidence that people keep going
 once they are in smoke is expert judgement. A user setting waits for

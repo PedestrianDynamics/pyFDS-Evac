@@ -1,8 +1,8 @@
 # T-junction test: smoke-blocked T-corridor
 
 This scenario was built to exercise speed reduction, FED incapacitation and
-dynamic rerouting. In the run at `c619a046` (defaults, so no irritant
-slowdown) speed reduction and FED act; rerouting acts once: one agent
+dynamic rerouting. In the run at `c619a046` (probabilistic
+incapacitation, no irritant slowdown) speed reduction and FED act; rerouting acts once: one agent
 changes exit on the way. See the results below
 and [#195](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/195).
 
@@ -84,10 +84,10 @@ spawned at 94 s, heads for Exit A and switches to Exit B at 104 s, when
 both routes are refused (`fallback`). Every other agent that gets out
 leaves by Exit B.
 
-Measured at `c619a046` with the command below, run on `config_full.json`
-(`--scenario assets/t_junction/config_full.json`, default seed) against the
-FDS output in the project's data store (`t_junction/fire_2MW_PVC/`); the
-clear-air run drops `--fds-dir`, and the FIC run adds `--enable-fic-speed`.
+Measured at `c619a046` with the command in step 2 below (`config_full.json`,
+default seed) against the FDS output in the project's data store
+(`t_junction/fire_2MW_PVC/`); the clear-air run drops `--fds-dir` and the
+FDS history outputs, and the FIC run adds `--enable-fic-speed`.
 The figures of `7a3617d` (90 of 150 out, FED max 0.33, two incapacitated,
 23 of the first 26 agents to Exit A, no exit change) predate the 0.5.0
 routing and sampling changes.
@@ -106,15 +106,19 @@ fds assets/t_junction/t_junction.fds
 
 ```bash
 uv run python run.py \
-  --scenario assets/t_junction \
+  --scenario assets/t_junction/config_full.json \
   --fds-dir assets/t_junction \
   --incapacitation-mode probabilistic \
   --enable-rerouting \
   --reroute-interval 5 \
   --output-smoke-history smoke.csv \
   --output-fed-history fed.csv \
-  --output-route-history routes.csv
+  --output-route-history routes.csv \
+  --output-exit-history exits.csv \
+  --output-sqlite t_junction.sqlite
 ```
+
+`--fds-dir` is the folder that holds the FDS output of step 1.
 
 ## Smoke-weight sweep: when does smoke actually change the exit?
 

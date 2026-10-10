@@ -360,7 +360,7 @@ pages. Defaults are on the Models pages.
 | \(L_k\) | Walkable distance still to go on route *k* | m | `effective_length` |
 | \(\tau_k = \bar K_k L_k\) | Optical depth along route *k* | - | `tau_route` |
 | \(\tau_{\max}\) | Refusal budget for \(\tau\) | - | `tau_max` |
-| \(\Delta s\) | Spacing of smoke samples where the field has no grid, and of the walk-dose FED rate | m | `sampling_step_m` |
+| \(\Delta s\) | Spacing of smoke samples where the field has no grid or the line leaves every FDS subslice, and of the walk-dose FED rate | m | `sampling_step_m` |
 | \(\alpha_s\) | Bearing of a sign, degrees clockwise from north | ° | sign `alpha` |
 
 The same code name `alpha` is used for the Frantzich–Nilsson coefficient, for

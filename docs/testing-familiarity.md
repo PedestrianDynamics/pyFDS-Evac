@@ -214,7 +214,7 @@ three rings.
 
 **Precondition.** The grid resolves the walls: at least one cell centre lies
 inside each 0.1 m wall. At 0.25 m it does not, and the criteria below are not
-evaluated; there, with no tolerance, 36 learnt nodes had their sign hidden in
+evaluated; there, with no tolerance, 37 learnt nodes had their sign hidden in
 exact geometry (12 of them CP2, learnt from the next room).
 
 1. **Full.** Every full agent knows all 6 nodes and the 11 wired edges at

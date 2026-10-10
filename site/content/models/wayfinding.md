@@ -659,7 +659,7 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   extend the FDS meshes over the walkable area, or run with
   `--require-fds-coverage`.
 - **Sight lines that leave the FDS meshes hide signs**
-  ([#454](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454), planned for 0.5.0). On the grid, a sight line that
+  ([#454](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454), open). On the grid, a sight line that
   crosses a cell outside every FDS mesh gets a NaN extinction, and the sign
   is unreadable from that cell. Here pyFDS-Evac is stricter than FDS+Evac
   ([Limitations › Outside the FDS domain](/docs/limitations.md#outside-the-fds-domain-the-air-is-clear)).

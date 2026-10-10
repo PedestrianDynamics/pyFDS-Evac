@@ -90,8 +90,7 @@ that cell, even where the walkable part of the line lies inside the domain
 *K* = 0 outside its fire meshes. FDS meshes that cover the walkable area
 and the sight lines to the signs avoid it. The fix needs an fdsvismap release with
 [FireDynamics/fdsvismap#89](https://github.com/FireDynamics/fdsvismap/issues/89)
-and [#90](https://github.com/FireDynamics/fdsvismap/issues/90) and is planned
-for 0.5.0.
+and [#90](https://github.com/FireDynamics/fdsvismap/issues/90) ([#454](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454), open).
 
 ## Incapacitation is deterministic by default
 

@@ -689,9 +689,10 @@ page.
 - **All routes refused before people move.** Then the router takes the
   route with the lowest optical depth τ
   ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)), here the shorter route to
-  exit B past the burner. It is not the safer route: at 60 s R's largest
-  max FED is 0.19, against 0.10 (median over seeds) under the code-level
-  `fallback_rule="hold"`, which keeps everyone on the route to A. At 0 and
+  exit B past the burner. It is not the safer route: at 60 s the median
+  over seeds of the largest max FED is 0.18 under the default rule,
+  against 0.10 under the code-level `fallback_rule="hold"`, which keeps
+  everyone on the route to A. At 0 and
   30 s most R agents already take exit A. Whether this rule is right is
   open ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
 - **HCl is probably overestimated.** The deck has no HCl loss to walls

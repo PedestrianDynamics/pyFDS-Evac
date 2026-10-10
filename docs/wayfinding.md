@@ -403,7 +403,7 @@ read from the simulation clock, with a run that does not finish counted as
 The fully familiar tier took 34.9 s at seed 420. The code advises a cell smaller than the
 thinnest wall and warns when it is not (`visibility.py`, `VisibilityModel.clear_air`). The #168 investigation recommends at
 most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
-median changes by about 1 % at both halvings. The P90 fails the 5 % rule at
+median changes by at most 1.1 % at both halvings. The P90 fails the 5 % rule at
 both, because deadlocked runs count as 300 s; without them it changes by
 −3.0 % from 0.1 to 0.05 m and +1.1 % from 0.05 to 0.025 m. Since
 [#726](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726) (0.5.0) the
