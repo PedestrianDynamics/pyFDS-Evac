@@ -64,6 +64,8 @@ from matplotlib.patches import Polygon as MplPolygon
 from shapely import wkt
 from shapely.geometry import LineString, Point, Polygon
 
+from pyfds_evac.core.direct_steering_runtime import TARGET_REACH_MARGIN_M
+
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "site" / "static" / "images" / "verification"
 SCENARIO = ROOT / "assets" / "familiarity_test_discovery"
@@ -850,7 +852,7 @@ def _turn_back_note(ax, n_turned):
     )
 
 
-def plot_door(out, walkable, polys, geo, signs, patrols, tol):
+def plot_door(out, walkable, polys, geo, signs, patrols, tol, radius):
     """Zoom on CP3's door: where arrival registers, where the exit is seen."""
     fig, ax = plt.subplots(figsize=(7.0, 5.2), dpi=150)
     x_lo, x_hi, y_lo, y_hi = 16.3, 18.9, 12.35, 14.15
@@ -860,8 +862,18 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
     )
     for ring in walkable.interiors:
         ax.add_patch(MplPolygon(np.asarray(ring.coords), fc=WALL, ec=WALL, lw=1.0))
-    # where arrival at CP3 can register: within 0.7 m of a point in its box
-    reach = polys["CP3"].buffer(0.7).intersection(walkable)
+    # where arrival at CP3 can register (#69, #726): the centre inside the box,
+    # or within r + TARGET_REACH_MARGIN_M of a target point, which is drawn at
+    # least max(0.05, 0.8 r) inside the box (pick_stage_target)
+    inset = max(0.05, 0.8 * radius)
+    reach_m = radius + TARGET_REACH_MARGIN_M
+    reach = (
+        polys["CP3"]
+        .buffer(-inset)
+        .buffer(reach_m)
+        .union(polys["CP3"])
+        .intersection(walkable)
+    )
     for part in getattr(reach, "geoms", [reach]):
         ax.add_patch(
             MplPolygon(
@@ -954,7 +966,8 @@ def plot_door(out, walkable, polys, geo, signs, patrols, tol):
             color=DEST["CP3"],
             lw=1.0,
             ls="--",
-            label="arrival can register: within 0.7 m of the box (#69)",
+            label=f"arrival: within r + 0.5 = {reach_m:.1f} m of a target point,\n"
+            "or inside the box (#69)",
         ),
         Line2D([0], [0], color=EXIT, lw=1.8, label="exit sign legible above this line"),
         Patch(fc=EXIT, alpha=0.4, label=f"grid tolerance ±{tol:.2f} m (0.05 m grid)"),
@@ -1368,7 +1381,16 @@ def main():
         "discovery": f"discovery: learns it ({MAIN_CELL:g} m grid)",
     }
     plot_paths(OUT, walkable, polys, runs, titles, n_turned, n_west)
-    plot_door(OUT, walkable, polys, geo, signs, main_patrols, grid_tol(MAIN_CELL))
+    plot_door(
+        OUT,
+        walkable,
+        polys,
+        geo,
+        signs,
+        main_patrols,
+        grid_tol(MAIN_CELL),
+        float(params.get("radius", 0.2)),
+    )
     refs = {
         f"L/v0, full: {l_full:.1f} m / {v0:g} m/s = {l_full / v0:.0f} s": (
             l_full / v0,
