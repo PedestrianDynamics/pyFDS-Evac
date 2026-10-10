@@ -2,8 +2,8 @@
 
 fdsreader 1.11.7 keeps a ``<CHID>.pickle`` cache next to the ``.smv``
 (``Simulation._get_pickle_filename``). With caching on, it writes that
-file on every open after the first in a process and deletes a pickle it
-cannot read or that is stale; with ``settings.ENABLE_CACHING = False``
+file when none exists, and on every open after the first in a process,
+and deletes a pickle it cannot read or that is stale; with ``settings.ENABLE_CACHING = False``
 it deletes an existing pickle instead. Either way, opening a case writes
 to or deletes from the user's FDS directory (#716).
 
@@ -21,9 +21,13 @@ values it found. fdsreader calls in another thread that do not use this
 module are not held by the lock. Child processes start with fdsreader's
 defaults and must open cases through this module too.
 
-A ``Simulation`` returned by ``open_fds_simulation`` deletes nothing on
-``clear_cache(clear_persistent_cache=True)``: it never wrote a pickle,
-and fdsreader would delete ``<CHID>.pickle`` in the case directory.
+``open_fds_simulation`` returns a ``CaseSafeSimulation``, an
+``fdsreader.Simulation`` that keeps this promise after the block: a copy
+(``copy.deepcopy``) or an unpickled instance is created inside the block
+again, as fdsreader creates it through ``Simulation.__new__``, and
+``clear_cache(clear_persistent_cache=True)`` clears the memory cache
+only. fdsreader's own function, called as
+``Simulation.clear_cache(sim, True)``, still deletes ``<CHID>.pickle``.
 
 Workaround record. Reason: fdsreader has no setting for the cache
 folder and deletes the pickle when caching is off. Affected versions:
@@ -37,7 +41,6 @@ folder be set, or turns caching off without deleting the pickle.
 
 from __future__ import annotations
 
-import functools
 import tempfile
 import threading
 from collections.abc import Iterator
@@ -102,18 +105,40 @@ def fdsreader_without_cache() -> Iterator[None]:
             settings.ENABLE_CACHING = caching
 
 
-def _clear_memory_cache(sim: Any, clear_persistent_cache: bool = False) -> None:
-    """``Simulation.clear_cache`` without deleting ``<CHID>.pickle``."""
-    type(sim).clear_cache(sim, clear_persistent_cache=False)
+def _case_safe_class() -> type:
+    """``CaseSafeSimulation``, built on first use to keep imports cheap."""
+    cls = globals().get("_CASE_SAFE")
+    if cls is not None:
+        return cls
+    from fdsreader.simulation import Simulation
+
+    class CaseSafeSimulation(Simulation):
+        """``fdsreader.Simulation`` that never touches the case's pickle."""
+
+        def __new__(cls, *args: Any, **kwargs: Any) -> Any:
+            # Also the path of copy.deepcopy and pickle.load, which pass
+            # the .smv path from Simulation.__getnewargs__.
+            with fdsreader_without_cache():
+                return super().__new__(cls, *args, **kwargs)
+
+        def clear_cache(self, clear_persistent_cache: bool = False) -> None:
+            """Free the loaded data; there is no pickle of this one to delete."""
+            super().clear_cache(clear_persistent_cache=False)
+
+    CaseSafeSimulation.__module__ = __name__
+    CaseSafeSimulation.__qualname__ = "CaseSafeSimulation"
+    globals()["_CASE_SAFE"] = CaseSafeSimulation
+    return CaseSafeSimulation
+
+
+def __getattr__(name: str) -> Any:
+    # pickle finds CaseSafeSimulation here by name.
+    if name == "CaseSafeSimulation":
+        return _case_safe_class()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 def open_fds_simulation(path: str | Path) -> Any:
     """``fdsreader.Simulation(path)`` that leaves the case directory unchanged."""
     with fdsreader_without_cache():
-        from fdsreader import Simulation
-        from fdsreader.simulation import Simulation as upstream
-
-        sim = Simulation(str(path))
-    if isinstance(sim, upstream):
-        sim.clear_cache = functools.partial(_clear_memory_cache, sim)
-    return sim
+        return _case_safe_class()(str(path))

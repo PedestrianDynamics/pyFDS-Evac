@@ -9,6 +9,7 @@ worker), so a loader that bypasses ``fdsreader_adapter`` changes the case.
 from __future__ import annotations
 
 import ast
+import copy
 import os
 import pickle
 import shutil
@@ -53,17 +54,27 @@ def upstream_cache(request, monkeypatch):
     return request.param
 
 
+def _add_pickle(case: Path, pickle_state: str) -> None:
+    """Put fdsreader's ``<CHID>.pickle`` into *case*: valid, stale or corrupt."""
+    chid = next(case.glob("*.smv")).stem
+    if pickle_state == "corrupt":
+        (case / f"{chid}.pickle").write_bytes(b"not a pickle")
+        return
+    if pickle_state not in ("valid", "stale"):
+        return
+    # As fdsreader writes it (simulation.py:198-202); stale: another .smv.
+    with fdsreader_without_cache():
+        sim = Simulation.__new__(Simulation, str(case))
+        sim.__init__(str(case))
+    valid = pickle_state == "valid"
+    sim._hash = create_hash(sim.smv_file_path) if valid else "stale"
+    with open(case / f"{chid}.pickle", "wb") as f:
+        pickle.dump(sim, f, protocol=4)
+
+
 def _copy(src: Path, dst: Path, pickle_state: str) -> Path:
     shutil.copytree(src, dst, ignore=shutil.ignore_patterns("*.pickle"))
-    chid = next(dst.glob("*.smv")).stem
-    if pickle_state == "valid":
-        # As fdsreader writes it (simulation.py:198-202).
-        sim = open_fds_simulation(dst)
-        sim._hash = create_hash(sim.smv_file_path)
-        with open(dst / f"{chid}.pickle", "wb") as f:
-            pickle.dump(sim, f, protocol=4)
-    elif pickle_state == "corrupt":
-        (dst / f"{chid}.pickle").write_bytes(b"not a pickle")
+    _add_pickle(dst, pickle_state)
     return dst
 
 
@@ -206,6 +217,31 @@ def test_clearing_the_persistent_cache_keeps_the_case_pickle(tmp_path, upstream_
     sim.clear_cache(clear_persistent_cache=True)
     sim.clear_cache()
     assert _listing(case) == before
+
+
+@pytest.mark.parametrize("pickle_state", ["corrupt", "valid", "stale"])
+@pytest.mark.parametrize(
+    "duplicate",
+    [copy.deepcopy, lambda sim: pickle.loads(pickle.dumps(sim))],
+    ids=["deepcopy", "pickle"],
+)
+def test_a_copied_simulation_leaves_the_case_unchanged(
+    tmp_path, upstream_cache, monkeypatch, duplicate, pickle_state
+):
+    """copy and unpickle go through Simulation.__new__ after the block.
+
+    fdsreader reads (and on failure deletes) a pickle only on the first
+    __new__ in a process, so ``_loading`` is reset here.
+    """
+    case = _copy(VIS_CASE, tmp_path / "case", "none")
+    sim = open_fds_simulation(case)
+    _add_pickle(case, pickle_state)
+    monkeypatch.setattr(Simulation, "_loading", False)
+    before = _listing(case)
+    clone = duplicate(sim)
+    assert _listing(case) == before
+    assert isinstance(clone, Simulation)
+    assert len(clone.slices) == len(sim.slices)
 
 
 def test_nested_blocks_restore_the_settings_after_an_error(upstream_cache):
@@ -391,3 +427,18 @@ def test_the_verification_scripts_open_cases_without_touching_them(
         assert len(module.open_fds_case(case).slices) == 4
         assert _listing(case) == before
     assert Simulation.__dict__["_get_pickle_filename"] is original
+
+
+def test_the_verification_scripts_refuse_an_fdsreader_without_the_hooks(
+    tmp_path, monkeypatch
+):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "_fdsreader_open", REPO / "scripts" / "verification" / "_fdsreader_open.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    monkeypatch.delattr(settings, "ENABLE_CACHING")
+    with pytest.raises(RuntimeError, match="has no settings.ENABLE_CACHING"):
+        module.open_fds_case(_copy(VIS_CASE, tmp_path / "case", "none"))

@@ -2938,10 +2938,12 @@ class TestSmokeOverlay321:
 
     @pytest.fixture
     def fds(self, tmp_path, monkeypatch):
-        import fdsreader
+        from pyfds_evac.core import fdsreader_adapter
 
         def use(*slices):
-            monkeypatch.setattr(fdsreader, "Simulation", lambda p: _FakeSim(slices))
+            monkeypatch.setattr(
+                fdsreader_adapter, "open_fds_simulation", lambda p: _FakeSim(slices)
+            )
             return str(tmp_path)
 
         return use
