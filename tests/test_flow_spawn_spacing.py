@@ -23,6 +23,7 @@ import pytest
 from shapely.geometry import Polygon, box
 from test_run_outcome import D, _coords, _scenario
 
+import pyfds_evac.core.simulation_init as simulation_init
 from pyfds_evac.core.scenario import run_scenario
 from pyfds_evac.core.simulation_init import (
     _CONTACT_OWN_RADIUS,
@@ -159,6 +160,24 @@ def test_an_uncrowded_flow_defers_nothing(monkeypatch):
     _, result, out = _run_recording_gaps(monkeypatch, scenario, 1)
     assert result.metrics["flow_spawns_deferred"] == 0
     assert "found no free position" not in out
+
+
+def test_positions_are_not_kept_once_no_flow_can_follow(monkeypatch):
+    """The flow window closes at 1 s of a 3 s run (dt 0.01 s)."""
+    calls = []
+    take = simulation_init._jupedsim_positions
+
+    def counting(simulation):
+        calls.append(simulation.elapsed_time())
+        return take(simulation)
+
+    monkeypatch.setattr(simulation_init, "_jupedsim_positions", counting)
+    scenario = _scenario_with_flow(
+        "CollisionFreeSpeedModel", AREA, (0, STANDING_R), (50, FLOW_R), 1.0, 3.0
+    )
+    _run_recording_gaps(monkeypatch, scenario, 1)
+    assert calls
+    assert max(calls) <= 1.0 + 1e-9
 
 
 def _occupied(*agents, seen=None):

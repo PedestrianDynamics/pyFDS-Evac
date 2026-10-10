@@ -879,6 +879,16 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _flow_pending(
+    flow_distributions: list, numbers: list, counters: list, time_s: float
+) -> bool:
+    """Whether a flow source has agents to add and its window is still open."""
+    return any(
+        counters[source_id] < numbers[source_id] and time_s <= flow["end_time"]
+        for source_id, flow in enumerate(flow_distributions)
+    )
+
+
 def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
     """Count a step at which flow source *source_id* found no free position."""
     count, first, _ = deferred.get(source_id, (0, time_s, time_s))
@@ -2434,6 +2444,7 @@ def run_scenario(
                     flow_radius = max_agent_radius(flow_dist["params"])
                     for _ in range(spawning_freqs_and_numbers[source_id][1]):
                         spawned_this_attempt = False
+                        # O(agents) per attempt, not per candidate.
                         occupied = _occupied(
                             simulation, agent_radii, jupedsim_positions
                         )
@@ -3437,10 +3448,17 @@ def run_scenario(
                         }
                     )
 
-            if has_flow_spawning:
+            # Only read at a later flow spawn; once none can follow, not kept.
+            flows_pending = has_flow_spawning and _flow_pending(
+                flow_distributions,
+                num_agents_per_source,
+                agent_counter_per_source,
+                simulation.elapsed_time(),
+            )
+            if flows_pending:
                 jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
-            if has_flow_spawning:
+            if flows_pending:
                 _forget_removed(jupedsim_positions, simulation)
             if frame_recorder is not None:
                 frame_recorder.after_step(
