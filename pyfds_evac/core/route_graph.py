@@ -1398,21 +1398,42 @@ def _dose(fed_rate_per_min: float, travel_time_s: float) -> float:
     return fed_rate_per_min * travel_time_s / _SECONDS_PER_MINUTE
 
 
+@dataclass(frozen=True)
+class _FedRateAsExtinction:
+    """A FED-rate sampler read through the extinction-sampler interface.
+
+    Lets ``_polyline_stats`` average the FED rate along a walk at the same
+    points it samples the walk's extinction.
+    """
+
+    fed_rate_sampler: FedRateSampler
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return self.fed_rate_sampler.sample_fed_rate(time_s, x, y)
+
+
 def _walk_dose(
     leg: _FirstLeg,
     travel_time_s: float,
     time_s: float,
     fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
 ) -> float:
-    """The dose of the walk *leg*, read at its midpoint at *time_s* (#171).
+    """The dose of the walk *leg*: its mean FED rate over its time (#171).
 
-    Measured on the walk, as its smoke and time are, and read when the walk
-    starts, as an edge's rate is read when the agent reaches the edge.
+    Measured on the walk, as its smoke and time are: the length-weighted
+    mean rate at the walk's extinction sample points, every sample read at
+    *time_s*, when the walk starts. A single sample would turn one hot
+    cell into the dose of a whole walk, which in dense smoke lasts a minute.
     """
     if fed_rate_sampler is None:
         return 0.0
-    mid_x, mid_y = _polyline_midpoint(leg.waypoints)
-    rate = fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)
+    rate, _ = _polyline_stats(
+        leg.waypoints,
+        time_s,
+        _FedRateAsExtinction(fed_rate_sampler),
+        config.sampling_step_m,
+    )
     return _dose(rate, travel_time_s)
 
 
@@ -1621,9 +1642,9 @@ def _measure_route(
         travel_time = sum([walk_time] + [s.travel_time_s for s in segments[1:]])
         # The dose too is that of the walk: the walk back to the origin node
         # is charged, and a dose already incurred is in current_fed (#171).
-        fed_growth = _walk_dose(first_leg, walk_time, time_s, fed_rate_sampler) + sum(
-            s.fed_growth for s in segments[1:]
-        )
+        fed_growth = _walk_dose(
+            first_leg, walk_time, time_s, fed_rate_sampler, config
+        ) + sum(s.fed_growth for s in segments[1:])
         clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)
@@ -2350,7 +2371,7 @@ def _first_hops(
             k_avg=leg.k_avg,
             speed_factor=speed_factor,
             travel_time_s=travel_time,
-            fed_growth=_walk_dose(leg, travel_time, time_s, fed_rate_sampler),
+            fed_growth=_walk_dose(leg, travel_time, time_s, fed_rate_sampler, config),
             visible=leg.k_avg < config.visibility_extinction_threshold,
             k_max=leg.k_max,
             arrival_time_s=time_s,

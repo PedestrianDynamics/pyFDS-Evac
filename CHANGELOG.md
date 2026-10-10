@@ -13,11 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   field (#171): it rises for an agent behind its route's origin node and
   moves either way in a non-uniform field. Under `additive` the route
   cost moves by `w_fed` times that change, so near-tied choices can
-  change. Under `gate` a route whose dose now reaches
-  `fed_rejection_threshold` is refused, so choices can change too: in
-  the t_junction golden deck 12 more agents switch by fallback and the
-  last one leaves at 204.6 s instead of 179.0 s. Runs without a FED
-  field are unchanged.
+  change. On the t_junction, l_corridor, Schroeder 2015, world100 and
+  world77 decks the largest route FED rises from 0.43 to 0.71 and no
+  exit choice changes. Runs without a FED field are unchanged.
 
 - Route history (`--output-route-history`, `result.route_history`):
   `smoke_reroute` now counts only the exit changes smoke caused (#92).
@@ -142,8 +140,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the CSV outputs are unchanged. No shipped deck changes: the
   largest route FED in their outputs is 0.565, below the limit.
 - The dose of a route's first leg is that of the agent's walk to the
-  route's next node, read at the walk's midpoint over its travel time,
-  as the leg's smoke and time already were (#171). Before, it was the
+  route's next node: the mean FED rate at the walk's smoke sample
+  points, read at the decision time, over the walk's travel time, as
+  the leg's smoke and time already were (#171). Before, it was the
   first segment's dose pro rata to what is left of it, which charged no
   dose for the walk back to the route's origin node of an agent behind
   it, and read the segment's rate, not the walk's. The candidate search
