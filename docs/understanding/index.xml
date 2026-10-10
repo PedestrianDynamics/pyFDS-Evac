@@ -129,8 +129,8 @@ Script: &lt;code>scripts/generate_tenability_curves.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;a href="#routes-live-on-a-stage-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Routes are paths on a directed graph whose nodes are the spawn areas,
 checkpoints and exits. Each edge carries a polyline that JuPedSim computes
 along the walkable area, so it follows the corridors, not a straight line
-through walls. Smoke is sampled at short steps along it, and the mean of the
-samples, \(\bar K_{uv}\), is a discrete Beer–Lambert mean (see
+through walls. Smoke is read once in every grid cell of the FDS slice that
+the polyline crosses, and the mean of the samples, \(\bar K_{uv}\), is a discrete Beer–Lambert mean (see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>) taken along a walked
 path instead of a line of sight.&lt;/p>
 &lt;p>A route is measured from where the agent stands. Its mean extinction
@@ -140,10 +140,11 @@ decision is not remembered: every re-decision starts again from the current
 field. pyFDS-Evac sets each agent&amp;rsquo;s target itself and
 JuPedSim walks the agent there; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#how-agents-are-steered">How agents are steered&lt;/a>.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/stage_graph.png" alt="Plan view of a room with an internal wall; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with sample points coloured by extinction" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/stage_graph.png" alt="Plan view of a room with an internal wall over a light 0.5 m grid; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with one sample point in each grid cell it crosses, coloured by extinction" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 3. Schematic with a toy extinction field, not a simulation. The
 straight line (dashed) passes through a wall; the walked polyline (solid) goes
-around it, its samples coloured by K [1/m] at the time the agent would reach
+around it, read once in each cell of a notional 0.5 m FDS grid that it
+crosses, its samples coloured by K [1/m] at the time the agent would reach
 them. \(d_W\) is the walkable distance to the first node.
 Script: &lt;code>scripts/figures/stage_graph.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>The exposure gate&lt;span class="hx-absolute -hx-mt-20" id="the-exposure-gate">&lt;/span>
@@ -397,7 +398,7 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>\(\Delta s\)&lt;/td>
-&lt;td>Maximum spacing of smoke samples along a polyline&lt;/td>
+&lt;td>Spacing of smoke samples where the field has no grid or the line leaves every FDS subslice, and of the walk-dose FED rate&lt;/td>
 &lt;td>m&lt;/td>
 &lt;td>&lt;code>sampling_step_m&lt;/code>&lt;/td>
 &lt;/tr>
@@ -504,8 +505,7 @@ that cell, even where the walkable part of the line lies inside the domain
 &lt;em>K&lt;/em> = 0 outside its fire meshes. FDS meshes that cover the walkable area
 and the sight lines to the signs avoid it. The fix needs an fdsvismap release with
 &lt;a href="https://github.com/FireDynamics/fdsvismap/issues/89" target="_blank" rel="noopener">FireDynamics/fdsvismap#89&lt;/a>
-and &lt;a href="https://github.com/FireDynamics/fdsvismap/issues/90" target="_blank" rel="noopener">#90&lt;/a> and is planned
-for 0.5.0.&lt;/p>
+and &lt;a href="https://github.com/FireDynamics/fdsvismap/issues/90" target="_blank" rel="noopener">#90&lt;/a> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/454" target="_blank" rel="noopener">#454&lt;/a>, open).&lt;/p>
 &lt;h2>Incapacitation is deterministic by default&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-is-deterministic-by-default">&lt;/span>
 &lt;a href="#incapacitation-is-deterministic-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>FED below means fractional effective dose. By default
 (&lt;code>--incapacitation-mode deterministic&lt;/code>), every agent stops when its FED
@@ -632,7 +632,7 @@ it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.&lt;/p>
 &lt;p>&lt;strong>Route choice.&lt;/strong> Route choice has open limitations: switching can oscillate
 where two routes cross in cost (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>), routes are priced with smoke the agent
-cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), one path is priced per exit (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), the first-leg FED is taken pro rata from the first edge (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>), a real optical-depth
+cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), one path is priced per exit (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), node-to-node legs take their FED rate from one sample at the polyline midpoint, a real optical-depth
 difference inside the anchor&amp;rsquo;s deadband can keep the current exit ranked first, so the anchor is never asked (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; round-off is a tie since &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452" target="_blank" rel="noopener">#452&lt;/a>). The full list, with
 one line per issue, is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing › Limitations&lt;/a>.&lt;/p>
@@ -694,29 +694,36 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 &lt;h2>Known defects&lt;span class="hx-absolute -hx-mt-20" id="known-defects">&lt;/span>
 &lt;a href="#known-defects" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>Crowds deadlock at doors and narrow gaps&lt;/strong>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706" target="_blank" rel="noopener">#706&lt;/a>, planned for 0.5.0). With the default
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706" target="_blank" rel="noopener">#706&lt;/a>, planned for 0.6.0). With the default
 collision-free speed model, a crowd can stop in front of an opening
 several body widths wide and never clear it, so the run reaches
 &lt;code>max_simulation_time&lt;/code> with agents inside. Imported FDS+Evac decks such
 as &lt;code>HUT_Library&lt;/code> and &lt;code>imo/CompTest9a&lt;/code> show it in some seeds; a smaller
 radius makes it rarer but does not remove it.&lt;/li>
 &lt;li>&lt;strong>Doorway deadlocks of exploring agents&lt;/strong>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>, planned for 0.5.0). Under &lt;code>no_known_exit: explore&lt;/code>, and
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>, planned for 0.6.0). Under &lt;code>no_known_exit: explore&lt;/code>, and
 &lt;code>return&lt;/code> when it explores, two agents that meet head-on in a door, or
 four jammed at a checkpoint, can stand there for the rest of the run. On &lt;code>familiarity_test_no_journey&lt;/code>
-(clear air, 0.05 m grid) up to 4 agents are left in 5 of 150 runs of 5
-agents and in 5 of 60 runs of 20 agents
+(clear air, 0.05 m grid, the settings of
+&lt;code>tests/test_familiarity_no_journey.py&lt;/code>, at &lt;code>c619a046&lt;/code>) 2 agents are left
+in 3 of 150 runs of 5 agents (seeds 1–150), and 2 to 6 agents in 7 of
+60 runs of 20 agents (seeds 1–60)
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Dense counterflow can lock&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745" target="_blank" rel="noopener">#745&lt;/a>, planned for 0.6.0). In dense head-on counterflow under the
+default &lt;code>CollisionFreeSpeedModel&lt;/code>, the two streams can meet and stand
+for the rest of the run. The four decks Iso-06-counterflow-50 and -100
+and Nist-2-8-counterflow-50 and -100 of jupedsim-web-community
+(&lt;code>82404ee&lt;/code>, radius 0.15 m, clear air, patched with &lt;code>&amp;quot;journeys&amp;quot;: []&lt;/code> and
+&lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code>) reach their 400 s limit with 0–1 agents out in
+each of seeds 1–3 at &lt;code>c619a046&lt;/code>; in the last 60 s no agent moves more
+than 0.02 m. With the same patch, Iso-06-counterflow-0 and -10 finish.
+The jam is head-on contact in JuPedSim&amp;rsquo;s operational model, not smoke:
+pyFDS-Evac has no dedicated counterflow algorithm
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#1-movement-model">Model comparison&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Re-evaluation at most once per second&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660" target="_blank" rel="noopener">#660&lt;/a>).
 &lt;code>run_scenario&lt;/code> runs the reroute pass at most once per simulated second, so
 a &lt;code>reevaluation_interval_s&lt;/code> (&lt;code>--reroute-interval&lt;/code>) below 1 s acts as 1 s.&lt;/li>
-&lt;li>&lt;strong>Stage reach assumes a 0.2 m radius&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/661" target="_blank" rel="noopener">#661&lt;/a>). For
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#which-agents-are-steered-directly">directly steered agents&lt;/a>,
-the distance at which a stage counts as reached and the clearance of the
-targets picked on the way use 0.2 m, whatever the agent&amp;rsquo;s &lt;code>radius&lt;/code>. On decks with
-another radius, such as &lt;code>world_100&lt;/code> (0.1 m) and imported FDS+Evac
-decks (0.12–0.16 m), or with a radius distribution, agents reach stages
-at the wrong distance.&lt;/li>
 &lt;li>&lt;strong>&lt;code>init --check&lt;/code> keeps the deck&amp;rsquo;s z on a stretched grid.&lt;/strong> The check
 moves each slice to the uniform &lt;code>&amp;amp;MESH&lt;/code> grid as FDS does
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687" target="_blank" rel="noopener">#687&lt;/a>); with

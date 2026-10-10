@@ -121,10 +121,20 @@ estimated travel time. (Active only when a &lt;code>fed_model&lt;/code> is
 provided; otherwise &lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>.)&lt;/li>
 &lt;/ol>
 &lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
-&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The mean extinction along an edge is computed from its polyline. Each
-segment &lt;code>s&lt;/code> of length &lt;code>L_s&lt;/code> is sampled at evenly spaced points, both ends
-included, at most &lt;code>sampling_step_m&lt;/code> apart, and &lt;code>K_bar_s&lt;/code> is the mean of
-those samples. The segment means are combined weighted by length:&lt;/p>
+&lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The mean extinction along an edge is computed from its polyline. On an
+FDS extinction field each segment &lt;code>s&lt;/code> of length &lt;code>L_s&lt;/code> is read once in
+every grid cell it crosses, at points fixed to the grid, as FDS+Evac&amp;rsquo;s
+&lt;code>See_door&lt;/code> does (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).
+The segment is split by subslice; each part is marched along its dominant
+axis and sampled at its start, at each value position strictly between
+its end cells, and at its end. Where subslices overlap, the first one in
+order is read, and a segment crossing meshes of different spacing is read
+on each mesh&amp;rsquo;s own grid. Only a field without a grid (a constant or test
+field) and a stretch outside every FDS subslice are sampled at evenly
+spaced points, both ends included, at most &lt;code>sampling_step_m&lt;/code> apart. Under
+&lt;code>anticipate&lt;/code> each sample is read at the agent&amp;rsquo;s arrival time there.
+&lt;code>K_bar_s&lt;/code> is the mean of the samples, and the segment means are combined
+weighted by length:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>sigma_bar = sum(L_s * K_bar_s) / sum(L_s)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -203,7 +213,8 @@ is credited out of &lt;code>K_ave&lt;/code> and &lt;code>FED_max&lt;/code>, beca
 in &lt;code>current_fed&lt;/code>. For &lt;code>k_max_route&lt;/code> and &lt;code>k_leg_max&lt;/code> the first segment is
 resampled along the walk from the agent to its next node: the routing
 engine&amp;rsquo;s path through the walkable area, or the straight line when no
-engine is available, sampled every &lt;code>sampling_step_m&lt;/code> along its length.&lt;/p>
+engine is available, read by the same rule: once per grid cell on an FDS
+field, every &lt;code>sampling_step_m&lt;/code> only without a grid or off the slice.&lt;/p>
 &lt;h3>What each model ranks on&lt;span class="hx-absolute -hx-mt-20" id="what-each-model-ranks-on">&lt;/span>
 &lt;a href="#what-each-model-ranks-on" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Both models write a single &lt;code>rank_cost&lt;/code> field, which ordering, the
 exit-switch anchor and the same-exit path test all read:&lt;/p>
@@ -275,26 +286,65 @@ the one to flee (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/is
 lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
 &lt;code>fallback_switch_margin&lt;/code> hysteresis on &lt;code>tau_route&lt;/code>: the current exit stays
 first unless the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than that fraction lower (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). Under the
-additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>) (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>; the underlying sampling cause is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/p>
+additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>) (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The lockout was added while route smoke was sampled at steps that could pass over a narrow plume core; 0.5.0 reads it per grid cell (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>), and the lockout stays as a guard against near-ties of τ.&lt;/p>
 &lt;p>An experimental alternative exists at code level only:
 &lt;code>RouteCostConfig(fallback_rule=&amp;quot;hold&amp;quot;)&lt;/code>. No scenario key, CLI flag or
 GUI control sets it, and the default &lt;code>&amp;quot;tau&amp;quot;&lt;/code> is the rule above
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696" target="_blank" rel="noopener">#696&lt;/a>). Under
-&lt;code>&amp;quot;hold&amp;quot;&lt;/code> the first choice with every route refused is still the lowest
-&lt;code>tau_route&lt;/code>, but after that the agent keeps its exit between refused
-routes. It leaves only for a feasible route, or when its current route
-must be fled and the rival need not be (#128).
-&lt;code>fallback_switch_margin&lt;/code> and &lt;code>fallback_return_lockout_s&lt;/code> then have no
-effect. On &lt;code>t_junction&lt;/code> (&lt;code>fire_2MW_PVC&lt;/code>, R arm of &lt;code>howto-with-without-fire.md&lt;/code>, seeds 4–13), the
-prototype on the 0.4.0 routing code gave the following results
-(pre-movement 0 / 30 / 60 s).
-Under &lt;code>&amp;quot;tau&amp;quot;&lt;/code>, 81 / 19 / 0 % of agents went to exit A, with a median
-largest FED of 0.040 / 0.123 / 0.195 and 19 / 149 / 129 switches.
-Under &lt;code>&amp;quot;hold&amp;quot;&lt;/code>, 100 % went to A at every pre-movement, with a median
-largest FED of 0.006 / 0.028 / 0.145 and no switches. This is one deck
-and one fire, and the evidence that people keep going once they are in
-smoke is expert judgement. A user setting waits for measurements on
-&lt;code>l_corridor&lt;/code>, &lt;code>world100&lt;/code> and Schroeder 2015.&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696" target="_blank" rel="noopener">#696&lt;/a>).
+Closed and unreachable exits are dropped before ranking, so they never
+count as the current route. Under &lt;code>&amp;quot;hold&amp;quot;&lt;/code>:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>No current exit among the ranked routes&lt;/strong> (the first choice, an exit
+closed on schedule, or one unreachable from where the agent stands):
+&lt;code>&amp;quot;hold&amp;quot;&lt;/code> acts as &lt;code>&amp;quot;tau&amp;quot;&lt;/code>. The agent takes the route it need not flee with
+the lowest &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>.&lt;/li>
+&lt;li>&lt;strong>Current route and rival both must be fled&lt;/strong> (both FED-lethal, or both
+impassable under the additive model): &lt;code>&amp;quot;hold&amp;quot;&lt;/code> keeps the current exit,
+whatever their τ. &lt;code>&amp;quot;tau&amp;quot;&lt;/code> switches when the rival&amp;rsquo;s τ is more than the
+20 % margin lower.&lt;/li>
+&lt;li>&lt;strong>Current route must be fled, the rival need not be:&lt;/strong> the agent switches
+under both rules (#128).&lt;/li>
+&lt;li>&lt;strong>Rival must be fled, the current route need not be:&lt;/strong> the agent holds
+under both rules.&lt;/li>
+&lt;li>&lt;strong>Two refused routes of the same kind otherwise:&lt;/strong> &lt;code>&amp;quot;hold&amp;quot;&lt;/code> never
+switches.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;code>fallback_switch_margin&lt;/code> and &lt;code>fallback_return_lockout_s&lt;/code> then have no
+effect. On &lt;code>t_junction&lt;/code> (&lt;code>fire_2MW_PVC&lt;/code>, R arm of
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>, seeds
+4–23 with no pre-movement and 4–13 at 30 and 60 s, at &lt;code>c619a046&lt;/code>) the two
+rules give the following. Each cell lists the agents to exit A, median
+[min, max] over seeds; the median of the largest max FED; and the
+fallback exit changes per run, median (max).&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Pre-movement&lt;/th>
+&lt;th>&lt;code>&amp;quot;tau&amp;quot;&lt;/code>&lt;/th>
+&lt;th>&lt;code>&amp;quot;hold&amp;quot;&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>0 s&lt;/td>
+&lt;td>100 [94, 100] %; 0.006; 0 (6)&lt;/td>
+&lt;td>100 [100, 100] %; 0.006; 0 (0)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>30 s&lt;/td>
+&lt;td>51 [49, 55] %; 0.070; 195 (201)&lt;/td>
+&lt;td>100 [100, 100] %; 0.024; 0 (0)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>60 s&lt;/td>
+&lt;td>3 [0, 6] %; 0.178; 267 (278)&lt;/td>
+&lt;td>100 [100, 100] %; 0.100; 0 (0)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>This is one deck and one fire, and the evidence that people keep going
+once they are in smoke is expert judgement. A user setting waits for
+measurements on &lt;code>l_corridor&lt;/code>, &lt;code>world100&lt;/code> and Schroeder 2015.&lt;/p>
 &lt;p>Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
 closes on an exit — the distance in &lt;code>tau&lt;/code> is the distance that remains.&lt;/p>
@@ -409,7 +459,9 @@ Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
 library ships no congestion weight at all, and the calibrated value lives with
 the deck it was calibrated on. Issue #89 tracks replacing the global &lt;code>N&lt;/code> with a
 queue the agent can perceive, which would remove the scale dependence.&lt;/p>
-&lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> currently ships &lt;code>w_queue = 0.024&lt;/code>, not 0.03.&lt;/strong> The 0.03
+&lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> ships &lt;code>w_queue = 0.024&lt;/code>, fitted under the additive
+model on an older geometry; at 0.5.0 it gives a front-door share of 34.8 %
+against Fahy&amp;rsquo;s 52.9 %, so it no longer reproduces Fahy&amp;rsquo;s split.&lt;/strong> The 0.03
 below was swept against a geometry whose doorways were narrower than the
 building&amp;rsquo;s; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy&amp;rsquo;s 52.9 %.
@@ -423,7 +475,11 @@ on main at &lt;code>81726ea&lt;/code>), within the spread between seeds. With ev
 from the agent&amp;rsquo;s position (#451; &lt;code>2a94a8da&lt;/code>, the head of its branch, not on
 main) it scores 0.03 at 33.2 % and 0.024
 at 34.7 %, run for run the same as main at &lt;code>22beb01c&lt;/code>: the deck has no fire.
-The sweep was not run again for 0.4.0.&lt;/p>
+At &lt;code>c619a046&lt;/code> (0.5.0) the sweep
+(&lt;code>scripts/sweep_queue_weight.py --weights 0.024 0.03 --seeds 420 421 422&lt;/code>)
+scores 0.024 at 34.8 % (34.2–35.2 %, row deviation 22.2 %) and 0.03 at
+32.8 % (31.5–33.4 %, 23.2 %); one agent never reached a door in 3 of the 6
+runs. The 0.5.0 changes leave the share within the spread between seeds.&lt;/p>
 &lt;p>&lt;strong>Two further caveats on that number.&lt;/strong> The sweep was run under the additive
 composite, where &lt;code>w_queue&lt;/code> multiplies a &lt;em>distance&lt;/em>
 (&lt;code>w_queue * base_speed_m_per_s * queue_time&lt;/code>). Under the default gate model it
@@ -1107,8 +1163,8 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;strong>No vismap precondition.&lt;/strong> The gate reads no visibility model: its criterion
 is the optical depth along the route polyline. A deck of fully familiar agents
-therefore builds no visibility model and needs no &lt;code>--vis-cache&lt;/code>: &lt;code>l_corridor&lt;/code>
-takes 5 seconds and reproduces the cached run&amp;rsquo;s 82/18. A visibility model is
+therefore builds no visibility model and needs no &lt;code>--vis-cache&lt;/code>: at
+&lt;code>7a3617d&lt;/code>, &lt;code>l_corridor&lt;/code> took 5 seconds and reproduced the cached run&amp;rsquo;s 82/18. A visibility model is
 still built for decks with discovery agents, which consult it to learn the
 graph.&lt;/p>
 &lt;h2>How the gate decides&lt;span class="hx-absolute -hx-mt-20" id="how-the-gate-decides">&lt;/span>
@@ -1564,8 +1620,9 @@ only if the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than &lt;code>fallb
 the fallback above; the clean bypass below is not consulted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>).
 If the last exit switch was also between two refused routes, a return to
 the exit it left is refused for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after
-it, including at exactly 10 s (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The lockout stands in for a
-finer smoke sampling step (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/li>
+it, including at exactly 10 s (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The lockout was added while
+route smoke was sampled at steps that could pass over a narrow plume; 0.5.0
+reads it per grid cell (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>), and the lockout stays.&lt;/li>
 &lt;li>The rival is clean and the current exit is not — adopt.&lt;/li>
 &lt;li>The rival is not &lt;code>feasible&lt;/code> — fall through to the &lt;code>rank_cost&lt;/code> comparison.&lt;/li>
 &lt;li>Otherwise a &lt;strong>symmetric deadband&lt;/strong> on &lt;code>tau&lt;/code>, with
@@ -1867,7 +1924,7 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>sampling_step_m&lt;/code>&lt;/td>
 &lt;td>&lt;code>2.0&lt;/code>&lt;/td>
-&lt;td>Spacing of extinction samples along an edge polyline.&lt;/td>
+&lt;td>Spacing of extinction samples where the field has no grid (constant or test fields) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose. An FDS field is read once per grid cell the line crosses (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>active&lt;/td>
 &lt;/tr>
@@ -1940,8 +1997,13 @@ the crossover more frequent near a smoky door: on the &lt;code>l_corridor_gate&l
 reference deck (&lt;code>scripts/golden_rerouting.py&lt;/code>) switches went from 28 to 58
 and exit reversals from 16 to 40, 28 of them within 2 s. Since
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650" target="_blank" rel="noopener">#650&lt;/a>, which
-reads each sample at the agent&amp;rsquo;s arrival time, the deck gives 17 switches
-and 8 reversals, 5 within 2 s; the oscillation is reduced, not removed.&lt;/li>
+reads each sample at the agent&amp;rsquo;s arrival time, the deck gave 17 switches
+and 8 reversals, 5 within 2 s. Since
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a> (0.5.0),
+which reads route smoke once per grid cell, it gives 9 switches (4
+&lt;code>shorter_path&lt;/code>, 5 &lt;code>smoke_reroute&lt;/code>) and no reversals, with all 100 agents
+out by 130.8 s (&lt;code>golden_rerouting.py&lt;/code> at &lt;code>867cedab&lt;/code>). #124 stays open:
+the crossover itself is not modelled away.&lt;/li>
 &lt;li>&lt;strong>&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a> — route
 choice is not perception-limited.&lt;/strong> See
 &lt;a href="#route-choice-is-an-optimality-bound-not-a-perception-limited-model">Route choice is an optimality bound&lt;/a>.
@@ -2069,6 +2131,10 @@ familiarity 1.0):&lt;/p>
 &lt;p>The control run puts the fire east of the junction, where the far route smokes
 first; the gate then diverts 1 agent instead of 16, so it is not simply
 preferring long routes.&lt;/p>
+&lt;p>Before 0.5.0 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92" target="_blank" rel="noopener">#92&lt;/a>)
+every exit change was logged &lt;code>smoke_reroute&lt;/code>, so &amp;ldquo;14 &lt;code>smoke_reroute&lt;/code>&amp;rdquo; and &amp;ldquo;23
+&lt;code>smoke_reroute&lt;/code>&amp;rdquo; count exit changes of any cause; today&amp;rsquo;s runs split them by
+cause.&lt;/p>
 &lt;p>The table is the run made at &lt;code>b3babc0&lt;/code>, before the band left the ordering. The
 84/16 split was re-measured after &lt;code>cea33ce&lt;/code> and reported unchanged; that re-run
 is not in the folder above, so take the attribution from the commit message

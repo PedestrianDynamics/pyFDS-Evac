@@ -705,14 +705,16 @@ the effect of #172. The run of Figure 7 gives the same numbers before and
 after #174. For both tiers, the first leg&amp;rsquo;s smoke is resampled along the
 walked path from the agent to its next node, the path that also measures the
 first leg&amp;rsquo;s length
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171" target="_blank" rel="noopener">#171&lt;/a>). Since
+0.5.0 the dose of a walk behind the route&amp;rsquo;s origin node is charged as well
+(#171).&lt;/p>
 &lt;p>The patrol can stall: when smoke limits legibility to a few metres, a patrol
 over a few known nodes may never pass a legible new sign
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122" target="_blank" rel="noopener">#122&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Discovery times depend on the grid.&lt;/strong> On
 &lt;code>assets/familiarity_test_discovery&lt;/code>, seeds 1–30, the grid study of the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-familiarity/#pass-criteria">familiarity verification&lt;/a> (criterion
-6, at &lt;code>828ae8c3&lt;/code>) gives the following last-out times of the discovery tier,
+6, at &lt;code>c619a046&lt;/code>) gives the following last-out times of the discovery tier,
 read from the simulation clock, with a run that does not finish counted as
 300 s:&lt;/p>
 &lt;table>
@@ -727,36 +729,38 @@ read from the simulation clock, with a run that does not finish counted as
 &lt;tbody>
 &lt;tr>
 &lt;td>0.25 m (does not resolve the walls)&lt;/td>
-&lt;td>76.6 s&lt;/td>
-&lt;td>90.7 s&lt;/td>
-&lt;td>2 of 30&lt;/td>
+&lt;td>75.7 s&lt;/td>
+&lt;td>104.6 s&lt;/td>
+&lt;td>3 of 30&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.1 m&lt;/td>
-&lt;td>76.7 s&lt;/td>
-&lt;td>87.3 s&lt;/td>
+&lt;td>74.6 s&lt;/td>
+&lt;td>85.4 s&lt;/td>
 &lt;td>2 of 30&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.05 m&lt;/td>
-&lt;td>76.2 s&lt;/td>
-&lt;td>82.8 s&lt;/td>
-&lt;td>0 of 30&lt;/td>
+&lt;td>74.7 s&lt;/td>
+&lt;td>300 s&lt;/td>
+&lt;td>4 of 30&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>0.025 m&lt;/td>
-&lt;td>76.7 s&lt;/td>
-&lt;td>83.9 s&lt;/td>
-&lt;td>0 of 30&lt;/td>
+&lt;td>75.5 s&lt;/td>
+&lt;td>104.3 s&lt;/td>
+&lt;td>3 of 30&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The fully familiar tier took 34.9 s at seed 420. The code advises a cell smaller than the
 thinnest wall and warns when it is not (&lt;code>visibility.py&lt;/code>, &lt;code>VisibilityModel.clear_air&lt;/code>). The #168 investigation recommends at
-most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. From
-0.05 to 0.025 m the median and the P90 change by less than 5 %, though the
-bootstrap 90 % interval of the P90 change reaches +10 %; from 0.1 to 0.05 m
-the P90 changes by −5.2 %, because of the two deadlocked runs at 0.1 m
+most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
+median changes by at most 1.1 % at both halvings. The P90 fails the 5 % rule at
+both, because deadlocked runs count as 300 s; without them it changes by
+−3.0 % from 0.1 to 0.05 m and +1.1 % from 0.05 to 0.025 m. Since
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726" target="_blank" rel="noopener">#726&lt;/a> (0.5.0) the
+deadlocks end 12 of these 120 runs, against 4 before
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168" target="_blank" rel="noopener">#168&lt;/a>, open).
 Do not quote a discovery egress time without its grid.&lt;/p>
 &lt;p>The talk also shows discovery with and without sign gating on the NIST floor
