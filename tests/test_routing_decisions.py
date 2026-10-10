@@ -19,12 +19,18 @@ What it compared is now pinned on the live code alone:
   agent position (#451);
 * each decision branch keeps an explicit test below.
 
-One thing only the differential checked is no longer pinned: the order of
-the sampler calls and of the cached segments. The snapshots hold their
-counts.
+The snapshots also hold, in order, every extinction and FED sample a case
+takes (kind, time, x, y) and every cache entry it writes (key and segment),
+so a change in what is sampled, where, or which route writes a shared entry
+first shows up as a diff. A variant whose snapshot equals the case's
+``as_is`` one is stored as ``"as_is"``.
 
-Regenerate the snapshots as described in ``tests/test_rerouting_golden.py``,
-and only when a change of behaviour is intended.
+Regenerate them, only when a change of behaviour is intended, with::
+
+    PYFDS_EVAC_REGEN_GOLDEN=1 uv run pytest tests/test_routing_decisions.py
+
+A change to where routes are sampled (for example #653) rewrites the
+sampler logs and cache keys of most cases.
 """
 
 from __future__ import annotations
@@ -204,6 +210,59 @@ def _plain(value: Any) -> Any:
     return value
 
 
+def _segment_snapshot(seg: Any) -> list:
+    return _plain(
+        [
+            seg.source,
+            seg.target,
+            seg.length_m,
+            seg.k_avg,
+            seg.k_max,
+            seg.speed_factor,
+            seg.travel_time_s,
+            seg.fed_growth,
+            seg.visible,
+            seg.arrival_time_s,
+        ]
+    )
+
+
+def _line(values: Any) -> str:
+    """*values* as one line of snapshot text, floats rounded."""
+    return " ".join(str(v) for v in _plain(list(values)))
+
+
+def _samples_snapshot(log: list) -> list[str]:
+    """Each sample as ``kind time x y``, in the order it was taken."""
+    return [_line(entry) for entry in log]
+
+
+def _samples_pair(plain: list, cached: list) -> dict:
+    """The samples without and with a cache; the second as "samples" if equal."""
+    with_cache = "samples" if cached == plain else _samples_snapshot(cached)
+    return {
+        "samples": _samples_snapshot(plain),
+        "samples_with_cache": with_cache,
+    }
+
+
+def _cache_snapshot(cache: dict) -> list[str]:
+    """Cache entries in the order they were written: key | segment."""
+    return [
+        f"{_line(key)} | {_line(_segment_snapshot(seg))}" for key, seg in cache.items()
+    ]
+
+
+def _variants_snapshot(case: Any, snapshot: Callable[[Any], dict]) -> dict:
+    """*snapshot* of *case* under each variant; one equal to as_is says so."""
+    out: dict = {}
+    for variant in sorted(_VARIANTS):
+        snap = snapshot(replace(case, config=_VARIANTS[variant](case.config)))
+        out[variant] = snap
+    base = out["as_is"]
+    return {v: ("as_is" if v != "as_is" and s == base else s) for v, s in out.items()}
+
+
 def _wait_info_snapshot(wait_info: dict) -> dict:
     """*wait_info* without the stage configurations, which hold polygons."""
     return _plain({k: v for k, v in wait_info.items() if k != "stage_configs"})
@@ -246,7 +305,7 @@ def _route_snapshot(rc: RouteCost) -> dict:
 
 
 def _rank_snapshot(case: golden.RankCase) -> dict:
-    """The ranking, and how many samples and cached segments it took.
+    """The ranking, the samples taken with and without a cache, and the cache.
 
     A fresh cache must not change the ranking.
     """
@@ -255,9 +314,8 @@ def _rank_snapshot(case: golden.RankCase) -> dict:
     assert cached["ranked"] == plain["ranked"]
     return {
         "ranked": [_route_snapshot(rc) for rc in plain["ranked"]],
-        "samples": len(plain["log"]),
-        "samples_with_cache": len(cached["log"]),
-        "cached_segments": len(cached["cache"]),
+        **_samples_pair(plain["log"], cached["log"]),
+        "cache": _cache_snapshot(cached["cache"]),
     }
 
 
@@ -353,11 +411,8 @@ def test_rank_routes_snapshot():
     golden._check_golden(
         f"{_SNAPSHOTS}/rank_routes.json",
         {
-            f"{name}/{variant}": _rank_snapshot(
-                replace(case, config=_VARIANTS[variant](case.config))
-            )
+            name: _variants_snapshot(case, _rank_snapshot)
             for name, case in sorted(_ALL_RANK_CASES.items())
-            for variant in sorted(_VARIANTS)
         },
     )
 
@@ -463,9 +518,8 @@ def _reroute_snapshot(case: golden.RerouteCase) -> dict:
         "switch": golden._switch_snapshot(plain["switch"]),
         "route_state": _plain(plain["route_state"]),
         "wait_info": _wait_info_snapshot(plain["wait_info"]),
-        "samples": len(plain["log"]),
-        "samples_with_cache": len(cached["log"]),
-        "cached_segments": len(cached["cache"]),
+        **_samples_pair(plain["log"], cached["log"]),
+        "cache": _cache_snapshot(cached["cache"]),
     }
 
 
@@ -548,11 +602,8 @@ def test_evaluate_and_reroute_snapshot():
     golden._check_golden(
         f"{_SNAPSHOTS}/evaluate_and_reroute.json",
         {
-            f"{name}/{variant}": _reroute_snapshot(
-                replace(case, config=_VARIANTS[variant](case.config))
-            )
+            name: _variants_snapshot(case, _reroute_snapshot)
             for name, case in sorted(_ALL_REROUTE_CASES.items())
-            for variant in sorted(_VARIANTS)
         },
     )
 
@@ -689,7 +740,9 @@ def _run_passes(spec: _Pass) -> dict:
                     "route_state": _state_snapshot(rs),
                 }
             )
-        trace.append({"cached_segments": len(cache), "exit_counts": dict(exit_counts)})
+        trace.append(
+            {"cache": _cache_snapshot(cache), "exit_counts": dict(exit_counts)}
+        )
     return {"trace": trace, "samples": len(log)}
 
 
