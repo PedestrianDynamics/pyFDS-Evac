@@ -177,7 +177,14 @@ def _spawn_value(key: str, value: Any, name: str, zero_v0: bool = False) -> Any:
 
 
 def _normalize_flow_schedule_entry(entry: dict) -> dict:
-    """Normalize one configured flow schedule entry to canonical keys."""
+    """Normalize one configured flow schedule entry to canonical keys.
+
+    Times are finite seconds, the start >= 0 and the end after it, and
+    ``number`` a positive integer; anything else, an entry that is not
+    an object included, raises ``ValueError``.
+    """
+    if not isinstance(entry, dict):
+        raise ValueError(f"Each flow schedule entry must be an object, got {entry!r}")
     start_time = entry.get("flow_start_time", entry.get("start_time_s"))
     end_time = entry.get("flow_end_time", entry.get("end_time_s"))
     number = entry.get("number", entry.get("sim_count"))
@@ -188,10 +195,19 @@ def _normalize_flow_schedule_entry(entry: dict) -> dict:
             "Accepted keys: flow_start_time|start_time_s, flow_end_time|end_time_s, number|sim_count."
         )
 
-    start_time = float(start_time)
-    end_time = float(end_time)
-    number = int(number)
+    try:
+        start_time = float(start_time)
+        end_time = float(end_time)
+        number = int(number)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise ValueError(
+            f"Flow schedule entry {entry!r}: times and number must be numbers"
+        ) from error
 
+    if not (math.isfinite(start_time) and math.isfinite(end_time)):
+        raise ValueError(
+            f"Invalid flow window [{start_time}, {end_time}] - times must be finite."
+        )
     if start_time < 0 or end_time <= start_time:
         raise ValueError(
             f"Invalid flow window [{start_time}, {end_time}] - end_time must be greater than start_time."
@@ -213,6 +229,8 @@ def _normalized_flow_schedule(params: dict) -> list[dict]:
     raw_schedule = params.get("flow_schedule", [])
     if not raw_schedule:
         return []
+    if not isinstance(raw_schedule, list):
+        raise ValueError(f"flow_schedule must be a list, got {raw_schedule!r}")
     normalized = [_normalize_flow_schedule_entry(entry) for entry in raw_schedule]
     normalized.sort(
         key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])

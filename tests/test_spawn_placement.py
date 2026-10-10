@@ -531,8 +531,37 @@ def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
             {"flow_schedule": _SCHEDULE, "initial_number": "three"},
             r"Distribution 'jps-distributions_0': initial_number must be a number",
         ),
+        (
+            {"flow_schedule": [{"start_time_s": "nan", "end_time_s": 5, "number": 2}]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be finite",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": 0, "end_time_s": "inf", "number": 2}]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be finite",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": [0], "end_time_s": 5, "number": 2}]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be numbers",
+        ),
+        (
+            {"flow_schedule": [[0, 5, 2]]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be an object",
+        ),
+        (
+            {"flow_schedule": 5},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be a list",
+        ),
     ],
-    ids=["negative-start", "empty-window", "initial-not-a-number"],
+    ids=[
+        "negative-start",
+        "empty-window",
+        "initial-not-a-number",
+        "nan-start",
+        "inf-end",
+        "list-time",
+        "entry-not-an-object",
+        "schedule-not-a-list",
+    ],
 )
 def test_invalid_flow_schedule_stops_the_set_up(
     tmp_path, with_journeys, extra, message
@@ -763,3 +792,41 @@ def test_views_show_the_count_of_a_fill_mode_as_an_upper_bound():
     lines = scenario.summary().splitlines()
     assert f"    {D0}: up to 143 agents" in lines
     assert "  Agents:        ~143" in lines
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_inactive_count_fields_are_not_checked(tmp_path, with_journeys):
+    """A percentage mode does not read ``number``, nor a deck without a
+    schedule ``initial_number``; neither stops the run (#436, #390)."""
+    params = {
+        "distribution_mode": "by_percentage",
+        "percentage": 50,
+        "number": -1,
+        "initial_number": "x",
+        "use_premovement": False,
+    }
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), params)}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, _ = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 71
+
+
+def test_malformed_spawn_coordinates_are_skipped_with_a_warning(tmp_path):
+    """Coordinates that are not numbers are skipped as an invalid polygon (#118)."""
+    data = _journey_deck(
+        {
+            D0: (box(12.0, 2.0, 16.0, 8.0), _params(4)),
+            D1: (box(2.0, 2.0, 4.0, 4.0), _params(3)),
+        }
+    )
+    data["distributions"][D1]["coordinates"] = [[None, 0], [1, 0], [0, 1]]
+    path = tmp_path / "deck.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    simulation = jps.Simulation(model=jps.CollisionFreeSpeedModel(), geometry=WALKABLE)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        initialize_simulation_from_json(
+            str(path), simulation, pedpy.WalkableArea(WALKABLE), seed=SEED
+        )
+    assert f"Warning: Error processing distribution {D1}: float()" in out.getvalue()
+    assert simulation.agent_count() == 4

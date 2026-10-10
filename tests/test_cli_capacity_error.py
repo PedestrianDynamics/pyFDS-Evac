@@ -341,3 +341,13 @@ def test_run_reports_what_a_fill_mode_placed():
         result = run_scenario(scenario)
     assert result.fill_placement == {D: {"placed": 16, "upper_bound": 16}}
     assert summary_line(result).endswith(f" '{D}' placed 16 of at most 16.")
+
+
+def test_export_only_skips_malformed_spawn_coordinates_the_run_skips(monkeypatch):
+    """Coordinates that are not numbers are skipped as by the run (#118)."""
+    scenario = _scenario(ENOUGH_S)
+    scenario.raw["distributions"]["bad"] = {
+        **scenario.raw["distributions"][D],
+        "coordinates": [[None, 0], [1, 0], [0, 1]],
+    }
+    assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0

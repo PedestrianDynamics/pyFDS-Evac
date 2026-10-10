@@ -207,7 +207,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   every error of a spawn area into `Warning: Error processing
   distribution ...` and skips it: only coordinates that make no valid
   polygon, such as a self-intersecting one, are skipped that way, as
-  `--export-only` does.
+  `--export-only` does. Coordinates that are not numbers, such as
+  `[null, 0]`, count as such a polygon.
 
 - A spawn area's `flow_schedule` and `initial_number`, written by
   `Scenario.set_flow_schedule()` or by hand, never reached the run,
@@ -218,7 +219,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without journeys; `--print-summary`, `--export-only`'s capacity check
   and the run count the same agents, and the summary lists each spawn
   area's initial and scheduled agents. The setter and the run read a
-  schedule with one normaliser.
+  schedule with one normaliser, which also refuses times that are not
+  finite (`"nan"`, `"inf"`), entries that are not objects and a
+  schedule that is not a list, with a `ValueError` that names the
+  distribution. `initial_number` without a schedule, and `number` in a
+  percentage mode, are neither read nor checked.
 
 - `distribution_mode: "by_percentage"` ignored `percentage` for agents
   placed at the start and placed `number` agents, as `by_number` does

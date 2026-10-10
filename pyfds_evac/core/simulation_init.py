@@ -143,9 +143,13 @@ def _convert_distribution_spawn_values(params: dict[str, Any], dist_id: Any) -> 
     unset, as for the deck-wide values: the key is removed, so the area
     takes the deck default. A ``ValueError`` names the distribution and the
     key the deck set (``desired_speed`` when that alias gave ``v0``).
+    ``number`` is left as set in a percentage mode, which does not read it.
     """
     for key in _SPAWN_DEFAULT_TYPES:
         if key not in params:
+            continue
+        if key == "number" and params.get("distribution_mode") in _PERCENTAGE_MODES:
+            # Not read by a percentage mode (#436), so not checked either.
             continue
         if params[key] is None:
             del params[key]
@@ -159,14 +163,15 @@ def _convert_flow_schedule(params: dict[str, Any], dist_id: Any) -> None:
     """Normalise a distribution's ``flow_schedule`` and ``initial_number`` (#390).
 
     The schedule is read as ``Scenario.set_flow_schedule`` reads it, alias
-    keys and all, and sorted. ``initial_number`` is read as ``number``;
-    ``null`` is unset. A ``ValueError`` names the distribution and the key.
+    keys and all, and sorted. ``initial_number`` is read as ``number``
+    beside a schedule and dropped without one; ``null`` is unset. A ``ValueError`` names the distribution and the key.
     """
     try:
         params["flow_schedule"] = _normalized_flow_schedule(params)
     except ValueError as error:
         raise ValueError(f"Distribution {dist_id!r}: flow_schedule: {error}") from error
-    if params.get("initial_number") is None:
+    if params.get("initial_number") is None or not params["flow_schedule"]:
+        # Without a schedule initial_number is not read, so not checked.
         params.pop("initial_number", None)
         return
     name = f"Distribution {dist_id!r}: initial_number"
@@ -2367,7 +2372,7 @@ def _journey_spawn_area(coords, walkable_polygon):
     return shapely.intersection(Polygon(coords), walkable_polygon)
 
 
-_INVALID_SPAWN_POLYGON = (shapely.errors.GEOSException, ValueError)
+_INVALID_SPAWN_POLYGON = (shapely.errors.GEOSException, ValueError, TypeError)
 """What ``_journey_spawn_area`` raises for coordinates that make no valid polygon."""
 
 
