@@ -83,10 +83,15 @@ For placement it means:
 - Each checkpoint you add on the walking line between two nodes removes their
   direct edge. Checkpoints therefore define which nodes are neighbours, and
   exploring agents learn the building neighbour by neighbour.
+  Agents then walk from neighbour to neighbour, so the route bends through
+  each such checkpoint.
 - A checkpoint that lies a little off the walking line, so that the detour
   through it is more than 5 % longer, does not remove the direct edge.
-- In clear air, agents go to the nearest exit and do not visit checkpoints,
-  unless smoke makes the route through them cheaper.
+- Agents walk through every checkpoint that removed their direct edge, in
+  clear air too: their path bends to a random point inside it. A waiting time
+  set on that checkpoint applies to all of them. Keep such checkpoints small
+  and on the walking line, or use `transitions` if agents must not pass
+  through them.
 
 Shipped scenarios use both ways:
 

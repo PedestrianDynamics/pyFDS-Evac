@@ -65,11 +65,16 @@ nearest target is kept. Crossings thus define which nodes are neighbours.
 Where to draw them is on
 [How do I place checkpoints?](howto-place-checkpoints.md).
 
-Crossings
-therefore participate in cost-driven routing without a hand-authored journey.
-In clear air the direct spawn-to-exit edge is cheapest, so agents take the
-nearest exit and crossings sit inert; smoke can make a route through a
-crossing cheaper.
+Crossings are therefore part of the routes, in clear air too. Every run picks
+each agent's first route on this graph, with or without rerouting
+(`scenario.py`, `_assign_initial_exit`), and the agent follows the whole path.
+When crossing C has replaced the direct edge from spawn area A to exit B, the
+agent walks into C first and then on to B. Between node points the detour is
+at most 5 %; the agent aims at a random point inside C, so a large crossing
+adds more. A crossing that lies off the walking line keeps the direct edge,
+and agents go through it only when that route is cheaper, for example when
+smoke lies on the direct one. Without `distributions`, agents start at their
+nearest exit's node and walk straight to it.
 
 Explicit `transitions` remain authoritative and skip this path entirely.
 
