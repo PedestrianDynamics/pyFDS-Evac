@@ -162,8 +162,8 @@ def test_an_uncrowded_flow_defers_nothing(monkeypatch):
     assert "found no free position" not in out
 
 
-def test_positions_are_not_kept_once_no_flow_can_follow(monkeypatch):
-    """The flow window closes at 1 s of a 3 s run (dt 0.01 s)."""
+def _count_snapshots(monkeypatch, scenario):
+    """Simulated times at which ``_jupedsim_positions`` was taken."""
     calls = []
     take = simulation_init._jupedsim_positions
 
@@ -172,12 +172,32 @@ def test_positions_are_not_kept_once_no_flow_can_follow(monkeypatch):
         return take(simulation)
 
     monkeypatch.setattr(simulation_init, "_jupedsim_positions", counting)
+    _, result, _ = _run_recording_gaps(monkeypatch, scenario, 1)
+    return calls, result
+
+
+def test_positions_are_not_kept_once_no_flow_can_follow(monkeypatch):
+    """The flow window closes at 1 s of a 3 s run (dt 0.01 s)."""
     scenario = _scenario_with_flow(
         "CollisionFreeSpeedModel", AREA, (0, STANDING_R), (50, FLOW_R), 1.0, 3.0
     )
-    _run_recording_gaps(monkeypatch, scenario, 1)
+    calls, _ = _count_snapshots(monkeypatch, scenario)
     assert calls
     assert max(calls) <= 1.0 + 1e-9
+
+
+def test_positions_are_kept_only_before_a_due_spawn(monkeypatch):
+    """Five agents over a 2 s window in a 3 s run: a spawn every 0.4 s.
+
+    One snapshot before the run, and one before each step with a spawn
+    due, rather than one per step.
+    """
+    scenario = _scenario_with_flow(
+        "CollisionFreeSpeedModel", AREA, (0, STANDING_R), (5, FLOW_R), 2.0, 3.0
+    )
+    calls, result = _count_snapshots(monkeypatch, scenario)
+    assert result.metrics["flow_spawns_deferred"] == 0
+    assert 5 <= len(calls) <= 1 + 2 * 5
 
 
 def _occupied(*agents, seen=None):
@@ -332,3 +352,31 @@ def test_jupedsim_refuses_where_the_agent_stood_before_the_iteration(model_type)
     assert walker.position[0] - x > contact
     with pytest.raises(RuntimeError):
         add(x)
+
+
+def test_jupedsim_refuses_next_to_an_agent_it_just_removed():
+    """An agent in ``removed_agents`` after an iteration is still listed,
+    and ``add_agent`` still measures to where it stood before that
+    iteration; so ``_jupedsim_positions`` keeps it."""
+    model, parameters = MODELS["CollisionFreeSpeedModel"]
+    simulation = jps.Simulation(model=model(), geometry=box(0, 0, 10, 10), dt=0.01)
+    exit_stage = simulation.add_exit_stage(Polygon(box(9, 4, 10, 6)))
+    journey = simulation.add_journey(jps.JourneyDescription([exit_stage]))
+
+    def add(x):
+        return simulation.add_agent(
+            parameters(
+                position=(x, 5.0), journey_id=journey, stage_id=exit_stage, radius=0.2
+            )
+        )
+
+    walker = add(8.5)
+    for _ in range(5000):
+        seen = _jupedsim_positions(simulation)
+        simulation.iterate()
+        if list(simulation.removed_agents()):
+            break
+    assert list(simulation.removed_agents()) == [walker]
+    assert [a.id for a in simulation.agents()] == [walker]
+    with pytest.raises(RuntimeError):
+        add(seen[walker][0] - 0.39)

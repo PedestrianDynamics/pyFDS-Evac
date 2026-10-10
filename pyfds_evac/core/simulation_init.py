@@ -512,16 +512,11 @@ def _jupedsim_positions(simulation):
     Taken right before ``Simulation.iterate``: JuPedSim 1.4.2 files the
     agents for its neighbour search at the start of an iteration, before
     they move, so ``add_agent`` measures a new agent against where the
-    others stood then. Pass the iteration's ``removed_agents`` to
-    ``_forget_removed`` afterwards, and record each agent added since.
+    others stood then; record each agent added since. An agent listed in
+    ``removed_agents`` after the iteration is still listed and checked
+    against until the next one.
     """
     return {int(agent.id): tuple(agent.position) for agent in simulation.agents()}
-
-
-def _forget_removed(positions, simulation):
-    """Drop the agents JuPedSim removed in the last iteration from *positions*."""
-    for agent_id in simulation.removed_agents():
-        positions.pop(int(agent_id), None)
 
 
 def _occupied(simulation, agent_radii, jupedsim_positions):

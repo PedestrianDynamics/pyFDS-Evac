@@ -879,14 +879,27 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
-def _flow_pending(
-    flow_distributions: list, numbers: list, counters: list, time_s: float
+def _flow_spawn_due(
+    flow_distributions: list,
+    spawning: list,
+    numbers: list,
+    counters: list,
+    time_s: float,
+    dt: float,
 ) -> bool:
-    """Whether a flow source has agents to add and its window is still open."""
-    return any(
-        counters[source_id] < numbers[source_id] and time_s <= flow["end_time"]
-        for source_id, flow in enumerate(flow_distributions)
-    )
+    """Whether a flow source may try to add an agent at *time_s*.
+
+    The test of the spawn loop, widened by half a step on each side so
+    that the rounding of the simulated time cannot miss a due attempt.
+    """
+    for source_id, flow in enumerate(flow_distributions):
+        if source_id >= len(spawning) or counters[source_id] >= numbers[source_id]:
+            continue
+        next_spawn = flow["start_time"] + counters[source_id] * spawning[source_id][0]
+        start = max(flow["start_time"], next_spawn)
+        if start - dt / 2 <= time_s <= flow["end_time"] + dt / 2:
+            return True
+    return False
 
 
 def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
@@ -1629,7 +1642,6 @@ def run_scenario(
     from .simulation_init import (
         _crowds_agents,
         _find_nearest_exit,
-        _forget_removed,
         _jupedsim_positions,
         _occupied,
         _random_point_in_polygon,
@@ -3448,18 +3460,17 @@ def run_scenario(
                         }
                     )
 
-            # Only read at a later flow spawn; once none can follow, not kept.
-            flows_pending = has_flow_spawning and _flow_pending(
+            # Read only by a flow spawn at the next step.
+            if has_flow_spawning and _flow_spawn_due(
                 flow_distributions,
+                spawning_freqs_and_numbers,
                 num_agents_per_source,
                 agent_counter_per_source,
-                simulation.elapsed_time(),
-            )
-            if flows_pending:
+                simulation.elapsed_time() + simulation.delta_time(),
+                simulation.delta_time(),
+            ):
                 jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
-            if flows_pending:
-                _forget_removed(jupedsim_positions, simulation)
             if frame_recorder is not None:
                 frame_recorder.after_step(
                     simulation,
@@ -3511,7 +3522,8 @@ def run_scenario(
         if has_flow_spawning:
             total_agents += sum(agent_counter_per_source)
 
-        # Flow agents the time limit cut off before they entered.
+        # Flow agents that never entered: cut off by the time limit, or
+        # still without a free position when their window closed.
         not_spawned = (
             max(0, sum(num_agents_per_source) - sum(agent_counter_per_source))
             if has_flow_spawning
