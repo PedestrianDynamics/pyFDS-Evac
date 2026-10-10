@@ -900,6 +900,26 @@ def _percentage_spawn_count(
     return 0 if area.is_empty else _percentage_count(params, area)
 
 
+def _schedule_window(entry, dist_key, dt) -> tuple[float, float]:
+    """Start and end of one scheduled window, as written (#390).
+
+    The run adds at most one agent of a window per time step *dt*, at
+    evenly spaced times; a window shorter than ``number`` steps could not
+    add them all before it ends, and raises ``ValueError``.
+    """
+    start = entry["flow_start_time"]
+    end = entry["flow_end_time"]
+    number = entry["number"]
+    if number * dt > end - start + 1e-9:
+        raise ValueError(
+            f"Distribution '{dist_key}': flow_schedule window [{start:g}, {end:g}] s "
+            f"is too short for {number} agents: the run adds at most one agent "
+            f"of a window per {dt:g} s step, so it must last at least "
+            f"{number * dt:g} s."
+        )
+    return start, end
+
+
 def _uses_fallback(data) -> bool:
     """Whether the set-up without journeys places the agents."""
     no_routes = not data.get("journeys") and not data.get("transitions")
@@ -1667,9 +1687,8 @@ def _initialize_with_fallback(
                 max_radius = _get_max_agent_radius(dist_params)
                 max_capacity = _estimate_max_capacity(clean_dist_area, max_radius)
                 n_agents = schedule_entry["number"]
-                flow_start_time = schedule_entry["flow_start_time"]
-                flow_end_time = max(
-                    flow_start_time + 0.1, schedule_entry["flow_end_time"]
+                flow_start_time, flow_end_time = _schedule_window(
+                    schedule_entry, dist_key_str, simulation.delta_time()
                 )
                 flow_duration = flow_end_time - flow_start_time
                 flow_rate = n_agents / flow_duration
@@ -2931,9 +2950,8 @@ def _add_agents(
 
             for schedule_entry in flow_schedule:
                 n_agents = schedule_entry["number"]
-                flow_start_time = schedule_entry["flow_start_time"]
-                flow_end_time = max(
-                    flow_start_time + 0.1, schedule_entry["flow_end_time"]
+                flow_start_time, flow_end_time = _schedule_window(
+                    schedule_entry, dist_key, simulation.delta_time()
                 )
                 flow_duration = flow_end_time - flow_start_time
                 flow_rate = n_agents / flow_duration

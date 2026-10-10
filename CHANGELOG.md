@@ -46,7 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `set_flow_schedule()` did; the run had clamped the start to 0 and
   dropped the window. The scheduled agents' candidate positions are
   drawn from their own streams (`flow_positions`, `flow_shuffle`),
-  apart from the initial agents'.
+  apart from the initial agents'. Each window is kept as written, also
+  below the 0.1 s that `flow_start_time`–`flow_end_time` is stretched
+  to; one shorter than `number` × 0.01 s, too short to add one agent
+  per time step, stops the run with a `ValueError`.
 
 - A spawn area with `distribution_mode` `by_percentage`, `fill_area` or
   `until_full` now places `percentage` of its capacity estimate at the
