@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- Route history (`--output-route-history`, `result.route_history`):
+  `smoke_reroute` now counts only the exit changes smoke caused (#92).
+  Other changes of exit, labelled `smoke_reroute` before, are
+  `fed_reroute`, `exit_opened`, `learned_exit`, `congestion`,
+  `shorter_path`, `exit_unreachable` or `resume`. Scripts that count
+  `smoke_reroute` as "any change of exit" must count these too.
+  Trajectories, exit choices and times are unchanged.
+
 - `pyfds-evac init --check` can now fail (✗, exit 3) on a deck it
   passed: a slice that FDS culls no longer counts, and a `PBZ` slice
   that also sets `PBX` or `PBY` is a line the run does not read (#705).
@@ -86,6 +94,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   files (0.01 s from the pickle). Results are unchanged. fdsreader is
   now pinned to `>=1.11.7,<1.12`, the versions this was checked on.
 
+- A route switch is labelled by what caused it, not `smoke_reroute` for
+  every change of exit (#92). An agent that switches in clear air to a
+  nearer exit, or to one it has just learned, logged a smoke reroute.
+  Outputs lists the values; Routing in practice lists them with their
+  order of precedence and how a cause is credited.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not

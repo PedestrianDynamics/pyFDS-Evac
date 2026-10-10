@@ -1011,6 +1011,11 @@ def _no_known_exit(wait_info: dict) -> str:
     return no_known_exit_mode(wait_info.get("no_known_exit"))
 
 
+def _known_nodes(cmap) -> frozenset[str] | None:
+    """The nodes in *cmap*, for the switch label; None without a map."""
+    return None if cmap is None else frozenset(cmap.known_nodes)
+
+
 def _default_route_row(time_s: float, agent_id: int, exit_id: str) -> dict[str, Any]:
     """Route-history row of an agent that takes the default route at spawn."""
     return {
@@ -2057,7 +2062,14 @@ def run_scenario(
                         ),
                         entrance=wait_info.get("entrance"),
                     )
-            return agent_route_state[agent_id]
+            route_state = agent_route_state[agent_id]
+            if route_state.known_at_last_eval is None:
+                # What the agent knows before its first evaluation, so an
+                # exit learned since is labelled learned_exit (#92).
+                route_state.known_at_last_eval = _known_nodes(
+                    cognitive_maps.get(agent_id)
+                )
+            return route_state
 
         def _reevaluate(
             agent_id: int,

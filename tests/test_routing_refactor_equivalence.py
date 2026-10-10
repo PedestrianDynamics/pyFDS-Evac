@@ -482,13 +482,35 @@ def _reroute_world(case: golden.RerouteCase) -> dict:
 # The return lockout's record (#458), which the frozen copy never writes; it
 # is pinned live in tests/test_fallback_tau_hold.py.
 _LOCKOUT_FIELDS = frozenset({"refused_switch_from", "refused_switch_time_s"})
+# What the switch labels read (#92), which the frozen copy never writes.
+_LIVE_ONLY_FIELDS = _LOCKOUT_FIELDS | {"known_at_last_eval"}
+# #92 labels an exit change by its cause; the frozen copy calls each of these
+# smoke_reroute. Initial, fallback and exit_closed are unchanged.
+_EXIT_CHANGE_CAUSES = frozenset(
+    {
+        "fed_reroute",
+        "exit_opened",
+        "learned_exit",
+        "congestion",
+        "shorter_path",
+        "exit_unreachable",
+        "resume",
+    }
+)
+
+
+def _legacy_label(switch):
+    """*switch* with a #92 exit-change cause read as the frozen copy's label."""
+    if switch is None or switch.reason not in _EXIT_CHANGE_CAUSES:
+        return switch
+    return replace(switch, reason="smoke_reroute")
 
 
 def _state_fields(route_state: AgentRouteState) -> dict:
     return {
         f.name: copy.deepcopy(getattr(route_state, f.name))
         for f in fields(route_state)
-        if f.name not in _LOCKOUT_FIELDS
+        if f.name not in _LIVE_ONLY_FIELDS
     }
 
 
@@ -519,7 +541,7 @@ def _reroute(
         agent_position=_NO_POSITION,
     )
     return {
-        "switch": switch,
+        "switch": _legacy_label(switch),
         "wait_info": copy.deepcopy(world["wait_info"]),
         "route_state": _state_fields(world["route_state"]),
         "cache": None if cache is None else list(cache.items()),
@@ -749,7 +771,7 @@ def _run_passes(side: str, spec: _Pass) -> list:
                 if switch.old_exit in exit_counts:
                     exit_counts[switch.old_exit] -= 1
                 exit_counts[switch.new_exit] = exit_counts.get(switch.new_exit, 0) + 1
-            trace.append(switch)
+            trace.append(_legacy_label(switch))
             trace.append(copy.deepcopy(wait_info))
             trace.append(_state_fields(rs))
         items = list(cache.items())
@@ -1710,7 +1732,7 @@ def _assignments(case: golden.RerouteCase) -> dict[str, list[str]]:
 
     _both(case, on_world)
     return {
-        side: [n for n in state.__dict__["_assigned"] if n not in _LOCKOUT_FIELDS]
+        side: [n for n in state.__dict__["_assigned"] if n not in _LIVE_ONLY_FIELDS]
         for side, state in states.items()
     }
 
