@@ -231,7 +231,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   still written whenever the history has rows, so it can now be 0:
   `assets/t_junction` under seed 42 with rerouting reported 295 (150
   `default_route` and 145 `initial` rows) and now reports 0. The GUI
-  run summary and the verification harness use the same definition.
+  run summary and the verification harness use the same definition, so
+  the GUI's switch count now includes `default_route` rows that leave a
+  closed exit.
 
 - `load_scenario` and the run refuse a journey that no entry in
   `transitions` names, with an error naming the journey (#504). Agents

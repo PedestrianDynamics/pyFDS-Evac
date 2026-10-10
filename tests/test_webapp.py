@@ -3235,6 +3235,15 @@ class TestRouteHistoryMessage:
         assert "4 route-history rows (0 switches)" in route
         assert "4 route switches" not in route
 
+    def test_default_route_from_a_closed_exit_is_a_switch(self, tmp_path):
+        # A default_route row with an old exit leaves a closed exit (#733).
+        rows = [
+            {"agent_id": 0, "reason": "default_route", "old_exit": ""},
+            {"agent_id": 1, "reason": "default_route", "old_exit": "west"},
+        ]
+        route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
+        assert "2 route-history rows (1 switch)" in route
+
     def test_rerouting_on_without_switches(self, tmp_path):
         route, _ = self._detail(tmp_path, rerouting=True, rows=[])
         assert "no agent switched route" in route
