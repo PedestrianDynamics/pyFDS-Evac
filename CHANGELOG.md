@@ -55,6 +55,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   can diverge from that agent's first contact on. A deck with
   `radius` + 3 × `radius_std` below 0.1 m is now spaced for 0.1 m.
 
+- Results of every rerouting run on FDS smoke change (#653): route
+  smoke is read once per grid cell of the extinction slice instead of
+  every `sampling_step_m`. `k_ave_route`, `tau_route`, `k_max_route`
+  and `k_leg_max` in the route-cost history move, and with them route
+  choices and switches. On the FDS golden decks (seed 42),
+  `l_corridor_gate` goes from 19 switches (8 straight returns) to 9
+  (none) and 69/31 to 63/37 agents per exit, `l_corridor_additive`
+  from 99/1 to 68/32 and 145.1 s to 170.0 s, `t_junction` from 4
+  switches to 1 and 14/83 to 17/80, `world100_stream_oval` from 8
+  switches to 13; evacuated counts do not change. In the first FDS
+  case (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents still
+  get out. `sampling_step_m` keeps its value in every deck, but
+  now applies only to fields without a grid (`ConstantExtinctionField`,
+  test fields) and to stretches of a route outside the FDS slice;
+  those runs and clear-air runs are unchanged. The FED rate of the
+  walk dose (#171) is still sampled every `sampling_step_m`.
+
 - `fed_max_route` in the route-cost history rises for an agent behind
   its route's origin node in runs with a FED field (#171). Under
   `additive` the route cost rises by `w_fed` times that change, so
@@ -189,6 +206,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for (#709): agents could start overlapping. The spacing bound now has
   one definition, `agent_params.max_agent_radius`, read by the run and
   by `pyfds-evac init`'s capacity check.
+
+- Route smoke no longer jumps as an agent walks across a narrow plume
+  (#653). It was sampled every `sampling_step_m` (2 m in the shipped
+  decks) from the agent's position, so samples slid on and off a plume
+  narrower than the step: on a 1 m band at K = 10 /m, route tau went
+  from 0 to 18.0 when the agent moved 0.1 m, where the plume's optical
+  depth is 10.0. An FDS extinction field is now read once per grid cell
+  the route crosses, at points fixed to the grid, as FDS+Evac
+  `See_door` does; the band reads 9.7–9.9 from every position. A
+  route crossing meshes of different spacing is read on each mesh's
+  own grid.
 
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or
