@@ -98,10 +98,12 @@ def test_discovery_agents_find_the_exit_but_for_deadlocks(
 ):
     """Every run ends complete or in a #359 deadlock, and deadlocks are rare.
 
-    Measured at #250 with these settings: 5 agents deadlock in 5 of seeds
-    1-150 (3.3 %), 20 agents in 5 of seeds 1-60 (8.3 %); before #250, 3 of
-    150 and 0 of 60. Each bound is the smallest k with P(X > k) <= 1 % at
-    that rate, binomial over the seeds run here: 4 of 30 and 5 of 20.
+    Measured at c619a046 (0.5.0) with these settings: 5 agents deadlock in
+    3 of seeds 1-150 (2.0 %), 20 agents in 7 of seeds 1-60 (11.7 %); at #250,
+    5 of 150 and 5 of 60; before #250, 3 of 150 and 0 of 60. Each bound is
+    the smallest k with P(X > k) <= 1 % at the #250 rate, binomial over the
+    seeds run here: 4 of 30 and 5 of 20. At the c619a046 rate of 20 agents
+    that k would be 6.
     """
     config = json.loads((DECK / "config.json").read_text())
     max_time_s = config["config"]["simulation_settings"]["simulationParams"][

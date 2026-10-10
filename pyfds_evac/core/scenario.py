@@ -985,7 +985,11 @@ class ScenarioResult:
 
     @property
     def agents_not_spawned(self) -> int:
-        """Flow agents that had not entered when the time limit was reached."""
+        """Flow agents that never entered.
+
+        Cut off by the time limit, or without a free position in their
+        spawn area when their flow window closed.
+        """
         return int(self.metrics.get("agents_not_spawned", 0))
 
     @property

@@ -171,7 +171,8 @@ def reached_stage(x, y, target, stage_cfg, agent_radius):
     of the target point or when the agent's centre is inside its polygon
     (#69): the random target point steers, it does not delay arrival deep
     inside a large checkpoint. Other stages (spawn areas, zones), and an exit
-    without a polygon, are reached at the target point only.
+    without a polygon, are reached only within
+    ``agent_radius + TARGET_REACH_MARGIN_M`` of the target point.
     """
     stage_cfg = stage_cfg or {}
     polygon = stage_cfg.get("polygon")
