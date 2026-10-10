@@ -26,9 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The FDS coverage warning names the frame (#26): when part of the
   walkable area lies outside the FDS slices, it ends with the bounds of
-  the walkable area and of the FDS domain, and says so when swapping x and
-  y, or shifting the walkable area onto the domain, would bring it inside
-  (`With x and y swapped ...`, `Shifted by (dx, dy) m ...`). The run
+  the walkable area and of the FDS domain. When swapping x and y,
+  shifting the walkable area onto the domain, or both would leave at most
+  1 % of it outside, it names that as a possible explanation
+  (`With x and y swapped, ...`, `Shifted by (dx, dy) m, ...`). The run
   manifest records the end-of-run count of samples outside as
   `fds_outside`. Results are unchanged; outside the slices agents still
   read ambient air and clear sight.

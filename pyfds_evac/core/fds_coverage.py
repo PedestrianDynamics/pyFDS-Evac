@@ -38,6 +38,9 @@ _AREA_SECTIONS = ("exits", "checkpoints", "distributions")
 # Share of the walkable area that may stay outside the domain after a swap of
 # x and y or a shift for the frame hint to name that swap or shift.
 _FRAME_FIT_SHARE = 0.01
+# A shift shorter than this prints as zero at centimetre precision and names
+# no frame mismatch.
+_MIN_SHIFT_M = 0.01
 
 
 @dataclass
@@ -188,35 +191,67 @@ def _shift_onto(geometry, domain):
     return translate(geometry, dx, dy), dx, dy
 
 
+def _has_area(geometry) -> bool:
+    """Return whether *geometry* is non-empty with a positive area."""
+    return not geometry.is_empty and geometry.area > _AREA_EPS_M2
+
+
 def frame_hint(walkable, domain) -> str | None:
-    """Name a swap of x and y or a shift that brings *walkable* inside *domain*.
+    """Name a swap of x and y or a shift that brings *walkable* into *domain*.
 
     A hint is given when the swap, the shift onto the domain's lower-left
     corner, or both leave at most ``_FRAME_FIT_SHARE`` of the walkable area
-    outside. It is a prompt to check the frame, not a diagnosis: a walkable
-    area that reaches past the meshes on one side but is narrower than the
-    domain along that axis also fits after a shift.
+    outside. It names a possible explanation, not a diagnosis: a walkable
+    area placed correctly that reaches past the meshes on one side, and is
+    narrower than the domain along that axis, also fits after a shift.
+    None when either area is empty, as when the samplers share no area.
     """
-    area = float(walkable.area)
-    limit = _FRAME_FIT_SHARE * area
-    if area <= 0.0 or walkable.difference(domain).area <= limit:
+    if not (_has_area(walkable) and _has_area(domain)):
+        return None
+    limit = _FRAME_FIT_SHARE * float(walkable.area)
+    if walkable.difference(domain).area <= limit:
         return None
     swapped = _swap_xy(walkable)
     if swapped.difference(domain).area <= limit:
-        return (
-            "With x and y swapped the walkable area would lie inside the FDS "
-            "domain: check the axis order of the geometry against the FDS deck."
-        )
-    for candidate, what in ((walkable, ""), (swapped, "With x and y swapped and ")):
+        return _hint_text("With x and y swapped", "axis order")
+    for candidate, swap in ((walkable, False), (swapped, True)):
         moved, dx, dy = _shift_onto(candidate, domain)
-        if moved.difference(domain).area <= limit:
-            shifted = "shifted" if what else "Shifted"
-            return (
-                f"{what}{shifted} by ({dx:+.2f}, {dy:+.2f}) m the walkable area "
-                "would lie inside the FDS domain: check the origin and axis "
-                "order of the geometry against the FDS deck."
+        if max(abs(dx), abs(dy)) < _MIN_SHIFT_M:
+            continue
+        if moved.difference(domain).area > limit:
+            continue
+        shift = f"shifted by ({dx:+.2f}, {dy:+.2f}) m"
+        if swap:
+            return _hint_text(
+                f"With x and y swapped and {shift}", "origin and axis order"
             )
+        return _hint_text(shift[0].upper() + shift[1:], "origin")
     return None
+
+
+def _hint_text(change: str, what: str) -> str:
+    """Return the frame hint for *change*, naming *what* to check."""
+    share = f"{100 * _FRAME_FIT_SHARE:.0f} %"
+    return (
+        f"{change}, at most {share} of the walkable area would lie outside the "
+        f"FDS domain; if it should lie inside, check the {what} of the "
+        "geometry against the FDS deck."
+    )
+
+
+def _frame_fields(walkable, domain) -> dict[str, Any]:
+    """Return the bounds of both areas and the frame hint for the report.
+
+    Empty when either area is empty: shapely gives NaN bounds then, and
+    there is no frame to compare.
+    """
+    if not (_has_area(walkable) and _has_area(domain)):
+        return {}
+    return {
+        "walkable_bounds": _float_bounds(walkable),
+        "domain_bounds": _float_bounds(domain),
+        "frame_hint": frame_hint(walkable, domain),
+    }
 
 
 def _outside_areas(raw: dict, domain) -> dict[str, float]:
@@ -272,9 +307,7 @@ def check_fds_coverage(
         walkable_outside_m2=float(walkable.difference(domain).area),
         areas_outside_m2=_outside_areas(raw, domain),
         edges_outside_m=_outside_edges(stage_graph, domain),
-        walkable_bounds=_float_bounds(walkable),
-        domain_bounds=_float_bounds(domain),
-        frame_hint=frame_hint(walkable, domain),
+        **_frame_fields(walkable, domain),
     )
     signs = getattr(vis_model, "_sign_xy", None)
     if signs is None:

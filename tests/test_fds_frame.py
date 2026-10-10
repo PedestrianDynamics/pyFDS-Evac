@@ -20,7 +20,7 @@ import pytest
 from shapely.affinity import translate
 from shapely.geometry import Polygon
 from test_fds_domain import _iso_run
-from test_fds_domain_defects import _ISO
+from test_fds_domain_defects import _ISO, _sampler
 
 from pyfds_evac.core.fds_coverage import (
     apply_coverage_policy,
@@ -52,7 +52,10 @@ def test_transposed_walkable_names_the_swap(samplers, caplog):
     assert "walkable area 196.00 m² (98.0 %)" in message
     assert "Walkable area x -1.00..1.00, y -50.00..50.00 m" in message
     assert "FDS domain x -50.00..50.00, y -1.00..1.00 m" in message
-    assert "With x and y swapped" in message
+    assert (
+        "With x and y swapped, at most 1 % of the walkable area would lie "
+        "outside the FDS domain; if it should lie inside, check the axis order"
+    ) in message
 
 
 def test_offset_walkable_names_the_shift(samplers):
@@ -60,13 +63,15 @@ def test_offset_walkable_names_the_shift(samplers):
     message = _summary(shifted, samplers)
     assert "walkable area 200.00 m² (100.0 %)" in message
     assert "Walkable area x 50.00..150.00, y 4.00..6.00 m" in message
-    assert "Shifted by (-100.00, -5.00) m the walkable area" in message
+    assert "Shifted by (-100.00, -5.00) m, at most 1 % of the walkable" in message
+    assert "check the origin of the geometry" in message
 
 
 def test_transposed_and_offset_walkable_names_both(samplers):
     moved = translate(Polygon([(-1, -50), (1, -50), (1, 50), (-1, 50)]), 0.0, 60.0)
     message = _summary(moved, samplers)
-    assert "With x and y swapped and shifted by (-60.00, +0.00) m" in message
+    assert "With x and y swapped and shifted by (-60.00, +0.00) m, at most" in message
+    assert "check the origin and axis order" in message
 
 
 def test_partial_coverage_gives_bounds_but_no_hint(samplers):
@@ -79,12 +84,77 @@ def test_partial_coverage_gives_bounds_but_no_hint(samplers):
 
 
 def test_partial_coverage_narrower_than_the_domain_gets_a_shift_hint(samplers):
-    """3 m past the mesh, 3 m short of the other end: a shift fits, so the
-    hint is given although the setup may be intended."""
-    corridor = Polygon([(-47, -1), (53, -1), (53, 1), (-47, 1)])
+    """98 m of a 100 m domain, 3 m past one end: a shift fits, so the hint is
+    given although the placement may be intended."""
+    corridor = Polygon([(-45, -1), (53, -1), (53, 1), (-45, 1)])
     message = _summary(corridor, samplers)
     assert "walkable area 6.00 m²" in message
-    assert "Shifted by (-3.00, +0.00) m the walkable area" in message
+    assert "Shifted by (-5.00, +0.00) m, at most 1 %" in message
+    assert "if it should lie inside" in message
+
+
+_ROOM = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])
+
+
+@pytest.mark.parametrize(
+    "second",
+    [(20.0, 30.0, 0.0, 10.0), (10.0, 20.0, 0.0, 10.0)],
+    ids=["disjoint", "touching-edge"],
+)
+def test_samplers_sharing_no_area_give_no_bounds(second, caplog):
+    """The domain is empty or a line: no bounds or hint, the report as before."""
+    samplers = [
+        _sampler("SOOT EXTINCTION COEFFICIENT", (0.0, 10.0, 0.0, 10.0)),
+        _sampler("TEMPERATURE", second),
+    ]
+    report = check_fds_coverage(walkable=_ROOM, raw={}, samplers=samplers)
+    assert report.walkable_outside_m2 == pytest.approx(100.0)
+    assert report.walkable_bounds is None and report.frame_hint is None
+    with caplog.at_level(logging.WARNING):
+        apply_coverage_policy(report, require_fds_coverage=False)
+    message = caplog.records[-1].getMessage()
+    assert "walkable area 100.00 m² (100.0 %)." in message
+    assert "Walkable area x" not in message
+
+
+def test_differing_sampler_extents_report_their_intersection():
+    samplers = [
+        _sampler("SOOT EXTINCTION COEFFICIENT", (0.0, 30.0, 0.0, 13.0)),
+        _sampler("TEMPERATURE", (0.0, 20.0, 0.0, 13.0)),
+    ]
+    walkable = Polygon([(0, 0), (30, 0), (30, 13), (0, 13)])
+    message = _summary(walkable, samplers)
+    assert "FDS domain x 0.00..20.00, y 0.00..13.00 m." in message
+    assert "at most 1 %" not in message
+
+
+_L_EXTENTS = ((0.0, 10.0, 0.0, 2.0), (0.0, 2.0, 0.0, 10.0))
+_L_SHAPE = Polygon([(0, 0), (10, 0), (10, 2), (2, 2), (2, 10), (0, 10)])
+
+
+def test_l_shaped_domain_names_the_shift():
+    samplers = [_sampler("SOOT EXTINCTION COEFFICIENT", *_L_EXTENTS)]
+    message = _summary(translate(_L_SHAPE, 20.0, 5.0), samplers)
+    assert "FDS domain x 0.00..10.00, y 0.00..10.00 m." in message
+    assert "Shifted by (-20.00, -5.00) m, at most 1 %" in message
+
+
+def test_l_shaped_domain_does_not_cover_its_bounding_box():
+    """The room over the L reaches into the L's notch: no swap or shift fits."""
+    samplers = [_sampler("SOOT EXTINCTION COEFFICIENT", *_L_EXTENTS)]
+    message = _summary(_ROOM, samplers)
+    assert "walkable area 64.00 m²" in message
+    assert "at most 1 %" not in message
+
+
+@pytest.mark.parametrize(("height", "hint"), [(10.1, True), (10.2, False)])
+def test_hint_threshold_is_one_percent_outside(height, hint):
+    """After the shift 0.1 m of the height stays outside: 1 m² of 101 m² is
+    under 1 %, 2 m² of 102 m² is over it."""
+    samplers = [_sampler("SOOT EXTINCTION COEFFICIENT", (0.0, 10.0, 0.0, 10.0))]
+    walkable = Polygon([(20, 0), (30, 0), (30, height), (20, height)])
+    message = _summary(walkable, samplers)
+    assert ("Shifted by (-20.00, +0.00) m" in message) is hint
 
 
 def test_inside_the_domain_the_summary_has_no_bounds(samplers):

@@ -127,14 +127,16 @@ area lies outside, it ends with the bounds of the walkable area and of the
 FDS domain, so that an offset origin or swapped x and y shows at a glance.
 If swapping x and y, shifting the walkable area onto the domain's
 lower-left corner, or both, would leave at most 1 % of it outside, the
-report says so: `With x and y swapped the walkable area would lie inside
-the FDS domain`, `Shifted by (dx, dy) m the walkable area would lie inside
-the FDS domain`, or `With x and y swapped and shifted by (dx, dy) m ...` ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)).
-The hint is a prompt to check the frame, not a diagnosis: a walkable area
-that reaches past the meshes on one side, a fire meshed over one part
-only, also fits after a shift when it is narrower than the domain along
-that axis. One wider than the domain gets the bounds and no hint. It is logged once and
-stored as `fds_coverage` in `metrics` and in the
+report names that as a possible explanation, for example `Shifted by (dx,
+dy) m, at most 1 % of the walkable area would lie outside the FDS domain;
+if it should lie inside, check the origin of the geometry against the FDS
+deck` ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)).
+It is not a diagnosis: a walkable area placed correctly that reaches past
+the meshes on one side, a fire meshed over one part only, also fits after
+a shift when it is narrower than the domain along that axis. When the
+slices of the sampled quantities share no area, the report gives neither
+bounds nor hint. The bounds and the hint are in the log only. The report
+is logged once and stored as `fds_coverage` in `metrics` and in the
 [run manifest](outputs.md#run-manifest). For a T-junction whose west
 corridor extends 12 m past the FDS mesh, the log reads:
 
