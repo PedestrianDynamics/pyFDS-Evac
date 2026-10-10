@@ -637,6 +637,14 @@ def test_summary_reports_the_agent_budget():
     assert "  Model:         CollisionFreeSpeedModelV2" in lines
 
 
+def test_summary_counts_spawn_areas_of_any_name_in_the_route():
+    """The route counts every key of ``distributions`` as a spawn area (#409)."""
+    data = _deck(journeys=[{"id": "J", "stages": ["room", "jps-exits_0"]}])
+    data["distributions"] = {"room": data["distributions"]["jps-distributions_0"]}
+    lines = _scenario(data).summary().splitlines()
+    assert "  Route:         1 distribution, 0 checkpoint, 1 exit" in lines
+
+
 def test_set_flow_schedule_sorts_and_derives_the_window():
     scenario = _scenario()
     scenario.set_flow_schedule(

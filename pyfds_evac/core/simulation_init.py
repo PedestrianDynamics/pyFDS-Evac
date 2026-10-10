@@ -1122,11 +1122,7 @@ def build_agent_path_state(
     if not path_choices:
         return None
 
-    distribution_stages = [
-        stage
-        for stage in full_stages
-        if isinstance(stage, str) and stage.startswith("jps-distributions_")
-    ]
+    distribution_stages = variant_data.get("distribution_stages", [])
     # Prefer the spawn area this agent was placed in; fall back to the first
     # distribution of the journey only when the caller cannot name one, which
     # is correct for the single-distribution scenarios that predate this.
@@ -2254,12 +2250,14 @@ def _is_routing_split_node(stage_key: Any) -> bool:
     )
 
 
-def _distribution_stage_keys(stages: list[Any]) -> list[str]:
-    """Return unique distribution stage keys preserving first-seen order."""
+def _distribution_stage_keys(stages: list[Any], distributions) -> list[str]:
+    """The spawn areas among *stages*, first-seen order, each once.
+
+    A stage is a spawn area when it is a key of *distributions*, whatever
+    its name (#409).
+    """
     keys = [
-        stage
-        for stage in stages
-        if isinstance(stage, str) and stage.startswith("jps-distributions_")
+        stage for stage in stages if isinstance(stage, str) and stage in distributions
     ]
     return list(dict.fromkeys(keys))
 
@@ -2278,6 +2276,7 @@ def _create_journeys_with_percentages(
     journey_endpoints = {}
 
     direct_steering_keys = direct_steering_keys or set()
+    distributions = data.get("distributions") or {}
 
     # Index transitions by journey id for robust stage ordering decisions.
     transitions_by_journey = defaultdict(list)
@@ -2334,7 +2333,7 @@ def _create_journeys_with_percentages(
 
         # Generate all possible journey variants for this journey
         variants = _generate_journey_variants(
-            jid, base_stages, waypoint_routing, stage_map
+            jid, base_stages, waypoint_routing, stage_map, distributions
         )
         journey_variants[jid] = []
 
@@ -2343,9 +2342,7 @@ def _create_journeys_with_percentages(
 
             # Filter out distributions first.
             actual_stages = [
-                stage
-                for stage in variant_stages
-                if not stage.startswith("jps-distributions_")
+                stage for stage in variant_stages if stage not in distributions
             ]
 
             # JuPedSim DirectSteeringStage may not be mixed with other stages.
@@ -2357,11 +2354,7 @@ def _create_journeys_with_percentages(
             # distribution, start in that direct-steering stage.
             dist_to_ds = None
             journey_transitions = transitions_by_journey.get(jid, [])
-            dist_keys = [
-                s
-                for s in variant_stages
-                if isinstance(s, str) and s.startswith("jps-distributions_")
-            ]
+            dist_keys = _distribution_stage_keys(variant_stages, distributions)
             for tr in journey_transitions:
                 from_key = tr.get("from")
                 to_key = tr.get("to")
@@ -2410,6 +2403,7 @@ def _create_journeys_with_percentages(
                         "stages": variant_stages,  # Keep original stages for reference
                         "actual_stages": actual_stages,  # Add filtered stages
                         "entry_stages": entry_stages,  # Initial stage segment used for the spawned journey
+                        "distribution_stages": dist_keys,
                         "percentage": percentage,
                         "variant_name": variant_id,
                     }
@@ -2428,13 +2422,15 @@ def _create_journeys_with_percentages(
             (j for j in data.get("journeys", []) if j["id"] == jid), None
         )
         journey_distributions = (
-            _distribution_stage_keys(journey_def.get("stages", []))
+            _distribution_stage_keys(journey_def.get("stages", []), distributions)
             if journey_def
             else []
         )
 
         for variant in variants:
-            variant_distributions = _distribution_stage_keys(variant.get("stages", []))
+            variant_distributions = _distribution_stage_keys(
+                variant.get("stages", []), distributions
+            )
             target_distributions = variant_distributions or journey_distributions
 
             for dist_key in target_distributions:
@@ -2455,8 +2451,12 @@ def _generate_journey_variants(
     base_stages: list[str],
     waypoint_routing: dict,
     stage_map: dict[str, int],
+    distributions=(),
 ) -> list[tuple[list[str], float]]:
-    """Generate all possible journey variants with their percentages."""
+    """Generate all possible journey variants with their percentages.
+
+    *distributions* are the deck's spawn-area keys (#409).
+    """
     _ = stage_map  # kept for compatibility with existing call sites
 
     if not waypoint_routing:
@@ -2465,10 +2465,8 @@ def _generate_journey_variants(
     variants = []
 
     # Find ALL distributions for this journey (not just the first one)
-    distributions = [
-        stage for stage in base_stages if stage.startswith("jps-distributions_")
-    ]
-    if not distributions:
+    sources = [stage for stage in base_stages if stage in distributions]
+    if not sources:
         return [(base_stages, 100.0)]
 
     # Routing split nodes may be waypoints or waiting polygons.
@@ -2506,7 +2504,7 @@ def _generate_journey_variants(
             return [(base_stages, 100.0)]
 
     # Generate variants per source distribution so each source can be mapped independently.
-    for reference_distribution in distributions:
+    for reference_distribution in sources:
         for initial_node in initial_routing_nodes:
             paths = _explore_all_paths_from_waypoint(
                 initial_node,
@@ -2768,7 +2766,7 @@ def _add_agents(
                 print(f"Warning: Distribution {dist_key} is outside walkable area")
                 continue
 
-            # dist_key already matches journey mapping keys (e.g. jps-distributions_0).
+            # dist_key already matches journey mapping keys.
             distribution_journeys = journeys_per_distribution.get(dist_key, [])
 
             if flow_schedule:

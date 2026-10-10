@@ -459,7 +459,7 @@ class Scenario:
                 stage.startswith("jps-exits_") for stage in journey_sequence
             )
             distribution_count = sum(
-                stage.startswith("jps-distributions_") for stage in journey_sequence
+                stage in self.distributions for stage in journey_sequence
             )
             lines.append(f"  Journey elems: {len(journey_sequence)}")
             lines.append(

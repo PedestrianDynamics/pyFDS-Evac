@@ -358,14 +358,14 @@ def test_fallback_deck_targets_the_nearest_exit(tmp_path):
     assert Counter(targets.values()) == {"E1": 4, "E2": 4}
 
 
-def _split_deck(destinations: list[dict], number: int) -> dict:
+def _split_deck(destinations: list[dict], number: int, key: str = D0) -> dict:
     """One distribution through a checkpoint that splits towards E1 and E2."""
     exits = sorted({d["target"] for d in destinations})
     return _deck(
-        {D0: (box(8.0, 2.0, 12.0, 8.0), _params(number))},
+        {key: (box(8.0, 2.0, 12.0, 8.0), _params(number))},
         checkpoints={CP: {"coordinates": _coords(box(9.5, 8.5, 10.5, 9.5))}},
-        journeys=[{"id": "J", "stages": [D0, CP, *exits]}],
-        transitions=[{"journey_id": "J", "from": D0, "to": CP}]
+        journeys=[{"id": "J", "stages": [key, CP, *exits]}],
+        transitions=[{"journey_id": "J", "from": key, "to": CP}]
         + [{"journey_id": "J", "from": CP, "to": e} for e in exits],
         waypoint_routing={CP: {"J": {"destinations": destinations}}},
     )
@@ -403,6 +403,36 @@ def test_percentage_weights_need_not_sum_to_100(tmp_path):
     )
     _, _, _, info = _initialize(data, tmp_path)
     assert _exit_choices(info) == {"E1": 2, "E2": 6}
+
+
+@pytest.mark.parametrize("key", [D0, "room"])
+def test_journey_finds_its_spawn_area_by_key_not_prefix(tmp_path, key):
+    """A spawn area is any key of ``distributions``, whatever its name (#409)."""
+    data = _deck(
+        {key: (box(2.0, 2.0, 8.0, 8.0), _params(6))},
+        journeys=[{"id": "J", "stages": [key, "E2"]}],
+        transitions=[{"journey_id": "J", "from": key, "to": "E2"}],
+    )
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 6
+    states = info["agent_wait_info"].values()
+    assert [(s["current_origin"], s["current_target_stage"]) for s in states] == [
+        (key, "E2")
+    ] * 6
+
+
+@pytest.mark.parametrize("key", [D0, "room"])
+def test_split_journey_from_a_spawn_area_of_any_name(tmp_path, key):
+    """Routing variants and path states start from the spawn area (#409)."""
+    data = _split_deck(
+        [{"target": "E1", "percentage": 30}, {"target": "E2", "percentage": 70}],
+        10,
+        key=key,
+    )
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 10
+    assert _exit_choices(info) == {"E1": 3, "E2": 7}
+    assert {s["current_origin"] for s in info["agent_wait_info"].values()} == {key}
 
 
 def test_placement_is_reproducible_and_seed_dependent(tmp_path):

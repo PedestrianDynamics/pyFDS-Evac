@@ -158,6 +158,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   all, or nothing is left free, the run stops with `SpawnCapacityError`.
   Flow-spawned agents are not covered.
 
+- A spawn area whose key does not start with `jps-distributions_`, such
+  as `"room"`, can now head a journey. It was kept as a journey stage
+  and the run stopped with `JourneyDescription.__init__(): incompatible
+  constructor arguments ... Invoked with: [-1]` (#409). Journeys,
+  routing variants, the per-agent path state and the `Route:` line of
+  `--print-summary` now take every key of `distributions` as a spawn
+  area, whatever its name. Results with `jps-distributions_<n>` keys do
+  not change.
+
 ### Documentation
 
 - Model comparison: the FDS+Evac body is a torso circle R_t and two
