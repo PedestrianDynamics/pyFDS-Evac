@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- `fed_max_route` in the route-cost history rises for an agent behind
+  its route's origin node in runs with a FED field (#171). Under
+  `additive` the route cost rises by `w_fed` times that change, so
+  near-tied choices can change. Agents on or ahead of the origin, and
+  runs without a FED field, are unchanged.
+
 - Route history (`--output-route-history`, `result.route_history`):
   `smoke_reroute` now counts only the exit changes smoke caused (#92).
   Other changes of exit, labelled `smoke_reroute` before, are
@@ -131,6 +137,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flee behind every route it need not flee. The `rejection_reason` text
   and the CSV outputs are unchanged. No shipped deck changes: the
   largest route FED in their outputs is 0.565, below the limit.
+- An agent behind its route's origin node is charged the dose of its
+  walk back to the origin (#171). The first segment's dose is charged
+  pro rata to what is left of it, a share capped at 1, so that stretch
+  carried no dose although its smoke and time were counted. It is now
+  charged at the mean FED rate sampled along it at the decision time,
+  over the walk's pace; the candidate search weighs the walk to each
+  first node the same way.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not

@@ -1388,6 +1388,83 @@ def _leg_travel_time(
     return sf, travel_time
 
 
+def _dose(fed_rate_per_min: float, travel_time_s: float) -> float:
+    """FED taken at *fed_rate_per_min* over *travel_time_s*.
+
+    No dose where the rate is zero, even over an infinite time.
+    """
+    if fed_rate_per_min == 0.0:
+        return 0.0
+    return fed_rate_per_min * travel_time_s / _SECONDS_PER_MINUTE
+
+
+@dataclass(frozen=True)
+class _FedRateAsExtinction:
+    """A FED-rate sampler read through the extinction-sampler interface.
+
+    Lets ``_polyline_stats`` average the FED rate along a walk at the same
+    points it samples the walk's extinction.
+    """
+
+    fed_rate_sampler: FedRateSampler
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return self.fed_rate_sampler.sample_fed_rate(time_s, x, y)
+
+
+def _polyline_prefix(
+    waypoints: list[tuple[float, float]], length_m: float
+) -> list[tuple[float, float]]:
+    """The first *length_m* metres of a polyline, from its first point."""
+    prefix = [waypoints[0]]
+    left = length_m
+    for (x0, y0), (x1, y1) in zip(waypoints, waypoints[1:]):
+        seg = _euclidean(x0, y0, x1, y1)
+        if seg >= left:
+            t = left / seg if seg > 1e-12 else 0.0
+            prefix.append((x0 + t * (x1 - x0), y0 + t * (y1 - y0)))
+            return prefix
+        prefix.append((x1, y1))
+        left -= seg
+    return prefix
+
+
+def _first_leg_dose(
+    leg: _FirstLeg,
+    walk_time_s: float,
+    first_segment: SegmentCost,
+    time_s: float,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+) -> float:
+    """The dose of a route's first segment, measured from the agent (#171).
+
+    On or ahead of the origin node the FED already taken on the traversed
+    part of the segment is in current_fed, so the segment's dose is charged
+    pro rata to what is left of it. Behind the origin the whole segment is
+    charged, as every node leg is, plus the stretch the walk is longer than
+    the segment: its first ``remaining - L0`` metres from the agent, at the
+    mean FED rate sampled along it at *time_s*, over the walk's pace. A
+    single sample there would turn one hot cell into the dose of the whole
+    stretch, which in dense smoke lasts a minute.
+    """
+    remaining = leg.length_m
+    first_length = first_segment.length_m
+    if remaining <= first_length + 1e-6:
+        return _first_share(remaining, first_length) * first_segment.fed_growth
+    if fed_rate_sampler is None:
+        return first_segment.fed_growth
+    excess = remaining - first_length
+    rate, _ = _polyline_stats(
+        _polyline_prefix(leg.waypoints, excess),
+        time_s,
+        _FedRateAsExtinction(fed_rate_sampler),
+        config.sampling_step_m,
+    )
+    excess_time = walk_time_s * (excess / remaining)
+    return first_segment.fed_growth + _dose(rate, excess_time)
+
+
 def _first_share(remaining_m: float, first_length_m: float) -> float:
     """The still-untraversed fraction of a first segment, in (0, 1].
 
@@ -1573,7 +1650,7 @@ def _measure_route(
 
     # The FED already taken on the traversed part of the first segment is in
     # current_fed, so the first segment's dose is charged pro rata to what is
-    # left of it.
+    # left of it; behind the origin, see _first_leg_dose.
     shares = [first_share] + [1.0] * (len(segments) - 1)
     weighted = list(zip(shares, segments))
     if first_leg is not None and graph.nodes.get(path[0]) is not None:
@@ -1591,10 +1668,14 @@ def _measure_route(
         exposure_length = sum(length for _, length in legs)
         total_k_samples = sum(k * length for k, length in legs)
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
-        travel_time = sum(
-            [_leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]]
-            + [s.travel_time_s for s in segments[1:]]
+        walk_time = _leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]
+        travel_time = sum([walk_time] + [s.travel_time_s for s in segments[1:]])
+        first_dose = _first_leg_dose(
+            first_leg, walk_time, segments[0], time_s, fed_rate_sampler, config
         )
+        # Summed in the order of the pro-rata sum below, so an agent on or
+        # ahead of the origin gets bit-identically the same dose.
+        fed_growth = sum([first_dose] + [s.fed_growth for s in segments[1:]])
         clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)
@@ -1611,7 +1692,7 @@ def _measure_route(
         if effective_length > exposure_length > 1e-9:
             travel_time *= effective_length / exposure_length
             clear_travel_time *= effective_length / exposure_length
-    fed_growth = sum(w * s.fed_growth for w, s in weighted)
+        fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
     # The worst point on the route, not its average: a route is refused because
     # of the wall of smoke in it, and a mean over 30 clear metres and 3 blind
@@ -2173,7 +2254,8 @@ def evaluate_route(
     behind the agent is not charged and smoke on a walk that leaves the first
     segment is. The FED of the first segment is charged pro rata to what is
     left of it, so a dose already incurred -- and carried in ``current_fed``
-    -- is not charged a second time.
+    -- is not charged a second time; an agent behind the origin node is
+    charged the whole segment and the stretch back to it.
 
     ``current_target`` is accepted and ignored; it is kept so callers that
     already thread it through do not have to change, and so the parameter is
@@ -2292,7 +2374,7 @@ def _first_hops(
     Those nodes are *source*'s successors in *graph* and the node the agent is
     walking to. Each walk is weighted by *policy* as an edge, measured as
     ``_measure_route`` measures a first leg: the smoke on the walk, its time,
-    and the dose of the segment from *source* pro rata to what is left of it.
+    and the dose of the segment from *source* as ``_first_leg_dose`` charges it.
     So every exit, the agent's own included, is searched for from where the
     agent stands and not from the node it last left.
     """
@@ -2336,7 +2418,9 @@ def _first_hops(
             k_avg=leg.k_avg,
             speed_factor=speed_factor,
             travel_time_s=travel_time,
-            fed_growth=_first_share(leg.length_m, seg.length_m) * seg.fed_growth,
+            fed_growth=_first_leg_dose(
+                leg, travel_time, seg, time_s, fed_rate_sampler, config
+            ),
             visible=leg.k_avg < config.visibility_extinction_threshold,
             k_max=leg.k_max,
             arrival_time_s=time_s,
