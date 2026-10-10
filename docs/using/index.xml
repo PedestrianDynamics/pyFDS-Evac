@@ -1959,7 +1959,7 @@ line, so agents leave about 0.4 s before the line at 1.25 m/s.&lt;/li>
 &lt;li>The walkable area is derived from the deck: the union of the floor&amp;rsquo;s mesh
 footprints (the main evacuation meshes of an FDS+Evac deck), whose edge is
 a wall, minus the &lt;code>&amp;amp;OBST&lt;/code> records in the walking band, less their &lt;code>&amp;amp;HOLE&lt;/code>
-cuts. Only the parts that hold a spawn area, or
+cuts, and on a plain deck minus each &lt;code>&amp;amp;EVHO&lt;/code> on the floor. Only the parts that hold a spawn area, or
 without one an exit, are kept; &lt;code>import_report.json&lt;/code> lists the dropped
 parts. &lt;code>--walkable FILE.wkt&lt;/code> replaces the derived polygon.&lt;/li>
 &lt;li>A spawn area that asks for more agents than the run can place (the same
@@ -2005,9 +2005,10 @@ dropped, with its line number; &lt;code>-v&lt;/code>/&lt;code>--verbose&lt;/code
 &lt;/table>
 &lt;h4>What the importer derives&lt;span class="hx-absolute -hx-mt-20" id="what-the-importer-derives">&lt;/span>
 &lt;a href="#what-the-importer-derives" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;ul>
-&lt;li>&lt;strong>Deck type.&lt;/strong> An FDS+Evac deck has a &lt;code>&amp;amp;MESH&lt;/code> with &lt;code>EVACUATION=.TRUE.&lt;/code>
-or any of &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;PERS&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code>, &lt;code>&amp;amp;ENTR&lt;/code>, &lt;code>&amp;amp;CORR&lt;/code>, &lt;code>&amp;amp;EVHO&lt;/code>,
-&lt;code>&amp;amp;EVSS&lt;/code>, &lt;code>&amp;amp;STRS&lt;/code>, &lt;code>&amp;amp;EDEV&lt;/code>; any other deck is a plain FDS deck.&lt;/li>
+&lt;li>&lt;strong>Deck type.&lt;/strong> An FDS+Evac deck has a &lt;code>&amp;amp;MESH&lt;/code> with &lt;code>EVACUATION=.TRUE.&lt;/code>;
+any other deck is a plain FDS deck. On a plain deck, &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>,
+&lt;code>&amp;amp;PERS&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code>, &lt;code>&amp;amp;ENTR&lt;/code>, &lt;code>&amp;amp;CORR&lt;/code>, &lt;code>&amp;amp;EVSS&lt;/code>, &lt;code>&amp;amp;STRS&lt;/code> and &lt;code>&amp;amp;EDEV&lt;/code> are
+ignored with a warning; &lt;code>&amp;amp;EVHO&lt;/code> is applied (see &lt;code>&amp;amp;EVHO&lt;/code>, plain deck).&lt;/li>
 &lt;li>&lt;strong>Floor, FDS+Evac deck.&lt;/strong> The main evacuation meshes (&lt;code>EVAC_HUMANS=.TRUE.&lt;/code>,
 else all evacuation meshes), grouped by overlapping z. The lowest group is
 imported; &lt;code>--floor MESH_ID&lt;/code> picks another. The floor level is the mesh
@@ -2028,6 +2029,13 @@ is expanded; &lt;code>MESH_ID&lt;/code> is honoured; on an FDS+Evac floor, recor
 &lt;code>CTRL_ID&lt;/code> are taken as written. &lt;code>&amp;amp;GEOM&lt;/code> is not represented; &lt;code>&amp;amp;CATF&lt;/code>
 stops the import. Two touching evacuation meshes of one floor are joined,
 with a warning (FDS+Evac keeps their shared edge a wall).&lt;/li>
+&lt;li>&lt;strong>&lt;code>&amp;amp;EVHO&lt;/code>, plain deck.&lt;/strong> An &lt;code>&amp;amp;EVHO&lt;/code> whose z range meets the floor level up
+to the top of the walking band, whose &lt;code>MESH_ID&lt;/code>, if given, names a mesh
+of the floor, and that overlaps the walkable area is cut out of it, so
+agents neither spawn nor walk there; &lt;code>walkable.diagnostics&lt;/code> notes
+&lt;code>N &amp;amp;EVHO cut out&lt;/code>. Any other &lt;code>&amp;amp;EVHO&lt;/code> is ignored with a warning. With &lt;code>--walkable&lt;/code> the polygon is taken as given and the
+&lt;code>&amp;amp;EVHO&lt;/code> is ignored. On an FDS+Evac deck, &lt;code>&amp;amp;EVHO&lt;/code> is cut out of the spawn
+areas only (see Agents).&lt;/li>
 &lt;li>&lt;strong>Kept parts.&lt;/strong> The parts of the walkable area that hold a spawn area are
 kept; with no spawn area, those that hold an exit; a part with an
 &lt;code>--exit&lt;/code> is always kept; with neither, all parts are kept. Exits and spawn
@@ -2186,6 +2194,42 @@ not cut out.&lt;/li>
 &lt;td>3, runnable&lt;/td>
 &lt;td>A slot narrower than 0.1 m.&lt;/td>
 &lt;td>Widen the exit in a copy of the deck, or pass &lt;code>--exit&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>cut out of the walkable area (plain deck)&lt;/code> (info)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>An &lt;code>&amp;amp;EVHO&lt;/code> on the floor of a plain deck.&lt;/td>
+&lt;td>None; agents neither spawn nor walk in it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>ignored: not on the imported floor&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>The &lt;code>&amp;amp;EVHO&lt;/code> z range misses the floor up to the top of the walking band.&lt;/td>
+&lt;td>Check its &lt;code>XB&lt;/code> z values, or &lt;code>--floor-z&lt;/code>/&lt;code>--z-band&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>ignored: MESH_ID 'X' is not a mesh of the imported floor&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>The &lt;code>&amp;amp;EVHO&lt;/code> names a mesh of another floor.&lt;/td>
+&lt;td>Check its &lt;code>MESH_ID&lt;/code>, or &lt;code>--floor-z&lt;/code>/&lt;code>--z-band&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>ignored: outside the walkable area&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>The &lt;code>&amp;amp;EVHO&lt;/code> footprint does not overlap the derived walkable area.&lt;/td>
+&lt;td>Check its &lt;code>XB&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>ignored: the --walkable polygon is taken as given&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>&lt;code>--walkable&lt;/code> on a plain deck with an &lt;code>&amp;amp;EVHO&lt;/code>.&lt;/td>
+&lt;td>Cut the area out of the WKT.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>&lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code> or another FDS+Evac namelist in a plain deck.&lt;/td>
+&lt;td>Add the evacuation meshes for an FDS+Evac import, or remove the records.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>… holds a config.json that the importer did not write …&lt;/code>&lt;/td>
@@ -6966,7 +7010,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a6e07a3ef2ce2a4758552df4e1c9a03868b4846a">&lt;code>a6e07a3&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/d65dc7d3f1fbd8814da72049e0350ee9957e9a96">&lt;code>d65dc7d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6990,7 +7034,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">fae2dce1ef8c947baa02b692ad0064ee1d9e75ae659387936c9a14bf2dd19427&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6cac7cff4cbb4324489a20931ca75d6a2a76177ad45775347e3e64a6c26cab70&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
