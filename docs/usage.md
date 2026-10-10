@@ -729,6 +729,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Item `EVHO` `ignored: the --walkable polygon is taken as given` (warning) | 0 | `--walkable` on a plain deck with an `&EVHO`. | Cut the area out of the WKT. |
 | Item `EVHO` `ignored: invalid, XB is missing` (warning) | 0 | An `&EVHO` without `XB` in a plain deck. | Give it an `XB`, or remove it. |
 | Item `ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck` (warning) | 0 | `&EVAC`, `&EXIT`, `&DOOR` or another FDS+Evac namelist in a plain deck. | Add the evacuation meshes for an FDS+Evac import, or remove the records. |
+| Check note `dropped &SLCF line N (QUANTITY, z Z m): REASON, so FDS writes no such slice`, or on an FDS 6.7.6 deck `dropped &SLCF line N (QUANTITY, z Z m): FDS 6.7.6 writes it in &MESH M with zero width in x, and fdsreader then reads no horizontal slice` (the orientation in place of z for a vertical or volume slice) | 3 with `--check` when no other slice gives the item, else 0 | FDS culls the slice: it lies outside every fire `&MESH` (FDS 6.10: a slice that only touches a mesh in a direction it spans counts as outside), or its `MESH_NUMBER` names a mesh that does not hold it or no fire mesh. On a deck with evacuation meshes, which FDS 6.7.6 runs, a horizontal slice that touches a mesh in x or y is kept there at zero width, and the run then reads no horizontal slice; the note says so. The check reads the deck as if the slice were absent (#705). | Move the slice into a fire mesh, or fix or drop `MESH_NUMBER`. |
 | `… holds a config.json that the importer did not write …` | 1 | `-o` points at an authored scenario. | Another `-o`, or `--force`. |
 | `no &MESH reaches the walking band z = LO..HI m; …` | 1 | Wrong `--floor-z` or `--z-band`. | As the message says. |
 | `--floor 'X' names no evacuation mesh; known: […]` | 1 | A wrong `--floor`. | Use a listed id. |
@@ -751,7 +752,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `items` | one entry per record: `status` (S, A, D, C), `level` (info, warning, error), `group`, `id`, deck `line`, `message` |
 | `exits` | per exit: `id`, `source` (`X1` vent, `X3` `--exit`, `&EXIT`, `&DOOR`), `segment`, `strip_area_m2`, `sign`, `fds_evac_segment`, and `open_from_s`, `closed_after_s`, `role` |
 | `distributions` | per spawn area: `number`, `area_m2`, `density_per_m2`, `parameters_written`, `loader_defaults`, `placeholder`, `zero_width_expansion`, `source` |
-| `recommendations` | `smoke_slice_height`; `slices` (one entry per item of the check: `status`, `required`, `z_requested`, `nearest_pbz`, `orientation_found`, `ok`, `fix`, `message`); `slice_check_ok`; `coverage` (walkable area and exits outside the fire meshes); `fds_meshes`, `fds_output_found`, `fds_dir`, `run_command` |
+| `recommendations` | `smoke_slice_height`; `slices` (one entry per item of the check: `status`, `required`, `z_requested`, `nearest_pbz`, `orientation_found`, `ok`, `fix`, `message`); `slice_check_ok`; `slices_dropped` (the slices FDS culls: `line`, `quantity`, `spec_id`, `orientation`, `z`, `reason`); `coverage` (walkable area and exits outside the fire meshes); `fds_meshes`, `fds_output_found`, `fds_dir`, `run_command` |
 | `runnable`, `not_runnable_reasons` | whether `pyfds-evac --scenario` can run the folder, and why not |
 
 #### Check a deck before running FDS — `pyfds-evac init --check`
@@ -765,7 +766,7 @@ Reads the deck only, before FDS runs, and writes nothing. It chooses the
 floor as `init` does and checks, at the smoke slice height `init` would
 write (the floor plus the last `HUMAN_SMOKE_HEIGHT`, else 1.6 m;
 `--smoke-slice-height Z` checks another absolute z), the FDS output the run
-reads. It uses the run's rule: a horizontal slice (`PBZ`, or `XB` with equal
+reads. It uses the run's rule: a horizontal slice (`PBZ` alone, or `XB` with equal
 z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie, with each
 slice's z moved to the mesh grid as FDS moves it; slices with
 `EVACUATION=.TRUE.` do not count. Each line prints the requested and the
@@ -786,10 +787,18 @@ at, from `&MESH` `IJK` and `XB` (the nearest cell face; for
 `CELL_CENTERED=.TRUE.` the top of the cell that holds z; only the mesh
 `MESH_NUMBER` names, if given), the lowest across meshes, as fdsreader
 reads it. The deck's z follows (`deck z 1.6 m`) when it differs;
-`nearest_pbz` in the report is that z. A deck with `&TRNZ` keeps the
-deck's z. `-o`, `--walkable`, `--exit`, `--agents`, `--exit-depth`,
-`--force`, `--no-fds` and `-v` shape the written scenario and are refused
-with `--check`.
+`nearest_pbz` in the report is that z. A slice FDS culls (outside every
+fire mesh, or a `MESH_NUMBER` that names a mesh not holding it or no fire
+mesh) counts as absent and is named in a `dropped &SLCF` line. The cull
+follows FDS 6.10 `READ_SLCF`, and FDS 6.7.6 for a deck with evacuation
+meshes, which only that version runs: 6.10 culls a planar slice that
+only touches a mesh in a direction it spans, 6.7.6 keeps it at zero
+width, which the run cannot read as horizontal. `MESH_NUMBER` counts the
+fire meshes only, the `MULT` copies in order. A deck with `&TRNZ` keeps
+the deck's z, since the check does not compute the stretched grid; the cull still applies, as `&TRNZ` moves
+the nodes and not the mesh bounds. `-o`, `--walkable`, `--exit`,
+`--agents`, `--exit-depth`, `--force`, `--no-fds` and `-v` shape the
+written scenario and are refused with `--check`.
 
 | Status | Meaning |
 |---|---|

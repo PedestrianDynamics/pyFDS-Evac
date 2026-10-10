@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- `pyfds-evac init --check` can now fail (✗, exit 3) on a deck it
+  passed: a slice that FDS culls no longer counts, and a `PBZ` slice
+  that also sets `PBX` or `PBY` is a line the run does not read (#705).
+  No tracked deck changes. `import_report.json` gains
+  `recommendations.slices_dropped`.
+
 - Scripts that parse `import_report.json`: `nearest_pbz` under
   `recommendations.slices` is the z the run ranks the slice on, the grid
   node FDS writes it at, no longer the deck's z (#687). On a 0.5 m grid
@@ -60,6 +66,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `pyfds-evac init --check` drops a slice that FDS culls, with the exact
+  bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
+  `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not
+  hold it or no fire mesh. The check gives the status it gives without
+  that slice and prints `dropped &SLCF line N (…): REASON, so FDS writes
+  no such slice`; before, it ranked the slice at the deck's z and could
+  pass (#705). The cull applies to `&TRNZ` decks too. `MESH_NUMBER`
+  counts the fire meshes only, as the FDS 6.7.6 fire run does, and
+  `PBX` or `PBY` with `PBZ` is a vertical line, as fdsreader reads it.
+  On a deck with evacuation meshes (FDS 6.7.6), a horizontal slice that
+  only touches a mesh in x or y is reported as unreadable: FDS keeps it
+  there at zero width, and fdsreader then reads no horizontal slice.
+- The deck parser computes `MULT` copies as FDS does, `(XB + DX0) +
+  I*DX`, so the check compares the doubles FDS uses (#705). The
+  walkable area, exits and obstructions use these coordinates rounded to
+  1e-9 m, so faces that `MULT` copies leave a few ulp apart coincide:
+  such a seam between mesh rows could split the walkable area in two and
+  leave no agents placed. No tracked deck's `init` output changes. The
+  rounding closes such seams up to coordinates of about 2e6 m; at
+  larger ones, such as UTM northings (~5e6 m), one ulp exceeds 0.5e-9 m
+  and a seam can remain.
 - `pyfds-evac init` reads a deck as an FDS+Evac deck only when it has a
   `&MESH` with `EVACUATION=.TRUE.`. An `&EVHO` in a plain deck is cut out
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;
