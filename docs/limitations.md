@@ -306,7 +306,7 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 ## Known defects
 
 - **Crowds deadlock at doors and narrow gaps**
-  ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706), planned for 0.5.0). With the default
+  ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706), planned for 0.6.0). With the default
   collision-free speed model, a crowd can stop in front of an opening
   several body widths wide and never clear it, so the run reaches
   `max_simulation_time` with agents inside. Imported FDS+Evac decks such
@@ -321,7 +321,8 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   in 3 of 150 runs of 5 agents (seeds 1–150), and 2 to 6 agents in 7 of
   60 runs of 20 agents (seeds 1–60)
   ([Wayfinding › Limitations](/models/wayfinding.md#limitations)).
-- **Dense counterflow can lock.** In dense head-on counterflow under the
+- **Dense counterflow can lock**
+  ([#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745), planned for 0.6.0). In dense head-on counterflow under the
   default `CollisionFreeSpeedModel`, the two streams can meet and stand
   for the rest of the run. The four decks Iso-06-counterflow-50 and -100
   and Nist-2-8-counterflow-50 and -100 of jupedsim-web-community
