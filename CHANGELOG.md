@@ -66,8 +66,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `HUT_Library` decks, the `OpenFloorOffice` decks and `DoorAlgo2_A`,
   run without rerouting. Such runs now return and write a route history
   (`--output-route-history`) holding the `exit_closed` and
-  `default_route` rows of the closures. Runs with rerouting and runs
-  without a schedule are unchanged.
+  `default_route` rows of the closures. Runs without a schedule are
+  unchanged. Runs with rerouting and a schedule move the same, but
+  their route history changes in two ways: a closure row of an agent
+  that followed its default route has `old_exit` = the closed exit
+  instead of empty, and a closure onto a gate fallback route is
+  labelled `exit_closed` instead of `fallback`.
 
 ### Added
 

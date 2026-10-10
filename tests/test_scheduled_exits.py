@@ -149,7 +149,17 @@ def _door_at(x: float, y: float) -> str | None:
     )
 
 
-def _run(scenario: Scenario, **kwargs) -> dict:
+def _frames(result) -> list[tuple[float, float, float]]:
+    """Every recorded (time, x, y) of the run."""
+    with contextlib.closing(sqlite3.connect(result.sqlite_file)) as con:
+        fps = float(
+            con.execute("SELECT value FROM metadata WHERE key='fps'").fetchone()[0]
+        )
+        rows = con.execute("SELECT frame, pos_x, pos_y FROM trajectory_data")
+        return [(frame / fps, x, y) for frame, x, y in rows]
+
+
+def _run(scenario: Scenario, with_frames: bool = False, **kwargs) -> dict:
     result = run_scenario(scenario, seed=SEED, **kwargs)
     try:
         last_seen = _last_seen(result)
@@ -157,6 +167,7 @@ def _run(scenario: Scenario, **kwargs) -> dict:
             "last_seen": last_seen,
             "departures": [(t, _door_at(x, y)) for t, x, y in last_seen],
             "routes": list(result.route_history or []),
+            "frames": _frames(result) if with_frames else [],
             "evacuated": result.agents_evacuated,
             "remaining": result.agents_remaining,
         }
@@ -346,11 +357,12 @@ NORTH_DOOR = box(
     LENGTH_M / 2.0 + DOOR_M / 2.0,
     WIDTH_M + DOOR_DEPTH_M,
 )
-# Dense smoke over the north door from the start.
+# Dense smoke over the north door from the start, clear of the straight
+# lines from the west half of the room to the east door.
 NORTH_SMOKE = (
-    LENGTH_M / 2.0 - 4.0,
-    LENGTH_M / 2.0 + 4.0,
-    WIDTH_M - 4.0,
+    LENGTH_M / 2.0 - 1.5,
+    LENGTH_M / 2.0 + 1.5,
+    WIDTH_M - 1.5,
     WIDTH_M + DOOR_DEPTH_M,
 )
 NORTH_SMOKE_PER_M = 5.0
@@ -432,24 +444,40 @@ def test_smoke_blind_closure_run_walks_as_the_run_without_fire():
 
 
 def test_closure_rechoice_uses_the_map_the_agent_holds(monkeypatch):
-    """Without rerouting the map does not grow from sight at the re-choice (D6)."""
+    """The re-choice adds no perception step of its own (D6, R-A).
+
+    Without rerouting the map grows only on arrival at a stage: the agents
+    learn the north door at the checkpoint and switch to it by name, while
+    nothing expands their map from sight.
+    """
     import pyfds_evac.core.scenario as scenario_module
 
-    calls = []
-    expand = scenario_module.expand_from_visibility
+    calls: dict[str, int] = {"sight": 0, "arrival": 0}
 
-    def _spy(*args, **kwargs):
-        calls.append(args)
-        return expand(*args, **kwargs)
+    def _spy(name, wrapped):
+        def _counted(*args, **kwargs):
+            calls[name] += 1
+            return wrapped(*args, **kwargs)
 
-    monkeypatch.setattr(scenario_module, "expand_from_visibility", _spy)
-    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
-    run = _run(scenario, reroute_config=None)
-    assert _closed_switches(run) == {("west", "east")}
-    assert not calls
+        return _counted
+
+    for name, attr in (
+        ("sight", "expand_from_visibility"),
+        ("arrival", "expand_on_arrival"),
+    ):
+        monkeypatch.setattr(
+            scenario_module, attr, _spy(name, getattr(scenario_module, attr))
+        )
+    t_close = 12.0
+    run = _run(_checkpoint_scenario(t_close), reroute_config=None)
+    assert {(r["new_exit"], r["reason"]) for r in run["routes"]} == {
+        ("north", "exit_closed")
+    }
+    assert calls["arrival"] > 0
+    assert calls["sight"] == 0
     # The spy sees the expansion the reroute pass makes.
-    _run(scenario, reroute_config=REROUTE)
-    assert calls
+    _run(_checkpoint_scenario(t_close), reroute_config=REROUTE)
+    assert calls["sight"] > 0
 
 
 @pytest.mark.parametrize("mode", NO_REROUTE_MODES)
@@ -519,3 +547,186 @@ def test_flow_spawned_journey_agent_with_schedule_is_rejected(mode, monkeypatch)
     ]
     with pytest.raises(ValueError, match="walks a JuPedSim journey"):
         run_scenario(scenario, **RUN_MODES[mode])
+
+
+# ── Closure rules shared by both modes (#395 R-A to R-C) ──────────────
+
+REROUTE_AND_NOT = ["reroute", "no_reroute"]
+CHECKPOINT_ID = "jps-checkpoints_0"
+SPAWN_ID = "jps-distributions_0"
+
+
+def _checkpoint_scenario(
+    t_close: float, waiting_time: float = 0.0, number: int = 10
+) -> Scenario:
+    """Agents who know only the west door walk to it through a checkpoint.
+
+    The checkpoint spans the room, west of the spawn area and east of the
+    north door. Without a visibility model, arriving at it reveals every
+    stage it leads to, the north door included.
+    """
+    doors = {"west": DOORS["west"], "north": NORTH_DOOR}
+    scenario = _scenario(
+        {"west": {"closed_after_s": t_close}},
+        doors=doors,
+        familiarity=0.0,
+        entrance="west",
+        number=number,
+    )
+    raw = scenario.raw
+    room = raw["distributions"].pop("room")
+    room["coordinates"] = _coords(box(22.0, 1.0, LENGTH_M - 1.0, WIDTH_M - 1.0))
+    raw["distributions"] = {SPAWN_ID: room}
+    raw["checkpoints"] = {
+        CHECKPOINT_ID: {
+            "type": "polygon",
+            "coordinates": _coords(box(16.0, 0.0, 18.0, WIDTH_M)),
+            "waiting_time": waiting_time,
+            "waiting_time_distribution": "constant",
+            "speed_factor": 1.0,
+            "enable_throughput_throttling": False,
+        }
+    }
+    raw["journeys"] = [{"id": "j0", "stages": [SPAWN_ID, CHECKPOINT_ID, "west"]}]
+    raw["transitions"] = [
+        {"from": SPAWN_ID, "to": CHECKPOINT_ID, "journey_id": "j0"},
+        {"from": CHECKPOINT_ID, "to": "west", "journey_id": "j0"},
+        {"from": CHECKPOINT_ID, "to": "north", "journey_id": "j1"},
+    ]
+    return scenario
+
+
+def _north_departures(run: dict) -> int:
+    return sum(
+        1
+        for _t, x, y in run["last_seen"]
+        if NORTH_DOOR.distance(Point(x, y)) <= AT_DOOR_M
+    )
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_closure_rechoice_uses_exits_learned_at_a_checkpoint(mode):
+    """The map at the closure holds what the agent learned on the way (R-A).
+
+    The agents know only the west door at spawn and learn the north door on
+    arriving at the checkpoint. When the west door closes they switch to
+    it as an exit they know, not by the default route.
+    """
+    t_close = 12.0
+    run = _run(_checkpoint_scenario(t_close), **RUN_MODES[mode])
+    rows = {(r["old_exit"], r["new_exit"], r["reason"]) for r in run["routes"]}
+    assert rows == {("west", "north", "exit_closed")}
+    assert all(t_close <= r["time_s"] <= t_close + 1.0 for r in run["routes"])
+    assert run["evacuated"] == 10
+    assert _north_departures(run) == 10
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_agent_waiting_at_a_checkpoint_rechooses_when_its_exit_closes(mode):
+    """An agent in the middle of its wait at a checkpoint re-decides too.
+
+    The agents reach the checkpoint within 10 s and wait 10 s there; the
+    west door closes during the wait. An agent learns at a checkpoint when
+    its wait ends, so it does not know the north door yet: it takes it as
+    the nearest open exit on foot.
+    """
+    t_close = 12.0
+    scenario = _checkpoint_scenario(t_close, waiting_time=10.0)
+    run = _run(scenario, **RUN_MODES[mode])
+    rows = {(r["old_exit"], r["new_exit"], r["reason"]) for r in run["routes"]}
+    assert rows == {("west", "north", "default_route")}
+    assert all(t_close <= r["time_s"] <= t_close + 1.0 for r in run["routes"])
+    assert run["evacuated"] == 10
+    assert _north_departures(run) == 10
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_agent_standing_in_the_closed_exit_leaves_when_another_opens(mode):
+    """An agent that reached its exit after it closed walks on later.
+
+    The crowd starts by the west door, which closes at 2 s while the east
+    door is shut until 6 s. Agents that reach the west door meanwhile stand
+    in it; at the first check after 6 s they head for the east door.
+    """
+    t_close, t_open = 2.0, 6.0
+    scenario = _scenario(
+        {"west": {"closed_after_s": t_close}, "east": {"open_from_s": t_open}}
+    )
+    by_west = _coords(box(0.3, 2.0, 5.0, WIDTH_M - 2.0))
+    scenario.raw["distributions"]["room"]["coordinates"] = by_west
+    run = _run(scenario, with_frames=True, **RUN_MODES[mode])
+    standing = [
+        (t, x, y)
+        for t, x, y in run["frames"]
+        if t_close + 1.0 < t < t_open
+        and DOORS["west"].distance(Point(x, y)) <= AT_DOOR_M
+    ]
+    assert standing, "nobody stood in the closed west door"
+    late = [door for t, door in run["departures"] if t > t_close + FRAME_S]
+    assert late and set(late) == {"east"}
+    switches = [r for r in run["routes"] if r["new_exit"] == "east"]
+    assert switches
+    assert all(t_open <= r["time_s"] <= t_open + 1.0 for r in switches)
+    assert {(r["old_exit"], r["reason"]) for r in switches} == {("west", "exit_closed")}
+    assert run["evacuated"] == NUM_AGENTS
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_sequential_closures_leave_from_the_exit_walked_to(mode):
+    """Each closure row names the exit the agent was walking to (R-B).
+
+    The agents know only the west door. It closes at T1, and their default
+    route takes them to the nearest open door on foot: the north one, or the
+    east one for agents near it. The north door closes at T2 and its agents
+    go on to the east door. No row is ``initial``, and the second closure's
+    rows have ``old_exit`` north, not empty.
+    """
+    t1, t2 = T_CLOSE_S, 9.0
+    doors = {**DOORS, "north": NORTH_DOOR}
+    scenario = _scenario(
+        {"west": {"closed_after_s": t1}, "north": {"closed_after_s": t2}},
+        doors=doors,
+        familiarity=0.0,
+        entrance="west",
+    )
+    run = _run(scenario, **RUN_MODES[mode])
+    routes = run["routes"]
+    assert routes
+    assert {r["reason"] for r in routes} == {"default_route"}
+    first = [r for r in routes if r["old_exit"] == "west"]
+    second = [r for r in routes if r["old_exit"] == "north"]
+    assert first and second
+    assert len(first) + len(second) == len(routes)
+    assert "north" in {r["new_exit"] for r in first}
+    assert {r["new_exit"] for r in first} <= {"north", "east"}
+    assert all(t1 <= r["time_s"] <= t1 + 1.0 for r in first)
+    assert {r["new_exit"] for r in second} == {"east"}
+    assert all(t2 <= r["time_s"] <= t2 + 1.0 for r in second)
+    assert run["evacuated"] == NUM_AGENTS
+
+
+def _east_smoke_model():
+    from pyfds_evac.core.smoke_speed import SmokeSpeedConfig, SmokeSpeedModel
+
+    class _EastSmoke:
+        def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+            return NORTH_SMOKE_PER_M if x >= LENGTH_M - 6.0 else 0.0
+
+    return SmokeSpeedModel(
+        _EastSmoke(), SmokeSpeedConfig(fds_dir=".", update_interval_s=1.0)
+    )
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_closure_onto_a_refused_route_is_labelled_exit_closed(mode):
+    """The closure, not the fallback, is the reason for the switch (R-C).
+
+    Smoke refuses every route to the east door, the only one left open, so
+    the agents bound west are given it as a gate fallback.
+    """
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    run = _run(scenario, smoke_speed_model=_east_smoke_model(), **RUN_MODES[mode])
+    closure = [r for r in run["routes"] if r["old_exit"] == "west"]
+    assert closure
+    assert {(r["new_exit"], r["reason"]) for r in closure} == {("east", "exit_closed")}
+    assert not [r for r in run["routes"] if r["reason"] == "fallback"]

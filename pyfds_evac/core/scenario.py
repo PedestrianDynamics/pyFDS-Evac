@@ -117,6 +117,7 @@ from .route_graph import (
     RouteSwitch,
     StageGraph,
     _reconstruct_committed_path,
+    adopt_heading_exit,
     compute_eval_offset,
     end_look,
     evaluate_and_reroute,
@@ -2255,12 +2256,8 @@ def run_scenario(
                 return
             if not _heads_for_closed_exit(wait_info, stage_graph, current_time):
                 return
-            rs = agent_route_state.setdefault(
-                agent_id,
-                AgentRouteState(
-                    current_exit=_extract_terminal_exit(wait_info, stage_graph.nodes)
-                ),
-            )
+            rs = agent_route_state.setdefault(agent_id, AgentRouteState())
+            adopt_heading_exit(rs, wait_info, stage_graph, cognitive_maps.get(agent_id))
             clear_air = smoke_blind or smoke_speed_model is None
             switch = evaluate_and_reroute(
                 agent_id=agent_id,
@@ -3102,11 +3099,17 @@ def run_scenario(
                     # to it before drifting along the default path. Later
                     # evaluations keep the staggered cadence.
                     first_eval = rs.last_eval_time_s == -math.inf
-                    # An agent heading for a closed exit re-decides now.
-                    first_eval = first_eval or (
-                        has_exit_schedule
-                        and _heads_for_closed_exit(wait_info, stage_graph, current_time)
-                    )
+                    # An agent heading for a closed exit re-decides now, from
+                    # the exit it walks to (#395 R-B).
+                    if has_exit_schedule and _heads_for_closed_exit(
+                        wait_info, stage_graph, current_time
+                    ):
+                        first_eval = True
+                        _counted = rs.counted_exit
+                        adopt_heading_exit(
+                            rs, wait_info, stage_graph, cognitive_maps.get(agent_id)
+                        )
+                        _move_count(exit_counts, _counted, rs.counted_exit)
                     if not first_eval and not should_reevaluate(
                         current_time, rs, reroute_config.reevaluation_interval_s
                     ):

@@ -3833,7 +3833,9 @@ def _decide_default_route(
     return RouteDecision(
         kind="default_route",
         path=path,
-        old_exit=route_state.current_exit,
+        # The exit the agent was walking to, known or not: a closed one is
+        # the exit the closure took from it (#395 R-B).
+        old_exit=route_state.counted_exit,
         target_id=exit_id,
         new_cost=0.0,
         switch_reason="default_route",
@@ -3971,7 +3973,10 @@ def evaluate_and_reroute(
     ):
         return None
 
-    old_exit = route_state.current_exit
+    # The exit the agent walks to, in its map or not. When it has closed,
+    # the switch leaves that exit, and the closure is the cause (#395).
+    heading_closed = stage_closed(graph, route_state.counted_exit, current_time_s)
+    old_exit = route_state.counted_exit if heading_closed else route_state.current_exit
     old_rc = None
     old_cost = None
     if old_exit and old_exit != best.exit_id:
@@ -4023,7 +4028,9 @@ def evaluate_and_reroute(
             news=news,
             current_fed=current_fed,
         )
-        if decision.kind == "switch" and stage_closed(graph, old_exit, current_time_s):
+        # A fallback keeps its kind, for the lockout, but the closure is
+        # why the agent moved (#395 R-C).
+        if decision.kind in ("switch", "fallback") and heading_closed:
             decision = replace(decision, switch_reason="exit_closed")
     switch = _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
     if decision.kind in ("switch", "fallback") and switch is not None:
@@ -4039,6 +4046,23 @@ def _remember_exit_switch(
         return
     route_state.refused_switch_from = switch.old_exit if refused else None
     route_state.refused_switch_time_s = switch.time_s if refused else -math.inf
+
+
+def adopt_heading_exit(
+    route_state: AgentRouteState, wait_info: dict, graph: StageGraph, cognitive_map
+) -> None:
+    """Set the route state from the exit the agent's path ends at (#395 R-B).
+
+    An exit in the agent's map (or any exit, without a map) is its current
+    exit; one outside it is the exit of its default route. Called before a
+    closure decision, so the switch leaves the exit the agent walked to.
+    """
+    exit_id = terminal_exit(wait_info, graph.nodes)
+    if exit_id is None:
+        return
+    known = cognitive_map is None or exit_id in cognitive_map.known_nodes
+    route_state.current_exit = exit_id if known else None
+    route_state.default_exit = None if known else exit_id
 
 
 def stage_closed(graph: StageGraph, stage_id: str | None, time_s: float) -> bool:
