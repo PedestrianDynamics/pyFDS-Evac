@@ -477,11 +477,11 @@ to route through. Values per quantity are on
 exits, checkpoints, spawn areas, signs and route edges outside the slices,
 and stores them as &lt;code>fds_coverage&lt;/code> in the run manifest. The smoke and FED
 histories mark each row outside with &lt;code>in_fds_domain = False&lt;/code>, and
-&lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code> counts the agents, samples and agent-seconds
-outside. Check these two; the single warning at the first extinction
-sample outside says nothing about later agents. The route-cost history does
-not record the length outside per row
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).
+&lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code> and the manifest&amp;rsquo;s &lt;code>fds_outside&lt;/code> count the
+agents, samples and agent-seconds outside. Check these two; the single
+warning at the first extinction sample outside says nothing about later
+agents. The route-cost history does not record the length outside per
+row (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).
 &lt;code>--require-fds-coverage&lt;/code> turns every case outside into an error.&lt;/p>
 &lt;p>&lt;strong>Signs seen from outside the FDS grid.&lt;/strong> An agent beyond the grid of an
 FDS visibility model sees every sign within its reading distance, measured

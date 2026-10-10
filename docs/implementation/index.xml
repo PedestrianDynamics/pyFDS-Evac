@@ -924,7 +924,20 @@ slices. The check runs when an agent reaches such a point, not at setup.&lt;/p>
 scenario with the slices of every sampled quantity. The domain is the area
 that every quantity covers. The report gives the walkable area outside
 (m² and share), each exit, checkpoint and spawn area outside (m²), each
-sign outside, and each route edge outside (m). It is logged once and
+sign outside, and each route edge outside (m). When part of the walkable
+area lies outside, it ends with the bounds of the walkable area and of the
+FDS domain, so that an offset origin or swapped x and y shows at a glance.
+When more than half of the walkable area lies outside, a frame mistake
+is plausible, and the report also tries swapping x and y, shifting the
+walkable area onto the domain&amp;rsquo;s lower-left corner, and both. If one of
+them would leave at most 1 % of the walkable area outside, the report
+names it as a possible explanation, for example &lt;code>Shifted by (dx, dy) m, at most 1 % of the walkable area would lie outside the FDS domain; if it should lie inside, check the origin of the geometry against the FDS deck&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26" target="_blank" rel="noopener">#26&lt;/a>).
+With both, the shift is in the frame after the swap. With half or less
+outside, as for a mesh margin or a corridor reaching past the mesh on
+one side, the report gives the bounds only. When the slices of the
+sampled quantities share no area, it gives neither bounds nor hint. The
+bounds and the hint are in the log and, with &lt;code>--require-fds-coverage&lt;/code>,
+in the error text, not in &lt;code>fds_coverage&lt;/code>. The report is logged once and
 stored as &lt;code>fds_coverage&lt;/code> in &lt;code>metrics&lt;/code> and in the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#run-manifest">run manifest&lt;/a>. For a T-junction whose west
 corridor extends 12 m past the FDS mesh, the log reads:&lt;/p>
@@ -934,7 +947,8 @@ MONOXIDE VOLUME FRACTION, HYDROGEN CHLORIDE VOLUME FRACTION, OXYGEN VOLUME
 FRACTION, SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear
 sight: walkable area 36.00 m² (19.4 %); exit exit_A_left 3.00 m²;
 distribution jps-distributions_out 6.00 m²; sign exit_A_left; edge
-jps-checkpoints_0 -&amp;gt; exit_A_left 11.50 m; ...&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+jps-checkpoints_0 -&amp;gt; exit_A_left 11.50 m; ... Walkable area x
+-12.00..30.00, y 0.00..13.00 m, FDS domain x 0.00..30.00, y 0.00..13.00 m.&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -948,7 +962,7 @@ title="Copy code"
 &lt;code>False&lt;/code> where the agent stood outside
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#smoke-history">Outputs&lt;/a>). At the end, the run logs the number
 of agents, samples and agent-seconds outside, stored as
-&lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code>:&lt;/p>
+&lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code> and as &lt;code>fds_outside&lt;/code> in the run manifest:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>Outside the FDS domain: 8 agent(s), 56 sample(s), about 56.0 agent-seconds
 of ambient air and clear sight.&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">

@@ -201,12 +201,16 @@ title="Copy code"
 &lt;td>Either genuinely survivable, or FED never ran. Check for the warning above before concluding the former.&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>Warning: &lt;code>FDS coverage: outside the FDS slices (...), agents read ambient air and clear sight: walkable area ... m² ...&lt;/code>&lt;/td>
-&lt;td>Part of the scenario lies outside the slices of a sampled quantity. Agents there read &lt;em>K&lt;/em> = 0, ambient gases and 20 °C, as in FDS+Evac, and read signs in clear air within their reading distance. The smoke and FED histories mark those rows with &lt;code>in_fds_domain = False&lt;/code>, and the run ends with a count of the samples outside. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#outside-the-fds-slices">FDS slice sampling&lt;/a>.&lt;/td>
+&lt;td>Warning: &lt;code>FDS coverage: outside the FDS slices (...), agents read ambient air and clear sight: walkable area ... m² ... Walkable area x ..., FDS domain x ...&lt;/code>&lt;/td>
+&lt;td>Part of the scenario lies outside the slices of a sampled quantity. Agents there read &lt;em>K&lt;/em> = 0, ambient gases and 20 °C, as in FDS+Evac, and read signs in clear air within their reading distance. The smoke and FED histories mark those rows with &lt;code>in_fds_domain = False&lt;/code>, and the run ends with a count of the samples outside. Compare the two bounds: if the walkable area is meant to lie inside, its origin or axis order differs from the deck&amp;rsquo;s. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#outside-the-fds-slices">FDS slice sampling&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>The same warning ending &lt;code>With x and y swapped, at most 1 % of the walkable area would lie outside the FDS domain; ...&lt;/code>, &lt;code>Shifted by (dx, dy) m, at most 1 % ...&lt;/code>, or &lt;code>With x and y swapped and shifted by (dx, dy) m, at most 1 % ...&lt;/code>&lt;/td>
+&lt;td>More than half of the walkable area lies outside, and swapping x and y, shifting it, or both would bring all but 1 % of it inside; with both, the shift is in the swapped frame. A possible explanation, not a finding: the geometry and the FDS deck may use different frames. If the walkable area should lie inside the FDS domain, draw it in the deck&amp;rsquo;s frame, or derive it from the deck with &lt;code>pyfds-evac init&lt;/code>. With &lt;code>--require-fds-coverage&lt;/code> the same text is the &lt;code>FdsDomainError&lt;/code>, ending &lt;code>Otherwise extend the FDS meshes or slices over these objects, or run without --require-fds-coverage.&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>FdsDomainError: ... outside the FDS slice domain (--require-fds-coverage)&lt;/code>, or &lt;code>FdsDomainError: FDS coverage: ...&lt;/code> at setup&lt;/td>
-&lt;td>&lt;code>--require-fds-coverage&lt;/code> is set and part of the scenario, or a sample, lies outside the slices. Extend the FDS meshes or slices, or run without the option.&lt;/td>
+&lt;td>&lt;code>--require-fds-coverage&lt;/code> is set and part of the scenario, or a sample, lies outside the slices. Correct the frame of the geometry if the setup error names a swap or a shift and the walkable area should lie inside; otherwise extend the FDS meshes or slices, or run without the option.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Warning: &lt;code>N sign(s) lie outside the FDS extinction slice that sign visibility is computed on, ...&lt;/code>; with &lt;code>--require-fds-coverage&lt;/code> the same text as &lt;code>FdsDomainError&lt;/code>, ending &lt;code>Extend the FDS meshes over the signs, or run without --require-fds-coverage.&lt;/code>&lt;/td>
@@ -707,7 +711,7 @@ its zone removed, run with &lt;code>--fds-dir assets/iso_table21_coupled/fds&lt;
 &lt;code>--allow-fds-horizon-hold&lt;/code>, because its &lt;code>max_simulation_time&lt;/code> of 300 s
 exceeds the 150 s of FDS output:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>WARNING:pyfds_evac.core.fds_coverage:FDS coverage: outside the FDS slices (SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear sight: walkable area 185.00 m² (90.2 %); exit jps-exits_0 18.00 m²; distribution jps-distributions_0 34.00 m²; sign jps-exits_0; edge jps-distributions_0 -&amp;gt; jps-exits_0 21.50 m.
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>WARNING:pyfds_evac.core.fds_coverage:FDS coverage: outside the FDS slices (SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear sight: walkable area 185.00 m² (90.2 %); exit jps-exits_0 18.00 m²; distribution jps-distributions_0 34.00 m²; sign jps-exits_0; edge jps-distributions_0 -&amp;gt; jps-exits_0 21.50 m. Walkable area x 0.00..25.00, y 0.00..10.00 m, FDS domain x -50.00..50.00, y -1.00..1.00 m.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>...
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation finished in 59.21 s (50/50 evacuated).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Outside the FDS domain: 50 agent(s), 2106 sample(s), about 2106.0 agent-seconds of ambient air and clear sight.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
@@ -929,7 +933,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--require-fds-coverage&lt;/code>&lt;/td>
 &lt;td>off&lt;/td>
-&lt;td>Stop the run when part of the scenario lies outside the FDS slices: at setup for the walkable area, an exit, checkpoint, spawn area, sign or route edge, and at any smoke, FED, heat or sign-visibility sample. Without it, those places read ambient air and clear sight, as in FDS+Evac; the run logs what lies outside at setup, flags each history row with &lt;code>in_fds_domain&lt;/code>, and counts the samples outside at the end. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>.&lt;/td>
+&lt;td>Stop the run when part of the scenario lies outside the FDS slices: at setup for the walkable area, an exit, checkpoint, spawn area, sign or route edge, and at any smoke, FED, heat or sign-visibility sample. Without it, those places read ambient air and clear sight, as in FDS+Evac; the run logs what lies outside at setup, with the bounds of the walkable area and of the FDS domain and a hint when swapped x and y or a shift could explain it, flags each history row with &lt;code>in_fds_domain&lt;/code>, and counts the samples outside at the end. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
@@ -2855,6 +2859,10 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;tr>
 &lt;td>&lt;code>fds_coverage&lt;/code>&lt;/td>
 &lt;td>when FDS slices are sampled: the setup check of the scenario against the slice coverage, with &lt;code>quantities&lt;/code>, &lt;code>walkable_area_m2&lt;/code>, &lt;code>walkable_outside_m2&lt;/code>, &lt;code>areas_outside_m2&lt;/code> (exits, checkpoints, spawn areas), &lt;code>signs_outside&lt;/code>, &lt;code>signs_off_vismap_grid_m&lt;/code> and &lt;code>edges_outside_m&lt;/code> (route edges)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fds_outside&lt;/code>&lt;/td>
+&lt;td>with &lt;code>fds_coverage&lt;/code>: the history rows sampled outside the FDS slices, as &lt;code>rows&lt;/code>, &lt;code>agents&lt;/code> and &lt;code>agent_seconds&lt;/code>, the same as &lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>replay_exits&lt;/code>&lt;/td>
@@ -7066,7 +7074,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/01562272c8e854261fca8aa01c25be68bfa44f89">&lt;code>0156227&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/c81de385cefb8f72e2de93c0f007c1ddf877c5c9">&lt;code>c81de38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7090,7 +7098,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">174da1d45842c22a0a4e47f83e8d9530964d72f30d384bc6f06bfb0d2b0c9c34&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d3de14255dc300e85a24977f5494f04da0298e32fefb1cdbd1f2d91d7bc8dd12&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
