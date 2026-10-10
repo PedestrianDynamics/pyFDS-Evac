@@ -70,7 +70,7 @@ add and the failure modes that stay silent unless you read the warnings.
 
 | Flag | Default | Purpose |
 |------|---------|---------|
-| `--enable-rerouting` / `--no-enable-rerouting` | on | Let agents re-evaluate exits during the run. Without it, an agent whose exit closes (`open_from_s`, `closed_after_s`) still chooses again, once, as it chose its first exit ([Scenario JSON](scenario-json.md#exits-exitsid)). |
+| `--enable-rerouting` / `--no-enable-rerouting` | on | Let agents re-evaluate exits during the run. Without it, an agent whose exit closes (`open_from_s`, `closed_after_s`) still chooses again, once for each closure, as it chose its first exit ([Scenario JSON](scenario-json.md#exits-exitsid)). |
 | `--reroute-interval S` | 1.0 s | Seconds between per-agent reevaluations. The reroute pass runs at most once per simulated second, so below 1 s agents still re-decide every 1 s ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)). With a smoke-aware visibility model, S is also the time step at which sign legibility is computed. |
 | `--output-route-history CSV` | none | Write route switches; see [Outputs](outputs.md#route-history). |
 | `--output-route-cost-history CSV` | none | Write ranked route cost snapshots; see [Outputs](outputs.md#route-cost-history). |
@@ -98,7 +98,7 @@ the fully coupled default
 
 | Flag | Default | Purpose |
 |------|---------|---------|
-| `--smoke-blind` | off | Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say. An agent whose exit closes (`open_from_s`, `closed_after_s`) still chooses again, once, in clear air ([Scenario JSON](scenario-json.md#exits-exitsid)). Gas FED, heat FED and FIC still accumulate and are written to the FED history; `incapacitated` stays false. The smoke history holds the sampled K with `speed_factor` 1. |
+| `--smoke-blind` | off | Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say. An agent whose exit closes (`open_from_s`, `closed_after_s`) still chooses again, once for each closure, in clear air ([Scenario JSON](scenario-json.md#exits-exitsid)). Gas FED, heat FED and FIC still accumulate and are written to the FED history; `incapacitated` stays false. The smoke history holds the sampled K with `speed_factor` 1. |
 | `--output-exit-history CSV` | none | Write each path agent's exit; see [Outputs](outputs.md#exit-history). |
 | `--replay-exits CSV` | none | Send each agent to the exit its counterpart took in an earlier run, read from that run's `--output-exit-history` file. Agents are paired by origin and spawn order within it (`origin`, `spawn_index`), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent's map. Not allowed with an exit that has `open_from_s` or `closed_after_s`. |
 

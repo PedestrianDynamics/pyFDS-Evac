@@ -101,7 +101,7 @@ this deck. It does not affect the result.
 A scenario with an exit that closes (`closed_after_s`, for example a front
 door that jams) also runs smoke-blind
 ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). An
-agent whose exit closes chooses again, once, in clear air, as it chose its
+agent whose exit closes chooses again, once for each closure, in clear air, as it chose its
 first exit; nobody else re-decides. Arm C re-decides through the reroute
 pass, so with a closure U walks exactly as the no-fire run with
 `--no-enable-rerouting`, not necessarily as C.

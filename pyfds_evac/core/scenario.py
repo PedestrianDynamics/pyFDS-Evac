@@ -2240,12 +2240,15 @@ def run_scenario(
         def _redirect_from_closed_exit(agent, current_time: float, cache: dict) -> None:
             """Re-choose the exit of a path agent whose exit is closed (#395).
 
-            Runs only without a reroute pass. The agent decides once, as
-            the reroute pass would with the closed exit as its exit, but
-            scored like its opening choice: on the map it holds, without
-            the queue term, in clear air when smoke-blind. When it knows
-            no open exit it takes the default route. An exit that opens
-            changes nobody's choice.
+            Runs only without a reroute pass, for an agent whose path ends
+            at an exit that has closed down or has not opened yet. It
+            decides once per closure, as the reroute pass would, but scored
+            like its opening choice: on the map it holds, without the queue
+            term, in clear air when smoke-blind. An exit that has closed
+            down is the exit it leaves (``exit_closed``); one not open yet
+            was never its exit, so its first open exit is ``initial``.
+            When it knows no open exit it takes the default route. An exit
+            that opens changes nobody's choice.
             """
             agent_id = int(agent.id)
             wait_info = agent_wait_info.get(agent_id)
@@ -2257,7 +2260,9 @@ def run_scenario(
             if not _heads_for_closed_exit(wait_info, stage_graph, current_time):
                 return
             rs = agent_route_state.setdefault(agent_id, AgentRouteState())
-            adopt_heading_exit(rs, wait_info, stage_graph, cognitive_maps.get(agent_id))
+            adopt_heading_exit(
+                rs, wait_info, stage_graph, cognitive_maps.get(agent_id), current_time
+            )
             clear_air = smoke_blind or smoke_speed_model is None
             switch = evaluate_and_reroute(
                 agent_id=agent_id,
@@ -3107,7 +3112,11 @@ def run_scenario(
                         first_eval = True
                         _counted = rs.counted_exit
                         adopt_heading_exit(
-                            rs, wait_info, stage_graph, cognitive_maps.get(agent_id)
+                            rs,
+                            wait_info,
+                            stage_graph,
+                            cognitive_maps.get(agent_id),
+                            current_time,
                         )
                         _move_count(exit_counts, _counted, rs.counted_exit)
                     if not first_eval and not should_reevaluate(

@@ -65,13 +65,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Imported FDS+Evac decks with `TIME_OPEN` or `TIME_CLOSE`, such as the
   `HUT_Library` decks, the `OpenFloorOffice` decks and `DoorAlgo2_A`,
   run without rerouting. Such runs now return and write a route history
-  (`--output-route-history`) holding the `exit_closed` and
-  `default_route` rows of the closures. Runs without a schedule are
-  unchanged. Runs with rerouting and a schedule move the same, but
-  their route history changes in two ways: a closure row of an agent
-  that followed its default route has `old_exit` = the closed exit
-  instead of empty, and a closure onto a gate fallback route is
-  labelled `exit_closed` instead of `fallback`.
+  (`--output-route-history`) holding the rows of these re-choices:
+  `exit_closed`, `initial` (exit not open yet) and `default_route`.
+  Runs without a schedule are unchanged. Runs with rerouting and a
+  schedule move the same, and an exit that has not opened yet gives the
+  same rows as before, but rows for an exit that has closed
+  (`closed_after_s`) change in two ways: a closure row of an agent that
+  followed its default route has `old_exit` = the closed exit instead
+  of empty, and a closure onto a gate fallback route is labelled
+  `exit_closed` instead of `fallback`.
 
 ### Added
 
@@ -120,8 +122,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Scheduled exits work in runs without rerouting (#395). At each
-  one-second check, only an agent whose route ends at a closed exit
-  chooses again, once, scored as its opening choice: on the map it
+  one-second check, only an agent whose route ends at a closed exit, or
+  at one not open yet, chooses again, once for each closure, scored as
+  its opening choice: on the map it
   holds, without the queue term, with the smoke at that time, or in
   clear air when smoke-blind. An agent that knows no open exit takes
   the default route to the nearest open exit on foot; with every exit

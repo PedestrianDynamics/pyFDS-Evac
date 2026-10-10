@@ -15,14 +15,19 @@ from __future__ import annotations
 import contextlib
 import math
 import sqlite3
+from types import SimpleNamespace
 
 import pytest
 from shapely.geometry import Point, Polygon, box
 
+from pyfds_evac.core.cognitive_map import AgentCognitiveMap
+from pyfds_evac.core.fed import DefaultFedInputs
 from pyfds_evac.core.route_graph import (
+    AgentRouteState,
     RerouteConfig,
     StageGraph,
     StageNode,
+    adopt_heading_exit,
     without_closed_stages,
 )
 from pyfds_evac.core.scenario import Scenario, run_scenario
@@ -730,3 +735,171 @@ def test_closure_onto_a_refused_route_is_labelled_exit_closed(mode):
     assert closure
     assert {(r["new_exit"], r["reason"]) for r in closure} == {("east", "exit_closed")}
     assert not [r for r in run["routes"] if r["reason"] == "fallback"]
+
+
+# ── Exits that have not opened yet, scoring and cadence (#395 §8, QA) ──
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_exits_opening_together_give_no_closure_rows(mode):
+    """Nothing is open before T: no row between spawn and T.
+
+    An exit that has not opened yet was never the agent's exit, so any
+    first row is an ``initial`` or ``default_route`` with no old exit. With
+    rerouting, agents that know no open exit get their spawn-time
+    ``default_route`` row at t = 0.
+    """
+    schedule = {"open_from_s": T_OPEN_S}
+    run = _run(_scenario({"west": schedule, "east": schedule}), **RUN_MODES[mode])
+    assert not [r for r in run["routes"] if 0.0 < r["time_s"] < T_OPEN_S]
+    first: dict[int, dict] = {}
+    for r in run["routes"]:
+        first.setdefault(r["agent_id"], r)
+    assert all(r["old_exit"] == "" for r in first.values())
+    assert {r["reason"] for r in first.values()} <= {"initial", "default_route"}
+    assert run["evacuated"] == NUM_AGENTS
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_staggered_openings_give_no_exit_closed_rows(mode):
+    """West opens at 20 s, east at 40 s: no exit ever closed down."""
+    scenario = _scenario({"west": {"open_from_s": 20.0}, "east": {"open_from_s": 40.0}})
+    run = _run(scenario, **RUN_MODES[mode])
+    assert run["routes"]
+    assert not [r for r in run["routes"] if r["reason"] == "exit_closed"]
+    first: dict[int, dict] = {}
+    for r in run["routes"]:
+        first.setdefault(r["agent_id"], r)
+    assert all(r["old_exit"] == "" for r in first.values())
+    assert not [r for r in run["routes"] if 0.0 < r["time_s"] < 20.0]
+
+
+@pytest.mark.parametrize("mode", REROUTE_AND_NOT)
+def test_closure_while_the_other_exit_is_not_open_yet(mode):
+    """West closes at T1 and east opens at T2: the west agents wait, then
+    leave west for east as a closure (``exit_closed``, old exit west)."""
+    t1, t2 = T_CLOSE_S, 30.0
+    scenario = _scenario({"west": {"closed_after_s": t1}, "east": {"open_from_s": t2}})
+    run = _run(scenario, **RUN_MODES[mode])
+    rows = {(r["old_exit"], r["new_exit"], r["reason"]) for r in run["routes"]}
+    assert rows == {("west", "east", "exit_closed")}
+    assert all(t2 <= r["time_s"] <= t2 + 1.0 for r in run["routes"])
+    assert run["evacuated"] == NUM_AGENTS
+
+
+class _ConstantDose:
+    """A FED model that accrues DOSE_PER_MIN wherever the agent is."""
+
+    config = SimpleNamespace(update_interval_s=0.0)
+
+    def advance(self, time_s, x, y, *, dt_s, current_fed):
+        inputs = DefaultFedInputs(0.1, 2.0, 15.0)
+        return inputs, DOSE_PER_MIN, current_fed + DOSE_PER_MIN * dt_s / 60.0
+
+
+DOSE_PER_MIN = 3.0
+# Speed at which the gate turns route length into travel time [m/s].
+GATE_BASE_SPEED = 1.3
+# Weight of the dose in the additive route cost.
+ADDITIVE_W_FED = 10.0
+
+
+def _closure_costs(routing: dict | None = None, **kwargs) -> list[float]:
+    """``new_cost`` of the closure rows, in agent order."""
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    if routing is not None:
+        scenario.raw["routing"] = routing
+    run = _run(scenario, **kwargs)
+    rows = sorted(run["routes"], key=lambda r: r["new_cost"])
+    assert rows and {r["reason"] for r in rows} == {"exit_closed"}
+    return [r["new_cost"] for r in rows]
+
+
+@pytest.mark.parametrize("mode", NO_REROUTE_MODES)
+def test_closure_rechoice_is_scored_with_the_scenario_routing_block(mode):
+    """The re-choice uses the scenario's routing weights, as the opening
+    choice does: in clear air the additive cost is the route length, the
+    gate's the length over 1.3 m/s."""
+    gate = _closure_costs(**RUN_MODES[mode])
+    additive = _closure_costs({"cost_model": "additive"}, **RUN_MODES[mode])
+    assert additive == pytest.approx([GATE_BASE_SPEED * c for c in gate], abs=1e-3)
+
+
+def test_closure_rechoice_carries_the_dose_taken():
+    """With rerouting off the re-choice weighs the dose already taken.
+
+    The additive cost adds w_fed times the dose: 10 x 3/min x 4 s = 2.0.
+    A smoke-blind run takes the dose too but chooses without it.
+    """
+    routing = {"cost_model": "additive"}
+    clean = _closure_costs(routing, reroute_config=None)
+    dosed = _closure_costs(routing, reroute_config=None, fed_model=_ConstantDose())
+    dose = DOSE_PER_MIN * T_CLOSE_S / 60.0
+    assert dosed == pytest.approx([c + ADDITIVE_W_FED * dose for c in clean], abs=1e-3)
+    blind = _closure_costs(routing, smoke_blind=True, fed_model=_ConstantDose())
+    assert blind == pytest.approx(clean, abs=1e-6)
+
+
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_closure_at_an_odd_time_acts_at_the_next_whole_second(mode):
+    """The check runs every simulated second: a door closing at 4.3 s is
+    acted on at 5.0 s."""
+    scenario = _scenario({"west": {"closed_after_s": 4.3}})
+    run = _run(scenario, **RUN_MODES[mode])
+    closure = [r for r in run["routes"] if r["reason"] == "exit_closed"]
+    assert closure
+    assert all(r["time_s"] == pytest.approx(5.0, abs=0.02) for r in closure)
+
+
+def test_reroute_pass_adopts_the_exit_walked_to(monkeypatch):
+    """With rerouting the closure decision starts from the exit walked to."""
+    import pyfds_evac.core.scenario as scenario_module
+
+    adopted = []
+    adopt = scenario_module.adopt_heading_exit
+
+    def _spy(*args, **kwargs):
+        adopted.append(args)
+        return adopt(*args, **kwargs)
+
+    monkeypatch.setattr(scenario_module, "adopt_heading_exit", _spy)
+    _run(_scenario({"west": {"closed_after_s": T_CLOSE_S}}), reroute_config=REROUTE)
+    assert adopted
+
+
+def _star_with_schedules() -> tuple[StageGraph, dict]:
+    graph = StageGraph(
+        nodes={
+            "spawn": StageNode("spawn", 0.0, 0.0, "distribution"),
+            "down": StageNode("down", -10.0, 0.0, "exit", closed_after_s=4.0),
+            "later": StageNode("later", 10.0, 0.0, "exit", open_from_s=50.0),
+        }
+    )
+    return graph, {"mode": "path", "path_choices": {}, "current_origin": "spawn"}
+
+
+@pytest.mark.parametrize(
+    "known, expected",
+    [(True, ("down", None)), (False, (None, "down"))],
+)
+def test_adopting_an_exit_that_closed_down(known, expected):
+    """A closed-down exit becomes the current exit if known, else the
+    default-route exit (#395 R-B)."""
+    graph, wait_info = _star_with_schedules()
+    wait_info["current_target_stage"] = "down"
+    cmap = AgentCognitiveMap(
+        familiarity="discovery", known_nodes={"spawn", "down"} if known else {"spawn"}
+    )
+    state = AgentRouteState(current_exit="other")
+    adopt_heading_exit(state, wait_info, graph, cmap, 5.0)
+    assert (state.current_exit, state.default_exit) == expected
+
+
+@pytest.mark.parametrize("target, time_s", [("later", 5.0), ("down", 3.0)])
+def test_an_exit_not_open_yet_or_still_open_is_not_adopted(target, time_s):
+    """Only an exit that has closed down is adopted (#395 §8)."""
+    graph, wait_info = _star_with_schedules()
+    wait_info["current_target_stage"] = target
+    state = AgentRouteState()
+    adopt_heading_exit(state, wait_info, graph, None, time_s)
+    assert (state.current_exit, state.default_exit) == (None, None)

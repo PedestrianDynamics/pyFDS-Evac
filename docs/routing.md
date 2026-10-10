@@ -584,11 +584,14 @@ Each `RouteSwitch` record includes a `reason` field:
 For a change of exit the first of these that applies names the cause:
 `default_route`, `exit_closed`, `fallback`, `initial`, `fed_reroute`,
 `smoke_reroute`, `exit_opened`, `learned_exit`, `congestion`,
-`shorter_path`. When the exit the agent walks to has closed, the switch is
-`exit_closed` even onto a gate fallback route (the decision is still a
-fallback, and the route cost history shows it), unless the agent knows no
-open exit and takes the default route. Either way `old_exit` is the closed
-exit, also for an agent that was following its default route
+`shorter_path`. When the exit the agent walks to has closed
+(`closed_after_s` passed), the switch is `exit_closed` even onto a gate
+fallback route (the decision is still a fallback; with rerouting on, the
+route cost history shows it), unless the agent knows no open exit and takes
+the default route. Either way `old_exit` is the closed exit, also for an
+agent that was following its default route. An exit that has not opened yet
+never gives `exit_closed`: it was never the agent's exit, so its first open
+exit is `initial` with an empty `old_exit`
 ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). A route to the
 old exit that is refused gives `fed_reroute` when its predicted dose is over
 the limit, else `smoke_reroute`. With no route to the old exit, and for an
