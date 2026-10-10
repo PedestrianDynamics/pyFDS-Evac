@@ -626,6 +626,32 @@ def routing_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     return None
 
 
+def spawn_issue(scenario: Any) -> ConfigIssue | None:
+    """A spawn area the run refuses at set-up, as ``--export-only`` finds it.
+
+    A bad flow schedule or ``initial_number``, a flow window too short or
+    too fast, an over-full spawn area (#390, #508), or another spawn value
+    the run rejects. Needs a loaded
+    ``Scenario`` for its walkable area; for a raw mapping nothing is said.
+    """
+    walkable = getattr(scenario, "walkable_polygon", None)
+    if walkable is None:
+        return None
+    from types import SimpleNamespace
+
+    from pyfds_evac.core.simulation_init import _check_spawn_capacity
+
+    try:
+        _check_spawn_capacity(
+            scenario.raw, walkable, SimpleNamespace(**scenario.sim_params)
+        )
+    except ValueError as exc:
+        # SpawnCapacityError and SpawnConfigError, and a spawn value the
+        # run rejects when it reads the distributions.
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
 def speed_alias_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     """A ``desired_speed*`` alias that differs from its ``v0*`` key (#612).
 

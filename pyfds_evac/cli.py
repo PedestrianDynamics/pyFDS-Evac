@@ -206,11 +206,22 @@ def _run_or_exit(scenario, run_kwargs):
     from pyfds_evac.core.simulation_init import (
         AgentInsertionError,
         SpawnCapacityError,
+        SpawnConfigError,
     )
 
     try:
         return run_scenario(scenario, **run_kwargs)
-    except (SpawnCapacityError, AgentInsertionError) as exc:
+    except (SpawnCapacityError, SpawnConfigError, AgentInsertionError) as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
+
+
+def _summary_or_exit(scenario) -> str:
+    """The scenario summary; a spawn area it cannot read is one line (#390)."""
+    from pyfds_evac.core.agent_params import SpawnConfigError
+
+    try:
+        return str(scenario.summary())
+    except SpawnConfigError as exc:
         raise SystemExit(f"pyfds-evac: error: {exc}") from None
 
 
@@ -218,6 +229,7 @@ def _check_capacity_or_exit(scenario):
     """Report an over-full spawn area as the run does, without running (#508)."""
     from pyfds_evac.core.simulation_init import (
         SpawnCapacityError,
+        SpawnConfigError,
         _check_spawn_capacity,
     )
 
@@ -227,7 +239,7 @@ def _check_capacity_or_exit(scenario):
             scenario.walkable_polygon,
             SimpleNamespace(**scenario.sim_params),
         )
-    except SpawnCapacityError as exc:
+    except (SpawnCapacityError, SpawnConfigError) as exc:
         raise SystemExit(f"pyfds-evac: error: {exc}") from None
 
 
@@ -250,7 +262,7 @@ def main() -> int:
     print("Initialization started.")
 
     if args.print_summary:
-        print(scenario.summary())
+        print(_summary_or_exit(scenario))
 
     if args.export_app_bundle:
         _export_app_bundle(scenario, args.export_app_bundle)

@@ -64,6 +64,24 @@ def test_journeys_with_transitions_pass():
     check_journey_transitions(_scenario(ENOUGH_S).raw)
 
 
+@pytest.mark.parametrize(
+    ("stages", "refused"),
+    [(["room", "E"], True), (["room"], False)],
+    ids=["room-to-exit", "room-only"],
+)
+def test_a_spawn_area_of_any_name_heads_a_journey(stages, refused):
+    # A distribution key without the jps-distributions_ prefix is a spawn
+    # area too (#409), so its journey is checked as one that places agents.
+    raw = _without_transitions().raw
+    raw["distributions"] = {"room": raw["distributions"][D]}
+    raw["journeys"] = [{"id": "J", "stages": stages}]
+    if not refused:
+        check_journey_transitions(raw)
+        return
+    with pytest.raises(ValueError, match=r"Journey\(s\) 'J' list stages"):
+        check_journey_transitions(raw)
+
+
 def test_a_deck_without_distributions_is_not_checked():
     # The fallback set-up places nobody from a journey, so it has no
     # journey to steer along.
