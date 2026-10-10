@@ -53,12 +53,17 @@ _AGENT_MODEL_TYPES = (
 )
 """Model types ``create_agent_parameters`` accepts (= ``scenario._MODEL_BUILDERS``)."""
 
-_PLACEMENT_ERRORS = (
-    RuntimeError,  # Simulation.add_agent: outside the area, too close
+_DISTRIBUTION_ERRORS = (
     jps.AgentNumberError,  # distribute_by_number
     jps.IncorrectParameterError,
     jps.NegativeValueError,
     jps.OverlappingCirclesError,
+)
+"""Errors of ``distribute_by_number`` (JuPedSim 1.4.2)."""
+
+_PLACEMENT_ERRORS = (
+    RuntimeError,  # Simulation.add_agent: outside the area, too close
+    *_DISTRIBUTION_ERRORS,
 )
 """Errors of the JuPedSim placement calls.
 
@@ -457,7 +462,7 @@ def _seed_shared_areas(spawn_distributions, seed):
                 distance_to_polygon=max_radius,
                 seed=distribution_seed(seed, area_key, PURPOSE_POSITIONS),
             )
-        except _PLACEMENT_ERRORS as error:
+        except _DISTRIBUTION_ERRORS as error:
             keys = [m["dist_key"] for m in members]
             raise _unplaced_error(keys, total, capacity, error) from error
         # Shuffle so the profiles interleave across the room instead of one

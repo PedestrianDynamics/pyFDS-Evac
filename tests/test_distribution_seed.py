@@ -131,6 +131,21 @@ def test_unplaceable_count_below_the_estimate_names_the_upper_bound():
         _seed_shared_areas(spawns, 1)
 
 
+def test_runtime_error_of_the_sampler_is_not_reported_as_capacity(monkeypatch):
+    """Only the distribution errors mean "could not place" (#702)."""
+
+    def fail(**_kwargs):
+        raise RuntimeError("sampler bug")
+
+    monkeypatch.setattr(simulation_init_mod.jps, "distribute_by_number", fail)
+    params = {"number": 2, "radius": 0.2}
+    spawns = [
+        {"area": box(0, 0, 4, 4), "params": params, "index": 0, "dist_key": KEYS[0]}
+    ]
+    with pytest.raises(RuntimeError, match="sampler bug"):
+        _seed_shared_areas(spawns, 1)
+
+
 def _record_streams(monkeypatch, config, walkable, seed):
     """Initialise *asset* and return the seed of every per-distribution stream."""
     streams = []

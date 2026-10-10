@@ -174,9 +174,14 @@ def _warn_if_not_runnable(scenario_path: str) -> None:
     """Warn when the folder's import_report.json marks it not runnable (#701).
 
     The run goes on: the folder may have been fixed by hand after ``init``,
-    which leaves the report stale. An unreadable report is skipped.
+    which leaves the report stale. An unreadable report is skipped; reasons
+    that are not a list of strings give the warning without them. A
+    scenario given as a file (``DIR/config.json``) reads DIR's report.
     """
-    report_path = pathlib.Path(scenario_path) / "import_report.json"
+    folder = pathlib.Path(scenario_path)
+    if folder.is_file():
+        folder = folder.parent
+    report_path = folder / "import_report.json"
     if not report_path.is_file():
         return
     try:
@@ -185,10 +190,12 @@ def _warn_if_not_runnable(scenario_path: str) -> None:
         return
     if not isinstance(report, dict) or report.get("runnable") is not False:
         return
-    reasons = "; ".join(str(r) for r in report.get("not_runnable_reasons") or [])
+    reasons = report.get("not_runnable_reasons")
+    listed = isinstance(reasons, list) and all(isinstance(r, str) for r in reasons)
+    detail = f": {'; '.join(reasons)}" if listed and reasons else ""
     print(
         "pyfds-evac: warning: import_report.json marks this scenario "
-        f"not runnable: {reasons or 'no reason given'}",
+        f"not runnable{detail}",
         file=sys.stderr,
     )
 
