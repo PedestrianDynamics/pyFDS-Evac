@@ -1371,6 +1371,16 @@ class TestAppliedRouteWalkedAsPriced:
         assert wait_info["current_origin"] == "C0"
         assert wait_info["current_target_stage"] == "C3"
 
+    def test_idle_agent_is_not_sent_back_to_its_origin(self):
+        """An idle agent stands on its target, so the route goes on from there."""
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C3")
+        wait_info["state"] = "idle"
+        reroute_agent(wait_info, ["D0", "C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_origin"] == "C3"
+        assert wait_info["current_target_stage"] == "E0"
+        assert "D0" not in wait_info["path_choices"]
+
 
 # ── integrated_extinction_along_los tests ─────────────────────────────
 
