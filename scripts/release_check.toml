@@ -121,9 +121,9 @@ timeout = 900
 exit_ok = [0, 2]
 expect = [
   "Configuring visibility model (3 signs).",
-  "Simulation incomplete: time limit reached after 300.00 s (93/150 evacuated, 57 remaining, 50 not spawned).",
-  "Route history rows: 161",
-  "Agents that left by an exit not in their map: 82",
+  "Simulation incomplete: time limit reached after 300.00 s (99/150 evacuated, 51 remaining, 50 not spawned).",
+  "Route history rows: 163",
+  "Agents that left by an exit not in their map: 87",
 ]
 
 [[page.step]]
@@ -151,7 +151,7 @@ run = 'uv run python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj
 timeout = 1800
 expect = [
   "agents 150, spawned last at 298 s",
-  "trajectory: 93 left before 300 s, last exit 299.7 s",
+  "trajectory: 99 left before 300 s, last exit 299.7 s",
 ]
 
 # --- How-tos ----------------------------------------------------------------

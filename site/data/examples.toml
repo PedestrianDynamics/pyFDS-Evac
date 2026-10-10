@@ -122,8 +122,8 @@ Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
 (99/150 evacuated, 51 remaining, 50 not spawned). and exits with status \
 2, as for every run that reaches its time limit with agents inside."""
-results_commit = "9c820e0f"
-results_python = "3.12.13"
+results_commit = "c619a046"
+results_python = "3.13.4"
 results_machine = "Apple M3 Pro, macOS"
 
 [study-schroeder2015]
