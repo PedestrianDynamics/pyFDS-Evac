@@ -13,8 +13,11 @@ import contextlib
 import dataclasses
 import io
 import itertools
+import json
 import math
 
+import jupedsim as jps
+import pedpy
 import pytest
 from shapely.geometry import Point, box
 from test_run_outcome import D, _coords, _scenario
@@ -24,6 +27,7 @@ from pyfds_evac.core.simulation_init import (
     SpawnCapacityError,
     _distribute_beside,
     _seed_shared_areas,
+    initialize_simulation_from_json,
 )
 
 D1 = "jps-distributions_1"
@@ -66,16 +70,82 @@ def test_the_area_seeded_first_is_placed_as_before(seed):
     assert _seed_shared_areas(_spawns(), seed)[0] == alone[0]
 
 
-def test_a_split_free_area_is_a_capacity_error():
-    """A placed agent whose hole cuts a 0.5 m strip in two."""
+def _spawn(area, number, radius, index, key):
+    params = {"number": number, "radius": radius}
+    return {"area": area, "params": params, "index": index, "dist_key": key}
+
+
+def _closest(first, second):
+    return min(math.dist(a, b) for a, b in itertools.product(first, second))
+
+
+@pytest.mark.parametrize("radii", [(0.3, 0.15), (0.15, 0.3)], ids=["big", "small"])
+@pytest.mark.parametrize("seed", CLASHING_SEEDS)
+def test_unequal_radii_keep_twice_the_larger_radius(seed, radii):
+    room_r, inner_r = radii
+    spawns = [_spawn(ROOM, 40, room_r, 0, D), _spawn(INNER, 5, inner_r, 1, D1)]
+    placed = _seed_shared_areas(spawns, seed)
+    assert [len(placed[0]), len(placed[1])] == [40, 5]
+    assert _closest(placed[0], placed[1]) >= 2 * max(radii)
+
+
+@pytest.mark.parametrize("seed", CLASHING_SEEDS)
+def test_a_small_area_seeded_before_the_room_around_it(seed):
+    spawns = [_spawn(INNER, 5, RADIUS, 0, D), _spawn(ROOM, 40, RADIUS, 1, D1)]
+    placed = _seed_shared_areas(spawns, seed)
+    assert placed[0] == _seed_shared_areas(spawns[:1], seed)[0]
+    assert [len(placed[0]), len(placed[1])] == [5, 40]
+    assert _closest(placed[0], placed[1]) >= 2 * RADIUS
+
+
+@pytest.mark.parametrize("seed", CLASHING_SEEDS)
+def test_three_overlapping_areas_keep_the_spacing(seed):
+    third = box(22, 2, 27, 6)
+    spawns = [
+        _spawn(ROOM, 40, RADIUS, 0, D),
+        _spawn(INNER, 5, RADIUS, 1, D1),
+        _spawn(third, 8, RADIUS, 2, "jps-distributions_2"),
+    ]
+    placed = _seed_shared_areas(spawns, seed)
+    assert [len(placed[i]) for i in range(3)] == [40, 5, 8]
+    for a, b in itertools.combinations(range(3), 2):
+        assert _closest(placed[a], placed[b]) >= 2 * RADIUS
+
+
+def test_without_journeys_a_b_a_seeds_both_a_before_b():
+    """Distributions over one polygon are seeded together, at the first's turn."""
+    a2 = "jps-distributions_2"
+    spawns = [
+        _spawn(INNER, 5, RADIUS, 0, D),
+        _spawn(ROOM, 40, RADIUS, 1, D1),
+        _spawn(INNER, 4, RADIUS, 2, a2),
+    ]
+    placed = _seed_shared_areas(spawns, 7)
+    both_a = _seed_shared_areas([spawns[0], spawns[2]], 7)
+    assert (placed[0], placed[2]) == (both_a[0], both_a[2])
+    assert _closest(placed[0] + placed[2], placed[1]) >= 2 * RADIUS
+
+
+def test_a_split_free_area_is_seeded_in_both_parts():
+    """A placed agent whose hole cuts a 0.5 m strip in two; each half seats one."""
+    strip = box(0, 0, 4, 0.5)
+    hole_agent = (2.0, 0.25)
+    placed = [(box(0, 0, 4, 4), [hole_agent], 0.3, [D])]
+    positions = _distribute_beside(strip, [D1], 2, 4, RADIUS, 1, placed)
+    assert len(positions) == 2
+    assert sorted(x < 2 for x, _ in positions) == [False, True]
+    assert _closest([hole_agent], positions) >= 2 * 0.3
+
+
+def test_a_split_area_too_small_for_the_count_is_a_capacity_error():
     strip = box(0, 0, 4, 0.5)
     placed = [(box(0, 0, 4, 4), [(2.0, 0.25)], 0.3, [D])]
     with pytest.raises(
         SpawnCapacityError,
-        match=rf"^Distribution '{D1}': could not place the 2 requested agents "
-        rf"\(agents of '{D}' split the free area\)\.",
+        match=rf"^Distribution '{D1}': could not place the 12 requested agents "
+        r"\(only \d+ fit in the 2 parts left free\)\.",
     ):
-        _distribute_beside(strip, [D1], 2, 4, RADIUS, 1, placed)
+        _distribute_beside(strip, [D1], 12, 12, RADIUS, 1, placed)
 
 
 def test_no_free_area_is_a_capacity_error():
@@ -96,34 +166,31 @@ def test_a_pocket_no_agent_fits_in_is_dropped():
     placed = [(room, triangle, RADIUS, [D])]
     positions = _distribute_beside(room, [D1], 10, 20, RADIUS, 1, placed)
     assert len(positions) == 10
-    closest = min(math.dist(a, b) for a, b in itertools.product(triangle, positions))
-    assert closest >= 2 * RADIUS
+    assert _closest(triangle, positions) >= 2 * RADIUS
 
 
-def _overlapping_scenario(with_journeys: bool):
+def _overlapping_scenario(with_journeys: bool, spawns=None):
+    """The room with *spawns* ``(key, polygon, number)``: by default the issue's."""
+    spawns = spawns or [(D, ROOM, 40), (D1, INNER, 5)]
     scenario = _scenario(1.0, number=40, radius=RADIUS)
     scenario = dataclasses.replace(scenario, walkable_area_wkt=box(0, 0, 30, 10).wkt)
     raw = scenario.raw
     raw["exits"]["E"]["coordinates"] = _coords(box(29.8, 4, 30, 6))
-    room = raw["distributions"][D]
-    room["coordinates"] = _coords(ROOM)
-    raw["distributions"][D1] = {
-        "type": "polygon",
-        "coordinates": _coords(INNER),
-        "parameters": dict(room["parameters"], number=5),
+    params = raw["distributions"][D]["parameters"]
+    raw["distributions"] = {
+        key: {
+            "type": "polygon",
+            "coordinates": _coords(polygon),
+            "parameters": dict(params, number=number),
+        }
+        for key, polygon, number in spawns
     }
+    raw["journeys"] = []
+    raw["transitions"] = []
     if with_journeys:
-        raw["journeys"] = [
-            {"id": "J", "stages": [D, "E"]},
-            {"id": "J1", "stages": [D1, "E"]},
-        ]
-        raw["transitions"] = [
-            {"from": D, "to": "E", "journey_id": "J"},
-            {"from": D1, "to": "E", "journey_id": "J1"},
-        ]
-    else:
-        raw["journeys"] = []
-        raw["transitions"] = []
+        for key, *_ in spawns:
+            raw["journeys"].append({"id": f"J{key}", "stages": [key, "E"]})
+            raw["transitions"].append({"from": key, "to": "E", "journey_id": f"J{key}"})
     return scenario
 
 
@@ -133,3 +200,26 @@ def test_overlapping_distributions_run(with_journeys):
     with contextlib.redirect_stdout(io.StringIO()):
         result = run_scenario(_overlapping_scenario(with_journeys), seed=7)
     assert result.total_agents == 45
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize("seed", CLASHING_SEEDS)
+def test_a_b_a_places_everybody_apart(tmp_path, with_journeys, seed):
+    """A, B, A over the inner box and the room, with and without journeys.
+
+    With journeys the second A is seeded last, around the first A and B.
+    """
+    spawns = [(D, INNER, 5), (D1, ROOM, 40), ("jps-distributions_2", INNER, 4)]
+    scenario = _overlapping_scenario(with_journeys, spawns)
+    config = tmp_path / "config.json"
+    config.write_text(json.dumps(scenario.raw))
+    walkable = pedpy.WalkableArea(scenario.walkable_area_wkt)
+    simulation = jps.Simulation(
+        model=jps.CollisionFreeSpeedModel(), geometry=walkable.polygon
+    )
+    with contextlib.redirect_stdout(io.StringIO()):
+        initialize_simulation_from_json(str(config), simulation, walkable, seed=seed)
+    positions = [agent.position for agent in simulation.agents()]
+    assert len(positions) == 49
+    closest = min(math.dist(a, b) for a, b in itertools.combinations(positions, 2))
+    assert closest >= 2 * RADIUS

@@ -486,44 +486,121 @@ def _free_area(area, max_radius, overlapping):
     from every edge, a hole's too, so a hole of radius
     ``2 * max(r, r_placed) - r`` around a placed agent keeps the two
     ``distance_to_agents`` apart. Areas that only touch need no hole: each
-    agent keeps its radius from its own area's edge. *area* comes back
-    unchanged when no hole reaches it.
+    agent keeps its radius from its own area's edge. Only agents whose hole
+    reaches *area* cut one; *area* comes back unchanged when none does.
 
     Workaround: JuPedSim 1.4.2 ``distribute_by_number`` takes no agents to
     keep clear of, but measures ``distance_to_polygon`` to holes as well.
     No upstream issue yet; drop the holes once it takes placed agents.
     """
-    holes = unary_union(
-        [
-            Point(position).buffer(
-                (2 * max(max_radius, radius) - max_radius) * _HOLE_SCALE,
-                quad_segs=_HOLE_SEGMENTS,
-            )
-            for _, positions, radius, _ in overlapping
-            for position in positions
-        ]
-    )
-    if holes.is_empty or not holes.intersects(area):
+    holes = []
+    for _, positions, radius, _ in overlapping:
+        if not positions:
+            continue
+        hole = (2 * max(max_radius, radius) - max_radius) * _HOLE_SCALE
+        points = shapely.points(positions)
+        reaching = points[shapely.distance(area, points) < hole]
+        holes.extend(shapely.buffer(reaching, hole, quad_segs=_HOLE_SEGMENTS).tolist())
+    if not holes:
         return area
-    return area.difference(holes)
+    return area.difference(unary_union(holes))
 
 
-def _seatable_part(free, max_radius, dist_keys, number, capacity, overlapping):
-    """The one part of *free* that can seat an agent; none or several raise.
+def _seatable_parts(free, max_radius):
+    """The parts of *free* that can seat an agent, in a stable order.
 
     Holes that touch cut off pockets and slivers no centre fits in; those
-    are dropped. ``distribute_by_number`` takes one ``Polygon`` only.
+    are dropped. ``distribute_by_number`` takes one ``Polygon`` at a time.
     """
     parts = [
         part
         for part in getattr(free, "geoms", [free])
         if isinstance(part, Polygon) and not part.buffer(-max_radius).is_empty
     ]
-    if len(parts) == 1:
-        return parts[0]
-    others = ", ".join(f"'{key}'" for *_, keys in overlapping for key in keys)
-    effect = "split the free area" if parts else "leave no free area"
-    raise _unplaced_error(dist_keys, number, capacity, f"agents of {others} {effect}")
+    return sorted(parts, key=lambda part: part.bounds)
+
+
+def _shares(number, capacities):
+    """Split *number* in proportion to *capacities*, largest remainder first."""
+    total = sum(capacities)
+    exact = [number * c / total for c in capacities]
+    shares = [math.floor(x) for x in exact]
+    by_remainder = sorted(range(len(exact)), key=lambda i: (shares[i] - exact[i], i))
+    for i in by_remainder[: number - sum(shares)]:
+        shares[i] += 1
+    return shares
+
+
+def _seated(part, count, max_radius, seed):
+    """``distribute_by_number`` in *part*; None when it cannot seat *count*."""
+    try:
+        return jps.distribute_by_number(
+            polygon=part,
+            number_of_agents=count,
+            distance_to_agents=2 * max_radius,
+            distance_to_polygon=max_radius,
+            seed=seed,
+        )
+    except _DISTRIBUTION_ERRORS:
+        return None
+
+
+def _most_that_fit(part, wanted, max_radius, seed):
+    """Positions for as many of *wanted* agents as the sampler seats in *part*."""
+    best = _seated(part, wanted, max_radius, seed) if wanted else []
+    if best is not None:
+        return best
+    low, high, best = 0, wanted - 1, []
+    while low < high:
+        count = (low + high + 1) // 2
+        positions = _seated(part, count, max_radius, seed)
+        if positions is None:
+            high = count - 1
+        else:
+            low, best = count, positions
+    return best
+
+
+def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
+    """Seed *number* agents across the separate *parts* of one free area.
+
+    Agents of two parts need no hole between them: each keeps *max_radius*
+    from its own part's edge. Each part takes a share in proportion to its
+    capacity estimate; what a part cannot seat goes to the next, smallest
+    part first, and a remainder after the largest goes back to the parts
+    with room. Only a remainder no part can seat raises.
+    """
+    capacities = [_estimate_max_capacity(part, max_radius) for part in parts]
+    order = sorted(range(len(parts)), key=lambda i: capacities[i])
+    shares = _shares(number, capacities)
+    seeds = [
+        seed
+        if rank == 0
+        else distribution_seed(seed, f"part {rank}", PURPOSE_POSITIONS)
+        for rank in range(len(parts))
+    ]
+    seated: list = [[] for _ in parts]
+    for rank, i in enumerate(order):
+        placed = sum(len(seated[j]) for j in order[:rank])
+        wanted = number - placed - sum(shares[j] for j in order[rank + 1 :])
+        seated[i] = _most_that_fit(parts[i], wanted, max_radius, seeds[rank])
+    for rank, i in enumerate(order):
+        missing = number - sum(len(positions) for positions in seated)
+        if missing == 0:
+            break
+        more = _most_that_fit(
+            parts[i], len(seated[i]) + missing, max_radius, seeds[rank]
+        )
+        seated[i] = max(seated[i], more, key=len)
+    positions = [position for part in seated for position in part]
+    if len(positions) < number:
+        raise _unplaced_error(
+            dist_keys,
+            number,
+            capacity,
+            f"only {len(positions)} fit in the {len(parts)} parts left free",
+        )
+    return positions
 
 
 def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, placed):
@@ -531,15 +608,29 @@ def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, plac
 
     *placed* holds ``(area, positions, max_radius, dist_keys)`` of every
     area seeded so far; the positions placed here are appended to it.
-    Without a placed agent in reach, *area* is seeded as it stands.
+    Without a placed agent in reach, *area* is seeded as it stands. A free
+    area cut into pieces is seeded piece by piece (``_distribute_in_parts``).
+
+    The order differs between the set-ups. Without journeys, distributions
+    over the same polygon are seeded together at the first one's turn
+    (``_seed_shared_areas``): A, B, A seeds both A before B. With journeys
+    each distribution is seeded on its own in deck order, so the second A
+    is seeded around the first A and B.
     """
     overlapping = [entry for entry in placed if area.intersection(entry[0]).area > 0]
     free = _free_area(area, max_radius, overlapping)
-    if free is not area:
-        free = _seatable_part(
-            free, max_radius, dist_keys, number, capacity, overlapping
+    parts = [free] if free is area else _seatable_parts(free, max_radius)
+    if not parts:
+        others = ", ".join(f"'{key}'" for *_, keys in overlapping for key in keys)
+        raise _unplaced_error(
+            dist_keys, number, capacity, f"agents of {others} leave no free area"
         )
-    positions = _distribute(free, dist_keys, number, capacity, max_radius, seed)
+    if len(parts) == 1:
+        positions = _distribute(parts[0], dist_keys, number, capacity, max_radius, seed)
+    else:
+        positions = _distribute_in_parts(
+            parts, dist_keys, number, capacity, max_radius, seed
+        )
     placed.append((area, positions, max_radius, dist_keys))
     return positions
 

@@ -104,9 +104,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `distance_to_agents` (twice the larger radius) apart. The area placed
   first and every area that overlaps none keep their positions; the
   counts and capacity estimates do not change. When the agents already
-  placed leave no free part of an area that can seat an agent, or
-  several, the run stops with `SpawnCapacityError`. Flow-spawned agents
-  are not covered.
+  placed cut the free part of an area into pieces, the agents are shared
+  among the pieces by their capacity; when the pieces cannot seat them
+  all, or nothing is left free, the run stops with `SpawnCapacityError`.
+  Flow-spawned agents are not covered.
 
 ### Documentation
 
