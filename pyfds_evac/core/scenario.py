@@ -1491,6 +1491,9 @@ def load_scenario(path: str) -> Scenario:
             walkable_wkt = zf.read(wkt_name).decode("utf-8").strip()
 
     _migrate_journeys_v2(data)
+    from .simulation_init import check_journey_transitions
+
+    check_journey_transitions(data)
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
     sim_params = sim_settings.get("simulationParams", {})
@@ -2680,6 +2683,9 @@ def run_scenario(
                                             "state": "to_target",
                                             "wait_until": None,
                                             "step_index": 0,
+                                            "agent_radius": float(
+                                                flow_params.get("radius", 0.2)
+                                            ),
                                             **steering_seeds(seed, key),
                                             "familiarity": dist_familiarity[
                                                 flow_dist.get("dist_index", source_id)

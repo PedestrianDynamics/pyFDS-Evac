@@ -18,8 +18,10 @@ from shapely.ops import unary_union
 from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
     DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
+    SAMPLED_RADIUS_MIN_M,
     _deck_spawn_defaults,
     _spawn_value,
+    max_agent_radius,
     normalize_distribution_speed_aliases,
     parameters_as_dict,
 )
@@ -445,13 +447,11 @@ def _estimate_max_capacity(polygon, max_radius):
 def _get_max_agent_radius(params):
     """Get max effective radius for spacing calculations.
 
-    For Gaussian distribution, use mean + 3*std (99.7% coverage) clipped to max 1.0.
-    For constant distribution, use mean radius.
+    As ``agent_params.max_agent_radius``: the mean radius, or for a Gaussian
+    radius ``min(max(mean + 3 * std, 0.1), 1.0)``, the bound every sampled
+    radius is clipped to (#709).
     """
-    mean_radius = params.get("radius", 0.2)
-    if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        return min(mean_radius + 3 * params["radius_std"], 1.0)
-    return mean_radius
+    return max_agent_radius(params)
 
 
 def _distribute(area, dist_keys, number, capacity, max_radius, seed):
@@ -743,6 +743,54 @@ def _uses_fallback(data) -> bool:
     return not data.get("distributions") or no_routes
 
 
+def _places_agents(journey: dict, distributions) -> bool:
+    """Whether set-up puts agents on *journey*: it lists a deck distribution
+    and a stage that is not a distribution."""
+    stages = journey.get("stages") or []
+    starts = [k for k in _distribution_stage_keys(stages) if k in distributions]
+    return bool(starts) and any(
+        not str(stage).startswith("jps-distributions_") for stage in stages
+    )
+
+
+def check_journey_transitions(data) -> None:
+    """Raise for an agents' journey that no entry in ``transitions`` names (#504).
+
+    An agent on a journey is steered along that journey's transitions
+    only; journey stages alone give it no route, and it stands still
+    until the time limit. Only journeys that place agents are checked: a
+    deck distribution among their stages and a stage to walk to. Other
+    journeys leave their agents to the nearest-exit set-up, and a deck the
+    fallback set-up places does not use its journeys at all.
+    """
+    if _uses_fallback(data):
+        return
+    named = {
+        tr.get("journey_id")
+        for tr in data.get("transitions") or []
+        if isinstance(tr, dict)
+    }
+    missing = [
+        journey.get("id")
+        for journey in data.get("journeys") or []
+        if isinstance(journey, dict)
+        and journey.get("id") not in named
+        and _places_agents(journey, data.get("distributions") or {})
+    ]
+    if not missing:
+        return
+    hint = (
+        "; or set 'journeys' to [] to use the editor's 'journeys_v2'"
+        if data.get("journeys_v2")
+        else ""
+    )
+    raise ValueError(
+        f"Journey(s) {', '.join(repr(j) for j in missing)} list stages but no "
+        "entry in 'transitions' names them, so their agents would never move: "
+        f"add the transitions between their stages with that journey_id{hint}."
+    )
+
+
 def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> None:
     """Raise the run's ``SpawnCapacityError`` for an over-full spawn area (#508).
 
@@ -855,7 +903,11 @@ def _sample_agent_values(params, n_agents, rng):
     mean_v0 = params.get("v0", 1.25)
 
     if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(0.1, 1.0)
+        # Clipped to the spacing bound, not redrawn: the stream keeps its
+        # n draws, so every in-bound radius and every v0 stays the same (#709).
+        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(
+            SAMPLED_RADIUS_MIN_M, _get_max_agent_radius(params)
+        )
     else:
         radii = np.full(n_agents, mean_radius)
 
@@ -1211,6 +1263,7 @@ def build_agent_path_state(
         "state": "to_target",
         "wait_until": None,
         "step_index": 0,
+        "agent_radius": float(agent_radius),
         **seeds,
     }
 
@@ -1221,6 +1274,7 @@ def build_exit_path_state(
     seed: int,
     spawn_key: SpawnKey,
     *,
+    agent_radius: float,
     familiarity: Any = "full",
     entrance: str | None = None,
     no_known_exit: str | None = None,
@@ -1263,6 +1317,7 @@ def build_exit_path_state(
         "state": "to_target",
         "wait_until": None,
         "step_index": 0,
+        "agent_radius": float(agent_radius),
         **steering_seeds(seed, spawn_key),
         "familiarity": familiarity,
         "entrance": entrance,
@@ -1296,6 +1351,7 @@ def initialize_simulation_from_json(
     # Without distributions, or without journeys and transitions, the
     # fallback set-up places the agents.
     needs_fallback = _uses_fallback(data)
+    check_journey_transitions(data)
 
     if "checkpoints" not in data and "waiting_polygons" not in data:
         data["checkpoints"] = {}
@@ -1840,6 +1896,7 @@ def _initialize_with_fallback(
                 "state": "to_target",
                 "wait_until": None,
                 "step_index": 0,
+                "agent_radius": agent_radius,
                 **steering_seeds(seed, key),
                 # Carried so the reroute pass can seed a cognitive map from
                 # them; without these every agent is treated as fully familiar
@@ -2108,6 +2165,7 @@ def _add_stages(
             "enable_throughput_throttling": enable_throttling,
             "max_throughput": float(exit_data.get("max_throughput", 0.0)),
             "stage_type": "exit",
+            "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
             **_exit_schedule(exit_id, exit_data),
         }
 
@@ -3171,6 +3229,7 @@ def _add_agents(
                             direct_steering_info,
                             seed,
                             key,
+                            agent_radius=agent_radius,
                             familiarity=spawn_params.get("familiarity", "full"),
                             entrance=spawn_params.get("entrance"),
                             no_known_exit=spawn_params.get("no_known_exit"),

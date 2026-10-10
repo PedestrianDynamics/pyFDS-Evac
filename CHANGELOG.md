@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- A deck with a journey from a distribution to a stage that no entry in
+  `transitions` names now fails to load (#504): `Journey(s) 'J' list
+  stages but no entry in 'transitions' names them, so their agents
+  would never move: ...`. Such a deck used to run to
+  `max_simulation_time` with every agent on that journey standing
+  still. Add the transitions between the
+  journey's stages, or, for an editor export that also carries
+  `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
+  No shipped deck has this shape.
+
+- Results change for agents whose radius is not 0.2 m (#408): the
+  runtime now reaches a stage target within the agent's own radius plus
+  0.5 m, and keeps next-stage and reroute target points 0.8 times the
+  agent's own radius from a stage's edge; both used 0.2 m for every
+  agent. This includes decks imported by `pyfds-evac init` since #699
+  (0.12–0.16 m) and decks with a sampled `radius_distribution`. Of the
+  rerouting goldens (darwin-arm64) only the six `tj_*` decks
+  (`t_junction`, 0.15 m, one checkpoint) move: evacuation times change
+  by -0.36 to +1.11 s, all 30 agents still get out. The
+  `heat_default` verification baseline (0.15 m) moves by up to 12 mm in
+  `x`/`y`, its FED values do not. Clear-air runs of the shipped decks:
+  `station_fahy` (Gaussian radius, seed 420) still gets 331 of 333 out
+  at 600 s together with #709 below, on other trajectories (330 with
+  this change alone); `l_corridor` and `schroeder2015_route` end
+  0.03 s later;
+  `t_junction` and `schroeder2020_room` end with the same counts and
+  times; decks with 0.2 m are unchanged. In the first FDS case
+  (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get out
+  instead of 100, FED max 0.23 instead of 0.24.
+
+- Decks with journeys and an exit `capacity_agents_per_s` now price
+  that exit's queue with it (#394), as decks without journeys did;
+  it was priced at `routing.default_exit_capacity` (1.3 agents/s).
+  Only runs with `routing.w_queue` > 0 change. No shipped deck sets
+  `capacity_agents_per_s`, so no golden or asset result moves.
+
+- Gaussian radii (`radius_distribution: gaussian`) are clipped to the
+  radius placement spaces agents for, b = min(max(`radius` + 3 ×
+  `radius_std`, 0.1), 1.0) m, instead of [0.1, 1.0] m (#709). A draw
+  beyond mean + 3σ (0.135 % of agents) becomes b; the draws, the other
+  radii, every v0 and every position stay the same for a seed. Of the
+  shipped decks only `station_fahy` uses a Gaussian radius: at its
+  default seed 420 one radius goes from 0.2656 to 0.26 m, and the run
+  can diverge from that agent's first contact on. A deck with
+  `radius` + 3 × `radius_std` below 0.1 m is now spaced for 0.1 m.
+
 - `fed_max_route` in the route-cost history rises for an agent behind
   its route's origin node in runs with a FED field (#171). Under
   `additive` the route cost rises by `w_fed` times that change, so
@@ -120,6 +166,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fit the spawn area at 0.15 m, not at 0.2 m.
 
 ### Fixed
+
+- `load_scenario` and the run refuse a journey that no entry in
+  `transitions` names, with an error naming the journey (#504). Agents
+  on it had no route and stood still, without a warning; the
+  `--print-summary`, `--export-only` and GUI upload paths now stop on it
+  too. Only journeys that place agents are checked: one that lists a
+  distribution of the deck and a stage to walk to. A journey of exits
+  only, or of a distribution only, places nobody and needs no
+  transitions; decks without distributions use no journeys.
+
+- The per-agent steering state stores the agent's radius (#408). It was
+  read with a 0.2 m default but never written, so stage reach
+  (radius + 0.5 m of the target point) and target clearance used 0.2 m
+  whatever the agent's radius.
+
+- The set-up with journeys passes each exit's `capacity_agents_per_s`
+  to route pricing (#394). It was dropped, so the queue term priced
+  every exit of a journey deck at the 1.3 agents/s default.
+
+- A Gaussian radius draw no longer exceeds the radius placement spaced
+  for (#709): agents could start overlapping. The spacing bound now has
+  one definition, `agent_params.max_agent_radius`, read by the run and
+  by `pyfds-evac init`'s capacity check.
 
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or
