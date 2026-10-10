@@ -1,0 +1,8336 @@
+{
+ "additive": {
+  "samples": 720,
+  "trace": [
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.25,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.25,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 34.0175,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 2.3077,
+      "rank_cost": 34.0175,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 43.3724,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 43.3724,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.25,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 21.297,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.182,
+      "k_max_route": 0.202,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 2.3077,
+      "rank_cost": 21.297,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1432,
+      "travel_time_s": 18.1753,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 29.4827,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2895,
+      "k_leg_max": 0.192,
+      "k_max_route": 0.222,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 29.4827,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2032,
+      "travel_time_s": 23.2624,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 20.9418,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.178,
+      "k_max_route": 0.198,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 2.3077,
+      "rank_cost": 20.9418,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.788,
+      "travel_time_s": 17.2281,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 29.0304,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2818,
+      "k_leg_max": 0.188,
+      "k_max_route": 0.218,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 29.0304,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.828,
+      "travel_time_s": 22.3135,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 20.9418,
+     "new_exit": "E0",
+     "old_cost": 29.0304,
+     "old_exit": "E1",
+     "reason": "shorter_path",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 28.6346,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 28.6346,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 37.4021,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.0769,
+      "rank_cost": 37.4021,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 45.9877,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.6824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 45.9877,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 28.6346,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.4635,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.17,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.0769,
+      "rank_cost": 18.4635,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.925,
+      "travel_time_s": 15.1574,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 25.5887,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2664,
+      "k_leg_max": 0.18,
+      "k_max_route": 0.21,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.5887,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.925,
+      "travel_time_s": 20.2394,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 18.4635,
+     "new_exit": "E0",
+     "old_cost": 25.5887,
+     "old_exit": "E1",
+     "reason": "shorter_path",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.6346,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.6346,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 34.8387,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 34.8387,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 42.7627,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.391,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 42.7627,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 22.1173,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1864,
+      "k_max_route": 0.2064,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 22.1173,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1942,
+      "travel_time_s": 18.1795,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 28.8714,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.298,
+      "k_leg_max": 0.1964,
+      "k_max_route": 0.2264,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 28.8714,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2762,
+      "travel_time_s": 23.2684,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 21.7859,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1824,
+      "k_max_route": 0.2024,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 21.7859,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8628,
+      "travel_time_s": 17.2344,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 28.4428,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2903,
+      "k_leg_max": 0.1924,
+      "k_max_route": 0.2224,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 28.4428,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9248,
+      "travel_time_s": 22.3216,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 28.6346,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 28.6346,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 37.8387,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 37.8387,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 45.7627,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.691,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 45.7627,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.8976,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1744,
+      "k_max_route": 0.1944,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 18.8976,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.9745,
+      "travel_time_s": 15.1615,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 25.3603,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2748,
+      "k_leg_max": 0.1844,
+      "k_max_route": 0.2144,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 25.3603,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9965,
+      "travel_time_s": 20.2454,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.6346,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.6346,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.4958,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 35.4958,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 44.7841,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.4996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 44.7841,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 22.7623,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.242,
+      "k_max_route": 0.262,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 22.7623,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8392,
+      "travel_time_s": 18.2333,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.8721,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.4058,
+      "k_leg_max": 0.252,
+      "k_max_route": 0.282,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 30.8721,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1992,
+      "travel_time_s": 23.3455,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 22.7311,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.238,
+      "k_max_route": 0.258,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 22.7311,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.808,
+      "travel_time_s": 17.3131,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.7431,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.398,
+      "k_leg_max": 0.248,
+      "k_max_route": 0.278,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 30.7431,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 5.148,
+      "travel_time_s": 22.4237,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 28.6346,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 28.6346,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 38.4958,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 38.4958,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 47.7841,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.7996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 47.7841,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 19.5231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 19.5231,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.6,
+      "travel_time_s": 15.2135,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 27.3395,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 27.3395,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9,
+      "travel_time_s": 20.3207,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate": {
+  "samples": 720,
+  "trace": [
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2348,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.342,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.182,
+      "k_max_route": 0.202,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1753,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1432,
+      "travel_time_s": 18.1753,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2895,
+      "k_leg_max": 0.192,
+      "k_max_route": 0.222,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.2624,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2032,
+      "travel_time_s": 23.2624,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.178,
+      "k_max_route": 0.198,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.2281,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.788,
+      "travel_time_s": 17.2281,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2818,
+      "k_leg_max": 0.188,
+      "k_max_route": 0.218,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.3135,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.828,
+      "travel_time_s": 22.3135,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 17.2281,
+     "new_exit": "E0",
+     "old_cost": 22.3135,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2348,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.6824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.342,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.17,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1574,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.925,
+      "travel_time_s": 15.1574,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2664,
+      "k_leg_max": 0.18,
+      "k_max_route": 0.21,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.2394,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.925,
+      "travel_time_s": 20.2394,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 15.1574,
+     "new_exit": "E0",
+     "old_cost": 20.2394,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2392,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.391,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.3482,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1864,
+      "k_max_route": 0.2064,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1795,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1942,
+      "travel_time_s": 18.1795,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.298,
+      "k_leg_max": 0.1964,
+      "k_max_route": 0.2264,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.2684,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2762,
+      "travel_time_s": 23.2684,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1824,
+      "k_max_route": 0.2024,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.2344,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8628,
+      "travel_time_s": 17.2344,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2903,
+      "k_leg_max": 0.1924,
+      "k_max_route": 0.2224,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.3216,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9248,
+      "travel_time_s": 22.3216,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2392,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.691,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.3482,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1744,
+      "k_max_route": 0.1944,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1615,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.9745,
+      "travel_time_s": 15.1615,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2748,
+      "k_leg_max": 0.1844,
+      "k_max_route": 0.2144,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.2454,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9965,
+      "travel_time_s": 20.2454,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2942,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.4996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.4268,
+      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.242,
+      "k_max_route": 0.262,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.2333,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8392,
+      "travel_time_s": 18.2333,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.4058,
+      "k_leg_max": 0.252,
+      "k_max_route": 0.282,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.3455,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1992,
+      "travel_time_s": 23.3455,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.238,
+      "k_max_route": 0.258,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.3131,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.808,
+      "travel_time_s": 17.3131,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.398,
+      "k_leg_max": 0.248,
+      "k_max_route": 0.278,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.4237,
+      "rejection_reason": "tau 5.15 > 4.80 (K_ave 0.234 x 22.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.148,
+      "travel_time_s": 22.4237,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2942,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.7996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.4268,
+      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.2135,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.6,
+      "travel_time_s": 15.2135,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.3207,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9,
+      "travel_time_s": 20.3207,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate_clean": {
+  "samples": 729,
+  "trace": [
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2348,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.342,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.182,
+      "k_max_route": 0.202,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1753,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1432,
+      "travel_time_s": 18.1753,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2895,
+      "k_leg_max": 0.192,
+      "k_max_route": 0.222,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.2624,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2032,
+      "travel_time_s": 23.2624,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2818,
+      "k_leg_max": 0.188,
+      "k_max_route": 0.218,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.3135,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.828,
+      "travel_time_s": 22.3135,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.178,
+      "k_max_route": 0.198,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.2281,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.788,
+      "travel_time_s": 17.2281,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S2",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2348,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.6824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.342,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2664,
+      "k_leg_max": 0.18,
+      "k_max_route": 0.21,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.2394,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.925,
+      "travel_time_s": 20.2394,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.17,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1574,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.925,
+      "travel_time_s": 15.1574,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S1",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 3,
+     "E1": 1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2392,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.391,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.3482,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1864,
+      "k_max_route": 0.2064,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1795,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1942,
+      "travel_time_s": 18.1795,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.298,
+      "k_leg_max": 0.1964,
+      "k_max_route": 0.2264,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.2684,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2762,
+      "travel_time_s": 23.2684,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2903,
+      "k_leg_max": 0.1924,
+      "k_max_route": 0.2224,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.3216,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9248,
+      "travel_time_s": 22.3216,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1824,
+      "k_max_route": 0.2024,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.2344,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8628,
+      "travel_time_s": 17.2344,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S2",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2392,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.691,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.3482,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2748,
+      "k_leg_max": 0.1844,
+      "k_max_route": 0.2144,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.2454,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9965,
+      "travel_time_s": 20.2454,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1744,
+      "k_max_route": 0.1944,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1615,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.9745,
+      "travel_time_s": 15.1615,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S1",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 3,
+     "E1": 1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2942,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.4996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.4268,
+      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.242,
+      "k_max_route": 0.262,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.2333,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8392,
+      "travel_time_s": 18.2333,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.4058,
+      "k_leg_max": 0.252,
+      "k_max_route": 0.282,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.3455,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1992,
+      "travel_time_s": 23.3455,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.398,
+      "k_leg_max": 0.248,
+      "k_max_route": 0.278,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.4237,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 5.148,
+      "travel_time_s": 22.4237,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.238,
+      "k_max_route": 0.258,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.3131,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.808,
+      "travel_time_s": 17.3131,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S2",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.2942,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.7996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.4268,
+      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": true,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.3207,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9,
+      "travel_time_s": 20.3207,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.2135,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.6,
+      "travel_time_s": 15.2135,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S1",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 3,
+     "E1": 1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate_no_anticipate": {
+  "samples": 303,
+  "trace": [
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.1399,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.7182,
+      "travel_time_s": 30.1399,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2274,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.1929,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.3682,
+      "travel_time_s": 35.1929,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1281,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.572,
+      "travel_time_s": 18.1281,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2274,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.1811,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.222,
+      "travel_time_s": 23.1811,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.1803,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.21,
+      "travel_time_s": 17.1803,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2274,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.2334,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.86,
+      "travel_time_s": 22.2334,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 17.1803,
+     "new_exit": "E0",
+     "old_cost": 22.2334,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.1399,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.7182,
+      "travel_time_s": 30.1399,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.5274,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.1929,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.3682,
+      "travel_time_s": 35.1929,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1223,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.5,
+      "travel_time_s": 15.1223,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2274,
+      "k_leg_max": 0.13,
+      "k_max_route": 0.13,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.1753,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.15,
+      "travel_time_s": 20.1753,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 15.1223,
+     "new_exit": "E0",
+     "old_cost": 20.1753,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.1442,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.7702,
+      "travel_time_s": 30.1442,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2358,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.199,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.4422,
+      "travel_time_s": 35.199,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1323,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.623,
+      "travel_time_s": 18.1323,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2358,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.1871,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.295,
+      "travel_time_s": 23.1871,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.1865,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.2848,
+      "travel_time_s": 17.1865,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2358,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.2413,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9568,
+      "travel_time_s": 22.2413,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.1442,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.7702,
+      "travel_time_s": 30.1442,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.5358,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.199,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.4422,
+      "travel_time_s": 35.199,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1263,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.5495,
+      "travel_time_s": 15.1263,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2358,
+      "k_leg_max": 0.1344,
+      "k_max_route": 0.1344,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.1812,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.2215,
+      "travel_time_s": 20.1812,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 D0 | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.1985,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.4273,
+      "travel_time_s": 30.1985,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3428,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.2763,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.3773,
+      "travel_time_s": 35.2763,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 18.1856,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.268,
+      "travel_time_s": 18.1856,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3428,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 23.2635,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.218,
+      "travel_time_s": 23.2635,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 17.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 17.2648,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.23,
+      "travel_time_s": 17.2648,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3428,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 22.3427,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.18,
+      "travel_time_s": 22.3427,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 30.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 30.1985,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.4273,
+      "travel_time_s": 30.1985,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.6428,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.2763,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.3773,
+      "travel_time_s": 35.2763,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 15.0,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 15.1781,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.175,
+      "travel_time_s": 15.1781,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3428,
+      "k_leg_max": 0.19,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.256,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.125,
+      "travel_time_s": 20.256,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 D0 | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate_queue": {
+  "samples": 720,
+  "trace": [
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.0,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 25.0202,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 31.1538,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 2.3077,
+      "rank_cost": 31.3887,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.3846,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 35.7266,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 19.1538,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.182,
+      "k_max_route": 0.202,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 2.3077,
+      "rank_cost": 19.3292,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1432,
+      "travel_time_s": 18.1753,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 23.3846,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2895,
+      "k_leg_max": 0.192,
+      "k_max_route": 0.222,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 23.647,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2032,
+      "travel_time_s": 23.2624,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.1538,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.178,
+      "k_max_route": 0.198,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 2.3077,
+      "rank_cost": 18.382,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.788,
+      "travel_time_s": 17.2281,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.3846,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2818,
+      "k_leg_max": 0.188,
+      "k_max_route": 0.218,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 22.6981,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.828,
+      "travel_time_s": 22.3135,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 18.382,
+     "new_exit": "E0",
+     "old_cost": 22.6981,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.3846,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.4048,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 31.5385,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.0769,
+      "rank_cost": 31.7733,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8636,
+      "travel_time_s": 30.2348,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 35.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.6824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 35.342,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1636,
+      "travel_time_s": 35.342,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.4048,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 16.5385,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.17,
+      "k_max_route": 0.19,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.0769,
+      "rank_cost": 16.6959,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.925,
+      "travel_time_s": 15.1574,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 20.0,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2664,
+      "k_leg_max": 0.18,
+      "k_max_route": 0.21,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": 0.0,
+      "rank_cost": 20.2394,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.925,
+      "travel_time_s": 20.2394,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 16.6959,
+     "new_exit": "E0",
+     "old_cost": 20.2394,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.3846,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.4048,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 31.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 32.1622,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 34.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.391,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 34.9636,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 19.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1864,
+      "k_max_route": 0.2064,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 20.1026,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.1942,
+      "travel_time_s": 18.1795,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.298,
+      "k_leg_max": 0.1964,
+      "k_max_route": 0.2264,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 22.8838,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.2762,
+      "travel_time_s": 23.2684,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1824,
+      "k_max_route": 0.2024,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 19.1574,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8628,
+      "travel_time_s": 17.2344,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 21.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2903,
+      "k_leg_max": 0.1924,
+      "k_max_route": 0.2224,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 21.937,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9248,
+      "travel_time_s": 22.3216,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.3846,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.4048,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 31.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.2344,
+      "k_max_route": 0.2544,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 32.1622,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9156,
+      "travel_time_s": 30.2392,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 34.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.691,
+      "k_leg_max": 0.2444,
+      "k_max_route": 0.2744,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 34.9636,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.2376,
+      "travel_time_s": 35.3482,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 16.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.1744,
+      "k_max_route": 0.1944,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 17.0846,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 1.9745,
+      "travel_time_s": 15.1615,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 19.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.2748,
+      "k_leg_max": 0.1844,
+      "k_max_route": 0.2144,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 19.8608,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.9965,
+      "travel_time_s": 20.2454,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.3846,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.4048,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 31.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 32.2173,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 34.6154,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.4996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 35.0422,
+      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 19.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.242,
+      "k_max_route": 0.262,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 20.1563,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.8392,
+      "travel_time_s": 18.2333,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 22.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.4058,
+      "k_leg_max": 0.252,
+      "k_max_route": 0.282,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 22.9609,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 4.1992,
+      "travel_time_s": 23.3455,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 18.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.238,
+      "k_max_route": 0.258,
+      "path": [
+       "S2",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 19.2362,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.808,
+      "travel_time_s": 17.3131,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 21.6154,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.398,
+      "k_leg_max": 0.248,
+      "k_max_route": 0.278,
+      "path": [
+       "S2",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 22.0391,
+      "rejection_reason": "tau 5.15 > 4.80 (K_ave 0.234 x 22.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.148,
+      "travel_time_s": 22.4237,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 25.3846,
+      "exit_id": "E2",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.01,
+      "k_max_route": 0.01,
+      "path": [
+       "D0",
+       "E2"
+      ],
+      "queue_time_s": 0.7692,
+      "rank_cost": 25.4048,
+      "rejection_reason": null,
+      "segments": 1,
+      "status": "ok",
+      "tau_route": 0.25,
+      "travel_time_s": 25.0202,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 31.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.3,
+      "k_leg_max": 0.29,
+      "k_max_route": 0.31,
+      "path": [
+       "D0",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 32.2173,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.5727,
+      "travel_time_s": 30.2942,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 34.6154,
+      "exit_id": "E1",
+      "feasible": false,
+      "fed_max_route": 0.7996,
+      "k_leg_max": 0.3,
+      "k_max_route": 0.33,
+      "path": [
+       "D0",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 35.0422,
+      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "segments": 2,
+      "status": "tau",
+      "tau_route": 5.1727,
+      "travel_time_s": 35.4268,
+      "violation_kinds": [
+       "tau"
+      ]
+     }
+    ]
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "ranked": [
+     {
+      "clean": false,
+      "composite_cost": 16.9231,
+      "exit_id": "E0",
+      "feasible": true,
+      "fed_max_route": 0.0,
+      "k_leg_max": 0.23,
+      "k_max_route": 0.25,
+      "path": [
+       "S1",
+       "M",
+       "E0"
+      ],
+      "queue_time_s": 3.8462,
+      "rank_cost": 17.1366,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 2.6,
+      "travel_time_s": 15.2135,
+      "violation_kinds": []
+     },
+     {
+      "clean": false,
+      "composite_cost": 19.6154,
+      "exit_id": "E1",
+      "feasible": true,
+      "fed_max_route": 0.3824,
+      "k_leg_max": 0.24,
+      "k_max_route": 0.27,
+      "path": [
+       "S1",
+       "M",
+       "E1"
+      ],
+      "queue_time_s": -0.7692,
+      "rank_cost": 19.9361,
+      "rejection_reason": null,
+      "segments": 2,
+      "status": "ok",
+      "tau_route": 3.9,
+      "travel_time_s": 20.3207,
+      "violation_kinds": []
+     }
+    ]
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ }
+}

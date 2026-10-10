@@ -528,12 +528,40 @@ def _run_deck_isolated(name: str, tmp_path: Path) -> dict:
     """
     out = tmp_path / f"{name}.json"
     subprocess.run(
-        [sys.executable, __file__, name, str(out)],
+        [sys.executable, __file__, name, str(out), str(REPO)],
         check=True,
         cwd=REPO,
+        env=_checkout_env(),
         stdout=subprocess.DEVNULL,
     )
     return json.loads(out.read_text(encoding="utf-8"))
+
+
+def _checkout_env() -> dict[str, str]:
+    """The environment with this checkout first on ``PYTHONPATH``.
+
+    The child runs this file as a script, so its ``sys.path`` starts with
+    ``tests/``, not the repository root. Without this it imports whatever
+    ``pyfds_evac`` the interpreter has installed, which can be another
+    checkout's code (#721).
+    """
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(
+        p for p in (str(REPO), env.get("PYTHONPATH", "")) if p
+    )
+    return env
+
+
+def _check_imported_from(root: Path) -> None:
+    """Exit with an error unless ``pyfds_evac`` was imported from *root*."""
+    import pyfds_evac
+
+    package = Path(pyfds_evac.__file__).resolve().parent
+    if not package.is_relative_to(root.resolve()):
+        sys.exit(
+            f"golden deck run: pyfds_evac was imported from {package}, "
+            f"not from the checkout under test {root}"
+        )
 
 
 @pytest.mark.parametrize("name", sorted(DECKS))
@@ -543,6 +571,29 @@ def test_scenario_decisions_match_golden(name, tmp_path):
     _check_golden(
         f"scenarios/{PLATFORM}/{name}.json", _run_deck_isolated(name, tmp_path)
     )
+
+
+def test_deck_run_refuses_another_checkout(tmp_path):
+    """A child that imports pyfds_evac from elsewhere fails, naming both (#721)."""
+    other = tmp_path / "other_checkout"
+    other.mkdir()
+    proc = subprocess.run(
+        [
+            sys.executable,
+            __file__,
+            sorted(DECKS)[0],
+            str(tmp_path / "x.json"),
+            str(other),
+        ],
+        cwd=REPO,
+        env=_checkout_env(),
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode != 0
+    assert "pyfds_evac was imported from" in proc.stderr
+    assert str(other) in proc.stderr
+    assert not (tmp_path / "x.json").exists()
 
 
 # ── Hand-built graphs for the unit layers ─────────────────────────────
@@ -1384,6 +1435,9 @@ def test_every_switch_reason_is_pinned():
 
 if __name__ == "__main__":
     # Entry point for _run_deck_isolated: run one deck, write its snapshot.
+    if len(sys.argv) != 4:
+        sys.exit(f"usage: {sys.argv[0]} DECK OUT.json CHECKOUT_ROOT")
+    _check_imported_from(Path(sys.argv[3]))
     Path(sys.argv[2]).write_text(
         json.dumps(_run_deck(DECKS[sys.argv[1]]), sort_keys=True), encoding="utf-8"
     )
