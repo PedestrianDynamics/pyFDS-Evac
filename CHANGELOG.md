@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- `pyfds-evac init --check` can now fail (✗, exit 3) on a deck it
+  passed: a horizontal slice that FDS culls no longer counts (#705). No
+  tracked deck changes. `import_report.json` gains
+  `recommendations.slices_dropped`.
+
 - Scripts that parse `import_report.json`: `nearest_pbz` under
   `recommendations.slices` is the z the run ranks the slice on, the grid
   node FDS writes it at, no longer the deck's z (#687). On a 0.5 m grid
@@ -50,6 +55,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `pyfds-evac init --check` drops a horizontal slice that FDS culls, as
+  FDS `READ_SLCF` does: its z outside every fire `&MESH`, or its
+  `MESH_NUMBER` naming a mesh that does not hold z or no fire mesh. The
+  check gives the status it gives without that slice and prints `dropped
+  &SLCF line N (…): REASON, so FDS writes no such slice`; before, it
+  ranked the slice at the deck's z and could pass (#705). The cull
+  applies to `&TRNZ` decks too.
 - `pyfds-evac init` reads a deck as an FDS+Evac deck only when it has a
   `&MESH` with `EVACUATION=.TRUE.`. An `&EVHO` in a plain deck is cut out
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;

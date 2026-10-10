@@ -399,6 +399,108 @@ def test_evacuation_only_deck_does_not_get_the_trnz_note(tmp_path, capsys):
     assert "(z on the mesh grid, where FDS writes the slice)" in lines[0]
 
 
+# A second mesh above the plain one, z 3-6, and an evacuation mesh (number 3).
+UPPER = "&MESH IJK=20,20,30, XB=0,10,0,10,3,6 /"
+EVAC_MESH = "&MESH IJK=20,20,1, XB=0,10,0,10,1,2, EVACUATION=.TRUE. /"
+LOW_GASES = tuple(g.replace("PBZ=1.6", "PBZ=1.5") for g in GASES)
+
+
+@pytest.mark.parametrize(
+    ("mesh", "extra", "soot", "reason"),
+    [
+        (
+            "IJK=20,20,15, XB=0,10,0,10,0,1.5",
+            (),
+            "PBZ=1.6",
+            "outside every fire &MESH",
+        ),
+        (
+            "",
+            (UPPER,),
+            "PBZ=1.6, MESH_NUMBER=2",
+            "&MESH 2 (MESH_NUMBER) does not hold it",
+        ),
+        ("", (UPPER,), "PBZ=1.6, MESH_NUMBER=9", "MESH_NUMBER 9 names no fire &MESH"),
+        (
+            "",
+            (UPPER, EVAC_MESH),
+            "PBZ=1.6, MESH_NUMBER=3",
+            "MESH_NUMBER 3 names no fire &MESH",
+        ),
+        ("", (), "XB=20,30,0,10,1.6,1.6", "outside every fire &MESH"),
+        (
+            "IJK=20,20,15, XB=0,10,0,10,0,1.5",
+            ("&TRNZ IDERIV=0, CC=1, PC=1, MESH_NUMBER=1 /",),
+            "PBZ=1.6",
+            "outside every fire &MESH",
+        ),
+    ],
+    ids=["above-every-mesh", "mesh-number", "no-such-mesh", "evac-mesh", "xy", "trnz"],
+)
+def test_slice_fds_culls_is_missing_and_named(
+    tmp_path, capsys, mesh, extra, soot, reason
+):
+    """FDS writes no slice it culls (READ_SLCF, read.f90): the check fails
+    as with no extinction slice, and names the slice it dropped (#705)."""
+    text = PLAIN.replace("&VENT", "\n".join((*extra, "&VENT")))
+    if mesh:
+        text = text.replace("IJK=20,20,30, XB=0,10,0,10,0,3", mesh)
+    records = (f"&SLCF {soot}, QUANTITY='EXTINCTION COEFFICIENT' /", *LOW_GASES)
+    deck = tmp_path / "culled.fds"
+    text = text.format(time=TIME, records="\n".join(records))
+    deck.write_text(text)
+    line = text.splitlines().index(records[0]) + 1
+    # The evacuation mesh makes an FDS+Evac deck: fix the height there too.
+    status, lines = _check(capsys, deck, "--check", "--smoke-slice-height", "1.6")
+    assert status == cli_init.EXIT_NOT_RUNNABLE
+    assert _line(lines, "Extinction").startswith(
+        "  ✗ Extinction  none (requested z 1.6 m)"
+    )
+    assert _line(lines, "CO2").startswith("  ✓")
+    dropped = [x for x in lines if x.startswith("  dropped &SLCF")]
+    assert dropped == [
+        f"  dropped &SLCF line {line} (EXTINCTION COEFFICIENT, "
+        f"z 1.6 m): {reason}, so FDS writes no such slice"
+    ]
+
+
+def test_culled_slice_does_not_outrank_a_written_one(tmp_path, capsys):
+    near = "&SLCF PBZ=1.6, MESH_NUMBER=9, QUANTITY='EXTINCTION COEFFICIENT' /"
+    far = "&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT' /"
+    status, lines = _check(capsys, _deck(tmp_path, near, far, *GASES), "--check")
+    assert status == cli_init.EXIT_OK
+    assert "z 2 m (requested 1.6 m" in _line(lines, "Extinction")
+
+
+def test_slice_on_the_mesh_top_is_kept(tmp_path, capsys):
+    """READ_SLCF keeps z = ZF: it culls only XB(5) > ZF (#705)."""
+    low = PLAIN.replace(
+        "IJK=20,20,30, XB=0,10,0,10,0,3", "IJK=20,20,16, XB=0,10,0,10,0,1.6"
+    )
+    deck = tmp_path / "top.fds"
+    deck.write_text(low.format(time=TIME, records="\n".join((SOOT, *GASES))))
+    status, lines = _check(capsys, deck, "--check")
+    assert status == cli_init.EXIT_OK
+    assert not any(x.startswith("  dropped") for x in lines)
+
+
+def test_report_lists_the_dropped_slices(tmp_path):
+    culled = "&SLCF PBZ=1.6, MESH_NUMBER=9, QUANTITY='EXTINCTION COEFFICIENT' /"
+    report = _report(tmp_path, _deck(tmp_path, culled, *GASES))
+    rec = report["recommendations"]
+    assert rec["slice_check_ok"] is False
+    assert rec["slices_dropped"] == [
+        {
+            "line": 5,
+            "quantity": "EXTINCTION COEFFICIENT",
+            "spec_id": None,
+            "z": 1.6,
+            "reason": "MESH_NUMBER 9 names no fire &MESH",
+        }
+    ]
+    assert rec["slices"]["EXTINCTION COEFFICIENT"]["status"] == "missing"
+
+
 def _extent(z: float):
     return types.SimpleNamespace(z_start=z, z_end=z)
 

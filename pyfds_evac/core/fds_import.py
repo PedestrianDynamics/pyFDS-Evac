@@ -231,6 +231,7 @@ def import_fds_deck(
     check = check_slices(deck, rounded(height))
     report.recommendations["slices"] = check.to_dict()
     report.recommendations["slice_check_ok"] = check.ok
+    report.recommendations["slices_dropped"] = check.dropped
     if on_slice_check is not None:
         on_slice_check(check)
     build = _import_legacy if kind == "legacy" else _import_modern
