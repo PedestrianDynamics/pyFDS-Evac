@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import re
 
 import jupedsim as jps
@@ -188,17 +189,63 @@ def _export_and_run_messages(monkeypatch, make_scenario):
 
 
 @pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
-def test_export_only_checks_the_stored_number_of_a_fill_area_spawn(
+def test_export_only_ignores_the_number_of_a_percentage_spawn(
     monkeypatch, with_journeys
 ):
-    """The run checks ``number`` whatever the ``distribution_mode`` (#508)."""
+    """A percentage mode fills its share of the area, whatever ``number`` (#436)."""
 
     def fill_area():
         scenario = _over_full(with_journeys)
-        scenario.distributions[D]["parameters"]["distribution_mode"] = "fill_area"
+        params = scenario.distributions[D]["parameters"]
+        params.update(distribution_mode="fill_area", percentage=50)
         return scenario
 
-    export, run = _export_and_run_messages(monkeypatch, fill_area)
+    assert _main(monkeypatch, fill_area(), "--print-summary", "--export-only") == 0
+
+
+def test_export_only_sums_percentage_spawns_sharing_a_polygon(monkeypatch):
+    """Two 60 % areas on one polygon over-fill it, as the run finds (#436).
+
+    The 3 x 4 m area holds ~84 agents of radius 0.15 m; 60 % is 50 each.
+    """
+
+    def two_at_60():
+        scenario = _scenario(ENOUGH_S)
+        scenario.raw["journeys"] = []
+        scenario.raw["transitions"] = []
+        params = scenario.distributions[D]["parameters"]
+        params.update(distribution_mode="by_percentage", percentage=60)
+        scenario.raw["distributions"]["other"] = json.loads(
+            json.dumps(scenario.distributions[D])
+        )
+        return scenario
+
+    export, run = _export_and_run_messages(monkeypatch, two_at_60)
+    assert re.match(
+        rf"^pyfds-evac: error: Distributions '{D}', 'other': requested 100 "
+        r"agents but area can hold at most ~84\. ",
+        export,
+    ), export
+    assert export == run
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_export_only_checks_the_initial_agents_of_a_flow_schedule(
+    monkeypatch, with_journeys
+):
+    """Both check ``initial_number`` beside a schedule, not ``number`` (#390)."""
+
+    def scheduled():
+        scenario = _over_full(with_journeys)
+        scenario.set_flow_schedule(
+            D,
+            [{"flow_start_time": 0, "flow_end_time": 600, "number": 5}],
+            keep_initial_agents=True,
+        )
+        return scenario
+
+    assert scheduled().distributions[D]["parameters"]["number"] == 5
+    export, run = _export_and_run_messages(monkeypatch, scheduled)
     assert re.match(PATTERN, export), export
     assert export == run
 
@@ -264,3 +311,136 @@ def test_export_only_skips_a_spawn_polygon_the_run_skips(monkeypatch):
         "coordinates": bow,
     }
     assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
+
+
+def test_export_only_counts_a_fill_mode_as_an_upper_bound(monkeypatch):
+    """An ``until_full`` area beside an exact count on one polygon passes (#436).
+
+    Without journeys, the exact 80 of ~84 are checked; the fill mode
+    takes what is left, up to its own count.
+    """
+
+    def shared():
+        scenario = _scenario(ENOUGH_S, number=80)
+        scenario.raw["journeys"] = []
+        scenario.raw["transitions"] = []
+        other = json.loads(json.dumps(scenario.distributions[D]))
+        other["parameters"]["distribution_mode"] = "until_full"
+        scenario.raw["distributions"]["other"] = other
+        return scenario
+
+    assert _main(monkeypatch, shared(), "--print-summary", "--export-only") == 0
+
+
+def test_run_reports_what_a_fill_mode_placed():
+    """The result and its summary line give placed of the upper bound (#436)."""
+    from pyfds_evac.core.run_outputs import summary_line
+
+    scenario = _scenario(ENOUGH_S, distribution_mode="fill_area", percentage=20)
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(scenario)
+    assert result.fill_placement == {D: {"placed": 16, "upper_bound": 16}}
+    assert summary_line(result).endswith(f" '{D}' placed 16 of at most 16.")
+
+
+def test_export_only_skips_malformed_spawn_coordinates_the_run_skips(monkeypatch):
+    """Coordinates that are not numbers are skipped as by the run (#118)."""
+    scenario = _scenario(ENOUGH_S)
+    scenario.raw["distributions"]["bad"] = {
+        **scenario.raw["distributions"][D],
+        "coordinates": [[None, 0], [1, 0], [0, 1]],
+    }
+    assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
+
+
+def _scheduled(with_journeys, window):
+    scenario = _scenario(ENOUGH_S)
+    if not with_journeys:
+        scenario.raw["journeys"] = []
+        scenario.raw["transitions"] = []
+    scenario.distributions[D]["parameters"]["flow_schedule"] = [window]
+    return scenario
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize(
+    ("window", "message"),
+    [
+        (
+            {"flow_start_time": 0, "flow_end_time": 0.02, "number": 3},
+            r"window \[0, 0\.02\] s is too short for 3 agents",
+        ),
+        (
+            {"flow_start_time": 0, "flow_end_time": 10, "number": 900},
+            r"flow rate of 90\.0 agents/s exceeds area capacity",
+        ),
+    ],
+    ids=["too-short", "too-fast"],
+)
+def test_export_only_checks_the_flow_windows_as_the_run(
+    monkeypatch, with_journeys, window, message
+):
+    """--export-only refuses the windows the run refuses, in one line (#390)."""
+    export, run = _export_and_run_messages(
+        monkeypatch, lambda: _scheduled(with_journeys, window)
+    )
+    assert re.match(rf"^pyfds-evac: error: Distribution '{D}': .*{message}", export)
+    assert export == run
+
+
+@pytest.mark.parametrize("args", [(), ("--export-only",), ("--print-summary",)])
+def test_an_unreadable_flow_schedule_is_a_one_line_error(monkeypatch, args):
+    """A spawn area's schedule error ends the CLI in one line (#390)."""
+    scenario = _scheduled(
+        True, {"flow_start_time": -1, "flow_end_time": 5, "number": 2}
+    )
+    with pytest.raises(SystemExit) as exit_:
+        _main(monkeypatch, scenario, *args)
+    message = exit_.value.code
+    assert isinstance(message, str) and "\n" not in message
+    assert message.startswith(
+        f"pyfds-evac: error: Distribution '{D}': flow_schedule: Invalid flow window"
+    ), message
+
+
+def test_print_summary_reports_an_unreadable_initial_number_in_one_line(
+    monkeypatch,
+):
+    """The summary reads ``initial_number`` as the run does (#390)."""
+    scenario = _scheduled(True, {"flow_start_time": 0, "flow_end_time": 5, "number": 2})
+    scenario.distributions[D]["parameters"]["initial_number"] = "abc"
+    with pytest.raises(SystemExit) as exit_:
+        _main(monkeypatch, scenario, "--print-summary", "--export-only")
+    assert exit_.value.code == (
+        f"pyfds-evac: error: Distribution '{D}': initial_number must be a "
+        "number, got 'abc'"
+    )
+
+
+@pytest.mark.parametrize(
+    "spoil",
+    [
+        lambda s: s.distributions[D]["parameters"].update(
+            flow_schedule=[{"flow_start_time": -1, "flow_end_time": 5, "number": 2}]
+        ),
+        lambda s: s.distributions[D]["parameters"].update(
+            flow_schedule=[{"flow_start_time": 0, "flow_end_time": 0.02, "number": 3}]
+        ),
+        lambda s: s.distributions[D]["parameters"].update(number=500),
+    ],
+    ids=["bad-schedule", "short-window", "over-full"],
+)
+def test_show_config_reports_what_the_run_refuses_at_set_up(monkeypatch, spoil):
+    """--show-config lists a spawn area the run refuses and exits 1."""
+    scenario = _scenario(ENOUGH_S)
+    spoil(scenario)
+    monkeypatch.setattr(cli, "load_scenario", lambda _path: scenario)
+    monkeypatch.setattr(
+        "sys.argv", ["pyfds-evac", "--scenario", "unused", "--show-config"]
+    )
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        code = cli.main()
+    assert code == 1
+    text = out.getvalue()
+    assert f"Distribution '{D}'" in text.split("Errors:", 1)[1]

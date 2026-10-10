@@ -53,6 +53,7 @@ from .rules import (
     no_known_exit_value_issue,
     predict_mechanisms,
     routing_issue,
+    spawn_issue,
     speed_alias_issue,
     visibility_value_issue,
 )
@@ -219,7 +220,7 @@ def effective_configuration(
     max_time = _max_simulation_time(scenario, raw)
 
     mech = predict_mechanisms(opts, raw, known)
-    errors = _errors(opts, mech, known, max_time, raw)
+    errors = _errors(opts, mech, known, max_time, raw, scenario)
     invalid = {e.option for e in errors}
     # An option whose value stops the run is an error, never "no effect".
     inactive = [i for i in inactive_settings(opts, mech) if i.option not in invalid]
@@ -497,7 +498,12 @@ def _routing(raw: Mapping[str, Any]) -> tuple[RoutingValue, ...]:
 
 
 def _errors(
-    opts: Any, m: Mechanisms, fds: Any, max_time: float, raw: Mapping[str, Any]
+    opts: Any,
+    m: Mechanisms,
+    fds: Any,
+    max_time: float,
+    raw: Mapping[str, Any],
+    scenario: Any = None,
 ) -> list[ConfigIssue]:
     """The F, I and B errors the run would stop on at setup, in check order."""
     errors = list(check_options(opts))
@@ -521,6 +527,9 @@ def _errors(
         errors.append(issue)
     issue = no_known_exit_value_issue(raw) or no_known_exit_issue(opts, raw)
     if issue is not None:
+        errors.append(issue)
+    issue = spawn_issue(scenario)
+    if issue is not None and issue.message not in {e.message for e in errors}:
         errors.append(issue)
     return errors
 

@@ -37,6 +37,13 @@ PURPOSE_POSITIONS = "positions"
 PURPOSE_SHUFFLE = "shuffle"
 PURPOSE_PREMOVEMENT = "premovement"
 PURPOSE_AGENT_VALUES = "agent_values"
+# The candidate positions of a flow schedule's windows, apart from the
+# agents the same distribution places at the start (#390).
+PURPOSE_FLOW_POSITIONS = "flow_positions"
+PURPOSE_FLOW_SHUFFLE = "flow_shuffle"
+# The fill modes of a spawn area, seeded around its exact counts (#436).
+PURPOSE_FILL_POSITIONS = "fill_positions"
+PURPOSE_FILL_SHUFFLE = "fill_shuffle"
 
 # Hashed into every per-agent seed; fixed so that those seeds stay as they are.
 _AGENT_SEED_TAG = "spawn-key-blake2b-v1"

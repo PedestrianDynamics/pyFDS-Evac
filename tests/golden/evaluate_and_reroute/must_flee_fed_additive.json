@@ -14,7 +14,7 @@
   "new_exit": "east",
   "old_cost": 35.3333,
   "old_exit": "west",
-  "reason": "smoke_reroute",
+  "reason": "fed_reroute",
   "time_s": 5.0
  },
  "wait_info": {

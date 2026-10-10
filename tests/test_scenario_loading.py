@@ -2,9 +2,9 @@
 
 Pins what ``load_scenario`` accepts (directory, JSON file, ZIP bundle) and
 the errors it raises, the ``journeys_v2`` -> ``journeys``/``transitions``
-migration of editor decks, the flow-schedule normalisers of ``scenario.py``
-and ``simulation_init.py``, and the input checks of the public ``Scenario``
-setters.
+migration of editor decks, the one flow-schedule normaliser that the
+setter, the views and the run share, and the input checks of the public
+``Scenario`` setters.
 """
 
 import json
@@ -12,6 +12,7 @@ import zipfile
 
 import pytest
 
+from pyfds_evac.core import simulation_init
 from pyfds_evac.core.scenario import (
     Scenario,
     _distribution_agent_budget,
@@ -21,7 +22,6 @@ from pyfds_evac.core.scenario import (
     load_scenario,
     run_scenario,
 )
-from pyfds_evac.core.simulation_init import _normalize_flow_schedule_entries
 
 WALKABLE = "POLYGON ((0 0, 10 0, 10 5, 0 5, 0 0))"
 
@@ -521,38 +521,23 @@ def test_distribution_agent_budget(params, budget):
     assert _distribution_agent_budget({"parameters": params}) == budget
 
 
-def test_runtime_flow_normaliser_shares_keys_sorting_and_errors():
-    schedule = [
-        {"start_time_s": 10, "end_time_s": 20, "sim_count": "1"},
-        {"flow_start_time": 0, "flow_end_time": 8, "number": 2},
-    ]
-    assert _normalize_flow_schedule_entries({"flow_schedule": schedule}) == [
-        {"flow_start_time": 0.0, "flow_end_time": 8.0, "number": 2},
-        {"flow_start_time": 10.0, "flow_end_time": 20.0, "number": 1},
-    ]
-    assert _normalize_flow_schedule_entries({}) == []
-    with pytest.raises(ValueError, match="must define start/end time and number"):
-        _normalize_flow_schedule_entries(
-            {"flow_schedule": [{"flow_start_time": 0, "number": 2}]}
-        )
-    with pytest.raises(ValueError, match="Invalid flow_schedule window"):
-        _normalize_flow_schedule_entries(
-            {"flow_schedule": [{"flow_start_time": 4, "flow_end_time": 4, "number": 2}]}
-        )
+def test_the_run_reads_flow_schedules_with_the_same_normaliser():
+    """One normaliser for the setter, the views and the run (#390)."""
+    assert simulation_init._normalized_flow_schedule is _normalized_flow_schedule
 
 
-def test_runtime_flow_normaliser_clamps_start_and_drops_empty_windows():
-    # Unlike _normalize_flow_schedule_entry (scenario.py), which rejects both,
-    # the runtime normaliser clamps a negative start to 0 and drops windows
-    # with no agents. Neither path is reachable from a scenario JSON yet
-    # (#390).
-    schedule = [
+@pytest.mark.parametrize(
+    "entry",
+    [
         {"flow_start_time": -3, "flow_end_time": 4, "number": 2},
         {"flow_start_time": 5, "flow_end_time": 9, "number": 0},
-    ]
-    assert _normalize_flow_schedule_entries({"flow_schedule": schedule}) == [
-        {"flow_start_time": 0.0, "flow_end_time": 4.0, "number": 2}
-    ]
+    ],
+    ids=["negative-start", "no-agents"],
+)
+def test_run_rejects_the_flow_windows_the_setter_rejects(entry):
+    """The run once clamped a negative start and dropped empty windows (#390)."""
+    with pytest.raises(ValueError, match="Distribution 'D': flow_schedule: "):
+        simulation_init._convert_flow_schedule({"flow_schedule": [entry]}, "D")
 
 
 # ---------------------------------------------------------------------------
@@ -635,6 +620,43 @@ def test_summary_reports_the_agent_budget():
     lines = scenario.summary().splitlines()
     assert "  Agents:        ~9" in lines
     assert "  Model:         CollisionFreeSpeedModelV2" in lines
+
+
+def test_summary_lists_the_initial_and_scheduled_agents_of_a_spawn_area():
+    """Per spawn area, the summary counts what the run places (#390)."""
+    scenario = _scenario()
+    scenario.set_flow_schedule(
+        "jps-distributions_1",
+        [
+            {"flow_start_time": 0, "flow_end_time": 5, "number": 4},
+            {"flow_start_time": 10, "flow_end_time": 12, "number": 1},
+        ],
+        keep_initial_agents=True,
+    )
+    lines = scenario.summary().splitlines()
+    assert (
+        "    jps-distributions_1: 7 agents (2 at the start, flow: 4 in 0-5s, 1 in 10-12s)"
+        in lines
+    )
+    assert "  Agents:        ~10" in lines
+
+
+def test_views_of_a_deck_by_number_read_only_the_count():
+    """The views do not stop on a value only the run reads (#436)."""
+    data = _deck()
+    data["distributions"]["jps-distributions_1"]["parameters"]["v0"] = "fast"
+    data["config"]["simulation_settings"]["simulationParams"]["radius"] = "wide"
+    scenario = _scenario(data)
+    assert [d["agents"] for d in scenario.list_distributions()] == [3, 2]
+    assert "  Agents:        ~5" in scenario.summary().splitlines()
+
+
+def test_summary_counts_spawn_areas_of_any_name_in_the_route():
+    """The route counts every key of ``distributions`` as a spawn area (#409)."""
+    data = _deck(journeys=[{"id": "J", "stages": ["room", "jps-exits_0"]}])
+    data["distributions"] = {"room": data["distributions"]["jps-distributions_0"]}
+    lines = _scenario(data).summary().splitlines()
+    assert "  Route:         1 distribution, 0 checkpoint, 1 exit" in lines
 
 
 def test_set_flow_schedule_sorts_and_derives_the_window():

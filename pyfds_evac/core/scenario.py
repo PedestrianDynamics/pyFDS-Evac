@@ -41,7 +41,15 @@ from pyfds_evac.config import messages
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
-from .agent_params import deck_default_number, max_agent_radius, parameters_as_dict
+from .agent_params import (
+    SpawnConfigError,
+    _normalize_flow_schedule_entry,
+    _normalized_flow_schedule,
+    _spawn_value,
+    deck_default_number,
+    max_agent_radius,
+    parameters_as_dict,
+)
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_FAMILIARITY,
@@ -296,50 +304,6 @@ def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
     return max(1, math.floor(theoretical * 0.5))
 
 
-def _normalize_flow_schedule_entry(entry: dict) -> dict:
-    """Normalize one configured flow schedule entry to canonical keys."""
-    start_time = entry.get("flow_start_time", entry.get("start_time_s"))
-    end_time = entry.get("flow_end_time", entry.get("end_time_s"))
-    number = entry.get("number", entry.get("sim_count"))
-
-    if start_time is None or end_time is None or number is None:
-        raise ValueError(
-            "Each flow schedule entry must define start/end time and number. "
-            "Accepted keys: flow_start_time|start_time_s, flow_end_time|end_time_s, number|sim_count."
-        )
-
-    start_time = float(start_time)
-    end_time = float(end_time)
-    number = int(number)
-
-    if start_time < 0 or end_time <= start_time:
-        raise ValueError(
-            f"Invalid flow window [{start_time}, {end_time}] - end_time must be greater than start_time."
-        )
-    if number <= 0:
-        raise ValueError(
-            f"Flow schedule numbers must be positive integers, got {number!r}"
-        )
-
-    return {
-        "flow_start_time": start_time,
-        "flow_end_time": end_time,
-        "number": number,
-    }
-
-
-def _normalized_flow_schedule(params: dict) -> list[dict]:
-    """Return the sorted flow schedule for one distribution."""
-    raw_schedule = params.get("flow_schedule", [])
-    if not raw_schedule:
-        return []
-    normalized = [_normalize_flow_schedule_entry(entry) for entry in raw_schedule]
-    normalized.sort(
-        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
-    )
-    return normalized
-
-
 def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
     """Return the total number of agents implied by one distribution.
 
@@ -347,10 +311,20 @@ def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
     views pass the run's default, :func:`deck_default_number` (#647).
     """
     params = parameters_as_dict(dist.get("parameters")) or {}
-    schedule = _normalized_flow_schedule(params)
+    try:
+        schedule = _normalized_flow_schedule(params)
+    except SpawnConfigError as error:
+        raise SpawnConfigError(f"flow_schedule: {error}") from error
     if schedule:
-        initial_number = int(params.get("initial_number", 0) or 0)
-        return initial_number + sum(entry["number"] for entry in schedule)
+        initial = params.get("initial_number")
+        if initial is None:
+            initial = 0
+        else:
+            try:
+                initial = _spawn_value("number", initial, "initial_number")
+            except ValueError as error:
+                raise SpawnConfigError(str(error)) from error
+        return initial + sum(entry["number"] for entry in schedule)
     return int(params.get("number", default_number) or 0)
 
 
@@ -431,11 +405,32 @@ class Scenario:
         params.update(self.sim_params)
         params["model_type"] = self.model_type
 
+    def _agent_budget(self, dist_id: str, dist: dict, default_number: int) -> int:
+        """Agents the run places for one distribution, at the start and later.
+
+        A percentage mode counts a share of its clipped area's capacity, as
+        the run does (#436); every other mode is read from the parameters.
+        """
+        from .simulation_init import _percentage_spawn_count
+
+        count = _percentage_spawn_count(
+            self.raw,
+            dist_id,
+            self.walkable_polygon,
+            SimpleNamespace(**self.sim_params),
+        )
+        if count is not None:
+            return count
+        try:
+            return _distribution_agent_budget(dist, default_number)
+        except SpawnConfigError as error:
+            raise SpawnConfigError(f"Distribution {dist_id!r}: {error}") from error
+
     def summary(self) -> str:
         default_number = deck_default_number(self.sim_params)
         total_agents = sum(
-            _distribution_agent_budget(d, default_number)
-            for d in self.distributions.values()
+            self._agent_budget(did, d, default_number)
+            for did, d in self.distributions.items()
         )
         journey_sequence = []
         journeys = self.raw.get("journeys", [])
@@ -461,7 +456,7 @@ class Scenario:
                 stage.startswith("jps-exits_") for stage in journey_sequence
             )
             distribution_count = sum(
-                stage.startswith("jps-distributions_") for stage in journey_sequence
+                stage in self.distributions for stage in journey_sequence
             )
             lines.append(f"  Journey elems: {len(journey_sequence)}")
             lines.append(
@@ -474,13 +469,23 @@ class Scenario:
         for dist_id, dist in self.distributions.items():
             params = parameters_as_dict(dist.get("parameters")) or {}
             flow = params.get("use_flow_spawning", False)
-            n = params.get("number", default_number)
+            n = self._agent_budget(dist_id, dist, default_number)
+            upper = params.get("distribution_mode") in ("fill_area", "until_full")
+            count = f"up to {n}" if upper and not params.get("flow_schedule") else n
             tag = (
                 f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)"
                 if flow
                 else ""
             )
-            lines.append(f"    {dist_id}: {n} agents{tag}")
+            schedule = _normalized_flow_schedule(params)
+            if schedule:
+                initial = int(params.get("initial_number") or 0)
+                windows = ", ".join(
+                    f"{w['number']} in {w['flow_start_time']:g}-{w['flow_end_time']:g}s"
+                    for w in schedule
+                )
+                tag = f" ({initial} at the start, flow: {windows})"
+            lines.append(f"    {dist_id}: {count} agents{tag}")
         return "\n".join(lines)
 
     def plot(self, ax=None):
@@ -567,7 +572,7 @@ class Scenario:
 
         default_number = deck_default_number(self.sim_params)
         for i, (did, d) in enumerate(self.distributions.items()):
-            n = _distribution_agent_budget(d, default_number)
+            n = self._agent_budget(did, d, default_number)
             _plot_element(d["coordinates"], palette["distribution"], f"D{i}\n({n} ag)")
 
         for i, (eid, e) in enumerate(self.exits.items()):
@@ -678,7 +683,7 @@ class Scenario:
                 {
                     "index": i,
                     "id": did,
-                    "agents": _distribution_agent_budget(d, default_number),
+                    "agents": self._agent_budget(did, d, default_number),
                     "flow": params.get("use_flow_spawning", False)
                     or bool(params.get("flow_schedule")),
                 }
@@ -981,6 +986,11 @@ class ScenarioResult:
     def agents_not_spawned(self) -> int:
         """Flow agents that had not entered when the time limit was reached."""
         return int(self.metrics.get("agents_not_spawned", 0))
+
+    @property
+    def fill_placement(self) -> dict[str, dict[str, int]]:
+        """Per ``fill_area``/``until_full`` spawn area, ``placed`` of ``upper_bound``."""
+        return dict(self.metrics.get("fill_placement", {}))
 
     @property
     def evacuation_time(self) -> float:
@@ -3548,6 +3558,10 @@ def run_scenario(
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
+        # Agents a fill mode placed of its upper bound (#436); only decks
+        # with one get the key.
+        if spawning_info.get("fill_placement"):
+            metrics["fill_placement"] = spawning_info["fill_placement"]
         # Only agents that were given an exit can have taken a replayed one.
         _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:
