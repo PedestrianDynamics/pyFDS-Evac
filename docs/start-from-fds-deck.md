@@ -44,7 +44,7 @@ pyfds-evac init assets/t_junction/t_junction.fds --check
 ```
 
 ```text
-FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+FDS output check at z = 1.6 m (z on the mesh grid, where FDS writes the slice):
   ✓ Extinction  z 2 m (requested 1.6 m, line 73); smoke speed and sign legibility read it
   ✓ CO          z 2 m (requested 1.6 m, line 76)
   ✓ CO2         z 2 m (requested 1.6 m, line 77)
@@ -94,7 +94,7 @@ assets/t_junction/t_junction.fds → assets/t_junction/t_junction_scenario/   (F
   Walkable  150.0 m², 1 area                   Exits    2 of 2 (vent_2, vent_3)
   Spawn     1 area (100 placeholder agents)    Floor    z = 0 m
 
-FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+FDS output check at z = 1.6 m (z on the mesh grid, where FDS writes the slice):
   ✓ Extinction  z 2 m (requested 1.6 m, line 73); smoke speed and sign legibility read it
   ✓ CO          z 2 m (requested 1.6 m, line 76)
   ✓ CO2         z 2 m (requested 1.6 m, line 77)
@@ -213,7 +213,7 @@ assets/ISO-table21/ISO-table21.fds → assets/ISO-table21/ISO-table21_scenario/ 
   Walkable  200.0 m², 1 area      Exits    0 of 0
   Spawn     0 areas (0 agents)    Floor    z = 0 m
 
-FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+FDS output check at z = 1.6 m (z on the mesh grid, where FDS writes the slice):
   ✓ Extinction  z 2 m (requested 1.6 m, line 20); smoke speed and sign legibility read it
   ✓ CO          z 2 m (requested 1.6 m, line 21)
   ✓ CO2         z 2 m (requested 1.6 m, line 22)
@@ -297,7 +297,7 @@ pyfds-evac init evac_example1aA.fds --check
 ```
 
 ```text
-FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+FDS output check at z = 1.6 m (z on the mesh grid, where FDS writes the slice):
   ✗ Extinction  none (requested z 1.6 m); the run has no smoke slowdown and no smoke on signs; fix: add &SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
   ✗ CO          none (requested z 1.6 m); fix: add &SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
   ✗ CO2         none (requested z 1.6 m); fix: add &SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
@@ -326,7 +326,7 @@ evac_example1aA.fds → evac_example1aA_scenario/   (FDS+Evac deck)
   Walkable  120.4 m², 1 area    Exits    2 of 2 (LeftExit, RightExit)
   Groups    4 (100 agents)      Floor    z = 0 m
 
-FDS output check at z = 1.6 m (deck z; FDS moves a slice to the grid, up to half a cell):
+FDS output check at z = 1.6 m (z on the mesh grid, where FDS writes the slice):
   ✗ Extinction  none (requested z 1.6 m); the run has no smoke slowdown and no smoke on signs; fix: add &SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /
   …
   The scenario is still written; the ✗ lines say what the run will lack. Details: pyfds-evac init DECK --check
@@ -518,11 +518,11 @@ with 3 although the scenario can run.
 - **The deck is read by pyFDS-Evac's own parser.** `&GEOM` is not
   represented, `&CATF` is refused, and obstructions with `DEVC_ID` or
   `CTRL_ID` are taken as written, without their time dependence.
-- **The check reads the deck.** FDS moves a slice to the nearest grid plane,
-  up to half a cell from the deck's z; the check cannot see that. It can
-  then name another `&SLCF` line than the run reads, or warn where the run
-  finds the slice, but it never fails a deck for it
-  ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687)).
+- **The check reads the deck.** It moves each slice to the mesh grid as
+  FDS does, from `&MESH IJK` and `XB`. With `&TRNZ` (a stretched z grid)
+  it keeps the deck's z, and can then name another `&SLCF` line than the
+  run reads, or warn where the run finds the slice, but it never fails a
+  deck for it.
 - **FDS+Evac output is not read.** Run FDS on a fire-only copy, written by
   hand.
 - **Touching evacuation meshes are joined.** FDS+Evac keeps their shared

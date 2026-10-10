@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;
   t_junction with an `&EVHO` lost both exits before (#688). Other
   FDS+Evac namelists in a plain deck are reported as ignored.
+- `pyfds-evac init --check` ranks slices at the z FDS writes them, the
+  nearest cell face of the `&MESH` grid, as the run does. On tracked
+  output at z = 2.0 m it named PBZ 1.6 where the run reads PBZ 2.5
+  (#687). Lines print the grid z, with the deck's z when it differs, and
+  `nearest_pbz` in `import_report.json` is the grid z.
 
 - In a scenario with neither journeys nor transitions, a spawn area
   whose count is within the capacity estimate but where JuPedSim cannot

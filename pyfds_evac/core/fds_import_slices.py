@@ -9,7 +9,10 @@ The rules copy the runtime's, they do not redefine them:
 - A slice is used when it is horizontal (``PBZ``, or ``XB`` with z0 == z1
   and neither x nor y collapsed: fdsreader tests x, then y, then z);
   among those, the one nearest the requested height wins and declaration
-  order breaks ties, as :func:`fds_sampling.select_horizontal_slice`. Past
+  order breaks ties, as :func:`fds_sampling.select_horizontal_slice`. The
+  z ranked is the one FDS writes: the slice moved to the nearest cell face
+  of each mesh it cuts (from ``&MESH IJK``/``XB``), the middle of those
+  faces when the meshes differ, as fdsreader's extent (#687). Past
   ``_SLICE_HEIGHT_TOLERANCE_M`` the runtime warns; so does the check.
 - Smoke speed and sign legibility read ``SOOT EXTINCTION COEFFICIENT``: deck
   ``QUANTITY='EXTINCTION COEFFICIENT'`` with no ``SPEC_ID`` or
@@ -22,18 +25,20 @@ The rules copy the runtime's, they do not redefine them:
 - Without ``&TIME T_END`` FDS stops at its default of 1 s (User Guide 6.9.1,
   Sec. 6.2.1), while ``init`` writes ``max_simulation_time`` 300 s.
 
-The z printed is the deck's; FDS moves a slice to the nearest grid plane,
-up to half a cell away.
+A deck with ``&TRNZ`` (a stretched z grid) keeps the deck's z; so does a
+slice outside every mesh.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import math
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from pyfds_evac.config.parameters import SMOKE_UPDATE_INTERVAL_S
 
-from .fds_deck import FdsDeck, FdsDeckError, NamelistRecord
+from .fds_deck import FdsDeck, FdsDeckError, NamelistRecord, _is_number
+from .fds_import_geometry import rounded
 from .fds_sampling import _SLICE_HEIGHT_TOLERANCE_M
 from .fed import HEAT_SLICE_Z_TOLERANCE_M, FdsFedField
 
@@ -59,7 +64,7 @@ SOOT_SPEC_IDS = (None, "SOOT")
 
 FAILED = ("missing", "vertical_only")
 MARKS = {"ok": "✓", "missing": "✗", "vertical_only": "✗", "far": "!"}
-GRID_NOTE = "deck z; FDS moves a slice to the grid, up to half a cell"
+GRID_NOTE = "z on the mesh grid, where FDS writes the slice"
 
 
 @dataclass
@@ -155,11 +160,13 @@ class _Slice:
     record: NamelistRecord
     orientation: str  # horizontal, vertical or volume
     z: float | None
+    deck_z: float | None = None
 
 
 def check_slices(deck: FdsDeck, height: float) -> SliceCheck:
     """Check *deck* for the slices a run at *height* reads; see the module."""
-    slices = [s for s in map(_slice, deck.group("SLCF")) if s is not None]
+    meshes = _grid_meshes(deck)
+    slices = [_on_grid(s, meshes) for s in map(_slice, deck.group("SLCF")) if s]
     check = SliceCheck(height)
     check.items.append(_extinction(deck, slices, height))
     gases = [_gas(slices, label, spec, height) for label, spec in FED_GASES]
@@ -203,6 +210,42 @@ def _slice(record: NamelistRecord) -> _Slice | None:
     return _Slice(record, "volume", None)
 
 
+def _grid_meshes(deck: FdsDeck) -> list[NamelistRecord]:
+    """The fire meshes a slice is moved onto; none with ``&TRNZ``."""
+    if deck.group("TRNZ"):
+        return []
+    return [m for m in deck.group("MESH") if not _safe(m.flag, "EVACUATION", False)]
+
+
+def _on_grid(item: _Slice, meshes: list[NamelistRecord]) -> _Slice:
+    """*item* at the z FDS writes it, the deck's z kept in ``deck_z``."""
+    if item.orientation != "horizontal" or item.z is None:
+        return item
+    xy = None if item.record.has("PBZ") else _safe(item.record.xb)
+    faces = [f for f in (_face(m, item.z, xy) for m in meshes) if f is not None]
+    if not faces:
+        return replace(item, deck_z=item.z)
+    return replace(item, z=rounded((min(faces) + max(faces)) / 2), deck_z=item.z)
+
+
+def _face(mesh: NamelistRecord, z: float, xy) -> float | None:
+    """The cell face of *mesh* nearest *z*; None when the slice misses it.
+
+    FDS rounds half up (``NINT``) on the uniform grid of ``IJK``/``XB``.
+    """
+    ijk = mesh.values("IJK")
+    xb = _safe(mesh.xb)
+    if xb is None or len(ijk) != 3 or not _is_number(ijk[2]) or ijk[2] <= 0:
+        return None
+    x0, x1, y0, y1, z0, z1 = xb
+    if z < z0 - 1e-9 or z > z1 + 1e-9:
+        return None
+    if xy is not None and (xy[1] <= x0 or xy[0] >= x1 or xy[3] <= y0 or xy[2] >= y1):
+        return None
+    dz = (z1 - z0) / float(ijk[2])
+    return float(z0 + math.floor((z - z0) / dz + 0.5) * dz)
+
+
 def _safe(method, *args):
     try:
         return method(*args)
@@ -239,6 +282,13 @@ def _nearest(matches: list[_Slice], height: float) -> _Slice | None:
     return min(horizontal, key=lambda s: abs(_z(s) - height))
 
 
+def _deck_z(item: _Slice) -> str:
+    """``deck z ..., `` when the deck puts *item* off the grid."""
+    if item.deck_z is None or item.deck_z == item.z:
+        return ""
+    return f"deck z {item.deck_z:g} m, "
+
+
 def _z(item: _Slice) -> float:
     return item.z if item.z is not None else float("nan")
 
@@ -266,7 +316,10 @@ def _required(key, label, matches, height, fix, extra="") -> SliceItem:
         return item
     z = _z(chosen)
     item.nearest_pbz = z
-    item.message = f"z {z:g} m (requested {height:g} m, line {chosen.record.line})"
+    item.message = (
+        f"z {z:g} m ({_deck_z(chosen)}requested {height:g} m, "
+        f"line {chosen.record.line})"
+    )
     if abs(z - height) > _SLICE_HEIGHT_TOLERANCE_M:
         item.status = "far"
         item.level = "warning"

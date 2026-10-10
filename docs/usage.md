@@ -762,7 +762,8 @@ floor as `init` does and checks, at the smoke slice height `init` would
 write (the floor plus the last `HUMAN_SMOKE_HEIGHT`, else 1.6 m;
 `--smoke-slice-height Z` checks another absolute z), the FDS output the run
 reads. It uses the run's rule: a horizontal slice (`PBZ`, or `XB` with equal
-z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie; slices with
+z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie, with each
+slice's z moved to the mesh grid as FDS moves it; slices with
 `EVACUATION=.TRUE.` do not count. Each line prints the requested and the
 chosen z, and the fix as a deck line.
 
@@ -776,8 +777,10 @@ chosen z, and the fix as a deck line.
 | `DT_SLCF` | | `&DUMP DT_SLCF`, else (T_END − T_BEGIN)/NFRAMES; `!` when coarser than 1 s, the run's smoke update interval |
 | `&REAC SOOT_YIELD`, `CO_YIELD` | | `!` when a simple-chemistry deck declares the slice but the yield is absent or 0 |
 
-The z is the deck's: FDS moves a slice to the nearest grid plane, up to half
-a cell away. `-o`, `--walkable`, `--exit`, `--agents`, `--exit-depth`,
+The z printed is the one FDS writes: the nearest cell face of the `&MESH`
+grid (`IJK` and `XB`), with the deck's z after it (`deck z 1.6 m`) when it
+differs; `nearest_pbz` in the report is that grid z. A deck with `&TRNZ`
+keeps the deck's z. `-o`, `--walkable`, `--exit`, `--agents`, `--exit-depth`,
 `--force`, `--no-fds` and `-v` shape the written scenario and are refused
 with `--check`.
 

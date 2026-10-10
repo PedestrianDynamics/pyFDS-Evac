@@ -20,10 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / "assets" / "fds_evac_guide"
 T_JUNCTION = ROOT / "assets" / "t_junction" / "t_junction.fds"
 
-# One plain mesh, z 0-3: the check runs at z_floor 0 + 1.6 m.
+# One plain mesh, z 0-3 on a 0.1 m grid, so that the deck's z are on it:
+# the check runs at z_floor 0 + 1.6 m.
 PLAIN = """\
 &HEAD CHID='plain' /
-&MESH IJK=20,20,6, XB=0,10,0,10,0,3 /
+&MESH IJK=20,20,30, XB=0,10,0,10,0,3 /
 &VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /
 {time}
 {records}
@@ -250,6 +251,51 @@ def test_nearest_of_several_matches_the_runtime_rule(tmp_path):
         runtime = select_horizontal_slice(fakes, height, "q", "dir")
         item = check_slices(deck, height).items[0]
         assert item.nearest_pbz == runtime.extent.z_start, height
+
+
+@pytest.mark.parametrize(
+    ("case", "quantity", "key"),
+    [
+        (
+            "fed_slice_height",
+            "CARBON MONOXIDE VOLUME FRACTION",
+            "VOLUME FRACTION CARBON MONOXIDE",
+        ),
+        ("vis_slice_height", "SOOT EXTINCTION COEFFICIENT", "EXTINCTION COEFFICIENT"),
+    ],
+)
+def test_ranking_on_the_grid_matches_the_runtime_on_tracked_output(case, quantity, key):
+    """FDS moves PBZ 1.6 to the 0.5 m grid at 1.5; at 2.0 it ties PBZ 2.5,
+    declared first, which the run reads (#687). The deck's z picks 1.6."""
+    fdsreader = pytest.importorskip("fdsreader")
+    from pyfds_evac.core.fds_deck import parse_fds_deck
+    from pyfds_evac.core.fds_import_slices import check_slices
+    from pyfds_evac.core.fds_sampling import _slice_z_mid, load_slice_sampler
+
+    folder = ROOT / "assets" / case
+    deck = parse_fds_deck(folder / f"{case}.fds")
+    sim = fdsreader.Simulation(str(folder / "fds"))
+    for height in (0.5, 1.0, 1.6, 1.75, 2.0, 2.4):
+        runtime = load_slice_sampler(
+            str(folder / "fds"), quantity, simulation=sim, slice_height_m=height
+        )
+        item = check_slices(deck, height).to_dict()[key]
+        assert item["nearest_pbz"] == _slice_z_mid(runtime._slice), height
+
+
+def test_off_grid_slice_prints_both_z_and_trnz_keeps_the_deck_z(tmp_path, capsys):
+    coarse = PLAIN.replace("IJK=20,20,30", "IJK=20,20,6")  # 0.5 m in z
+    soot = "&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /"
+    deck = tmp_path / "coarse.fds"
+    deck.write_text(coarse.format(time=TIME, records="\n".join((soot, *GASES))))
+    status, lines = _check(capsys, deck, "--check")
+    assert status == cli_init.EXIT_OK
+    assert "z 1.5 m (deck z 1.6 m, requested 1.6 m" in _line(lines, "Extinction")
+    stretched = "&TRNZ IDERIV=0, CC=1, PC=1, MESH_NUMBER=1 /"
+    records = "\n".join((stretched, soot, *GASES))
+    deck.write_text(coarse.format(time=TIME, records=records))
+    status, lines = _check(capsys, deck, "--check")
+    assert "z 1.6 m (requested 1.6 m" in _line(lines, "Extinction")
 
 
 def _extent(z: float):
