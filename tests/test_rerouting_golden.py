@@ -1435,6 +1435,8 @@ def test_every_switch_reason_is_pinned():
 
 if __name__ == "__main__":
     # Entry point for _run_deck_isolated: run one deck, write its snapshot.
+    if len(sys.argv) != 4:
+        sys.exit(f"usage: {sys.argv[0]} DECK OUT.json CHECKOUT_ROOT")
     _check_imported_from(Path(sys.argv[3]))
     Path(sys.argv[2]).write_text(
         json.dumps(_run_deck(DECKS[sys.argv[1]]), sort_keys=True), encoding="utf-8"

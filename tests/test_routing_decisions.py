@@ -29,8 +29,8 @@ Regenerate them, only when a change of behaviour is intended, with::
 
     PYFDS_EVAC_REGEN_GOLDEN=1 uv run pytest tests/test_routing_decisions.py
 
-A change to where routes are sampled (for example #653) rewrites the
-sampler logs and cache keys of most cases.
+These snapshots use grid-less fields, so the per-grid-cell sampling path
+(#653) is not covered here.
 """
 
 from __future__ import annotations
