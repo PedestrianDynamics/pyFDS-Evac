@@ -729,7 +729,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Item `EVHO` `ignored: the --walkable polygon is taken as given` (warning) | 0 | `--walkable` on a plain deck with an `&EVHO`. | Cut the area out of the WKT. |
 | Item `EVHO` `ignored: invalid, XB is missing` (warning) | 0 | An `&EVHO` without `XB` in a plain deck. | Give it an `XB`, or remove it. |
 | Item `ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck` (warning) | 0 | `&EVAC`, `&EXIT`, `&DOOR` or another FDS+Evac namelist in a plain deck. | Add the evacuation meshes for an FDS+Evac import, or remove the records. |
-| Check note `dropped &SLCF line N (QUANTITY, z Z m): REASON, so FDS writes no such slice` (the orientation in place of z for a vertical or volume slice) | 3 with `--check` when no other slice gives the item, else 0 | FDS culls the slice: it lies outside every fire `&MESH` (a slice that only touches a mesh in a direction it spans counts as outside), or its `MESH_NUMBER` names a mesh that does not hold it or no fire mesh. The check reads the deck as if the slice were absent (#705). | Move the slice into a fire mesh, or fix or drop `MESH_NUMBER`. |
+| Check note `dropped &SLCF line N (QUANTITY, z Z m): REASON, so FDS writes no such slice` (the orientation in place of z for a vertical or volume slice) | 3 with `--check` when no other slice gives the item, else 0 | FDS culls the slice: it lies outside every fire `&MESH` (FDS 6.10: a slice that only touches a mesh in a direction it spans counts as outside), or its `MESH_NUMBER` names a mesh that does not hold it or no fire mesh. On a deck with evacuation meshes, which FDS 6.7.6 runs, a horizontal slice that touches a mesh in x or y is kept there at zero width, and the run then reads no horizontal slice; the note says so. The check reads the deck as if the slice were absent (#705). | Move the slice into a fire mesh, or fix or drop `MESH_NUMBER`. |
 | `… holds a config.json that the importer did not write …` | 1 | `-o` points at an authored scenario. | Another `-o`, or `--force`. |
 | `no &MESH reaches the walking band z = LO..HI m; …` | 1 | Wrong `--floor-z` or `--z-band`. | As the message says. |
 | `--floor 'X' names no evacuation mesh; known: […]` | 1 | A wrong `--floor`. | Use a listed id. |
@@ -791,9 +791,11 @@ reads it. The deck's z follows (`deck z 1.6 m`) when it differs;
 fire mesh, or a `MESH_NUMBER` that names a mesh not holding it or no fire
 mesh) counts as absent and is named in a `dropped &SLCF` line. The cull
 follows FDS 6.10 `READ_SLCF`, and FDS 6.7.6 for a deck with evacuation
-meshes, which only that version runs; `MESH_NUMBER` counts the fire
-meshes only, the `MULT` copies in order. A deck with `&TRNZ` keeps the deck's z, since the check does
-not compute the stretched grid; the cull still applies, as `&TRNZ` moves
+meshes, which only that version runs: 6.10 culls a planar slice that
+only touches a mesh in a direction it spans, 6.7.6 keeps it at zero
+width, which the run cannot read as horizontal. `MESH_NUMBER` counts the
+fire meshes only, the `MULT` copies in order. A deck with `&TRNZ` keeps
+the deck's z, since the check does not compute the stretched grid; the cull still applies, as `&TRNZ` moves
 the nodes and not the mesh bounds. `-o`, `--walkable`, `--exit`,
 `--agents`, `--exit-depth`, `--force`, `--no-fds` and `-v` shape the
 written scenario and are refused with `--check`.

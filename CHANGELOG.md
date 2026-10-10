@@ -65,8 +65,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pass (#705). The cull applies to `&TRNZ` decks too. `MESH_NUMBER`
   counts the fire meshes only, as the FDS 6.7.6 fire run does, and
   `PBX` or `PBY` with `PBZ` is a vertical line, as fdsreader reads it.
+  On a deck with evacuation meshes (FDS 6.7.6), a horizontal slice that
+  only touches a mesh in x or y is reported as unreadable: FDS keeps it
+  there at zero width, and fdsreader then reads no horizontal slice.
 - The deck parser computes `MULT` copies as FDS does, `(XB + DX0) +
-  I*DX`, so mesh bounds are the doubles FDS uses (#705).
+  I*DX`, so the check compares the doubles FDS uses (#705). The
+  walkable area, exits and obstructions use these coordinates rounded to
+  1e-9 m, so faces that `MULT` copies leave a few ulp apart coincide:
+  such a seam between mesh rows could split the walkable area in two and
+  leave no agents placed. No tracked deck's `init` output changes.
 - `pyfds-evac init` reads a deck as an FDS+Evac deck only when it has a
   `&MESH` with `EVACUATION=.TRUE.`. An `&EVHO` in a plain deck is cut out
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;

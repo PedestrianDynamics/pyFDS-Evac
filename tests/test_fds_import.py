@@ -1665,3 +1665,35 @@ def test_summary_shows_result_changing_info_notes(tmp_path, capsys):
     out = capsys.readouterr().out
     assert status == cli_init.EXIT_OK
     assert "no T_END: max_simulation_time 300 s" in out
+
+
+# backend-qa's MULT probe (#705): six meshes and twelve obstructions copied
+# with DX0/DY0/DZ0. FDS's arithmetic leaves the mesh rows at y = 4.1 a few
+# ulp apart; the walkable area must still be one piece.
+MULT_SEAM_DECK = """\
+&HEAD CHID='m' /
+&MULT ID='MM', DX0=0.1, DY0=0.3, DZ0=0.3, DX=3.3, DY=3.7, DZ=0.6, I_UPPER=2, J_UPPER=1, K_UPPER=1 /
+&MESH IJK=33,37,6, XB=0.1,3.4,0.1,3.8,0.1,0.7, MULT_ID='MM' /
+&MULT ID='OB', DX0=0.7, DY0=0.3, DX=1.1, DY=1.3, I_UPPER=3, J_UPPER=2 /
+&OBST XB=0.1,0.4,0.1,0.4,0,3, MULT_ID='OB' /
+&MULT ID='VV', DY0=0.3, DY=0.7, J_UPPER=1 /
+&VENT XB=0.1,0.1,1.1,1.9,0.1,2.1, SURF_ID='OPEN', MULT_ID='VV' /
+&TIME T_END=60 /
+&SLCF PBZ=1.9, QUANTITY='EXTINCTION COEFFICIENT' /
+"""
+
+
+def test_mult_seams_do_not_split_the_walkable_area(tmp_path):
+    from pyfds_evac.core.fds_deck import parse_fds_text
+
+    meshes = parse_fds_text(MULT_SEAM_DECK).group("MESH")
+    tops = {m.fds_xb()[3] for m in meshes if m.fds_xb()[2] < 1}
+    bottoms = {m.fds_xb()[2] for m in meshes if m.fds_xb()[2] > 1}
+    assert tops != bottoms  # the seam FDS's arithmetic leaves
+    assert {m.xb()[3] for m in meshes if m.xb()[2] < 1} == {4.1}
+    assert {m.xb()[2] for m in meshes if m.xb()[2] > 1} == {4.1}
+    deck = tmp_path / "m.fds"
+    deck.write_text(MULT_SEAM_DECK)
+    report = import_fds_deck(deck).report
+    assert report.walkable["components"] == 1
+    assert report.walkable["area_m2"] == pytest.approx(72.9)

@@ -400,6 +400,7 @@ def test_evacuation_only_deck_does_not_get_the_trnz_note(tmp_path, capsys):
 
 
 # A second mesh above the plain one, z 3-6, and an evacuation mesh.
+CULLED = ", so FDS writes no such slice"
 UPPER = "&MESH IJK=20,20,30, XB=0,10,0,10,3,6 /"
 EVAC_MESH = "&MESH IJK=20,20,1, XB=0,10,0,10,1,2, EVACUATION=.TRUE. /"
 LOW_GASES = tuple(g.replace("PBZ=1.6", "PBZ=1.5") for g in GASES)
@@ -460,7 +461,7 @@ def test_slice_fds_culls_is_missing_and_named(
     dropped = [x for x in lines if x.startswith("  dropped &SLCF")]
     assert dropped == [
         f"  dropped &SLCF line {line} (EXTINCTION COEFFICIENT, "
-        f"z 1.6 m): {reason}, so FDS writes no such slice"
+        f"z 1.6 m): {reason}{CULLED}"
     ]
 
 
@@ -496,18 +497,20 @@ def test_report_lists_the_dropped_slices(tmp_path):
             "spec_id": None,
             "orientation": "horizontal",
             "z": 1.6,
-            "reason": "MESH_NUMBER 9 names no fire &MESH",
+            "reason": f"MESH_NUMBER 9 names no fire &MESH{CULLED}",
         }
     ]
     assert rec["slices"]["EXTINCTION COEFFICIENT"]["status"] == "missing"
 
 
 def _culls(text: str) -> list[str]:
-    """The reasons :func:`check_slices` drops the slices of *text*."""
+    """The reasons :func:`check_slices` drops the slices of *text*,
+    without the :data:`CULLED` ending of a cull."""
     from pyfds_evac.core.fds_deck import parse_fds_text
     from pyfds_evac.core.fds_import_slices import check_slices
 
-    return [d["reason"] for d in check_slices(parse_fds_text(text), 1.6).dropped]
+    dropped = check_slices(parse_fds_text(text), 1.6).dropped
+    return [d["reason"].removesuffix(CULLED) for d in dropped]
 
 
 MESH_0_3 = "&MESH IJK=20,20,30, XB=0,10,0,10,0,3 /\n"
@@ -548,18 +551,48 @@ def test_pbx_with_pbz_is_a_vertical_line_the_run_skips(tmp_path, capsys):
     assert "vertical only, the run reads none" in _line(lines, "Extinction")
 
 
-def test_fds67_deck_keeps_a_slice_touching_a_mesh():
+def test_fds67_slice_touching_a_mesh_is_not_read_as_horizontal():
     """A deck with evacuation meshes runs on FDS 6.7.6, whose READ_SLCF
-    culls only lo > F or hi < S, on every axis (#705)."""
+    culls only lo > F or hi < S: it keeps a slice that touches a mesh, at
+    zero width there, and fdsreader then reads no horizontal slice (#705)."""
     evac = "&MESH IJK=10,10,1, XB=0,10,0,10,1,2, EVACUATION=.TRUE. /\n"
     touching = _soot("XB=10,20,0,10,1.6,1.6")
     assert _culls(MESH_0_3 + touching) == ["outside every fire &MESH"]
-    assert _culls(MESH_0_3 + evac + touching) == []
+    assert _culls(MESH_0_3 + evac + touching) == [
+        "FDS 6.7.6 writes it in &MESH 1 with zero width in x, and fdsreader "
+        "then reads no horizontal slice"
+    ]
+
+
+def test_fds67_slice_ending_on_a_mesh_face_is_missing(tmp_path, capsys):
+    """backend-qa's contact67.fds: the slice fills mesh 1 and touches mesh
+    2 at x = 10 m. FDS 6.7.6 writes both parts, the one in mesh 2 of zero
+    width, so the run has no extinction slice (#705)."""
+    text = (
+        "&HEAD CHID='c67' /\n"
+        "&MESH IJK=20,20,30, XB=0,10,0,10,0,3 /\n"
+        "&MESH IJK=20,20,30, XB=10,20,0,10,0,3 /\n"
+        "&MESH IJK=20,20,1, XB=0,20,0,10,1,2, EVACUATION=.TRUE. /\n"
+        f"{TIME}\n"
+        "&SLCF XB=0,10,0,10,1.6,1.6, QUANTITY='EXTINCTION COEFFICIENT' /\n"
+        + "\n".join(GASES)
+        + "\n"
+    )
+    deck = tmp_path / "c67.fds"
+    deck.write_text(text)
+    status, lines = _check(capsys, deck, "--check", "--smoke-slice-height", "1.6")
+    assert status == cli_init.EXIT_NOT_RUNNABLE
+    assert _line(lines, "Extinction").startswith("  ✗ Extinction  none")
+    assert (
+        "  dropped &SLCF line 6 (EXTINCTION COEFFICIENT, z 1.6 m): FDS 6.7.6 "
+        "writes it in &MESH 2 with zero width in x, and fdsreader then reads "
+        "no horizontal slice"
+    ) in lines
 
 
 def test_mesh_number_counts_mult_copies_and_skips_evacuation_meshes():
     """FDS numbers the MULT copies in order; the fire run of FDS 6.7.6
-    skips evacuation meshes (read.f90 of c9da70d7a0, line 750)."""
+    skips evacuation meshes (read.f90 of the FDS6.7.6 tag, line 750)."""
     deck = (
         "&MULT ID='Z', DZ=3, K_UPPER=1 /\n"
         "&MESH IJK=20,20,30, XB=0,10,0,10,0,3, MULT_ID='Z' /\n"  # 1, 2
@@ -585,7 +618,7 @@ def test_mult_bounds_are_the_ones_fds_computes():
         "&MULT ID='Z', DZ0=0.3, DZ=0.6, K_UPPER=1 /\n"
         "&MESH IJK=10,10,6, XB=0,10,0,10,0.1,0.7, MULT_ID='Z' /\n"
     )
-    assert parse_fds_text(deck).group("MESH")[1].xb()[5] == 1.6
+    assert parse_fds_text(deck).group("MESH")[1].fds_xb()[5] == 1.6
     assert _culls(deck + _soot("PBZ=1.6, MESH_NUMBER=2")) == []
 
 

@@ -29,12 +29,16 @@ A slice FDS culls is left out, as if the deck did not declare it, and
 named in :attr:`SliceCheck.dropped`: it lies outside every fire mesh,
 or its ``MESH_NUMBER`` names a mesh that does not hold it or no fire
 mesh (``READ_SLCF``, read.f90 of FDS-6.10.1-2291-gcc0ee9ee7e, lines
-15806 and 15813-15898). See :func:`_culled` and :func:`_holds`.
+15806 and 15813-15898). See :func:`_culled` and :func:`_holds`. So is
+a horizontal slice FDS 6.7.6 keeps in a mesh it only touches in x or y:
+that part has zero width, and fdsreader no longer reads the slice as
+horizontal (:func:`_zero_width`). Mesh and slice bounds are the doubles
+FDS compares (:meth:`NamelistRecord.fds_xb`).
 
 Mesh numbers count the fire meshes only, in deck order after ``MULT``:
 FDS 6.10 has no evacuation meshes, and the fire run of FDS 6.7.6, the
 only version that reads a deck with them, skips them (read.f90 of
-``c9da70d7a0``, the commit of ``materials/evac.f90``, line 750).
+the ``FDS6.7.6`` tag, line 750).
 
 A deck with ``&TRNZ`` (a stretched z grid) keeps the deck's z: the
 stretched nodes are not computed here. The cull still applies, since
@@ -145,7 +149,8 @@ class SliceCheck:
     items: list[SliceItem] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
     grid_note: str = GRID_NOTE
-    #: Slices FDS culls: ``line``, ``quantity``, ``spec_id``, ``z``, ``reason``.
+    #: Slices the run cannot read: ``line``, ``quantity``, ``spec_id``,
+    #: ``orientation``, ``z``, ``reason``.
     dropped: list[dict[str, Any]] = field(default_factory=list)
 
     @property
@@ -249,7 +254,7 @@ def _box(record: NamelistRecord) -> tuple[float | None, ...] | None:
     planes = [_number(record, key) for key in ("PBX", "PBY", "PBZ")]
     if any(p is not None for p in planes):
         return tuple(v for p in planes for v in (p, p))
-    xb = _safe(record.xb)
+    xb = _safe(record.fds_xb)
     return None if xb is None else tuple(xb)
 
 
@@ -293,12 +298,15 @@ def _on_grid(
     orientation, comes back with ``culled`` set; on a *stretched*
     (``&TRNZ``) grid, or when no holding mesh has a readable ``IJK``, the
     deck's z is kept. *fds67*: the deck has evacuation meshes, so only
-    FDS 6.7 runs it (:func:`_holds`).
+    FDS 6.7 runs it (:func:`_holds`, :func:`_zero_width`).
     """
     number = _number(item.record, "MESH_NUMBER")
-    named = [m for n, m in meshes if number is None or n == number]
-    holds = [_holds(mesh, item.box, item.ior, fds67) for mesh in named]
-    reason = _culled(number, named, holds)
+    named = [(n, m) for n, m in meshes if number is None or n == number]
+    holds = [_holds(m, item.box, item.ior, fds67) for _, m in named]
+    reason = _culled(number, [m for _, m in named], holds)
+    if reason is None and item.orientation == "horizontal":
+        kept = [(n, m) for (n, m), h in zip(named, holds, strict=True) if h]
+        reason = _zero_width(item.box, kept)
     if reason is not None:
         return replace(item, deck_z=item.z, culled=reason)
     if item.orientation != "horizontal" or item.z is None:
@@ -306,7 +314,7 @@ def _on_grid(
     if stretched:
         return replace(item, deck_z=item.z)
     centred = bool(_safe(item.record.flag, "CELL_CENTERED", False))
-    zs = [_node_z(m, item.z, centred) for m, h in zip(named, holds) if h]
+    zs = [_node_z(m, item.z, centred) for (_, m), h in zip(named, holds) if h]
     found = [z for z in zs if z is not None]
     if not found:
         return replace(item, deck_z=item.z)
@@ -325,12 +333,40 @@ def _culled(
     the check cannot judge then.
     """
     if number is not None and not named:
-        return f"MESH_NUMBER {number:g} names no fire &MESH"
+        return f"MESH_NUMBER {number:g} names no fire &MESH{_NONE}"
     if not named or None in holds or any(holds):
         return None
     if number is not None:
-        return f"&MESH {number:g} (MESH_NUMBER) does not hold it"
-    return "outside every fire &MESH"
+        return f"&MESH {number:g} (MESH_NUMBER) does not hold it{_NONE}"
+    return f"outside every fire &MESH{_NONE}"
+
+
+_NONE = ", so FDS writes no such slice"
+
+
+def _zero_width(
+    box: tuple[float | None, ...], kept: list[tuple[int, NamelistRecord]]
+) -> str | None:
+    """Why the run reads no horizontal slice FDS keeps; None if it reads one.
+
+    A horizontal ``XB`` slice that ends on a mesh face in x or y is culled
+    there by FDS 6.10 (:func:`_holds`), but kept by FDS 6.7.6 with the
+    clipped extent of zero width (I1 = I2 or J1 = J2). fdsreader then
+    reads that part as an x or y slice, and the slice as not horizontal
+    (``Slice.__init__``, slcf/slice.py 245-257); the run reads none.
+    """
+    for number, mesh in kept:
+        bounds = _safe(mesh.fds_xb)
+        for axis, name in ((0, "x"), (1, "y")):
+            lo, hi = box[2 * axis], box[2 * axis + 1]
+            if bounds is None or lo is None or hi is None:
+                continue
+            if max(lo, bounds[2 * axis]) == min(hi, bounds[2 * axis + 1]):
+                return (
+                    f"FDS 6.7.6 writes it in &MESH {number} with zero width in "
+                    f"{name}, and fdsreader then reads no horizontal slice"
+                )
+    return None
 
 
 def _holds(
@@ -343,9 +379,9 @@ def _holds(
     axis when IOR is 0, culled when lo > F or hi < S; on the other axes
     of a planar slice when lo >= F or hi <= S, so a slice that only
     touches a mesh in x or y is culled. FDS 6.7.6 (*fds67*; read.f90 of
-    ``c9da70d7a0``, line 14535) uses lo > F or hi < S on every axis.
+    the ``FDS6.7.6`` tag, line 14492) uses lo > F or hi < S on every axis.
     """
-    bounds = _safe(mesh.xb)
+    bounds = _safe(mesh.fds_xb)
     if bounds is None:
         return None
     for axis in range(3):
@@ -370,7 +406,7 @@ def _node_z(mesh: NamelistRecord, z: float, centred: bool) -> float | None:
     whose centre is within DZ/2 + 1e-10 m of z, written as its upper node.
     """
     ijk = mesh.values("IJK")
-    xb = _safe(mesh.xb)
+    xb = _safe(mesh.fds_xb)
     if xb is None or len(ijk) != 3 or not isinstance(ijk[2], int) or ijk[2] <= 0:
         return None
     x0, x1, y0, y1, z0, z1 = xb
@@ -401,7 +437,7 @@ def _dropped_note(entry: dict[str, Any]) -> str:
     where = entry["orientation"] if entry["z"] is None else f"z {entry['z']:g} m"
     return (
         f"dropped &SLCF line {entry['line']} ({entry['quantity']}{spec}, "
-        f"{where}): {entry['reason']}, so FDS writes no such slice"
+        f"{where}): {entry['reason']}"
     )
 
 

@@ -114,7 +114,21 @@ class NamelistRecord:
         return value
 
     def xb(self) -> tuple[float, float, float, float, float, float] | None:
-        """``XB`` as (x0, x1, y0, y1, z0, z1), each axis pair sorted."""
+        """``XB`` as (x0, x1, y0, y1, z0, z1), each axis pair sorted.
+
+        Each value is rounded to 1e-9 m, the nearest double to the deck's
+        decimal: faces that ``MULT`` copies leave a few ulp apart then
+        coincide, and a union of boxes has no seam (#705).
+        :meth:`fds_xb` keeps the doubles FDS compares.
+        """
+        exact = self.fds_xb()
+        if exact is None:
+            return None
+        x0, x1, y0, y1, z0, z1 = (round(v, 9) + 0.0 for v in exact)
+        return (x0, x1, y0, y1, z0, z1)
+
+    def fds_xb(self) -> tuple[float, float, float, float, float, float] | None:
+        """``XB`` as :meth:`xb`, with the doubles FDS holds, unrounded."""
         values = self.values("XB")
         if not values:
             return None
@@ -369,8 +383,8 @@ def _copies(record: NamelistRecord, mult: NamelistRecord) -> list[NamelistRecord
 
     Each bound is ``XB + D0 + n*DXB`` evaluated left to right, as FDS
     does (``XB1 = XB(1) + MR%DX0 + II*MR%DXB(1)``, read.f90 6.10 line
-    641), so that the bounds are the doubles FDS computes, barring a
-    compiler that fuses the multiply-add.
+    641), so that the bounds are the doubles FDS computes when compiled
+    in source order, as gfortran does without a fused multiply-add.
     """
     if record.xb() is None:
         raise FdsDeckError(
