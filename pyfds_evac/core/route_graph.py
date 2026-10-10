@@ -732,6 +732,8 @@ class FedRateSampler(Protocol):
 
 
 ROUTE_COST_MODELS = ("gate", "additive")
+#: Rules for the exit an agent takes when every route is refused (#696).
+FALLBACK_RULES = ("tau", "hold")
 
 
 def _unknown_cost_model(cost_model: object) -> ValueError:
@@ -854,11 +856,26 @@ class RouteCostConfig:
     # evaluations (#653); this keeps that from reversing the agent. 0 turns
     # it off.
     fallback_return_lockout_s: float = 10.0
+    # Which exit an agent keeps when every route is refused (#696). "tau":
+    # a refused rival displaces the current exit when its optical depth is
+    # clearly lower (fallback_switch_margin). "hold": the agent keeps its
+    # exit between refused routes and leaves only for a feasible route or
+    # when the current route must be fled (#128); fallback_switch_margin
+    # and fallback_return_lockout_s are then inert. The first choice with
+    # every route refused is the lowest tau under both. Experimental and
+    # code-level only: from_routing_params does not read it, so no scenario
+    # key sets it; measured on t_junction alone (docs/routing.md).
+    fallback_rule: str = "tau"
 
     def __post_init__(self) -> None:
-        """Reject an unknown cost_model and a negative or non-numeric lockout."""
+        """Reject an unknown cost_model or fallback_rule, and a bad lockout."""
         if self.cost_model not in ROUTE_COST_MODELS:
             raise _unknown_cost_model(self.cost_model)
+        if self.fallback_rule not in FALLBACK_RULES:
+            raise ValueError(
+                f"Unknown RouteCostConfig.fallback_rule {self.fallback_rule!r}; "
+                f"expected one of {FALLBACK_RULES}"
+            )
         lockout = self.fallback_return_lockout_s
         if (
             isinstance(lockout, bool)
@@ -2444,12 +2461,15 @@ def _fallback_rival_wins(
 
     A route the agent must flee never displaces one it need not flee, and
     always yields to one (#128); the tau rule decides only between two of a
-    kind.
+    kind. Under ``fallback_rule == "hold"`` nothing else displaces the
+    current exit (#696).
     """
     rival_flee = _must_flee_rejection(rival, config)
     current_flee = _must_flee_rejection(current, config)
     if rival_flee != current_flee:
         return current_flee
+    if config.fallback_rule == "hold":
+        return False
     if taus_tie(rival.tau_route, current.tau_route):
         return False
     margin = 1.0 - config.fallback_switch_margin
@@ -2473,7 +2493,8 @@ def _apply_fallback(
     refuse everything -- which is most of a real run, see
     docs/gate-model-review-notes.md -- the ordering follows the field, so the
     current exit is held unless a rival's optical depth is clearly lower
-    (``_fallback_rival_wins``).
+    (``_fallback_rival_wins``), or, under ``fallback_rule == "hold"``,
+    unless the current route must be fled and the rival need not be (#696).
 
     Ordered by optical depth here too, not by the worst sample: ordering
     refused routes by k_max alone once put a 51 m route ahead of a 22 m one
