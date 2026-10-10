@@ -139,16 +139,22 @@ def reached_stage(x, y, target, stage_cfg, agent_radius):
     An exit is reached when the agent's centre enters the exit polygon, or
     comes within ``EXIT_REACH_TOLERANCE_M`` of it, so the door width, not the
     distance to the target point, bounds the flow.
-    Other stages, and an exit without a polygon, are reached within
-    ``agent_radius + TARGET_REACH_MARGIN_M`` of the target point.
+    A checkpoint is reached within ``agent_radius + TARGET_REACH_MARGIN_M``
+    of the target point or when the agent's centre is inside its polygon
+    (#69): the random target point steers, it does not delay arrival deep
+    inside a large checkpoint. Other stages (spawn areas, zones), and an exit
+    without a polygon, are reached at the target point only.
     """
-    polygon = (stage_cfg or {}).get("polygon")
-    if (stage_cfg or {}).get("stage_type") == "exit" and polygon is not None:
+    stage_cfg = stage_cfg or {}
+    polygon = stage_cfg.get("polygon")
+    stage_type = stage_cfg.get("stage_type", "checkpoint")
+    if stage_type == "exit" and polygon is not None:
         return distance_to_polygon(x, y, polygon) <= EXIT_REACH_TOLERANCE_M
-    if target is None:
-        return False
-    reach_dist = float(agent_radius) + TARGET_REACH_MARGIN_M
-    return math.hypot(x - float(target[0]), y - float(target[1])) <= reach_dist
+    if target is not None:
+        reach_dist = float(agent_radius) + TARGET_REACH_MARGIN_M
+        if math.hypot(x - float(target[0]), y - float(target[1])) <= reach_dist:
+            return True
+    return stage_type == "checkpoint" and is_inside_polygon(x, y, polygon)
 
 
 def reached_node_point(x, y, point, body_radius):
@@ -492,5 +498,4 @@ def advance_path_target(wait_info, may_enter=None):
     wait_info["target_assigned"] = False
     wait_info["wait_until"] = None
     wait_info["state"] = "to_target"
-    wait_info["inside_since"] = None
     wait_info["target"] = pick_stage_target(wait_info, stage_configs[next_stage])

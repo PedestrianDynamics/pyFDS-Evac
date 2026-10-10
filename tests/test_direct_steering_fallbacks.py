@@ -196,13 +196,42 @@ class TestReachedStage:
         assert reached_stage(reach - 0.01, 0.0, (0.0, 0.0), stage_cfg, radius)
         assert not reached_stage(reach + 0.01, 0.0, (0.0, 0.0), stage_cfg, radius)
 
-    def test_checkpoint_polygon_is_not_an_exit_test(self):
-        """A checkpoint is reached near its target point, not its polygon."""
+    def test_checkpoint_reached_inside_polygon_whatever_the_target(self):
+        """A checkpoint is reached inside its polygon (#69)."""
         cfg = {"stage_type": "checkpoint", "polygon": UNIT}
-        assert not reached_stage(0.5, 0.5, (5.0, 5.0), cfg, 0.2)
+        assert reached_stage(0.5, 0.5, (5.0, 5.0), cfg, 0.2)
+
+    def test_deep_inside_a_large_checkpoint_is_reached(self):
+        """Contract case 1 (#69): inside [0,2]^2, 1.98 m from the target."""
+        cfg = {"stage_type": "checkpoint", "polygon": box(0.0, 0.0, 2.0, 2.0)}
+        assert reached_stage(1.7, 1.7, (0.3, 0.3), cfg, 0.2)
+
+    def test_outside_and_far_from_the_target_is_not_reached(self):
+        """Contract case 2 (#69): outside [0,2]^2, 2.0 m from the target."""
+        cfg = {"stage_type": "checkpoint", "polygon": box(0.0, 0.0, 2.0, 2.0)}
+        assert not reached_stage(2.3, 0.3, (0.3, 0.3), cfg, 0.2)
+
+    def test_outside_a_small_circle_near_the_target_is_reached(self):
+        """Contract case 3 (#69): the point test still applies outside."""
+        cfg = {"stage_type": "checkpoint", "polygon": Point(0.0, 0.0).buffer(0.245)}
+        assert reached_stage(0.6, 0.0, (0.0, 0.0), cfg, 0.2)
+
+    def test_untyped_stage_is_a_checkpoint(self):
+        assert reached_stage(0.5, 0.5, (5.0, 5.0), {"polygon": UNIT}, 0.2)
+
+    @pytest.mark.parametrize("stage_type", ["distribution", "zone"])
+    def test_patrol_and_zone_stages_keep_the_point_test(self, stage_type):
+        """Only checkpoints are reached by containment; a spawn area walked
+        to on patrol is reached at its target point, not on entry."""
+        cfg = {"stage_type": stage_type, "polygon": box(0.0, 0.0, 2.0, 2.0)}
+        assert not reached_stage(1.7, 1.7, (0.3, 0.3), cfg, 0.2)
 
     def test_no_target_never_reached(self):
         assert not reached_stage(0.0, 0.0, None, {"stage_type": "checkpoint"}, 0.2)
+
+    def test_no_target_inside_checkpoint_polygon_is_reached(self):
+        cfg = {"stage_type": "checkpoint", "polygon": UNIT}
+        assert reached_stage(0.5, 0.5, None, cfg, 0.2)
 
 
 class TestPickStageTarget:
@@ -366,7 +395,6 @@ def _wait_info(choices, configs, **extra):
         "state": "waiting",
         "target_assigned": True,
         "wait_until": 9.0,
-        "inside_since": 8.0,
     }
     info.update(extra)
     return info
@@ -399,7 +427,6 @@ class TestAdvancePathTarget:
         assert info["step_index"] == 1
         assert info["target_assigned"] is False
         assert info["wait_until"] is None
-        assert info["inside_since"] is None
         assert STAGE_B["polygon"].covers(Point(*info["target"]))
 
     def test_zero_weight_successor_is_never_chosen(self):

@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `smoke_reroute` as "any change of exit" must count these too.
   Trajectories, exit choices and times are unchanged.
 
+- Results of decks with checkpoints change (#69): checkpoint arrivals
+  come earlier, and crowd interaction then moves individual agents
+  either way. In the first FDS case (`t_junction`, 2 MW PVC fire,
+  seed 42) 100 of 150 agents get out instead of 93; its clear-air run
+  stays at 144/150. Decks without checkpoints (all `init` imports, the
+  ISO decks, exit-only decks) and `station_fahy`, whose checkpoint
+  circles lie inside the 0.7 m reach disc, are unchanged.
+
 - `pyfds-evac init --check` can now fail (✗, exit 3) on a deck it
   passed: a slice that FDS culls no longer counts, and a `PBZ` slice
   that also sets `PBX` or `PBY` is a line the run does not read (#705).
@@ -81,6 +89,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fit the spawn area at 0.15 m, not at 0.2 m.
 
 ### Fixed
+
+- A checkpoint now counts as reached when the agent's centre is inside
+  its polygon, as well as within the agent radius plus 0.5 m of its
+  random target point (#69). An agent deep inside a large checkpoint,
+  such as the 3x3 m boxes of `t_junction` and `l_corridor`, used to
+  walk on to the target point first. Arrival is never later than
+  before on the same trajectory. Exits keep their polygon rule; spawn
+  areas walked to on patrol and speed zones keep the point rule. The
+  unused `inside_since`, `reach_penetration` and `reach_dwell_seconds`
+  entries of the per-agent steering state are removed.
 
 - Reading FDS output no longer writes to or deletes from the FDS
   directory (#716). fdsreader 1.11.7 writes `<CHID>.pickle` next to the
