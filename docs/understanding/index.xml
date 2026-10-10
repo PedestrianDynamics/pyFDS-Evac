@@ -659,6 +659,20 @@ and there is no separate detection phase.&lt;/p>
 is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (&lt;code>&amp;amp;DUMP DT_SLCF&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Body shape.&lt;/strong> An agent is one circle. &lt;code>pyfds-evac init&lt;/code> gives the
+five FDS+Evac Guide agent types the radius of their torso circle
+R&lt;sub>t&lt;/sub> (Adult 0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly
+0.15), the same value for every operational model; the &lt;code>IMO_*&lt;/code> presets
+keep 0.2 m
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699" target="_blank" rel="noopener">#699&lt;/a>).
+The circle is as deep as the FDS+Evac body (0.30 m for an adult) but
+narrower than its shoulders (0.51 m), so two agents pass side by side
+through gaps of 0.6–1.0 m where FDS+Evac fits one, and the flow through
+such gaps may be overpredicted. With &lt;code>SocialForceModel&lt;/code>, whose radius is
+half the shoulder width (Helbing, Farkas &amp;amp; Vicsek 2000), the enclosing
+circle R&lt;sub>d&lt;/sub> (0.255 m for an adult) is the closer counterpart.
+FDS+Evac draws the body size per agent; the import uses the mean. Set
+&lt;code>radius&lt;/code> per spawn area in &lt;code>config.json&lt;/code> for another value.&lt;/p>
 &lt;p>&lt;strong>Social force friction.&lt;/strong> With &lt;code>model_type: &amp;quot;SocialForceModel&amp;quot;&lt;/code>, the
 friction &lt;em>κ&lt;/em> is 0 for agents and walls: JuPedSim 1.4.2 applies the wall
 friction with the wrong sign
@@ -679,6 +693,13 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 (Table 6.3, p. 87).&lt;/p>
 &lt;h2>Known defects&lt;span class="hx-absolute -hx-mt-20" id="known-defects">&lt;/span>
 &lt;a href="#known-defects" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;strong>Crowds deadlock at doors and narrow gaps&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706" target="_blank" rel="noopener">#706&lt;/a>, planned for 0.5.0). With the default
+collision-free speed model, a crowd can stop in front of an opening
+several body widths wide and never clear it, so the run reaches
+&lt;code>max_simulation_time&lt;/code> with agents inside. Imported FDS+Evac decks such
+as &lt;code>HUT_Library&lt;/code> and &lt;code>imo/CompTest9a&lt;/code> show it in some seeds; a smaller
+radius makes it rarer but does not remove it.&lt;/li>
 &lt;li>&lt;strong>Doorway deadlocks of exploring agents&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>, planned for 0.5.0). Under &lt;code>no_known_exit: explore&lt;/code>, and
 &lt;code>return&lt;/code> when it explores, two agents that meet head-on in a door, or
@@ -693,8 +714,9 @@ a &lt;code>reevaluation_interval_s&lt;/code> (&lt;code>--reroute-interval&lt;/co
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#which-agents-are-steered-directly">directly steered agents&lt;/a>,
 the distance at which a stage counts as reached and the clearance of the
 targets picked on the way use 0.2 m, whatever the agent&amp;rsquo;s &lt;code>radius&lt;/code>. On decks with
-another radius, such as &lt;code>world_100&lt;/code> (0.1 m), or with a radius
-distribution, agents reach stages at the wrong distance.&lt;/li>
+another radius, such as &lt;code>world_100&lt;/code> (0.1 m) and imported FDS+Evac
+decks (0.12–0.16 m), or with a radius distribution, agents reach stages
+at the wrong distance.&lt;/li>
 &lt;li>&lt;strong>&lt;code>init --check&lt;/code> keeps the deck&amp;rsquo;s z on a stretched grid.&lt;/strong> The check
 moves each slice to the uniform &lt;code>&amp;amp;MESH&lt;/code> grid as FDS does
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687" target="_blank" rel="noopener">#687&lt;/a>); with
@@ -770,8 +792,8 @@ call (:13256), with no behaviour change. The note on Evac 2.6.1 in
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Body shape&lt;/strong>&lt;/td>
-&lt;td>Three overlapping circles (torso Rd, shoulder Rs, head Rt) with rotational degree of freedom ([1] Table 1, Fig. 1)&lt;/td>
-&lt;td>Point agent (circle of configurable radius in JuPedSim)&lt;/td>
+&lt;td>Three overlapping circles, a torso circle R&lt;sub>t&lt;/sub> and two shoulder circles R&lt;sub>s&lt;/sub>, inside an enclosing circle R&lt;sub>d&lt;/sub> of half the shoulder width (no head circle), with rotational degree of freedom ([1] Table 1, Fig. 1)&lt;/td>
+&lt;td>One circle of configurable radius in JuPedSim; &lt;code>pyfds-evac init&lt;/code> sets it to the mean torso radius R&lt;sub>t&lt;/sub> of the &lt;code>&amp;amp;PERS&lt;/code> type, 0.12–0.16 m (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699" target="_blank" rel="noopener">#699&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Counterflow&lt;/strong>&lt;/td>
