@@ -4,6 +4,7 @@ import argparse
 import contextlib
 import importlib
 import json
+import pathlib
 import sys
 from typing import TYPE_CHECKING
 
@@ -169,6 +170,29 @@ def _apply_scenario_settings(scenario, args) -> None:
     )
 
 
+def _warn_if_not_runnable(scenario_path: str) -> None:
+    """Warn when the folder's import_report.json marks it not runnable (#701).
+
+    The run goes on: the folder may have been fixed by hand after ``init``,
+    which leaves the report stale. An unreadable report is skipped.
+    """
+    report_path = pathlib.Path(scenario_path) / "import_report.json"
+    if not report_path.is_file():
+        return
+    try:
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    if not isinstance(report, dict) or report.get("runnable") is not False:
+        return
+    reasons = "; ".join(str(r) for r in report.get("not_runnable_reasons") or [])
+    print(
+        "pyfds-evac: warning: import_report.json marks this scenario "
+        f"not runnable: {reasons or 'no reason given'}",
+        file=sys.stderr,
+    )
+
+
 def _run_or_exit(scenario, run_kwargs):
     """Run the scenario; report an over-full spawn area in one line (#692)."""
     from pyfds_evac.core.simulation_init import SpawnCapacityError
@@ -193,6 +217,7 @@ def main() -> int:
     _load_run_stack()
 
     scenario = load_scenario(args.scenario)
+    _warn_if_not_runnable(args.scenario)
     _apply_scenario_settings(scenario, args)
     print("Initialization started.")
 
