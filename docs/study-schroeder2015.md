@@ -610,8 +610,9 @@ runs used `FDS-6.10.1-0-g12efa16-release`.
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
 - Agents behind the origin node
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)).
-- `smoke_reroute` is logged for any exit change
-  ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)).
+- The runs on this page predate
+  [#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92): their
+  `smoke_reroute` counts every exit change, whatever its cause.
 - Perception scope
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 - Anticipation horizon
@@ -625,8 +626,6 @@ runs used `FDS-6.10.1-0-g12efa16-release`.
    the path search at decision time.
 2. The 1e-6·L length floor lets the path search react to τ of order 1e-4;
    [the gate page](/docs/route-cost-gate.md) discusses the floor.
-3. The `smoke_reroute` label
-   ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)).
 
 **Not done yet.** A dose-aware or perceived-smoke arm for the late B→F
 route through the opaque upper corridor.

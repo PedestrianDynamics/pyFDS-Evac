@@ -1,38 +1,36 @@
-"""Differential test for the rerouting refactor of issue #187.
+"""Rerouting decision branches, pinned on the live code.
 
-``_legacy_routing`` is a frozen copy of the decision code at 7a3617d. Every
-case here runs that copy and the live ``route_graph`` on two independently
-built but identical worlds, and requires the results to be exactly equal:
+This file began as the differential test of #187 stage 1: a frozen copy of
+the decision code at 7a3617d (``tests/_legacy_routing.py``) ran next to the
+live ``route_graph`` and had to agree exactly. Stage 1 is merged, and every
+later change to these functions changed results on purpose: #451 prices
+exits from the agent's position, #458 decides between refused routes on
+tau, #650 reads foresight samples on arrival, #128 lets a lethal route
+always lose, #92 labels switches by cause. The copy could only follow with
+normalisations that hid those differences, and the remaining #187 stages
+change results by design, so there is no further refactor for an exact
+differential to guard. The copy was retired (#466).
 
-* the ranked ``RouteCost`` lists;
-* the ``RouteSwitch``;
-* a deep copy of ``wait_info`` and every ``AgentRouteState`` field;
-* ``list(cache.items())``, so the order and the first writer of every shared
-  segment entry are the same;
-* the calls made to the extinction and FED samplers, in order, which is the
-  one direct check that segments are evaluated in the same number and order,
-  including the uncached first-leg resample and the walked-path evaluation.
+What it compared is now pinned on the live code alone:
 
-No tolerance: stage 1 changes structure only.
+* the decision cases, their configuration variants, the threshold-equality
+  cases, the anchor and must-flee table and the shared-cache passes are
+  snapshots under ``tests/golden/routing_decisions/``, run with each case's
+  agent position (#451);
+* each decision branch keeps an explicit test below.
 
-The frozen copy predates #451, which prices every exit from the agent's
-position. Both sides therefore run every case with ``agent_position=None``,
-where #451 changes nothing; the behaviour with a position is pinned by the
-golden snapshots (``tests/test_rerouting_golden.py``) and by
-``tests/test_gate_exit_pricing.py``.
+The snapshots also hold, in order, every extinction and FED sample a case
+takes (kind, time, x, y) and every cache entry it writes (key and segment),
+so a change in what is sampled, where, or which route writes a shared entry
+first shows up as a diff. A variant whose snapshot equals the case's
+``as_is`` one is stored as ``"as_is"``.
 
-#458 changed the rule between two refused routes from k_max (fallback order)
-and travel time (exit anchor) to optical depth. The cases that reach that
-rule are listed in ``_DIVERGED_458`` and must differ from the frozen copy;
-their live decisions are pinned below and in ``tests/test_fallback_tau_hold.py``.
+Regenerate them, only when a change of behaviour is intended, with::
 
-#650 reads every sample under anticipation at the time the agent reaches it;
-the frozen copy reads each edge at its start. With ``anticipate`` on, the
-sampler calls and the cache keys therefore differ by design, and only the
-decisions and the cached segments are compared: they are equal wherever the
-field does not change in time. A case whose field does is listed in
-``_DIVERGED_650`` and must differ there; with ``anticipate`` off every case
-is compared in full.
+    PYFDS_EVAC_REGEN_GOLDEN=1 uv run pytest tests/test_routing_decisions.py
+
+These snapshots use grid-less fields, so the per-grid-cell sampling path
+(#653) is not covered here.
 """
 
 from __future__ import annotations
@@ -43,7 +41,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, fields, replace
 from typing import Any
 
-import _legacy_routing as legacy
 import pytest
 import test_rerouting_golden as golden
 
@@ -57,61 +54,7 @@ from pyfds_evac.core.route_graph import (
 )
 from pyfds_evac.core.smoke_speed import ConstantExtinctionField
 
-_SIDES = {"legacy": legacy, "live": live}
-# The frozen copy predates #451; see the module docstring.
-_NO_POSITION = None
-_DECISION_FUNCTIONS = (
-    "evaluate_route",
-    "rank_routes",
-    "_must_flee_rejection",
-    "_anchor_allows",
-    "_adoptable",
-    "evaluate_and_reroute",
-)
-
-
-# Cases where two refused routes meet, decided on k_max or travel time by the
-# frozen copy and on tau by the live code (#458): intended divergences.
-_DIVERGED_458 = frozenset(
-    {
-        "additive_fed_fallback",
-        "gate_fallback_hold",
-        "gate_fallback_margin_keeps_current",
-        "gate_fallback_raw_tau",
-        "gate_fallback_slower_refused",
-        "gate_scan_lands_on_rejected",
-    }
-)
-
-
-# Cases whose field changes in time, so that with anticipation on the live
-# code reads other smoke than the frozen copy (#650): intended divergences.
-_DIVERGED_650 = frozenset(
-    {
-        "additive_ramp_fed",
-        "gate_ramp_anticipated",
-        "gate_ramp_idle",
-        "gate_ramp_walking",
-    }
-)
-
-
-def _segments(cache: list | None) -> list | None:
-    """The cached segments without their keys, which #650 extends."""
-    return None if cache is None else [seg for _, seg in cache]
-
-
-def _case_names(cases: dict) -> list:
-    """Case names, each #458 divergence marked as a strict xfail."""
-    diverged = pytest.mark.xfail(
-        strict=True,
-        raises=AssertionError,
-        reason="#458: two refused routes are decided on tau, not k_max or time",
-    )
-    return [
-        pytest.param(name, marks=diverged) if name in _DIVERGED_458 else name
-        for name in sorted(cases)
-    ]
+_SNAPSHOTS = "routing_decisions"
 
 
 # ── Recording samplers ────────────────────────────────────────────────
@@ -254,14 +197,88 @@ _VARIANTS: dict[str, Callable[[RouteCostConfig], RouteCostConfig]] = {
 }
 
 
+def _plain(value: Any) -> Any:
+    """*value* as snapshot data: floats rounded, containers as lists and dicts."""
+    if isinstance(value, float):
+        return golden._r(value)
+    if isinstance(value, dict):
+        return {str(k): _plain(v) for k, v in value.items()}
+    if isinstance(value, (set, frozenset)):
+        return sorted(_plain(v) for v in value)
+    if isinstance(value, (list, tuple)):
+        return [_plain(v) for v in value]
+    return value
+
+
+def _segment_snapshot(seg: Any) -> list:
+    return _plain(
+        [
+            seg.source,
+            seg.target,
+            seg.length_m,
+            seg.k_avg,
+            seg.k_max,
+            seg.speed_factor,
+            seg.travel_time_s,
+            seg.fed_growth,
+            seg.visible,
+            seg.arrival_time_s,
+        ]
+    )
+
+
+def _line(values: Any) -> str:
+    """*values* as one line of snapshot text, floats rounded."""
+    return " ".join(str(v) for v in _plain(list(values)))
+
+
+def _samples_snapshot(log: list) -> list[str]:
+    """Each sample as ``kind time x y``, in the order it was taken."""
+    return [_line(entry) for entry in log]
+
+
+def _samples_pair(plain: list, cached: list) -> dict:
+    """The samples without and with a cache; the second as "samples" if equal."""
+    with_cache = "samples" if cached == plain else _samples_snapshot(cached)
+    return {
+        "samples": _samples_snapshot(plain),
+        "samples_with_cache": with_cache,
+    }
+
+
+def _cache_snapshot(cache: dict) -> list[str]:
+    """Cache entries in the order they were written: key | segment."""
+    return [
+        f"{_line(key)} | {_line(_segment_snapshot(seg))}" for key, seg in cache.items()
+    ]
+
+
+def _variants_snapshot(case: Any, snapshot: Callable[[Any], dict]) -> dict:
+    """*snapshot* of *case* under each variant; one equal to as_is says so."""
+    out: dict = {}
+    for variant in sorted(_VARIANTS):
+        snap = snapshot(replace(case, config=_VARIANTS[variant](case.config)))
+        out[variant] = snap
+    base = out["as_is"]
+    return {v: ("as_is" if v != "as_is" and s == base else s) for v, s in out.items()}
+
+
+def _wait_info_snapshot(wait_info: dict) -> dict:
+    """*wait_info* without the stage configurations, which hold polygons."""
+    return _plain({k: v for k, v in wait_info.items() if k != "stage_configs"})
+
+
+def _state_snapshot(route_state: AgentRouteState) -> dict:
+    return {f.name: _plain(getattr(route_state, f.name)) for f in fields(route_state)}
+
+
 # ── rank_routes ───────────────────────────────────────────────────────
 
 
-def _rank(side: str, case: golden.RankCase, with_cache: bool) -> dict:
-    mod = _SIDES[side]
+def _rank(case: golden.RankCase, with_cache: bool) -> dict:
     extinction, fed, log = _samplers(case.extinction, case.fed)
-    cache = {} if with_cache else None
-    ranked = mod.rank_routes(
+    cache: dict | None = {} if with_cache else None
+    ranked = live.rank_routes(
         case.graph(),
         case.source,
         case.time_s,
@@ -272,90 +289,34 @@ def _rank(side: str, case: golden.RankCase, with_cache: bool) -> dict:
         cached_segments=cache,
         exit_counts=copy.deepcopy(case.exit_counts),
         cognitive_map=case.cognitive_map() if case.cognitive_map else None,
-        agent_position=_NO_POSITION,
+        agent_position=case.agent_position,
         current_exit=case.current_exit,
     )
+    return {"ranked": ranked, "cache": cache, "log": log}
+
+
+def _route_snapshot(rc: RouteCost) -> dict:
     return {
-        "ranked": ranked,
-        "cache": None if cache is None else list(cache.items()),
-        "log": log,
+        **golden._route_snapshot(rc),
+        "rejection_reason": rc.rejection_reason,
+        "violation_kinds": list(rc.violation_kinds),
+        "segments": len(rc.segments),
     }
 
 
-def _assert_rank_equal(case: golden.RankCase) -> None:
-    for with_cache in (False, True):
-        old = _rank("legacy", case, with_cache)
-        new = _rank("live", case, with_cache)
-        assert new["ranked"] == old["ranked"]
-        if case.config.anticipate:
-            assert _segments(new["cache"]) == _segments(old["cache"])
-            continue
-        assert new["cache"] == old["cache"]
-        assert new["log"] == old["log"]
+def _rank_snapshot(case: golden.RankCase) -> dict:
+    """The ranking, the samples taken with and without a cache, and the cache.
 
-
-# The live T1 costs of the #650 divergences (anticipate on). The ramp cases
-# on _linear have an independent reference: from D0 at 30.3 s and 1 m/s,
-# C0 -> E0 is sampled at x = 10, 12, ..., 20 m at t = 30.3 + x s, where
-# K = 0.01 t for x >= 11, so its mean is 0.01 (5 x 30.3 + 80) / 6 and the
-# route's tau, over 20 m with a clear first 10 m, is 10 times that.
-_T1_RAMP_TAU = 10 * 0.01 * (5 * 30.3 + 80) / 6
-# Pinned from the live code: the switch costs of the two reroute cases.
-_T1_SWITCH_COSTS = {
-    "gate_ramp_idle": (None, 30.317939385250213),
-    "gate_ramp_walking": (58.97028884531496, 30.317939385250213),
-}
-
-
-def _decision(switch) -> Any:
-    """A route switch without its costs, which #650 changes."""
-    if switch is None:
-        return None
-    return (
-        switch.time_s,
-        switch.agent_id,
-        switch.old_exit,
-        switch.new_exit,
-        switch.reason,
-    )
-
-
-def _ranking(ranked: list[RouteCost]) -> list[tuple]:
-    """A ranking without its costs: exits, paths and refusals in order."""
-    return [(rc.exit_id, rc.path, rc.rejected, rc.rejection_reason) for rc in ranked]
-
-
-def _assert_rank_t1(case: golden.RankCase) -> None:
-    """A #650 rank divergence: legacy order and refusals, T1 costs."""
-    for with_cache in (False, True):
-        old = _rank("legacy", case, with_cache)
-        new = _rank("live", case, with_cache)
-        assert _ranking(new["ranked"]) == _ranking(old["ranked"])
-        (route,) = new["ranked"]
-        assert route.tau_route == pytest.approx(_T1_RAMP_TAU, rel=1e-12)
-        assert route.tau_route != old["ranked"][0].tau_route
-
-
-def _assert_reroute_t1(name: str, case: golden.RerouteCase) -> None:
-    """A #650 reroute divergence: legacy decision and state, T1 costs."""
-    for with_cache in (False, True):
-        old = _reroute("legacy", case, with_cache)
-        new = _reroute("live", case, with_cache)
-        assert _decision(new["switch"]) == _decision(old["switch"])
-        assert new["route_state"] == old["route_state"]
-        assert new["wait_info"] == old["wait_info"]
-        costs = (new["switch"].old_cost, new["switch"].new_cost)
-        assert costs == pytest.approx(_T1_SWITCH_COSTS[name], rel=1e-12)
-
-
-def _assert_or_t1(check: Callable[[Any], None], name: str, case: Any) -> None:
-    """*check* the case, or, for a #650 divergence, its pinned T1 outcome."""
-    if not (case.config.anticipate and name in _DIVERGED_650):
-        check(case)
-    elif name in _ALL_REROUTE_CASES:
-        _assert_reroute_t1(name, case)
-    else:
-        _assert_rank_t1(case)
+    A fresh cache must not change the ranking.
+    """
+    plain = _rank(case, with_cache=False)
+    cached = _rank(case, with_cache=True)
+    assert cached["ranked"] == plain["ranked"]
+    return {
+        "ranked": [_route_snapshot(rc) for rc in plain["ranked"]],
+        **_samples_pair(plain["log"], cached["log"]),
+        "cache": _cache_snapshot(cached["cache"]),
+    }
 
 
 def _star2() -> StageGraph:
@@ -441,18 +402,40 @@ _EXTRA_RANK_CASES: dict[str, golden.RankCase] = {
     ),
 }
 
+
 _ALL_RANK_CASES = {**golden.RANK_CASES, **_EXTRA_RANK_CASES}
 
 
-@pytest.mark.parametrize("variant", sorted(_VARIANTS))
-@pytest.mark.parametrize("name", _case_names(_ALL_RANK_CASES))
-def test_rank_routes_equivalent(name, variant):
-    case = _ALL_RANK_CASES[name]
-    _assert_or_t1(
-        _assert_rank_equal,
-        name,
-        replace(case, config=_VARIANTS[variant](case.config)),
+def test_rank_routes_snapshot():
+    """Every rank case under every configuration variant."""
+    golden._check_golden(
+        f"{_SNAPSHOTS}/rank_routes.json",
+        {
+            name: _variants_snapshot(case, _rank_snapshot)
+            for name, case in sorted(_ALL_RANK_CASES.items())
+        },
     )
+
+
+# The ramp cases on _linear have an independent reference. From D0 at 30.3 s
+# and 1 m/s, C0 -> E0 is sampled at x = 10, 12, ..., 20 m, where K = 0.01 t
+# for x >= 11. With anticipation (#650) each sample is read when the agent
+# gets there, at t = 30.3 + x s, so the mean is 0.01 (5 x 30.3 + 80) / 6;
+# without it every sample is read at 30.3 s. The route's tau, over 20 m with
+# a clear first 10 m, is 10 times the mean.
+_RAMP_TAU = {
+    True: 10 * 0.01 * (5 * 30.3 + 80) / 6,
+    False: 10 * 0.01 * 5 * 30.3 / 6,
+}
+
+
+@pytest.mark.parametrize("anticipate", [True, False], ids=["anticipate", "now"])
+@pytest.mark.parametrize("name", ["gate_ramp_anticipated", "additive_ramp_fed"])
+def test_ramp_tau_matches_hand_value(name, anticipate):
+    case = _EXTRA_RANK_CASES[name]
+    case = replace(case, config=replace(case.config, anticipate=anticipate))
+    (route,) = _rank(case, with_cache=False)["ranked"]
+    assert route.tau_route == pytest.approx(_RAMP_TAU[anticipate], rel=1e-12)
 
 
 # ── evaluate_and_reroute ──────────────────────────────────────────────
@@ -479,32 +462,30 @@ def _reroute_world(case: golden.RerouteCase) -> dict:
     }
 
 
-# The return lockout's record (#458), which the frozen copy never writes; it
-# is pinned live in tests/test_fallback_tau_hold.py.
-_LOCKOUT_FIELDS = frozenset({"refused_switch_from", "refused_switch_time_s"})
+# The return lockout's record (#458) and the known nodes the switch labels
+# read (#92): bookkeeping, not part of a decision branch's writes.
+_RECORD_FIELDS = frozenset(
+    {"refused_switch_from", "refused_switch_time_s", "known_at_last_eval"}
+)
 
 
 def _state_fields(route_state: AgentRouteState) -> dict:
     return {
-        f.name: copy.deepcopy(getattr(route_state, f.name))
-        for f in fields(route_state)
-        if f.name not in _LOCKOUT_FIELDS
+        f.name: copy.deepcopy(getattr(route_state, f.name)) for f in fields(route_state)
     }
 
 
 def _reroute(
-    side: str,
     case: golden.RerouteCase,
-    with_cache: bool,
-    on_world: Callable[[str, dict], None] | None = None,
+    with_cache: bool = True,
+    on_world: Callable[[dict], None] | None = None,
 ) -> dict:
-    mod = _SIDES[side]
     world = _reroute_world(case)
     if on_world is not None:
-        on_world(side, world)
+        on_world(world)
     extinction, fed, log = _samplers(case.extinction, case.fed)
-    cache = {} if with_cache else None
-    switch = mod.evaluate_and_reroute(
+    cache: dict | None = {} if with_cache else None
+    switch = live.evaluate_and_reroute(
         agent_id=7,
         wait_info=world["wait_info"],
         route_state=world["route_state"],
@@ -516,34 +497,36 @@ def _reroute(
         config=RerouteConfig(cost_config=case.config, exit_switch_anchor=case.anchor),
         cached_segments=cache,
         cognitive_map=world["cmap"],
-        agent_position=_NO_POSITION,
+        agent_position=case.agent_position,
     )
     return {
         "switch": switch,
         "wait_info": copy.deepcopy(world["wait_info"]),
         "route_state": _state_fields(world["route_state"]),
-        "cache": None if cache is None else list(cache.items()),
+        "cache": cache,
         "log": log,
     }
 
 
-def _assert_reroute_equal(case: golden.RerouteCase) -> None:
-    for with_cache in (False, True):
-        old = _reroute("legacy", case, with_cache)
-        new = _reroute("live", case, with_cache)
-        assert new["switch"] == old["switch"]
-        assert new["route_state"] == old["route_state"]
-        assert new["wait_info"] == old["wait_info"]
-        if case.config.anticipate:
-            assert _segments(new["cache"]) == _segments(old["cache"])
-            continue
-        assert new["cache"] == old["cache"]
-        assert new["log"] == old["log"]
+def _reroute_snapshot(case: golden.RerouteCase) -> dict:
+    """The decision and the state it leaves; a fresh cache must not matter."""
+    plain = _reroute(case, with_cache=False)
+    cached = _reroute(case, with_cache=True)
+    for key in ("switch", "route_state", "wait_info"):
+        assert cached[key] == plain[key], key
+    return {
+        "switch": golden._switch_snapshot(plain["switch"]),
+        "route_state": _plain(plain["route_state"]),
+        "wait_info": _wait_info_snapshot(plain["wait_info"]),
+        **_samples_pair(plain["log"], cached["log"]),
+        "cache": _cache_snapshot(cached["cache"]),
+    }
 
 
 _EXTRA_REROUTE_CASES: dict[str, golden.RerouteCase] = {
-    # A route that is both FED-lethal and over tau: the tau reason wins and
-    # the must-flee bypass is lost (#128, kept in stage 1).
+    # A route that is both FED-lethal and over tau: the tau reason wins, and
+    # with a feasible rival the tau band switches with or without the
+    # must-flee bypass (#128).
     "gate_fed_and_tau_current": golden.RerouteCase(
         _star2,
         golden._gate(),
@@ -610,17 +593,18 @@ _EXTRA_REROUTE_CASES: dict[str, golden.RerouteCase] = {
     ),
 }
 
+
 _ALL_REROUTE_CASES = {**golden.REROUTE_CASES, **_EXTRA_REROUTE_CASES}
 
 
-@pytest.mark.parametrize("variant", sorted(_VARIANTS))
-@pytest.mark.parametrize("name", _case_names(_ALL_REROUTE_CASES))
-def test_evaluate_and_reroute_equivalent(name, variant):
-    case = _ALL_REROUTE_CASES[name]
-    _assert_or_t1(
-        _assert_reroute_equal,
-        name,
-        replace(case, config=_VARIANTS[variant](case.config)),
+def test_evaluate_and_reroute_snapshot():
+    """Every reroute case under every configuration variant."""
+    golden._check_golden(
+        f"{_SNAPSHOTS}/evaluate_and_reroute.json",
+        {
+            name: _variants_snapshot(case, _reroute_snapshot)
+            for name, case in sorted(_ALL_REROUTE_CASES.items())
+        },
     )
 
 
@@ -685,8 +669,8 @@ class _Pass:
     anchor: float = 0.9
 
 
-def _run_passes(side: str, spec: _Pass) -> list:
-    mod = _SIDES[side]
+def _run_passes(spec: _Pass) -> dict:
+    """Every agent evaluated in turn, one shared cache per pass."""
     graph = _merge_graph()
     extinction, fed, log = _samplers(spec.extinction, spec.fed)
     config = RerouteConfig(cost_config=spec.config, exit_switch_anchor=spec.anchor)
@@ -703,7 +687,7 @@ def _run_passes(side: str, spec: _Pass) -> list:
             AgentRouteState(current_exit=a.current_exit, current_path=list(a.path)),
         )
     exit_counts = {"E0": 3, "E1": 1, "E2": 0}
-    trace = []
+    trace: list = []
     for time_s in spec.times:
         cache: dict = {}
         for a in _PASS_AGENTS:
@@ -713,24 +697,23 @@ def _run_passes(side: str, spec: _Pass) -> list:
                     "current_target_stage"
                 )
                 if source is not None and source in graph.nodes:
-                    trace.append(
-                        mod.rank_routes(
-                            graph,
-                            source,
-                            time_s,
-                            a.current_fed,
-                            extinction,
-                            fed,
-                            spec.config,
-                            cached_segments=cache,
-                            exit_counts=exit_counts,
-                            cognitive_map=None,
-                            agent_position=_NO_POSITION,
-                            current_exit=rs.current_exit or None,
-                            current_target=wait_info.get("current_target_stage"),
-                        )
+                    ranked = live.rank_routes(
+                        graph,
+                        source,
+                        time_s,
+                        a.current_fed,
+                        extinction,
+                        fed,
+                        spec.config,
+                        cached_segments=cache,
+                        exit_counts=exit_counts,
+                        cognitive_map=None,
+                        agent_position=a.position,
+                        current_exit=rs.current_exit or None,
+                        current_target=wait_info.get("current_target_stage"),
                     )
-            switch = mod.evaluate_and_reroute(
+                    trace.append({"ranked": [_route_snapshot(rc) for rc in ranked]})
+            switch = live.evaluate_and_reroute(
                 a.agent_id,
                 wait_info,
                 rs,
@@ -743,21 +726,24 @@ def _run_passes(side: str, spec: _Pass) -> list:
                 cache,
                 exit_counts=exit_counts,
                 cognitive_map=None,
-                agent_position=_NO_POSITION,
+                agent_position=a.position,
             )
             if switch is not None and switch.old_exit != switch.new_exit:
                 if switch.old_exit in exit_counts:
                     exit_counts[switch.old_exit] -= 1
                 exit_counts[switch.new_exit] = exit_counts.get(switch.new_exit, 0) + 1
-            trace.append(switch)
-            trace.append(copy.deepcopy(wait_info))
-            trace.append(_state_fields(rs))
-        items = list(cache.items())
-        trace.append(_segments(items) if spec.config.anticipate else items)
-        trace.append(dict(exit_counts))
-    if not spec.config.anticipate:
-        trace.append(log)
-    return trace
+            trace.append(
+                {
+                    "agent_id": a.agent_id,
+                    "switch": golden._switch_snapshot(switch),
+                    "wait_info": _wait_info_snapshot(wait_info),
+                    "route_state": _state_snapshot(rs),
+                }
+            )
+        trace.append(
+            {"cache": _cache_snapshot(cache), "exit_counts": dict(exit_counts)}
+        )
+    return {"trace": trace, "samples": len(log)}
 
 
 _PASS_CONFIGS = {
@@ -818,119 +804,17 @@ def test_edge_weight_cases_turn_on_the_weight():
         assert ranked[0].path == ["D0", via, "E0"], name
 
 
-def test_shared_cache_is_order_sensitive():
-    """The pass field really makes the first writer of a cache key matter.
-
-    It does in the frozen copy, whose key buckets the arrival time to the
-    second. The live key holds the exact arrival time (#650), so a key the
-    two routes share is one they measure alike.
-    """
-    graph = _merge_graph()
-    config = golden._gate()
-    field_ = _Ramp(0.004, 19.0, base=0.01)
-    for time_s in _Pass(config, False).times:
-        for side in (legacy, live):
-            caches = ({}, {})
-            for cache, path in zip(caches, (["S1", "M", "E0"], ["S2", "M", "E0"])):
-                side.evaluate_route(
-                    graph,
-                    path,
-                    time_s,
-                    0.0,
-                    field_,
-                    None,
-                    config,
-                    cached_segments=cache,
-                )
-            shared = [key for key in caches[0] if key in caches[1]]
-            if side is legacy:
-                assert shared
-                assert all(caches[0][key] != caches[1][key] for key in shared)
-            else:
-                assert all(caches[0][key] == caches[1][key] for key in shared)
-
-
-def _decisions(trace: list) -> list:
-    """A pass trace without costs and cached segments (#650)."""
-    out: list = []
-    for item in trace:
-        if item is None or hasattr(item, "new_exit"):
-            out.append(_decision(item))
-        elif isinstance(item, list) and item and isinstance(item[0], RouteCost):
-            out.append(_ranking(item))
-        elif isinstance(item, list) and item and hasattr(item[0], "k_avg"):
-            continue
-        else:
-            out.append(item)
-    return out
-
-
-def _brief(item: Any) -> Any:
-    """What a pass trace entry decides, for the pinned #650 differences."""
-    if isinstance(item, list):
-        return (
-            "refused",
-            tuple(exit_id for exit_id, _, rejected, _ in item if rejected),
-        )
-    if isinstance(item, dict) and "current_exit" in item:
-        return ("state", item["current_exit"], tuple(item["current_path"]))
-    if isinstance(item, dict) and "path_choices" in item:
-        return ("wait_info", item["current_origin"], item["path_choices"]["M"])
-    return item
-
-
-# The decisions of the anticipated passes that differ from the frozen copy
-# (#650), by trace position. At 45 s the samples on M -> E1 are read when the
-# agents get there, later in the ramp, and the route is refused: in every
-# gate ranking from D0 and S2, and under the clean tier agent 3, heading for
-# E1, turns to E0. The additive passes and the 30 s and 31.1 s passes do not
-# differ.
-_REFUSE_E1 = ("refused", ("E1",))
-_TURN_TO_E0 = {
-    "switch": (45.0, 3, "E1", "E0", "smoke_reroute"),
-    "wait_info": ("wait_info", "S2", [("E0", 100.0)]),
-    "state": ("state", "E0", ("S2", "M", "E0")),
-    "counts": {"E0": 4, "E1": 0, "E2": 1},
-}
-_PASS_T1_DIFFS: dict[tuple[str, bool], dict[int, Any]] = {
-    ("gate", True): {42: _REFUSE_E1, 50: _REFUSE_E1, 54: _REFUSE_E1},
-    ("gate_queue", True): {42: _REFUSE_E1, 50: _REFUSE_E1, 54: _REFUSE_E1},
-    ("gate_clean", False): {
-        38: _TURN_TO_E0["switch"],
-        39: _TURN_TO_E0["wait_info"],
-        40: _TURN_TO_E0["state"],
-        47: _TURN_TO_E0["counts"],
-    },
-    ("gate_clean", True): {
-        42: _REFUSE_E1,
-        50: _REFUSE_E1,
-        51: _TURN_TO_E0["switch"],
-        52: _TURN_TO_E0["wait_info"],
-        53: _TURN_TO_E0["state"],
-        54: _REFUSE_E1,
-        62: _TURN_TO_E0["counts"],
-    },
-}
-
-
 @pytest.mark.parametrize("history", [False, True], ids=["no_history", "history"])
-@pytest.mark.parametrize("name", sorted(_PASS_CONFIGS))
-def test_shared_cache_passes_equivalent(name, history):
-    spec = _Pass(_PASS_CONFIGS[name], history)
-    live_trace = _run_passes("live", spec)
-    legacy_trace = _run_passes("legacy", spec)
-    if spec.config.anticipate:
-        # The pass field ramps in time, so #650 reads other smoke: the costs
-        # differ, every decision, state and exit count is the frozen copy's.
-        live_d, legacy_d = _decisions(live_trace), _decisions(legacy_trace)
-        assert len(live_d) == len(legacy_d)
-        diffs = {
-            i: _brief(a) for i, (a, b) in enumerate(zip(live_d, legacy_d)) if a != b
-        }
-        assert diffs == _PASS_T1_DIFFS.get((name, history), {})
-        assert live_trace != legacy_trace
-        return
-    assert live_trace == legacy_trace
+def test_shared_cache_passes_snapshot(history):
+    """Five agents, three passes, one cache per pass, as in run_scenario."""
+    label = "history" if history else "no_history"
+    golden._check_golden(
+        f"{_SNAPSHOTS}/shared_cache_passes_{label}.json",
+        {
+            name: _run_passes(_Pass(config, history))
+            for name, config in sorted(_PASS_CONFIGS.items())
+        },
+    )
 
 
 # ── Exact threshold equality ──────────────────────────────────────────
@@ -1113,9 +997,12 @@ def test_margin_limits_are_hit_exactly():
             assert prefix in reasons[0] and prefix not in reasons[1], reasons
 
 
-@pytest.mark.parametrize("name", sorted(_LIMIT_CASES))
-def test_threshold_equality_rank_equivalent(name):
-    _assert_rank_equal(_LIMIT_CASES[name])
+def test_threshold_equality_snapshot():
+    """Each limit one ulp below, at, and one ulp above the measured value."""
+    golden._check_golden(
+        f"{_SNAPSHOTS}/threshold_equality.json",
+        {name: _rank_snapshot(case) for name, case in sorted(_LIMIT_CASES.items())},
+    )
 
 
 def test_fallback_boundary_is_hit():
@@ -1151,7 +1038,7 @@ def test_fallback_hold_case_now_switches():
     west, east = sorted(ranked, key=lambda rc: rc.exit_id != "west")
     assert west.k_max_route == east.k_max_route
     assert west.tau_route < 0.8 * east.tau_route
-    result = _reroute("live", case, True)
+    result = _reroute(case)
     assert result["switch"].old_exit == "east"
     assert result["switch"].new_exit == "west"
 
@@ -1171,6 +1058,16 @@ def _rc(exit_id: str, **kw) -> RouteCost:
     )
     base.update(kw)
     return RouteCost(**base)
+
+
+# Each reason with the limits that produce it (#128).
+_FLEE_REASONS = (
+    ("all segments non-visible", ("all_segments_non_visible",)),
+    ("fallback: all segments non-visible", ("all_segments_non_visible",)),
+    ("FED_max 1.2 > 1.0", ("fed",)),
+    ("fallback: FED_max 1.2 > 1.0", ("fed",)),
+    ("tau 7.00 > 6.00 (K_ave 0.300 x 23.3 m)", ("tau",)),
+)
 
 
 def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfig]]:
@@ -1233,13 +1130,7 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
         )
         limit = cc.impassable_extinction_threshold
         for i, k in enumerate(_around(limit)):
-            for reason in (
-                "all segments non-visible",
-                "fallback: all segments non-visible",
-                "FED_max 1.2 > 1.0",
-                "fallback: FED_max 1.2 > 1.0",
-                "tau 7.00 > 6.00 (K_ave 0.300 x 23.3 m)",
-            ):
+            for reason, kinds in _FLEE_REASONS:
                 for rejected in (False, True):
                     out.append(
                         (
@@ -1251,6 +1142,7 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
                                 k_ave_route=k,
                                 rejected=rejected,
                                 rejection_reason=reason,
+                                violation_kinds=kinds,
                             ),
                             cfg,
                         )
@@ -1261,30 +1153,67 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
 _ANCHOR_CASES = {name: rest for name, *rest in _anchor_cases()}
 
 
-@pytest.mark.parametrize("name", sorted(_ANCHOR_CASES))
-def test_anchor_and_flee_equivalent(name):
-    candidate, old_rc, cfg = _ANCHOR_CASES[name]
-    assert live._anchor_allows(candidate, old_rc, cfg) == legacy._anchor_allows(
-        candidate, old_rc, cfg
-    )
-    if old_rc is not None:
-        assert live._must_flee_rejection(
-            old_rc, cfg.cost_config
-        ) == legacy._must_flee_rejection(old_rc, cfg.cost_config)
+def _anchor_snapshot(
+    candidate: RouteCost, old_rc: RouteCost | None, cfg: RerouteConfig
+) -> dict:
     ranked = [candidate] + ([old_rc] if old_rc is not None else [])
-    for current in (None, candidate.exit_id, "b", "gone"):
-        rs = AgentRouteState(current_exit=current)
-        assert live._adoptable(candidate, ranked, rs, cfg) == legacy._adoptable(
-            candidate, ranked, rs, cfg
-        )
+    return {
+        "anchor_allows": live._anchor_allows(candidate, old_rc, cfg),
+        "must_flee": (
+            None
+            if old_rc is None
+            else live._must_flee_rejection(old_rc, cfg.cost_config)
+        ),
+        "adoptable": {
+            str(current): live._adoptable(
+                candidate, ranked, AgentRouteState(current_exit=current), cfg
+            )
+            for current in (None, candidate.exit_id, "b", "gone")
+        },
+    }
+
+
+def test_anchor_and_flee_snapshot():
+    golden._check_golden(
+        f"{_SNAPSHOTS}/anchor_and_flee.json",
+        {name: _anchor_snapshot(*args) for name, args in sorted(_ANCHOR_CASES.items())},
+    )
+
+
+def test_promoted_hazard_is_fled():
+    """A route the fallback promoted keeps its hazard (#128).
+
+    Must-flee holds for it, and the anchor lets the agent leave it.
+    """
+    promoted = [
+        (name, candidate, old_rc, cfg)
+        for name, (candidate, old_rc, cfg) in _ANCHOR_CASES.items()
+        if _promoted_hazard(old_rc, cfg)
+    ]
+    assert promoted
+    for name, candidate, old_rc, cfg in promoted:
+        assert live._must_flee_rejection(old_rc, cfg.cost_config), name
+        assert live._anchor_allows(candidate, old_rc, cfg), name
+
+
+def _promoted_hazard(old_rc: RouteCost | None, cfg: RerouteConfig) -> bool:
+    """Whether *old_rc* is a promoted route with a hazard it must flee."""
+    if old_rc is None or old_rc.rejected:
+        return False
+    if "fed" in old_rc.violation_kinds:
+        return True
+    return (
+        "all_segments_non_visible" in old_rc.violation_kinds
+        and old_rc.k_ave_route > cfg.cost_config.impassable_extinction_threshold
+    )
 
 
 # ── Ties, fallback identity and the K_vis screen ─────────────────────
 
 
-def _ranked_extra(name: str, side: str = "live") -> list[RouteCost]:
+def _ranked_extra(name: str) -> list[RouteCost]:
     case = _EXTRA_RANK_CASES[name]
-    return _SIDES[side].rank_routes(
+    return live.rank_routes(
         case.graph(),
         case.source,
         case.time_s,
@@ -1305,33 +1234,27 @@ def test_full_tie_keeps_insertion_order():
         ("gate_full_tie_e0_first", ["E0", "E1"]),
         ("gate_full_tie_e1_first", ["E1", "E0"]),
     ):
-        for side in _SIDES:
-            first, second = _ranked_extra(name, side)
-            assert _sort_fields(first) == _sort_fields(second), (name, side)
-            assert [first.exit_id, second.exit_id] == order, (name, side)
+        first, second = _ranked_extra(name)
+        assert _sort_fields(first) == _sort_fields(second), name
+        assert [first.exit_id, second.exit_id] == order, name
 
 
 def test_fallback_tie_keeps_first_sort_order():
-    for side in _SIDES:
-        first, second = _ranked_extra("gate_fallback_tie_keeps_order", side)
-        assert (first.tau_route, first.rank_cost) == (
-            second.tau_route,
-            second.rank_cost,
-        )
-        # E1 is inserted first; the first sort puts the shorter path ahead.
-        assert first.path == ["D0", "E0"]
-        assert first.rejection_reason.startswith("fallback: FED")
-        assert second.rejected
+    first, second = _ranked_extra("gate_fallback_tie_keeps_order")
+    assert (first.tau_route, first.rank_cost) == (second.tau_route, second.rank_cost)
+    # E1 is inserted first; the first sort puts the shorter path ahead.
+    assert first.path == ["D0", "E0"]
+    assert first.rejection_reason.startswith("fallback: FED")
+    assert second.rejected
 
 
 def test_kvis_with_only_the_rejected_route_visible():
-    for side in _SIDES:
-        ranked = _ranked_extra("additive_kvis_visible_route_rejected", side)
-        by_exit = {rc.exit_id: rc for rc in ranked}
-        assert any(s.visible for s in by_exit["west"].segments)
-        assert by_exit["west"].rejection_reason.startswith("FED")
-        assert not any(s.visible for s in by_exit["east"].segments)
-        assert not by_exit["east"].rejected
+    ranked = _ranked_extra("additive_kvis_visible_route_rejected")
+    by_exit = {rc.exit_id: rc for rc in ranked}
+    assert any(s.visible for s in by_exit["west"].segments)
+    assert by_exit["west"].rejection_reason.startswith("FED")
+    assert not any(s.visible for s in by_exit["east"].segments)
+    assert not by_exit["east"].rejected
 
 
 def test_fallback_promotes_the_current_record_by_identity():
@@ -1368,21 +1291,7 @@ def test_fallback_promotes_the_current_record_by_identity():
 
 # ── Mutation points of evaluate_and_reroute ──────────────────────────
 #
-# Each test runs the legacy copy and the live code, requires them to agree,
-# and pins the state the branch leaves behind.
-
-
-def _both(case: golden.RerouteCase, on_world=None) -> dict:
-    old = _reroute("legacy", case, True, on_world)
-    new = _reroute("live", case, True, on_world)
-    for key in ("switch", "route_state", "wait_info"):
-        assert new[key] == old[key], key
-    if case.config.anticipate:
-        assert _segments(new["cache"]) == _segments(old["cache"]), "cache"
-        return new
-    for key in ("cache", "log"):
-        assert new[key] == old[key], key
-    return new
+# Each test pins the state the branch leaves behind.
 
 
 def _ranked_for(case: golden.RerouteCase) -> list[RouteCost]:
@@ -1399,19 +1308,19 @@ def _ranked_for(case: golden.RerouteCase) -> list[RouteCost]:
 
 
 class _FailingReroute:
-    """A failing reroute_agent per copy, recording every call it receives.
+    """A failing reroute_agent, recording every call it receives.
 
     Each call records its arguments and the route state the agent had at
     that moment, so a dropped, repeated or reordered application attempt
-    shows up as a difference between the legacy copy and the live code.
+    shows up in the calls.
     """
 
     def __init__(self, monkeypatch) -> None:
-        self.calls: dict[str, list] = {side: [] for side in _SIDES}
+        self.calls: list = []
         self._monkeypatch = monkeypatch
 
-    def on_world(self, side: str, world: dict) -> None:
-        calls = self.calls[side]
+    def on_world(self, world: dict) -> None:
+        calls = self.calls
         route_state = world["route_state"]
 
         def reroute_agent(wait_info, new_path, stage_configs):
@@ -1427,12 +1336,11 @@ class _FailingReroute:
             )
             return False
 
-        self._monkeypatch.setattr(_SIDES[side], "reroute_agent", reroute_agent)
+        self._monkeypatch.setattr(live, "reroute_agent", reroute_agent)
 
     def run(self, case: golden.RerouteCase) -> tuple[dict, list]:
-        result = _both(case, self.on_world)
-        assert self.calls["live"] == self.calls["legacy"]
-        return result, self.calls["live"]
+        result = _reroute(case, on_world=self.on_world)
+        return result, self.calls
 
 
 _SCAN_STOPS = golden.RerouteCase(
@@ -1458,7 +1366,7 @@ def test_scan_stops_at_the_current_exit_and_keeps_the_best():
     cfg = RerouteConfig(cost_config=_SCAN_STOPS.config)
     assert not live._adoptable(ranked[0], ranked, rs, cfg)
     assert live._adoptable(ranked[2], ranked, rs, cfg)
-    result = _both(_SCAN_STOPS)
+    result = _reroute(_SCAN_STOPS)
     assert result["switch"] is None
     assert result["route_state"]["current_exit"] == "west"
     assert result["route_state"]["current_path"] == []
@@ -1467,8 +1375,7 @@ def test_scan_stops_at_the_current_exit_and_keeps_the_best():
 
 # A feasible but slower rank 1 inside a widened tau deadband, then a refused
 # rival whose tau is clearly below the refused current exit's: the anchor
-# lets the agent onto the rival under the frozen copy (time) and the live
-# code (tau, #458) alike.
+# lets the agent onto the rival (tau, #458).
 _SCAN_REFUSED = golden.RerouteCase(
     golden._star3,
     golden._gate(tau_deadband=0.5),
@@ -1494,7 +1401,7 @@ def test_scan_takes_a_rejected_route_and_returns_unstamped():
     assert live._adoptable(ranked[1], ranked, rs, cfg)
     assert ranked[1].rejected
     assert not ranked[1].rejection_reason.startswith("fallback")
-    result = _both(case)
+    result = _reroute(case)
     assert result["switch"] is None
     assert result["route_state"]["last_eval_time_s"] == -math.inf
     assert result["route_state"]["current_path"] == []
@@ -1529,7 +1436,7 @@ def test_failed_exit_change_leaves_the_path(monkeypatch):
 
 def test_empty_ranking_stamps_before_exploring():
     case = golden.REROUTE_CASES["no_route_without_map"]
-    result = _both(case)
+    result = _reroute(case)
     assert result["switch"] is None
     assert result["route_state"]["last_eval_time_s"] == case.time_s
 
@@ -1548,7 +1455,7 @@ def test_failed_explore_is_stamped_and_leaves_the_path(monkeypatch):
 
 def test_committed_explore_returns_before_the_path():
     case = golden.REROUTE_CASES["explore_already_committed"]
-    result = _both(case)
+    result = _reroute(case)
     assert result["switch"] is None
     assert result["route_state"]["current_path"] == list(case.current_path)
     assert result["route_state"]["last_eval_time_s"] == case.time_s
@@ -1556,7 +1463,7 @@ def test_committed_explore_returns_before_the_path():
 
 def test_explore_keeps_the_exit_commitment():
     case = replace(golden.REROUTE_CASES["explore_frontier"], current_exit="E0")
-    result = _both(case)
+    result = _reroute(case)
     switch = result["switch"]
     assert switch.reason == "explore"
     assert (switch.old_exit, switch.old_cost, switch.new_cost) == (None, None, 0.0)
@@ -1590,7 +1497,7 @@ def test_additive_does_not_scan_past_rank_one():
     cfg = RerouteConfig(cost_config=case.config)
     assert not live._adoptable(ranked[0], ranked, rs, cfg)
     assert live._adoptable(ranked[1], ranked, rs, cfg)
-    result = _both(case)
+    result = _reroute(case)
     assert result["switch"] is None
     assert result["route_state"]["last_eval_time_s"] == case.time_s
 
@@ -1599,8 +1506,7 @@ def test_clean_bypass_comes_before_candidate_feasibility():
     config = RerouteConfig(cost_config=golden._gate())
     candidate = _rc("a", clean=True, feasible=False, rank_cost=20.0)
     old_rc = _rc("b", clean=False, rank_cost=10.0)
-    for mod in _SIDES.values():
-        assert mod._anchor_allows(candidate, old_rc, config)
+    assert live._anchor_allows(candidate, old_rc, config)
 
 
 def test_wander_step_advances_before_a_failed_lookup():
@@ -1611,7 +1517,7 @@ def test_wander_step_advances_before_a_failed_lookup():
         current_path=("D0",),
         wander_step=2,
     )
-    result = _both(case)
+    result = _reroute(case)
     assert result["switch"] is None
     assert result["route_state"]["wander_step"] == 3
     assert result["route_state"]["last_eval_time_s"] == case.time_s
@@ -1631,32 +1537,29 @@ def test_wander_step_survives_a_failing_lookup(monkeypatch):
         current_path=("D0",),
         wander_step=2,
     )
-    for side in _SIDES:
-        world = _reroute_world(case)
-        with pytest.raises(RuntimeError, match="lookup failed"):
-            _SIDES[side].evaluate_and_reroute(
-                7,
-                world["wait_info"],
-                world["route_state"],
-                world["graph"],
-                case.time_s,
-                0.0,
-                case.extinction,
-                None,
-                RerouteConfig(cost_config=case.config),
-                {},
-                cognitive_map=world["cmap"],
-            )
-        assert world["route_state"].wander_step == 3, side
-        assert world["route_state"].last_eval_time_s == case.time_s, side
+    world = _reroute_world(case)
+    with pytest.raises(RuntimeError, match="lookup failed"):
+        live.evaluate_and_reroute(
+            7,
+            world["wait_info"],
+            world["route_state"],
+            world["graph"],
+            case.time_s,
+            0.0,
+            case.extinction,
+            None,
+            RerouteConfig(cost_config=case.config),
+            {},
+            cognitive_map=world["cmap"],
+        )
+    assert world["route_state"].wander_step == 3
+    assert world["route_state"].last_eval_time_s == case.time_s
 
 
 def test_explore_decides_without_writing_the_exit(monkeypatch):
     """A successful explore and a failed one both leave current_exit alone."""
     case = replace(golden.REROUTE_CASES["explore_frontier"], current_exit="E0")
-    assigned = _assignments(case)
-    assert assigned["live"] == assigned["legacy"]
-    assert assigned["live"] == ["last_eval_time_s", "current_path"]
+    assert _assignments(case) == ["last_eval_time_s", "current_path"]
     failing = _FailingReroute(monkeypatch)
     result, calls = failing.run(case)
     assert [c["new_path"] for c in calls] == [["D0", "C0"]]
@@ -1666,7 +1569,7 @@ def test_explore_decides_without_writing_the_exit(monkeypatch):
 
 def test_wander_step_is_kept_after_a_patrol_leg():
     case = golden.REROUTE_CASES["wander_patrol"]
-    result = _both(case)
+    result = _reroute(case)
     assert result["switch"].reason == "wander"
     assert result["route_state"]["wander_step"] == case.wander_step + 1
 
@@ -1702,30 +1605,25 @@ class _AssignmentLog(AgentRouteState):
         return logged
 
 
-def _assignments(case: golden.RerouteCase) -> dict[str, list[str]]:
-    states = {}
+def _assignments(case: golden.RerouteCase) -> list[str]:
+    """The route-state fields the decision assigns, in order."""
+    logged: list[_AssignmentLog] = []
 
-    def on_world(side, world):
-        world["route_state"] = states[side] = _AssignmentLog.of(world["route_state"])
+    def on_world(world):
+        world["route_state"] = _AssignmentLog.of(world["route_state"])
+        logged.append(world["route_state"])
 
-    _both(case, on_world)
-    return {
-        side: [n for n in state.__dict__["_assigned"] if n not in _LOCKOUT_FIELDS]
-        for side, state in states.items()
-    }
+    _reroute(case, on_world=on_world)
+    (state,) = logged
+    return [n for n in state.__dict__["_assigned"] if n not in _RECORD_FIELDS]
 
 
 def test_same_exit_switch_does_not_assign_current_exit():
     case = golden.REROUTE_CASES["better_path_ten_percent"]
-    assert _reroute("live", case, True)["switch"].reason == "better_path"
-    assigned = _assignments(case)
-    assert assigned["live"] == assigned["legacy"]
-    assert "current_exit" not in assigned["live"]
-    assert assigned["live"] == ["last_eval_time_s", "current_path"]
+    assert _reroute(case)["switch"].reason == "better_path"
+    assert _assignments(case) == ["last_eval_time_s", "current_path"]
     # Control: an exit change does assign it.
-    change = _assignments(golden.REROUTE_CASES["gate_anchor_cleaner"])
-    assert change["live"] == change["legacy"]
-    assert "current_exit" in change["live"]
+    assert "current_exit" in _assignments(golden.REROUTE_CASES["gate_anchor_cleaner"])
 
 
 def test_walked_path_evaluation_omits_current_exit(monkeypatch):
@@ -1733,7 +1631,7 @@ def test_walked_path_evaluation_omits_current_exit(monkeypatch):
 
     The smoke sits between the plain clean threshold and the one the current
     exit is allowed, so passing current_exit would flip the walked route's
-    clean flag; both copies must leave it out.
+    clean flag; the walked path must be priced without it.
     """
     base = golden.REROUTE_CASES["better_path_ten_percent"]
     smoke = ConstantExtinctionField(0.05)
@@ -1747,49 +1645,19 @@ def test_walked_path_evaluation_omits_current_exit(monkeypatch):
     assert not plain.clean and as_current.clean
     case = replace(base, config=config, extinction=smoke)
 
-    calls = {side: [] for side in _SIDES}
-    for side, mod in _SIDES.items():
-        real = mod.evaluate_route
+    calls: list = []
+    real = live.evaluate_route
 
-        def recording(*args, _calls=calls[side], _real=real, **kwargs):
-            result = _real(*args, **kwargs)
-            _calls.append((list(args[1]), dict(kwargs), result))
-            return result
+    def recording(*args, **kwargs):
+        result = real(*args, **kwargs)
+        calls.append((list(args[1]), dict(kwargs), result))
+        return result
 
-        monkeypatch.setattr(mod, "evaluate_route", recording)
-    result = _both(case)
+    monkeypatch.setattr(live, "evaluate_route", recording)
+    result = _reroute(case)
     assert result["switch"].reason == "better_path"
-    walked_calls = {
-        side: [(kw, rc) for path, kw, rc in log if path == walked]
-        for side, log in calls.items()
-    }
-    assert len(walked_calls["live"]) == 1
-    for side, found in walked_calls.items():
-        kwargs, rc = found[0]
-        assert kwargs.get("current_exit") is None, side
-        assert not rc.clean, side
-
-    def comparable(kwargs: dict) -> dict:
-        # The cache keys carry #650's foresight limit on the live side.
-        cache = kwargs.get("cached_segments")
-        if cache is None or not case.config.anticipate:
-            return kwargs
-        return {**kwargs, "cached_segments": list(cache.values())}
-
-    assert [comparable(kw) for kw, _ in walked_calls["live"]] == [
-        comparable(kw) for kw, _ in walked_calls["legacy"]
-    ]
-
-
-# ── The harness compares legacy with live, not live with itself ──────
-
-
-def test_legacy_copy_binds_to_itself():
-    for name in _DECISION_FUNCTIONS:
-        fn = getattr(legacy, name)
-        assert fn is not getattr(live, name), name
-        assert fn.__module__ == legacy.__name__, name
-        for other in _DECISION_FUNCTIONS:
-            if other in fn.__code__.co_names:
-                assert fn.__globals__[other] is getattr(legacy, other), (name, other)
-    assert legacy.evaluate_and_reroute.__globals__["rank_routes"] is legacy.rank_routes
+    walked_calls = [(kw, rc) for path, kw, rc in calls if path == walked]
+    assert len(walked_calls) == 1
+    kwargs, rc = walked_calls[0]
+    assert kwargs.get("current_exit") is None
+    assert not rc.clean

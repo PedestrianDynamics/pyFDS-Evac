@@ -117,8 +117,8 @@ empty object, before the setter's keys are written.
 | `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |
-| `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
-| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1, 1.0] m. |
+| `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint (an agent also arrives when its centre is inside the checkpoint polygon). An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
+| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. |
 | `radius_std` | none | — | Spread of the Gaussian draw. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. |
@@ -126,7 +126,7 @@ empty object, before the setter's keys are written.
 | `premovement_seed` | none | — | Separate seed for the pre-movement draw. When set, the pre-movement times are the same for every run seed. |
 | `premovement_offset_s` | none | ≥ 0 s | A fixed delay added to every agent's drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac's detection time; `pyfds-evac init` writes it. It needs `use_premovement: true`, and without it the run stops with a `ValueError`. Applies with and without `journeys`; ignored with flow spawning. |
 | `use_flow_spawning` | `false` | — | Add agents over time instead of at the start (no pre-movement then). |
-| `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. |
+| `flow_start_time`, `flow_end_time` | 0 s, 10 s | — | Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (`agents_not_spawned`). |
 | `flow_schedule` | none | a list of windows | Flow windows that replace `flow_start_time`, `flow_end_time` and `number`: each `{"flow_start_time", "flow_end_time", "number"}` (aliases `start_time_s`, `end_time_s`, `sim_count`) adds `number` agents at evenly spaced times within its window, as written, at most one per 0.01 s time step; a window shorter than `number` × 0.01 s, or one whose agents per second exceed the area's capacity estimate, stops the run. Agents of a window that the time limit cuts off count as not spawned. An entry that is not an object, a time that is not a finite number, a start below 0, an end not after the start or a `number` that is not a whole number ≥ 1 stops the run. Each of these errors is a `SpawnConfigError` (a `ValueError`) that names the distribution, printed by the CLI in one line; `--export-only` reports the same. `Scenario.set_flow_schedule()` writes it. |
 | `initial_number` | 0 | ≥ 0 | With `flow_schedule`: agents placed at the start beside the scheduled ones, checked against the area's capacity as `number` is. Ignored, and not checked, without `flow_schedule`. |
 | `familiarity` | `"full"` | `full`, `discovery`, or a probability in [0, 1] | What the agents know of the exits at the start; see [Models › Wayfinding](/models/wayfinding.md). |
@@ -186,20 +186,40 @@ it is closed:
   agent would arrive;
 - an agent whose route ends at it re-evaluates at the next reroute check
   (every second), whatever `--reroute-interval` says, and takes the best open
-  exit it knows. The switch is logged with the reason `exit_closed`. An agent
-  that knows no open exit is not told of another one. It heads for a known
-  node it has not visited, or else wanders over the nodes it knows; an agent
-  that knows only its spawn area and the closed exit has neither, so it keeps
-  its route and waits at the closed exit.
+  exit it knows. The switch is logged with the reason `exit_closed` when the
+  exit has closed (`closed_after_s` passed). An exit that has not opened yet
+  (`open_from_s` still ahead) was never the agent's exit: the first open exit
+  it is given is logged as `initial`. An agent
+  that knows no open exit acts by its spawn area's `no_known_exit` mode. Under
+  the default, `default_route`, it walks to the nearest open exit on foot,
+  which need not be in its map, and the switch is logged as `default_route`.
+  Under `explore` it is not told of another exit: it heads for a known node it
+  has not visited, or else wanders over the nodes it knows; an agent that
+  knows only its spawn area and the closed exit has neither, so it keeps its
+  route and waits at the closed exit. With every exit closed, an agent keeps
+  its route and waits.
 
 When an exit opens, nobody is made to re-decide: an agent takes it at its next
 regular re-evaluation, up to `--reroute-interval` later.
 
-A schedule needs rerouting: a run with a scheduled exit and
-`--no-enable-rerouting`, `--smoke-blind` or `--replay-exits` stops with an
-error, as does an agent that walks a JuPedSim journey instead of a routed path
-(a spawn area with no journey in a scenario that has journeys). Without a
-schedule nothing changes.
+A run without rerouting (`--no-enable-rerouting` or `--smoke-blind`) honours
+the schedule too
+([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). At the
+same one-second check, only the agents whose route ends at a closed exit
+choose again, once for each closure, scored as their opening choice is: on
+the map they hold, without the queue term, with the smoke at that time, or in
+clear air when the run is smoke-blind. An agent that knows no open exit takes
+the default route to the nearest open exit on foot; with no exit open it waits
+and is checked again every second. The route history logs the switches:
+`exit_closed` for an exit that has closed, `initial` for an agent whose exit
+has not opened yet and is sent to an open one it knows, and `default_route`
+for an agent sent to an exit it does not know. Without rerouting nobody
+re-decides when an exit opens.
+
+A schedule cannot be combined with `--replay-exits`, and a run with a
+scheduled exit stops with an error when an agent walks a JuPedSim journey
+instead of a routed path (a spawn area with no journey in a scenario that has
+journeys). Without a schedule nothing changes.
 
 ### Signs: `sign`
 
@@ -225,6 +245,9 @@ The legibility rule is on [Models › Wayfinding](/models/wayfinding.md).
 | `waiting_time` | checkpoint | 0 s | Time agents wait at the checkpoint. |
 | `waiting_time_distribution`, `waiting_time_std` | checkpoint | constant, 1.0 s | `"gaussian"` draws the wait per agent. |
 | `enable_throughput_throttling`, `max_throughput` | checkpoint | `false`, 1.0 | Cap the flow through the checkpoint. |
+
+Where to draw checkpoints, how large, and how they join the route graph:
+[How do I place checkpoints?](howto-place-checkpoints.md).
 
 ## Journey splits: `waypoint_routing`
 

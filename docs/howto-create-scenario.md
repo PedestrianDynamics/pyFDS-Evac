@@ -140,11 +140,11 @@ one `journey_weights` entry. A spawn area split over several journeys is not
 converted.
 {{< /details >}}
 
-{{< details title="Agents that never move: journeys without transitions" closed="true" >}}
-A file whose `journeys` list `stages` but which has no `transitions` runs
-with agents that never move. No warning is printed, and `--print-summary`
-looks normal
-([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504)).
+{{< details title="Journeys without transitions" closed="true" >}}
+A file whose `journeys` list `stages` but which has no `transitions` is
+refused at load with an error that names each journey
+([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504),
+`check_journey_transitions`).
 Older app exports have this shape, for example the `bottleneck-zone` example
 and 23 of the 55 scenario ZIPs of jupedsim-web-community, which also carry
 `journeys_v2`.
@@ -226,7 +226,8 @@ The keys most often changed:
   `config.simulation_settings.simulationParams.max_simulation_time`
   (default 300 s).
 
-Exits, spawn areas and checkpoints must lie inside the walkable area. With
+Exits, spawn areas and checkpoints must lie inside the walkable area; see
+[How do I place checkpoints?](howto-place-checkpoints.md). With
 `--fds-dir`, `max_simulation_time` must not exceed the last FDS slice time by
 more than one output interval, unless you pass `--allow-fds-horizon-hold`.
 

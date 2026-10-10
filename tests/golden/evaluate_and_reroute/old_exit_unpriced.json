@@ -14,7 +14,7 @@
   "new_exit": "west",
   "old_cost": null,
   "old_exit": "gone",
-  "reason": "smoke_reroute",
+  "reason": "exit_unreachable",
   "time_s": 5.0
  },
  "wait_info": {

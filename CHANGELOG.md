@@ -9,6 +9,93 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- A deck with a journey from a distribution to a stage that no entry in
+  `transitions` names now fails to load (#504): `Journey(s) 'J' list
+  stages but no entry in 'transitions' names them, so their agents
+  would never move: ...`. Such a deck used to run to
+  `max_simulation_time` with every agent on that journey standing
+  still. Add the transitions between the
+  journey's stages, or, for an editor export that also carries
+  `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
+  No shipped deck has this shape.
+
+- Results change for agents whose radius is not 0.2 m (#408): the
+  runtime now reaches a stage target within the agent's own radius plus
+  0.5 m, and keeps next-stage and reroute target points 0.8 times the
+  agent's own radius from a stage's edge; both used 0.2 m for every
+  agent. This includes decks imported by `pyfds-evac init` since #699
+  (0.12–0.16 m) and decks with a sampled `radius_distribution`. Of the
+  rerouting goldens (darwin-arm64) only the six `tj_*` decks
+  (`t_junction`, 0.15 m, one checkpoint) move: evacuation times change
+  by -0.36 to +1.11 s, all 30 agents still get out. The
+  `heat_default` verification baseline (0.15 m) moves by up to 12 mm in
+  `x`/`y`, its FED values do not. Clear-air runs of the shipped decks:
+  `station_fahy` (Gaussian radius, seed 420) still gets 331 of 333 out
+  at 600 s together with #709 below, on other trajectories (330 with
+  this change alone); `l_corridor` and `schroeder2015_route` end
+  0.03 s later;
+  `t_junction` and `schroeder2020_room` end with the same counts and
+  times; decks with 0.2 m are unchanged. In the first FDS case
+  (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get out
+  instead of 100, FED max 0.23 instead of 0.24.
+
+- Decks with journeys and an exit `capacity_agents_per_s` now price
+  that exit's queue with it (#394), as decks without journeys did;
+  it was priced at `routing.default_exit_capacity` (1.3 agents/s).
+  Only runs with `routing.w_queue` > 0 change. No shipped deck sets
+  `capacity_agents_per_s`, so no golden or asset result moves.
+
+- Gaussian radii (`radius_distribution: gaussian`) are clipped to the
+  radius placement spaces agents for, b = min(max(`radius` + 3 ×
+  `radius_std`, 0.1), 1.0) m, instead of [0.1, 1.0] m (#709). A draw
+  beyond mean + 3σ (0.135 % of agents) becomes b; the draws, the other
+  radii, every v0 and every position stay the same for a seed. Of the
+  shipped decks only `station_fahy` uses a Gaussian radius: at its
+  default seed 420 one radius goes from 0.2656 to 0.26 m, and the run
+  can diverge from that agent's first contact on. A deck with
+  `radius` + 3 × `radius_std` below 0.1 m is now spaced for 0.1 m.
+
+- Results of every rerouting run on FDS smoke change (#653): route
+  smoke is read once per grid cell of the extinction slice instead of
+  every `sampling_step_m`. `k_ave_route`, `tau_route`, `k_max_route`
+  and `k_leg_max` in the route-cost history move, and with them route
+  choices and switches. On the FDS golden decks (seed 42),
+  `l_corridor_gate` goes from 19 switches (8 straight returns) to 9
+  (none) and 69/31 to 63/37 agents per exit, `l_corridor_additive`
+  from 99/1 to 68/32 and 145.1 s to 170.0 s, `t_junction` from 4
+  switches to 1 and 14/83 to 17/80, `world100_stream_oval` from 8
+  switches to 13 (two of them path refinements to the same exit) and
+  95/25 to 90/30, `world100_stream_east` from 85/4/31 to 86/4/30;
+  evacuated counts do not change. In the first FDS
+  case (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents still
+  get out. `sampling_step_m` keeps its value in every deck, but
+  now applies only to fields without a grid (`ConstantExtinctionField`,
+  test fields) and to stretches of a route outside the FDS slice;
+  those runs and clear-air runs are unchanged. The FED rate of the
+  walk dose (#171) is still sampled every `sampling_step_m`.
+
+- `fed_max_route` in the route-cost history rises for an agent behind
+  its route's origin node in runs with a FED field (#171). Under
+  `additive` the route cost rises by `w_fed` times that change, so
+  near-tied choices can change. Agents on or ahead of the origin, and
+  runs without a FED field, are unchanged.
+
+- Route history (`--output-route-history`, `result.route_history`):
+  `smoke_reroute` now counts only the exit changes smoke caused (#92).
+  Other changes of exit, labelled `smoke_reroute` before, are
+  `fed_reroute`, `exit_opened`, `learned_exit`, `congestion`,
+  `shorter_path`, `exit_unreachable` or `resume`. Scripts that count
+  `smoke_reroute` as "any change of exit" must count these too.
+  Trajectories, exit choices and times are unchanged.
+
+- Results of decks with checkpoints change (#69): checkpoint arrivals
+  come earlier, and crowd interaction then moves individual agents
+  either way. In the first FDS case (`t_junction`, 2 MW PVC fire,
+  seed 42) 100 of 150 agents get out instead of 93; its clear-air run
+  stays at 144/150. Decks without checkpoints (all `init` imports, the
+  ISO decks, exit-only decks) and `station_fahy`, whose checkpoint
+  circles lie inside the 0.7 m reach disc, are unchanged.
+
 - `pyfds-evac init --check` can now fail (✗, exit 3) on a deck it
   passed: a slice that FDS culls no longer counts, and a `PBZ` slice
   that also sets `PBX` or `PBY` is a line the run does not read (#705).
@@ -27,6 +114,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   imported before keep 0.2 m until they are imported again. Some
   imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
   deadlock at doors and narrow gaps in some seeds (#706).
+
+- Results change for runs with same-exit `better_path` switches, and
+  for any rerouting run in which an agent switches to a route that
+  reaches its current target by a detour (#445): the agent now walks the
+  detour. On the golden decks only `better_path` switches are affected.
+  On the golden deck `ft_full_gate_detour` (darwin-arm64) the
+  evacuation time goes from 49.43 s to 54.92 s and the `better_path`
+  rows of `route_history.csv` from 24 to 17.
+
+- A scenario with an exit that opens or closes on a schedule
+  (`open_from_s`, `closed_after_s`) now runs with `--smoke-blind` and
+  with `--no-enable-rerouting` (and `run_scenario` without a
+  `RerouteConfig`) instead of stopping with "need rerouting" (#395).
+  Imported FDS+Evac decks with `TIME_OPEN` or `TIME_CLOSE`, such as the
+  `HUT_Library` decks, the `OpenFloorOffice` decks and `DoorAlgo2_A`,
+  run without rerouting. Such runs now return and write a route history
+  (`--output-route-history`) holding the rows of these re-choices:
+  `exit_closed`, `initial` (exit not open yet) and `default_route`.
+  Runs without a schedule are unchanged. Runs with rerouting and a
+  schedule move the same, and an exit that has not opened yet gives the
+  same rows as before, but rows for an exit that has closed
+  (`closed_after_s`) change in two ways: a closure row of an agent that
+  followed its default route has `old_exit` = the closed exit instead
+  of empty, and a closure onto a gate fallback route is labelled
+  `exit_closed` instead of `fallback`.
 
 - A deck with journeys whose flow-spawning area (`use_flow_spawning`)
   asks for more agents per second than the area holds now stops the run
@@ -84,6 +196,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   import_report.json marks this scenario not runnable: ...`. The run
   continues, since the folder may have been fixed by hand after `init`.
   A missing or unreadable report prints nothing.
+- `RouteCostConfig.fallback_rule` (#696), an experimental code-level
+  option with no scenario key, CLI flag or GUI control. `"tau"` (the
+  default) keeps the lowest-tau rule when every route is refused.
+  `"hold"` keeps the agent's exit between refused routes, unless the
+  current route must be fled (#128). Default results are unchanged.
+  The run manifest's `cost_config` gains `"fallback_rule": "tau"`.
+  #696 stays open as a documented finding: on `t_junction` the default
+  still sends agents past the burner.
 
 ### Changed
 
@@ -104,6 +224,77 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `metrics["route_switches"]` counts route switches, not route-history
+  rows (#733). Per agent, it counts each later time step whose decision
+  changes the agent's target, or its path to an exit it holds (a row
+  with an old exit). An agent's first decision and repeated rows in one
+  time step are not counted, and reasons are not read: an `initial` row
+  that turns an agent on its default route to another exit counts, one
+  to the exit it already walks to does not. The key is still written
+  whenever the history has rows, so it can now be 0:
+  `assets/t_junction` under seed 42 with rerouting has 298 rows (150
+  `default_route`, 148 `initial`) and reported 298; it now reports 0.
+  The GUI run summary and the verification harness use the same
+  definition, so the GUI's switch count changes too.
+
+- `load_scenario` and the run refuse a journey that no entry in
+  `transitions` names, with an error naming the journey (#504). Agents
+  on it had no route and stood still, without a warning; the
+  `--print-summary`, `--export-only` and GUI upload paths now stop on it
+  too. Only journeys that place agents are checked: one that lists a
+  distribution of the deck and a stage to walk to. A journey of exits
+  only, or of a distribution only, places nobody and needs no
+  transitions; decks without distributions use no journeys.
+
+- The per-agent steering state stores the agent's radius (#408). It was
+  read with a 0.2 m default but never written, so stage reach
+  (radius + 0.5 m of the target point) and target clearance used 0.2 m
+  whatever the agent's radius.
+
+- The set-up with journeys passes each exit's `capacity_agents_per_s`
+  to route pricing (#394). It was dropped, so the queue term priced
+  every exit of a journey deck at the 1.3 agents/s default.
+
+- A Gaussian radius draw no longer exceeds the radius placement spaced
+  for (#709): agents could start overlapping. The spacing bound now has
+  one definition, `agent_params.max_agent_radius`, read by the run and
+  by `pyfds-evac init`'s capacity check.
+
+- Route smoke no longer jumps as an agent walks across a narrow plume
+  (#653). It was sampled every `sampling_step_m` (2 m in the shipped
+  decks) from the agent's position, so samples slid on and off a plume
+  narrower than the step: on a 1 m band at K = 10 /m, route tau went
+  from 0 to 18.0 when the agent moved 0.1 m, where the plume's optical
+  depth is 10.0. An FDS extinction field is now read once per grid cell
+  the route crosses, at points fixed to the grid, as FDS+Evac
+  `See_door` does; the band reads 9.7–9.9 from every position. A
+  route crossing meshes of different spacing is read on each mesh's
+  own grid.
+
+- Scheduled exits work in runs without rerouting (#395). At each
+  one-second check, only an agent whose route ends at a closed exit, or
+  at one not open yet, chooses again, once for each closure, scored as
+  its opening choice: on the map it
+  holds, without the queue term, with the smoke at that time, or in
+  clear air when smoke-blind. An agent that knows no open exit takes
+  the default route to the nearest open exit on foot; with every exit
+  closed it waits. Nobody re-decides when an exit opens, which differs
+  from FDS+Evac, whose door choice keeps running. A flow-spawned agent
+  on a JuPedSim journey is refused in these runs too.
+
+- A checkpoint now counts as reached when the agent's centre is inside
+  its polygon, as well as within the agent radius plus 0.5 m of its
+  random target point (#69). An agent deep inside a large checkpoint,
+  such as the 3x3 m boxes of `t_junction` and `l_corridor`, used to
+  walk on to the target point first. Arrival is never later than
+  before on the same trajectory. Exits keep their polygon rule; spawn
+  areas walked to on patrol and speed zones keep the point rule. An
+  agent that spawns inside a checkpoint on its route reaches it on its
+  first step: in the `fed_incap_*` decks 4 m² of each of the four
+  first 4x4 m checkpoints lies in the spawn area. The unused
+  `inside_since`, `reach_penetration` and `reach_dwell_seconds`
+  entries of the per-agent steering state are removed.
+
 - Reading FDS output no longer writes to or deletes from the FDS
   directory (#716). fdsreader 1.11.7 writes `<CHID>.pickle` next to the
   `.smv`, deletes a pickle it cannot read, and deletes it when caching is
@@ -116,6 +307,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   files (0.01 s from the pickle). Results are unchanged. fdsreader is
   now pinned to `>=1.11.7,<1.12`, the versions this was checked on.
 
+- A route switch is labelled by what caused it, not `smoke_reroute` for
+  every change of exit (#92). An agent that switches in clear air to a
+  nearer exit, or to one it has just learned, logged a smoke reroute.
+  Outputs lists the values; Routing in practice lists them with their
+  order of precedence and how a cause is credited.
+
+- An agent now leaves a route whose predicted dose is lethal, as the
+  routing docs promise (#128). Under the gate, a route over both the FED
+  and the `tau` limit reports `tau ...` and lost the must-flee bypass;
+  when every route was refused, a lethal current exit with the lowest
+  `tau` was held. Must-flee now reads the limits a route breaks, the new
+  `RouteCost.violation_kinds` (default `()`), instead of the rejection
+  reason, and the all-refused fallback orders a route the agent must
+  flee behind every route it need not flee. The `rejection_reason` text
+  and the CSV outputs are unchanged. No shipped deck changes: the
+  largest route FED in their outputs is 0.565, below the limit.
+- An agent behind its route's origin node is charged the dose of its
+  walk back to the origin (#171). The first segment's dose is charged
+  pro rata to what is left of it, a share capped at 1, so that stretch
+  carried no dose although its smoke and time were counted. It is now
+  charged at the mean FED rate sampled along it at the decision time,
+  over the walk's pace; the candidate search weighs the walk to each
+  first node the same way.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not
@@ -195,7 +409,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   placed cut the free part of an area into pieces, the agents are shared
   among the pieces by their capacity; when the pieces cannot seat them
   all, or nothing is left free, the run stops with `SpawnCapacityError`.
-  Flow-spawned agents are not covered.
+  Flow-spawned agents keep the same spacing, see #710 below.
+
+- A flow-spawned agent (`use_flow_spawning`, `flow_schedule`) now keeps
+  twice the larger radius from every agent already in the run, as the
+  agents of overlapping spawn areas do (#710). It used to be checked
+  only by JuPedSim's `add_agent`, which refuses closer than the model's
+  own limit, and measures to where the others stood at the start of the
+  last time step: the sum of the two radii for the collision-free speed
+  and anticipation velocity models, the radius of the agent added for
+  `SocialForceModel`, an ellipse spacing for
+  `GeneralizedCentrifugalForceModel`, nothing for `WarpDriverModel`. A
+  flow of 0.15 m agents into an area where 0.3 m agents wait could
+  enter 0.48 m from one of them instead of 0.6 m, and under
+  `WarpDriverModel` on top of one. A flow that finds no free position
+  waits as before; instead of a `Flow spawn attempt failed` line at
+  every step it is counted in
+  `metrics["flow_spawns_deferred"]`, and the run ends with one line per
+  such flow: `Flow spawning: '<id>' found no free position at N steps
+  between t=A s and t=B s; K of its M agents did not enter`. A
+  candidate that JuPedSim refuses anyway is still handed to it, since a
+  refusal uses up an agent id; so runs where no agent entered too close
+  are placed as before, ids included, except under
+  `GeneralizedCentrifugalForceModel`, whose refusal is not mirrored and
+  whose agents can be numbered differently. `l_corridor` and the three
+  flow configs of `t_junction` (seeds 1 and 42) add the same agents at
+  the same times and positions, with the same ids and metrics, but for
+  one agent of `t_junction/config_full.json` under seed 42, run in clear
+  air (without its fire): at t = 222 s it entered 0.296 m from another agent, where 0.3 m is kept now, and
+  enters at the next free position. Of the rerouting goldens only
+  `ft_full_gate_detour` and `ft_full_additive_detour`
+  (`SocialForceModel`, a 0.2 m flow) move: 5 of their 30 agents entered
+  0.19 to 0.37 m from another, now none closer than 0.4 m; all 30 still get
+  out, at 58.18 s instead of 54.39 s and at 48.33 s instead of 48.35 s.
+- An applied route is walked as it was priced (#445). A route is priced
+  from the node the agent last left, through the node after it. When
+  the agent's current target was further along the new route, the agent
+  kept walking to it: it stayed on a leg the gate had refused
+  (τ > `tau_max`), and the same `better_path` switch was logged again at
+  every re-evaluation. The agent now heads for the node after the one it
+  last left. This holds for every kind of switch, exit changes included.
 
 - A spawn area whose key does not start with `jps-distributions_`, such
   as `"room"`, can now head a journey. It was kept as a journey stage

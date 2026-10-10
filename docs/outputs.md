@@ -16,7 +16,7 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | `agent_scalars` table | inside the SQLite | a FED track ran | one per agent per FED update |
 | Smoke history | `--output-smoke-history CSV` | a smoke model ran (`--fds-dir` with an extinction slice, or `--constant-extinction`) | one per agent per `--smoke-update-interval` |
 | FED history | `--output-fed-history CSV` | the gas FED or the heat FED ran | one per agent per `--smoke-update-interval` |
-| Route history | `--output-route-history CSV` | rerouting is on (the default) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
+| Route history | `--output-route-history CSV` | rerouting is on (the default), or an exit has `open_from_s` or `closed_after_s`; without rerouting it then holds only the rows of agents whose exit is closed: `exit_closed`, `initial` (exit not open yet) or `default_route` ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
 | Route cost history | `--output-route-cost-history CSV` | rerouting is on | one per candidate route per agent per evaluation |
 | Exit history | `--output-exit-history CSV` | always | one per agent that walks the stage graph |
 
@@ -154,20 +154,22 @@ The equations behind each rate are on [Models › FED](/models/fed.md) and
 | Column | Meaning |
 |---|---|
 | `time_s`, `agent_id` | when, and who |
-| `old_exit`, `new_exit` | exit before and after; `old_exit` is empty for the first assignment |
+| `old_exit`, `new_exit` | exit before and after; `new_exit` is a node for `explore`, `wander`, `return` and `stay`. `old_exit` is empty for the first assignment, for `explore`, `wander`, `return` and `stay`, for an `initial` row that gives an agent on its default route its first known exit, and for a second `default_route` row at spawn in the same time step |
 | `old_cost`, `new_cost` | ranking cost of the two routes, rounded to 4 decimals; `old_cost` is empty when there was none |
-| `reason` | `initial`, `default_route`, `smoke_reroute`, `exit_closed`, `fallback`, `better_path`, `explore` or `wander` |
+| `reason` | `initial`, `default_route`, `fed_reroute`, `smoke_reroute`, `exit_closed`, `exit_opened`, `learned_exit`, `congestion`, `shorter_path`, `exit_unreachable`, `resume`, `fallback`, `better_path`, `explore`, `wander`, `return` or `stay` |
 
 The reasons are defined on
-[Routing in practice](routing.md#route-switch-reasons). `smoke_reroute` labels
-every change of exit, whatever caused it
-([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)), except a
-change away from an exit that has closed, which is `exit_closed`.
+[Routing in practice](routing.md#route-switch-reasons). A change of exit is
+labelled by its cause
+([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)):
+`smoke_reroute` only when smoke made the switch, `fed_reroute` when the dose
+did, `shorter_path` when time or length alone did.
 
 An `initial` row is written only when an agent that has no exit at a
-re-evaluation is given its first one. A `default_route` row is written once
-at spawn for an agent with no exit in its map that follows its default
-route, the journey or the nearest exit on foot. Other agents that start with
+re-evaluation is given its first one. A `default_route` row is written for
+an agent that follows its default route, the journey or the nearest exit on
+foot: at spawn when its map holds no exit, or when its known exits are all
+closed or unreachable. Other agents that start with
 a journey exit get no row until they change target, so a run without any switch (such as the
 example above, `Route history rows: 0`) writes a file with only its header. This
 does not mean rerouting was off.
@@ -213,9 +215,11 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 |---|---|
 | `evacuation_time` | simulated time when the run stopped |
 | `total_agents`, `agents_evacuated`, `agents_remaining` | head counts at the end |
-| `agents_not_spawned` | flow agents that had not entered when the run reached `max_simulation_time` |
+| `agents_not_spawned` | flow agents that had not entered when the run stopped: cut off by `max_simulation_time`, or still waiting for a free position when their flow window closed |
+| `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
 | `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
+| `metrics["route_switches"]` | per agent, each later time step whose decision changes the agent's target (`new_exit`), or its path to an exit it holds (a row with an `old_exit`); the first decision and repeated rows in one time step are not counted, and reasons are not read (#733). Each new `explore` or `wander` node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0 |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran |
 

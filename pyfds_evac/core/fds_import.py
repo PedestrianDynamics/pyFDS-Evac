@@ -38,6 +38,7 @@ from typing import Any
 from shapely import wkt as shapely_wkt
 from shapely.geometry import LineString, Point, box
 
+from .agent_params import max_agent_radius
 from .fds_deck import FdsDeck, NamelistRecord, parse_fds_deck
 from .fds_import_geometry import (
     MIN_EXIT_WIDTH_M,
@@ -1435,11 +1436,8 @@ def spawn_capacity(area: float, max_radius: float) -> int:
 
 
 def _max_radius(params: dict[str, Any]) -> float:
-    """As ``simulation_init._get_max_agent_radius``."""
-    radius = float(params.get("radius", DEFAULT_RADIUS_M))
-    if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        return min(radius + 3 * float(params["radius_std"]), 1.0)
-    return radius
+    """As ``simulation_init._get_max_agent_radius`` (#709)."""
+    return max_agent_radius({"radius": DEFAULT_RADIUS_M, **params})
 
 
 def _check_capacity(report, walkable, spawns) -> None:

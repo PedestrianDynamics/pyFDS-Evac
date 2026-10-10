@@ -112,15 +112,15 @@ fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS"
 evac_runtime = "about 10 s for the fire run"
 expected = [
-  "evacuated: 93/150 in 300 s",
-  "FED max:   0.27",
-  "route history rows by reason: {'default_route': 150, 'initial': 11}",
+  "evacuated: 99/150 in 300 s",
+  "FED max:   0.23",
+  "route history rows by reason: {'default_route': 150, 'initial': 12, 'smoke_reroute': 1}",
 ]
 expected_note = """\
 These are the last lines of python examples/first_fds_case.py "$FDS". \
 Without FDS output it prints evacuated: 144/150 in 300 s. run.py ends \
 with: Simulation incomplete: time limit reached after 300.00 s \
-(93/150 evacuated, 57 remaining, 50 not spawned). and exits with status \
+(99/150 evacuated, 51 remaining, 50 not spawned). and exits with status \
 2, as for every run that reaches its time limit with agents inside."""
 results_commit = "9c820e0f"
 results_python = "3.12.13"

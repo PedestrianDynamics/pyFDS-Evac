@@ -6,12 +6,14 @@ import heapq
 import logging
 import math
 import weakref
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import Protocol
+from typing import Any, Protocol
 
+import numpy as np
 from shapely.geometry import Polygon
 
+from .fds_sampling import LinePart
 from .geometry import node_position as _node_position
 from .smoke_speed import speed_factor_from_extinction
 
@@ -527,9 +529,11 @@ def integrated_extinction_along_los(
 ) -> float:
     """Return the Beer-Lambert path-integrated mean extinction coefficient.
 
-    Computes the arithmetic mean of K sampled at uniform intervals along
-    the line of sight from (x_from, y_from) to (x_to, y_to), which is
-    the discrete form of Boerger et al. (2024) Eq. 8-9:
+    Computes the arithmetic mean of K sampled along the line of sight from
+    (x_from, y_from) to (x_to, y_to), once per grid cell of an FDS field
+    and at uniform intervals for a field without a grid (see
+    :func:`_los_stats`), which is the discrete form of Boerger et al.
+    (2024) Eq. 8-9:
 
         sigma_bar = (1 / |P|) * sum_p K_p
 
@@ -548,7 +552,8 @@ def integrated_extinction_along_los(
     extinction_sampler : ExtinctionSampler
         Provides ``sample_extinction(time_s, x, y) -> float``.
     step_m : float
-        Maximum spacing between sample points along the ray.
+        Maximum spacing between sample points along the ray, for a field
+        without a grid and where the ray leaves the FDS slice.
 
     Returns
     -------
@@ -585,7 +590,42 @@ def _los_stats(
 
     Every sample is read at *time_s*, or with a *clock* at the time the agent
     reaches it (#650).
+
+    A sampler with a grid (``line_parts``, an FDS ``ExtinctionField``) is
+    read once per grid cell the line crosses, at points fixed to the grid,
+    as FDS+Evac ``See_door`` does (#653); *step_m* then applies only where
+    the line leaves the slice. Other samplers are read at evenly spaced
+    points at most *step_m* apart, both ends included.
     """
+    line_parts = getattr(extinction_sampler, "line_parts", None)
+    parts = None if line_parts is None else line_parts(x_from, y_from, x_to, y_to)
+    if parts is not None:
+        return _cell_los_stats(
+            parts,
+            (x_from, y_from, x_to, y_to),
+            time_s,
+            extinction_sampler,
+            step_m,
+            length,
+            clock,
+        )
+    return _step_los_stats(
+        x_from, y_from, x_to, y_to, time_s, extinction_sampler, step_m, length, clock
+    )
+
+
+def _step_los_stats(
+    x_from: float,
+    y_from: float,
+    x_to: float,
+    y_to: float,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+    length: float,
+    clock: _ForesightClock | None = None,
+) -> tuple[float, float]:
+    """``_los_stats`` at evenly spaced points at most *step_m* apart."""
     n_samples = max(2, int(math.ceil(length / step_m)) + 1)
     total = 0.0
     worst = 0.0
@@ -600,6 +640,71 @@ def _los_stats(
     return total / n_samples, worst
 
 
+def _cell_los_stats(
+    parts: tuple[LinePart, ...],
+    line: tuple[float, float, float, float],
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+    length: float,
+    clock: _ForesightClock | None,
+) -> tuple[float, float]:
+    """``_los_stats`` on the parts of a line given by ``line_parts`` (#653).
+
+    A part on the grid is the plain mean of its samples, one per cell; a
+    part off the slice is sampled every *step_m*. Parts are combined
+    weighted by their length, as the segments of a polyline are.
+    """
+    x0, y0, x1, y1 = line
+    part_means: list[tuple[float, float]] = []
+    worst = 0.0
+    for part in parts:
+        ta, tb = part.t_start, part.t_end
+        part_len = (tb - ta) * length
+        if part.fractions is None:
+            mean, part_worst = _step_los_stats(
+                x0 + ta * (x1 - x0),
+                y0 + ta * (y1 - y0),
+                x0 + tb * (x1 - x0),
+                y0 + tb * (y1 - y0),
+                time_s,
+                extinction_sampler,
+                step_m,
+                part_len,
+                None if clock is None else clock.shifted(ta * length),
+            )
+        else:
+            mean, part_worst = _read_part(
+                part, time_s, extinction_sampler, length, clock
+            )
+        part_means.append((mean, part_len))
+        worst = max(worst, part_worst)
+    return _length_weighted_mean(part_means, []), worst
+
+
+def _read_part(
+    part: LinePart,
+    time_s: float,
+    extinction_sampler,
+    length: float,
+    clock: _ForesightClock | None,
+) -> tuple[float, float]:
+    """Mean and worst K at the samples of a grid part of a line.
+
+    Each sample is read at *time_s*, or with a *clock* when the agent
+    reaches it (#650). The mean is summed in sample order.
+    """
+    fractions = part.fractions
+    if fractions is None:
+        raise ValueError("_read_part needs a part on the grid, not one off the slice")
+    if clock is None:
+        times = np.full(len(fractions), float(time_s))
+    else:
+        times = clock.at_many(fractions * length)
+    values = extinction_sampler.read_cells(part, times).tolist()
+    return sum(values) / len(values), max(0.0, *values)
+
+
 def integrated_extinction_along_polyline(
     waypoints: list[tuple[float, float]],
     time_s: float,
@@ -608,8 +713,8 @@ def integrated_extinction_along_polyline(
 ) -> float:
     """Return the Beer-Lambert path-integrated mean extinction along a polyline.
 
-    Samples K at uniform intervals along each segment of the polyline,
-    takes the mean per segment and returns the mean of those, weighted by
+    Samples K along each segment of the polyline as
+    :func:`integrated_extinction_along_los` does, takes the mean per segment and returns the mean of those, weighted by
     segment length (see :func:`_polyline_stats`).
     """
     if step_m <= 0:
@@ -732,6 +837,8 @@ class FedRateSampler(Protocol):
 
 
 ROUTE_COST_MODELS = ("gate", "additive")
+#: Rules for the exit an agent takes when every route is refused (#696).
+FALLBACK_RULES = ("tau", "hold")
 
 
 def _unknown_cost_model(cost_model: object) -> ValueError:
@@ -783,6 +890,10 @@ class RouteCostConfig:
     # (S ~ C/K); NOT calibrated, but chosen to sit well above the mild haze that
     # caused the demo flip-flop (k_ave <= ~0.9) and below genuine walls of smoke.
     impassable_extinction_threshold: float = 3.0
+    # Spacing of route smoke samples [m] for a field without a grid
+    # (constant K, test fields) and where a route leaves the FDS slice. An
+    # FDS field is read once per grid cell instead (#653), and the FED rate
+    # of the walk dose (#171) every sampling_step_m.
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
     alpha: float = 0.706
@@ -798,11 +909,6 @@ class RouteCostConfig:
     # 1 -> 20 on assets/world_100 moved 12 of 120 agents). Matched exactly;
     # any other value raises ValueError.
     cost_model: str = "gate"
-    # A route is refused when the sighting distance at its worst point falls
-    # below this fraction of the distance still to walk -- FDS+Evac's own door
-    # criterion (evac.f90: "Check that visibility > 0.5*distance to the door").
-    # Being distance-relative is the point: haze 5 m from an exit is usable and
-    # the same haze at 40 m is not, which no absolute extinction limit can say.
     # Tier 1: an exit is "clean" while the smokiest leg of the route to it
     # stays under this. Off by default -- see docs/gate-model-review-notes.md
     # for why it does not survive contact with either reference deck.
@@ -813,8 +919,8 @@ class RouteCostConfig:
     # The route the agent will accept, as an optical depth: tau = K_ave * L,
     # the soot column it walks through. Refused above this.
     #
-    # 6 is FDS+Evac's own threshold, not an analogy: evac.f90:16458 computes
-    # L2_tmp = d * 0.5 / (3/K_ave) = K_ave * d / 6, and :16463 refuses the door
+    # 6 is FDS+Evac's own threshold, not an analogy: evac.f90:16794 computes
+    # L2_tmp = d * 0.5 / (3/K_ave) = K_ave * d / 6, and :16799 refuses the door
     # at L2_tmp >= 1, which is tau >= 6. Writing it as an optical depth is what
     # made that visible.
     #
@@ -823,19 +929,19 @@ class RouteCostConfig:
     # sight), the scope (there it is a last-resort branch over known-or-visible
     # doors), and the memory (there a strike-out lasts one call; the only
     # lasting mark is on a lone agent's previous target once K_ave >= 0.3 /m,
-    # evac.f90:16292-16301, and it acts weakly -- see docs/model-comparison.md).
+    # evac.f90:16628-16637, and it acts weakly -- see docs/model-comparison.md).
     # Citable as a threshold, uncalibrated as an exposure budget --
     # docs/gate-model-review-notes.md.
     tau_max: float = 6.0
     # How far apart two routes' optical depths must be before the difference
     # overrides the exit an agent already walks to. Ours: the reference applies
-    # no hysteresis to this veto (evac.f90:16463 tests the raw value).
+    # no hysteresis to this veto (evac.f90:16799 tests the raw value).
     tau_deadband: float = 0.1
     current_exit_discount: float = 0.9
     # A rival exit must come in under tau_max * this before an agent switches
     # onto it, so a route sitting near the budget does not toggle. Ours: the
-    # reference applies no hysteresis to this veto (evac.f90:16463 tests the
-    # raw value); its 0.1 hysteresis is on the tier-1 test at :16255.
+    # reference applies no hysteresis to this veto (evac.f90:16799 tests the
+    # raw value); its 0.1 hysteresis is on the tier-1 test at :16591.
     tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
     # rather than the smoke standing there while it decides.
@@ -854,11 +960,26 @@ class RouteCostConfig:
     # evaluations (#653); this keeps that from reversing the agent. 0 turns
     # it off.
     fallback_return_lockout_s: float = 10.0
+    # Which exit an agent keeps when every route is refused (#696). "tau":
+    # a refused rival displaces the current exit when its optical depth is
+    # clearly lower (fallback_switch_margin). "hold": the agent keeps its
+    # exit between refused routes and leaves only for a feasible route or
+    # when the current route must be fled (#128); fallback_switch_margin
+    # and fallback_return_lockout_s are then inert. The first choice with
+    # every route refused is the lowest tau under both. Experimental and
+    # code-level only: from_routing_params does not read it, so no scenario
+    # key sets it; measured on t_junction alone (docs/routing.md).
+    fallback_rule: str = "tau"
 
     def __post_init__(self) -> None:
-        """Reject an unknown cost_model and a negative or non-numeric lockout."""
+        """Reject an unknown cost_model or fallback_rule, and a bad lockout."""
         if self.cost_model not in ROUTE_COST_MODELS:
             raise _unknown_cost_model(self.cost_model)
+        if self.fallback_rule not in FALLBACK_RULES:
+            raise ValueError(
+                f"Unknown RouteCostConfig.fallback_rule {self.fallback_rule!r}; "
+                f"expected one of {FALLBACK_RULES}"
+            )
         lockout = self.fallback_return_lockout_s
         if (
             isinstance(lockout, bool)
@@ -881,8 +1002,10 @@ class RouteCostConfig:
         """
         routing = routing or {}
         return cls(
-            cost_model=routing.get("cost_model", "gate"),
-            clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.0),
+            cost_model=routing.get("cost_model", RouteCostConfig.cost_model),
+            clean_extinction_threshold=routing.get(
+                "clean_extinction_threshold", RouteCostConfig.clean_extinction_threshold
+            ),
             clean_exit_margin=routing.get(
                 "clean_exit_margin", RouteCostConfig.clean_exit_margin
             ),
@@ -894,25 +1017,40 @@ class RouteCostConfig:
             tau_return_margin=routing.get(
                 "tau_return_margin", RouteCostConfig.tau_return_margin
             ),
-            anticipate=routing.get("anticipate", True),
-            foresight_horizon_s=routing.get("foresight_horizon_s", math.inf),
-            fallback_switch_margin=routing.get("fallback_switch_margin", 0.2),
+            anticipate=routing.get("anticipate", RouteCostConfig.anticipate),
+            foresight_horizon_s=routing.get(
+                "foresight_horizon_s", RouteCostConfig.foresight_horizon_s
+            ),
+            fallback_switch_margin=routing.get(
+                "fallback_switch_margin", RouteCostConfig.fallback_switch_margin
+            ),
             fallback_return_lockout_s=routing.get(
                 "fallback_return_lockout_s", RouteCostConfig.fallback_return_lockout_s
             ),
-            w_smoke=routing.get("w_smoke", 1.0),
-            w_fed=routing.get("w_fed", 10.0),
-            w_queue=routing.get("w_queue", 0.0),
-            fed_rejection_threshold=routing.get("fed_rejection_threshold", 1.0),
-            visibility_extinction_threshold=routing.get(
-                "visibility_extinction_threshold", 0.5
+            w_smoke=routing.get("w_smoke", RouteCostConfig.w_smoke),
+            w_fed=routing.get("w_fed", RouteCostConfig.w_fed),
+            w_queue=routing.get("w_queue", RouteCostConfig.w_queue),
+            fed_rejection_threshold=routing.get(
+                "fed_rejection_threshold", RouteCostConfig.fed_rejection_threshold
             ),
-            sampling_step_m=routing.get("sampling_step_m", 2.0),
-            base_speed_m_per_s=routing.get("base_speed_m_per_s", 1.3),
-            alpha=routing.get("alpha", 0.706),
-            beta=routing.get("beta", -0.057),
-            min_speed_factor=routing.get("min_speed_factor", 0.1),
-            default_exit_capacity=routing.get("default_exit_capacity", 1.3),
+            visibility_extinction_threshold=routing.get(
+                "visibility_extinction_threshold",
+                RouteCostConfig.visibility_extinction_threshold,
+            ),
+            sampling_step_m=routing.get(
+                "sampling_step_m", RouteCostConfig.sampling_step_m
+            ),
+            base_speed_m_per_s=routing.get(
+                "base_speed_m_per_s", RouteCostConfig.base_speed_m_per_s
+            ),
+            alpha=routing.get("alpha", RouteCostConfig.alpha),
+            beta=routing.get("beta", RouteCostConfig.beta),
+            min_speed_factor=routing.get(
+                "min_speed_factor", RouteCostConfig.min_speed_factor
+            ),
+            default_exit_capacity=routing.get(
+                "default_exit_capacity", RouteCostConfig.default_exit_capacity
+            ),
         )
 
 
@@ -962,6 +1100,15 @@ class RouteCost:
     # criterion. Clean exits are preferred outright; time decides among them.
     k_leg_max: float = 0.0
     clean: bool = True
+    # The travel time the route would take in clear air: travel_time_s with
+    # every speed factor 1. Labels only (``smoke_reroute``, #92), so it takes
+    # no part in comparing two routes; None when the route was not measured
+    # by evaluate_route.
+    clear_travel_time_s: float | None = field(default=None, compare=False)
+    # The limits the route breaks, in the order they were recorded: "fed",
+    # "tau", "all_segments_non_visible". Must-flee reads these, not the
+    # rejection reason, which names only the last one (#128).
+    violation_kinds: tuple[str, ...] = ()
 
 
 # ── Internal route records ───────────────────────────────────────────
@@ -990,6 +1137,8 @@ class RouteMeasurements:
     k_max_route: float
     tau_route: float
     k_leg_max: float
+    # travel_time_s with every speed factor 1, for the switch label (#92).
+    clear_travel_time_s: float | None = None
 
 
 @dataclass(frozen=True)
@@ -1073,6 +1222,8 @@ def _project_route_cost(assessment: RouteAssessment) -> RouteCost:
         rank_cost=assessment.rank_cost,
         k_leg_max=m.k_leg_max,
         clean=assessment.clean,
+        clear_travel_time_s=m.clear_travel_time_s,
+        violation_kinds=tuple(v.kind for v in f.violations),
     )
 
 
@@ -1205,6 +1356,15 @@ class _ForesightClock:
         """The time the agent reaches *d* metres along [s]."""
         t = min(self.t0 + (self.d0 + d) / self.speed, self.horizon_end_s)
         return _cap_at_fds_end(self.decision_time_s, t, self.end_s, self.end_owner)
+
+    def at_many(self, d: np.ndarray) -> np.ndarray:
+        """:meth:`at` for every distance in *d*, logging the cap as it does."""
+        t = np.minimum(self.t0 + (self.d0 + d) / self.speed, self.horizon_end_s)
+        cap = max(self.decision_time_s, self.end_s)
+        over = t > cap
+        if over.any():
+            self.at(float(d[int(over.argmax())]))
+        return np.minimum(t, cap)
 
     def shifted(self, d: float) -> _ForesightClock:
         """The clock of the geometry that starts *d* metres further on."""
@@ -1373,6 +1533,83 @@ def _leg_travel_time(
     effective_speed = config.base_speed_m_per_s * sf
     travel_time = length_m / effective_speed if effective_speed > 1e-9 else math.inf
     return sf, travel_time
+
+
+def _dose(fed_rate_per_min: float, travel_time_s: float) -> float:
+    """FED taken at *fed_rate_per_min* over *travel_time_s*.
+
+    No dose where the rate is zero, even over an infinite time.
+    """
+    if fed_rate_per_min == 0.0:
+        return 0.0
+    return fed_rate_per_min * travel_time_s / _SECONDS_PER_MINUTE
+
+
+@dataclass(frozen=True)
+class _FedRateAsExtinction:
+    """A FED-rate sampler read through the extinction-sampler interface.
+
+    Lets ``_polyline_stats`` average the FED rate along a walk at the same
+    points it samples the walk's extinction.
+    """
+
+    fed_rate_sampler: FedRateSampler
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        return self.fed_rate_sampler.sample_fed_rate(time_s, x, y)
+
+
+def _polyline_prefix(
+    waypoints: list[tuple[float, float]], length_m: float
+) -> list[tuple[float, float]]:
+    """The first *length_m* metres of a polyline, from its first point."""
+    prefix = [waypoints[0]]
+    left = length_m
+    for (x0, y0), (x1, y1) in zip(waypoints, waypoints[1:]):
+        seg = _euclidean(x0, y0, x1, y1)
+        if seg >= left:
+            t = left / seg if seg > 1e-12 else 0.0
+            prefix.append((x0 + t * (x1 - x0), y0 + t * (y1 - y0)))
+            return prefix
+        prefix.append((x1, y1))
+        left -= seg
+    return prefix
+
+
+def _first_leg_dose(
+    leg: _FirstLeg,
+    walk_time_s: float,
+    first_segment: SegmentCost,
+    time_s: float,
+    fed_rate_sampler: FedRateSampler | None,
+    config: RouteCostConfig,
+) -> float:
+    """The dose of a route's first segment, measured from the agent (#171).
+
+    On or ahead of the origin node the FED already taken on the traversed
+    part of the segment is in current_fed, so the segment's dose is charged
+    pro rata to what is left of it. Behind the origin the whole segment is
+    charged, as every node leg is, plus the stretch the walk is longer than
+    the segment: its first ``remaining - L0`` metres from the agent, at the
+    mean FED rate sampled along it at *time_s*, over the walk's pace. A
+    single sample there would turn one hot cell into the dose of the whole
+    stretch, which in dense smoke lasts a minute.
+    """
+    remaining = leg.length_m
+    first_length = first_segment.length_m
+    if remaining <= first_length + 1e-6:
+        return _first_share(remaining, first_length) * first_segment.fed_growth
+    if fed_rate_sampler is None:
+        return first_segment.fed_growth
+    excess = remaining - first_length
+    rate, _ = _polyline_stats(
+        _polyline_prefix(leg.waypoints, excess),
+        time_s,
+        _FedRateAsExtinction(fed_rate_sampler),
+        config.sampling_step_m,
+    )
+    excess_time = walk_time_s * (excess / remaining)
+    return first_segment.fed_growth + _dose(rate, excess_time)
 
 
 def _first_share(remaining_m: float, first_length_m: float) -> float:
@@ -1560,7 +1797,7 @@ def _measure_route(
 
     # The FED already taken on the traversed part of the first segment is in
     # current_fed, so the first segment's dose is charged pro rata to what is
-    # left of it.
+    # left of it; behind the origin, see _first_leg_dose.
     shares = [first_share] + [1.0] * (len(segments) - 1)
     weighted = list(zip(shares, segments))
     if first_leg is not None and graph.nodes.get(path[0]) is not None:
@@ -1578,15 +1815,21 @@ def _measure_route(
         exposure_length = sum(length for _, length in legs)
         total_k_samples = sum(k * length for k, length in legs)
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
-        travel_time = sum(
-            [_leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]]
-            + [s.travel_time_s for s in segments[1:]]
+        walk_time = _leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]
+        travel_time = sum([walk_time] + [s.travel_time_s for s in segments[1:]])
+        first_dose = _first_leg_dose(
+            first_leg, walk_time, segments[0], time_s, fed_rate_sampler, config
         )
+        # Summed in the order of the pro-rata sum below, so an agent on or
+        # ahead of the origin gets bit-identically the same dose.
+        fed_growth = sum([first_dose] + [s.fed_growth for s in segments[1:]])
+        clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)
         total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         travel_time = sum(w * s.travel_time_s for w, s in weighted)
+        clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
         # The share is capped at 1, so an agent behind the route's origin node
         # would be timed over the node legs alone and not the walk to the
         # origin. That stretch is timed at the route's mean pace, the same
@@ -1595,7 +1838,8 @@ def _measure_route(
         # infinite.
         if effective_length > exposure_length > 1e-9:
             travel_time *= effective_length / exposure_length
-    fed_growth = sum(w * s.fed_growth for w, s in weighted)
+            clear_travel_time *= effective_length / exposure_length
+        fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
     # The worst point on the route, not its average: a route is refused because
     # of the wall of smoke in it, and a mean over 30 clear metres and 3 blind
@@ -1617,7 +1861,7 @@ def _measure_route(
     # an agent past a smoke blob read its committed route as clean and every
     # rival as dirty, on smoke none of them would walk through.
     #
-    # Sampled along the walk itself, around walls, at sampling_step_m over its
+    # Sampled along the walk itself, around walls, once per grid cell over its
     # real length -- which, behind the origin node, is longer than the capped
     # first_share of the segment.
     if first_leg is not None:
@@ -1688,6 +1932,7 @@ def _measure_route(
         k_max_route=k_max,
         tau_route=tau_route,
         k_leg_max=k_leg_max,
+        clear_travel_time_s=clear_travel_time,
     )
 
 
@@ -1806,6 +2051,12 @@ class _AnchoredPolicy:
         """
         if old_rc is None:
             return True
+        # Must-flee comes first, so a refused rival the agent must also flee
+        # is allowed here without the tau margin _apply_fallback asks of it.
+        # In a reevaluation that pair never reaches the anchor: when every
+        # route is refused, the fallback keeps the current exit ahead of such
+        # a rival unless its tau clears the margin, and the scan stops at the
+        # current exit (#128).
         if _must_flee_rejection(old_rc, config.cost_config):
             return True
         if not candidate.feasible and not old_rc.feasible:
@@ -1877,6 +2128,10 @@ class AdditivePolicy(_AnchoredPolicy):
                         rc,
                         rejected=True,
                         rejection_reason="all segments non-visible",
+                        violation_kinds=(
+                            *rc.violation_kinds,
+                            "all_segments_non_visible",
+                        ),
                     )
                 updated.append(rc)
             costs = updated
@@ -2053,7 +2308,7 @@ class GatePolicy(_AnchoredPolicy):
         # The exit the agent already walks to has its optical depth discounted,
         # so it keeps its place unless a rival is clearly cleaner rather than
         # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
-        # (evac.f90:1507), applied at :16467 inside the IF that ranks doors --
+        # (evac.f90:1572), applied at :16803 inside the IF that ranks doors --
         # the same position, not a separate veto afterwards. Hysteresis belongs
         # in the ordering: bolted on after it, the ordering and the veto
         # disagree and the agent oscillates between what each of them prefers.
@@ -2146,7 +2401,8 @@ def evaluate_route(
     behind the agent is not charged and smoke on a walk that leaves the first
     segment is. The FED of the first segment is charged pro rata to what is
     left of it, so a dose already incurred -- and carried in ``current_fed``
-    -- is not charged a second time.
+    -- is not charged a second time; an agent behind the origin node is
+    charged the whole segment and the stretch back to it.
 
     ``current_target`` is accepted and ignored; it is kept so callers that
     already thread it through do not have to change, and so the parameter is
@@ -2265,7 +2521,7 @@ def _first_hops(
     Those nodes are *source*'s successors in *graph* and the node the agent is
     walking to. Each walk is weighted by *policy* as an edge, measured as
     ``_measure_route`` measures a first leg: the smoke on the walk, its time,
-    and the dose of the segment from *source* pro rata to what is left of it.
+    and the dose of the segment from *source* as ``_first_leg_dose`` charges it.
     So every exit, the agent's own included, is searched for from where the
     agent stands and not from the node it last left.
     """
@@ -2309,7 +2565,9 @@ def _first_hops(
             k_avg=leg.k_avg,
             speed_factor=speed_factor,
             travel_time_s=travel_time,
-            fed_growth=_first_share(leg.length_m, seg.length_m) * seg.fed_growth,
+            fed_growth=_first_leg_dose(
+                leg, travel_time, seg, time_s, fed_rate_sampler, config
+            ),
             visible=leg.k_avg < config.visibility_extinction_threshold,
             k_max=leg.k_max,
             arrival_time_s=time_s,
@@ -2330,7 +2588,18 @@ def _fallback_rival_wins(
     never moves an agent. One rule for the fallback order and the anchor:
     a k_max hold with a time anchor behind it kept agents on an exit with
     three times the smoke.
+
+    A route the agent must flee never displaces one it need not flee, and
+    always yields to one (#128); the tau rule decides only between two of a
+    kind. Under ``fallback_rule == "hold"`` nothing else displaces the
+    current exit (#696).
     """
+    rival_flee = _must_flee_rejection(rival, config)
+    current_flee = _must_flee_rejection(current, config)
+    if rival_flee != current_flee:
+        return current_flee
+    if config.fallback_rule == "hold":
+        return False
     if taus_tie(rival.tau_route, current.tau_route):
         return False
     margin = 1.0 - config.fallback_switch_margin
@@ -2343,8 +2612,9 @@ def _apply_fallback(
     """Un-reject the least bad route when every route is refused.
 
     Fallback: with every route refused the agent still has to go somewhere,
-    and the least bad one is the one with the least smoke to walk through,
-    the smallest optical depth tau, then the quickest (#458).
+    and the least bad one is one it need not flee (#128), then the one with
+    the least smoke to walk through, the smallest optical depth tau, then the
+    quickest (#458).
 
     Refusal is never remembered: the sight criterion is measured against the
     distance *still to walk*, so it relaxes as the agent closes on an exit and
@@ -2353,7 +2623,8 @@ def _apply_fallback(
     refuse everything -- which is most of a real run, see
     docs/gate-model-review-notes.md -- the ordering follows the field, so the
     current exit is held unless a rival's optical depth is clearly lower
-    (``_fallback_rival_wins``).
+    (``_fallback_rival_wins``), or, under ``fallback_rule == "hold"``,
+    unless the current route must be fled and the rival need not be (#696).
 
     Ordered by optical depth here too, not by the worst sample: ordering
     refused routes by k_max alone once put a 51 m route ahead of a 22 m one
@@ -2366,7 +2637,13 @@ def _apply_fallback(
     ``feasible`` is left as it was.
     """
     if costs and all(rc.rejected for rc in costs):
-        costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
+        costs.sort(
+            key=lambda rc: (
+                _must_flee_rejection(rc, config),
+                rc.tau_route,
+                rc.rank_cost,
+            )
+        )
         current = next((rc for rc in costs if rc.exit_id == current_exit), None)
         if current is not None and costs[0].exit_id != current.exit_id:
             if not _fallback_rival_wins(costs[0], current, config):
@@ -2553,7 +2830,12 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
     subject to the anchor. The demo's flip-flop was exactly this — mild smoke
     (k_ave ~0.5-0.9) tripping the binary 0.5 visibility threshold every tick.
 
-    Two hazards this does **not** catch, both by construction:
+    The test reads the limits the route breaks (``violation_kinds``), not
+    its public reason, and not ``rejected``: a route over both the FED and the
+    tau limit reports ``tau ...`` but is still lethal, and a route the
+    all-refused fallback promoted keeps its hazard (#128).
+
+    One hazard this does **not** catch, by construction:
 
     * **Heat.** The convective heat dose is tracked per agent and can
       incapacitate on its own
@@ -2561,18 +2843,10 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
       reaches no part of route choice -- ``rank_routes`` is given the gas dose
       and a gas-only rate sampler. An agent can therefore walk into a route
       that will incapacitate it thermally, and nothing here will reject it.
-    * **A FED-lethal route that is also smoke-choked.** Under
-      ``cost_model="gate"`` the tau test overwrites ``rejection_reason`` after
-      the dose test sets it, so such a route reports ``tau ...`` and no longer
-      matches the ``FED`` prefix below. The bypass is lost exactly where both
-      hazards are present.
     """
-    if not rc.rejected:
-        return False
-    reason = (rc.rejection_reason or "").removeprefix("fallback: ")
-    if reason.startswith("FED"):
+    if "fed" in rc.violation_kinds:
         return True
-    if "visible" in reason:  # smoke-obscured path or unreadable sign
+    if "all_segments_non_visible" in rc.violation_kinds:
         return rc.k_ave_route > cost_config.impassable_extinction_threshold
     return False
 
@@ -2611,6 +2885,10 @@ class AgentRouteState:
     default_exit: str | None = None
     # Whether the agent stands because it has nowhere known to go (#610).
     standing: bool = False
+    # The agent's known nodes at its last evaluation, to tell a switch to an
+    # exit learned since then (``learned_exit``). Labels only; None without a
+    # cognitive map or before the first evaluation.
+    known_at_last_eval: frozenset[str] | None = None
 
     @property
     def counted_exit(self) -> str | None:
@@ -2625,7 +2903,26 @@ class AgentRouteState:
 
 @dataclass(frozen=True)
 class RouteSwitch:
-    """Record of a route switch for diagnostics."""
+    """Record of a route switch for diagnostics.
+
+    ``reason`` is one of :data:`SWITCH_REASONS`. A change of exit is labelled
+    by the decision branch that let it through, first match wins:
+    ``fallback`` (every route refused), ``initial`` (no exit before),
+    ``exit_closed`` (the old exit closed on its schedule), ``fed_reroute``
+    (the old route is over the dose limit, or under ``additive`` the dose term
+    contributes to a switch that needs the hazard terms), ``smoke_reroute``
+    (the old route is refused on smoke alone; under ``gate`` the new route is
+    clean where the old is not, clearly lower in tau, or quicker only with
+    smoke slowdown; under ``additive`` the switch needs the smoke term and not
+    the dose term), ``exit_opened`` (the new exit was closed at the previous
+    evaluation), ``learned_exit`` (the new exit was not in the agent's
+    cognitive map at the previous evaluation, or at spawn before the first),
+    ``congestion`` (the switch needs the queue term),
+    ``shorter_path`` (time or length alone clears the anchor). An old exit
+    with no route from where the agent stands gives ``exit_unreachable``,
+    and an idle agent routed to the exit it already holds ``resume``, unless
+    the new exit was opened or learned since the previous evaluation.
+    """
 
     time_s: float
     agent_id: int
@@ -2634,6 +2931,77 @@ class RouteSwitch:
     old_cost: float | None
     new_cost: float
     reason: str
+
+
+#: Every value of :attr:`RouteSwitch.reason`; not in order of precedence.
+SWITCH_REASONS = (
+    "initial",
+    "default_route",
+    "fed_reroute",
+    "smoke_reroute",
+    "exit_closed",
+    "exit_opened",
+    "learned_exit",
+    "congestion",
+    "shorter_path",
+    "exit_unreachable",
+    "resume",
+    "fallback",
+    "better_path",
+    "explore",
+    "wander",
+    "return",
+    "stay",
+)
+
+
+def _agent_steps(
+    rows: Iterable[Mapping[str, Any]],
+) -> dict[Any, list[Mapping[str, Any]]]:
+    """Each agent's route-history rows, one per time step, in history order.
+
+    Rows of one agent with equal ``time_s`` were written in one step; the
+    last of them is the decision the agent acts on.
+    """
+    steps: dict[Any, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        agent = steps.setdefault(row["agent_id"], [])
+        if agent and agent[-1]["time_s"] == row["time_s"]:
+            agent[-1] = row
+        else:
+            agent.append(row)
+    return steps
+
+
+def route_switches(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[tuple[str, Mapping[str, Any]]]:
+    """The route switches in a route history, as (previous target, row).
+
+    *rows* are route-history rows as in ``ScenarioResult.route_history``,
+    in history order. A target is a row's ``new_exit``: an exit, or the node
+    of an ``explore``, ``wander``, ``return`` or ``stay`` row. Per agent and
+    time step (see :func:`_agent_steps`), a step is a switch when the agent
+    already had a target and the step either names an old exit (a change of
+    exit, or of the path to the exit held) or a different target. An agent's
+    target before its first step is that row's old exit, the exit seeded at
+    spawn, if any. Reasons are not read: ``initial`` also labels the first
+    known exit of an agent already on its default route (#733).
+    """
+    found: list[tuple[str, Mapping[str, Any]]] = []
+    for steps in _agent_steps(rows).values():
+        previous = steps[0].get("old_exit") or None
+        for row in steps:
+            changed = bool(row.get("old_exit")) or row["new_exit"] != previous
+            if previous is not None and changed:
+                found.append((previous, row))
+            previous = row["new_exit"]
+    return found
+
+
+def count_route_switches(rows: Iterable[Mapping[str, Any]]) -> int:
+    """Number of route switches in a route history, see :func:`route_switches`."""
+    return len(route_switches(rows))
 
 
 def compute_eval_offset(
@@ -2680,6 +3048,9 @@ def reroute_agent(
     Modifies path_choices so that each stage in the new path leads
     deterministically to the next stage.  Retargets the agent to the
     first remaining stage in the new path that it hasn't passed yet.
+    A route is priced as a walk from the node the agent last left to the
+    node after it, so when the current target lies further along the new
+    path than that node, the agent is retargeted to that node.
 
     Returns True if the route was actually changed.
     """
@@ -2700,6 +3071,21 @@ def reroute_agent(
     if insert_idx is None:
         # Agent is not on the new path yet; retarget from first stage.
         insert_idx = 0
+
+    # The new path was priced from current_origin to the node after it. If
+    # the current target is further along, anchoring there would keep the
+    # agent on the leg the new path replaced, so anchor at the origin and
+    # retarget to the node after it. An idle or waiting agent already stands
+    # on its target, so its route goes on from there.
+    skips_ahead = False
+    if (
+        wait_info.get("state") not in ("idle", "waiting")
+        and current_origin in new_path
+        and current_stage in new_path
+        and new_path.index(current_stage) > new_path.index(current_origin) + 1
+    ):
+        insert_idx = new_path.index(current_origin)
+        skips_ahead = True
 
     # Build deterministic path_choices: each stage → next stage at 100%.
     remaining = new_path[insert_idx:]
@@ -2730,7 +3116,7 @@ def reroute_agent(
     # given path_choices it never consults, and would stand there for the rest
     # of the run.
     idle = wait_info.get("state") == "idle"
-    if (current_stage not in remaining or idle) and len(remaining) >= 2:
+    if (current_stage not in remaining or idle or skips_ahead) and len(remaining) >= 2:
         next_stage = remaining[1]
         if next_stage in stage_configs:
             from .direct_steering_runtime import pick_stage_target
@@ -2743,7 +3129,6 @@ def reroute_agent(
             wait_info["target_assigned"] = False
             wait_info["state"] = "to_target"
             wait_info["wait_until"] = None
-            wait_info["inside_since"] = None
 
     return True
 
@@ -2983,6 +3368,8 @@ def _decide_exit_change(
     *,
     route_state: AgentRouteState | None = None,
     time_s: float | None = None,
+    news: str | None = None,
+    current_fed: float = 0.0,
 ) -> RouteDecision:
     """Whether to move the agent to *best*'s exit, or give it its first one.
 
@@ -2993,6 +3380,11 @@ def _decide_exit_change(
     None) or when the old exit is no longer reachable and so was never
     priced. Everything else is _anchor_allows, which is also what chose
     `best`, and, given *route_state* and *time_s*, the return lockout.
+
+    *news* is ``exit_opened`` or ``learned_exit`` when *best*'s exit became
+    available to the agent since its previous evaluation; it only labels the
+    switch (see :class:`RouteSwitch`), as does *current_fed*, the dose the
+    agent has already taken.
     """
     if (
         old_exit is not None
@@ -3004,11 +3396,17 @@ def _decide_exit_change(
     ):
         return RouteDecision(kind="keep")
 
-    reason = "initial" if old_exit is None else "smoke_reroute"
-    if best.rejection_reason and best.rejection_reason.startswith("fallback"):
+    fallback = (best.rejection_reason or "").startswith("fallback")
+    if fallback:
         reason = "fallback"
+    elif old_exit is None:
+        reason = "initial"
+    else:
+        reason = _exit_change_reason(
+            best, old_exit, old_rc, config, news, current_fed=current_fed
+        )
     return RouteDecision(
-        kind="fallback" if reason == "fallback" else "switch",
+        kind="fallback" if fallback else "switch",
         path=best.path,
         old_exit=old_exit,
         target_id=best.exit_id,
@@ -3016,6 +3414,167 @@ def _decide_exit_change(
         new_cost=best.rank_cost,
         switch_reason=reason,
     )
+
+
+def _exit_change_reason(
+    best: RouteCost,
+    old_exit: str,
+    old_rc: RouteCost | None,
+    config: RerouteConfig,
+    news: str | None,
+    *,
+    current_fed: float = 0.0,
+) -> str:
+    """The cause of an allowed change from *old_exit* to *best*.
+
+    Reads only the two priced routes, so it cannot change the decision.
+    *current_fed* is the dose already taken, which both routes carry.
+    """
+    if old_rc is None:
+        fallback = "resume" if best.exit_id == old_exit else "exit_unreachable"
+        return news or fallback
+    if old_rc.rejected:
+        return "fed_reroute" if _over_dose(old_rc) else "smoke_reroute"
+    hazard = _hazard_reason(best, old_rc, config, current_fed)
+    if hazard is not None:
+        return hazard
+    if news is not None:
+        return news
+    if not _clears_without(best, old_rc, config, _queue_term):
+        return "congestion"
+    return "shorter_path"
+
+
+def _over_dose(rc: RouteCost) -> bool:
+    """Whether the route to the agent's own exit breaks the dose limit.
+
+    Read from the limits the route breaks, not the rejection message: under
+    ``gate`` a route over both limits reports tau, and the dose still names
+    the cause. The kinds were recorded against the limit of the agent's own
+    exit, so the label and must-flee agree (#128).
+    """
+    return "fed" in rc.violation_kinds
+
+
+def _hazard_reason(
+    best: RouteCost,
+    old_rc: RouteCost,
+    config: RerouteConfig,
+    current_fed: float = 0.0,
+) -> str | None:
+    """``fed_reroute`` or ``smoke_reroute`` if dose or smoke let *best* win.
+
+    Under ``additive`` the dose term is credited on the dose each route adds,
+    not on the dose already taken: that part is the same on both routes and
+    would decide nothing, yet under the ratio anchor removing it changes the
+    comparison.
+    """
+    cost_config = config.cost_config
+    if cost_config.cost_model == "gate":
+        cleaner = GatePolicy._clean_bypass(best, old_rc) or (
+            GatePolicy._tau_band(best, old_rc, cost_config) > 0
+        )
+        return (
+            "smoke_reroute"
+            if cleaner or _slowed_by_smoke(best, old_rc, config)
+            else None
+        )
+    fed_term = _fed_growth_term(current_fed)
+
+    def hazard_terms(rc: RouteCost, cfg: RouteCostConfig) -> float:
+        return fed_term(rc, cfg) + _smoke_term(rc, cfg)
+
+    if _clears_without(best, old_rc, config, hazard_terms):
+        return None
+    if _clears_without(best, old_rc, config, _smoke_term) or not _clears_without(
+        best, old_rc, config, fed_term
+    ):
+        return "fed_reroute"
+    return "smoke_reroute"
+
+
+def _slowed_by_smoke(best: RouteCost, old_rc: RouteCost, config: RerouteConfig) -> bool:
+    """Whether the switch fails the anchor with clear-air travel times (gate).
+
+    Gate ranks on travel time, which smoke slows; a switch that clears only
+    because of that slowdown is a smoke effect. The queue term is kept.
+    """
+    if best.clear_travel_time_s is None or old_rc.clear_travel_time_s is None:
+        return False
+    queue = config.cost_config.w_queue
+    new_cost = best.clear_travel_time_s + queue * best.queue_time_s
+    old_cost = old_rc.clear_travel_time_s + queue * old_rc.queue_time_s
+    return not new_cost < old_cost * config.exit_switch_anchor
+
+
+def _fed_growth_term(
+    current_fed: float,
+) -> Callable[[RouteCost, RouteCostConfig], float]:
+    """The dose term of the additive composite for the dose the route adds."""
+
+    def term(rc: RouteCost, config: RouteCostConfig) -> float:
+        return config.w_fed * (rc.fed_max_route - current_fed)
+
+    return term
+
+
+def _smoke_term(rc: RouteCost, config: RouteCostConfig) -> float:
+    """The smoke term of the additive composite, w_smoke * K_ave * L."""
+    return config.w_smoke * rc.tau_route
+
+
+def _queue_term(rc: RouteCost, config: RouteCostConfig) -> float:
+    """The queue term of ``rank_cost`` under either cost model."""
+    if config.cost_model == "gate":
+        return config.w_queue * rc.queue_time_s
+    return config.w_queue * config.base_speed_m_per_s * rc.queue_time_s
+
+
+def _clears_without(
+    best: RouteCost,
+    old_rc: RouteCost,
+    config: RerouteConfig,
+    term: Callable[[RouteCost, RouteCostConfig], float],
+) -> bool:
+    """Whether *best* would clear the anchor with *term* taken out of both costs."""
+    cost_config = config.cost_config
+    new_cost = best.rank_cost - term(best, cost_config)
+    old_cost = old_rc.rank_cost - term(old_rc, cost_config)
+    return new_cost < old_cost * config.exit_switch_anchor
+
+
+def _exit_news(
+    exit_id: str,
+    graph: StageGraph,
+    route_state: AgentRouteState,
+    cognitive_map,
+) -> str | None:
+    """Whether *exit_id* became available since the agent's last evaluation.
+
+    ``exit_opened`` if the exit was closed then, ``learned_exit`` if it was not
+    in the agent's cognitive map then (or, before the first evaluation, in the
+    map it was given at spawn), else None. Labels only.
+    """
+    last = route_state.last_eval_time_s
+    node = graph.nodes.get(exit_id)
+    if math.isfinite(last) and node is not None and not node.is_open(last):
+        return "exit_opened"
+    known = route_state.known_at_last_eval
+    if cognitive_map is not None and known is not None and exit_id not in known:
+        return "learned_exit"
+    return None
+
+
+def _remember_known(route_state: AgentRouteState, cognitive_map) -> None:
+    """Keep the agent's known nodes as of this evaluation, for ``learned_exit``.
+
+    A cognitive map only grows, so an unchanged size is an unchanged map.
+    """
+    if cognitive_map is None:
+        return
+    known = route_state.known_at_last_eval
+    if known is None or len(known) != len(cognitive_map.known_nodes):
+        route_state.known_at_last_eval = frozenset(cognitive_map.known_nodes)
 
 
 def _decide_explore(
@@ -3185,7 +3744,6 @@ def _start_look(wait_info: dict, node_id: str, point: tuple[float, float]) -> No
     wait_info["target_assigned"] = False
     wait_info["state"] = "to_target"
     wait_info["wait_until"] = None
-    wait_info["inside_since"] = None
     wait_info.pop("look_deadline", None)
 
 
@@ -3293,7 +3851,6 @@ def _stand(wait_info: dict, route_state: AgentRouteState, node: str | None) -> N
     wait_info["target"] = tuple(position) if position is not None else None
     wait_info["target_assigned"] = False
     wait_info["wait_until"] = None
-    wait_info["inside_since"] = None
     route_state.standing = True
     route_state.current_path = []
 
@@ -3569,6 +4126,7 @@ def evaluate_and_reroute(
         # discovery agent that hasn't found the way out yet). Its
         # distribution's no_known_exit mode decides what it does (#610).
         route_state.last_eval_time_s = current_time_s
+        _remember_known(route_state, cognitive_map)
         if cognitive_map is None:
             return None
         decision = _decide_no_known_exit(
@@ -3579,6 +4137,12 @@ def evaluate_and_reroute(
             cognitive_map,
             agent_position,
         )
+        if decision.kind == "default_route" and stage_closed_down(
+            graph, route_state.counted_exit, current_time_s
+        ):
+            # The exit the agent walked to, known or not, is the one the
+            # closure took from it (#395 R-B).
+            decision = replace(decision, old_exit=route_state.counted_exit)
         return _apply_decision(
             decision, agent_id, wait_info, route_state, current_time_s
         )
@@ -3592,7 +4156,11 @@ def evaluate_and_reroute(
     ):
         return None
 
-    old_exit = route_state.current_exit
+    # The exit the agent walks to, in its map or not. When it has closed
+    # down, the switch leaves that exit, and the closure is the cause
+    # (#395). An exit that has not opened yet was never the agent's.
+    heading_closed = stage_closed_down(graph, route_state.counted_exit, current_time_s)
+    old_exit = route_state.counted_exit if heading_closed else route_state.current_exit
     old_rc = None
     old_cost = None
     if old_exit and old_exit != best.exit_id:
@@ -3605,7 +4173,9 @@ def evaluate_and_reroute(
                 old_cost = rc.rank_cost
                 break
 
+    news = _exit_news(best.exit_id, graph, route_state, cognitive_map)
     route_state.last_eval_time_s = current_time_s
+    _remember_known(route_state, cognitive_map)
 
     # An idle agent stands on a node with no onward plan, so there is no
     # committed path to compare against and no churn to protect it from. It must
@@ -3639,8 +4209,12 @@ def evaluate_and_reroute(
             config,
             route_state=route_state,
             time_s=current_time_s,
+            news=news,
+            current_fed=current_fed,
         )
-        if decision.kind == "switch" and stage_closed(graph, old_exit, current_time_s):
+        # A fallback keeps its kind, for the lockout, but the closure is
+        # why the agent moved (#395 R-C).
+        if decision.kind in ("switch", "fallback") and heading_closed:
             decision = replace(decision, switch_reason="exit_closed")
     switch = _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
     if decision.kind in ("switch", "fallback") and switch is not None:
@@ -3656,6 +4230,43 @@ def _remember_exit_switch(
         return
     route_state.refused_switch_from = switch.old_exit if refused else None
     route_state.refused_switch_time_s = switch.time_s if refused else -math.inf
+
+
+def adopt_heading_exit(
+    route_state: AgentRouteState,
+    wait_info: dict,
+    graph: StageGraph,
+    cognitive_map,
+    time_s: float,
+) -> None:
+    """Set the route state from the exit the agent's path ends at (#395 R-B).
+
+    Only an exit that has closed down is adopted: an exit in the agent's map
+    (or any exit, without a map) becomes its current exit, one outside it
+    the exit of its default route. Called before a closure decision, so the
+    switch leaves the exit the agent walked to. An exit that has not opened
+    yet is never the agent's exit, so the state is left as it is.
+    """
+    exit_id = terminal_exit(wait_info, graph.nodes)
+    if not stage_closed_down(graph, exit_id, time_s):
+        return
+    known = cognitive_map is None or exit_id in cognitive_map.known_nodes
+    route_state.current_exit = exit_id if known else None
+    route_state.default_exit = None if known else exit_id
+
+
+def stage_closed_down(graph: StageGraph, stage_id: str | None, time_s: float) -> bool:
+    """Whether *stage_id* has closed on its schedule by *time_s*.
+
+    Unlike :func:`stage_closed`, an exit that has not opened yet does not
+    count: it was never open, so nobody lost it.
+    """
+    node = graph.nodes.get(stage_id) if stage_id is not None else None
+    return (
+        node is not None
+        and node.closed_after_s is not None
+        and time_s >= node.closed_after_s
+    )
 
 
 def stage_closed(graph: StageGraph, stage_id: str | None, time_s: float) -> bool:

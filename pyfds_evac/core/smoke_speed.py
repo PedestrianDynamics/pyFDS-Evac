@@ -69,6 +69,7 @@ import numpy as np
 from .fds_sampling import (
     FdsDomainError,
     FdsHorizonError,
+    LinePart,
     SliceFieldSampler,
     domain_error_message,
     load_slice_sampler,
@@ -199,6 +200,27 @@ class ExtinctionField:
     def covers(self, x: float, y: float) -> bool:
         """Return whether the extinction slice covers the x/y point."""
         return self._sampler.covers(x, y)
+
+    def line_parts(
+        self, x0: float, y0: float, x1: float, y1: float
+    ) -> tuple[LinePart, ...] | None:
+        """One sample per grid cell along a segment (#653), or None.
+
+        See ``SliceFieldSampler.line_parts``. None for a sampler without a
+        grid; route smoke is then sampled every ``sampling_step_m``.
+        """
+        line_parts = getattr(self._sampler, "line_parts", None)
+        if line_parts is None:
+            return None
+        parts: tuple[LinePart, ...] = line_parts(x0, y0, x1, y1)
+        return parts
+
+    def read_cells(self, part: LinePart, times: np.ndarray) -> np.ndarray:
+        """K [1/m] at the samples of a part from ``line_parts``.
+
+        See ``SliceFieldSampler.read_cells``.
+        """
+        return self._sampler.read_cells(part, times)
 
     @property
     def end_time_s(self) -> float:

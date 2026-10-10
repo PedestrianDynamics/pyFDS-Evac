@@ -272,18 +272,18 @@
    "time_s": 20.0
   },
   {
-   "agent_id": 3,
-   "new_cost": 0.0,
-   "new_exit": "jps-checkpoints_3",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
-   "time_s": 23.0
-  },
-  {
    "agent_id": 5,
    "new_cost": 0.0,
    "new_exit": "jps-checkpoints_2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 22.0
+  },
+  {
+   "agent_id": 3,
+   "new_cost": 0.0,
+   "new_exit": "jps-checkpoints_3",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -336,7 +336,7 @@
   },
   {
    "agent_id": 4,
-   "new_cost": 32.13,
+   "new_cost": 32.052,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "",
@@ -345,7 +345,7 @@
   },
   {
    "agent_id": 2,
-   "new_cost": 29.748,
+   "new_cost": 29.898,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "",
@@ -354,7 +354,7 @@
   },
   {
    "agent_id": 1,
-   "new_cost": 30.061,
+   "new_cost": 32.023,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "",
@@ -363,7 +363,7 @@
   },
   {
    "agent_id": 5,
-   "new_cost": 32.008,
+   "new_cost": 36.748,
    "new_exit": "jps-exits_0",
    "old_cost": null,
    "old_exit": "",

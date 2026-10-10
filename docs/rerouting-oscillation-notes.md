@@ -173,9 +173,9 @@ sweep is the path to a real value.
 
 ### What changed under the gate cost model
 
-**`_must_flee_rejection` is nearly dead under the gate.** It fires only on a rejection
-reason starting `FED` or containing `"visible"`, and the gate's only reason string starts
-`tau`. So `impassable_extinction_threshold` cannot fire under the default model at any
+**`_must_flee_rejection` is nearly dead under the gate.** It fires only on a FED
+violation or the additive `all segments non-visible` rejection, and the gate's only
+smoke rejection is `tau`. So `impassable_extinction_threshold` cannot fire under the default model at any
 smoke density, and the only surviving bypass is FED — which on the fires measured here
 never reaches its threshold (largest projected FED 0.0016 against 1.0). In practice
 **nothing bypasses the anchor under the gate.** This is defensible if optical depth is not

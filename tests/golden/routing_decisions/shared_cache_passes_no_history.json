@@ -1,0 +1,4090 @@
+{
+ "additive": {
+  "samples": 636,
+  "trace": [
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.25,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 20.9418,
+     "new_exit": "E0",
+     "old_cost": 29.0304,
+     "old_exit": "E1",
+     "reason": "shorter_path",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 28.6346,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 18.4635,
+     "new_exit": "E0",
+     "old_cost": 25.5887,
+     "old_exit": "E1",
+     "reason": "shorter_path",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate": {
+  "samples": 636,
+  "trace": [
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 17.2281,
+     "new_exit": "E0",
+     "old_cost": 22.3135,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 15.1574,
+     "new_exit": "E0",
+     "old_cost": 20.2394,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate_clean": {
+  "samples": 645,
+  "trace": [
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S2",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S1",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 3,
+     "E1": 1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S2",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S1",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 3,
+     "E1": 1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S2",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E1",
+     "current_path": [
+      "S1",
+      "M",
+      "E1"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E1",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 3,
+     "E1": 1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate_no_anticipate": {
+  "samples": 261,
+  "trace": [
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 17.1803,
+     "new_exit": "E0",
+     "old_cost": 22.2334,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 15.1223,
+     "new_exit": "E0",
+     "old_cost": 20.1753,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 D0 | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 D0 | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ },
+ "gate_queue": {
+  "samples": 636,
+  "trace": [
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 1,
+     "new_cost": 25.0202,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": null,
+     "reason": "initial",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 3,
+     "new_cost": 18.382,
+     "new_exit": "E0",
+     "old_cost": 22.6981,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 4,
+     "new_cost": 25.4048,
+     "new_exit": "E2",
+     "old_cost": null,
+     "old_exit": "E2",
+     "reason": "resume",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 30.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": {
+     "agent_id": 5,
+     "new_cost": 16.6959,
+     "new_exit": "E0",
+     "old_cost": 20.2394,
+     "old_exit": "E1",
+     "reason": "smoke_reroute",
+     "time_s": 30.0
+    },
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0209 0.13 0.9983 20.0338 0.0 True 30.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M | S1 M 10.1 0.0271 0.13 0.9978 10.1222 0.0 True 30.0",
+     "S2 M | S2 M 10.3 0.13 0.13 0.9895 10.4093 0.0 True 30.0",
+     "M E0 | M E0 10.0 0.13 0.13 0.9895 10.1061 0.0 True 30.0",
+     "M E1 | M E1 15.0 0.13 0.13 0.9895 15.1591 0.2274 True 30.0",
+     "D0 M 30.0 inf | D0 M 20.0 0.0282 0.21 0.9977 20.0456 0.0 True 30.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0",
+     "D0 E2 30.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 30.0",
+     "S1 M 30.0 inf | S1 M 10.1 0.0329 0.1704 0.9973 10.1269 0.0 True 30.0",
+     "M E0 38.0 inf | M E0 10.0 0.182 0.202 0.9853 10.1491 0.0 True 38.0",
+     "M E1 38.0 inf | M E1 15.0 0.192 0.222 0.9845 15.2362 0.2895 True 38.0",
+     "S2 M 30.0 inf | S2 M 10.3 0.1506 0.1712 0.9878 10.4268 0.0 True 30.0",
+     "M E0 37.0 inf | M E0 10.0 0.178 0.198 0.9856 10.1458 0.0 True 37.0",
+     "M E1 37.0 inf | M E1 15.0 0.188 0.218 0.9848 15.2312 0.2818 True 37.0",
+     "M E0 35.0 inf | M E0 10.0 0.17 0.19 0.9863 10.1392 0.0 True 35.0",
+     "M E1 35.0 inf | M E1 15.0 0.18 0.21 0.9855 15.2212 0.2664 True 35.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 31.1,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0213 0.1344 0.9983 20.0345 0.0 True 31.1",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "S1 M | S1 M 10.1 0.0278 0.1344 0.9978 10.1227 0.0 True 31.1",
+     "S2 M | S2 M 10.3 0.1344 0.1344 0.9891 10.413 0.0 True 31.1",
+     "M E0 | M E0 10.0 0.1344 0.1344 0.9891 10.1097 0.0 True 31.1",
+     "M E1 | M E1 15.0 0.1344 0.1344 0.9891 15.1646 0.2358 True 31.1",
+     "D0 M 31.1 inf | D0 M 20.0 0.0286 0.2144 0.9977 20.0463 0.0 True 31.1",
+     "M E0 51.1 inf | M E0 10.0 0.2344 0.2544 0.9811 10.1929 0.0 True 51.1",
+     "M E1 51.1 inf | M E1 15.0 0.2444 0.2744 0.9803 15.3019 0.391 True 51.1",
+     "D0 E2 31.1 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 31.1",
+     "D0 D0 31.1 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 31.1",
+     "S1 M 31.1 inf | S1 M 10.1 0.0335 0.1748 0.9973 10.1274 0.0 True 31.1",
+     "M E0 39.1 inf | M E0 10.0 0.1864 0.2064 0.985 10.1528 0.0 True 39.1",
+     "M E1 39.1 inf | M E1 15.0 0.1964 0.2264 0.9841 15.2417 0.298 True 39.1",
+     "S2 M 31.1 inf | S2 M 10.3 0.155 0.1756 0.9875 10.4305 0.0 True 31.1",
+     "M E0 38.1 inf | M E0 10.0 0.1824 0.2024 0.9853 10.1495 0.0 True 38.1",
+     "M E1 38.1 inf | M E1 15.0 0.1924 0.2224 0.9845 15.2367 0.2903 True 38.1",
+     "M E0 36.1 inf | M E0 10.0 0.1744 0.1944 0.9859 10.1428 0.0 True 36.1",
+     "M E1 36.1 inf | M E1 15.0 0.1844 0.2144 0.9851 15.2267 0.2748 True 36.1"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   },
+   {
+    "agent_id": 1,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "D0",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      -0.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 2,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 3,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S2",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S2",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S2": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 4,
+    "route_state": {
+     "current_exit": "E2",
+     "current_path": [
+      "D0",
+      "E2"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "D0",
+     "current_target_stage": "E2",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "D0": [
+       [
+        "E2",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      0.2342,
+      -25.798
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "agent_id": 5,
+    "route_state": {
+     "current_exit": "E0",
+     "current_path": [
+      "S1",
+      "M",
+      "E0"
+     ],
+     "default_exit": null,
+     "eval_offset_s": 0.0,
+     "known_at_last_eval": null,
+     "last_eval_time_s": 45.0,
+     "refused_switch_from": null,
+     "refused_switch_time_s": -Infinity,
+     "standing": false,
+     "wander_step": 0
+    },
+    "switch": null,
+    "wait_info": {
+     "agent_radius": 0.2,
+     "base_seed": 42,
+     "current_origin": "S1",
+     "current_target_stage": "M",
+     "mode": "path",
+     "no_known_exit": null,
+     "path_choices": {
+      "M": [
+       [
+        "E0",
+        100.0
+       ]
+      ],
+      "S1": [
+       [
+        "M",
+        100.0
+       ]
+      ]
+     },
+     "state": "to_target",
+     "step_index": 0,
+     "target": [
+      20.0,
+      -0.0
+     ],
+     "target_assigned": false,
+     "wait_until": null
+    }
+   },
+   {
+    "cache": [
+     "D0 M | D0 M 20.0 0.0264 0.19 0.9979 20.0427 0.0 True 45.0",
+     "D0 E2 | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "S1 M | S1 M 10.1 0.0357 0.19 0.9971 10.1292 0.0 True 45.0",
+     "S2 M | S2 M 10.3 0.19 0.19 0.9847 10.4605 0.0 True 45.0",
+     "M E0 | M E0 10.0 0.19 0.19 0.9847 10.1558 0.0 True 45.0",
+     "M E1 | M E1 15.0 0.19 0.19 0.9847 15.2337 0.3428 True 45.0",
+     "D0 M 45.0 inf | D0 M 20.0 0.0336 0.27 0.9973 20.0545 0.0 True 45.0",
+     "M E0 65.0 inf | M E0 10.0 0.29 0.31 0.9766 10.2397 0.0 True 65.0",
+     "M E1 65.0 inf | M E1 15.0 0.3 0.33 0.9758 15.3723 0.4996 True 65.0",
+     "D0 E2 45.0 inf | D0 E2 25.0 0.01 0.01 0.9992 25.0202 0.0 True 45.0",
+     "D0 D0 45.0 inf | D0 D0 0.0 0.01 0.01 0.9992 0.0 0.0 True 45.0",
+     "S1 M 45.0 inf | S1 M 10.1 0.0415 0.2304 0.9967 10.1339 0.0 True 45.0",
+     "M E0 53.0 inf | M E0 10.0 0.242 0.262 0.9805 10.1993 0.0 True 53.0",
+     "M E1 53.0 inf | M E1 15.0 0.252 0.282 0.9797 15.3115 0.4058 True 53.0",
+     "S2 M 45.0 inf | S2 M 10.3 0.2106 0.2312 0.983 10.4782 0.0 True 45.0",
+     "M E0 52.0 inf | M E0 10.0 0.238 0.258 0.9808 10.1959 0.0 True 52.0",
+     "M E1 52.0 inf | M E1 15.0 0.248 0.278 0.98 15.3065 0.398 True 52.0",
+     "M E0 50.0 inf | M E0 10.0 0.23 0.25 0.9814 10.1892 0.0 True 50.0",
+     "M E1 50.0 inf | M E1 15.0 0.24 0.27 0.9806 15.2964 0.3824 True 50.0"
+    ],
+    "exit_counts": {
+     "E0": 5,
+     "E1": -1,
+     "E2": 1
+    }
+   }
+  ]
+ }
+}

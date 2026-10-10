@@ -356,7 +356,8 @@ movie.
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
   In clear air this changes nothing here.
 - **Labels.** `routes.csv` records an agent's first exit as `initial`. A
-  later change of exit is `smoke_reroute`, also in clear air
+  later change of exit is labelled by its cause; in clear air that is
+  `learned_exit` or `shorter_path`, not `smoke_reroute`
   ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)).
 - **Not yet an automated test.** The checks run in the figure script on the
   stored output. `scripts/golden_rerouting.py` records these runs, the grid

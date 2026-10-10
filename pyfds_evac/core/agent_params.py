@@ -279,3 +279,27 @@ def deck_default_number(sim_params: Any) -> int:
     if value is None:
         return int(DEFAULT_SPAWN_PARAMS["number"])
     return int(_deck_spawn_value("number", value))
+
+
+SAMPLED_RADIUS_MIN_M = 0.1
+"""Smallest radius [m] a Gaussian radius draw is given."""
+
+SAMPLED_RADIUS_MAX_M = 1.0
+"""Largest spacing bound [m] of a Gaussian radius."""
+
+
+def max_agent_radius(params: dict[str, Any]) -> float:
+    """The largest radius [m] an agent of *params* gets: the spacing bound.
+
+    Placement keeps agents twice this apart and this far from the area's
+    edge. A constant radius is its own bound. A Gaussian radius is bounded
+    by ``min(max(radius + 3 * radius_std, 0.1), 1.0)``, and every draw is
+    clipped into [0.1, bound], so no agent is larger than the spacing
+    assumed (#709). The run's placement and the importer's capacity check
+    both read this.
+    """
+    radius = float(params.get("radius", DEFAULT_SPAWN_PARAMS["radius"]))
+    if params.get("radius_distribution") != "gaussian" or not params.get("radius_std"):
+        return radius
+    bound = radius + 3 * float(params["radius_std"])
+    return min(max(bound, SAMPLED_RADIUS_MIN_M), SAMPLED_RADIUS_MAX_M)

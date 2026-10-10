@@ -674,9 +674,6 @@ def _make_wait_info(
         "target_assigned": False,
         "state": "to_target",
         "wait_until": None,
-        "inside_since": None,
-        "reach_penetration": 0.25,
-        "reach_dwell_seconds": 0.2,
         "step_index": 0,
         "base_seed": 42,
         "agent_radius": 0.2,
@@ -1215,6 +1212,187 @@ class TestEvaluateAndReroute:
         assert route_state.last_eval_time_s == 42.0
 
 
+# ── an applied route is walked as it was priced (#445) ────────────────
+
+
+def _detour_graph(with_e1: bool = False) -> StageGraph:
+    """A refusable direct leg and a clean detour to the same node.
+
+    C0 (5,5)
+      /    \\
+    D0 (0,0) ───> C3 (10,0) ──> E0 (12,0)
+                     │
+                     └──> E1 (10,-4)   (with_e1 only)
+    """
+    direct_steering_info = {
+        "C0": {"polygon": _box(5, 5), "stage_type": "checkpoint"},
+        "C3": {"polygon": _box(10, 0), "stage_type": "checkpoint"},
+        "E0": {"polygon": _box(12, 0, 0.5), "stage_type": "exit"},
+    }
+    transitions = [
+        {"from": "D0", "to": "C3"},
+        {"from": "D0", "to": "C0"},
+        {"from": "C0", "to": "C3"},
+        {"from": "C3", "to": "E0"},
+    ]
+    if with_e1:
+        direct_steering_info["E1"] = {
+            "polygon": _box(10, -4, 0.5),
+            "stage_type": "exit",
+        }
+        transitions.append({"from": "C3", "to": "E1"})
+    distributions = {"D0": {"coordinates": list(_box(0, 0).exterior.coords)}}
+    return StageGraph.from_scenario(direct_steering_info, transitions, distributions)
+
+
+class _SmokeOnDirectLeg:
+    """K = 10 /m on the D0 -> C3 leg ahead of the agent; the detour is clean."""
+
+    def sample_extinction(self, time_s, x, y):
+        return 10.0 if abs(y) < 0.5 and 3.5 < x < 9.0 else 0.0
+
+
+class _SmokeOnDirectLegAndE0:
+    """As _SmokeOnDirectLeg, and K = 10 /m on the C3 -> E0 leg too."""
+
+    def sample_extinction(self, time_s, x, y):
+        if abs(y) < 0.5 and (3.5 < x < 9.0 or 10.5 < x < 12.5):
+            return 10.0
+        return 0.0
+
+
+def _walking_d0_c3(graph: StageGraph) -> tuple[dict, AgentRouteState]:
+    """An agent that left D0 and walks the direct leg to C3, then E0."""
+    wait_info = _make_wait_info(
+        graph,
+        "D0",
+        "C3",
+        path_choices={"D0": [("C3", 100.0)], "C3": [("E0", 100.0)]},
+    )
+    return wait_info, AgentRouteState(
+        current_exit="E0", current_path=["D0", "C3", "E0"]
+    )
+
+
+def _evaluate(graph, wait_info, route_state, t, field):
+    return evaluate_and_reroute(
+        agent_id=0,
+        wait_info=wait_info,
+        route_state=route_state,
+        graph=graph,
+        current_time_s=t,
+        current_fed=0.0,
+        extinction_sampler=field,
+        fed_rate_sampler=None,
+        config=RerouteConfig(cost_config=RouteCostConfig()),
+        agent_position=(3.0, 0.0),
+    )
+
+
+class TestAppliedRouteWalkedAsPriced:
+    """A route is priced from the node the agent left, so it is walked from there.
+
+    The agent left D0 for C3 and stands at (3, 0). The new route
+    D0 -> C0 -> C3 -> ... has C3 at index 2. Anchoring it at C3 kept the
+    agent on the refused D0 -> C3 leg and logged the same switch every
+    evaluation (#445).
+    """
+
+    def test_same_exit_switch_heads_for_the_detour(self):
+        graph = _detour_graph()
+        field = _SmokeOnDirectLeg()
+        wait_info, route_state = _walking_d0_c3(graph)
+        walked = evaluate_route(
+            graph,
+            ["D0", "C3", "E0"],
+            5.0,
+            0.0,
+            field,
+            None,
+            RouteCostConfig(),
+            agent_position=(3.0, 0.0),
+            current_target="C3",
+        )
+        assert walked.rejected is True
+        assert walked.tau_route > RouteCostConfig().tau_max
+
+        switch = _evaluate(graph, wait_info, route_state, 5.0, field)
+
+        assert switch is not None
+        assert switch.reason == "better_path"
+        assert wait_info["current_origin"] == "D0"
+        assert wait_info["current_target_stage"] == "C0"
+        assert wait_info["state"] == "to_target"
+        assert wait_info["path_choices"]["D0"] == [("C0", 100.0)]
+        assert wait_info["path_choices"]["C0"] == [("C3", 100.0)]
+        assert wait_info["path_choices"]["C3"] == [("E0", 100.0)]
+        assert _evaluate(graph, wait_info, route_state, 6.0, field) is None
+
+    def test_exit_change_heads_for_the_detour(self):
+        graph = _detour_graph(with_e1=True)
+        field = _SmokeOnDirectLegAndE0()
+        wait_info, route_state = _walking_d0_c3(graph)
+
+        switch = _evaluate(graph, wait_info, route_state, 5.0, field)
+
+        assert switch is not None
+        assert (switch.old_exit, switch.new_exit) == ("E0", "E1")
+        assert switch.reason != "better_path"
+        assert wait_info["current_target_stage"] == "C0"
+        assert wait_info["path_choices"]["C0"] == [("C3", 100.0)]
+        assert wait_info["path_choices"]["C3"] == [("E1", 100.0)]
+        assert _evaluate(graph, wait_info, route_state, 6.0, field) is None
+
+    def test_target_next_after_origin_is_kept(self):
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C0")
+        target = wait_info["target"]
+        reroute_agent(wait_info, ["D0", "C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_target_stage"] == "C0"
+        assert wait_info["target"] == target
+        assert "D0" not in wait_info["path_choices"]
+
+    def test_route_from_the_target_keeps_the_target(self):
+        """Without an origin on the route, the agent first reaches its target."""
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C0")
+        reroute_agent(wait_info, ["C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_target_stage"] == "C0"
+        assert wait_info["path_choices"]["C0"] == [("C3", 100.0)]
+
+    def test_idle_agent_heads_for_the_node_after_its_stage(self):
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C0")
+        wait_info["state"] = "idle"
+        reroute_agent(wait_info, ["C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_origin"] == "C0"
+        assert wait_info["current_target_stage"] == "C3"
+
+    def test_idle_agent_is_not_sent_back_to_its_origin(self):
+        """An idle agent stands on its target, so the route goes on from there."""
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C3")
+        wait_info["state"] = "idle"
+        reroute_agent(wait_info, ["D0", "C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_origin"] == "C3"
+        assert wait_info["current_target_stage"] == "E0"
+        assert "D0" not in wait_info["path_choices"]
+
+    def test_waiting_agent_keeps_its_wait(self):
+        """An agent waiting in its target stays there; the route goes on from it."""
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C3")
+        wait_info["state"] = "waiting"
+        wait_info["wait_until"] = 99.0
+        reroute_agent(wait_info, ["D0", "C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_origin"] == "D0"
+        assert wait_info["current_target_stage"] == "C3"
+        assert wait_info["state"] == "waiting"
+        assert wait_info["wait_until"] == 99.0
+        assert wait_info["path_choices"]["C3"] == [("E0", 100.0)]
+        assert "D0" not in wait_info["path_choices"]
+
+
 # ── integrated_extinction_along_los tests ─────────────────────────────
 
 
@@ -1739,6 +1917,15 @@ class TestQueueConfigAndFields:
         assert RouteCostConfig.from_routing_params({"w_queue": 0.5}).w_queue == 0.5
         assert RouteCostConfig.from_routing_params({}).w_queue == 0.0
         assert RouteCostConfig.from_routing_params(None).w_queue == 0.0
+
+    def test_route_cost_config_empty_routing_uses_field_defaults(self):
+        """An empty routing block gives the dataclass defaults, field for field.
+
+        from_routing_params once repeated its own literal defaults, and the
+        two sets could drift apart (#151).
+        """
+        assert RouteCostConfig.from_routing_params({}) == RouteCostConfig()
+        assert RouteCostConfig.from_routing_params(None) == RouteCostConfig()
 
     def test_route_cost_has_queue_time_field(self, linear_graph):
         field = ConstantExtinctionField(0.0)

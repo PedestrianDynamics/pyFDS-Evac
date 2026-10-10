@@ -19,10 +19,12 @@ from shapely.ops import unary_union
 from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
     DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
+    SAMPLED_RADIUS_MIN_M,
     SpawnConfigError,
     _deck_spawn_defaults,
     _normalized_flow_schedule,
     _spawn_value,
+    max_agent_radius,
     normalize_distribution_speed_aliases,
     parameters_as_dict,
 )
@@ -482,13 +484,11 @@ def _estimate_max_capacity(polygon, max_radius):
 def _get_max_agent_radius(params):
     """Get max effective radius for spacing calculations.
 
-    For Gaussian distribution, use mean + 3*std (99.7% coverage) clipped to max 1.0.
-    For constant distribution, use mean radius.
+    As ``agent_params.max_agent_radius``: the mean radius, or for a Gaussian
+    radius ``min(max(mean + 3 * std, 0.1), 1.0)``, the bound every sampled
+    radius is clipped to (#709).
     """
-    mean_radius = params.get("radius", 0.2)
-    if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        return min(mean_radius + 3 * params["radius_std"], 1.0)
-    return mean_radius
+    return max_agent_radius(params)
 
 
 def _by_number(polygon, count, max_radius, seed):
@@ -546,6 +546,92 @@ def _free_area(area, max_radius, overlapping):
     if not holes:
         return area
     return area.difference(unary_union(holes))
+
+
+def _jupedsim_positions(simulation):
+    """Agent positions as JuPedSim checks a new agent against, see ``_occupied``.
+
+    Taken right before ``Simulation.iterate``: JuPedSim 1.4.2 files the
+    agents for its neighbour search at the start of an iteration, before
+    they move, so ``add_agent`` measures a new agent against where the
+    others stood then; record each agent added since. An agent listed in
+    ``removed_agents`` after the iteration is still listed and checked
+    against until the next one.
+    """
+    return {int(agent.id): tuple(agent.position) for agent in simulation.agents()}
+
+
+def _occupied(simulation, agent_radii, jupedsim_positions):
+    """Positions and radii of the agents in *simulation*, for ``_crowds_agents``.
+
+    Returns the current positions, the radii, and the positions JuPedSim
+    checks against (``_jupedsim_positions``). The radius is the one
+    JuPedSim holds; a model without one (the generalized centrifugal force
+    model) falls back to *agent_radii*.
+    """
+    agents = list(simulation.agents())
+    xy = np.array([agent.position for agent in agents], dtype=float).reshape(-1, 2)
+    seen = [jupedsim_positions.get(int(a.id), a.position) for a in agents]
+    radii = [
+        getattr(agent.model, "radius", None) or agent_radii.get(int(agent.id), 0.2)
+        for agent in agents
+    ]
+    seen_xy = np.array(seen, dtype=float).reshape(-1, 2)
+    return xy, np.array(radii, dtype=float), seen_xy
+
+
+# Workaround: JuPedSim 1.4.2 spends an agent id on every refused
+# ``add_agent``, and refuses an agent at a distance d from another when
+# d <= r + r_other (collision-free speed models, anticipation velocity
+# model) or d <= r (social force model, r of the agent added), d measured
+# to where the other stood at the start of the last iteration. A flow
+# candidate it refuses is still handed to ``add_agent``, so that the ids,
+# and the runs, stay as they were. The pool keeps candidates the largest
+# radius away from their area's boundary, so the wall check does not
+# refuse them. The generalized centrifugal force model compares ellipses
+# that depend on each agent's speed and orientation; it is not mirrored,
+# so its runs can number agents differently. No upstream issue; drop the
+# exception once ``add_agent`` takes a spacing, or spends no id on a
+# refusal (``test_flow_spawn_spacing.py`` pins these facts).
+_CONTACT_RADIUS_SUM = frozenset(
+    {
+        "CollisionFreeSpeedModel",
+        "CollisionFreeSpeedModelV2",
+        "AnticipationVelocityModel",
+    }
+)
+_CONTACT_OWN_RADIUS = frozenset({"SocialForceModel"})
+
+
+def _gaps(position, xy):
+    """Distances from *position* to *xy*, computed as JuPedSim's ``Point::Norm``."""
+    dx, dy = position[0] - xy[:, 0], position[1] - xy[:, 1]
+    return np.sqrt(dx * dx + dy * dy)
+
+
+def _refused_by_model(model_type, radius, gaps, radii):
+    """Whether JuPedSim 1.4.2 refuses an agent of *radius* at *gaps*."""
+    if model_type in _CONTACT_RADIUS_SUM:
+        return bool(np.any(gaps <= radius + radii))
+    if model_type in _CONTACT_OWN_RADIUS:
+        return bool(np.any(gaps <= radius))
+    return False
+
+
+def _crowds_agents(model_type, agent_parameters, max_radius, occupied):
+    """Whether ``add_agent`` would take a flow agent closer than the spacing (#710).
+
+    As for overlapping spawn areas (#402), two agents keep twice the larger
+    radius apart: *max_radius* is the flow distribution's bound, *occupied*
+    comes from ``_occupied``. A candidate that the model refuses anyway is
+    left to ``add_agent``, see ``_CONTACT_RADIUS_SUM``.
+    """
+    xy, radii, seen_xy = occupied
+    position = agent_parameters.position
+    if np.all(_gaps(position, xy) >= 2 * np.maximum(max_radius, radii)):
+        return False
+    radius = getattr(agent_parameters, "radius", max_radius)
+    return not _refused_by_model(model_type, radius, _gaps(position, seen_xy), radii)
 
 
 def _seatable_parts(free, max_radius):
@@ -1041,6 +1127,52 @@ def _uses_fallback(data) -> bool:
     return not data.get("distributions") or no_routes
 
 
+def _places_agents(journey: dict, distributions) -> bool:
+    """Whether set-up puts agents on *journey*: it lists a deck distribution
+    and a stage that is not a distribution."""
+    stages = journey.get("stages") or []
+    starts = _distribution_stage_keys(stages, distributions)
+    return bool(starts) and any(stage not in distributions for stage in stages)
+
+
+def check_journey_transitions(data) -> None:
+    """Raise for an agents' journey that no entry in ``transitions`` names (#504).
+
+    An agent on a journey is steered along that journey's transitions
+    only; journey stages alone give it no route, and it stands still
+    until the time limit. Only journeys that place agents are checked: a
+    deck distribution among their stages and a stage to walk to. Other
+    journeys leave their agents to the nearest-exit set-up, and a deck the
+    fallback set-up places does not use its journeys at all.
+    """
+    if _uses_fallback(data):
+        return
+    named = {
+        tr.get("journey_id")
+        for tr in data.get("transitions") or []
+        if isinstance(tr, dict)
+    }
+    missing = [
+        journey.get("id")
+        for journey in data.get("journeys") or []
+        if isinstance(journey, dict)
+        and journey.get("id") not in named
+        and _places_agents(journey, data.get("distributions") or {})
+    ]
+    if not missing:
+        return
+    hint = (
+        "; or set 'journeys' to [] to use the editor's 'journeys_v2'"
+        if data.get("journeys_v2")
+        else ""
+    )
+    raise ValueError(
+        f"Journey(s) {', '.join(repr(j) for j in missing)} list stages but no "
+        "entry in 'transitions' names them, so their agents would never move: "
+        f"add the transitions between their stages with that journey_id{hint}."
+    )
+
+
 def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> None:
     """Raise the run's ``SpawnCapacityError`` for an over-full spawn area (#508).
 
@@ -1126,7 +1258,11 @@ def _sample_agent_values(params, n_agents, rng):
     mean_v0 = params.get("v0", 1.25)
 
     if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(0.1, 1.0)
+        # Clipped to the spacing bound, not redrawn: the stream keeps its
+        # n draws, so every in-bound radius and every v0 stays the same (#709).
+        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(
+            SAMPLED_RADIUS_MIN_M, _get_max_agent_radius(params)
+        )
     else:
         radii = np.full(n_agents, mean_radius)
 
@@ -1269,14 +1405,17 @@ def _pick_initial_stage_target(
     current_position: tuple[float, float] | None,
     rng,
     agent_radius: float,
-    reach_penetration: float = 0.25,
 ):
-    """Pick a random point inside the stage polygon with interior clearance."""
+    """Pick a random point inside the stage polygon with interior clearance.
+
+    The clearance is at least 0.25 m, deeper than ``pick_stage_target``
+    asks of later stages; it is kept so seeded first targets do not move.
+    """
     polygon = (stage_cfg or {}).get("polygon")
     if polygon is None:
         return None
 
-    target_clearance = max(0.05, float(agent_radius) * 0.8, float(reach_penetration))
+    target_clearance = max(0.05, float(agent_radius) * 0.8, 0.25)
     return _random_point_in_polygon(polygon, rng, min_clearance=target_clearance)
 
 
@@ -1462,7 +1601,6 @@ def build_agent_path_state(
         initial_position,
         target_rng,
         float(agent_radius),
-        0.25,
     )
 
     return {
@@ -1475,10 +1613,8 @@ def build_agent_path_state(
         "target_assigned": False,
         "state": "to_target",
         "wait_until": None,
-        "inside_since": None,
-        "reach_penetration": 0.25,
-        "reach_dwell_seconds": 0.2,
         "step_index": 0,
+        "agent_radius": float(agent_radius),
         **seeds,
     }
 
@@ -1489,6 +1625,7 @@ def build_exit_path_state(
     seed: int,
     spawn_key: SpawnKey,
     *,
+    agent_radius: float,
     familiarity: Any = "full",
     entrance: str | None = None,
     no_known_exit: str | None = None,
@@ -1530,10 +1667,8 @@ def build_exit_path_state(
         "target_assigned": False,
         "state": "to_target",
         "wait_until": None,
-        "inside_since": None,
-        "reach_penetration": 0.25,
-        "reach_dwell_seconds": 0.2,
         "step_index": 0,
+        "agent_radius": float(agent_radius),
         **steering_seeds(seed, spawn_key),
         "familiarity": familiarity,
         "entrance": entrance,
@@ -1567,6 +1702,7 @@ def initialize_simulation_from_json(
     # Without distributions, or without journeys and transitions, the
     # fallback set-up places the agents.
     needs_fallback = _uses_fallback(data)
+    check_journey_transitions(data)
 
     if "checkpoints" not in data and "waiting_polygons" not in data:
         data["checkpoints"] = {}
@@ -2099,10 +2235,8 @@ def _initialize_with_fallback(
                 "target_assigned": False,
                 "state": "to_target",
                 "wait_until": None,
-                "inside_since": None,
-                "reach_penetration": 0.25,
-                "reach_dwell_seconds": 0.2,
                 "step_index": 0,
+                "agent_radius": agent_radius,
                 **steering_seeds(seed, key),
                 # Carried so the reroute pass can seed a cognitive map from
                 # them; without these every agent is treated as fully familiar
@@ -2372,6 +2506,7 @@ def _add_stages(
             "enable_throughput_throttling": enable_throttling,
             "max_throughput": float(exit_data.get("max_throughput", 0.0)),
             "stage_type": "exit",
+            "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
             **_exit_schedule(exit_id, exit_data),
         }
 
@@ -3414,6 +3549,7 @@ def _add_agents(
                             direct_steering_info,
                             seed,
                             key,
+                            agent_radius=agent_radius,
                             familiarity=spawn_params.get("familiarity", "full"),
                             entrance=spawn_params.get("entrance"),
                             no_known_exit=spawn_params.get("no_known_exit"),

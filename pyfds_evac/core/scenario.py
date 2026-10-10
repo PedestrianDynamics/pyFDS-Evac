@@ -47,6 +47,7 @@ from .agent_params import (
     _normalized_flow_schedule,
     _spawn_value,
     deck_default_number,
+    max_agent_radius,
     parameters_as_dict,
 )
 from .agent_seed import (
@@ -121,9 +122,12 @@ from .route_graph import (
     AgentRouteState,
     RerouteConfig,
     RouteCostConfig,
+    RouteSwitch,
     StageGraph,
     _reconstruct_committed_path,
+    adopt_heading_exit,
     compute_eval_offset,
+    count_route_switches,
     end_look,
     evaluate_and_reroute,
     look_radius,
@@ -881,6 +885,51 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _flow_spawn_due(
+    flow_distributions: list,
+    spawning: list,
+    numbers: list,
+    counters: list,
+    time_s: float,
+    dt: float,
+) -> bool:
+    """Whether a flow source may try to add an agent at *time_s*.
+
+    The test of the spawn loop, widened by half a step on each side so
+    that the rounding of the simulated time cannot miss a due attempt.
+    """
+    for source_id, flow in enumerate(flow_distributions):
+        if source_id >= len(spawning) or counters[source_id] >= numbers[source_id]:
+            continue
+        next_spawn = flow["start_time"] + counters[source_id] * spawning[source_id][0]
+        start = max(flow["start_time"], next_spawn)
+        if start - dt / 2 <= time_s <= flow["end_time"] + dt / 2:
+            return True
+    return False
+
+
+def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
+    """Count a step at which flow source *source_id* found no free position."""
+    count, first, _ = deferred.get(source_id, (0, time_s, time_s))
+    deferred[source_id] = (count + 1, first, time_s)
+
+
+def _deferred_spawn_lines(
+    deferred: dict, flow_distributions: list, numbers: list, counters: list
+) -> list[str]:
+    """One line per flow source that had to wait for a free position (#710)."""
+    lines = []
+    for source_id, (count, first, last) in sorted(deferred.items()):
+        key = flow_distributions[source_id].get("dist_key") or source_id
+        lines.append(
+            f"Flow spawning: '{key}' found no free position at {count} steps "
+            f"between t={first:.2f} s and t={last:.2f} s; "
+            f"{numbers[source_id] - counters[source_id]} of its "
+            f"{numbers[source_id]} agents did not enter"
+        )
+    return lines
+
+
 @dataclass(frozen=True)
 class ProgressEvent:
     """A single progress sample emitted while a scenario runs.
@@ -1020,6 +1069,11 @@ def _no_known_exit(wait_info: dict) -> str:
     return no_known_exit_mode(wait_info.get("no_known_exit"))
 
 
+def _known_nodes(cmap) -> frozenset[str] | None:
+    """The nodes in *cmap*, for the switch label; None without a map."""
+    return None if cmap is None else frozenset(cmap.known_nodes)
+
+
 def _default_route_row(time_s: float, agent_id: int, exit_id: str) -> dict[str, Any]:
     """Route-history row of an agent that takes the default route at spawn."""
     return {
@@ -1030,6 +1084,21 @@ def _default_route_row(time_s: float, agent_id: int, exit_id: str) -> dict[str, 
         "old_cost": "",
         "new_cost": 0.0,
         "reason": "default_route",
+    }
+
+
+def _route_row(switch: RouteSwitch) -> dict[str, Any]:
+    """Route-history row of an applied route switch."""
+    return {
+        "time_s": round(float(switch.time_s), 6),
+        "agent_id": switch.agent_id,
+        "old_exit": switch.old_exit or "",
+        "new_exit": switch.new_exit,
+        "old_cost": round(float(switch.old_cost), 4)
+        if switch.old_cost is not None
+        else "",
+        "new_cost": round(float(switch.new_cost), 4),
+        "reason": switch.reason,
     }
 
 
@@ -1333,13 +1402,8 @@ def _has_exit_schedule(stage_graph: "StageGraph | None") -> bool:
     )
 
 
-def _check_exit_schedule(has_schedule: bool, reroute_config, replay_exits) -> None:
-    """Reject a scheduled exit in a run where no agent could leave it."""
-    if has_schedule and reroute_config is None:
-        raise ValueError(
-            "Exits with open_from_s or closed_after_s need rerouting: agents "
-            "heading for a closed exit are redirected by the reroute pass"
-        )
+def _check_exit_schedule(has_schedule: bool, replay_exits) -> None:
+    """Reject a scheduled exit in a run that replays its exits."""
     if has_schedule and replay_exits is not None:
         raise ValueError(
             "--replay-exits cannot be combined with exits that have "
@@ -1483,6 +1547,9 @@ def load_scenario(path: str) -> Scenario:
             walkable_wkt = zf.read(wkt_name).decode("utf-8").strip()
 
     _migrate_journeys_v2(data)
+    from .simulation_init import check_journey_transitions
+
+    check_journey_transitions(data)
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
     sim_params = sim_settings.get("simulationParams", {})
@@ -1584,7 +1651,10 @@ def run_scenario(
     """
     _require_jupedsim()
     from .simulation_init import (
+        _crowds_agents,
         _find_nearest_exit,
+        _jupedsim_positions,
+        _occupied,
         _random_point_in_polygon,
         build_agent_path_state,
         create_agent_parameters,
@@ -1774,7 +1844,7 @@ def run_scenario(
             no_known_exit_by_dist,
         )
         has_exit_schedule = _has_exit_schedule(stage_graph)
-        _check_exit_schedule(has_exit_schedule, reroute_config, replay_exits)
+        _check_exit_schedule(has_exit_schedule, replay_exits)
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
         # already known -- a real crowd is a gradient, not two camps.
@@ -2066,7 +2136,14 @@ def run_scenario(
                         ),
                         entrance=wait_info.get("entrance"),
                     )
-            return agent_route_state[agent_id]
+            route_state = agent_route_state[agent_id]
+            if route_state.known_at_last_eval is None:
+                # What the agent knows before its first evaluation, so an
+                # exit learned since is labelled learned_exit (#92).
+                route_state.known_at_last_eval = _known_nodes(
+                    cognitive_maps.get(agent_id)
+                )
+            return route_state
 
         def _reevaluate(
             agent_id: int,
@@ -2185,19 +2262,7 @@ def run_scenario(
             else:
                 agent_exits.pop(agent_id, None)
             if switch is not None:
-                route_history.append(
-                    {
-                        "time_s": round(float(switch.time_s), 6),
-                        "agent_id": switch.agent_id,
-                        "old_exit": switch.old_exit or "",
-                        "new_exit": switch.new_exit,
-                        "old_cost": round(float(switch.old_cost), 4)
-                        if switch.old_cost is not None
-                        else "",
-                        "new_cost": round(float(switch.new_cost), 4),
-                        "reason": switch.reason,
-                    }
-                )
+                route_history.append(_route_row(switch))
 
         def _decide_at_flow_spawn(
             agent_id: int, wait_info: dict, chosen: str | None
@@ -2229,6 +2294,61 @@ def run_scenario(
                 reroute_config,
                 stage_graph,
             )
+
+        # Without a reroute pass, the exit choice that runs when an agent's
+        # exit closes is scored as the opening choice is (#395).
+        closure_config = RerouteConfig(cost_config=initial_cost_config)
+
+        def _redirect_from_closed_exit(agent, current_time: float, cache: dict) -> None:
+            """Re-choose the exit of a path agent whose exit is closed (#395).
+
+            Runs only without a reroute pass, for an agent whose path ends
+            at an exit that has closed down or has not opened yet. It
+            decides once per closure, as the reroute pass would, but scored
+            like its opening choice: on the map it holds, without the queue
+            term, in clear air when smoke-blind. An exit that has closed
+            down is the exit it leaves (``exit_closed``); one not open yet
+            was never its exit, so its first open exit is ``initial``.
+            When it knows no open exit it takes the default route. An exit
+            that opens changes nobody's choice.
+            """
+            agent_id = int(agent.id)
+            wait_info = agent_wait_info.get(agent_id)
+            _check_path_agent(has_exit_schedule, wait_info, agent_id)
+            if wait_info is None or wait_info.get("mode") != "path":
+                return
+            if wait_info.get("state") == "done" or stage_graph is None:
+                return
+            if not _heads_for_closed_exit(wait_info, stage_graph, current_time):
+                return
+            rs = agent_route_state.setdefault(agent_id, AgentRouteState())
+            adopt_heading_exit(
+                rs, wait_info, stage_graph, cognitive_maps.get(agent_id), current_time
+            )
+            clear_air = smoke_blind or smoke_speed_model is None
+            switch = evaluate_and_reroute(
+                agent_id=agent_id,
+                wait_info=wait_info,
+                route_state=rs,
+                graph=stage_graph,
+                current_time_s=current_time,
+                current_fed=0.0
+                if smoke_blind
+                else fed_state.get(agent_id, {}).get("cumulative", 0.0),
+                extinction_sampler=_ZERO_EXTINCTION
+                if clear_air
+                else smoke_speed_model.field,
+                fed_rate_sampler=None if smoke_blind else _fed_rate_adapter,
+                config=closure_config,
+                cached_segments=cache,
+                cognitive_map=cognitive_maps.get(agent_id),
+                agent_position=extract_agent_xy(agent),
+            )
+            if switch is None:
+                return
+            if rs.counted_exit is not None:
+                agent_exits[agent_id] = rs.counted_exit
+            route_history.append(_route_row(switch))
 
         if reroute_config is not None and stage_graph is not None:
             # Initialise all exits to zero.
@@ -2264,6 +2384,9 @@ def run_scenario(
                 tuple(scenario.walkable_polygon.bounds),
             )
         last_progress_time = -1.0
+        # source id -> (steps without a free position, first and last time)
+        deferred_spawns: dict[int, tuple[int, float, float]] = {}
+        jupedsim_positions = _jupedsim_positions(simulation)
         last_progress_agents = simulation.agent_count()
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
@@ -2341,8 +2464,13 @@ def run_scenario(
                         continue
 
                     flow_origin = _flow_origin(flow_dist, source_id)
+                    flow_radius = max_agent_radius(flow_dist["params"])
                     for _ in range(spawning_freqs_and_numbers[source_id][1]):
                         spawned_this_attempt = False
+                        # O(agents) per attempt, not per candidate.
+                        occupied = _occupied(
+                            simulation, agent_radii, jupedsim_positions
+                        )
                         selected_variant = None
                         selected_variant_info = None
                         fallback_exit_id = None
@@ -2486,6 +2614,13 @@ def run_scenario(
                                     stage_id=assigned_stage_id,
                                 )
 
+                                if _crowds_agents(
+                                    spawning_info["model_type"],
+                                    agent_parameters,
+                                    flow_radius,
+                                    occupied,
+                                ):
+                                    continue
                                 agent_id = simulation.add_agent(agent_parameters)
                                 # From here on the agent exists, so a failure
                                 # is raised rather than retried elsewhere.
@@ -2494,6 +2629,9 @@ def run_scenario(
                                     spawn_keys, origin_counts, agent_id, pending
                                 )
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)
+                                jupedsim_positions[agent_id] = tuple(
+                                    agent_parameters.position
+                                )
                                 # print(
                                 #     "Spawned flow agent "
                                 #     f"{agent_id} from source {source_id} at t={current_time:.2f}s "
@@ -2621,10 +2759,10 @@ def run_scenario(
                                             "target_assigned": False,
                                             "state": "to_target",
                                             "wait_until": None,
-                                            "inside_since": None,
-                                            "reach_penetration": 0.25,
-                                            "reach_dwell_seconds": 0.2,
                                             "step_index": 0,
+                                            "agent_radius": float(
+                                                flow_params.get("radius", 0.2)
+                                            ),
                                             **steering_seeds(seed, key),
                                             "familiarity": dist_familiarity[
                                                 flow_dist.get("dist_index", source_id)
@@ -2667,11 +2805,8 @@ def run_scenario(
                                 continue
 
                         if not spawned_this_attempt:
-                            print(
-                                "Flow spawn attempt failed "
-                                f"for source {source_id} at t={current_time:.2f}s "
-                                f"after trying {len(starting_pos_per_source[source_id])} candidate positions"
-                            )
+                            # Retried at the next step while the window lasts.
+                            _defer_flow_spawn(deferred_spawns, source_id, current_time)
                             break
                         agent_counter_per_source[source_id] += 1
 
@@ -3049,11 +3184,21 @@ def run_scenario(
                     # to it before drifting along the default path. Later
                     # evaluations keep the staggered cadence.
                     first_eval = rs.last_eval_time_s == -math.inf
-                    # An agent heading for a closed exit re-decides now.
-                    first_eval = first_eval or (
-                        has_exit_schedule
-                        and _heads_for_closed_exit(wait_info, stage_graph, current_time)
-                    )
+                    # An agent heading for a closed exit re-decides now, from
+                    # the exit it walks to (#395 R-B).
+                    if has_exit_schedule and _heads_for_closed_exit(
+                        wait_info, stage_graph, current_time
+                    ):
+                        first_eval = True
+                        _counted = rs.counted_exit
+                        adopt_heading_exit(
+                            rs,
+                            wait_info,
+                            stage_graph,
+                            cognitive_maps.get(agent_id),
+                            current_time,
+                        )
+                        _move_count(exit_counts, _counted, rs.counted_exit)
                     if not first_eval and not should_reevaluate(
                         current_time, rs, reroute_config.reevaluation_interval_s
                     ):
@@ -3092,6 +3237,22 @@ def run_scenario(
                         f"switches={len(route_history)}"
                     )
                     reroute_debug_printed = True
+
+            if (
+                reroute_config is None
+                and has_exit_schedule
+                and (
+                    last_reroute_check_time is None
+                    or simulation.elapsed_time() - last_reroute_check_time >= 1.0
+                )
+            ):
+                # The one-second check of the reroute pass, for runs without
+                # one: only agents whose exit is closed re-decide (#395).
+                current_time = simulation.elapsed_time()
+                last_reroute_check_time = current_time
+                closure_cache: dict = {}
+                for agent in simulation.agents():
+                    _redirect_from_closed_exit(agent, current_time, closure_cache)
 
             if direct_steering_info:
                 current_time = simulation.elapsed_time()
@@ -3310,6 +3471,16 @@ def run_scenario(
                         }
                     )
 
+            # Read only by a flow spawn at the next step.
+            if has_flow_spawning and _flow_spawn_due(
+                flow_distributions,
+                spawning_freqs_and_numbers,
+                num_agents_per_source,
+                agent_counter_per_source,
+                simulation.elapsed_time() + simulation.delta_time(),
+                simulation.delta_time(),
+            ):
+                jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
             if frame_recorder is not None:
                 frame_recorder.after_step(
@@ -3348,6 +3519,13 @@ def run_scenario(
             f"  wall={wall_m}m{wall_s:02d}s"
             f"  done   "
         )
+        for line in _deferred_spawn_lines(
+            deferred_spawns,
+            flow_distributions,
+            num_agents_per_source,
+            agent_counter_per_source,
+        ):
+            print(line)
 
         evacuation_time = simulation.elapsed_time()
         remaining = simulation.agent_count()
@@ -3355,7 +3533,8 @@ def run_scenario(
         if has_flow_spawning:
             total_agents += sum(agent_counter_per_source)
 
-        # Flow agents the time limit cut off before they entered.
+        # Flow agents that never entered: cut off by the time limit, or
+        # still without a free position when their window closed.
         not_spawned = (
             max(0, sum(num_agents_per_source) - sum(agent_counter_per_source))
             if has_flow_spawning
@@ -3373,6 +3552,7 @@ def run_scenario(
             "agents_evacuated": total_agents - remaining,
             "agents_remaining": remaining,
             "agents_not_spawned": not_spawned,
+            "flow_spawns_deferred": sum(c for c, _, _ in deferred_spawns.values()),
             "all_evacuated": remaining == 0,
             "frame_rate": 10.0,
             "dt": 0.01,
@@ -3406,8 +3586,12 @@ def run_scenario(
                 smoke_history, fed_history, smoke_speed_model, fed_model, heat_fed_model
             )
 
-        if reroute_config is not None and route_history:
-            metrics["route_switches"] = len(route_history)
+        # A run without rerouting switches routes only when an exit closes.
+        # The key is present whenever the history has rows; an agent's first
+        # decision is not a switch (#733).
+        records_routes = reroute_config is not None or has_exit_schedule
+        if records_routes and route_history:
+            metrics["route_switches"] = count_route_switches(route_history)
         # Agents that left through an exit absent from their map: on the
         # default route, the FDS+Evac counterpart, this is modeller knowledge
         # (#610).
@@ -3478,7 +3662,7 @@ def run_scenario(
             fed_history=fed_history
             if (fed_model is not None or heat_fed_model is not None)
             else None,
-            route_history=route_history if reroute_config is not None else None,
+            route_history=route_history if records_routes else None,
             route_cost_history=(
                 route_cost_history
                 if reroute_config is not None and collect_route_cost_history

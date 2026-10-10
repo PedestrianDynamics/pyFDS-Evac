@@ -23,15 +23,22 @@
  },
  "rankings": [
   [
-   15.0,
-   7,
+   13.0,
+   10,
    "C3",
    "",
    "E_east:ok"
   ],
   [
-   15.0,
+   14.0,
    10,
+   "C3",
+   "E_east",
+   "E_east:ok"
+  ],
+  [
+   15.0,
+   7,
    "C3",
    "",
    "E_east:ok"
@@ -45,79 +52,72 @@
   ],
   [
    16.0,
-   10,
-   "C3",
-   "E_east",
-   "E_east:ok"
-  ],
-  [
-   17.0,
-   4,
-   "C2",
-   "",
-   "E_west:fallback/tau"
-  ],
-  [
-   17.0,
    9,
    "C2",
    "",
    "E_west:fallback/tau"
   ],
   [
-   18.0,
+   17.0,
    4,
-   "C2",
-   "E_west",
-   "E_west:fallback/tau"
+   "C3",
+   "",
+   "E_east:ok"
   ],
   [
-   18.0,
+   17.0,
    9,
    "C2",
    "E_west",
    "E_west:fallback/tau"
   ],
   [
-   19.0,
+   18.0,
    2,
    "C3",
    "",
    "E_east:ok"
   ],
   [
-   19.0,
-   3,
+   18.0,
+   4,
    "C3",
-   "",
+   "E_east",
    "E_east:ok"
   ],
   [
-   19.0,
+   18.0,
    8,
    "C2",
    "",
    "E_west:fallback/tau"
   ],
   [
-   20.0,
+   19.0,
    2,
    "C3",
    "E_east",
    "E_east:ok"
   ],
   [
+   19.0,
+   8,
+   "C2",
+   "E_west",
+   "E_west:fallback/tau"
+  ],
+  [
    20.0,
    3,
    "C3",
-   "E_east",
+   "",
    "E_east:ok"
   ],
   [
    20.0,
-   8,
+   5,
    "C2",
-   "E_west",
+   "",
    "E_west:fallback/tau"
   ],
   [
@@ -129,9 +129,16 @@
   ],
   [
    21.0,
+   3,
+   "C3",
+   "E_east",
+   "E_east:ok"
+  ],
+  [
+   21.0,
    5,
    "C2",
-   "",
+   "E_west",
    "E_west:fallback/tau"
   ],
   [
@@ -150,49 +157,28 @@
   ],
   [
    22.0,
-   4,
-   "C2",
-   "E_west",
-   "E_west:ok"
-  ],
-  [
-   22.0,
-   5,
-   "C2",
-   "E_west",
-   "E_west:fallback/tau"
+   6,
+   "C3",
+   "",
+   "E_east:ok"
   ],
   [
    23.0,
    6,
-   "C2",
-   "",
-   "E_west:fallback/tau"
+   "C3",
+   "E_east",
+   "E_east:ok"
   ],
   [
-   24.0,
-   6,
-   "C2",
-   "E_west",
-   "E_west:fallback/tau"
-  ],
-  [
-   24.0,
+   23.0,
    8,
    "C2",
    "E_west",
    "E_west:ok"
   ],
   [
-   26.0,
+   25.0,
    5,
-   "C2",
-   "E_west",
-   "E_west:ok"
-  ],
-  [
-   27.0,
-   6,
    "C2",
    "E_west",
    "E_west:ok"
@@ -200,7 +186,7 @@
  ],
  "summary": {
   "agents_evacuated": 10,
-  "evacuation_time": 29.04,
+  "evacuation_time": 28.06,
   "total_agents": 10
  },
  "switches": [
@@ -295,16 +281,16 @@
    "time_s": 0.0
   },
   {
-   "agent_id": 7,
+   "agent_id": 10,
    "new_cost": 0.0,
    "new_exit": "C3",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
-   "time_s": 9.0
+   "time_s": 8.0
   },
   {
-   "agent_id": 10,
+   "agent_id": 7,
    "new_cost": 0.0,
    "new_exit": "C3",
    "old_cost": null,
@@ -340,9 +326,9 @@
    "time_s": 12.0
   },
   {
-   "agent_id": 8,
+   "agent_id": 4,
    "new_cost": 0.0,
-   "new_exit": "C2",
+   "new_exit": "C3",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -358,6 +344,33 @@
    "time_s": 13.0
   },
   {
+   "agent_id": 8,
+   "new_cost": 0.0,
+   "new_exit": "C2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 13.0
+  },
+  {
+   "agent_id": 10,
+   "new_cost": 5.792,
+   "new_exit": "E_east",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
+   "time_s": 13.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 0.0,
+   "new_exit": "C2",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "explore",
+   "time_s": 14.0
+  },
+  {
    "agent_id": 3,
    "new_cost": 0.0,
    "new_exit": "C3",
@@ -369,7 +382,7 @@
   {
    "agent_id": 5,
    "new_cost": 0.0,
-   "new_exit": "C3",
+   "new_exit": "C2",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -385,9 +398,9 @@
    "time_s": 15.0
   },
   {
-   "agent_id": 5,
+   "agent_id": 6,
    "new_cost": 0.0,
-   "new_exit": "C2",
+   "new_exit": "C3",
    "old_cost": null,
    "old_exit": "",
    "reason": "explore",
@@ -395,7 +408,7 @@
   },
   {
    "agent_id": 7,
-   "new_cost": 6.005,
+   "new_cost": 5.994,
    "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
@@ -403,94 +416,76 @@
    "time_s": 15.0
   },
   {
-   "agent_id": 10,
-   "new_cost": 5.175,
-   "new_exit": "E_east",
+   "agent_id": 9,
+   "new_cost": 6.83,
+   "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
-   "reason": "initial",
-   "time_s": 15.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 0.0,
-   "new_exit": "C2",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "explore",
+   "reason": "fallback",
    "time_s": 16.0
   },
   {
    "agent_id": 4,
-   "new_cost": 6.815,
-   "new_exit": "E_west",
+   "new_cost": 5.978,
+   "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
-   "reason": "fallback",
-   "time_s": 17.0
-  },
-  {
-   "agent_id": 9,
-   "new_cost": 6.205,
-   "new_exit": "E_west",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "fallback",
+   "reason": "initial",
    "time_s": 17.0
   },
   {
    "agent_id": 2,
-   "new_cost": 5.505,
+   "new_cost": 6.08,
    "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
    "reason": "initial",
-   "time_s": 19.0
-  },
-  {
-   "agent_id": 3,
-   "new_cost": 6.177,
-   "new_exit": "E_east",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "initial",
-   "time_s": 19.0
+   "time_s": 18.0
   },
   {
    "agent_id": 8,
-   "new_cost": 6.831,
+   "new_cost": 7.037,
    "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
    "reason": "fallback",
-   "time_s": 19.0
+   "time_s": 18.0
   },
   {
-   "agent_id": 1,
-   "new_cost": 5.399,
+   "agent_id": 3,
+   "new_cost": 5.984,
    "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
    "reason": "initial",
-   "time_s": 21.0
+   "time_s": 20.0
   },
   {
    "agent_id": 5,
-   "new_cost": 6.896,
+   "new_cost": 6.962,
    "new_exit": "E_west",
    "old_cost": null,
    "old_exit": "",
    "reason": "fallback",
+   "time_s": 20.0
+  },
+  {
+   "agent_id": 1,
+   "new_cost": 5.678,
+   "new_exit": "E_east",
+   "old_cost": null,
+   "old_exit": "",
+   "reason": "initial",
    "time_s": 21.0
   },
   {
    "agent_id": 6,
-   "new_cost": 6.519,
-   "new_exit": "E_west",
+   "new_cost": 5.784,
+   "new_exit": "E_east",
    "old_cost": null,
    "old_exit": "",
-   "reason": "fallback",
-   "time_s": 23.0
+   "reason": "initial",
+   "time_s": 22.0
   }
  ]
 }

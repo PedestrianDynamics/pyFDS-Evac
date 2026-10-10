@@ -54,11 +54,27 @@ graph = StageGraph.from_scenario(
 
 When a scenario defines no `transitions`, the stage graph wires itself by
 stage type: spawn areas and crossings reach every crossing and every exit,
-exits are terminal, and nothing points back at a spawn area. Crossings
-therefore participate in cost-driven routing without a hand-authored journey.
-In clear air the direct spawn-to-exit edge is cheapest, so agents take the
-nearest exit and crossings sit inert; smoke can make a route through a
-crossing cheaper.
+exits are terminal, and nothing points back at a spawn area.
+
+An edge from A to B is dropped when a third crossing C lies on the way: the
+walkable distance A → C → B is at most 1.05 times A → B
+(`route_graph.py`, `_passes_through_another_node`,
+`_BETWEENNESS_TOLERANCE` = 0.05). Only crossings block; spawn areas and exits
+never do. If pruning would leave a source without an edge, the edge to the
+nearest target is kept. Crossings thus define which nodes are neighbours.
+Where to draw them is on
+[How do I place checkpoints?](howto-place-checkpoints.md).
+
+Crossings are therefore part of the routes, in clear air too. In a deck
+without journeys, every run picks each agent's first route on this graph, with or without rerouting
+(`scenario.py`, `_assign_initial_exit`), and the agent follows the whole path.
+When crossing C has replaced the direct edge from spawn area A to exit B, the
+agent walks into C first and then on to B. Between node points the detour is
+at most 5 %. A crossing that lies off the walking line keeps the direct edge,
+and agents go through it only when that route is cheaper, for example when
+smoke lies on the direct one. Without `distributions`, agents are placed over
+the whole walkable area; their route starts at their nearest exit's node, so
+they walk straight to that exit and pass no crossing.
 
 Explicit `transitions` remain authoritative and skip this path entirely.
 
@@ -240,11 +256,34 @@ none are visibility-rejected.
 
 If all routes end up rejected, the least-bad one is un-rejected as a
 fallback so the agent always has a path, and its reason is prefixed
-`fallback: `. Under the gate the least-bad route is the one with the
+`fallback: `. A route the agent must flee (FED-lethal, or impassably
+smoky under the additive model) orders behind every route it need not
+flee, and the current exit never holds against such a rival when it is
+the one to flee ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). Among the rest, under the gate the least-bad route is the one with the
 lowest undiscounted `tau_route`, then the lowest `rank_cost`, with
 `fallback_switch_margin` hysteresis on `tau_route`: the current exit stays
 first unless the rival's `tau` is more than that fraction lower ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Under the
-additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458); the underlying sampling cause is [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458); the underlying sampling cause is [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+
+An experimental alternative exists at code level only:
+`RouteCostConfig(fallback_rule="hold")`. No scenario key, CLI flag or
+GUI control sets it, and the default `"tau"` is the rule above
+([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)). Under
+`"hold"` the first choice with every route refused is still the lowest
+`tau_route`, but after that the agent keeps its exit between refused
+routes. It leaves only for a feasible route, or when its current route
+must be fled and the rival need not be (#128).
+`fallback_switch_margin` and `fallback_return_lockout_s` then have no
+effect. On `t_junction` (`fire_2MW_PVC`, R arm of `howto-with-without-fire.md`, seeds 4–13), the
+prototype on the 0.4.0 routing code gave the following results
+(pre-movement 0 / 30 / 60 s).
+Under `"tau"`, 81 / 19 / 0 % of agents went to exit A, with a median
+largest FED of 0.040 / 0.123 / 0.195 and 19 / 149 / 129 switches.
+Under `"hold"`, 100 % went to A at every pre-movement, with a median
+largest FED of 0.006 / 0.028 / 0.145 and no switches. This is one deck
+and one fire, and the evidence that people keep going once they are in
+smoke is expert judgement. A user setting waits for measurements on
+`l_corridor`, `world100` and Schroeder 2015.
 
 Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
@@ -476,12 +515,12 @@ discovery agent with no known exit explores or wanders instead (see below).
 |---|---|---|
 | **Source** | `current_origin`, else `current_target_stage`; a source outside the graph skips the tick | same |
 | **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth at decision time (`k_avg` × length + 1e-6 × length), started at the agent's position: the first legs are the walks to the source's successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)); the current exit's entry is replaced by the walked path when that path orders ahead | Dijkstra on each edge's share of the composite at decision time (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth), started at the agent's position as for the gate; one path per exit; the walked path as for the gate |
-| **Rejection** | FED over the threshold (× `fed_return_margin` for a rival while a current exit is set), then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
+| **Rejection** | FED over the threshold (× `fed_return_margin` for a rival while a current exit is set), then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason; must-flee reads `violation_kinds`, not the reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
 | **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
-| **Fallback** | when every route is rejected: re-sorted by raw τ, then `rank_cost`; the current exit goes first unless the winner's τ is below the current exit's × (1 − `fallback_switch_margin`) and differs from it by more than 1e-9; the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
+| **Fallback** | when every route is rejected: re-sorted by must-flee (last), then raw τ, then `rank_cost`; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner's τ is below the current exit's × (1 − `fallback_switch_margin`) and differs from it by more than 1e-9; the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
 | **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below 0.9 × the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way | same |
 | **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above `impassable_extinction_threshold`). Next, between two refused routes the rival needs a τ strictly below the current exit's × (1 − `fallback_switch_margin`), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor; a return to the exit left by such a switch waits `fallback_return_lockout_s`. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts under the same hazard bypasses and the same rule between two refused routes, else needs `rank_cost` < old × `exit_switch_anchor` |
-| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails no `RouteSwitch` is recorded | same |
+| **Applied** | `path_choices` rewritten along the new path, the agent retargeted to the stage after the one it last left when the new path passes that stage (the route is walked as it was priced, #445), else to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails no `RouteSwitch` is recorded | same |
 
 In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 `AdditivePolicy`, and each row is one function:
@@ -541,13 +580,57 @@ Each `RouteSwitch` record includes a `reason` field:
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
-| `default_route` | Written once at spawn: the agent has no exit in its map and follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)) |
-| `smoke_reroute` | Best route is a different exit (lower `rank_cost`), or an idle agent is routed to its current exit |
-| `exit_closed`   | The agent's exit has closed on its schedule; the best open exit it knows |
+| `default_route` | The agent follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)): at spawn, or when the agent's known exits are all closed or unreachable |
+| `fed_reroute`   | A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (`additive`) the dose term contributes to a switch the hazard terms are needed for |
+| `smoke_reroute` | A different exit: the route to the old exit is refused on smoke alone (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, lower in τ by more than the deadband, or would not clear the anchor with clear-air travel times; under `additive` the switch needs the smoke term and not the dose term |
+| `exit_closed`   | The exit the agent walks to has closed on its schedule; the best open exit it knows, also when that route is a gate fallback |
+| `exit_opened`   | A different exit, closed at the agent's previous evaluation |
+| `learned_exit`  | A different exit, not in the agent's cognitive map at its previous evaluation |
+| `congestion`    | A different exit; the switch would not clear the anchor without the queue term |
+| `shorter_path`  | A different exit; time (`gate`) or length (`additive`) alone clears the anchor |
+| `exit_unreachable` | A different exit; the old exit has no route from where the agent stands |
+| `resume`        | An idle agent is routed to the exit it already holds |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
 | `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
 | `explore`       | No exit known yet; heading to the nearest unexplored frontier    |
 | `wander`        | Knowledge exhausted; patrolling known nodes                      |
+| `return`        | No exit known; walking back over known legs to a node with a known exit (`no_known_exit: "return"`) |
+| `stay`          | No exit known; standing until one becomes known (`no_known_exit: "stay"`) |
+
+For a change of exit the first of these that applies names the cause:
+`default_route`, `exit_closed`, `fallback`, `initial`, `fed_reroute`,
+`smoke_reroute`, `exit_opened`, `learned_exit`, `congestion`,
+`shorter_path`. When the exit the agent walks to has closed
+(`closed_after_s` passed), the switch is `exit_closed` even onto a gate
+fallback route (the decision is still a fallback; with rerouting on, the
+route cost history shows it), unless the agent knows no open exit and takes
+the default route. Either way `old_exit` is the closed exit, also for an
+agent that was following its default route. An exit that has not opened yet
+never gives `exit_closed`: it was never the agent's exit, so its first open
+exit is `initial` with an empty `old_exit`
+([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). A route to the
+old exit that is refused gives `fed_reroute` when its predicted dose is over
+the limit, else `smoke_reroute`. With no route to the old exit, and for an
+idle agent routed to its own exit, `exit_opened` and `learned_exit` still
+come first, then `exit_unreachable` or `resume`.
+
+A cost term is credited when the switch would not clear the anchor without
+it; the anchor is strict, so a cost of exactly the old cost times
+`exit_switch_anchor` does not clear. Under `gate` the smoke test also
+compares clear-air travel times (queue term kept): a switch that a slowed old
+route alone makes quicker is `smoke_reroute`. Under `additive` the dose and
+smoke terms are first removed together: if the switch still clears, neither is
+credited. If it does not, the dose is credited (`fed_reroute`) when the dose
+term alone suffices or the switch fails without it, else the smoke
+(`smoke_reroute`); so two redundant hazards credit the dose. The dose term
+here is `w_fed` times the dose each route adds, not its `FED_max`: the dose
+already taken is the same on both routes, and under the ratio anchor
+removing it would hide a switch the added dose made. `learned_exit`
+compares with the agent's map at its previous evaluation, or at spawn before
+the first. The order of `SWITCH_REASONS` is not this precedence.
+The label is read from the routes already priced and does not change the
+decision. `RouteSwitch` and `SWITCH_REASONS` in `route_graph.py` list the same
+values.
 
 ### Segment caching
 
@@ -622,6 +705,7 @@ Full cost evaluation for one candidate route:
 | `feasible`         | `bool`              | Optical depth and dose both allow the route (gate) |
 | `rejected`         | `bool`              | Whether route was rejected        |
 | `rejection_reason` | `str \| None`       | Reason for rejection; `fallback: ` prefix when un-rejected |
+| `violation_kinds`  | `tuple[str, ...]`   | Limits the route breaks, in recorded order: `"fed"`, `"tau"`, `"all_segments_non_visible"`; kept when the fallback un-rejects it. Must-flee reads these ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) |
 
 `rank_cost`, `k_max_route`, `tau_route`, `k_leg_max`, `clean` and `feasible` are
 all written to the route-cost CSV (`run.py --output-route-cost-history`), so the

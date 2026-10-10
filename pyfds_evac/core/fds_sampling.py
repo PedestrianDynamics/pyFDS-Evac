@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import logging
 from functools import cached_property
+from typing import Any, NamedTuple
 
 import numpy as np
 
@@ -33,6 +34,27 @@ _SLICE_HEIGHT_TOLERANCE_M = 0.5
 # nearly every call; the bound only limits memory, a cleared entry is looked
 # up again.
 _T_INDEX_CACHE_SIZE = 65536
+
+# Lines a sampler remembers the grid parts of (#653). Route edges between
+# nodes are asked for again at every evaluation; a walk from an agent's
+# position rarely is. The bound only limits memory.
+_LINE_CACHE_SIZE = 65536
+
+
+class LinePart(NamedTuple):
+    """A piece of a sampled line, as fractions of its length (#653).
+
+    *fractions* are where its samples sit, one per grid cell, *subslice*
+    the slice part they are read from and *cells* the value positions
+    ``(i, j)`` they read; all three are None for a piece outside every
+    subslice. Parts are cached and shared: never modify their arrays.
+    """
+
+    t_start: float
+    t_end: float
+    fractions: np.ndarray | None = None
+    subslice: Any = None
+    cells: tuple[np.ndarray, np.ndarray] | None = None
 
 
 class FdsHorizonError(ValueError):
@@ -116,6 +138,7 @@ class SliceFieldSampler:
         self._cached_t_index: int = 0
         self._t_index_cache: dict[float, int] = {}
         self._axes_cache: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        self._line_cache: dict[tuple[float, float, float, float], tuple] = {}
 
     def _find_subslice(self, x: float, y: float):
         """Return the subslice covering the requested x/y point."""
@@ -211,6 +234,91 @@ class SliceFieldSampler:
             self._axes_cache[key] = axes
         return axes
 
+    def line_parts(
+        self, x0: float, y0: float, x1: float, y1: float
+    ) -> tuple[LinePart, ...]:
+        """Where to sample the segment (x0, y0)-(x1, y1): one point per grid cell.
+
+        Returns the parts that cover the segment in order, as fractions of
+        its length. A part inside a subslice carries the fractions of its
+        samples (see :func:`_cell_fractions`) and the subslice to read them
+        from with :meth:`read_cells`; a part outside every subslice carries
+        neither. Where subslices overlap, the first one in order takes the
+        overlap (#653). Parts are cached and shared; their arrays are
+        read-only.
+        """
+        key = (x0, y0, x1, y1)
+        parts = self._line_cache.get(key)
+        if parts is None:
+            parts = self._line_parts(x0, y0, x1, y1)
+            if len(self._line_cache) >= _LINE_CACHE_SIZE:
+                self._line_cache.clear()
+            self._line_cache[key] = parts
+        return parts
+
+    def _line_parts(
+        self, x0: float, y0: float, x1: float, y1: float
+    ) -> tuple[LinePart, ...]:
+        """:meth:`line_parts`, not cached."""
+        dx, dy = x1 - x0, y1 - y0
+        covered: list[tuple[float, float, object]] = []
+        for subslice in self._subslices:
+            span = _clip_to_extent(x0, y0, dx, dy, subslice.extent)
+            if span is None:
+                continue
+            for ta, tb in _subtract(span, [(a, b) for a, b, _ in covered]):
+                covered.append((ta, tb, subslice))
+        covered.sort(key=lambda part: part[0])
+        parts: list[LinePart] = []
+        t = 0.0
+        for ta, tb, subslice in covered:
+            if ta > t:
+                parts.append(LinePart(t, ta))
+            axes = self._axes(subslice)
+            fractions = _cell_fractions(x0, y0, dx, dy, ta, tb, axes)
+            cells = (
+                _nearest_indices(axes[0], x0 + fractions * dx),
+                _nearest_indices(axes[1], y0 + fractions * dy),
+            )
+            for array in (fractions, *cells):
+                array.setflags(write=False)
+            parts.append(LinePart(ta, tb, fractions, subslice, cells))
+            t = tb
+        if t < 1.0:
+            parts.append(LinePart(t, 1.0))
+        return tuple(parts)
+
+    def read_cells(self, part: LinePart, times: np.ndarray) -> np.ndarray:
+        """Values at the samples of a grid *part*, each at its own time.
+
+        The value position nearest each sample and the frame nearest its
+        time, as :meth:`sample` reads them, for all samples at once. Every
+        sample is read from the part's own subslice, which covers it, so
+        none is out of the domain. Raises ``FdsHorizonError`` past the FDS
+        output, as :meth:`sample` does.
+        """
+        if part.cells is None:
+            raise ValueError(
+                f"read_cells needs a part inside a subslice of '{self.quantity}', "
+                f"got the part {part.t_start:g}..{part.t_end:g} outside the slice"
+            )
+        i_index, j_index = part.cells
+        values = part.subslice.data[self._frames(times), i_index, j_index]
+        return np.asarray(values, dtype=float)
+
+    def _frames(self, times: np.ndarray) -> np.ndarray | int:
+        """The frame of each time, horizon-checked as :meth:`sample` checks it."""
+        first = float(times[0])
+        if (times == first).all():
+            return self._time_index(first)
+        self._check_horizon(float(times.max()))
+        return _nearest_frames(self._frame_times, times)
+
+    @cached_property
+    def _frame_times(self) -> np.ndarray:
+        """The times of the slice frames [s]."""
+        return np.asarray(self._slice.times, dtype=float)
+
     @property
     def z_m(self) -> float:
         """Height of the slice [m]: the mid z of its extent."""
@@ -283,6 +391,121 @@ class SliceFieldSampler:
         i_index = self._nearest_index(xs, float(x))
         j_index = self._nearest_index(ys, float(y))
         return float(subslice.data[t_index, i_index, j_index])
+
+
+def _clip_to_extent(
+    x0: float, y0: float, dx: float, dy: float, ext
+) -> tuple[float, float] | None:
+    """The fractions ``(ta, tb)`` of a segment inside a closed extent, or None.
+
+    Liang-Barsky clipping of ``(x0, y0) + t * (dx, dy)``, ``0 <= t <= 1``.
+    A span of zero length (a touched corner or edge) counts as outside.
+    """
+    ta, tb = 0.0, 1.0
+    for p, q in (
+        (-dx, x0 - ext.x_start),
+        (dx, ext.x_end - x0),
+        (-dy, y0 - ext.y_start),
+        (dy, ext.y_end - y0),
+    ):
+        if p == 0.0:
+            if q < 0.0:
+                return None
+            continue
+        if p < 0.0:
+            ta = max(ta, q / p)
+        else:
+            tb = min(tb, q / p)
+    return (ta, tb) if ta < tb else None
+
+
+def _subtract(
+    span: tuple[float, float], taken: list[tuple[float, float]]
+) -> list[tuple[float, float]]:
+    """The pieces of *span* not inside any interval of *taken*."""
+    pieces = [span]
+    for a, b in taken:
+        pieces = [
+            piece
+            for ta, tb in pieces
+            for piece in ((ta, min(tb, a)), (max(ta, b), tb))
+            if piece[0] < piece[1]
+        ]
+    return pieces
+
+
+def _nearest_frames(frame_times: np.ndarray, times: np.ndarray) -> np.ndarray:
+    """``Slice.get_nearest_timestep`` of fdsreader 1.11.7 for many times.
+
+    The nearer of the two frames around each time, ties to the later one;
+    a time of 0 or less takes the first frame at or after it. Pinned
+    against fdsreader's own method in ``tests/test_route_grid_sampling.py``.
+    """
+    count = len(frame_times)
+    idx = np.searchsorted(frame_times, times, side="left")
+    before = frame_times[idx - 1]
+    after = frame_times[np.minimum(idx, count - 1)]
+    nearer_before = np.abs(times - before) < np.abs(times - after)
+    take_before = (times > 0) & ((idx == count) | nearer_before)
+    return np.where(take_before, idx - 1, idx)
+
+
+def _nearest_indices(coords: np.ndarray, values: np.ndarray) -> np.ndarray:
+    """``SliceFieldSampler._nearest_index`` of every value, ties to the lower."""
+    values = np.asarray(values, dtype=float)
+    if len(coords) <= 1:
+        return np.zeros(values.shape, dtype=int)
+    right = np.clip(np.searchsorted(coords, values), 1, len(coords) - 1)
+    left = right - 1
+    take_left = values - coords[left] <= coords[right] - values
+    return np.where(take_left, left, right)
+
+
+def _cell_fractions(
+    x0: float,
+    y0: float,
+    dx: float,
+    dy: float,
+    ta: float,
+    tb: float,
+    axes: tuple[np.ndarray, np.ndarray],
+) -> np.ndarray:
+    """Sample fractions of the part ``ta..tb`` of a segment, one per cell.
+
+    Marches the value positions of the segment's dominant axis, as FDS+Evac
+    ``See_door`` marches the cells of its mesh (``evac.f90``): the start of
+    the part, every value position strictly between the nearest positions
+    of its two ends, and its end. Moving an end within a cell does not move
+    the samples between. Two ends that read the same value give one sample.
+    """
+    along_x = abs(dx) >= abs(dy)
+    coords, origin, delta = (axes[0], x0, dx) if along_x else (axes[1], y0, dy)
+    nearest = SliceFieldSampler._nearest_index
+    i0 = nearest(coords, origin + ta * delta)
+    i1 = nearest(coords, origin + tb * delta)
+    if i0 == i1 and _same_cell(x0, y0, dx, dy, ta, tb, axes):
+        return np.array([ta])
+    lo, hi = min(i0, i1), max(i0, i1)
+    inner = (coords[lo + 1 : hi] - origin) / delta
+    if i1 < i0:
+        inner = inner[::-1]
+    return np.concatenate(([ta], inner, [tb]))
+
+
+def _same_cell(
+    x0: float,
+    y0: float,
+    dx: float,
+    dy: float,
+    ta: float,
+    tb: float,
+    axes: tuple[np.ndarray, np.ndarray],
+) -> bool:
+    """Whether the points at fractions *ta* and *tb* read the same value."""
+    nearest = SliceFieldSampler._nearest_index
+    return nearest(axes[0], x0 + ta * dx) == nearest(axes[0], x0 + tb * dx) and nearest(
+        axes[1], y0 + ta * dy
+    ) == nearest(axes[1], y0 + tb * dy)
 
 
 class SliceGrid:
