@@ -13,6 +13,7 @@ touching them. ``_weighted_choice`` is reached through ``advance_path_target``.
 
 from __future__ import annotations
 
+import gc
 import math
 import random
 
@@ -20,6 +21,7 @@ import jupedsim as jps
 import pytest
 from shapely.geometry import Point, Polygon, box
 
+from pyfds_evac.core import direct_steering_runtime
 from pyfds_evac.core.direct_steering_runtime import (
     EXIT_REACH_TOLERANCE_M,
     TARGET_REACH_MARGIN_M,
@@ -159,6 +161,31 @@ class TestIsInsidePolygon:
 
     def test_bad_coordinates_are_outside(self):
         assert is_inside_polygon("a", 0.5, UNIT) is False
+
+    def test_cached_bounds_go_with_the_polygon(self):
+        """The bounds are cached by id; a freed polygon's entry must go,
+        or a later polygon at the same address inherits its bounds."""
+        polygon = box(0.0, 0.0, 1.0, 1.0)
+        assert is_inside_polygon(0.5, 0.5, polygon)
+        key = id(polygon)
+        assert key in direct_steering_runtime._POLYGON_BOUNDS
+        del polygon
+        gc.collect()
+        assert key not in direct_steering_runtime._POLYGON_BOUNDS
+
+    def test_a_polygon_at_a_reused_address_is_tested_by_its_own_bounds(self):
+        """Polygons made and freed in turn reuse addresses; each is tested
+        against its own bounds, not those of a freed one."""
+        seen = set()
+        reused = 0
+        for i in range(200):
+            polygon = box(10.0 * i, 0.0, 10.0 * i + 1.0, 1.0)
+            reused += id(polygon) in seen
+            seen.add(id(polygon))
+            assert is_inside_polygon(10.0 * i + 0.5, 0.5, polygon), i
+            del polygon
+        if not reused:
+            pytest.skip("no address was reused")
 
 
 class TestDistanceToPolygon:
