@@ -209,6 +209,14 @@ def _radius_import(tmp_path, keys: str):
         ),
         # DIAMETER_DIST beats the preset: global D_TORSO_MEAN 0.30, not 0.24.
         ("DEFAULT_PROPERTIES='Child', DIAMETER_DIST=0, DIA_MEAN=0.42", 0.15),
+        # DIAMETER_DIST < 0 is unset in FDS+Evac: the preset applies.
+        ("DEFAULT_PROPERTIES='Child', DIAMETER_DIST=-1", 0.12),
+        # No preset, no DIAMETER_DIST: constant body DIA_MEAN, R_d clamped
+        # at 0.05 m; radius = max(DIA_MEAN / 2, 0.05) * D_TORSO_MEAN / DIA_MEAN.
+        ("DIA_MEAN=0.50", 0.15),
+        ("DIA_MEAN=0.50, D_TORSO_MEAN=0.36", 0.18),
+        ("DIA_MEAN=0.08", 0.1875),  # 0.05 * 0.30 / 0.08
+        ("DIAMETER_DIST=-1, DIA_MEAN=0.50", 0.15),
     ],
 )
 def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
@@ -218,10 +226,27 @@ def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
     assert "radius_std" not in params
 
 
-def test_pers_preset_ignores_body_keys_without_diameter_dist(tmp_path):
-    result = _radius_import(tmp_path, "DEFAULT_PROPERTIES='Adult', D_TORSO_MEAN=0.40")
-    assert _params(result, "g")["radius"] == 0.15
-    assert any("D_TORSO_MEAN ignored" in i.message for i in _items(result, "A", "PERS"))
+@pytest.mark.parametrize(
+    ("keys", "radius", "ignored"),
+    [
+        ("DEFAULT_PROPERTIES='Adult', D_TORSO_MEAN=0.40", 0.15, "D_TORSO_MEAN"),
+        ("DEFAULT_PROPERTIES='Adult', D_SHOULDER_MEAN=0.40", 0.15, "D_SHOULDER_MEAN"),
+        ("DIA_MEAN=0.50, DIA_LOW=0.4, DIA_HIGH=0.6", 0.15, "DIA_HIGH, DIA_LOW"),
+    ],
+)
+def test_pers_body_keys_fds_evac_ignores_are_reported(tmp_path, keys, radius, ignored):
+    result = _radius_import(tmp_path, keys)
+    assert _params(result, "g")["radius"] == radius
+    assert any(
+        i.message.startswith(f"{ignored} ignored") for i in _items(result, "A", "PERS")
+    )
+
+
+def test_pers_explicit_uniform_reports_the_torso_range(tmp_path):
+    result = _radius_import(tmp_path, "DIAMETER_DIST=1, DIA_LOW=0.40, DIA_HIGH=0.60")
+    messages = [i.message for i in _items(result, "A", "PERS")]
+    # 0.5 * 0.30 * [0.40, 0.60] / 0.50
+    assert any("uniform 0.12-0.18 m" in m for m in messages)
 
 
 @pytest.mark.parametrize(
@@ -230,6 +255,11 @@ def test_pers_preset_ignores_body_keys_without_diameter_dist(tmp_path):
         "DEFAULT_PROPERTIES='IMO_Male30-50'",  # IMO presets: separate issue
         "VELOCITY_DIST=0, VEL_MEAN=1.2",  # no preset, no DIA_*
         "DIAMETER_DIST=0",  # constant without DIA_MEAN
+        "DEFAULT_PROPERTIES='IMO_Male30-50', DIA_MEAN=0.5",  # IMO: Male body
+        "DIA_MEAN=0",  # FDS+Evac's body undefined, 0.05 m clamp
+        "DIAMETER_DIST=5, DIA_MEAN=1, DIA_PARA=40",  # log-normal mean overflows
+        "DIAMETER_DIST=6, DIA_PARA=0, DIA_PARA2=0",  # beta mean 0/0
+        "DIAMETER_DIST=0, DIA_MEAN=0.5, D_TORSO_MEAN=1e-10",  # rounds to 0
     ],
 )
 def test_pers_without_a_defined_body_gets_no_radius(tmp_path, keys):

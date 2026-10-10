@@ -42,8 +42,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `import_report.json` gives, per `&PERS`, the FDS+Evac three-circle body
   (R_d, R_t, R_s) and the radius taken from it, instead of "body size not
   mapped". A `&PERS` that sets `DIAMETER_DIST` gets 0.5 · `D_TORSO_MEAN`
-  · mean diameter / `DIA_MEAN`; one with neither a known
-  `DEFAULT_PROPERTIES` nor `DIAMETER_DIST` gets no radius and a warning
+  · mean diameter / `DIA_MEAN`; one with only a positive `DIA_MEAN`, a
+  constant body in FDS+Evac, gets max(`DIA_MEAN`/2, 0.05) ·
+  `D_TORSO_MEAN` / `DIA_MEAN`; any other gets no radius and a warning
   (#699). `DoorFlowExample.fds` now imports as runnable: its 100 agents
   fit the spawn area at 0.15 m, not at 0.2 m.
 
