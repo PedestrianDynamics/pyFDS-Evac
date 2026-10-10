@@ -64,8 +64,9 @@ def main() -> None:
         old_header, old_rows = _read(HERE / "fed_history.csv")
         _check_unchanged(header, rows, old_header, old_rows)
         (HERE / "fed_history.csv").write_bytes(written.read_bytes())
-    # Checked apart by the test; the baseline predates it (#290).
+    # Checked apart by the test; the baseline predates them (#290).
     manifest.pop("heat_clothing")
+    manifest.pop("outcome")
     (HERE / "manifest.json").write_text(
         json.dumps(manifest, indent=2) + "\n", encoding="utf-8"
     )

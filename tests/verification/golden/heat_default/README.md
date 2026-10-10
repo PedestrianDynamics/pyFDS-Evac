@@ -28,6 +28,7 @@ own run and rewrote the baseline only after checking that every column other
 than `x` and `y` is unchanged, and added the `agent_seeding` manifest key. Use
 it again for a later change of per-agent or per-distribution seeding; it
 was rerun when start positions were hashed from the distribution key (#360),
-which again moved only `x` and `y`:
+which again moved only `x` and `y`, and after #732, which moved `x` and
+`y` by at most 0.012 m:
 
     PYTHONPATH=. python tests/verification/golden/heat_default/reseed_baseline.py
