@@ -3,6 +3,7 @@
 import logging
 import math
 import random
+import weakref
 from typing import Any
 
 from . import simulation_init
@@ -88,15 +89,42 @@ def assign_agent_target(agent, target):
         _logger.warning("Failed to assign target to agent: %s", e)
 
 
+# Bounds of each polygon is_inside_polygon has tested, by id, dropped with
+# the polygon. The polygon is prepared when it enters, so a stage is
+# prepared once, and a point outside the bounds is rejected without a
+# shapely call: most agents tested against a stage are far from it.
+_POLYGON_BOUNDS: dict[int, tuple[float, float, float, float]] = {}
+
+
+def _prepared_bounds(polygon):
+    """Return the bounds of *polygon*, preparing it on first use."""
+    key = id(polygon)
+    bounds = _POLYGON_BOUNDS.get(key)
+    if bounds is None:
+        import shapely
+
+        shapely.prepare(polygon)
+        bounds = tuple(polygon.bounds)
+        _POLYGON_BOUNDS[key] = bounds
+        weakref.finalize(polygon, _POLYGON_BOUNDS.pop, key, None)
+    return bounds
+
+
 def is_inside_polygon(x, y, polygon):
-    """Return whether a point lies inside or on the boundary of a polygon."""
+    """Return whether a point lies inside or on the boundary of a polygon.
+
+    A point intersects a polygon exactly when the polygon covers it.
+    """
     if polygon is None:
         return False
-    from shapely.geometry import Point
+    import shapely
 
     try:
-        point = Point(float(x), float(y))
-        return bool(polygon.covers(point))
+        x, y = float(x), float(y)
+        minx, miny, maxx, maxy = _prepared_bounds(polygon)
+        if not (minx <= x <= maxx and miny <= y <= maxy):
+            return False
+        return bool(shapely.intersects_xy(polygon, x, y))
     except Exception as e:
         _logger.debug("Polygon containment check failed: %s", e)
         return False

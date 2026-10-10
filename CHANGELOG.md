@@ -96,8 +96,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   such as the 3x3 m boxes of `t_junction` and `l_corridor`, used to
   walk on to the target point first. Arrival is never later than
   before on the same trajectory. Exits keep their polygon rule; spawn
-  areas walked to on patrol and speed zones keep the point rule. The
-  unused `inside_since`, `reach_penetration` and `reach_dwell_seconds`
+  areas walked to on patrol and speed zones keep the point rule. An
+  agent that spawns inside a checkpoint on its route reaches it on its
+  first step: in the `fed_incap_*` decks 4 m² of each of the four
+  first 4x4 m checkpoints lies in the spawn area. The unused
+  `inside_since`, `reach_penetration` and `reach_dwell_seconds`
   entries of the per-agent steering state are removed.
 
 - Reading FDS output no longer writes to or deletes from the FDS
