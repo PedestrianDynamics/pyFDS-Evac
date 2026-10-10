@@ -64,6 +64,8 @@ SOOT_SPEC_IDS = (None, "SOOT")
 FAILED = ("missing", "vertical_only")
 MARKS = {"ok": "✓", "missing": "✗", "vertical_only": "✗", "far": "!"}
 GRID_NOTE = "z on the mesh grid, where FDS writes the slice"
+#: The note when ``&TRNZ`` stretches the grid and the deck's z is ranked.
+DECK_Z_NOTE = "deck z: &TRNZ stretches the grid, FDS moves a slice onto it"
 
 
 @dataclass
@@ -128,6 +130,7 @@ class SliceCheck:
     height: float
     items: list[SliceItem] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    grid_note: str = GRID_NOTE
 
     @property
     def ok(self) -> bool:
@@ -140,7 +143,7 @@ class SliceCheck:
     def lines(self, compact: bool = False) -> list[str]:
         """The printed block; *compact* leaves out the plain info lines."""
         shown = [i for i in self.items if not compact or i.mark != "·"]
-        out = [f"FDS output check at z = {self.height:g} m ({GRID_NOTE}):"]
+        out = [f"FDS output check at z = {self.height:g} m ({self.grid_note}):"]
         out += [f"  {item.line()}" for item in shown]
         out += [f"  {note}" for note in self.notes]
         if compact and not self.ok:
@@ -166,7 +169,7 @@ def check_slices(deck: FdsDeck, height: float) -> SliceCheck:
     """Check *deck* for the slices a run at *height* reads; see the module."""
     meshes = _grid_meshes(deck)
     slices = [_on_grid(s, meshes) for s in map(_slice, deck.group("SLCF")) if s]
-    check = SliceCheck(height)
+    check = SliceCheck(height, grid_note=GRID_NOTE if meshes else DECK_Z_NOTE)
     check.items.append(_extinction(deck, slices, height))
     gases = [_gas(slices, label, spec, height) for label, spec in FED_GASES]
     check.items += gases
