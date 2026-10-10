@@ -17,13 +17,9 @@ _logger = logging.getLogger(__name__)
 
 def _open_simulation(fds_dir):
     """Parse an FDS case with fdsreader, imported here to keep imports cheap."""
-    try:
-        from fdsreader import Simulation
-    except ModuleNotFoundError as exc:
-        raise ModuleNotFoundError(
-            "fdsreader is required to load FDS slice data."
-        ) from exc
-    return Simulation(str(fds_dir))
+    from .fdsreader_adapter import open_fds_simulation
+
+    return open_fds_simulation(fds_dir)
 
 
 # How far the selected slice may sit from the requested height before the

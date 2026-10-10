@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "fdsreader",
+#     "fdsreader>=1.11.7,<1.12",
 #     "matplotlib",
 #     "numpy",
 #     "pandas",
@@ -48,11 +48,11 @@ import re
 import sqlite3
 from pathlib import Path
 
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from _fdsreader_open import open_fds_case
 from matplotlib.animation import PillowWriter
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
@@ -123,7 +123,7 @@ def deck_soot_fraction(deck):
 
 def read_slices(fds_dir):
     """Every horizontal K slice: {z: array (time, x, y)}, plus the times."""
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_case(str(fds_dir))
     out, times = {}, None
     for sl in sim.slices:
         if sl.quantity.name != "SOOT EXTINCTION COEFFICIENT" or sl.orientation != 3:

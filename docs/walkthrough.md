@@ -246,8 +246,10 @@ start = next(i for i, line in enumerate(lines) if "iso_table22_a_1_1.sf" in line
 smv.write_text("".join(lines[:start] + lines[start + 5 :]))
 ```
 
-The `*.pickle` file is a cache that fdsreader writes into the case directory.
-It is skipped so that the copy is read fresh.
+A `*.pickle` file in the case directory is a cache that fdsreader writes when
+it is called directly, or that pyFDS-Evac before 0.5.0 left there. pyFDS-Evac
+neither reads nor writes it; it is skipped so that the copy holds only FDS
+output.
 
 **If you build the FED field yourself, the missing slice stops the call:**
 

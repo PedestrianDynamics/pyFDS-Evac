@@ -247,11 +247,11 @@ extinction and FED fields from the same case, load the `Simulation`
 once and pass it to both factory methods:
 
 ```python
-from fdsreader import Simulation
+from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 from pyfds_evac.core.smoke_speed import ExtinctionField
 from pyfds_evac.core.fed import FdsFedField
 
-sim = Simulation("path/to/fds_case")
+sim = open_fds_simulation("path/to/fds_case")
 extinction = ExtinctionField.from_fds("path/to/fds_case", simulation=sim)
 fed_field = FdsFedField.from_fds("path/to/fds_case", simulation=sim)
 ```
@@ -260,6 +260,11 @@ All three factory functions (`load_slice_sampler`,
 `ExtinctionField.from_fds`, `FdsFedField.from_fds`) accept an optional
 `simulation` keyword argument. When omitted, each creates its own
 `Simulation` instance internally.
+
+`open_fds_simulation` returns an `fdsreader.Simulation` and leaves the
+case directory unchanged. A plain `fdsreader.Simulation(...)` writes a
+`<CHID>.pickle` cache into the case directory, or deletes one there when
+fdsreader's caching is off (#716).
 
 ## Integration with models
 

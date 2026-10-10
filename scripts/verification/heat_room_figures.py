@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "fdsreader",
+#     "fdsreader>=1.11.7,<1.12",
 #     "matplotlib",
 #     "numpy",
 #     "pandas",
@@ -50,11 +50,11 @@ import json
 import math
 from pathlib import Path
 
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from _fdsreader_open import open_fds_case
 from matplotlib.animation import PillowWriter
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
@@ -103,7 +103,7 @@ def temperature_slice(fds_dir):
     share, the only place where "the slice value at a point" is ambiguous.
     ``shared[i, j]`` is True at such nodes.
     """
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_case(str(fds_dir))
     for sl in sim.slices:
         if sl.quantity.name != "TEMPERATURE" or sl.orientation != 3:
             continue

@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "fdsreader",
+#     "fdsreader>=1.11.7,<1.12",
 #     "matplotlib",
 #     "numpy",
 #     "pandas",
@@ -45,11 +45,11 @@ import argparse
 import math
 from pathlib import Path
 
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from _fdsreader_open import open_fds_case
 from matplotlib.animation import PillowWriter
 from matplotlib.lines import Line2D
 from matplotlib.patches import Patch, Rectangle
@@ -105,7 +105,7 @@ def style_axes(ax, frame=True):
 
 def read_gas(fds_dir):
     """Volume fractions (CO ppm, CO2 %, O2 %) and their spread over the slices."""
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_case(str(fds_dir))
     names = {
         "CARBON MONOXIDE VOLUME FRACTION": ("co_ppm", 1e6),
         "CARBON DIOXIDE VOLUME FRACTION": ("co2", 100.0),

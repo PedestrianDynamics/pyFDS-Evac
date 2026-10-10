@@ -235,9 +235,9 @@ def first_crossings(rec, people, criteria):
 
 
 def _check_slice_height(fds_dir):
-    from fdsreader import Simulation
+    from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
-    sim = Simulation(str(fds_dir))
+    sim = open_fds_simulation(fds_dir)
     for quantity in (
         "SOOT EXTINCTION COEFFICIENT",
         "HYDROGEN CHLORIDE VOLUME FRACTION",
@@ -304,8 +304,11 @@ def grid_aset(k_field, fed_field, walkable, cell=0.5):
 def sign_vismap(fds_dir, config):
     from fdsvismap import VisMap
 
+    from pyfds_evac.core.fdsreader_adapter import fdsreader_without_cache
+
     vis = VisMap()
-    vis.read_fds_data(str(fds_dir), fds_slc_height=SLICE_Z)
+    with fdsreader_without_cache():
+        vis.read_fds_data(str(fds_dir), fds_slc_height=SLICE_Z)
     vis.set_time_points(np.arange(0.0, T_END + 0.5, 1.0).tolist())
     vis.set_visibility_bounds(0.0, MAX_VIS_M)
     signs = {**config["exits"], **config["checkpoints"]}

@@ -149,9 +149,9 @@ def _extinction_slice_index(fds_dir: str, slice_height_m: float) -> int:
     itself (fdsvismap#55); passing the index keeps one owner of the rule and
     its height-mismatch warning.
     """
-    from fdsreader import Simulation
+    from .fdsreader_adapter import open_fds_simulation
 
-    collection = Simulation(fds_dir).slices
+    collection = open_fds_simulation(fds_dir).slices
     slices = list(collection)
     extinction = collection.filter_by_quantity(_EXTINCTION_QUANTITY)
     chosen = fds_sampling.select_horizontal_slice(
@@ -182,12 +182,14 @@ def _build_vismap(
 ):
     from fdsvismap import VisMap
 
+    from .fdsreader_adapter import fdsreader_without_cache
+
     vis = VisMap()
-    vis.read_fds_data(
-        fds_dir,
-        fds_slc_height=slice_height_m,
-        fds_slc_index=_extinction_slice_index(fds_dir, slice_height_m),
-    )
+    slice_index = _extinction_slice_index(fds_dir, slice_height_m)
+    with fdsreader_without_cache():
+        vis.read_fds_data(
+            fds_dir, fds_slc_height=slice_height_m, fds_slc_index=slice_index
+        )
     vis.set_time_points(_vismap_time_points(vis.fds_time_points.max(), time_step_s))
     for wp_id, (node_id, sign) in enumerate(sign_descriptors.items()):
         alpha = sign.get("alpha")
