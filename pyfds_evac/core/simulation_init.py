@@ -760,7 +760,7 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
                 continue
             try:
                 area = _journey_spawn_area(coords, walkable_polygon)
-            except Exception:
+            except _INVALID_SPAWN_POLYGON:
                 # The run warns and skips a distribution it cannot process.
                 continue
             if not area.is_empty:
@@ -2232,6 +2232,10 @@ def _journey_spawn_area(coords, walkable_polygon):
     return shapely.intersection(Polygon(coords), walkable_polygon)
 
 
+_INVALID_SPAWN_POLYGON = (shapely.errors.GEOSException, ValueError)
+"""What ``_journey_spawn_area`` raises for coordinates that make no valid polygon."""
+
+
 def _clip_spawn_area(dist_area, walkable_polygon):
     """*dist_area* without the obstacles, within the walkable area."""
     holes = [Polygon(interior) for interior in walkable_polygon.interiors]
@@ -2761,111 +2765,43 @@ def _add_agents(
 
         try:
             dist_area = _journey_spawn_area(polygon, walkable_area.polygon)
+        except _INVALID_SPAWN_POLYGON as e:
+            # Coordinates that make no valid polygon, such as a
+            # self-intersecting one: the export check skips them too.
+            print(f"Warning: Error processing distribution {dist_key}: {e}")
+            continue
 
-            if dist_area.is_empty:
-                print(f"Warning: Distribution {dist_key} is outside walkable area")
-                continue
+        if dist_area.is_empty:
+            print(f"Warning: Distribution {dist_key} is outside walkable area")
+            continue
 
-            # dist_key already matches journey mapping keys.
-            distribution_journeys = journeys_per_distribution.get(dist_key, [])
+        # dist_key already matches journey mapping keys.
+        distribution_journeys = journeys_per_distribution.get(dist_key, [])
 
-            if flow_schedule:
-                has_flow_spawning = True
+        if flow_schedule:
+            has_flow_spawning = True
 
-                max_radius = _get_max_agent_radius(params)
-                max_capacity = _estimate_max_capacity(dist_area, max_radius)
+            max_radius = _get_max_agent_radius(params)
+            max_capacity = _estimate_max_capacity(dist_area, max_radius)
 
-                positions = jps.distribute_until_filled(
-                    polygon=dist_area,
-                    distance_to_agents=2 * max_radius,
-                    distance_to_polygon=max_radius,
-                    seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
-                )
-                shuffle_rng = random.Random(
-                    distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
-                )
-                shuffle_rng.shuffle(positions)
+            positions = jps.distribute_until_filled(
+                polygon=dist_area,
+                distance_to_agents=2 * max_radius,
+                distance_to_polygon=max_radius,
+                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            )
+            shuffle_rng = random.Random(
+                distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
+            )
+            shuffle_rng.shuffle(positions)
 
-                for schedule_entry in flow_schedule:
-                    n_agents = schedule_entry["number"]
-                    flow_start_time = schedule_entry["flow_start_time"]
-                    flow_end_time = max(
-                        flow_start_time + 0.1, schedule_entry["flow_end_time"]
-                    )
-                    flow_duration = flow_end_time - flow_start_time
-                    flow_rate = n_agents / flow_duration
-                    if flow_rate > max_capacity:
-                        raise ValueError(
-                            f"Distribution '{dist_key}': flow rate of {flow_rate:.1f} agents/s "
-                            f"exceeds area capacity of {max_capacity} agents. "
-                            f"Reduce the number of agents ({n_agents}) or increase "
-                            f"the flow duration ({flow_duration:.1f}s)."
-                        )
-
-                    flow_params = dict(params)
-                    flow_params["number"] = n_agents
-                    flow_params["use_flow_spawning"] = True
-                    flow_params["flow_start_time"] = flow_start_time
-                    flow_params["flow_end_time"] = flow_end_time
-
-                    frequency = flow_duration / n_agents
-                    agents_per_spawn = 1
-
-                    spawning_freqs_and_numbers.append([frequency, agents_per_spawn])
-                    num_agents_per_source.append(n_agents)
-                    starting_pos_per_source.append(list(positions))
-
-                    flow_distributions.append(
-                        {
-                            "dist_index": dist_index,
-                            "dist_key": dist_key,
-                            "source_id": len(flow_distributions),
-                            "params": flow_params,
-                            "start_time": flow_start_time,
-                            "end_time": flow_end_time,
-                            "journey_info": distribution_journeys,
-                        }
-                    )
-
-                if initial_n_agents > 0:
-                    immediate_params = dict(params)
-                    immediate_params["number"] = initial_n_agents
-                    immediate_params["use_flow_spawning"] = False
-                    immediate_spawn_distributions[dist_key] = {
-                        "area": dist_area,
-                        "params": immediate_params,
-                    }
-
-                print(
-                    f"Flow spawning: {dist_key} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
-                )
-
-            elif use_flow_spawning:
-                has_flow_spawning = True
-
-                max_radius = _get_max_agent_radius(params)
-                max_capacity = _estimate_max_capacity(dist_area, max_radius)
-
-                # Flow spawning: agents spawn over time so the full requested
-                # count is valid even if it exceeds simultaneous capacity.
-                if dist_mode == "by_number":
-                    n_agents = requested_n_agents
-                else:  # by_percentage
-                    percentage = _get_distribution_percentage(params)
-                    n_agents = max(1, int(max_capacity * percentage / 100))
-
-                if n_agents <= 0:
-                    print(f"Warning: No agents fit in distribution {dist_key}")
-                    continue
-
-                # Get flow parameters
-                flow_start_time = max(0, params.get("flow_start_time", 0))
+            for schedule_entry in flow_schedule:
+                n_agents = schedule_entry["number"]
+                flow_start_time = schedule_entry["flow_start_time"]
                 flow_end_time = max(
-                    flow_start_time + 0.1, params.get("flow_end_time", 10)
+                    flow_start_time + 0.1, schedule_entry["flow_end_time"]
                 )
                 flow_duration = flow_end_time - flow_start_time
-
-                # Validate flow rate does not exceed area capacity
                 flow_rate = n_agents / flow_duration
                 if flow_rate > max_capacity:
                     raise ValueError(
@@ -2875,55 +2811,123 @@ def _add_agents(
                         f"the flow duration ({flow_duration:.1f}s)."
                     )
 
-                params["number"] = n_agents
+                flow_params = dict(params)
+                flow_params["number"] = n_agents
+                flow_params["use_flow_spawning"] = True
+                flow_params["flow_start_time"] = flow_start_time
+                flow_params["flow_end_time"] = flow_end_time
 
-                frequency = flow_duration / n_agents  # seconds between spawns
-                agents_per_spawn = 1  # spawn 1 agent at a time for smooth flow
+                frequency = flow_duration / n_agents
+                agents_per_spawn = 1
 
                 spawning_freqs_and_numbers.append([frequency, agents_per_spawn])
                 num_agents_per_source.append(n_agents)
+                starting_pos_per_source.append(list(positions))
 
-                positions = jps.distribute_until_filled(
-                    polygon=dist_area,
-                    distance_to_agents=2 * max_radius,
-                    distance_to_polygon=max_radius,
-                    seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
-                )
-                shuffle_rng = random.Random(
-                    distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
-                )
-                shuffle_rng.shuffle(positions)
-                starting_pos_per_source.append(positions)
-
-                # Store distribution info for flow spawning
                 flow_distributions.append(
                     {
                         "dist_index": dist_index,
                         "dist_key": dist_key,
                         "source_id": len(flow_distributions),
-                        "params": params,
+                        "params": flow_params,
                         "start_time": flow_start_time,
                         "end_time": flow_end_time,
                         "journey_info": distribution_journeys,
                     }
                 )
 
-                print(
-                    f"Flow spawning: {dist_key} - {n_agents} agents over {flow_duration}s (freq: {frequency:.2f}s, rate: {1 / frequency:.2f} agents/s)"
-                )
-
-            else:
-                # Store for immediate spawning
+            if initial_n_agents > 0:
+                immediate_params = dict(params)
+                immediate_params["number"] = initial_n_agents
+                immediate_params["use_flow_spawning"] = False
                 immediate_spawn_distributions[dist_key] = {
-                    "polygon": polygon,
-                    "params": params,
                     "area": dist_area,
+                    "params": immediate_params,
                     "distribution_journeys": distribution_journeys,
                 }
 
-        except Exception as e:
-            print(f"Warning: Error processing distribution {dist_key}: {e}")
-            continue
+            print(
+                f"Flow spawning: {dist_key} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
+            )
+
+        elif use_flow_spawning:
+            has_flow_spawning = True
+
+            max_radius = _get_max_agent_radius(params)
+            max_capacity = _estimate_max_capacity(dist_area, max_radius)
+
+            # Flow spawning: agents spawn over time so the full requested
+            # count is valid even if it exceeds simultaneous capacity.
+            if dist_mode == "by_number":
+                n_agents = requested_n_agents
+            else:  # by_percentage
+                percentage = _get_distribution_percentage(params)
+                n_agents = max(1, int(max_capacity * percentage / 100))
+
+            if n_agents <= 0:
+                print(f"Warning: No agents fit in distribution {dist_key}")
+                continue
+
+            # Get flow parameters
+            flow_start_time = max(0, params.get("flow_start_time", 0))
+            flow_end_time = max(flow_start_time + 0.1, params.get("flow_end_time", 10))
+            flow_duration = flow_end_time - flow_start_time
+
+            # Validate flow rate does not exceed area capacity
+            flow_rate = n_agents / flow_duration
+            if flow_rate > max_capacity:
+                raise ValueError(
+                    f"Distribution '{dist_key}': flow rate of {flow_rate:.1f} agents/s "
+                    f"exceeds area capacity of {max_capacity} agents. "
+                    f"Reduce the number of agents ({n_agents}) or increase "
+                    f"the flow duration ({flow_duration:.1f}s)."
+                )
+
+            params["number"] = n_agents
+
+            frequency = flow_duration / n_agents  # seconds between spawns
+            agents_per_spawn = 1  # spawn 1 agent at a time for smooth flow
+
+            spawning_freqs_and_numbers.append([frequency, agents_per_spawn])
+            num_agents_per_source.append(n_agents)
+
+            positions = jps.distribute_until_filled(
+                polygon=dist_area,
+                distance_to_agents=2 * max_radius,
+                distance_to_polygon=max_radius,
+                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            )
+            shuffle_rng = random.Random(
+                distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
+            )
+            shuffle_rng.shuffle(positions)
+            starting_pos_per_source.append(positions)
+
+            # Store distribution info for flow spawning
+            flow_distributions.append(
+                {
+                    "dist_index": dist_index,
+                    "dist_key": dist_key,
+                    "source_id": len(flow_distributions),
+                    "params": params,
+                    "start_time": flow_start_time,
+                    "end_time": flow_end_time,
+                    "journey_info": distribution_journeys,
+                }
+            )
+
+            print(
+                f"Flow spawning: {dist_key} - {n_agents} agents over {flow_duration}s (freq: {frequency:.2f}s, rate: {1 / frequency:.2f} agents/s)"
+            )
+
+        else:
+            # Store for immediate spawning
+            immediate_spawn_distributions[dist_key] = {
+                "polygon": polygon,
+                "params": params,
+                "area": dist_area,
+                "distribution_journeys": distribution_journeys,
+            }
 
     agent_counter_per_source = [0] * len(flow_distributions)
 

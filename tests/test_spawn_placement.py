@@ -27,6 +27,7 @@ import pedpy
 import pytest
 from shapely.geometry import MultiPolygon, Point, Polygon, box
 
+from pyfds_evac.core import simulation_init
 from pyfds_evac.core.simulation_init import (
     _find_nearest_exit,
     _get_distribution_mode_and_count,
@@ -433,6 +434,68 @@ def test_split_journey_from_a_spawn_area_of_any_name(tmp_path, key):
     assert simulation.agent_count() == 10
     assert _exit_choices(info) == {"E1": 3, "E2": 7}
     assert {s["current_origin"] for s in info["agent_wait_info"].values()} == {key}
+
+
+def _journey_deck(distributions: dict) -> dict:
+    """*distributions* on a deck whose one journey leads the first to E2."""
+    first = next(iter(distributions))
+    return _deck(
+        distributions,
+        journeys=[{"id": "J", "stages": [first, "E2"]}],
+        transitions=[{"journey_id": "J", "from": first, "to": "E2"}],
+    )
+
+
+def test_scheduled_spawn_area_places_its_initial_agents(tmp_path, monkeypatch):
+    """Initial agents beside a flow schedule start on the journey (#118).
+
+    The area is nearer E1, so an agent left without its journey heads there.
+    """
+    spawn_params = simulation_init._spawn_params
+
+    def with_schedule(params, spawn_defaults):
+        # The scenario JSON does not carry these two keys to the set-up (#390).
+        out = spawn_params(params, spawn_defaults)
+        out.update({k: params[k] for k in ("flow_schedule", "initial_number")})
+        return out
+
+    monkeypatch.setattr(simulation_init, "_spawn_params", with_schedule)
+    window = {"flow_start_time": 0, "flow_end_time": 10, "number": 4}
+    params = _params(0, initial_number=3, flow_schedule=[window])
+    data = _journey_deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 3
+    targets = [s["current_target_stage"] for s in info["agent_wait_info"].values()]
+    assert targets == ["E2"] * 3
+    assert info["num_agents_per_source"] == [4]
+
+
+def test_invalid_spawn_polygon_is_skipped_with_a_warning(tmp_path):
+    """A self-intersecting spawn area is warned about and skipped (#118, #508)."""
+    bow = Polygon([(1.1, 1.1), (3.9, 4.9), (3.9, 1.1), (1.1, 4.9)])
+    data = _journey_deck(
+        {D0: (box(12.0, 2.0, 16.0, 8.0), _params(4)), D1: (bow, _params(3))}
+    )
+    path = tmp_path / "deck.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    simulation = jps.Simulation(model=jps.CollisionFreeSpeedModel(), geometry=WALKABLE)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        initialize_simulation_from_json(
+            str(path), simulation, pedpy.WalkableArea(WALKABLE), seed=SEED
+        )
+    assert f"Warning: Error processing distribution {D1}: TopologyException" in (
+        out.getvalue()
+    )
+    assert simulation.agent_count() == 4
+
+
+def test_flow_rate_above_the_area_capacity_stops_a_deck_with_journeys(tmp_path):
+    """Raised as without journeys; it was a warning and no agents (#118)."""
+    params = _params(500, use_flow_spawning=True, flow_end_time=0.1)
+    data = _journey_deck({D0: (box(2.0, 2.0, 3.0, 3.0), params)})
+    with pytest.raises(ValueError, match="exceeds area capacity"):
+        _initialize(data, tmp_path)
 
 
 def test_placement_is_reproducible_and_seed_dependent(tmp_path):

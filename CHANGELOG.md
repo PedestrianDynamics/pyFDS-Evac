@@ -28,6 +28,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
   deadlock at doors and narrow gaps in some seeds (#706).
 
+- A deck with journeys whose flow-spawning area (`use_flow_spawning`)
+  asks for more agents per second than the area holds now stops the run
+  with `ValueError: Distribution '<id>': flow rate of ... exceeds area
+  capacity ...`, as a deck without journeys does (#118). Before, the
+  area was skipped with a warning and its agents never spawned. Any
+  other error while setting up a spawn area also stops the run instead
+  of skipping the area. No shipped asset is affected.
+
 ### Added
 
 - The FDS coverage warning names the frame (#26): when part of the
@@ -166,6 +174,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--print-summary` now take every key of `distributions` as a spawn
   area, whatever its name. Results with `jps-distributions_<n>` keys do
   not change.
+
+- In a scenario with journeys, a spawn area with a flow schedule and
+  initial agents (`initial_number`) stopped the set-up with
+  `KeyError: 'distribution_journeys'` instead of placing those agents
+  on the spawn area's journeys (#118). The set-up also no longer turns
+  every error of a spawn area into `Warning: Error processing
+  distribution ...` and skips it: only coordinates that make no valid
+  polygon, such as a self-intersecting one, are skipped that way, as
+  `--export-only` does.
 
 ### Documentation
 
