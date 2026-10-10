@@ -122,6 +122,48 @@ def test_promoted_route_keeps_its_hazard():
     assert routes["east"].violation_kinds == ("fed", "tau")
 
 
+@pytest.mark.parametrize(
+    ("k_west", "expected"), [(3.5, ("east", "smoke_reroute")), (2.0, ("stay", None))]
+)
+def test_additive_impassable_smoke_bypasses_the_anchor(k_west, expected):
+    """Additive, decision level: only impassable non-visible smoke is fled.
+
+    w_smoke 0, so the composite is length: east 40 against west 20, and the
+    anchor (east < 0.9 x west) refuses the switch. West is non-visible
+    (K_ave 10/11 of the arm value, over 0.5) and east is clear, so the K_vis
+    screen refuses west. At K 3.5 (K_ave 3.18 > 3.0) must-flee lets the
+    agent go; at K 2.0 (K_ave 1.82) the anchor holds it.
+    """
+    config = golden._additive(w_smoke=0.0)
+    smoke = golden.ArmField({"west": k_west})
+    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
+    wait_info = {
+        "current_origin": "spawn",
+        "current_target_stage": "west",
+        "path_choices": {"spawn": [("west", 100.0)]},
+        "state": "to_target",
+    }
+    switch = evaluate_and_reroute(
+        7,
+        wait_info,
+        rs,
+        golden._star2(),
+        5.0,
+        0.0,
+        smoke,
+        None,
+        RerouteConfig(cost_config=config),
+    )
+    decision = ("stay", None) if switch is None else (switch.new_exit, switch.reason)
+    assert decision == expected
+    ranked = rank_routes(
+        golden._star2(), "spawn", 5.0, 0.0, smoke, None, config, current_exit="west"
+    )
+    west = next(rc for rc in ranked if rc.exit_id == "west")
+    assert west.rejection_reason == "all segments non-visible"
+    assert west.k_ave_route == pytest.approx(k_west * 10 / 11)
+
+
 def _refused(exit_id: str, tau: float, kinds: tuple[str, ...], k_ave=0.5):
     return RouteCost(
         exit_id=exit_id,

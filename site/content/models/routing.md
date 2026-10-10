@@ -58,9 +58,11 @@ comes from is under [Deviations from the literature](#deviations-from-the-litera
 
 Refusals are **not remembered**. The criterion is relative to the distance still
 to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
-at 2 m. When every route is refused the agent still has to move, so it takes the
-one with least smoke to walk through and holds it unless a rival's `tau` is
-clearly lower (`fallback_switch_margin`). Churn is held down by the
+at 2 m. When every route is refused the agent still has to move. It never
+takes a route whose predicted dose is lethal while one that is not remains;
+among the rest it takes the one with least smoke to walk through and holds it
+unless a rival's `tau` is clearly lower (`fallback_switch_margin`)
+([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). Churn is held down by the
 exit-switch anchor, by a stricter budget for a rival exit
 (`tau_return_margin`), and by a discount on the current exit's `tau` in the
 sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`).
