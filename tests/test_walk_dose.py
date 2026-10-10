@@ -1,15 +1,17 @@
-"""The first leg's dose is that of the agent's walk (#171).
+"""An agent behind its route's origin is dosed for the walk back to it (#171).
 
-Smoke and time on the first leg are measured on the walk from the agent to
-the next node; so is its dose: the mean FED rate at the walk's extinction
-sample points, all read at the decision time, over the walk's travel time. Charging the first segment's
-dose pro rata to what is left of it left out the walk back to the origin
-node of an agent standing behind it.
+The first segment's dose is charged pro rata to what is left of it, since
+the dose already taken on it is in ``current_fed``. That share is capped at
+1, so an agent standing behind the origin node was charged nothing for the
+stretch its walk is longer than the segment. That stretch -- the first
+``remaining - L0`` metres of the walk from the agent -- is now charged at
+its mean FED rate, sampled along it at the decision time, over the walk's
+pace. On or ahead of the origin the dose is unchanged.
 
 The graph is ``_linear`` of the golden tests: D0 (0, 0) -> C0 (10, 0) -> E0
 (20, 0), no routing engine (straight walks), clear air, v0 = 1.3 m/s, 2 m
-sampling steps.
-A uniform FED rate of 7.8 /min is then 0.1 FED per metre walked.
+sampling steps. A uniform FED rate of 7.8 /min is then 0.1 FED per metre
+walked.
 """
 
 from __future__ import annotations
@@ -28,6 +30,8 @@ from pyfds_evac.core.route_graph import (
 )
 
 _PATH = ["D0", "C0", "E0"]
+_LEG_S = 10.0 / 1.3  # one node leg
+_BACK_S = 5.0 / 1.3  # the 5 m stretch from (-5, 0) back to D0
 
 
 class _Clear:
@@ -40,6 +44,13 @@ class _UniformFed:
         return 7.8
 
 
+class _FedBehind:
+    """6 FED/min where x < 0, none elsewhere."""
+
+    def sample_fed_rate(self, time_s, x, y):
+        return 6.0 if x < 0.0 else 0.0
+
+
 class _FedPatch:
     """6 FED/min where y > 1, none elsewhere."""
 
@@ -47,24 +58,12 @@ class _FedPatch:
         return 6.0 if y > 1.0 else 0.0
 
 
-class _FedSquare:
-    """0.375 y^2 FED/min."""
-
-    def sample_fed_rate(self, time_s, x, y):
-        return 0.375 * y * y
-
-
 class _HotCell:
-    """0.1 FED/min, and 1.3 in one 0.5 m cell around (7.5, 2)."""
+    """0.1 FED/min, and 1.3 in one 0.5 m cell around (-2.5, 0)."""
 
     def sample_fed_rate(self, time_s, x, y):
-        hot = abs(x - 7.5) < 0.25 and abs(y - 2.0) < 0.25
+        hot = abs(x + 2.5) < 0.25 and abs(y) < 0.25
         return 1.3 if hot else 0.1
-
-
-# The walk from (5, 4) to C0 (10, 0): 6.403 m, sampled at 5 points, at
-# y = 4, 3, 2, 1, 0 (the middle one at (7.5, 2)).
-_WALK_S = math.hypot(5.0, 4.0) / 1.3
 
 
 def _config(model: str) -> RouteCostConfig:
@@ -99,46 +98,46 @@ def test_additive_composite_counts_the_walk_back():
     ("position", "expected"),
     [((4.0, 0.0), 1.6), ((0.0, 0.0), 2.0), (None, 2.0)],
 )
-def test_ahead_of_the_origin_the_dose_is_unchanged(position, expected):
-    """In a uniform field the walk and the pro-rata share agree."""
+def test_on_or_ahead_of_the_origin_the_dose_is_unchanged(position, expected):
     assert _route(position).fed_max_route == pytest.approx(expected, abs=1e-9)
 
 
-def test_dose_is_read_on_the_walk_not_on_the_segment():
-    """From (5, 4) the walk to C0 crosses the patch; the segment D0 -> C0 does not.
+def test_ahead_of_the_origin_the_segment_is_charged_pro_rata():
+    """From (5, 4) the walk to C0 is shorter than D0 -> C0: no stretch is added.
 
-    Three of the walk's five samples are in the patch: mean 3.6 /min over
-    4.925 s. The segment's midpoint (5, 0) is outside it, so its share is
-    no dose.
+    The walk crosses the patch, the segment's midpoint (5, 0) does not; the
+    first segment keeps its pro-rata dose, 0.
     """
-    rc = _route((5.0, 4.0), fed=_FedPatch())
-    expected = 3.6 * _WALK_S / 60.0
-    assert expected == pytest.approx(0.29553, abs=1e-5)
+    assert _route((5.0, 4.0), fed=_FedPatch()).fed_max_route == 0.0
+
+
+def test_stretch_behind_the_origin_is_dosed_at_its_mean_rate():
+    """The 5 m back to D0 is sampled at x = -5, -3.33, -1.67 and 0.
+
+    Three samples lie in the x < 0 patch: mean 4.5 /min over 3.846 s. The
+    node legs' midpoints (x = 5, 15) are clear. A single sample at the
+    stretch's midpoint (-2.5, 0) would read 6 /min, a dose of 0.38462.
+    """
+    rc = _route((-5.0, 0.0), fed=_FedBehind())
+    expected = 4.5 * _BACK_S / 60.0
+    assert expected == pytest.approx(0.28846, abs=1e-5)
     assert rc.fed_max_route == pytest.approx(expected, abs=1e-9)
 
 
-def test_dose_is_the_mean_rate_on_the_walk():
-    """0.375 y^2: mean 0.375 (16 + 9 + 4 + 1 + 0) / 5 = 2.25 /min.
+def test_one_hot_cell_does_not_make_the_dose_of_the_stretch():
+    """A 0.5 m hot cell at the stretch's midpoint does not set its dose.
 
-    The midpoint (y = 2) alone reads 1.5 /min, a dose of 0.12314.
+    The stretch is sampled at x = -5, -3.33, -1.67 and 0, none in the cell,
+    so the whole route reads the 0.1 /min background over its 25 m. The
+    expected value is the mean at the sample points, not the cell's
+    length-weighted share of the stretch: a cell narrower than the sampling
+    step counts only where it holds a sample point. A midpoint sample would
+    charge the stretch 1.3 /min, 13 times the background.
     """
-    rc = _route((5.0, 4.0), fed=_FedSquare())
-    expected = 2.25 * _WALK_S / 60.0
-    assert expected == pytest.approx(0.18471, abs=1e-5)
-    assert rc.fed_max_route == pytest.approx(expected, abs=1e-9)
-
-
-def test_one_hot_cell_does_not_make_the_dose_of_the_walk():
-    """A hot cell on the walk's midpoint counts as one sample of five.
-
-    Mean (4 x 0.1 + 1.3) / 5 = 0.34 /min, not the 1.3 /min, 13 times the
-    background, that a midpoint sample reads. The leg C0 -> E0 adds
-    0.1 /min over its 10 m.
-    """
-    rc = _route((5.0, 4.0), fed=_HotCell())
-    walk = rc.fed_max_route - 0.1 * (10.0 / 1.3) / 60.0
-    assert walk == pytest.approx(0.34 * _WALK_S / 60.0, abs=1e-9)
-    assert walk < 0.3 * (1.3 * _WALK_S / 60.0)
+    rc = _route((-5.0, 0.0), fed=_HotCell())
+    background = 0.1 * (2 * _LEG_S + _BACK_S) / 60.0
+    assert rc.fed_max_route == pytest.approx(background, abs=1e-9)
+    assert rc.fed_max_route < 0.1 * 2 * _LEG_S / 60.0 + 1.3 * _BACK_S / 60.0
 
 
 def test_no_rate_is_no_dose_even_over_an_infinite_walk():
@@ -160,6 +159,7 @@ def test_first_hop_weight_counts_the_walk_back():
         _UniformFed(),
         config,
         policy_for(config),
+        {},
         None,
     )
     assert hops["C0"] == pytest.approx(30.0, abs=1e-9)

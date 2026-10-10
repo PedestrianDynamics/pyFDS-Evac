@@ -9,13 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
-- `fed_max_route` in the route-cost history moves in runs with a FED
-  field (#171): it rises for an agent behind its route's origin node and
-  moves either way in a non-uniform field. Under `additive` the route
-  cost moves by `w_fed` times that change, so near-tied choices can
-  change. On the t_junction, l_corridor, Schroeder 2015, world100 and
-  world77 decks the largest route FED rises from 0.43 to 0.71 and no
-  exit choice changes. Runs without a FED field are unchanged.
+- `fed_max_route` in the route-cost history rises for an agent behind
+  its route's origin node in runs with a FED field (#171). Under
+  `additive` the route cost rises by `w_fed` times that change, so
+  near-tied choices can change. Agents on or ahead of the origin, and
+  runs without a FED field, are unchanged.
 
 - Route history (`--output-route-history`, `result.route_history`):
   `smoke_reroute` now counts only the exit changes smoke caused (#92).
@@ -139,14 +137,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flee behind every route it need not flee. The `rejection_reason` text
   and the CSV outputs are unchanged. No shipped deck changes: the
   largest route FED in their outputs is 0.565, below the limit.
-- The dose of a route's first leg is that of the agent's walk to the
-  route's next node: the mean FED rate at the walk's smoke sample
-  points, read at the decision time, over the walk's travel time, as
-  the leg's smoke and time already were (#171). Before, it was the
-  first segment's dose pro rata to what is left of it, which charged no
-  dose for the walk back to the route's origin node of an agent behind
-  it, and read the segment's rate, not the walk's. The candidate search
-  weighs the walk to each first node the same way.
+- An agent behind its route's origin node is charged the dose of its
+  walk back to the origin (#171). The first segment's dose is charged
+  pro rata to what is left of it, a share capped at 1, so that stretch
+  carried no dose although its smoke and time were counted. It is now
+  charged at the mean FED rate sampled along it at the decision time,
+  over the walk's pace; the candidate search weighs the walk to each
+  first node the same way.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not
