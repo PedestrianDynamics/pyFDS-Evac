@@ -218,6 +218,20 @@ def test_leaving_a_closed_exit_is_exit_closed():
     assert _reason(switch) == ("east", "west", "exit_closed")
 
 
+def test_default_route_follower_leaving_a_closed_exit_is_exit_closed():
+    """The closed exit the agent walked to is the old exit (#395 R-B).
+
+    The agent follows its default route to ``west``, which is not in its
+    state as a known exit. When ``west`` has closed, the switch to ``east``
+    leaves ``west``: it is not the agent's first choice.
+    """
+    graph = golden._star2()
+    graph.nodes["west"] = replace(graph.nodes["west"], closed_after_s=4.0)
+    route_state = AgentRouteState(default_exit="west")
+    switch = _reroute(graph, golden._gate(), route_state, target="west")
+    assert _reason(switch) == ("east", "west", "exit_closed")
+
+
 def test_leaving_an_exit_with_no_route_is_exit_unreachable():
     switch = _reroute(
         golden._star2(), golden._gate(), AgentRouteState("gone"), target="west"

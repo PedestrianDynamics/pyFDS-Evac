@@ -567,7 +567,7 @@ Each `RouteSwitch` record includes a `reason` field:
 | `default_route` | The agent follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)): at spawn, or when the agent's known exits are all closed or unreachable |
 | `fed_reroute`   | A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (`additive`) the dose term contributes to a switch the hazard terms are needed for |
 | `smoke_reroute` | A different exit: the route to the old exit is refused on smoke alone (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, lower in τ by more than the deadband, or would not clear the anchor with clear-air travel times; under `additive` the switch needs the smoke term and not the dose term |
-| `exit_closed`   | The agent's exit has closed on its schedule; the best open exit it knows |
+| `exit_closed`   | The exit the agent walks to has closed on its schedule; the best open exit it knows, also when that route is a gate fallback |
 | `exit_opened`   | A different exit, closed at the agent's previous evaluation |
 | `learned_exit`  | A different exit, not in the agent's cognitive map at its previous evaluation |
 | `congestion`    | A different exit; the switch would not clear the anchor without the queue term |
@@ -582,8 +582,17 @@ Each `RouteSwitch` record includes a `reason` field:
 | `stay`          | No exit known; standing until one becomes known (`no_known_exit: "stay"`) |
 
 For a change of exit the first of these that applies names the cause:
-`fallback`, `initial`, `exit_closed`, `fed_reroute`, `smoke_reroute`,
-`exit_opened`, `learned_exit`, `congestion`, `shorter_path`. A route to the
+`default_route`, `exit_closed`, `fallback`, `initial`, `fed_reroute`,
+`smoke_reroute`, `exit_opened`, `learned_exit`, `congestion`,
+`shorter_path`. When the exit the agent walks to has closed
+(`closed_after_s` passed), the switch is `exit_closed` even onto a gate
+fallback route (the decision is still a fallback; with rerouting on, the
+route cost history shows it), unless the agent knows no open exit and takes
+the default route. Either way `old_exit` is the closed exit, also for an
+agent that was following its default route. An exit that has not opened yet
+never gives `exit_closed`: it was never the agent's exit, so its first open
+exit is `initial` with an empty `old_exit`
+([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). A route to the
 old exit that is refused gives `fed_reroute` when its predicted dose is over
 the limit, else `smoke_reroute`. With no route to the old exit, and for an
 idle agent routed to its own exit, `exit_opened` and `learned_exit` still
