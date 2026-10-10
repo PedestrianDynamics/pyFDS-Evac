@@ -86,6 +86,21 @@ def _capacity_error(dist_keys, requested, capacity) -> SpawnCapacityError:
     )
 
 
+def _unplaced_error(dist_keys, requested, capacity, error) -> SpawnCapacityError:
+    """Name the distributions when the sampler places fewer than requested (#702).
+
+    The count passed the capacity check, so the estimate is named as the
+    upper bound it is, next to JuPedSim's own message.
+    """
+    names = ", ".join(f"'{key}'" for key in dist_keys)
+    label = "Distributions" if len(dist_keys) > 1 else "Distribution"
+    return SpawnCapacityError(
+        f"{label} {names}: could not place the {requested} requested agents "
+        f"({error}). The capacity estimate ~{capacity} is an upper bound. "
+        f"Reduce the number of agents or enlarge the distribution area."
+    )
+
+
 def _placing(call, *args, **kwargs):
     """Run one placement call; report its failure as ``_AgentPlacementError``."""
     try:
@@ -434,13 +449,17 @@ def _seed_shared_areas(spawn_distributions, seed):
         if total > capacity:
             raise _capacity_error([m["dist_key"] for m in members], total, capacity)
         area_key = members[0]["dist_key"]
-        positions = jps.distribute_by_number(
-            polygon=area,
-            number_of_agents=total,
-            distance_to_agents=2 * max_radius,
-            distance_to_polygon=max_radius,
-            seed=distribution_seed(seed, area_key, PURPOSE_POSITIONS),
-        )
+        try:
+            positions = jps.distribute_by_number(
+                polygon=area,
+                number_of_agents=total,
+                distance_to_agents=2 * max_radius,
+                distance_to_polygon=max_radius,
+                seed=distribution_seed(seed, area_key, PURPOSE_POSITIONS),
+            )
+        except _PLACEMENT_ERRORS as error:
+            keys = [m["dist_key"] for m in members]
+            raise _unplaced_error(keys, total, capacity, error) from error
         # Shuffle so the profiles interleave across the room instead of one
         # taking whichever corner the sampler happened to fill first.
         random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
