@@ -42,6 +42,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Only runs with `routing.w_queue` > 0 change. No shipped deck sets
   `capacity_agents_per_s`, so no golden or asset result moves.
 
+- Gaussian radii (`radius_distribution: gaussian`) are clipped to the
+  radius placement spaces agents for, b = min(max(`radius` + 3 ×
+  `radius_std`, 0.1), 1.0) m, instead of [0.1, 1.0] m (#709). A draw
+  beyond mean + 3σ (0.135 % of agents) becomes b; the draws, the other
+  radii, every v0 and every position stay the same for a seed. Of the
+  shipped decks only `station_fahy` uses a Gaussian radius: at its
+  default seed 420 one radius goes from 0.2656 to 0.26 m, and the run
+  can diverge from that agent's first contact on. A deck with
+  `radius` + 3 × `radius_std` below 0.1 m is now spaced for 0.1 m.
+
 - `fed_max_route` in the route-cost history rises for an agent behind
   its route's origin node in runs with a FED field (#171). Under
   `additive` the route cost rises by `w_fed` times that change, so
@@ -169,6 +179,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The set-up with journeys passes each exit's `capacity_agents_per_s`
   to route pricing (#394). It was dropped, so the queue term priced
   every exit of a journey deck at the 1.3 agents/s default.
+
+- A Gaussian radius draw no longer exceeds the radius placement spaced
+  for (#709): agents could start overlapping. The spacing bound now has
+  one definition, `agent_params.max_agent_radius`, read by the run and
+  by `pyfds-evac init`'s capacity check.
 
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or

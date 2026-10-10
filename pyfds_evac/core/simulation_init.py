@@ -18,8 +18,10 @@ from shapely.ops import unary_union
 from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
     DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
+    SAMPLED_RADIUS_MIN_M,
     _deck_spawn_defaults,
     _spawn_value,
+    max_agent_radius,
     normalize_distribution_speed_aliases,
     parameters_as_dict,
 )
@@ -445,13 +447,11 @@ def _estimate_max_capacity(polygon, max_radius):
 def _get_max_agent_radius(params):
     """Get max effective radius for spacing calculations.
 
-    For Gaussian distribution, use mean + 3*std (99.7% coverage) clipped to max 1.0.
-    For constant distribution, use mean radius.
+    As ``agent_params.max_agent_radius``: the mean radius, or for a Gaussian
+    radius ``min(max(mean + 3 * std, 0.1), 1.0)``, the bound every sampled
+    radius is clipped to (#709).
     """
-    mean_radius = params.get("radius", 0.2)
-    if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        return min(mean_radius + 3 * params["radius_std"], 1.0)
-    return mean_radius
+    return max_agent_radius(params)
 
 
 def _distribute(area, dist_keys, number, capacity, max_radius, seed):
@@ -891,7 +891,11 @@ def _sample_agent_values(params, n_agents, rng):
     mean_v0 = params.get("v0", 1.25)
 
     if params.get("radius_distribution") == "gaussian" and params.get("radius_std"):
-        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(0.1, 1.0)
+        # Clipped to the spacing bound, not redrawn: the stream keeps its
+        # n draws, so every in-bound radius and every v0 stays the same (#709).
+        radii = rng.normal(mean_radius, params["radius_std"], n_agents).clip(
+            SAMPLED_RADIUS_MIN_M, _get_max_agent_radius(params)
+        )
     else:
         radii = np.full(n_agents, mean_radius)
 

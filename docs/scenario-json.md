@@ -118,7 +118,7 @@ empty object, before the setter's keys are written.
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |
 | `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
-| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1, 1.0] m. |
+| `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. |
 | `radius_std` | none | — | Spread of the Gaussian draw. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
 | `premovement_distribution` | `"gamma"` | `gamma`, `lognormal`, `weibull`, `uniform`, `constant` | Distribution of the delay. |
