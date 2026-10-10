@@ -472,6 +472,78 @@ def _distribute(area, dist_keys, number, capacity, max_radius, seed):
         raise _unplaced_error(dist_keys, number, capacity, error) from error
 
 
+_HOLE_SEGMENTS = 8
+# A buffered point is a polygon inscribed in its circle; scaling the radius
+# by 1 / cos(pi / (4 * segments)) puts the circle inside the polygon.
+_HOLE_SCALE = 1 / math.cos(math.pi / (4 * _HOLE_SEGMENTS))
+
+
+def _free_area(area, max_radius, overlapping):
+    """*area* without the room around agents placed in overlapping areas (#402).
+
+    *overlapping* holds ``(area, positions, max_radius, dist_keys)`` of the
+    areas seeded before that overlap *area*. The sampler keeps *max_radius*
+    from every edge, a hole's too, so a hole of radius
+    ``2 * max(r, r_placed) - r`` around a placed agent keeps the two
+    ``distance_to_agents`` apart. Areas that only touch need no hole: each
+    agent keeps its radius from its own area's edge. *area* comes back
+    unchanged when no hole reaches it.
+
+    Workaround: JuPedSim 1.4.2 ``distribute_by_number`` takes no agents to
+    keep clear of, but measures ``distance_to_polygon`` to holes as well.
+    No upstream issue yet; drop the holes once it takes placed agents.
+    """
+    holes = unary_union(
+        [
+            Point(position).buffer(
+                (2 * max(max_radius, radius) - max_radius) * _HOLE_SCALE,
+                quad_segs=_HOLE_SEGMENTS,
+            )
+            for _, positions, radius, _ in overlapping
+            for position in positions
+        ]
+    )
+    if holes.is_empty or not holes.intersects(area):
+        return area
+    return area.difference(holes)
+
+
+def _seatable_part(free, max_radius, dist_keys, number, capacity, overlapping):
+    """The one part of *free* that can seat an agent; none or several raise.
+
+    Holes that touch cut off pockets and slivers no centre fits in; those
+    are dropped. ``distribute_by_number`` takes one ``Polygon`` only.
+    """
+    parts = [
+        part
+        for part in getattr(free, "geoms", [free])
+        if isinstance(part, Polygon) and not part.buffer(-max_radius).is_empty
+    ]
+    if len(parts) == 1:
+        return parts[0]
+    others = ", ".join(f"'{key}'" for *_, keys in overlapping for key in keys)
+    effect = "split the free area" if parts else "leave no free area"
+    raise _unplaced_error(dist_keys, number, capacity, f"agents of {others} {effect}")
+
+
+def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, placed):
+    """``_distribute`` in the part of *area* that the *placed* agents leave free.
+
+    *placed* holds ``(area, positions, max_radius, dist_keys)`` of every
+    area seeded so far; the positions placed here are appended to it.
+    Without a placed agent in reach, *area* is seeded as it stands.
+    """
+    overlapping = [entry for entry in placed if area.intersection(entry[0]).area > 0]
+    free = _free_area(area, max_radius, overlapping)
+    if free is not area:
+        free = _seatable_part(
+            free, max_radius, dist_keys, number, capacity, overlapping
+        )
+    positions = _distribute(free, dist_keys, number, capacity, max_radius, seed)
+    placed.append((area, positions, max_radius, dist_keys))
+    return positions
+
+
 def _seed_shared_areas(spawn_distributions, seed):
     """Place agents once per distinct spawn area, then hand out the positions.
 
@@ -481,20 +553,24 @@ def _seed_shared_areas(spawn_distributions, seed):
     width of another's, which operational models with a hard contact constraint
     reject when the agent is added. Seeding the polygon once, for everybody who
     starts in it, keeps the spacing that ``distance_to_agents`` promises.
+    An area that overlaps one seeded before it is seeded around the agents
+    already there (#402).
     """
     positions_by_index: dict = {}
+    placed: list = []
     for members in _shared_areas(spawn_distributions):
         area = members[0]["area"]
         max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
         total, capacity = _checked_shared_area(members)
         area_key = members[0]["dist_key"]
-        positions = _distribute(
+        positions = _distribute_beside(
             area,
             [m["dist_key"] for m in members],
             total,
             capacity,
             max_radius,
             distribution_seed(seed, area_key, PURPOSE_POSITIONS),
+            placed,
         )
         # Shuffle so the profiles interleave across the room instead of one
         # taking whichever corner the sampler happened to fill first.
@@ -2745,6 +2821,7 @@ def _add_agents(
     has_premovement = False
 
     # Handle immediate spawning distributions (existing logic)
+    placed: list = []
     for dist_key, spawn_data in immediate_spawn_distributions.items():
         try:
             spawn_params = spawn_data["params"]
@@ -2758,13 +2835,14 @@ def _add_agents(
                     }
                 ]
             )
-            positions = _distribute(
+            positions = _distribute_beside(
                 spawn_data["area"],
                 [dist_key],
                 requested_count,
                 max_capacity,
                 max_radius,
                 distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+                placed,
             )
 
             all_positions.extend(positions)

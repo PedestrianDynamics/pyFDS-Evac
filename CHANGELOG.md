@@ -96,6 +96,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   spawn areas. A count within the estimate that JuPedSim cannot place is
   still found by the run only.
 
+- Two spawn areas that overlap but are not the same polygon, with or
+  without journeys, could place agents of one within a body width of
+  the other's, and the run stopped with `AgentInsertionError` (#402).
+  An area that overlaps one placed before it, in deck order, is now
+  seeded around the agents already there, so agents of the two keep
+  `distance_to_agents` (twice the larger radius) apart. The area placed
+  first and every area that overlaps none keep their positions; the
+  counts and capacity estimates do not change. When the agents already
+  placed leave no free part of an area that can seat an agent, or
+  several, the run stops with `SpawnCapacityError`. Flow-spawned agents
+  are not covered.
+
 ### Documentation
 
 - Model comparison: the FDS+Evac body is a torso circle R_t and two
