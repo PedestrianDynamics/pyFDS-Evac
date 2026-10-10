@@ -99,6 +99,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nearer exit, or to one it has just learned, logged a smoke reroute.
   Outputs lists the values; Routing in practice lists them with their
   order of precedence and how a cause is credited.
+
+- An agent now leaves a route whose predicted dose is lethal, as the
+  routing docs promise (#128). Under the gate, a route over both the FED
+  and the `tau` limit reports `tau ...` and lost the must-flee bypass;
+  when every route was refused, a lethal current exit with the lowest
+  `tau` was held. Must-flee now reads the limits a route breaks, the new
+  `RouteCost.violation_kinds` (default `()`), instead of the rejection
+  reason, and the all-refused fallback orders a route the agent must
+  flee behind every route it need not flee. The `rejection_reason` text
+  and the CSV outputs are unchanged. No shipped deck changes: the
+  largest route FED in their outputs is 0.565, below the limit.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not

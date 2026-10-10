@@ -967,6 +967,10 @@ class RouteCost:
     # no part in comparing two routes; None when the route was not measured
     # by evaluate_route.
     clear_travel_time_s: float | None = field(default=None, compare=False)
+    # The limits the route breaks, in the order they were recorded: "fed",
+    # "tau", "all_segments_non_visible". Must-flee reads these, not the
+    # rejection reason, which names only the last one (#128).
+    violation_kinds: tuple[str, ...] = ()
 
 
 # ── Internal route records ───────────────────────────────────────────
@@ -1081,6 +1085,7 @@ def _project_route_cost(assessment: RouteAssessment) -> RouteCost:
         k_leg_max=m.k_leg_max,
         clean=assessment.clean,
         clear_travel_time_s=m.clear_travel_time_s,
+        violation_kinds=tuple(v.kind for v in f.violations),
     )
 
 
@@ -1889,6 +1894,10 @@ class AdditivePolicy(_AnchoredPolicy):
                         rc,
                         rejected=True,
                         rejection_reason="all segments non-visible",
+                        violation_kinds=(
+                            *rc.violation_kinds,
+                            "all_segments_non_visible",
+                        ),
                     )
                 updated.append(rc)
             costs = updated
@@ -2342,7 +2351,15 @@ def _fallback_rival_wins(
     never moves an agent. One rule for the fallback order and the anchor:
     a k_max hold with a time anchor behind it kept agents on an exit with
     three times the smoke.
+
+    A route the agent must flee never displaces one it need not flee, and
+    always yields to one (#128); the tau rule decides only between two of a
+    kind.
     """
+    rival_flee = _must_flee_rejection(rival, config)
+    current_flee = _must_flee_rejection(current, config)
+    if rival_flee != current_flee:
+        return current_flee
     if taus_tie(rival.tau_route, current.tau_route):
         return False
     margin = 1.0 - config.fallback_switch_margin
@@ -2355,8 +2372,9 @@ def _apply_fallback(
     """Un-reject the least bad route when every route is refused.
 
     Fallback: with every route refused the agent still has to go somewhere,
-    and the least bad one is the one with the least smoke to walk through,
-    the smallest optical depth tau, then the quickest (#458).
+    and the least bad one is one it need not flee (#128), then the one with
+    the least smoke to walk through, the smallest optical depth tau, then the
+    quickest (#458).
 
     Refusal is never remembered: the sight criterion is measured against the
     distance *still to walk*, so it relaxes as the agent closes on an exit and
@@ -2378,7 +2396,13 @@ def _apply_fallback(
     ``feasible`` is left as it was.
     """
     if costs and all(rc.rejected for rc in costs):
-        costs.sort(key=lambda rc: (rc.tau_route, rc.rank_cost))
+        costs.sort(
+            key=lambda rc: (
+                _must_flee_rejection(rc, config),
+                rc.tau_route,
+                rc.rank_cost,
+            )
+        )
         current = next((rc for rc in costs if rc.exit_id == current_exit), None)
         if current is not None and costs[0].exit_id != current.exit_id:
             if not _fallback_rival_wins(costs[0], current, config):
@@ -2565,7 +2589,12 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
     subject to the anchor. The demo's flip-flop was exactly this — mild smoke
     (k_ave ~0.5-0.9) tripping the binary 0.5 visibility threshold every tick.
 
-    Two hazards this does **not** catch, both by construction:
+    The test reads the limits the route breaks (``violation_kinds``), not
+    its public reason, and not ``rejected``: a route over both the FED and the
+    tau limit reports ``tau ...`` but is still lethal, and a route the
+    all-refused fallback promoted keeps its hazard (#128).
+
+    One hazard this does **not** catch, by construction:
 
     * **Heat.** The convective heat dose is tracked per agent and can
       incapacitate on its own
@@ -2573,18 +2602,10 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
       reaches no part of route choice -- ``rank_routes`` is given the gas dose
       and a gas-only rate sampler. An agent can therefore walk into a route
       that will incapacitate it thermally, and nothing here will reject it.
-    * **A FED-lethal route that is also smoke-choked.** Under
-      ``cost_model="gate"`` the tau test overwrites ``rejection_reason`` after
-      the dose test sets it, so such a route reports ``tau ...`` and no longer
-      matches the ``FED`` prefix below. The bypass is lost exactly where both
-      hazards are present.
     """
-    if not rc.rejected:
-        return False
-    reason = (rc.rejection_reason or "").removeprefix("fallback: ")
-    if reason.startswith("FED"):
+    if "fed" in rc.violation_kinds:
         return True
-    if "visible" in reason:  # smoke-obscured path or unreadable sign
+    if "all_segments_non_visible" in rc.violation_kinds:
         return rc.k_ave_route > cost_config.impassable_extinction_threshold
     return False
 
@@ -3124,9 +3145,7 @@ def _exit_change_reason(
         fallback = "resume" if best.exit_id == old_exit else "exit_unreachable"
         return news or fallback
     if old_rc.rejected:
-        return (
-            "fed_reroute" if _over_dose(old_rc, old_exit, config) else "smoke_reroute"
-        )
+        return "fed_reroute" if _over_dose(old_rc) else "smoke_reroute"
     hazard = _hazard_reason(best, old_rc, config, current_fed)
     if hazard is not None:
         return hazard
@@ -3137,13 +3156,15 @@ def _exit_change_reason(
     return "shorter_path"
 
 
-def _over_dose(rc: RouteCost, old_exit: str, config: RerouteConfig) -> bool:
+def _over_dose(rc: RouteCost) -> bool:
     """Whether the route to the agent's own exit breaks the dose limit.
 
-    Read from the dose itself, not the rejection message: under ``gate`` a
-    route over both limits reports tau, and the dose still names the cause.
+    Read from the limits the route breaks, not the rejection message: under
+    ``gate`` a route over both limits reports tau, and the dose still names
+    the cause. The kinds were recorded against the limit of the agent's own
+    exit, so the label and must-flee agree (#128).
     """
-    return rc.fed_max_route > _fed_limit(config.cost_config, rc.exit_id, old_exit)
+    return "fed" in rc.violation_kinds
 
 
 def _hazard_reason(

@@ -477,7 +477,8 @@ Every tick re-decides from the current field; there is no permanent exit death.
 ### When every route is refused
 
 The agent still has to move. `rank_routes` re-sorts the refused routes by
-`(tau_route, rank_cost)` — least smoke to walk through, then quickest — and
+`(must_flee, tau_route, rank_cost)` — a dose-lethal route last, then least
+smoke to walk through, then quickest — and
 un-rejects the head with a `fallback:` prefix on its reason. The agent keeps its
 current target unless the rival's optical depth is more than
 `fallback_switch_margin` (default 0.2) lower, i.e. unless
@@ -488,6 +489,9 @@ and rival.tau_route < current.tau_route * (1 - fallback_switch_margin)
 ```
 
 Equality holds, and so does a tie: with both `tau` 0 the current exit stays.
+The `tau` rule decides only between two routes of a kind: a dose-lethal
+current exit is left for a rival that is not, whatever their `tau`, and a
+dose-lethal rival never displaces a current exit that is not ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
 The anchor applies the same rule whenever two refused routes meet
 (`_fallback_rival_wins`, [#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Before 0.4.0 the fallback compared
 `k_max_route` and the anchor then compared travel time, so a rival with the
@@ -510,7 +514,9 @@ when its rank cost beats `old_cost * exit_switch_anchor` (default 0.9). Under
 the gate, `_anchor_allows` decides in this order (`25a6f8f`):
 
 1. The current exit is a "must flee" rejection — adopt. In practice only a
-   dose rejection reaches this; see [limitations](#known-limitations).
+   dose rejection reaches this, including a route over both the dose and the
+   `tau` limit, whose reason names `tau` ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)); see
+   [limitations](#known-limitations).
 2. Both the rival and the current exit are refused (not `feasible`) — adopt
    only if the rival's `tau` is more than `fallback_switch_margin` lower, as in
    the fallback above; the clean bypass below is not consulted ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
@@ -754,8 +760,9 @@ prediction from `evac.f90`, not a measured run of it.
   sight line, not to a walked route, and nothing here checks 6 against a
   soot-dose or FED-equivalent limit.
 - **`impassable_extinction_threshold` is dead code under the default model.**
-  `_must_flee_rejection` fires only on a rejection reason starting `FED` or
-  containing `"visible"`; the gate's only reason string starts `tau`. So no
+  `_must_flee_rejection` fires only on a FED violation or the additive
+  `all segments non-visible` rejection; the gate refuses on dose and `tau`
+  only. So no
   smoke rejection bypasses the exit-switch anchor, at any density, and the key
   still takes a value and does nothing. `visibility_extinction_threshold`
   (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass

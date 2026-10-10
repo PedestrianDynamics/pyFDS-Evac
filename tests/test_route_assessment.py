@@ -89,6 +89,10 @@ def test_projection_carries_every_field():
             feasible=False,
             rejected=True,
             rejection_reason="why",
+            violations=(
+                RouteViolation(kind="fed", reason="dose", measured=2.0, limit=1.0),
+                RouteViolation(kind="tau", reason="why", measured=9.0, limit=6.0),
+            ),
         ),
         rank_cost=21.0,
         clean=False,
@@ -113,6 +117,7 @@ def test_projection_carries_every_field():
         "k_leg_max": 20.0,
         "clean": False,
         "clear_travel_time_s": 22.0,
+        "violation_kinds": ("fed", "tau"),
     }
     assert {f.name for f in fields(RouteCost)} == expected.keys()
     assert {f.name: getattr(rc, f.name) for f in fields(RouteCost)} == expected
@@ -160,13 +165,16 @@ def _assess_west(config, current_exit=None):
 
 
 def test_dual_violation_reports_tau_reason():
-    """A route over both limits reports tau, and loses the must-flee bypass.
+    """A route over both limits reports tau, and keeps the must-flee bypass.
 
-    #128: the tau test overwrites the FED reason. Stage 1 keeps that; the
-    violations record both, FED first, and the public reason is the last one.
+    #128: the violations record both, FED first, and the public reason is the
+    last one. Must-flee reads the kinds, so the tau reason no longer hides the
+    lethal dose.
     """
     config = golden._gate()
     m, assessment, rc = _assess_west(config)
+    assert _must_flee_rejection(rc, config)
+    assert rc.violation_kinds == ("fed", "tau")
     violations = assessment.feasibility.violations
     assert [v.kind for v in violations] == ["fed", "tau"]
     fed, tau = violations
@@ -176,7 +184,6 @@ def test_dual_violation_reports_tau_reason():
     assert tau.reason == rc.rejection_reason
     assert rc.rejection_reason.startswith("tau")
     assert not rc.feasible and rc.rejected
-    assert not _must_flee_rejection(rc, config)
     assert _project_route_cost(assessment) == rc
 
 
@@ -267,6 +274,7 @@ def test_kvis_rejection_keeps_route_feasible():
     assert west.rejected
     assert west.feasible
     assert west.rejection_reason == "all segments non-visible"
+    assert west.violation_kinds == ("all_segments_non_visible",)
     violation = RouteViolation(
         kind="all_segments_non_visible",
         reason=west.rejection_reason,
