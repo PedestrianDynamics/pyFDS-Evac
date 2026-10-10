@@ -592,7 +592,7 @@ pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
 - The walkable area is derived from the deck: the union of the floor's mesh
   footprints (the main evacuation meshes of an FDS+Evac deck), whose edge is
   a wall, minus the `&OBST` records in the walking band, less their `&HOLE`
-  cuts. Only the parts that hold a spawn area, or
+  cuts, and on a plain deck minus each `&EVHO` on the floor. Only the parts that hold a spawn area, or
   without one an exit, are kept; `import_report.json` lists the dropped
   parts. `--walkable FILE.wkt` replaces the derived polygon.
 - A spawn area that asks for more agents than the run can place (the same
@@ -623,9 +623,10 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 
 #### What the importer derives
 
-- **Deck type.** An FDS+Evac deck has a `&MESH` with `EVACUATION=.TRUE.`
-  or any of `&EVAC`, `&EXIT`, `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVHO`,
-  `&EVSS`, `&STRS`, `&EDEV`; any other deck is a plain FDS deck.
+- **Deck type.** An FDS+Evac deck has a `&MESH` with `EVACUATION=.TRUE.`;
+  any other deck is a plain FDS deck. On a plain deck, `&EVAC`, `&EXIT`,
+  `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVSS`, `&STRS` and `&EDEV` are
+  ignored with a warning; `&EVHO` is applied (see Walkable area).
 - **Floor, FDS+Evac deck.** The main evacuation meshes (`EVAC_HUMANS=.TRUE.`,
   else all evacuation meshes), grouped by overlapping z. The lowest group is
   imported; `--floor MESH_ID` picks another. The floor level is the mesh
@@ -646,6 +647,12 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   `CTRL_ID` are taken as written. `&GEOM` is not represented; `&CATF`
   stops the import. Two touching evacuation meshes of one floor are joined,
   with a warning (FDS+Evac keeps their shared edge a wall).
+- **`&EVHO`, plain deck.** An `&EVHO` whose z range meets the floor level up
+  to the top of the walking band is cut out of the walkable area, so agents
+  neither spawn nor walk there; `walkable.diagnostics` notes
+  `N &EVHO cut out`. With `--walkable` the polygon is taken as given and the
+  `&EVHO` is ignored. On an FDS+Evac deck, `&EVHO` is cut out of the spawn
+  areas only (see Agents).
 - **Kept parts.** The parts of the walkable area that hold a spawn area are
   kept; with no spawn area, those that hold an exit; a part with an
   `--exit` is always kept; with neither, all parts are kept. Exits and spawn
@@ -712,6 +719,10 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `spawn area X (A m2) holds about N agents of radius r m, but M are requested: …` | 3 | Capacity, see above. | Plain deck: a smaller `--agents` or a larger area. FDS+Evac deck: a lower `NUMBER_INITIAL_PERSONS` or a larger `&EVAC` area, in a copy of the deck. |
 | Error item `exit dropped: its strip on the room side is empty; the line is D m from the walkable area` | 3, runnable | The exit is not next to the kept walkable area. | Check the floor and the band (`--z-band`), or pass `--exit`. The run works without that exit. |
 | Error item `exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m` | 3, runnable | A slot narrower than 0.1 m. | Widen the exit in a copy of the deck, or pass `--exit`. |
+| Item `EVHO` `cut out of the walkable area (plain deck)` (info) | 0 | An `&EVHO` on the floor of a plain deck. | None; agents neither spawn nor walk in it. |
+| Item `EVHO` `not on the imported floor: ignored` (warning) | 0 | The `&EVHO` z range misses the floor up to the top of the walking band. | Check its `XB` z values, or `--floor-z`/`--z-band`. |
+| Item `EVHO` `ignored: the --walkable polygon is taken as given` (warning) | 0 | `--walkable` on a plain deck with an `&EVHO`. | Cut the area out of the WKT. |
+| Item `ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck` (warning) | 0 | `&EVAC`, `&EXIT`, `&DOOR` or another FDS+Evac namelist in a plain deck. | Add the evacuation meshes for an FDS+Evac import, or remove the records. |
 | `… holds a config.json that the importer did not write …` | 1 | `-o` points at an authored scenario. | Another `-o`, or `--force`. |
 | `no &MESH reaches the walking band z = LO..HI m; …` | 1 | Wrong `--floor-z` or `--z-band`. | As the message says. |
 | `--floor 'X' names no evacuation mesh; known: […]` | 1 | A wrong `--floor`. | Use a listed id. |

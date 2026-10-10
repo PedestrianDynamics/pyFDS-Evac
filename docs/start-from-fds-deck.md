@@ -432,9 +432,11 @@ The rules in short; [Usage › pyfds-evac init](usage.md#scenario-from-an-fds-de
 has every flag, constant, message and report field.
 
 {{< details title="Deck type and floor" closed="true" >}}
-A deck is an FDS+Evac deck when it has a `&MESH` with `EVACUATION=.TRUE.`
-or any of `&EVAC`, `&EXIT`, `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVHO`,
-`&EVSS`, `&STRS`, `&EDEV`; otherwise it is a plain deck.
+A deck is an FDS+Evac deck when it has a `&MESH` with `EVACUATION=.TRUE.`;
+otherwise it is a plain deck. On a plain deck, `&EVHO` is cut out of the
+walkable area, and the other FDS+Evac namelists (`&EVAC`, `&EXIT`, `&PERS`,
+`&DOOR`, `&ENTR`, `&CORR`, `&EVSS`, `&STRS`, `&EDEV`) are ignored with a
+warning.
 
 - **FDS+Evac deck.** The floor is a group of main evacuation meshes at one
   height, the lowest by default; `--floor MESH_ID` picks another. Its level
@@ -451,6 +453,7 @@ or any of `&EVAC`, `&EXIT`, `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVHO`,
 The union of the floor's mesh footprints, minus the `&OBST` records in the
 band, less their `&HOLE` cuts. The edge of the meshes is a wall. `MULT_ID`
 is expanded; `&GEOM` is not represented; a deck with `&CATF` is refused.
+On a plain deck, each `&EVHO` on the floor is cut out as well.
 
 When the result falls apart into pieces, `init` keeps the pieces that hold a
 spawn area; without spawn areas, those that hold an exit; with neither, all
@@ -525,9 +528,9 @@ with 3 although the scenario can run.
 - **Fire surfaces** in the walkable area are reported, not cut out. On a
   plain deck, rerun `init` with `--walkable FILE.wkt`, a walkable area
   without the surface, or cut a notch around it from the edge of the spawn
-  polygon in `config.json`. Do not add `&EVHO`: it turns the deck into an
-  FDS+Evac deck, which loses its exits, and `init` ends with exit status 3
-  ([#688](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/688)).
+  polygon in `config.json`. An `&EVHO` over the surface, in a copy of the
+  deck, also cuts it out of the walkable area; the deck stays a plain deck
+  and keeps its exits.
 - **No cross-check after the run.** The derived area and the FDS domain are
   not compared after the run
   ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)); exit
