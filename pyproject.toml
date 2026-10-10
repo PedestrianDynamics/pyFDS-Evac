@@ -79,6 +79,7 @@ exclude = [
     "/.specify",
     "/artifacts",
     "/assets/fds_evac_guide",
+    "/assets/fds_evac_guide_converted",
     "/materials",
     "/site",
     "/specs",

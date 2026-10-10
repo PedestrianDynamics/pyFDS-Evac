@@ -1,0 +1,697 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 600.0,
+        "smoke_slice_height": 1.6
+      }
+    }
+  },
+  "distributions": {
+    "AveDoor1": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door1",
+        "familiarity": "discovery",
+        "number": 39,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "AveDoor2": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door2",
+        "familiarity": "discovery",
+        "number": 18,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "AveDoor4": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door4",
+        "familiarity": "discovery",
+        "number": 23,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "AveDoor5": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door5",
+        "familiarity": "discovery",
+        "number": 70,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "ChildDoor1": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door1",
+        "familiarity": "discovery",
+        "number": 13,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 0.9,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "ChildDoor2": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door2",
+        "familiarity": "discovery",
+        "number": 6,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 0.9,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "ChildDoor4": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door4",
+        "familiarity": "discovery",
+        "number": 7,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 0.9,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "ChildDoor5": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door5",
+        "familiarity": "discovery",
+        "number": 24,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 0.9,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "FemaleDoor1": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door1",
+        "familiarity": "discovery",
+        "number": 39,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.15,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "FemaleDoor2": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door2",
+        "familiarity": "discovery",
+        "number": 18,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.15,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "FemaleDoor4": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door4",
+        "familiarity": "discovery",
+        "number": 23,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.15,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "FemaleDoor5": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door5",
+        "familiarity": "discovery",
+        "number": 70,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.15,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "MaleDoor1": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door1",
+        "familiarity": "discovery",
+        "number": 39,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.35,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "MaleDoor2": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door2",
+        "familiarity": "discovery",
+        "number": 18,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.35,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "MaleDoor4": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door4",
+        "familiarity": "discovery",
+        "number": 22,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.35,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    },
+    "MaleDoor5": {
+      "coordinates": [
+        [
+          105.0,
+          23.5
+        ],
+        [
+          105.0,
+          48.5
+        ],
+        [
+          85.0,
+          48.5
+        ],
+        [
+          85.0,
+          23.5
+        ],
+        [
+          105.0,
+          23.5
+        ]
+      ],
+      "parameters": {
+        "entrance": "Door5",
+        "familiarity": "discovery",
+        "number": 71,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 180.0,
+        "use_premovement": true,
+        "v0": 1.35,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.115470054
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "Door1": {
+      "coordinates": [
+        [
+          46.0,
+          -5.5
+        ],
+        [
+          43.0,
+          -5.5
+        ],
+        [
+          43.0,
+          -5.0
+        ],
+        [
+          46.0,
+          -5.0
+        ],
+        [
+          46.0,
+          -5.5
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 44.5,
+        "y": 0.1
+      },
+      "type": "polygon"
+    },
+    "Door2": {
+      "coordinates": [
+        [
+          -0.5,
+          1.0
+        ],
+        [
+          -1.0,
+          1.0
+        ],
+        [
+          -1.0,
+          5.0
+        ],
+        [
+          -0.5,
+          5.0
+        ],
+        [
+          -0.5,
+          1.0
+        ]
+      ],
+      "type": "polygon"
+    },
+    "Door4": {
+      "coordinates": [
+        [
+          18.5,
+          72.5
+        ],
+        [
+          17.5,
+          72.5
+        ],
+        [
+          17.5,
+          73.0
+        ],
+        [
+          18.5,
+          73.0
+        ],
+        [
+          18.5,
+          72.5
+        ]
+      ],
+      "type": "polygon"
+    },
+    "Door5": {
+      "coordinates": [
+        [
+          93.5,
+          72.5
+        ],
+        [
+          92.5,
+          72.5
+        ],
+        [
+          92.5,
+          73.0
+        ],
+        [
+          93.5,
+          73.0
+        ],
+        [
+          93.5,
+          72.5
+        ]
+      ],
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}

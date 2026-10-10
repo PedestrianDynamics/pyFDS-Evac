@@ -1,2 +1,4 @@
 # Third-party decks are kept byte for byte (checked by SHA256SUMS).
 assets/fds_evac_guide/**/*.fds -text
+# Converted input checksums must also survive Windows checkouts unchanged.
+assets/fds_evac_guide_converted/cases/** text eol=lf
