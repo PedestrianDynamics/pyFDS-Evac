@@ -651,7 +651,8 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   to the top of the walking band, whose `MESH_ID`, if given, names a mesh
   of the floor, and that overlaps the walkable area is cut out of it, so
   agents neither spawn nor walk there; `walkable.diagnostics` notes
-  `N &EVHO cut out`. Any other `&EVHO` is ignored with a warning. With `--walkable` the polygon is taken as given and the
+  `N &EVHO cut out`. When they leave no walkable area, `init` stops and
+  names them. Any other `&EVHO` is ignored with a warning. With `--walkable` the polygon is taken as given and the
   `&EVHO` is ignored. On an FDS+Evac deck, `&EVHO` is cut out of the spawn
   areas only (see Agents).
 - **Kept parts.** The parts of the walkable area that hold a spawn area are
@@ -725,6 +726,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Item `EVHO` `ignored: MESH_ID 'X' is not a mesh of the imported floor` (warning) | 0 | The `&EVHO` names a mesh of another floor. | Check its `MESH_ID`, or `--floor-z`/`--z-band`. |
 | Item `EVHO` `ignored: outside the walkable area` (warning) | 0 | The `&EVHO` footprint does not overlap the derived walkable area. | Check its `XB`. |
 | Item `EVHO` `ignored: the --walkable polygon is taken as given` (warning) | 0 | `--walkable` on a plain deck with an `&EVHO`. | Cut the area out of the WKT. |
+| Item `EVHO` `ignored: invalid, XB is missing` (warning) | 0 | An `&EVHO` without `XB` in a plain deck. | Give it an `XB`, or remove it. |
 | Item `ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck` (warning) | 0 | `&EVAC`, `&EXIT`, `&DOOR` or another FDS+Evac namelist in a plain deck. | Add the evacuation meshes for an FDS+Evac import, or remove the records. |
 | `… holds a config.json that the importer did not write …` | 1 | `-o` points at an authored scenario. | Another `-o`, or `--force`. |
 | `no &MESH reaches the walking band z = LO..HI m; …` | 1 | Wrong `--floor-z` or `--z-band`. | As the message says. |
@@ -733,6 +735,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `argument --exit: need x0,y0,x1,y1[,ior]`, `the line must be parallel to x or y` | 1 | A malformed `--exit`. | Four or five numbers, the line parallel to x or y. |
 | A parser error, such as `&RADI (line 21): no closing '/' before &DUMP on line 23` | 1 | Deck syntax; also `&CATF`, an unknown `MULT_ID`, a malformed `XB`. | Fix the deck. |
 | `the walkable area (…) is empty or invalid`, `the deck has no &MESH with XB` | 1 | A degenerate deck or WKT. | Check the deck, or pass `--walkable`. |
+| `the walkable area (derived:deck) is empty once &EVHO 'X' (line N) is cut out` | 1 | The `&EVHO` records of a plain deck cover the whole walkable area. | Shrink or remove the named `&EVHO`. |
 | `cannot read the walkable WKT: …` | 1 | A bad `--walkable` file. | Fix the WKT. |
 
 #### `import_report.json`

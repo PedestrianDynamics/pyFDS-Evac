@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   output at z = 2.0 m it named PBZ 1.6 where the run reads PBZ 2.5
   (#687). Lines print the grid z, with the deck's z when it differs, and
   `nearest_pbz` in `import_report.json` is the grid z.
+- On a plain deck, `pyfds-evac init` reports an `&EVHO` without `XB` as
+  invalid, not as off the floor, and names the `&EVHO` records when they
+  cover the whole walkable area, which ended in exit 1 with only
+  "walkable area (derived:deck) is empty". The fire-surface advice also
+  offers an `&EVHO` over the surface, in a copy of the deck (#688).
 
 - In a scenario with neither journeys nor transitions, a spawn area
   whose count is within the capacity estimate but where JuPedSim cannot
