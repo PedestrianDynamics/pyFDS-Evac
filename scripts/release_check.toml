@@ -186,7 +186,7 @@ uv run python run.py --scenario $SC --seed 4 \\
     --output-sqlite ww/c.sqlite --output-exit-history ww/c_exits.csv"""
 cwd = "."
 timeout = 600
-expect = ["Simulation finished in 55.11 s (100/100 evacuated)."]
+expect = ["Simulation finished in 50.48 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "1. arm U, smoke-blind"
@@ -198,7 +198,7 @@ timeout = 900
 expect = [
   "Smoke-blind: rerouting is off.",
   "Smoke-blind: FED is recorded, incapacitation and FIC slowdown off.",
-  "Simulation finished in 55.11 s (100/100 evacuated).",
+  "Simulation finished in 50.48 s (100/100 evacuated).",
 ]
 
 [[page.step]]
@@ -210,7 +210,7 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
 timeout = 900
 expect = [
   "Replaying the exits of 100 agents from ww/u_exits.csv.",
-  "Simulation finished in 67.95 s (100/100 evacuated).",
+  "Simulation finished in 68.17 s (100/100 evacuated).",
 ]
 
 [[page.step]]
@@ -220,7 +220,7 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
     --disable-tenability \\
     --output-sqlite ww/r.sqlite --output-exit-history ww/r_exits.csv"""
 timeout = 900
-expect = ["Simulation finished in 64.60 s (100/100 evacuated)."]
+expect = ["Simulation finished in 54.80 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "3. arm R-na, no anticipation"
@@ -239,7 +239,7 @@ uv run python run.py --scenario ww/na/config_initial_pre0.json --seed 4 \\
     --fds-dir "$FDS" --disable-tenability \\
     --output-sqlite ww/rna.sqlite --output-exit-history ww/rna_exits.csv"""
 timeout = 900
-expect = ["Simulation finished in 62.47 s (100/100 evacuated)."]
+expect = ["Simulation finished in 60.68 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "4. whole study, stored runs"
@@ -263,10 +263,10 @@ run = 'uv run python scripts/docs/fire_blind_vs_coupled.py --data "$FDS" --runs 
 timeout = 3600
 # Rows the page's tables quote.
 expect = [
-  "U last 56.5 [52.2, 61.1] p95 53.9 [49.7, 58.9] censored 0/20 exit A 0% [0%, 0%]",
-  "R last 63.3 [55.3, 68.6] p95 53.6 [50.3, 62.7] censored 0/20 exit A 80% [66%, 90%]",
-  "pre 0 R-U median 6.4 [-0.3, 15.0] R>U in 19/20, R<U 1, sign p = 4.01e-05",
-  "ISO FEC 1 pre 0 n=20 U:0/15/20/0 S:0/0/5/0 R:0/4/18/0 R-na:0/0/20/0 R+FIC:0/0/0/0",
+  "U last 53.3 [50.1, 56.9] p95 50.7 [47.2, 54.5] censored 0/20 exit A 0% [0%, 0%]",
+  "R last 54.5 [50.5, 57.1] p95 51.0 [46.5, 53.4] censored 0/20 exit A 100% [94%, 100%]",
+  "pre 0 R-U median 0.7 [-5.2, 5.4] R>U in 13/20, R<U 7, sign p = 0.263",
+  "ISO FEC 1 pre 0 n=20 U:0/20/20/0 S:0/0/3/0 R:0/20/20/0 R-na:0/19/20/0 R+FIC:0/0/0/0",
 ]
 
 [[page.step]]
@@ -282,7 +282,7 @@ name = "4. animation"
 mode = "full"
 run = 'uv run python scripts/docs/study_animations.py fire-blind --data "$FDS" --runs "$RUNS"'
 timeout = 1200
-expect = ["- pre 30 s: seed 7, R last out 124.9 s (median 124.9 s)"]
+expect = ["- pre 30 s: seed 4, R last out 95.3 s (median 95.5 s)"]
 
 # --- Verification -----------------------------------------------------------
 
