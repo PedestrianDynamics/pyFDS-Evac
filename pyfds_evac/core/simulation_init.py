@@ -998,14 +998,17 @@ def _pick_initial_stage_target(
     current_position: tuple[float, float] | None,
     rng,
     agent_radius: float,
-    reach_penetration: float = 0.25,
 ):
-    """Pick a random point inside the stage polygon with interior clearance."""
+    """Pick a random point inside the stage polygon with interior clearance.
+
+    The clearance is at least 0.25 m, deeper than ``pick_stage_target``
+    asks of later stages; it is kept so seeded first targets do not move.
+    """
     polygon = (stage_cfg or {}).get("polygon")
     if polygon is None:
         return None
 
-    target_clearance = max(0.05, float(agent_radius) * 0.8, float(reach_penetration))
+    target_clearance = max(0.05, float(agent_radius) * 0.8, 0.25)
     return _random_point_in_polygon(polygon, rng, min_clearance=target_clearance)
 
 
@@ -1195,7 +1198,6 @@ def build_agent_path_state(
         initial_position,
         target_rng,
         float(agent_radius),
-        0.25,
     )
 
     return {
@@ -1208,9 +1210,6 @@ def build_agent_path_state(
         "target_assigned": False,
         "state": "to_target",
         "wait_until": None,
-        "inside_since": None,
-        "reach_penetration": 0.25,
-        "reach_dwell_seconds": 0.2,
         "step_index": 0,
         **seeds,
     }
@@ -1263,9 +1262,6 @@ def build_exit_path_state(
         "target_assigned": False,
         "state": "to_target",
         "wait_until": None,
-        "inside_since": None,
-        "reach_penetration": 0.25,
-        "reach_dwell_seconds": 0.2,
         "step_index": 0,
         **steering_seeds(seed, spawn_key),
         "familiarity": familiarity,
@@ -1843,9 +1839,6 @@ def _initialize_with_fallback(
                 "target_assigned": False,
                 "state": "to_target",
                 "wait_until": None,
-                "inside_since": None,
-                "reach_penetration": 0.25,
-                "reach_dwell_seconds": 0.2,
                 "step_index": 0,
                 **steering_seeds(seed, key),
                 # Carried so the reroute pass can seed a cognitive map from

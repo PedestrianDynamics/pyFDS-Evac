@@ -2624,9 +2624,6 @@ def run_scenario(
                                             "target_assigned": False,
                                             "state": "to_target",
                                             "wait_until": None,
-                                            "inside_since": None,
-                                            "reach_penetration": 0.25,
-                                            "reach_dwell_seconds": 0.2,
                                             "step_index": 0,
                                             **steering_seeds(seed, key),
                                             "familiarity": dist_familiarity[

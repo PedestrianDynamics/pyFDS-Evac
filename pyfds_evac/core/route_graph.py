@@ -2845,7 +2845,6 @@ def reroute_agent(
             wait_info["target_assigned"] = False
             wait_info["state"] = "to_target"
             wait_info["wait_until"] = None
-            wait_info["inside_since"] = None
 
     return True
 
@@ -3461,7 +3460,6 @@ def _start_look(wait_info: dict, node_id: str, point: tuple[float, float]) -> No
     wait_info["target_assigned"] = False
     wait_info["state"] = "to_target"
     wait_info["wait_until"] = None
-    wait_info["inside_since"] = None
     wait_info.pop("look_deadline", None)
 
 
@@ -3569,7 +3567,6 @@ def _stand(wait_info: dict, route_state: AgentRouteState, node: str | None) -> N
     wait_info["target"] = tuple(position) if position is not None else None
     wait_info["target_assigned"] = False
     wait_info["wait_until"] = None
-    wait_info["inside_since"] = None
     route_state.standing = True
     route_state.current_path = []
 
