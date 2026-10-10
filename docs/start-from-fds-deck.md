@@ -361,8 +361,9 @@ An FDS+Evac deck carries its own exits and agents:
   is a `COUNT_ONLY` counter and is not an exit.
 - **Agents.** Four `&EVAC` groups, 100 agents. The `&EVHO` area is cut out,
   which splits each group into two pieces. The `&PERS` pre-movement becomes
-  10 s plus a gamma-distributed reaction, mean 20 s, and its Adult body a
-  radius of 0.15 m, the FDS+Evac torso circle. The group that knows no
+  10 s plus a gamma-distributed reaction, mean 20 s. Each group's agent
+  type gets the radius of its FDS+Evac torso circle: Male 0.16 m, Female
+  0.14 m, Child 0.12 m and Adult 0.15 m. The group that knows no
   door gets familiarity `discovery`.
 
 `--agents` has no effect here: the `&EVAC` records set the numbers. Change

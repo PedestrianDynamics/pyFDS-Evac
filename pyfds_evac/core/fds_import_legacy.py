@@ -93,6 +93,7 @@ HANDLED = {
         "DIAMETER_DIST",
         "DIA_*",
         "D_TORSO_MEAN",
+        "D_SHOULDER_MEAN",
     ),
 }
 COSMETIC = (

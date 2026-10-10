@@ -268,10 +268,11 @@ is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (`&DUMP DT_SLCF`).
 
-**Body shape.** An agent is one circle. `pyfds-evac init` gives an
-FDS+Evac agent type the radius of its torso circle R<sub>t</sub> (Adult
-0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly 0.15), the same value
-for every operational model
+**Body shape.** An agent is one circle. `pyfds-evac init` gives the
+five FDS+Evac Guide agent types the radius of their torso circle
+R<sub>t</sub> (Adult 0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly
+0.15), the same value for every operational model; the `IMO_*` presets
+keep 0.2 m
 ([#699](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699)).
 The circle is as deep as the FDS+Evac body (0.30 m for an adult) but
 narrower than its shoulders (0.51 m), so two agents pass side by side
@@ -325,8 +326,9 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   [directly steered agents](/models/routing.md#which-agents-are-steered-directly),
   the distance at which a stage counts as reached and the clearance of the
   targets picked on the way use 0.2 m, whatever the agent's `radius`. On decks with
-  another radius, such as `world_100` (0.1 m), or with a radius
-  distribution, agents reach stages at the wrong distance.
+  another radius, such as `world_100` (0.1 m) and imported FDS+Evac
+  decks (0.12–0.16 m), or with a radius distribution, agents reach stages
+  at the wrong distance.
 - **`init --check` keeps the deck's z on a stretched grid.** The check
   moves each slice to the uniform `&MESH` grid as FDS does
   ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687)); with

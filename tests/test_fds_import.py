@@ -217,6 +217,7 @@ def _radius_import(tmp_path, keys: str):
         ("DIA_MEAN=0.50, D_TORSO_MEAN=0.36", 0.18),
         ("DIA_MEAN=0.08", 0.1875),  # 0.05 * 0.30 / 0.08
         ("DIAMETER_DIST=-1, DIA_MEAN=0.50", 0.15),
+        ("DIAMETER_DIST=0, DIA_MEAN=0.08", 0.1875),  # same 0.05 m clamp
     ],
 )
 def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
@@ -260,12 +261,53 @@ def test_pers_explicit_uniform_reports_the_torso_range(tmp_path):
         "DIAMETER_DIST=5, DIA_MEAN=1, DIA_PARA=40",  # log-normal mean overflows
         "DIAMETER_DIST=6, DIA_PARA=0, DIA_PARA2=0",  # beta mean 0/0
         "DIAMETER_DIST=0, DIA_MEAN=0.5, D_TORSO_MEAN=1e-10",  # rounds to 0
+        # FDS+Evac stops on an unknown DEFAULT_PROPERTIES, DIAMETER_DIST or not.
+        "DEFAULT_PROPERTIES='Robot', DIAMETER_DIST=1, DIA_LOW=0.4, DIA_HIGH=0.6",
     ],
 )
 def test_pers_without_a_defined_body_gets_no_radius(tmp_path, keys):
     result = _radius_import(tmp_path, keys)
     assert "radius" not in _params(result, "g")
     assert any("body not mapped" in i.message for i in _items(result, "D", "PERS"))
+
+
+def test_pers_constant_diameter_reports_no_spread(tmp_path):
+    result = _radius_import(tmp_path, "DIAMETER_DIST=0, DIA_MEAN=0.5")
+    (message,) = [
+        i.message for i in _items(result, "A", "PERS") if "radius=" in i.message
+    ]
+    assert "has no spread" in message
+    assert "std" not in message
+
+
+@pytest.mark.parametrize(
+    ("keys", "source"),
+    [
+        ("DEFAULT_PROPERTIES='Adult'", "Table_DefaultHumans"),
+        ("DIAMETER_DIST=1, DIA_LOW=0.4, DIA_HIGH=0.6", "evac.f90:1998-2020"),
+        ("DIA_MEAN=0.5", "evac.f90:1998, 14583"),
+    ],
+)
+def test_pers_body_item_names_its_source(tmp_path, keys, source):
+    result = _radius_import(tmp_path, keys)
+    (message,) = [
+        i.message for i in _items(result, "A", "PERS") if "radius=" in i.message
+    ]
+    assert source in message
+    assert ("Table_DefaultHumans" in message) == (source == "Table_DefaultHumans")
+
+
+@pytest.mark.parametrize(
+    ("keys", "why"),
+    [
+        ("DEFAULT_PROPERTIES='Adult', D_SHOULDER_MEAN=0.4", "DEFAULT_PROPERTIES body"),
+        ("DIAMETER_DIST=0, DIA_MEAN=0.5, D_SHOULDER_MEAN=0.4", "torso circle"),
+    ],
+)
+def test_pers_shoulder_key_gets_one_ignored_item(tmp_path, keys, why):
+    result = _radius_import(tmp_path, keys)
+    items = [i for i in result.report.items if "D_SHOULDER_MEAN" in i.message]
+    assert [(i.status, why in i.message) for i in items] == [("A", True)]
 
 
 def test_mixed_pers_types_get_their_own_radius(tmp_path):
