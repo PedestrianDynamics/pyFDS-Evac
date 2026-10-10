@@ -27,6 +27,8 @@ Command-line errors start with the name of the command you ran:
 | `ValueError: --heat-radiant-source integrated-intensity needs --heat-u-factor in [0.25, 1]; there is no default.` | *f* has no default. | Set `--heat-u-factor`. |
 | `ValueError: DIR has no INTEGRATED INTENSITY slice. …` | The deck writes no `INTEGRATED INTENSITY` slice. | Add `&SLCF QUANTITY='INTEGRATED INTENSITY'` at the slice height and rerun FDS. |
 | `pyfds-evac: error: argument --heat-u-factor: must be in [0.25, 1.0], got …` | *f* outside its range. | Use a value in [0.25, 1]. |
+| `pyfds-evac: error: Distribution '…': requested N agents but area can hold at most ~C. …` | A spawn area asks for more agents than the run's capacity estimate. | Lower `number`, or enlarge the polygon in `distributions.<id>.coordinates`. |
+| `pyfds-evac: error: Distribution '…': could not place the N requested agents (Only K of N  could be placed. …). The capacity estimate ~C is an upper bound. …` | The count is within the estimate, but JuPedSim cannot place every agent, for example in a narrow area. Only in scenarios with neither journeys nor transitions. | As above. |
 | `ValueError: Unknown routing cost_model '…'; expected one of ('gate', 'additive')` | `routing.cost_model` in the scenario JSON is not one of the two names. The match is exact and case-sensitive: `"Gate"` fails. Raised with rerouting on or off. | Write `"gate"` or `"additive"`, or drop the key for `"gate"`; see [Scenario JSON](scenario-json.md#route-choice-routing). |
 | `ValueError: Distribution '…' sets desired_speed=… and v0=…; desired_speed is an alias of v0, set one of them` (or the same for `desired_speed_distribution` and `v0_distribution`, `desired_speed_std` and `v0_std`) | A spawn area sets an alias and its `v0*` key to different values. | Set one of the two, or give both the same value; see [Scenario JSON](scenario-json.md#spawn-areas-distributionsidparameters). |
 | `ValueError: Unknown speed_law '…'; expected one of ('lund', 'fridolf')` | Python only: a `SmokeSpeedConfig` built with another `speed_law`. No command-line option or JSON key sets it. | Use `"lund"` or `"fridolf"`, in lower case. |
@@ -65,6 +67,7 @@ Each message, its cause and its fix are in
 | `--heat-… has no effect without --enable-heat-fed.` | A heat option without the heat dose. | Add `--enable-heat-fed`, or drop the option. |
 | `--heat-fed-threshold … departs from ISO 13571:2012 …` | A separate heat threshold is set. | Intended if you set it; the manifest records it. |
 | `Distribution '…' sets no pre-movement; using the FDS+Evac default, a constant 10 s.` | The spawn area has no pre-movement keys. | Set `use_premovement` and the `premovement_*` keys ([Scenario JSON](scenario-json.md)). |
+| `pyfds-evac: warning: import_report.json marks this scenario not runnable` | `pyfds-evac init` wrote the folder as not runnable and lists why. The run goes on, since the folder may have been fixed by hand after `init`; a stale cause can still stop it later. | Fix what the reasons name and import again, or edit the folder by hand ([Start from an FDS deck](start-from-fds-deck.md)). |
 
 ## Harmless log lines
 

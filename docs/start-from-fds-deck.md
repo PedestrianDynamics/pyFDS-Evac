@@ -185,8 +185,10 @@ the import ends with exit status 3:
 ```
 
 The capacity is the run's own estimate of how many agents it can place in
-the area. The folder is still written, and the run refuses it. Import again
-with `--agents 40` before you go on.
+the area. The folder is still written. The run first prints
+`pyfds-evac: warning: import_report.json marks this scenario not runnable:`
+followed by the same reason, then stops with exit status 1 at the capacity
+check. Import again with `--agents 40` before you go on.
 
 {{< details title="The run stopped with exit status 2" closed="true" >}}
 Status 2 means the run reached `max_simulation_time` with agents still

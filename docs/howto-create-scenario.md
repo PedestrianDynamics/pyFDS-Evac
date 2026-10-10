@@ -273,10 +273,12 @@ and prints:
 pyfds-evac: error: Distribution 'jps-distributions_0': requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.
 ```
 
-The estimate is an upper bound. With `"number": 5` the traceback ends in:
+The estimate is an upper bound. With `"number": 5` the count passes the
+check, but JuPedSim places only 4 agents, and the run stops with exit
+status 1 and prints:
 
 ```text
-jupedsim.distributions.AgentNumberError: Only 4 of 5  could be placed. density: 2.35 p/m²
+pyfds-evac: error: Distribution 'jps-distributions_0': could not place the 5 requested agents (Only 4 of 5  could be placed. density: 2.35 p/m²). The capacity estimate ~6 is an upper bound. Reduce the number of agents or enlarge the distribution area.
 ```
 
 Enlarge the polygon in `distributions.<id>.coordinates`, or lower `number`.
