@@ -3457,13 +3457,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>number&lt;/code>&lt;/td>
 &lt;td>&lt;code>simulationParams.number&lt;/code>, else 10&lt;/td>
 &lt;td>≥ 0&lt;/td>
-&lt;td>Agents placed at the start. No value is taken from another spawn area.&lt;/td>
+&lt;td>Agents placed at the start by number, or added over the window with &lt;code>use_flow_spawning&lt;/code>. Not read, and not checked, in the percentage modes. No value is taken from another spawn area.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>distribution_mode&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;by_number&amp;quot;&lt;/code>&lt;/td>
-&lt;td>&lt;code>by_number&lt;/code>, &lt;code>by_percentage&lt;/code>&lt;/td>
-&lt;td>&lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> (1–100, default 50).&lt;/td>
+&lt;td>&lt;code>by_number&lt;/code>, &lt;code>by_percentage&lt;/code>, &lt;code>fill_area&lt;/code>, &lt;code>until_full&lt;/code>&lt;/td>
+&lt;td>&lt;code>by_percentage&lt;/code> fills the polygon to &lt;code>percentage&lt;/code> (default 50) of its capacity estimate: ⌊estimate × &lt;code>percentage&lt;/code> / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (&lt;code>radius&lt;/code>, or mean + 3 × &lt;code>radius_std&lt;/code> up to 1 m for a Gaussian radius; at least 0.1 m). &lt;code>number&lt;/code> is not read. The same count applies at the start and with &lt;code>use_flow_spawning&lt;/code>; &lt;code>--print-summary&lt;/code> shows it. &lt;code>percentage&lt;/code> is clamped to 1–100; a value that is not a number takes the default. The &lt;code>by_percentage&lt;/code> count is exact: when JuPedSim cannot seat it, the run stops with a &lt;code>SpawnCapacityError&lt;/code>, which near 100 % can happen. &lt;code>fill_area&lt;/code> and &lt;code>until_full&lt;/code> take the same count, with &lt;code>percentage&lt;/code> defaulting to 100, as an upper bound: at the start they place as many agents as fit up to it, the run prints &lt;code>Distribution '&amp;lt;id&amp;gt;': fill_area placed N of at most M agents&lt;/code>, and the result (&lt;code>ScenarioResult.fill_placement&lt;/code>, the closing summary line) records it; &lt;code>--print-summary&lt;/code> shows &lt;code>up to M agents&lt;/code>, and &lt;code>--export-only&lt;/code> does not report it as over-full. With or without journeys, every exact count is placed before any fill mode, whatever the deck order, and the fill modes share what is left.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>v0&lt;/code>&lt;/td>
@@ -3542,6 +3542,18 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>0 s, 10 s&lt;/td>
 &lt;td>—&lt;/td>
 &lt;td>Window of flow spawning.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>flow_schedule&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>a list of windows&lt;/td>
+&lt;td>Flow windows that replace &lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code> and &lt;code>number&lt;/code>: each &lt;code>{&amp;quot;flow_start_time&amp;quot;, &amp;quot;flow_end_time&amp;quot;, &amp;quot;number&amp;quot;}&lt;/code> (aliases &lt;code>start_time_s&lt;/code>, &lt;code>end_time_s&lt;/code>, &lt;code>sim_count&lt;/code>) adds &lt;code>number&lt;/code> agents at evenly spaced times within its window, as written, at most one per 0.01 s time step; a window shorter than &lt;code>number&lt;/code> × 0.01 s, or one whose agents per second exceed the area&amp;rsquo;s capacity estimate, stops the run. Agents of a window that the time limit cuts off count as not spawned. An entry that is not an object, a time that is not a finite number, a start below 0, an end not after the start or a &lt;code>number&lt;/code> that is not a whole number ≥ 1 stops the run. Each of these errors is a &lt;code>SpawnConfigError&lt;/code> (a &lt;code>ValueError&lt;/code>) that names the distribution, printed by the CLI in one line; &lt;code>--export-only&lt;/code> reports the same. &lt;code>Scenario.set_flow_schedule()&lt;/code> writes it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>initial_number&lt;/code>&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>≥ 0&lt;/td>
+&lt;td>With &lt;code>flow_schedule&lt;/code>: agents placed at the start beside the scheduled ones, checked against the area&amp;rsquo;s capacity as &lt;code>number&lt;/code> is. Ignored, and not checked, without &lt;code>flow_schedule&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>familiarity&lt;/code>&lt;/td>
@@ -7088,7 +7100,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/96ef15aba80bc927c1d78f471efa0e67999082cb">&lt;code>96ef15a&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6cbbce8ef6a318b122ed04c22df7ace6ad01fb87">&lt;code>6cbbce8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7112,7 +7124,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c404b3a198797688c0245e4686a3a28fbc7896036bea45d036ce18735f27a9b7&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f6bfc118501e65f1e65a861eb353937f7a060c0405efee467b136f0907060a8c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
