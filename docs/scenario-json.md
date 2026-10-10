@@ -117,7 +117,7 @@ empty object, before the setter's keys are written.
 | `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |
-| `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
+| `radius` | `simulationParams.radius`, else 0.2 m | finite, > 0 | Body radius: packing, spawn spacing, and the `radius + 0.5` m arrival distance at a checkpoint (an agent also arrives when its centre is inside the checkpoint polygon). An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it. |
 | `radius_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `radius_std`, clipped to [0.1 m, b], where b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m is the radius placement spaces agents for. |
 | `radius_std` | none | — | Spread of the Gaussian draw. |
 | `use_premovement` | constant 10 s when no pre-movement key is set, with a warning | `true`, `false` | Delay before the agent starts moving. Setting any pre-movement key, including `use_premovement: false`, turns the default off. |
@@ -243,6 +243,9 @@ The legibility rule is on [Models › Wayfinding](/models/wayfinding.md).
 | `waiting_time` | checkpoint | 0 s | Time agents wait at the checkpoint. |
 | `waiting_time_distribution`, `waiting_time_std` | checkpoint | constant, 1.0 s | `"gaussian"` draws the wait per agent. |
 | `enable_throughput_throttling`, `max_throughput` | checkpoint | `false`, 1.0 | Cap the flow through the checkpoint. |
+
+Where to draw checkpoints, how large, and how they join the route graph:
+[How do I place checkpoints?](howto-place-checkpoints.md).
 
 ## Journey splits: `waypoint_routing`
 

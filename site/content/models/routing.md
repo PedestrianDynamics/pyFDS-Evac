@@ -349,7 +349,9 @@ pyFDS-Evac, in Python, in the main loop of `run_scenario` (`scenario.py`):
   is reached when the agent's centre is inside the exit polygon or within
   `EXIT_REACH_TOLERANCE_M` = 0.03 m of it. A checkpoint or waypoint is reached
   within the agent radius plus `TARGET_REACH_MARGIN_M` = 0.5 m of its target
-  point;
+  point, or when the agent's centre is inside the checkpoint polygon (#726).
+  A spawn area walked to on a patrol, a zone and an exit without a polygon
+  are reached at the target point only;
 - applies checkpoint waiting times, throughput caps, exit schedules and zone
   speed factors;
 - removes an agent that reaches an exit with

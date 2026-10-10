@@ -420,8 +420,10 @@ exit and the spawn area sets `no_known_exit` to `explore`,
    (`wander_target`, `_undirected_known_path`, `cognitive_map.py`).
    Logged as `reason="wander"`.
 
-   **Look before wander.** A stage completes within 0.7 m of a random point
-   in it (`reached_stage`, `direct_steering_runtime.py`), so an agent can
+   **Look before wander.** A stage completes within *r* + 0.5 m of a random
+   point in it, *r* being the agent's radius, or, for a checkpoint, as soon
+   as the agent's centre enters the polygon (`reached_stage`,
+   `direct_steering_runtime.py`), so an agent can
    complete it short of the doorway from which the next sign is legible. Before it
    leaves a node on a patrol, it first walks until the node's routing point
    lies within its own body radius, the radius it was spawned with. From there it senses as on arrival, then
