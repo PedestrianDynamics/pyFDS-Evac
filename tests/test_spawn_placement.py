@@ -27,6 +27,7 @@ import pedpy
 import pytest
 from shapely.geometry import MultiPolygon, Point, Polygon, box
 
+from pyfds_evac.core.scenario import Scenario
 from pyfds_evac.core.simulation_init import (
     _find_nearest_exit,
     _get_distribution_mode_and_count,
@@ -643,23 +644,60 @@ def test_split_checkpoint_needs_complete_routing(tmp_path, routing, message):
         _initialize(data, tmp_path)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="#436: by_percentage ignores percentage for agents placed at start",
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize(
+    ("extra", "expected"),
+    [
+        ({"percentage": 10}, 14),
+        ({"percentage": 90}, 128),
+        ({"percentage": 90, "number": 3}, 128),
+        ({}, 71),
+        ({"distribution_mode": "fill_area", "percentage": 75}, 107),
+    ],
+    ids=["10", "90", "90-number-ignored", "default-50", "fill-area-75"],
 )
-def test_by_percentage_count_follows_the_percentage(tmp_path):
-    counts = {}
-    for percentage in (10, 90):
-        params = {
-            "distribution_mode": "by_percentage",
-            "percentage": percentage,
-            "use_premovement": False,
-        }
-        data = _deck(
-            {D0: (box(2.0, 2.0, 8.0, 8.0), params)},
-            journeys=[{"id": "J", "stages": [D0, "E2"]}],
-            transitions=[{"journey_id": "J", "from": D0, "to": "E2"}],
-        )
-        simulation, _, _, _ = _initialize(data, tmp_path)
-        counts[percentage] = simulation.agent_count()
-    assert counts[90] > counts[10]
+def test_by_percentage_count_follows_the_percentage(
+    tmp_path, with_journeys, extra, expected
+):
+    """At the start, ``by_percentage`` fills the area to ``percentage`` (#436).
+
+    floor(capacity estimate x percentage / 100): 36 m2 at radius 0.2 m is
+    floor(36 / (pi 0.2^2) / 2) = 143 agents, so 10 % is 14 and 50 % 71.
+    ``number`` is not read. ``Scenario.summary()`` counts the same.
+    """
+    params = {"distribution_mode": "by_percentage", "use_premovement": False}
+    params.update(extra)
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), params)}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, _ = _initialize(data, tmp_path)
+    assert simulation.agent_count() == expected
+    scenario = Scenario(
+        raw=data,
+        walkable_area_wkt=WALKABLE.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params={},
+    )
+    assert f"  Agents:        ~{expected}" in scenario.summary().splitlines()
+    assert scenario.list_distributions()[0]["agents"] == expected
+
+
+def test_summary_counts_a_flow_spawn_by_percentage_as_the_run(tmp_path):
+    """The views counted ``number`` for a flow spawn by percentage (#436)."""
+    params = {
+        "distribution_mode": "by_percentage",
+        "percentage": 50,
+        "use_flow_spawning": True,
+        "flow_end_time": 60,
+    }
+    data = _journey_deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
+    _, _, _, info = _initialize(data, tmp_path)
+    assert info["num_agents_per_source"] == [71]
+    scenario = Scenario(
+        raw=data,
+        walkable_area_wkt=WALKABLE.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params={},
+    )
+    assert scenario.list_distributions()[0]["agents"] == 71

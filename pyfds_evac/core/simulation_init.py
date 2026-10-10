@@ -713,7 +713,7 @@ def _seed_shared_areas(spawn_distributions, seed):
         )
         taken = 0
         for member in members:
-            count = _initial_spawn_count(member["params"]) or 0
+            count = _initial_spawn_count(member["params"], area)
             positions_by_index[member["index"]] = positions[taken : taken + count]
             taken += count
     return positions_by_index
@@ -729,7 +729,7 @@ def _shared_areas(spawns):
 
 def _checked_shared_area(members):
     """Total count and capacity of one spawn area; over-full raises."""
-    total = sum(_initial_spawn_count(m["params"]) or 0 for m in members)
+    total = sum(_initial_spawn_count(m["params"], m["area"]) for m in members)
     max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
     capacity = _estimate_max_capacity(members[0]["area"], max_radius)
     if total > capacity:
@@ -737,24 +737,35 @@ def _checked_shared_area(members):
     return total, capacity
 
 
-def _initial_spawn_count(params) -> int | None:
-    """Agents a distribution places at the start of the run, None if it has none.
+def _places_at_start(params) -> bool:
+    """Whether a distribution places agents at the start of the run.
 
-    The count both set-up paths place and check against the capacity: the
-    stored ``number`` whatever the ``distribution_mode``, ``initial_number``
-    beside a flow schedule. None for flow spawning, for a schedule without
-    initial agents and for a ``number`` of 0 by number: the set-up places
-    nobody there at the start.
+    Not with flow spawning, with a schedule without initial agents, or
+    with a ``number`` of 0 by number: the set-up places nobody there then.
     """
     mode, requested = _get_distribution_mode_and_count(params)
     flow_schedule = _normalized_flow_schedule(params)
-    initial = _initial_number(params, flow_schedule, requested)
-    if mode == "by_number" and requested <= 0 and initial <= 0 and not flow_schedule:
-        return None
     if flow_schedule:
-        return initial if initial > 0 else None
+        return int(params.get("initial_number") or 0) > 0
     if params.get("use_flow_spawning", False):
-        return None
+        return False
+    return bool(mode != "by_number" or requested > 0)
+
+
+def _initial_spawn_count(params, area) -> int:
+    """Agents a distribution places at the start in *area*, its clipped spawn area.
+
+    The count both set-up paths place and check against the capacity:
+    ``initial_number`` beside a flow schedule; else, by percentage, that
+    share of the capacity estimate of *area* (#436); else ``number``.
+    0 when the distribution places nobody at the start.
+    """
+    if not _places_at_start(params):
+        return 0
+    if _normalized_flow_schedule(params):
+        return int(params.get("initial_number") or 0)
+    if _get_distribution_mode_and_count(params)[0] == "by_percentage":
+        return _percentage_count(params, area)
     return int(params.get("number", 0))
 
 
@@ -766,6 +777,50 @@ def _initial_number(params, flow_schedule, requested: int) -> int:
     if flow_schedule:
         return int(params.get("initial_number") or 0)
     return requested
+
+
+def _percentage_count(params, area) -> int:
+    """Agents that fill *area* to the distribution's ``percentage`` (#436).
+
+    floor(capacity estimate x percentage / 100), at least 1, with the
+    estimate of ``_estimate_max_capacity`` at the distribution's largest
+    radius. ``number`` is not read.
+    """
+    capacity = _estimate_max_capacity(area, _get_max_agent_radius(params))
+    return max(1, int(capacity * _get_distribution_percentage(params) / 100))
+
+
+def _percentage_spawn_count(
+    data, dist_id, walkable_polygon, global_parameters=None
+) -> int | None:
+    """Agents the run places for *dist_id* by percentage, None in other modes.
+
+    The count of the ``Scenario`` views (#436), from the parameters and
+    the clipped area the run reads, for agents placed at the start or by
+    ``use_flow_spawning``; a flow schedule counts its windows instead.
+    0 when the run places nobody there.
+    """
+    dist = data["distributions"][dist_id]
+    raw = parameters_as_dict(dist.get("parameters")) or {}
+    # Read before converting anything, so that the views of a deck in
+    # other modes do not stop on a value only the run reads.
+    if raw.get("distribution_mode") not in _PERCENTAGE_MODES or raw.get(
+        "flow_schedule"
+    ):
+        return None
+    spawn_defaults = _deck_spawn_defaults(global_parameters)
+    params = _distribution_params(dist_id, dist, spawn_defaults, False)
+    coords = dist.get("coordinates")
+    if _uses_fallback(data):
+        if not isinstance(coords, list) or len(coords) < 3:
+            return 0
+        area = _clip_spawn_area(Polygon(coords), walkable_polygon)
+    else:
+        try:
+            area = _journey_spawn_area(coords, walkable_polygon)
+        except _INVALID_SPAWN_POLYGON:
+            return 0
+    return 0 if area.is_empty else _percentage_count(params, area)
 
 
 def _uses_fallback(data) -> bool:
@@ -787,7 +842,7 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
             data, global_parameters, premovement_default=False
         )
         for key, coords in geometry.items():
-            if _initial_spawn_count(params[key]) is None:
+            if not _places_at_start(params[key]):
                 continue
             try:
                 area = _journey_spawn_area(coords, walkable_polygon)
@@ -806,10 +861,14 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
     spawns = [
         {"area": _clip_spawn_area(area, walkable_polygon), "params": p, "dist_key": k}
         for area, p, k in zip(areas, params, keys)
-        if _initial_spawn_count(p) is not None
+        if _places_at_start(p)
     ]
     for members in _shared_areas(s for s in spawns if not s["area"].is_empty):
         _checked_shared_area(members)
+
+
+_PERCENTAGE_MODES = ("by_percentage", "fill_area", "until_full")
+"""The ``distribution_mode`` values that fill a share of the spawn area."""
 
 
 def _get_distribution_mode_and_count(params):
@@ -824,7 +883,7 @@ def _get_distribution_mode_and_count(params):
     if mode == "by_number":
         number = int(params.get("number", 0))
         return mode, max(0, number)
-    elif mode in {"by_percentage", "fill_area", "until_full"}:
+    elif mode in _PERCENTAGE_MODES:
         return "by_percentage", 0
     else:
         number = int(params.get("number", 0))
@@ -1608,8 +1667,7 @@ def _initialize_with_fallback(
             if dist_mode == "by_number":
                 n_agents = requested_n_agents
             else:  # by_percentage
-                percentage = _get_distribution_percentage(dist_params)
-                n_agents = max(1, int(max_capacity * percentage / 100))
+                n_agents = _percentage_count(dist_params, clean_dist_area)
 
             if n_agents <= 0:
                 print(f"Warning: No agents fit in distribution {i}")
@@ -2850,8 +2908,7 @@ def _add_agents(
             if dist_mode == "by_number":
                 n_agents = requested_n_agents
             else:  # by_percentage
-                percentage = _get_distribution_percentage(params)
-                n_agents = max(1, int(max_capacity * percentage / 100))
+                n_agents = _percentage_count(params, dist_area)
 
             if n_agents <= 0:
                 print(f"Warning: No agents fit in distribution {dist_key}")

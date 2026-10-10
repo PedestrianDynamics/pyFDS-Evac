@@ -641,6 +641,16 @@ def test_summary_lists_the_initial_and_scheduled_agents_of_a_spawn_area():
     assert "  Agents:        ~10" in lines
 
 
+def test_views_of_a_deck_by_number_read_only_the_count():
+    """The views do not stop on a value only the run reads (#436)."""
+    data = _deck()
+    data["distributions"]["jps-distributions_1"]["parameters"]["v0"] = "fast"
+    data["config"]["simulation_settings"]["simulationParams"]["radius"] = "wide"
+    scenario = _scenario(data)
+    assert [d["agents"] for d in scenario.list_distributions()] == [3, 2]
+    assert "  Agents:        ~5" in scenario.summary().splitlines()
+
+
 def test_summary_counts_spawn_areas_of_any_name_in_the_route():
     """The route counts every key of ``distributions`` as a spawn area (#409)."""
     data = _deck(journeys=[{"id": "J", "stages": ["room", "jps-exits_0"]}])

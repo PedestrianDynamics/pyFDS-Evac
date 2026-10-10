@@ -390,11 +390,29 @@ class Scenario:
         params.update(self.sim_params)
         params["model_type"] = self.model_type
 
+    def _agent_budget(self, dist_id: str, dist: dict, default_number: int) -> int:
+        """Agents the run places for one distribution, at the start and later.
+
+        A percentage mode counts a share of its clipped area's capacity, as
+        the run does (#436); every other mode is read from the parameters.
+        """
+        from .simulation_init import _percentage_spawn_count
+
+        count = _percentage_spawn_count(
+            self.raw,
+            dist_id,
+            self.walkable_polygon,
+            SimpleNamespace(**self.sim_params),
+        )
+        if count is None:
+            return _distribution_agent_budget(dist, default_number)
+        return count
+
     def summary(self) -> str:
         default_number = deck_default_number(self.sim_params)
         total_agents = sum(
-            _distribution_agent_budget(d, default_number)
-            for d in self.distributions.values()
+            self._agent_budget(did, d, default_number)
+            for did, d in self.distributions.items()
         )
         journey_sequence = []
         journeys = self.raw.get("journeys", [])
@@ -433,7 +451,7 @@ class Scenario:
         for dist_id, dist in self.distributions.items():
             params = parameters_as_dict(dist.get("parameters")) or {}
             flow = params.get("use_flow_spawning", False)
-            n = _distribution_agent_budget(dist, default_number)
+            n = self._agent_budget(dist_id, dist, default_number)
             tag = (
                 f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)"
                 if flow
@@ -534,7 +552,7 @@ class Scenario:
 
         default_number = deck_default_number(self.sim_params)
         for i, (did, d) in enumerate(self.distributions.items()):
-            n = _distribution_agent_budget(d, default_number)
+            n = self._agent_budget(did, d, default_number)
             _plot_element(d["coordinates"], palette["distribution"], f"D{i}\n({n} ag)")
 
         for i, (eid, e) in enumerate(self.exits.items()):
@@ -645,7 +663,7 @@ class Scenario:
                 {
                     "index": i,
                     "id": did,
-                    "agents": _distribution_agent_budget(d, default_number),
+                    "agents": self._agent_budget(did, d, default_number),
                     "flow": params.get("use_flow_spawning", False)
                     or bool(params.get("flow_schedule")),
                 }

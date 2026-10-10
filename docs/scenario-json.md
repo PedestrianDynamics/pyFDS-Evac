@@ -112,8 +112,8 @@ empty object, before the setter's keys are written.
 
 | Key | Default | Range | Effect |
 |---|---|---|---|
-| `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start. No value is taken from another spawn area. |
-| `distribution_mode` | `"by_number"` | `by_number`, `by_percentage` | `by_percentage` fills the polygon to `percentage` (1–100, default 50). |
+| `number` | `simulationParams.number`, else 10 | ≥ 0 | Agents placed at the start by number, or added over the window with `use_flow_spawning`. Not read by `by_percentage`. No value is taken from another spawn area. |
+| `distribution_mode` | `"by_number"` | `by_number`, `by_percentage` | `by_percentage` fills the polygon to `percentage` (default 50) of its capacity estimate: ⌊estimate × `percentage` / 100⌋ agents, at least 1. The estimate is ⌊A / (π r²) / 2⌋ for the spawn area A clipped to the walkable area and the largest agent radius r (`radius`, or mean + 3 × `radius_std` up to 1 m for a Gaussian radius; at least 0.1 m). `number` is not read. The same count applies at the start and with `use_flow_spawning`; `--print-summary` shows it. `percentage` is clamped to 1–100; a value that is not a number takes the default. Near 100 % the count is about what JuPedSim can seat, so placement can fail with a `SpawnCapacityError`: at 100 % and radius 0.2 m it failed in 10 of 20 seeds in a 6 × 6 m area, 5 of 20 in 10 × 8 m and 19 of 20 in a 20 × 1 m strip; at 90 % in at most 1 of 20. |
 | `v0` | `simulationParams.v0`, else 1.25 m/s | finite, ≥ 0 | Clear-air walking speed, for every movement model (FDS+Evac `VEL_MEAN`; 1.2 before). Every smoke, irritant and zone factor multiplies this value. |
 | `v0_distribution` | `"constant"` | `constant`, `gaussian` | `gaussian` draws per agent with `v0_std`; draws are clipped to [0.1, 5.0] m/s. |
 | `v0_std` | none | — | Spread of the Gaussian draw. |

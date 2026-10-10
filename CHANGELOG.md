@@ -48,6 +48,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   drawn from their own streams (`flow_positions`, `flow_shuffle`),
   apart from the initial agents'.
 
+- A spawn area with `distribution_mode` `by_percentage`, `fill_area` or
+  `until_full` now places `percentage` of its capacity estimate at the
+  start (#436), not `number`: 71 agents instead of 10 in a 6 × 6 m area
+  at the default 50 % and radius 0.2 m. Results of such scenarios
+  change; no shipped asset, example or documented scenario uses these
+  modes. `fill_area` and `until_full` default to 100 %, a count JuPedSim
+  cannot always seat: in a 6 × 6 m area it fails in half the seeds with
+  `SpawnCapacityError`. Set `percentage` to 90 or less, or use
+  `by_number`. A `number` beside a percentage mode is no longer read,
+  so `--export-only` no longer reports it as over-full.
+
 ### Added
 
 - The FDS coverage warning names the frame (#26): when part of the
@@ -160,9 +171,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   than its capacity estimate as `Agents: ~N` and exited 0. It now prints
   the run's line, `pyfds-evac: error: Distribution '<id>': requested N
   agents but area can hold at most ~C. ...`, and exits 1 (#508). It
-  counts as the run does: the stored `number` in every
-  `distribution_mode`, and the whole walkable area for a deck without
-  spawn areas. A count within the estimate that JuPedSim cannot place is
+  counts as the run does, `percentage` of the capacity estimate by
+  percentage and `number` otherwise (#436), and the whole walkable area
+  for a deck without spawn areas. A count within the estimate that JuPedSim cannot place is
   still found by the run only.
 
 - Two spawn areas that overlap but are not the same polygon, with or
@@ -206,6 +217,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the run count the same agents, and the summary lists each spawn
   area's initial and scheduled agents. The setter and the run read a
   schedule with one normaliser.
+
+- `distribution_mode: "by_percentage"` ignored `percentage` for agents
+  placed at the start and placed `number` agents, as `by_number` does
+  (#436). It now fills the spawn area to `percentage` of its capacity
+  estimate, ⌊estimate × percentage / 100⌋ and at least 1, with and
+  without journeys, as flow spawning by percentage already did; `number`
+  is not read. `--print-summary`, `Scenario.list_distributions()` and
+  `--export-only`'s capacity check count the same agents; for flow
+  spawning by percentage the views counted `number` before.
 
 ### Documentation
 

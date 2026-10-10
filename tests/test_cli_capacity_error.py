@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import contextlib
 import io
+import json
 import re
 
 import jupedsim as jps
@@ -188,18 +189,43 @@ def _export_and_run_messages(monkeypatch, make_scenario):
 
 
 @pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
-def test_export_only_checks_the_stored_number_of_a_fill_area_spawn(
+def test_export_only_ignores_the_number_of_a_percentage_spawn(
     monkeypatch, with_journeys
 ):
-    """The run checks ``number`` whatever the ``distribution_mode`` (#508)."""
+    """A percentage mode fills its share of the area, whatever ``number`` (#436)."""
 
     def fill_area():
         scenario = _over_full(with_journeys)
-        scenario.distributions[D]["parameters"]["distribution_mode"] = "fill_area"
+        params = scenario.distributions[D]["parameters"]
+        params.update(distribution_mode="fill_area", percentage=50)
         return scenario
 
-    export, run = _export_and_run_messages(monkeypatch, fill_area)
-    assert re.match(PATTERN, export), export
+    assert _main(monkeypatch, fill_area(), "--print-summary", "--export-only") == 0
+
+
+def test_export_only_sums_percentage_spawns_sharing_a_polygon(monkeypatch):
+    """Two 60 % areas on one polygon over-fill it, as the run finds (#436).
+
+    The 3 x 4 m area holds ~84 agents of radius 0.15 m; 60 % is 50 each.
+    """
+
+    def two_at_60():
+        scenario = _scenario(ENOUGH_S)
+        scenario.raw["journeys"] = []
+        scenario.raw["transitions"] = []
+        params = scenario.distributions[D]["parameters"]
+        params.update(distribution_mode="by_percentage", percentage=60)
+        scenario.raw["distributions"]["other"] = json.loads(
+            json.dumps(scenario.distributions[D])
+        )
+        return scenario
+
+    export, run = _export_and_run_messages(monkeypatch, two_at_60)
+    assert re.match(
+        rf"^pyfds-evac: error: Distributions '{D}', 'other': requested 100 "
+        r"agents but area can hold at most ~84\. ",
+        export,
+    ), export
     assert export == run
 
 
