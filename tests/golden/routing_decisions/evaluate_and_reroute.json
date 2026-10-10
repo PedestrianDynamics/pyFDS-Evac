@@ -1,0 +1,7898 @@
+{
+ "additive_anchor_allows/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 47.2727,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_allows/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 47.2727,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_allows/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 47.2727,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_allows/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 47.2727,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_refuses/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 75,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_refuses/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 75,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_refuses/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 75,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_anchor_refuses/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 75,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_kvis_current/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_kvis_current/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_kvis_current/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_kvis_current/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_mild_nonvisible_anchor/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_mild_nonvisible_anchor/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_mild_nonvisible_anchor/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive_mild_nonvisible_anchor/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "agent_position_gate/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 118,
+  "samples_with_cache": 65,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 23.1062,
+   "new_exit": "west",
+   "old_cost": 37.362,
+   "old_exit": "east",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "agent_position_gate/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 151,
+  "samples_with_cache": 130,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 23.1062,
+   "new_exit": "west",
+   "old_cost": 37.362,
+   "old_exit": "east",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "agent_position_gate/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 151,
+  "samples_with_cache": 130,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 23.1062,
+   "new_exit": "west",
+   "old_cost": 37.362,
+   "old_exit": "east",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "agent_position_gate/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 192,
+  "samples_with_cache": 150,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_additive/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 49,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_additive/as_is": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 98,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_additive/clean_tier_off": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 98,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_additive/clean_tier_on": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 98,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_leaves_rejected/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 56,
+  "samples_with_cache": 28,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.3961,
+   "new_exit": "E0",
+   "old_cost": 20.672,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    1.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_leaves_rejected/as_is": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 56,
+  "samples_with_cache": 56,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.3961,
+   "new_exit": "E0",
+   "old_cost": 20.672,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    1.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_leaves_rejected/clean_tier_off": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 56,
+  "samples_with_cache": 56,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.3961,
+   "new_exit": "E0",
+   "old_cost": 20.672,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    1.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_leaves_rejected/clean_tier_on": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 56,
+  "samples_with_cache": 56,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.3961,
+   "new_exit": "E0",
+   "old_cost": 20.672,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    1.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_ten_percent/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 49,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_ten_percent/as_is": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 98,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_ten_percent/clean_tier_off": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 98,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "better_path_ten_percent/clean_tier_on": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 98,
+  "samples_with_cache": 98,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.0,
+   "new_exit": "E0",
+   "old_cost": 58.2843,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "cognitive_map_known_exit/anticipate_flipped": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "east",
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 42,
+  "samples_with_cache": 21,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "cognitive_map_known_exit/as_is": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "east",
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 42,
+  "samples_with_cache": 42,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "cognitive_map_known_exit/clean_tier_off": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "east",
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 42,
+  "samples_with_cache": 42,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "cognitive_map_known_exit/clean_tier_on": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "east",
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 42,
+  "samples_with_cache": 42,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_already_committed/anticipate_flipped": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_already_committed/as_is": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_already_committed/clean_tier_off": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_already_committed/clean_tier_on": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_frontier/anticipate_flipped": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_frontier/as_is": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_frontier/clean_tier_off": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "explore_frontier/clean_tier_on": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_bypass/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0737,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_bypass/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0737,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_bypass/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0737,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_bypass/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0737,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_over_dirty/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.2226,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_over_dirty/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.2226,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_over_dirty/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.2226,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_clean_over_dirty/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.2226,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_cleaner/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0737,
+   "new_exit": "west",
+   "old_cost": 40.3725,
+   "old_exit": "east",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_cleaner/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0737,
+   "new_exit": "west",
+   "old_cost": 40.3725,
+   "old_exit": "east",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_cleaner/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0737,
+   "new_exit": "west",
+   "old_cost": 40.3725,
+   "old_exit": "east",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_cleaner/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 85,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_quicker/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.1181,
+   "new_exit": "west",
+   "old_cost": 40.1544,
+   "old_exit": "east",
+   "reason": "shorter_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_quicker/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.1181,
+   "new_exit": "west",
+   "old_cost": 40.1544,
+   "old_exit": "east",
+   "reason": "shorter_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_quicker/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.1181,
+   "new_exit": "west",
+   "old_cost": 40.1544,
+   "old_exit": "east",
+   "reason": "shorter_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_quicker/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 85,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_slower/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_slower/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_slower/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_anchor_deadband_slower/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 75,
+  "samples_with_cache": 64,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_hold/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.7619,
+   "new_exit": "west",
+   "old_cost": 41.5993,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_hold/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.7619,
+   "new_exit": "west",
+   "old_cost": 41.5993,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_hold/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.7619,
+   "new_exit": "west",
+   "old_cost": 41.5993,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_hold/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.7619,
+   "new_exit": "west",
+   "old_cost": 41.5993,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_slower_refused/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "west",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.6247,
+   "new_exit": "east",
+   "old_cost": 23.441,
+   "old_exit": "west",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_slower_refused/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "west",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.6247,
+   "new_exit": "east",
+   "old_cost": 23.441,
+   "old_exit": "west",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_slower_refused/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "west",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.6247,
+   "new_exit": "east",
+   "old_cost": 23.441,
+   "old_exit": "west",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_slower_refused/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "west",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.6247,
+   "new_exit": "east",
+   "old_cost": 23.441,
+   "old_exit": "west",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_switch/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.6049,
+   "new_exit": "west",
+   "old_cost": 47.2692,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_switch/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.6049,
+   "new_exit": "west",
+   "old_cost": 47.2692,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_switch/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.6049,
+   "new_exit": "west",
+   "old_cost": 47.2692,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fallback_switch/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.6049,
+   "new_exit": "west",
+   "old_cost": 47.2692,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fed_and_tau_current/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 34,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.7619,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fed_and_tau_current/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.7619,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fed_and_tau_current/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.7619,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_fed_and_tau_current/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.7619,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_idle/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 49,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.1795,
+   "new_exit": "E0",
+   "old_cost": null,
+   "old_exit": "E0",
+   "reason": "resume",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "E0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    20.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_idle/as_is": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 66,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.3179,
+   "new_exit": "E0",
+   "old_cost": null,
+   "old_exit": "E0",
+   "reason": "resume",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "E0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    20.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_idle/clean_tier_off": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 66,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.3179,
+   "new_exit": "E0",
+   "old_cost": null,
+   "old_exit": "E0",
+   "reason": "resume",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "E0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    20.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_idle/clean_tier_on": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 66,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 30.3179,
+   "new_exit": "E0",
+   "old_cost": null,
+   "old_exit": "E0",
+   "reason": "resume",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "E0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    20.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_walking/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 169,
+  "samples_with_cache": 82,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 22.2411,
+   "new_exit": "E0",
+   "old_cost": 50.5518,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_walking/as_is": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 185,
+  "samples_with_cache": 151,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 22.3315,
+   "new_exit": "E0",
+   "old_cost": 50.9043,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_walking/clean_tier_off": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 185,
+  "samples_with_cache": 151,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 22.3315,
+   "new_exit": "E0",
+   "old_cost": 50.9043,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_ramp_walking/clean_tier_on": {
+  "cached_segments": 8,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 30.3,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 185,
+  "samples_with_cache": 151,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 22.3315,
+   "new_exit": "E0",
+   "old_cost": 50.9043,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 30.3
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_lands_on_rejected/anticipate_flipped": {
+  "cached_segments": 3,
+  "route_state": {
+   "current_exit": "north",
+   "current_path": [
+    "spawn",
+    "north"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 48,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 50.7886,
+   "new_exit": "north",
+   "old_cost": 31.18,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "north",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "north",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    49.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_lands_on_rejected/as_is": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "north",
+   "current_path": [
+    "spawn",
+    "north"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 96,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 50.7886,
+   "new_exit": "north",
+   "old_cost": 31.18,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "north",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "north",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    49.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_lands_on_rejected/clean_tier_off": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "north",
+   "current_path": [
+    "spawn",
+    "north"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 96,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 50.7886,
+   "new_exit": "north",
+   "old_cost": 31.18,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "north",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "north",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    49.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_lands_on_rejected/clean_tier_on": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "north",
+   "current_path": [
+    "spawn",
+    "north"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": "east",
+   "refused_switch_time_s": 5.0,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 96,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 50.7886,
+   "new_exit": "north",
+   "old_cost": 31.18,
+   "old_exit": "east",
+   "reason": "fallback",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "north",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "north",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    49.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_skips_to_second/anticipate_flipped": {
+  "cached_segments": 3,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 48,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 10.1295,
+   "new_exit": "west",
+   "old_cost": 30.1598,
+   "old_exit": "east",
+   "reason": "shorter_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -9.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_skips_to_second/as_is": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 96,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 10.1295,
+   "new_exit": "west",
+   "old_cost": 30.1598,
+   "old_exit": "east",
+   "reason": "shorter_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -9.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_skips_to_second/clean_tier_off": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 96,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 10.1295,
+   "new_exit": "west",
+   "old_cost": 30.1598,
+   "old_exit": "east",
+   "reason": "shorter_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -9.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate_scan_skips_to_second/clean_tier_on": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 96,
+  "samples_with_cache": 96,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    30.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_additive/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_additive/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_additive/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_additive/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_gate/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_gate/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_gate/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "initial_gate/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 34,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 20.0,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed_additive/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 34,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 42.0,
+   "new_exit": "east",
+   "old_cost": 35.3333,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed_additive/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 42.0,
+   "new_exit": "east",
+   "old_cost": 35.3333,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed_additive/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 42.0,
+   "new_exit": "east",
+   "old_cost": 35.3333,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_fed_additive/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 68,
+  "samples_with_cache": 68,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 42.0,
+   "new_exit": "east",
+   "old_cost": 35.3333,
+   "old_exit": "west",
+   "reason": "fed_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_impassable_additive/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 83.6364,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_impassable_additive/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 83.6364,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_impassable_additive/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 83.6364,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "must_flee_impassable_additive/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 40.0,
+   "new_exit": "east",
+   "old_cost": 83.6364,
+   "old_exit": "west",
+   "reason": "smoke_reroute",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "east",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "no_route_without_map/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 12,
+  "samples_with_cache": 12,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "no_route_without_map/as_is": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 12,
+  "samples_with_cache": 12,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "no_route_without_map/clean_tier_off": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 12,
+  "samples_with_cache": 12,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "no_route_without_map/clean_tier_on": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 12,
+  "samples_with_cache": 12,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "old_exit_unpriced/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "gone",
+   "reason": "exit_unreachable",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "old_exit_unpriced/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "gone",
+   "reason": "exit_unreachable",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "old_exit_unpriced/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "gone",
+   "reason": "exit_unreachable",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "old_exit_unpriced/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "gone",
+   "reason": "exit_unreachable",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_committed_unknown/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 49,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_committed_unknown/as_is": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 66,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_committed_unknown/clean_tier_off": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 66,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_committed_unknown/clean_tier_on": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 66,
+  "samples_with_cache": 66,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_idle/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 32,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "west",
+   "reason": "resume",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_idle/as_is": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "west",
+   "reason": "resume",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_idle/clean_tier_off": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "west",
+   "reason": "resume",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_idle/clean_tier_on": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 64,
+  "samples_with_cache": 64,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": "west",
+   "reason": "resume",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -19.7658,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_no_change/anticipate_flipped": {
+  "cached_segments": 4,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 83,
+  "samples_with_cache": 49,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_no_change/as_is": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 83,
+  "samples_with_cache": 66,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_no_change/clean_tier_off": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 83,
+  "samples_with_cache": 66,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "same_exit_no_change/clean_tier_on": {
+  "cached_segments": 6,
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 83,
+  "samples_with_cache": 66,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit/anticipate_flipped": {
+  "cached_segments": 3,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 34,
+  "samples_with_cache": 34,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit/as_is": {
+  "cached_segments": 3,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 34,
+  "samples_with_cache": 34,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit/clean_tier_off": {
+  "cached_segments": 3,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 34,
+  "samples_with_cache": 34,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit/clean_tier_on": {
+  "cached_segments": 3,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 34,
+  "samples_with_cache": 34,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit_initial/anticipate_flipped": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 32,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit_initial/as_is": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 32,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit_initial/clean_tier_off": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 32,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_is_exit_initial/clean_tier_on": {
+  "cached_segments": 2,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 32,
+  "samples_with_cache": 32,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "west",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_not_in_graph/anticipate_flipped": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": -Infinity,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "nowhere",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_not_in_graph/as_is": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": -Infinity,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "nowhere",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_not_in_graph/clean_tier_off": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": -Infinity,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "nowhere",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "source_not_in_graph/clean_tier_on": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": -Infinity,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "nowhere",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_nowhere/anticipate_flipped": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_nowhere/as_is": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_nowhere/clean_tier_off": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_nowhere/clean_tier_on": {
+  "cached_segments": 0,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": 0,
+  "samples_with_cache": 0,
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_patrol/anticipate_flipped": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 1
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_patrol/as_is": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 1
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_patrol/clean_tier_off": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 1
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_patrol/clean_tier_on": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 1
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_second_step/anticipate_flipped": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 2
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_second_step/as_is": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 2
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_second_step/clean_tier_off": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 2
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "wander_second_step/clean_tier_on": {
+  "cached_segments": 1,
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 2
+  },
+  "samples": 6,
+  "samples_with_cache": 6,
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ }
+}

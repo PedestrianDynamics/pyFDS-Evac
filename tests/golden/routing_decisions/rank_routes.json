@@ -1,0 +1,8838 @@
+{
+ "additive_all_nonvisible/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 70.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 70.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "additive_all_nonvisible/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 70.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 70.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_all_nonvisible/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 70.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 70.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_all_nonvisible/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 70.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 70.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_clear/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "additive_clear/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_clear/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_clear/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_fed_fallback/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "fallback: FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "additive_fed_fallback/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "fallback: FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_fed_fallback/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "fallback: FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_fed_fallback/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "fallback: FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": true,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_fed_refuses/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 42.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 42.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "additive_fed_refuses/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 42.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 42.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_fed_refuses/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 42.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 42.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_fed_refuses/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 42.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 42.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_kvis_invisible_route_kept/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 36.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 36.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "additive_kvis_invisible_route_kept/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 36.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 36.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_kvis_invisible_route_kept/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 36.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 36.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_kvis_invisible_route_kept/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 36.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 36.5455,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 68.6667,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 2.8667,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 68.6667,
+    "rejection_reason": "FED_max 2.867 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_kvis_visible_route_rejected/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 72.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 72.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "additive_kvis_visible_route_rejected/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 72.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 72.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_kvis_visible_route_rejected/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 72.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 72.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_kvis_visible_route_rejected/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 72.4762,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.7619,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 72.4762,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 30.4762,
+    "travel_time_s": 42.6218,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 35.3333,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 35.3333,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "additive_nonvisible/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": "all segments non-visible",
+    "segments": 1,
+    "status": "nonvisible",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": [
+     "all_segments_non_visible"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "additive_nonvisible/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": "all segments non-visible",
+    "segments": 1,
+    "status": "nonvisible",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": [
+     "all_segments_non_visible"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_nonvisible/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": "all segments non-visible",
+    "segments": 1,
+    "status": "nonvisible",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": [
+     "all_segments_non_visible"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_nonvisible/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 34.5455,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.7273,
+    "k_max_route": 0.8,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 34.5455,
+    "rejection_reason": "all segments non-visible",
+    "segments": 1,
+    "status": "nonvisible",
+    "tau_route": 14.5455,
+    "travel_time_s": 21.2476,
+    "violation_kinds": [
+     "all_segments_non_visible"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_queue/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "additive_queue/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_queue/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_queue/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_ramp_fed/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 24.566,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.2041,
+    "k_leg_max": 0.2525,
+    "k_max_route": 0.303,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 24.566,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 2.525,
+    "travel_time_s": 20.2081,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 14
+ },
+ "additive_ramp_fed/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 26.2549,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.2397,
+    "k_leg_max": 0.3858,
+    "k_max_route": 0.503,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 26.2549,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 3.8583,
+    "travel_time_s": 20.3215,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "additive_ramp_fed/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 26.2549,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.2397,
+    "k_leg_max": 0.3858,
+    "k_max_route": 0.503,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 26.2549,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 3.8583,
+    "travel_time_s": 20.3215,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "additive_ramp_fed/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 26.2549,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.2397,
+    "k_leg_max": 0.3858,
+    "k_max_route": 0.503,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 26.2549,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 3.8583,
+    "travel_time_s": 20.3215,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "additive_smoke_toll/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 47.2727,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2727,
+    "k_max_route": 0.3,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2727,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.4545,
+    "travel_time_s": 20.4503,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "additive_smoke_toll/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 47.2727,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2727,
+    "k_max_route": 0.3,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2727,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.4545,
+    "travel_time_s": 20.4503,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_smoke_toll/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 47.2727,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2727,
+    "k_max_route": 0.3,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2727,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.4545,
+    "travel_time_s": 20.4503,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_smoke_toll/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 47.2727,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2727,
+    "k_max_route": 0.3,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2727,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.4545,
+    "travel_time_s": 20.4503,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "additive_twin_paths_dose/anticipate_flipped": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 32
+ },
+ "additive_twin_paths_dose/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 48
+ },
+ "additive_twin_paths_dose/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 48
+ },
+ "additive_twin_paths_dose/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 48
+ },
+ "additive_twin_paths_smoke/anticipate_flipped": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 28
+ },
+ "additive_twin_paths_smoke/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "additive_twin_paths_smoke/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "additive_twin_paths_smoke/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "gate_agent_position/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 48.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.032,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 48.1243,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.536,
+    "travel_time_s": 48.1243,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 12.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 12.1969,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.4,
+    "travel_time_s": 12.1969,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 96,
+  "samples_with_cache": 64
+ },
+ "gate_agent_position/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 48.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.032,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 48.1243,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.536,
+    "travel_time_s": 48.1243,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 12.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 12.1969,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.4,
+    "travel_time_s": 12.1969,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 128,
+  "samples_with_cache": 128
+ },
+ "gate_agent_position/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 48.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.032,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 48.1243,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.536,
+    "travel_time_s": 48.1243,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 12.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 12.1969,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.4,
+    "travel_time_s": 12.1969,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 128,
+  "samples_with_cache": 128
+ },
+ "gate_agent_position/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 48.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.032,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 48.1243,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.536,
+    "travel_time_s": 48.1243,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 12.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 12.1969,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.4,
+    "travel_time_s": 12.1969,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 128,
+  "samples_with_cache": 128
+ },
+ "gate_anticipate_off/anticipate_flipped": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 0.8,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5689,
+    "rejection_reason": "fallback: tau 6.67 > 6.00 (K_ave 0.333 x 20.0 m)",
+    "segments": 2,
+    "status": "fallback/tau",
+    "tau_route": 6.6667,
+    "travel_time_s": 20.5689,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_anticipate_off/as_is": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_anticipate_off/clean_tier_off": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_anticipate_off/clean_tier_on": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_anticipate_on/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_anticipate_on/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 0.8,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5689,
+    "rejection_reason": "fallback: tau 6.67 > 6.00 (K_ave 0.333 x 20.0 m)",
+    "segments": 2,
+    "status": "fallback/tau",
+    "tau_route": 6.6667,
+    "travel_time_s": 20.5689,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_anticipate_on/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 0.8,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5689,
+    "rejection_reason": "fallback: tau 6.67 > 6.00 (K_ave 0.333 x 20.0 m)",
+    "segments": 2,
+    "status": "fallback/tau",
+    "tau_route": 6.6667,
+    "travel_time_s": 20.5689,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_anticipate_on/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 0.8,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5689,
+    "rejection_reason": "fallback: tau 6.67 > 6.00 (K_ave 0.333 x 20.0 m)",
+    "segments": 2,
+    "status": "fallback/tau",
+    "tau_route": 6.6667,
+    "travel_time_s": 20.5689,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_clean_tier/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_clean_tier/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clean_tier/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clean_tier/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clean_tier_current_margin/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_clean_tier_current_margin/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clean_tier_current_margin/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clean_tier_current_margin/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0455,
+    "k_max_route": 0.05,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0737,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.9091,
+    "travel_time_s": 20.0737,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clear/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_clear/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clear/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clear/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_clear_floor_breaks_tie/anticipate_flipped": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "B",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 51,
+  "samples_with_cache": 39
+ },
+ "gate_clear_floor_breaks_tie/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "B",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 51,
+  "samples_with_cache": 51
+ },
+ "gate_clear_floor_breaks_tie/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "B",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 51,
+  "samples_with_cache": 51
+ },
+ "gate_clear_floor_breaks_tie/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "B",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 51,
+  "samples_with_cache": 51
+ },
+ "gate_cognitive_map/anticipate_flipped": {
+  "cached_segments": 1,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 21
+ },
+ "gate_cognitive_map/as_is": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "gate_cognitive_map/clean_tier_off": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "gate_cognitive_map/clean_tier_on": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "gate_current_exit_absent/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_current_exit_absent/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_current_exit_absent/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_current_exit_absent/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_current_exit_discount/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_current_exit_discount/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_current_exit_discount/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_current_exit_discount/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_current_absent/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 4.80 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_fallback_current_absent/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 4.80 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_current_absent/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 4.80 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_current_absent/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 4.80 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_margin_keeps_current/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_fallback_margin_keeps_current/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_margin_keeps_current/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_margin_keeps_current/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 4.80 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_no_current/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_fallback_no_current/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_no_current/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_no_current/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4762,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 41.5993,
+    "rejection_reason": "tau 19.05 > 6.00 (K_ave 0.476 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 19.0476,
+    "travel_time_s": 41.5993,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_raw_tau/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 24.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3692,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 24.7374,
+    "rejection_reason": "tau 8.86 > 4.80 (K_ave 0.369 x 24.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 8.8615,
+    "travel_time_s": 24.7374,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 24
+ },
+ "gate_fallback_raw_tau/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 24.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3692,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 24.7374,
+    "rejection_reason": "tau 8.86 > 4.80 (K_ave 0.369 x 24.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 8.8615,
+    "travel_time_s": 24.7374,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 48
+ },
+ "gate_fallback_raw_tau/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 24.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3692,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 24.7374,
+    "rejection_reason": "tau 8.86 > 4.80 (K_ave 0.369 x 24.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 8.8615,
+    "travel_time_s": 24.7374,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 48
+ },
+ "gate_fallback_raw_tau/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "fallback: tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 24.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3692,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 24.7374,
+    "rejection_reason": "tau 8.86 > 4.80 (K_ave 0.369 x 24.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 8.8615,
+    "travel_time_s": 24.7374,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 48,
+  "samples_with_cache": 48
+ },
+ "gate_fallback_rival_beats_margin/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3636,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.6049,
+    "rejection_reason": "fallback: tau 7.27 > 4.80 (K_ave 0.364 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 7.2727,
+    "travel_time_s": 20.6049,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 1.9048,
+    "k_max_route": 2.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2692,
+    "rejection_reason": "tau 76.19 > 6.00 (K_ave 1.905 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 76.1905,
+    "travel_time_s": 47.2692,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_fallback_rival_beats_margin/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3636,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.6049,
+    "rejection_reason": "fallback: tau 7.27 > 4.80 (K_ave 0.364 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 7.2727,
+    "travel_time_s": 20.6049,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 1.9048,
+    "k_max_route": 2.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2692,
+    "rejection_reason": "tau 76.19 > 6.00 (K_ave 1.905 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 76.1905,
+    "travel_time_s": 47.2692,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_rival_beats_margin/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3636,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.6049,
+    "rejection_reason": "fallback: tau 7.27 > 4.80 (K_ave 0.364 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 7.2727,
+    "travel_time_s": 20.6049,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 1.9048,
+    "k_max_route": 2.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2692,
+    "rejection_reason": "tau 76.19 > 6.00 (K_ave 1.905 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 76.1905,
+    "travel_time_s": 47.2692,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_rival_beats_margin/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3636,
+    "k_max_route": 0.4,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.6049,
+    "rejection_reason": "fallback: tau 7.27 > 4.80 (K_ave 0.364 x 20.0 m)",
+    "segments": 1,
+    "status": "fallback/tau",
+    "tau_route": 7.2727,
+    "travel_time_s": 20.6049,
+    "violation_kinds": [
+     "tau"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 1.9048,
+    "k_max_route": 2.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 47.2692,
+    "rejection_reason": "tau 76.19 > 6.00 (K_ave 1.905 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 76.1905,
+    "travel_time_s": 47.2692,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_fallback_tie_keeps_order/anticipate_flipped": {
+  "cached_segments": 3,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "fallback: FED_max 3.333 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "FED_max 3.333 > 1.000",
+    "segments": 2,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 34,
+  "samples_with_cache": 17
+ },
+ "gate_fallback_tie_keeps_order/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "fallback: FED_max 3.333 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "FED_max 3.333 > 1.000",
+    "segments": 2,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 34,
+  "samples_with_cache": 34
+ },
+ "gate_fallback_tie_keeps_order/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "fallback: FED_max 3.333 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "FED_max 3.333 > 1.000",
+    "segments": 2,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 34,
+  "samples_with_cache": 34
+ },
+ "gate_fallback_tie_keeps_order/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "fallback: FED_max 3.333 > 1.000",
+    "segments": 1,
+    "status": "fallback/fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   },
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": false,
+    "fed_max_route": 3.3333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": "FED_max 3.333 > 1.000",
+    "segments": 2,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 34,
+  "samples_with_cache": 34
+ },
+ "gate_fed_and_tau/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5841,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "fed",
+     "tau"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "gate_fed_and_tau/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5841,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "fed",
+     "tau"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_and_tau/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5841,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "fed",
+     "tau"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_and_tau/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5841,
+    "k_leg_max": 0.4545,
+    "k_max_route": 0.5,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.7619,
+    "rejection_reason": "tau 9.09 > 6.00 (K_ave 0.455 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 9.0909,
+    "travel_time_s": 20.7619,
+    "violation_kinds": [
+     "fed",
+     "tau"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_refuses/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "gate_fed_refuses/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_refuses/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_refuses/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.2,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 1.5333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 1.533 > 1.000",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_return_margin_current/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "gate_fed_return_margin_current/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_return_margin_current/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_return_margin_current/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_return_margin_rival/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 0.933 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 34
+ },
+ "gate_fed_return_margin_rival/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 0.933 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_return_margin_rival/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 0.933 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_fed_return_margin_rival/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.1,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.9333,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": "FED_max 0.933 > 0.900",
+    "segments": 1,
+    "status": "fed",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": [
+     "fed"
+    ]
+   }
+  ],
+  "samples": 68,
+  "samples_with_cache": 68
+ },
+ "gate_foresight_horizon/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_foresight_horizon/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_foresight_horizon/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_foresight_horizon/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_full_tie_e0_first/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_full_tie_e0_first/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_full_tie_e0_first/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_full_tie_e0_first/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_full_tie_e1_first/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_full_tie_e1_first/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_full_tie_e1_first/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_full_tie_e1_first/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_no_current_exit_same_field/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_no_current_exit_same_field/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_no_current_exit_same_field/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_no_current_exit_same_field/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1,
+    "k_max_route": 0.105,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.3256,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 4.0,
+    "travel_time_s": 40.3256,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_no_route/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [],
+  "samples": 12,
+  "samples_with_cache": 12
+ },
+ "gate_no_route/as_is": {
+  "cached_segments": 2,
+  "ranked": [],
+  "samples": 12,
+  "samples_with_cache": 12
+ },
+ "gate_no_route/clean_tier_off": {
+  "cached_segments": 2,
+  "ranked": [],
+  "samples": 12,
+  "samples_with_cache": 12
+ },
+ "gate_no_route/clean_tier_on": {
+  "cached_segments": 2,
+  "ranked": [],
+  "samples": 12,
+  "samples_with_cache": 12
+ },
+ "gate_nonvisible_short_route/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 4.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 1.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 4.2275,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.6667,
+    "travel_time_s": 4.2275,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 14
+ },
+ "gate_nonvisible_short_route/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 4.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 1.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 4.2275,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.6667,
+    "travel_time_s": 4.2275,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "gate_nonvisible_short_route/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 4.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 1.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 4.2275,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.6667,
+    "travel_time_s": 4.2275,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "gate_nonvisible_short_route/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 4.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.6667,
+    "k_max_route": 1.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 4.2275,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 2.6667,
+    "travel_time_s": 4.2275,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "gate_path_length_tie/anticipate_flipped": {
+  "cached_segments": 3,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 14
+ },
+ "gate_path_length_tie/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "gate_path_length_tie/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "gate_path_length_tie/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 10.0,
+    "exit_id": "E1",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C",
+     "E1"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.0,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 10.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 28,
+  "samples_with_cache": 28
+ },
+ "gate_queue/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_queue/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_queue/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_queue/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 50.7692,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 30.7692,
+    "rank_cost": 50.7692,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_ramp_anticipated/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2525,
+    "k_max_route": 0.303,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.2081,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 2.525,
+    "travel_time_s": 20.2081,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 12
+ },
+ "gate_ramp_anticipated/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3858,
+    "k_max_route": 0.503,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3215,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 3.8583,
+    "travel_time_s": 20.3215,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_ramp_anticipated/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3858,
+    "k_max_route": 0.503,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3215,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 3.8583,
+    "travel_time_s": 20.3215,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_ramp_anticipated/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3858,
+    "k_max_route": 0.503,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3215,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 3.8583,
+    "travel_time_s": 20.3215,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 24,
+  "samples_with_cache": 24
+ },
+ "gate_rival_return_margin/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": "tau 5.09 > 4.80 (K_ave 0.255 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_rival_return_margin/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": "tau 5.09 > 4.80 (K_ave 0.255 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_rival_return_margin/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": "tau 5.09 > 4.80 (K_ave 0.255 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_rival_return_margin/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": "tau 5.09 > 4.80 (K_ave 0.255 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_rival_without_current/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_rival_without_current/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_rival_without_current/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_rival_without_current/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.2545,
+    "k_max_route": 0.28,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.4196,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 5.0909,
+    "travel_time_s": 20.4196,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_source_is_exit/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 0.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 0.0,
+    "rejection_reason": null,
+    "segments": 0,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 0.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 32,
+  "samples_with_cache": 32
+ },
+ "gate_source_is_exit/as_is": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 0.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 0.0,
+    "rejection_reason": null,
+    "segments": 0,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 0.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 32,
+  "samples_with_cache": 32
+ },
+ "gate_source_is_exit/clean_tier_off": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 0.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 0.0,
+    "rejection_reason": null,
+    "segments": 0,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 0.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 32,
+  "samples_with_cache": 32
+ },
+ "gate_source_is_exit/clean_tier_on": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 0.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 0.0,
+    "rejection_reason": null,
+    "segments": 0,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 0.0,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 32,
+  "samples_with_cache": 32
+ },
+ "gate_tau_length_relative/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1905,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.6247,
+    "rejection_reason": "tau 7.62 > 6.00 (K_ave 0.190 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 7.619,
+    "travel_time_s": 40.6247,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_tau_length_relative/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1905,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.6247,
+    "rejection_reason": "tau 7.62 > 6.00 (K_ave 0.190 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 7.619,
+    "travel_time_s": 40.6247,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_length_relative/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1905,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.6247,
+    "rejection_reason": "tau 7.62 > 6.00 (K_ave 0.190 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 7.619,
+    "travel_time_s": 40.6247,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_length_relative/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1905,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.6247,
+    "rejection_reason": "tau 7.62 > 6.00 (K_ave 0.190 x 40.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 7.619,
+    "travel_time_s": 40.6247,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_orders_feasible/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0381,
+    "k_max_route": 0.04,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.1234,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5238,
+    "travel_time_s": 40.1234,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_tau_orders_feasible/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0381,
+    "k_max_route": 0.04,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.1234,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5238,
+    "travel_time_s": 40.1234,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_orders_feasible/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0381,
+    "k_max_route": 0.04,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.1234,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5238,
+    "travel_time_s": 40.1234,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_orders_feasible/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0381,
+    "k_max_route": 0.04,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.1234,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5238,
+    "travel_time_s": 40.1234,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1818,
+    "k_max_route": 0.2,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.298,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 3.6364,
+    "travel_time_s": 20.298,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_refuses_near/anticipate_flipped": {
+  "cached_segments": 2,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3182,
+    "k_max_route": 0.35,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5273,
+    "rejection_reason": "tau 6.36 > 6.00 (K_ave 0.318 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 6.3636,
+    "travel_time_s": 20.5273,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 32
+ },
+ "gate_tau_refuses_near/as_is": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3182,
+    "k_max_route": 0.35,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5273,
+    "rejection_reason": "tau 6.36 > 6.00 (K_ave 0.318 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 6.3636,
+    "travel_time_s": 20.5273,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_refuses_near/clean_tier_off": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3182,
+    "k_max_route": 0.35,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5273,
+    "rejection_reason": "tau 6.36 > 6.00 (K_ave 0.318 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 6.3636,
+    "travel_time_s": 20.5273,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_tau_refuses_near/clean_tier_on": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 40.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 40.0,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 40.0,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 20.0,
+    "exit_id": "west",
+    "feasible": false,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.3182,
+    "k_max_route": 0.35,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.5273,
+    "rejection_reason": "tau 6.36 > 6.00 (K_ave 0.318 x 20.0 m)",
+    "segments": 1,
+    "status": "tau",
+    "tau_route": 6.3636,
+    "travel_time_s": 20.5273,
+    "violation_kinds": [
+     "tau"
+    ]
+   }
+  ],
+  "samples": 64,
+  "samples_with_cache": 64
+ },
+ "gate_three_exits/anticipate_flipped": {
+  "cached_segments": 3,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 50.0,
+    "exit_id": "north",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0298,
+    "k_max_route": 0.031,
+    "path": [
+     "spawn",
+     "north"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 50.1206,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.4904,
+    "travel_time_s": 50.1206,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1583,
+    "k_max_route": 0.19,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.1295,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5833,
+    "travel_time_s": 10.1295,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 30.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0656,
+    "k_max_route": 0.07,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 30.1598,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.9688,
+    "travel_time_s": 30.1598,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 96,
+  "samples_with_cache": 48
+ },
+ "gate_three_exits/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 50.0,
+    "exit_id": "north",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0298,
+    "k_max_route": 0.031,
+    "path": [
+     "spawn",
+     "north"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 50.1206,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.4904,
+    "travel_time_s": 50.1206,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1583,
+    "k_max_route": 0.19,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.1295,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5833,
+    "travel_time_s": 10.1295,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 30.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0656,
+    "k_max_route": 0.07,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 30.1598,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.9688,
+    "travel_time_s": 30.1598,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 96,
+  "samples_with_cache": 96
+ },
+ "gate_three_exits/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 50.0,
+    "exit_id": "north",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0298,
+    "k_max_route": 0.031,
+    "path": [
+     "spawn",
+     "north"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 50.1206,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.4904,
+    "travel_time_s": 50.1206,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1583,
+    "k_max_route": 0.19,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.1295,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5833,
+    "travel_time_s": 10.1295,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 30.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0656,
+    "k_max_route": 0.07,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 30.1598,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.9688,
+    "travel_time_s": 30.1598,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 96,
+  "samples_with_cache": 96
+ },
+ "gate_three_exits/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 50.0,
+    "exit_id": "north",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0298,
+    "k_max_route": 0.031,
+    "path": [
+     "spawn",
+     "north"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 50.1206,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.4904,
+    "travel_time_s": 50.1206,
+    "violation_kinds": []
+   },
+   {
+    "clean": true,
+    "composite_cost": 30.0,
+    "exit_id": "east",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0656,
+    "k_max_route": 0.07,
+    "path": [
+     "spawn",
+     "east"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 30.1598,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.9688,
+    "travel_time_s": 30.1598,
+    "violation_kinds": []
+   },
+   {
+    "clean": false,
+    "composite_cost": 10.0,
+    "exit_id": "west",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.1583,
+    "k_max_route": 0.19,
+    "path": [
+     "spawn",
+     "west"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 10.1295,
+    "rejection_reason": null,
+    "segments": 1,
+    "status": "ok",
+    "tau_route": 1.5833,
+    "travel_time_s": 10.1295,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 96,
+  "samples_with_cache": 96
+ },
+ "gate_twin_paths_smoke/anticipate_flipped": {
+  "cached_segments": 4,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 28
+ },
+ "gate_twin_paths_smoke/as_is": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "gate_twin_paths_smoke/clean_tier_off": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": false,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ },
+ "gate_twin_paths_smoke/clean_tier_on": {
+  "cached_segments": 6,
+  "ranked": [
+   {
+    "clean": true,
+    "composite_cost": 20.3961,
+    "exit_id": "E0",
+    "feasible": true,
+    "fed_max_route": 0.0,
+    "k_leg_max": 0.0,
+    "k_max_route": 0.0,
+    "path": [
+     "D0",
+     "C0",
+     "E0"
+    ],
+    "queue_time_s": 0.0,
+    "rank_cost": 20.3961,
+    "rejection_reason": null,
+    "segments": 2,
+    "status": "ok",
+    "tau_route": 0.0,
+    "travel_time_s": 20.3961,
+    "violation_kinds": []
+   }
+  ],
+  "samples": 42,
+  "samples_with_cache": 42
+ }
+}
