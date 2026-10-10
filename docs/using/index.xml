@@ -633,7 +633,9 @@ returns before the JuPedSim set-up. A spawn area that asks for more agents
 than its capacity estimate stops it with the run&amp;rsquo;s error line and exit
 status 1. It does not catch an agent that never moves, a count within the
 estimate that JuPedSim cannot place, or a polygon outside the walkable
-area.&lt;/p>
+area. Each spawn area is checked on its own, so it also misses spawn
+areas that overlap: the agents placed in one take room from the other,
+and the run can still stop with &lt;code>could not place the N requested agents&lt;/code>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>The scenario runs.&lt;/strong> Run it without &lt;code>--export-only&lt;/code>. Set a small
@@ -6800,6 +6802,16 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;td>As above.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: Distribution '…': could not place the N requested agents (only K fit in the P parts left free). …&lt;/code>&lt;/td>
+&lt;td>The spawn area overlaps one placed before it, and the agents already there cut its free room into P parts that together seat only K.&lt;/td>
+&lt;td>Lower &lt;code>number&lt;/code>, enlarge the polygon, or move it off the other spawn area.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: Distribution '…': could not place the N requested agents (agents of '…' leave no free area). …&lt;/code>&lt;/td>
+&lt;td>The agents of the named, overlapping spawn area leave no room for one more agent in this one.&lt;/td>
+&lt;td>As above.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>pyfds-evac: error: Distribution '…': JuPedSim could not add an agent to the simulation (…).&lt;/code>&lt;/td>
 &lt;td>JuPedSim refused an agent at a position the sampler gave, for example for an unknown journey or stage or a model parameter it rejects.&lt;/td>
 &lt;td>Read JuPedSim&amp;rsquo;s message in the parentheses; the spawn area is not too small.&lt;/td>
@@ -7054,7 +7066,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ff34100c3377282c2d881393869b10d7af097594">&lt;code>ff34100&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/01562272c8e854261fca8aa01c25be68bfa44f89">&lt;code>0156227&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7078,7 +7090,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a8152d6e8df09f5444a093fce0bdc2db1106a8f2969e0c75028cd1caebffc11f&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">174da1d45842c22a0a4e47f83e8d9530964d72f30d384bc6f06bfb0d2b0c9c34&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
