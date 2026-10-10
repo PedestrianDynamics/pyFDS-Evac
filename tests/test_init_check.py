@@ -20,10 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 GUIDE = ROOT / "assets" / "fds_evac_guide"
 T_JUNCTION = ROOT / "assets" / "t_junction" / "t_junction.fds"
 
-# One plain mesh, z 0-3: the check runs at z_floor 0 + 1.6 m.
+# One plain mesh, z 0-3 on a 0.1 m grid, so that the deck's z are on it:
+# the check runs at z_floor 0 + 1.6 m.
 PLAIN = """\
 &HEAD CHID='plain' /
-&MESH IJK=20,20,6, XB=0,10,0,10,0,3 /
+&MESH IJK=20,20,30, XB=0,10,0,10,0,3 /
 &VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /
 {time}
 {records}
@@ -250,6 +251,152 @@ def test_nearest_of_several_matches_the_runtime_rule(tmp_path):
         runtime = select_horizontal_slice(fakes, height, "q", "dir")
         item = check_slices(deck, height).items[0]
         assert item.nearest_pbz == runtime.extent.z_start, height
+
+
+@pytest.mark.parametrize(
+    ("case", "quantity", "key"),
+    [
+        (
+            "fed_slice_height",
+            "CARBON MONOXIDE VOLUME FRACTION",
+            "VOLUME FRACTION CARBON MONOXIDE",
+        ),
+        ("vis_slice_height", "SOOT EXTINCTION COEFFICIENT", "EXTINCTION COEFFICIENT"),
+    ],
+)
+def test_ranking_on_the_grid_matches_the_runtime_on_tracked_output(case, quantity, key):
+    """FDS moves PBZ 1.6 to the 0.5 m grid at 1.5; at 2.0 it ties PBZ 2.5,
+    declared first, which the run reads (#687). The deck's z picks 1.6."""
+    fdsreader = pytest.importorskip("fdsreader")
+    from pyfds_evac.core.fds_deck import parse_fds_deck
+    from pyfds_evac.core.fds_import_slices import check_slices
+    from pyfds_evac.core.fds_sampling import _slice_z_mid, load_slice_sampler
+
+    folder = ROOT / "assets" / case
+    deck = parse_fds_deck(folder / f"{case}.fds")
+    sim = fdsreader.Simulation(str(folder / "fds"))
+    for height in (0.5, 1.0, 1.6, 1.75, 2.0, 2.4):
+        runtime = load_slice_sampler(
+            str(folder / "fds"), quantity, simulation=sim, slice_height_m=height
+        )
+        item = check_slices(deck, height).to_dict()[key]
+        assert item["nearest_pbz"] == _slice_z_mid(runtime._slice), height
+
+
+def test_off_grid_slice_prints_both_z_and_trnz_keeps_the_deck_z(tmp_path, capsys):
+    coarse = PLAIN.replace("IJK=20,20,30", "IJK=20,20,6")  # 0.5 m in z
+    soot = "&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT' /"
+    deck = tmp_path / "coarse.fds"
+    deck.write_text(coarse.format(time=TIME, records="\n".join((soot, *GASES))))
+    status, lines = _check(capsys, deck, "--check")
+    assert status == cli_init.EXIT_OK
+    assert "z 1.5 m (deck z 1.6 m, requested 1.6 m" in _line(lines, "Extinction")
+    stretched = "&TRNZ IDERIV=0, CC=1, PC=1, MESH_NUMBER=1 /"
+    records = "\n".join((stretched, soot, *GASES))
+    deck.write_text(coarse.format(time=TIME, records=records))
+    status, lines = _check(capsys, deck, "--check")
+    assert "z 1.6 m (requested 1.6 m" in _line(lines, "Extinction")
+    assert lines[0].endswith(
+        "(deck z: &TRNZ stretches the grid, FDS moves a slice onto it):"
+    )
+
+
+# Two meshes side by side, z 0-3: 'fine' with 0.5 m cells, 'coarse' with 1 m.
+TWO_GRIDS = (((0, 1, 0, 1, 0, 3), (2, 2, 6)), ((1, 2, 0, 1, 0, 3), (2, 2, 3)))
+
+
+def _synthetic_case(folder: Path, writes, grids=TWO_GRIDS) -> None:
+    """A two-mesh .smv of *grids* with one slice that FDS wrote as *writes*.
+
+    *writes* holds (SLCF or SLCC, mesh number, node K) per mesh written;
+    the .sf files hold a header and no frame, enough for the extent.
+    """
+
+    def axis(name, lo, hi, n):
+        rows = "".join(f"{i} {lo + (hi - lo) * i / n}\n" for i in range(n + 1))
+        return f"{name}\n 0\n{rows}\n"
+
+    text = "CHID\n syn\n\nNMESHES\n 2\n\n"
+    for n, ((x0, x1, y0, y1, z0, z1), (i, j, k)) in enumerate(grids, start=1):
+        text += f"OFFSET\n 0 0 0\n\nGRID MESH_{n}\n {i} {j} {k} 0 0 0 0 0 0\n\n"
+        text += f"PDIM\n {x0} {x1} {y0} {y1} {z0} {z1} 0 0 0\n\n"
+        text += axis("TRNX", x0, x1, i) + axis("TRNY", y0, y1, j)
+        text += axis("TRNZ", z0, z1, k) + "OBST\n 0\n\nVENT\n 0 0\n\nCVENT\n 0\n\n"
+    for kind, mesh, k in writes:
+        sf = f"syn_{mesh}_1.sf"
+        (folder / sf).write_bytes(b"\0" * (3 * 38 + 32))  # fdsreader's header size
+        cc_val = 1 if kind == "SLCC" else 0  # FDS dump.f90 writes CC_VAL
+        text += f"{kind} {mesh} # STRUCTURED & 0 2 0 2 {k} {k} ! 1 {cc_val} 3\n"
+        text += f" {sf}\n SOOT EXTINCTION COEFFICIENT\n ext\n 1/m\n\n"
+    (folder / "syn.smv").write_text(text)
+
+
+# The node K that FDS 6.10 READ_SLCF (read.f90) writes per mesh: a node
+# slice NINT((z - ZS)/DZ), halves up; a cell-centred one the last cell
+# whose centre is within DZ/2 + 1e-10 m; MESH_NUMBER keeps that mesh only.
+COARSE_FIRST = tuple(reversed(TWO_GRIDS))
+
+
+@pytest.mark.parametrize(
+    ("options", "writes", "grids", "z"),
+    [
+        ("PBZ=1.6", (("SLCF", 1, 3), ("SLCF", 2, 2)), TWO_GRIDS, 1.5),  # lowest
+        ("PBZ=1.6", (("SLCF", 1, 2), ("SLCF", 2, 3)), COARSE_FIRST, 1.5),
+        ("PBZ=1.6, MESH_NUMBER=2", (("SLCF", 2, 2),), TWO_GRIDS, 2.0),
+        (
+            "PBZ=1.6, CELL_CENTERED=.TRUE.",
+            (("SLCC", 1, 4), ("SLCC", 2, 2)),
+            TWO_GRIDS,
+            2.0,
+        ),
+        # On a face both cells are within DZ/2 + 1e-10 m; the last one wins.
+        (
+            "PBZ=2.0, CELL_CENTERED=.TRUE.",
+            (("SLCC", 1, 5), ("SLCC", 2, 3)),
+            TWO_GRIDS,
+            2.5,
+        ),
+        ("PBZ=1.75, MESH_NUMBER=1", (("SLCF", 1, 4),), TWO_GRIDS, 2.0),  # 3.5 up
+        ("PBZ=1.25, MESH_NUMBER=1", (("SLCF", 1, 3),), TWO_GRIDS, 1.5),  # 2.5 up
+    ],
+    ids=[
+        "two-grids",
+        "coarse-first",
+        "mesh-number",
+        "cell-centred",
+        "cell-centred-face",
+        "half-cell",
+        "half-cell-even",
+    ],
+)
+def test_grid_z_matches_fdsreaders_extent(tmp_path, options, writes, grids, z):
+    """The check's z is the one fdsreader gives the run (#687)."""
+    fdsreader = pytest.importorskip("fdsreader")
+    from pyfds_evac.core.fds_deck import parse_fds_text
+    from pyfds_evac.core.fds_import_slices import check_slices
+    from pyfds_evac.core.fds_sampling import _slice_z_mid
+
+    meshes = "".join(
+        f"&MESH IJK={','.join(map(str, ijk))}, XB={','.join(map(str, xb))} /\n"
+        for xb, ijk in grids
+    )
+    deck = parse_fds_text(
+        f"{meshes}&SLCF {options}, QUANTITY='EXTINCTION COEFFICIENT' /\n"
+    )
+    _synthetic_case(tmp_path, writes, grids)
+    [runtime] = fdsreader.Simulation(str(tmp_path)).slices
+    assert _slice_z_mid(runtime) == z
+    item = check_slices(deck, 1.6).to_dict()["EXTINCTION COEFFICIENT"]
+    assert item["nearest_pbz"] == z
+
+
+def test_evacuation_only_deck_does_not_get_the_trnz_note(tmp_path, capsys):
+    evac = PLAIN.replace("XB=0,10,0,10,0,3 /", "XB=0,10,0,10,0,3, EVACUATION=.TRUE. /")
+    deck = tmp_path / "evac.fds"
+    deck.write_text(evac.format(time=TIME, records="\n".join((SOOT, *GASES))))
+    _, lines = _check(capsys, deck, "--check")
+    assert "&TRNZ" not in lines[0]
+    assert "(z on the mesh grid, where FDS writes the slice)" in lines[0]
 
 
 def _extent(z: float):

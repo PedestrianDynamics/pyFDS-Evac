@@ -791,11 +791,13 @@ def _plain_evhos(deck, floor, band, user_walkable: bool, report) -> list:
 
 
 def _evho_skipped(record, z_floor: float, z_top: float, mesh_ids) -> str | None:
+    xb = record.xb()
+    if xb is None:
+        return "invalid, XB is missing"
     mesh_id = record.text("MESH_ID")
     if mesh_id is not None and mesh_id not in mesh_ids:
         return f"MESH_ID {mesh_id!r} is not a mesh of the imported floor"
-    xb = record.xb()
-    if xb is None or xb[5] < z_floor - 1e-9 or xb[4] > z_top:
+    if xb[5] < z_floor - 1e-9 or xb[4] > z_top:
         return "not on the imported floor"
     return None
 
@@ -805,7 +807,8 @@ def _minus_evhos(
 ) -> WalkableProvider:
     """*provider* with the footprints of *evhos* cut out of its polygon.
 
-    An ``&EVHO`` that does not overlap the polygon is reported as ignored.
+    An ``&EVHO`` that does not overlap the polygon is reported as ignored;
+    holes that leave nothing raise :class:`FdsImportError` naming them.
     """
     if not evhos:
         return provider
@@ -819,6 +822,13 @@ def _minus_evhos(
             return result
         note = f"{len(holes)} &EVHO cut out"
         polygon = result.polygon.difference(union([footprint(r) for r in holes]))
+        if polygon.is_empty or polygon.area <= 0:
+            names = ", ".join(f"&EVHO {r.label} (line {r.line})" for r in holes)
+            verb = "is" if len(holes) == 1 else "are"
+            raise FdsImportError(
+                f"the walkable area ({result.source}) is empty once {names} "
+                f"{verb} cut out; no scenario written"
+            )
         return WalkableResult(polygon, [*result.diagnostics, note], result.source)
 
     return derive
@@ -1232,7 +1242,8 @@ def _fire_surfaces(deck: FdsDeck, z_range, walkable, report) -> None:
     """Burning surfaces between the floor and the band top, in walkable space.
 
     Reported, not excluded: FDS+Evac does not exclude them either. The
-    advice names a way the deck kind supports.
+    advice names a way the deck kind supports; ``&EVHO`` only where it
+    applies, not under ``--walkable``.
     """
     if report.kind == "legacy":
         advice = ", as in FDS+Evac; exclude it with &EVHO or the spawn polygon"
@@ -1243,6 +1254,11 @@ def _fire_surfaces(deck: FdsDeck, z_range, walkable, report) -> None:
             "cut a notch around it from the edge of the spawn polygon in "
             "distributions.<id>.coordinates of config.json"
         )
+        if report.walkable.get("source") != "user":
+            advice += (
+                ". An &EVHO over the surface, in a copy of the deck, also cuts "
+                "it out of the walkable area"
+            )
     burning = {s.id for s in deck.group("SURF") if _burns(s)}
     for record in deck.group("VENT") + deck.group("OBST"):
         if not _burning_surface(record, burning):

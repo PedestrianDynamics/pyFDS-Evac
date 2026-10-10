@@ -19,7 +19,7 @@ from shapely import wkt as shapely_wkt
 from shapely.geometry import Polygon, box
 
 from pyfds_evac import cli, cli_init
-from pyfds_evac.core.fds_import import import_fds_deck
+from pyfds_evac.core.fds_import import FdsImportError, import_fds_deck
 from pyfds_evac.core.fds_import_geometry import largest_remainder
 from pyfds_evac.core.premovement_distributions import (
     create_premovement_distribution,
@@ -460,6 +460,7 @@ def test_evho_on_a_plain_deck_is_not_cut_from_a_given_walkable(tmp_path):
     [
         ("&EVHO XB=3,5,3,5,2.5,3 /", "not on the imported floor"),
         ("&EVHO XB=30,32,3,5,0,0 /", "outside the walkable area"),
+        ("&EVHO ID='nox' /", "invalid, XB is missing"),
     ],
 )
 def test_evho_on_a_plain_deck_off_the_floor_is_ignored(tmp_path, evho, reason):
@@ -469,6 +470,26 @@ def test_evho_on_a_plain_deck_off_the_floor_is_ignored(tmp_path, evho, reason):
     [item] = _items(result, "D", "EVHO")
     assert item.message == f"ignored: {reason}"
     assert not _items(result, "A", "EVHO")
+
+
+def test_evho_covering_the_floor_is_named_as_the_cause(tmp_path):
+    whole = "&EVHO ID='all', XB=-1,21,-1,11,0,0 /"
+    with pytest.raises(FdsImportError) as raised:
+        _modern(tmp_path, OPEN_LEFT, whole, wkt=None)
+    assert "is empty once &EVHO 'all' (line" in str(raised.value)
+    assert "is cut out; no scenario written" in str(raised.value)
+
+
+def test_evhos_covering_the_floor_together_are_all_named(tmp_path):
+    halves = (
+        "&EVHO ID='w', XB=-1,10,-1,11,0,0 /",
+        "&EVHO ID='e', XB=10,21,-1,11,0,0 /",
+    )
+    with pytest.raises(FdsImportError) as raised:
+        _modern(tmp_path, OPEN_LEFT, *halves, wkt=None)
+    message = str(raised.value)
+    assert "&EVHO 'w' (line" in message and "&EVHO 'e' (line" in message
+    assert "are cut out; no scenario written" in message
 
 
 # A ground floor 'room' (z 0-3) under 'upstairs' (z 3-6), both 10 x 10 m.
@@ -1088,18 +1109,25 @@ def test_fire_surface_in_walkable_space_is_reported(tmp_path):
     assert "&EVHO" in item.message
 
 
-def test_fire_surface_on_a_plain_deck_advises_a_supported_exclusion(tmp_path):
+@pytest.mark.parametrize("wkt", [HALL, None], ids=["walkable", "derived"])
+def test_fire_surface_on_a_plain_deck_advises_a_supported_exclusion(tmp_path, wkt):
+    """&EVHO is offered only where it applies: not under --walkable."""
     burner = (
         "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /\n"
         "&SURF ID='BURNER', HRRPUA=1000. /\n"
         "&VENT XB=3,4,3,4,0,0, SURF_ID='BURNER' /"
     )
-    result = _modern(tmp_path, burner)
+    result = _modern(tmp_path, burner, wkt=wkt)
     [item] = [i for i in _items(result, "A", "VENT") if "fire surface" in i.message]
-    assert "&EVHO" not in item.message
     advice = item.message.split("; ", 1)[1]
     assert advice.startswith("rerun init with --walkable FILE.wkt")
     assert "cut a notch around it from the edge of the spawn polygon" in advice
+    evho = (
+        ". An &EVHO over the surface, in a copy of the deck, also cuts it out "
+        "of the walkable area"
+    )
+    assert advice.endswith(evho) == (wkt is None)
+    assert ("&EVHO" in advice) == (wkt is None)
 
 
 def test_report_lists_the_loader_defaults(tmp_path):

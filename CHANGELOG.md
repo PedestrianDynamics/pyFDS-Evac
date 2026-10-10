@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading
+
+- Scripts that parse `import_report.json`: `nearest_pbz` under
+  `recommendations.slices` is the z the run ranks the slice on, the grid
+  node FDS writes it at, no longer the deck's z (#687). On a 0.5 m grid
+  a deck `PBZ=1.6` now reads 1.5.
+
 ### Added
 
 - `pyfds-evac --scenario DIR` prints one warning before the run when
@@ -31,6 +38,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;
   t_junction with an `&EVHO` lost both exits before (#688). Other
   FDS+Evac namelists in a plain deck are reported as ignored.
+- `pyfds-evac init --check` ranks slices at the z the run ranks them on:
+  the grid node FDS writes each at (the nearest cell face, the top of
+  the cell for `CELL_CENTERED`, only in `MESH_NUMBER` if given), the
+  lowest across meshes, as fdsreader reads it. On tracked output at
+  z = 2.0 m it named PBZ 1.6 where the run reads PBZ 2.5 (#687). Lines
+  print that z, with the deck's z when it differs.
+- On a plain deck, `pyfds-evac init` reports an `&EVHO` without `XB` as
+  invalid, not as off the floor, and names the `&EVHO` records when they
+  cover the whole walkable area, which ended in exit 1 with only
+  "walkable area (derived:deck) is empty". The fire-surface advice also
+  offers an `&EVHO` over the surface, in a copy of the deck (#688).
 
 - In a scenario with neither journeys nor transitions, a spawn area
   whose count is within the capacity estimate but where JuPedSim cannot

@@ -306,11 +306,12 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   targets picked on the way use 0.2 m, whatever the agent's `radius`. On decks with
   another radius, such as `world_100` (0.1 m), or with a radius
   distribution, agents reach stages at the wrong distance.
-- **`init --check` ranks slices on the deck's z** ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687), planned
-  for 0.5.0). The check picks the slice nearest the requested height from
-  the z in the deck; the run picks it after FDS has moved each slice to the
-  mesh grid. Where the two differ, the check names another `&SLCF` line or
-  turns a pass into a warning, never into a failure.
+- **`init --check` keeps the deck's z on a stretched grid.** The check
+  moves each slice to the uniform `&MESH` grid as FDS does
+  ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687)); with
+  `&TRNZ` it ranks the deck's z. Where that differs from the run's choice,
+  the check names another `&SLCF` line or turns a pass into a warning,
+  never into a failure.
 
 ## Reproducibility
 
