@@ -175,3 +175,51 @@ def test_additive_impassable_smoke_is_fled(k_ave, flee):
     rc = _refused("west", 0.0, ("all_segments_non_visible",), k_ave=k_ave)
     assert config.impassable_extinction_threshold == 3.0
     assert _must_flee_rejection(rc, config) is flee
+
+
+def test_alternating_lethal_dose_switches_every_tick():
+    """Must-flee overrides the return lockout, so a see-saw dose oscillates.
+
+    Both routes stay over tau (west 9.09, east 9.52: inside the 20 % margin,
+    so tau alone would hold). The predicted dose alternates which exit is
+    lethal: the current exit is over its limit 1.0 and the rival under its
+    limit 0.9. Each tick the agent flees its current exit, back onto the one
+    it left a second ago, inside the 10 s lockout. This pins the behaviour
+    the contract asks for; it is not a damping guarantee.
+    """
+    smoke = golden.ArmField({"west": 0.5, "east": 0.25})
+    # Predicted FED: west 1.04, east 0.82 / west 0.87, east 1.02.
+    doses = (
+        golden.ArmFed({"west": 3.0, "east": 1.2}),
+        golden.ArmFed({"west": 2.5, "east": 1.5}),
+    )
+    config = RerouteConfig(cost_config=golden._gate())
+    graph = golden._star2()
+    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
+    moves = []
+    for tick, time_s in enumerate((5.0, 6.0, 7.0, 8.0)):
+        current = rs.current_exit
+        wait_info = {
+            "current_origin": "spawn",
+            "current_target_stage": current,
+            "path_choices": {"spawn": [(current, 100.0)]},
+            "state": "to_target",
+        }
+        fed = doses[tick % 2]
+        ranked = _ranked(smoke, fed, current_exit=current)
+        assert "fed" in ranked[current].violation_kinds
+        rival = "east" if current == "west" else "west"
+        assert ranked[rival].violation_kinds == ("tau",)
+        switch = evaluate_and_reroute(
+            7, wait_info, rs, graph, time_s, 0.0, smoke, fed, config
+        )
+        assert switch is not None
+        moves.append((switch.old_exit, switch.new_exit, switch.reason))
+        assert rs.refused_switch_from == current
+        assert rs.refused_switch_time_s == time_s
+    assert moves == [
+        ("west", "east", "fallback"),
+        ("east", "west", "fallback"),
+        ("west", "east", "fallback"),
+        ("east", "west", "fallback"),
+    ]

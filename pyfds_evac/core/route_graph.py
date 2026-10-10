@@ -1823,6 +1823,12 @@ class _AnchoredPolicy:
         """
         if old_rc is None:
             return True
+        # Must-flee comes first, so a refused rival the agent must also flee
+        # is allowed here without the tau margin _apply_fallback asks of it.
+        # In a reevaluation that pair never reaches the anchor: when every
+        # route is refused, the fallback keeps the current exit ahead of such
+        # a rival unless its tau clears the margin, and the scan stops at the
+        # current exit (#128).
         if _must_flee_rejection(old_rc, config.cost_config):
             return True
         if not candidate.feasible and not old_rc.feasible:
