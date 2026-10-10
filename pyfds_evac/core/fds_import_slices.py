@@ -6,8 +6,9 @@ find what its default mechanisms need. It never opens FDS output.
 
 The rules copy the runtime's, they do not redefine them:
 
-- A slice is used when it is horizontal (``PBZ``, or ``XB`` with z0 == z1
-  and neither x nor y collapsed: fdsreader tests x, then y, then z);
+- A slice is used when it is horizontal (``PBZ`` alone, or ``XB`` with
+  z0 == z1 and neither x nor y collapsed: fdsreader tests x, then y,
+  then z, so ``PBX`` or ``PBY`` with ``PBZ`` is a vertical line);
   among those, the one nearest the requested height wins and declaration
   order breaks ties, as :func:`fds_sampling.select_horizontal_slice`. The
   z ranked is the one the run ranks: fdsreader's extent of the slice FDS
@@ -24,11 +25,16 @@ The rules copy the runtime's, they do not redefine them:
 - Without ``&TIME T_END`` FDS stops at its default of 1 s (User Guide 6.9.1,
   Sec. 6.2.1), while ``init`` writes ``max_simulation_time`` 300 s.
 
-A horizontal slice FDS culls is left out, as if the deck did not declare
-it, and named in :attr:`SliceCheck.dropped`: its z outside every fire
-mesh, or its ``MESH_NUMBER`` naming a mesh that does not hold z or no
-fire mesh (``READ_SLCF``, read.f90 of FDS-6.10.1-2291-gcc0ee9ee7e, lines
-15806 and 15854-15898). See :func:`_culled`.
+A slice FDS culls is left out, as if the deck did not declare it, and
+named in :attr:`SliceCheck.dropped`: it lies outside every fire mesh,
+or its ``MESH_NUMBER`` names a mesh that does not hold it or no fire
+mesh (``READ_SLCF``, read.f90 of FDS-6.10.1-2291-gcc0ee9ee7e, lines
+15806 and 15813-15898). See :func:`_culled` and :func:`_holds`.
+
+Mesh numbers count the fire meshes only, in deck order after ``MULT``:
+FDS 6.10 has no evacuation meshes, and the fire run of FDS 6.7.6, the
+only version that reads a deck with them, skips them (read.f90 of
+``c9da70d7a0``, the commit of ``materials/evac.f90``, line 750).
 
 A deck with ``&TRNZ`` (a stretched z grid) keeps the deck's z: the
 stretched nodes are not computed here. The cull still applies, since
@@ -38,6 +44,7 @@ stretched nodes are not computed here. The cull still applies, since
 from __future__ import annotations
 
 import math
+import sys
 from dataclasses import dataclass, field, replace
 from typing import Any
 
@@ -171,6 +178,11 @@ class _Slice:
     record: NamelistRecord
     orientation: str  # horizontal, vertical or volume
     z: float | None
+    #: x0, x1, y0, y1, z0, z1 before FDS clips it to a mesh; None for an
+    #: axis a ``PB`` slice leaves at the mesh bounds.
+    box: tuple[float | None, ...] = (None,) * 6
+    #: FDS's IOR: 1, 2 or 3 for the last collapsed axis, else 0.
+    ior: int = 0
     deck_z: float | None = None
     culled: str | None = None  # why FDS writes no such slice
 
@@ -179,8 +191,11 @@ def check_slices(deck: FdsDeck, height: float) -> SliceCheck:
     """Check *deck* for the slices a run at *height* reads; see the module."""
     meshes = _fire_meshes(deck)
     stretched = bool(deck.group("TRNZ"))
+    fds67 = len(meshes) < len(deck.group("MESH"))
     placed = [
-        _on_grid(s, meshes, stretched) for s in map(_slice, deck.group("SLCF")) if s
+        _on_grid(s, meshes, stretched, fds67)
+        for s in map(_slice, deck.group("SLCF"))
+        if s
     ]
     slices = [s for s in placed if s.culled is None]
     note = DECK_Z_NOTE if stretched else GRID_NOTE
@@ -211,22 +226,45 @@ def _slice(record: NamelistRecord) -> _Slice | None:
     """Orientation and z of an ``&SLCF``; None for evacuation or unplaced ones."""
     if _safe(record.flag, "EVACUATION", False):
         return None
-    pbz = _number(record, "PBZ")
-    if pbz is not None:
-        return _Slice(record, "horizontal", pbz)
-    if record.has("PBX") or record.has("PBY"):
-        return _Slice(record, "vertical", None)
-    xb = _safe(record.xb)
-    if xb is None:
+    box = _box(record)
+    if box is None:
         return None
-    x0, x1, y0, y1, z0, z1 = xb
+    x0, x1, y0, y1, z0, z1 = box
+    ior = _ior(box)
     # fdsreader's order: a collapsed x or y makes the slice vertical even
     # when z is collapsed too (a line), and the runtime then skips it.
-    if x0 == x1 or y0 == y1:
-        return _Slice(record, "vertical", None)
-    if z0 == z1:
-        return _Slice(record, "horizontal", z0)
-    return _Slice(record, "volume", None)
+    if (x0 is not None and x0 == x1) or (y0 is not None and y0 == y1):
+        return _Slice(record, "vertical", None, box, ior)
+    if z0 is not None and z0 == z1:
+        return _Slice(record, "horizontal", z0, box, ior)
+    return _Slice(record, "volume", None, box, ior)
+
+
+def _box(record: NamelistRecord) -> tuple[float | None, ...] | None:
+    """The slice's ``XB`` before FDS clips it, None if unplaced.
+
+    Any ``PBX``, ``PBY`` or ``PBZ`` replaces ``XB``: each sets its axis,
+    the others span the mesh (None here); read.f90 6.10 lines 15813-15823.
+    """
+    planes = [_number(record, key) for key in ("PBX", "PBY", "PBZ")]
+    if any(p is not None for p in planes):
+        return tuple(v for p in planes for v in (p, p))
+    xb = _safe(record.xb)
+    return None if xb is None else tuple(xb)
+
+
+def _ior(box: tuple[float | None, ...]) -> int:
+    """FDS's IOR: the last axis with ``|lo - hi| < 20 eps`` (lines 15854-15857)."""
+    ior = 0
+    for axis in range(3):
+        lo, hi = box[2 * axis], box[2 * axis + 1]
+        if lo is not None and hi is not None and abs(lo - hi) < _TWENTY_EPS:
+            ior = axis + 1
+    return ior
+
+
+#: FDS ``TWENTY_EPSILON_EB``: 20 times the double machine epsilon.
+_TWENTY_EPS = 20 * sys.float_info.epsilon
 
 
 #: FDS ``READ_SLCF`` tolerance of the cell-centred cell search [m].
@@ -234,17 +272,16 @@ _FDS_CELL_TOL_M = 1e-10
 
 
 def _fire_meshes(deck: FdsDeck) -> list[tuple[int, NamelistRecord]]:
-    """(FDS mesh number, mesh) of the fire meshes.
-
-    The number counts evacuation meshes too, as FDS numbers ``&MESH``
-    records (after ``MULT``); the evacuation meshes are left out (#687).
-    """
-    meshes = enumerate(deck.group("MESH"), start=1)
-    return [(n, m) for n, m in meshes if not _safe(m.flag, "EVACUATION", False)]
+    """(FDS mesh number, mesh) of the fire meshes; see the module."""
+    fire = [m for m in deck.group("MESH") if not _safe(m.flag, "EVACUATION", False)]
+    return list(enumerate(fire, start=1))
 
 
 def _on_grid(
-    item: _Slice, meshes: list[tuple[int, NamelistRecord]], stretched: bool
+    item: _Slice,
+    meshes: list[tuple[int, NamelistRecord]],
+    stretched: bool,
+    fds67: bool,
 ) -> _Slice:
     """*item* at the z the run ranks it on, the deck's z kept in ``deck_z``.
 
@@ -252,22 +289,24 @@ def _on_grid(
     as the grid node index K (``READ_SLCF``, read.f90). fdsreader 1.11
     takes z from node K of each mesh and, for a horizontal slice, the
     lowest of them (``Slice.__init__``, slcf/slice.py ~273), which the run
-    ranks (:func:`fds_sampling._slice_z_mid`). A slice FDS culls comes
-    back with ``culled`` set; on a *stretched* (``&TRNZ``) grid, or when
-    no holding mesh has a readable ``IJK``, the deck's z is kept.
+    ranks (:func:`fds_sampling._slice_z_mid`). A slice FDS culls, of any
+    orientation, comes back with ``culled`` set; on a *stretched*
+    (``&TRNZ``) grid, or when no holding mesh has a readable ``IJK``, the
+    deck's z is kept. *fds67*: the deck has evacuation meshes, so only
+    FDS 6.7 runs it (:func:`_holds`).
     """
-    if item.orientation != "horizontal" or item.z is None:
-        return item
     number = _number(item.record, "MESH_NUMBER")
-    xy = None if item.record.has("PBZ") else _safe(item.record.xb)
     named = [m for n, m in meshes if number is None or n == number]
-    reason = _culled(item.z, xy, number, named, bool(meshes))
+    holds = [_holds(mesh, item.box, item.ior, fds67) for mesh in named]
+    reason = _culled(number, named, holds)
     if reason is not None:
         return replace(item, deck_z=item.z, culled=reason)
+    if item.orientation != "horizontal" or item.z is None:
+        return item
     if stretched:
         return replace(item, deck_z=item.z)
     centred = bool(_safe(item.record.flag, "CELL_CENTERED", False))
-    zs = [_node_z(mesh, item.z, xy, centred) for mesh in named]
+    zs = [_node_z(m, item.z, centred) for m, h in zip(named, holds) if h]
     found = [z for z in zs if z is not None]
     if not found:
         return replace(item, deck_z=item.z)
@@ -275,59 +314,64 @@ def _on_grid(
 
 
 def _culled(
-    z: float, xy, number: float | None, named: list[NamelistRecord], any_mesh: bool
+    number: float | None, named: list[NamelistRecord], holds: list[bool | None]
 ) -> str | None:
-    """Why FDS writes no horizontal slice at *z*; None when it writes one.
+    """Why FDS writes no such slice; None when it writes one.
 
     ``READ_SLCF`` (read.f90 6.10) reads a slice in mesh NM only when
     ``MESH_NUMBER`` is NM, its default (line 15806), and culls it there
-    when z lies outside ZS..ZF or the clipped x-y extent is empty (lines
-    15870-15898). None, never a cull, when the deck has no fire mesh or a
-    named mesh has no readable ``XB``: the check cannot judge then.
+    as :func:`_holds` says. None, never a cull, when the deck has no fire
+    mesh and no ``MESH_NUMBER``, or a named mesh has no readable ``XB``:
+    the check cannot judge then.
     """
-    if not any_mesh:
-        return None
-    if not named:
+    if number is not None and not named:
         return f"MESH_NUMBER {number:g} names no fire &MESH"
-    holds = [_holds(mesh, z, xy) for mesh in named]
-    if None in holds or any(holds):
+    if not named or None in holds or any(holds):
         return None
     if number is not None:
         return f"&MESH {number:g} (MESH_NUMBER) does not hold it"
     return "outside every fire &MESH"
 
 
-def _holds(mesh: NamelistRecord, z: float, xy) -> bool | None:
-    """Whether FDS keeps a horizontal slice at *z* in *mesh*; None if unknown.
+def _holds(
+    mesh: NamelistRecord, box: tuple[float | None, ...], ior: int, fds67: bool
+) -> bool | None:
+    """Whether FDS keeps a slice of extent *box* in *mesh*; None if unknown.
 
-    Inclusive in z (``XB(5)>ZF .OR. XB(6)<ZS`` culls), exclusive in x and
-    y (``XB(1)>=XF .OR. XB(2)<=XS ...``), read.f90 lines 15885-15888. The
-    1e-9 m in z absorbs rounding in ``MULT``-expanded mesh bounds.
+    The exact comparisons of ``READ_SLCF`` after it clips *box* to the
+    mesh. FDS 6.10 (lines 15871-15892): on the IOR axis, or on every
+    axis when IOR is 0, culled when lo > F or hi < S; on the other axes
+    of a planar slice when lo >= F or hi <= S, so a slice that only
+    touches a mesh in x or y is culled. FDS 6.7.6 (*fds67*; read.f90 of
+    ``c9da70d7a0``, line 14535) uses lo > F or hi < S on every axis.
     """
-    xb = _safe(mesh.xb)
-    if xb is None:
+    bounds = _safe(mesh.xb)
+    if bounds is None:
         return None
-    x0, x1, y0, y1, z0, z1 = xb
-    if z < z0 - 1e-9 or z > z1 + 1e-9:
-        return False
-    if xy is not None and (xy[1] <= x0 or xy[0] >= x1 or xy[3] <= y0 or xy[2] >= y1):
-        return False
+    for axis in range(3):
+        lo, hi = box[2 * axis], box[2 * axis + 1]
+        start, end = bounds[2 * axis], bounds[2 * axis + 1]
+        if lo is None or hi is None:
+            continue
+        strict = not fds67 and ior not in (0, axis + 1)
+        if strict and (lo >= end or hi <= start):
+            return False
+        if lo > end or hi < start:
+            return False
     return True
 
 
-def _node_z(mesh: NamelistRecord, z: float, xy, centred: bool) -> float | None:
+def _node_z(mesh: NamelistRecord, z: float, centred: bool) -> float | None:
     """z of the node K that FDS writes for *z* in *mesh*; None if not known.
 
-    None when *mesh* does not hold the slice (:func:`_holds`) or has no
-    readable ``IJK``. Uniform grid of ``IJK``/``XB``. A node slice:
+    *mesh* holds the slice (:func:`_holds`); None when it has no readable
+    ``IJK``. Uniform grid of ``IJK``/``XB``. A node slice:
     K = NINT((z - ZS)/DZ), halves up. A cell-centred one: the last cell K
     whose centre is within DZ/2 + 1e-10 m of z, written as its upper node.
     """
     ijk = mesh.values("IJK")
     xb = _safe(mesh.xb)
     if xb is None or len(ijk) != 3 or not isinstance(ijk[2], int) or ijk[2] <= 0:
-        return None
-    if not _holds(mesh, z, xy):
         return None
     x0, x1, y0, y1, z0, z1 = xb
     dz = (z1 - z0) / ijk[2]
@@ -346,6 +390,7 @@ def _dropped(item: _Slice) -> dict[str, Any]:
         "line": item.record.line,
         "quantity": _quantity(item.record),
         "spec_id": _spec(item.record),
+        "orientation": item.orientation,
         "z": item.deck_z,
         "reason": item.culled,
     }
@@ -353,9 +398,10 @@ def _dropped(item: _Slice) -> dict[str, Any]:
 
 def _dropped_note(entry: dict[str, Any]) -> str:
     spec = f", SPEC_ID {entry['spec_id']}" if entry["spec_id"] else ""
+    where = entry["orientation"] if entry["z"] is None else f"z {entry['z']:g} m"
     return (
         f"dropped &SLCF line {entry['line']} ({entry['quantity']}{spec}, "
-        f"z {entry['z']:g} m): {entry['reason']}, so FDS writes no such slice"
+        f"{where}): {entry['reason']}, so FDS writes no such slice"
     )
 
 

@@ -365,7 +365,13 @@ def _mult_for(record: NamelistRecord, mults: dict) -> NamelistRecord:
 
 
 def _copies(record: NamelistRecord, mult: NamelistRecord) -> list[NamelistRecord]:
-    """Shifted copies of *record*, as FDS makes them."""
+    """Shifted copies of *record*, as FDS makes them.
+
+    Each bound is ``XB + D0 + n*DXB`` evaluated left to right, as FDS
+    does (``XB1 = XB(1) + MR%DX0 + II*MR%DXB(1)``, read.f90 6.10 line
+    641), so that the bounds are the doubles FDS computes, barring a
+    compiler that fuses the multiply-add.
+    """
     if record.xb() is None:
         raise FdsDeckError(
             f"&{record.group} {record.label} (line {record.line}): "
@@ -376,7 +382,10 @@ def _copies(record: NamelistRecord, mult: NamelistRecord) -> list[NamelistRecord
     out = []
     for index, shift in enumerate(shifts):
         params = dict(record.params)
-        params["XB"] = [float(v) + s for v, s in zip(base, shift, strict=True)]
+        params["XB"] = [
+            (float(v) + origin) + step
+            for v, (origin, step) in zip(base, shift, strict=True)
+        ]
         out.append(replace(record, params=params, copy_index=index))
     return out
 
@@ -407,7 +416,7 @@ def _ijk_shifts(mult: NamelistRecord, origin: tuple) -> list[tuple]:
     ]
     shifts = []
     for k, j, i in itertools.product(*ranges):
-        sx, sy, sz = x0 + i * dx, y0 + j * dy, z0 + k * dz
+        sx, sy, sz = (x0, i * dx), (y0, j * dy), (z0, k * dz)
         shifts.append((sx, sx, sy, sy, sz, sz))
     return shifts
 
@@ -423,6 +432,6 @@ def _n_shifts(record: NamelistRecord, mult: NamelistRecord, origin: tuple):
     lo, hi = int(mult.num("N_LOWER", 0)), int(mult.num("N_UPPER", 0))
     base = (x0, x0, y0, y0, z0, z0)
     return [
-        tuple(b + n * d for b, d in zip(base, dxb, strict=True))
+        tuple((b, n * d) for b, d in zip(base, dxb, strict=True))
         for n in range(lo, hi + 1)
     ]
