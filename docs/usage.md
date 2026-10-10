@@ -678,8 +678,9 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   strips, is a spawn area; `--agents N` (or the placeholder of 100) is
   shared between them by area. A part without an exit gets no agents.
 - **Agents, FDS+Evac deck.** `&EVAC` gives the spawn areas with
-  `NUMBER_INITIAL_PERSONS`, `&PERS` the speed and pre-movement
-  ([Coming from FDS+Evac](coming-from-fds-evac.md)); `--agents` is ignored.
+  `NUMBER_INITIAL_PERSONS`, `&PERS` the speed, pre-movement and radius
+  (the torso radius of the agent type;
+  [Coming from FDS+Evac](coming-from-fds-evac.md)); `--agents` is ignored.
   `&EVHO` is cut out of the spawn areas. `&ENTR` becomes flow spawning; an
   entry with `MAX_FLOW = 0` creates no agents. A point or line `&EVAC` is
   grown to a 0.6 m band across each zero-width axis, clipped to the walkable

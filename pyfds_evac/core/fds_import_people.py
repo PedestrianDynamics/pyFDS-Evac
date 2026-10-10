@@ -15,8 +15,10 @@ Maintainer decisions applied here (import task record, 2026-10-06):
   in closed form.
 - Q3: a uniform speed range becomes a Gaussian with the same mean and
   variance (std = half-range / sqrt(3)).
-- Q4: the body radius is not mapped; FDS+Evac's body is three circles, so it
-  has no single-radius equivalent. JuPedSim's 0.2 m stays.
+- Q4 (#699, 2026-10-10): the radius is the mean
+  torso radius R_t of the FDS+Evac three-circle body (D1), constant (D2),
+  for every operational model (D3). One circle as deep as the FDS+Evac
+  body (0.30 m for an adult) but narrower than its shoulders (0.51 m).
 - Q1: no known doors -> ``discovery``; every exit known -> ``full``; one
   known exit -> ``discovery`` with that ``entrance``; else the closest of
   these, with a warning.
@@ -39,6 +41,21 @@ DEFAULT_PROPERTIES_SPEED = {
     "CHILD": (0.90, 0.30),
     "ELDERLY": (0.80, 0.30),
 }
+#: FDS+Evac default agent types: body (DIA_MEAN, DIA_LOW, DIA_HIGH,
+#: D_TORSO_MEAN, D_SHOULDER_MEAN) [m], with 2R_d uniform on [DIA_LOW, DIA_HIGH]
+#: (evac.f90:1850-1961, FDS 6.7.6-404-gc9da70d7a; Guide Table_DefaultHumans).
+DEFAULT_PROPERTIES_BODY = {
+    "ADULT": (0.51, 0.44, 0.58, 0.30, 0.19),
+    "MALE": (0.54, 0.50, 0.58, 0.32, 0.20),
+    "FEMALE": (0.48, 0.44, 0.52, 0.28, 0.18),
+    "CHILD": (0.42, 0.39, 0.45, 0.24, 0.14),
+    "ELDERLY": (0.50, 0.46, 0.54, 0.30, 0.18),
+}
+#: FDS+Evac global D_TORSO_MEAN default [m] (evac.f90:1683).
+D_TORSO_MEAN_DEFAULT = 0.30
+_BODY_SOURCE = "FDS+Evac Guide Table_DefaultHumans; evac.f90 PERS presets"
+_EXPLICIT_SOURCE = "evac.f90:1998-2020, 14583-14584, 14669, 14955-14957"
+_CONSTANT_SOURCE = "evac.f90:1998, 14583-14584, 14669, 14955"
 #: FDS+Evac HUMAN_SMOKE_HEIGHT default [m above the floor].
 HUMAN_SMOKE_HEIGHT_M = 1.6
 _EULER_GAMMA = 0.5772156649015329
@@ -251,24 +268,172 @@ def _speed_from(speed: Component, pers: NamelistRecord, add: AddItem):
     return {"v0": speed.mean, "v0_distribution": "gaussian", "v0_std": round(std, 9)}
 
 
-def body_size_note(pers: NamelistRecord, add: AddItem) -> None:
-    """Q4: the body size is reported, never mapped to ``radius``."""
-    if not (pers.has("DEFAULT_PROPERTIES") or _has_prefix(pers, "DIA")):
-        return
+def body_size_parameters(pers: NamelistRecord, add: AddItem) -> dict[str, Any]:
+    """``radius`` from a ``&PERS``: the mean torso radius R_t (#699).
+
+    FDS+Evac applies the DEFAULT_PROPERTIES body only while DIAMETER_DIST is
+    unset, i.e. below 0 (``IF (DIAMETER_DIST < 0)``, evac.f90:1858);
+    otherwise the line's DIA_* keys and D_TORSO_MEAN (else 0.30 m) apply.
+    Without either, a positive DIA_MEAN is a constant body (DIAMETER_DIST 0,
+    evac.f90:1998). Empty when no branch defines a body.
+    """
+    name = pers.text("DEFAULT_PROPERTIES")
+    preset = DEFAULT_PROPERTIES_BODY.get(name.upper()) if name else None
+    explicit = pers.num("DIAMETER_DIST", -1) >= 0
+    if name is not None and preset is None:
+        why = f"DEFAULT_PROPERTIES={name!r} is not one of the five Guide presets"
+        return _body_not_mapped(pers, add, why)
+    if preset is not None and not explicit:
+        _note_ignored_body_keys(
+            pers,
+            add,
+            [k for k in pers.params if k.startswith("DIA_") or k in _TORSO_KEYS],
+            "without DIAMETER_DIST, FDS+Evac uses the DEFAULT_PROPERTIES body",
+        )
+        return _preset_body(str(name), preset, pers, add)
+    _note_ignored_body_keys(
+        pers,
+        add,
+        [k for k in ("D_SHOULDER_MEAN",) if pers.has(k)],
+        "the radius is the torso circle; the shoulder circles have no counterpart",
+    )
+    if explicit:
+        return _explicit_body(pers, add)
+    if pers.num("DIA_MEAN", -1) > 0:
+        return _constant_body(pers, add)
+    why = (
+        "no known DEFAULT_PROPERTIES, no DIAMETER_DIST and no positive "
+        "DIA_MEAN: FDS+Evac's body is undefined, clamped to 0.05 m"
+    )
+    return _body_not_mapped(pers, add, why)
+
+
+_TORSO_KEYS = ("D_TORSO_MEAN", "D_SHOULDER_MEAN")
+#: FDS+Evac clamps R_d at 0.05 m before scaling the torso (evac.f90:14669).
+_MIN_BODY_RADIUS_M = 0.05
+
+
+def _note_ignored_body_keys(
+    pers: NamelistRecord, add: AddItem, ignored: list[str], why: str
+) -> None:
+    if ignored:
+        add(
+            "A", "warning", "PERS", f"{', '.join(sorted(ignored))} ignored: {why}", pers
+        )
+
+
+def _preset_body(name, preset, pers: NamelistRecord, add: AddItem) -> dict[str, Any]:
+    dia, lo, hi, torso, shoulder = preset
+    r_t = torso / 2
+    t_lo, t_hi = r_t * lo / dia, r_t * hi / dia
+    std = (t_hi - t_lo) / (2 * math.sqrt(3))
     add(
         "A",
         "warning",
         "PERS",
-        "body size not mapped: FDS+Evac's body is three circles with no "
-        "single-radius equivalent; the JuPedSim radius stays 0.2 m",
+        f"DEFAULT_PROPERTIES={name!r}: body three circles R_d={dia / 2:g} "
+        f"({lo / 2:g}-{hi / 2:g}), R_t={r_t:g}, R_s={shoulder / 2:g} m -> "
+        f"radius={r_t:g} m (torso radius, constant; FDS+Evac draws R_t uniform "
+        f"{t_lo:.4g}-{t_hi:.4g}, std {std:.6f}). Approximation: one circle as "
+        f"deep as the FDS+Evac body but {torso:g} m wide instead of {dia:g} m; "
+        f"with SocialForceModel R_d={dia / 2:g} m is the closer counterpart "
+        f"({_BODY_SOURCE})",
         pers,
     )
+    return {"radius": round(r_t, 9)}
 
 
-def _has_prefix(record: NamelistRecord, prefix: str) -> bool:
-    return any(
-        k.startswith(prefix + "_") or k == "DIAMETER_DIST" for k in record.params
+def _constant_body(pers: NamelistRecord, add: AddItem) -> dict[str, Any]:
+    """No preset and no DIAMETER_DIST: FDS+Evac sets DIAMETER_DIST to 0, so
+    every agent has R_d = max(DIA_MEAN / 2, 0.05) and R_t = R_d * D_TORSO_MEAN
+    / DIA_MEAN (evac.f90:1998, 14583-14584, 14669, 14955)."""
+    _note_ignored_body_keys(
+        pers,
+        add,
+        [k for k in ("DIA_LOW", "DIA_HIGH", "DIA_PARA", "DIA_PARA2") if pers.has(k)],
+        "without DIAMETER_DIST, FDS+Evac's body diameter is the constant DIA_MEAN",
     )
+    torso = pers.num("D_TORSO_MEAN", D_TORSO_MEAN_DEFAULT)
+    dia = pers.num("DIA_MEAN", -1.0)
+    radius = round(max(0.5 * dia, _MIN_BODY_RADIUS_M) * torso / dia, 9)
+    if not (math.isfinite(radius) and radius > 0):
+        why = f"max(DIA_MEAN / 2, 0.05) * D_TORSO_MEAN / DIA_MEAN = {radius:g} m"
+        return _body_not_mapped(pers, add, why)
+    add(
+        "A",
+        "warning",
+        "PERS",
+        f"DIA_MEAN={dia:g} m without DIAMETER_DIST: constant body (DIAMETER_DIST "
+        f"0), FDS+Evac has no spread; D_TORSO_MEAN={torso:g} m -> "
+        f"radius={radius:.6g} m (torso radius). Approximation: one circle as "
+        f"deep as the FDS+Evac body but narrower than its shoulders "
+        f"({_CONSTANT_SOURCE})",
+        pers,
+    )
+    return {"radius": radius}
+
+
+def _explicit_body(pers: NamelistRecord, add: AddItem) -> dict[str, Any]:
+    """R_t,i = R_d,i * D_TORSO_MEAN / DIA_MEAN with R_d,i = max(D_i / 2, 0.05)
+    (evac.f90:14669, 14955-14957), so the mean is 0.5 * D_TORSO_MEAN * E[D] /
+    DIA_MEAN, clamped as one draw for a constant diameter; a negative DIA_MEAN
+    means the distribution mean (evac.f90:2001-2020)."""
+    torso = pers.num("D_TORSO_MEAN", D_TORSO_MEAN_DEFAULT)
+    try:
+        dia, d_mean, radius, std = _explicit_torso(pers, torso)
+    except (ValueError, ArithmeticError) as exc:
+        return _body_not_mapped(pers, add, f"{type(exc).__name__}: {exc}")
+    if not (math.isfinite(radius) and radius > 0):
+        why = f"R_d * D_TORSO_MEAN / DIA_MEAN = {radius:g} m"
+        return _body_not_mapped(pers, add, why)
+    spread = f"draws R_t with std {std:.6f} m"
+    if dia.kind == "uniform":
+        lo, hi = (0.5 * torso * float(x or 0.0) / d_mean for x in (dia.a, dia.b))
+        spread = f"draws R_t uniform {lo:.4g}-{hi:.4g} m, std {std:.6f} m"
+    if dia.kind == "constant":
+        spread = "has no spread"
+    add(
+        "A",
+        "warning",
+        "PERS",
+        f"DIAMETER_DIST: body diameter {dia.kind}, mean {dia.mean:g} m, "
+        f"D_TORSO_MEAN={torso:g} m -> radius={radius:.6g} m (torso radius "
+        f"R_d * D_TORSO_MEAN / {d_mean:g}, constant; FDS+Evac {spread}). "
+        f"Approximation: one circle as deep as the FDS+Evac body but narrower "
+        f"than its shoulders ({_EXPLICIT_SOURCE})",
+        pers,
+    )
+    return {"radius": radius}
+
+
+def _explicit_torso(
+    pers: NamelistRecord, torso: float
+) -> tuple[Component, float, float, float]:
+    """Diameter distribution, D_mean, rounded mean R_t and its std; raises
+    ValueError or ArithmeticError for a distribution with no usable mean."""
+    dia = component(_scalars(pers), "DIA", "DIAMETER_DIST")
+    if dia is None:
+        raise ValueError("no body diameter")
+    d_mean = pers.num("DIA_MEAN", -1.0)
+    d_mean = dia.mean if d_mean < 0 else d_mean
+    if not d_mean > 0:
+        raise ValueError(f"body diameter mean {d_mean:g} m is not positive")
+    r_d = 0.5 * dia.mean
+    if dia.kind == "constant":
+        r_d = max(r_d, _MIN_BODY_RADIUS_M)
+    radius = round(r_d * torso / d_mean, 9)
+    return dia, d_mean, radius, 0.5 * torso * math.sqrt(dia.var) / d_mean
+
+
+def _body_not_mapped(pers: NamelistRecord, add: AddItem, why: str) -> dict[str, Any]:
+    add(
+        "D",
+        "warning",
+        "PERS",
+        f"body not mapped ({why}); the 0.2 m loader default applies",
+        pers,
+    )
+    return {}
 
 
 # --- delay (detection + pre-movement) --------------------------------------

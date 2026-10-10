@@ -177,8 +177,151 @@ def test_pers_adult_speed_is_gaussian_with_the_uniform_moments(tmp_path):
     assert params["v0"] == 1.25
     assert params["v0_distribution"] == "gaussian"
     assert params["v0_std"] == pytest.approx(0.30 / math.sqrt(3), abs=1e-9)
-    assert "radius" not in params
-    assert any("three circles" in i.message for i in _items(result, "A", "PERS"))
+    assert params["radius"] == 0.15
+    messages = [i.message for i in _items(result, "A", "PERS")]
+    assert any("R_t=0.15" in m and "radius=0.15 m" in m for m in messages)
+    assert any("uniform 0.1294-0.1706, std 0.011887" in m for m in messages)
+    assert not any("body size not mapped" in i.message for i in result.report.items)
+
+
+def _radius_import(tmp_path, keys: str):
+    pers = f"&PERS ID='P', {keys} /"
+    return _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='P'"))
+
+
+@pytest.mark.parametrize(
+    ("keys", "radius"),
+    [
+        # Mean torso radius R_t = D_TORSO_MEAN / 2 of each preset (#699).
+        ("DEFAULT_PROPERTIES='Adult'", 0.15),
+        ("DEFAULT_PROPERTIES='Male'", 0.16),
+        ("DEFAULT_PROPERTIES='Female'", 0.14),
+        ("DEFAULT_PROPERTIES='Child'", 0.12),
+        ("DEFAULT_PROPERTIES='Elderly'", 0.15),
+        ("DEFAULT_PROPERTIES='adult'", 0.15),
+        ("DEFAULT_PROPERTIES='ADULT'", 0.15),
+        # Explicit body: 0.5 * D_TORSO_MEAN * E[D] / DIA_MEAN.
+        ("DIAMETER_DIST=1, DIA_LOW=0.40, DIA_HIGH=0.60", 0.15),  # 0.5*0.30*0.5/0.5
+        (
+            "DIAMETER_DIST=1, DIA_LOW=0.40, DIA_HIGH=0.60, DIA_MEAN=0.60, "
+            "D_TORSO_MEAN=0.36",
+            0.15,  # 0.5 * 0.36 * 0.50 / 0.60
+        ),
+        # DIAMETER_DIST beats the preset: global D_TORSO_MEAN 0.30, not 0.24.
+        ("DEFAULT_PROPERTIES='Child', DIAMETER_DIST=0, DIA_MEAN=0.42", 0.15),
+        # DIAMETER_DIST < 0 is unset in FDS+Evac: the preset applies.
+        ("DEFAULT_PROPERTIES='Child', DIAMETER_DIST=-1", 0.12),
+        # No preset, no DIAMETER_DIST: constant body DIA_MEAN, R_d clamped
+        # at 0.05 m; radius = max(DIA_MEAN / 2, 0.05) * D_TORSO_MEAN / DIA_MEAN.
+        ("DIA_MEAN=0.50", 0.15),
+        ("DIA_MEAN=0.50, D_TORSO_MEAN=0.36", 0.18),
+        ("DIA_MEAN=0.08", 0.1875),  # 0.05 * 0.30 / 0.08
+        ("DIAMETER_DIST=-1, DIA_MEAN=0.50", 0.15),
+        ("DIAMETER_DIST=0, DIA_MEAN=0.08", 0.1875),  # same 0.05 m clamp
+    ],
+)
+def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
+    params = _params(_radius_import(tmp_path, keys), "g")
+    assert params["radius"] == pytest.approx(radius, abs=1e-9)
+    assert "radius_distribution" not in params
+    assert "radius_std" not in params
+
+
+@pytest.mark.parametrize(
+    ("keys", "radius", "ignored"),
+    [
+        ("DEFAULT_PROPERTIES='Adult', D_TORSO_MEAN=0.40", 0.15, "D_TORSO_MEAN"),
+        ("DEFAULT_PROPERTIES='Adult', D_SHOULDER_MEAN=0.40", 0.15, "D_SHOULDER_MEAN"),
+        ("DIA_MEAN=0.50, DIA_LOW=0.4, DIA_HIGH=0.6", 0.15, "DIA_HIGH, DIA_LOW"),
+    ],
+)
+def test_pers_body_keys_fds_evac_ignores_are_reported(tmp_path, keys, radius, ignored):
+    result = _radius_import(tmp_path, keys)
+    assert _params(result, "g")["radius"] == radius
+    assert any(
+        i.message.startswith(f"{ignored} ignored") for i in _items(result, "A", "PERS")
+    )
+
+
+def test_pers_explicit_uniform_reports_the_torso_range(tmp_path):
+    result = _radius_import(tmp_path, "DIAMETER_DIST=1, DIA_LOW=0.40, DIA_HIGH=0.60")
+    messages = [i.message for i in _items(result, "A", "PERS")]
+    # 0.5 * 0.30 * [0.40, 0.60] / 0.50
+    assert any("uniform 0.12-0.18 m" in m for m in messages)
+
+
+@pytest.mark.parametrize(
+    "keys",
+    [
+        "DEFAULT_PROPERTIES='IMO_Male30-50'",  # IMO presets: separate issue
+        "VELOCITY_DIST=0, VEL_MEAN=1.2",  # no preset, no DIA_*
+        "DIAMETER_DIST=0",  # constant without DIA_MEAN
+        "DEFAULT_PROPERTIES='IMO_Male30-50', DIA_MEAN=0.5",  # IMO: Male body
+        "DIA_MEAN=0",  # FDS+Evac's body undefined, 0.05 m clamp
+        "DIAMETER_DIST=5, DIA_MEAN=1, DIA_PARA=40",  # log-normal mean overflows
+        "DIAMETER_DIST=6, DIA_PARA=0, DIA_PARA2=0",  # beta mean 0/0
+        "DIAMETER_DIST=0, DIA_MEAN=0.5, D_TORSO_MEAN=1e-10",  # rounds to 0
+        # FDS+Evac stops on an unknown DEFAULT_PROPERTIES, DIAMETER_DIST or not.
+        "DEFAULT_PROPERTIES='Robot', DIAMETER_DIST=1, DIA_LOW=0.4, DIA_HIGH=0.6",
+    ],
+)
+def test_pers_without_a_defined_body_gets_no_radius(tmp_path, keys):
+    result = _radius_import(tmp_path, keys)
+    assert "radius" not in _params(result, "g")
+    assert any("body not mapped" in i.message for i in _items(result, "D", "PERS"))
+
+
+def test_pers_constant_diameter_reports_no_spread(tmp_path):
+    result = _radius_import(tmp_path, "DIAMETER_DIST=0, DIA_MEAN=0.5")
+    (message,) = [
+        i.message for i in _items(result, "A", "PERS") if "radius=" in i.message
+    ]
+    assert "has no spread" in message
+    assert "std" not in message
+
+
+@pytest.mark.parametrize(
+    ("keys", "source"),
+    [
+        ("DEFAULT_PROPERTIES='Adult'", "Table_DefaultHumans"),
+        ("DIAMETER_DIST=1, DIA_LOW=0.4, DIA_HIGH=0.6", "evac.f90:1998-2020"),
+        ("DIA_MEAN=0.5", "evac.f90:1998, 14583"),
+    ],
+)
+def test_pers_body_item_names_its_source(tmp_path, keys, source):
+    result = _radius_import(tmp_path, keys)
+    (message,) = [
+        i.message for i in _items(result, "A", "PERS") if "radius=" in i.message
+    ]
+    assert source in message
+    assert ("Table_DefaultHumans" in message) == (source == "Table_DefaultHumans")
+
+
+@pytest.mark.parametrize(
+    ("keys", "why"),
+    [
+        ("DEFAULT_PROPERTIES='Adult', D_SHOULDER_MEAN=0.4", "DEFAULT_PROPERTIES body"),
+        ("DIAMETER_DIST=0, DIA_MEAN=0.5, D_SHOULDER_MEAN=0.4", "torso circle"),
+    ],
+)
+def test_pers_shoulder_key_gets_one_ignored_item(tmp_path, keys, why):
+    result = _radius_import(tmp_path, keys)
+    items = [i for i in result.report.items if "D_SHOULDER_MEAN" in i.message]
+    assert [(i.status, why in i.message) for i in items] == [("A", True)]
+
+
+def test_mixed_pers_types_get_their_own_radius(tmp_path):
+    records = (
+        "&PERS ID='A', DEFAULT_PROPERTIES='Adult' /",
+        "&PERS ID='C', DEFAULT_PROPERTIES='Child' /",
+        "&EVAC ID='a', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=5, PERS_ID='A' /",
+        "&EVAC ID='c', XB=6,9,1,9,1,1, NUMBER_INITIAL_PERSONS=5, PERS_ID='C' /",
+    )
+    result = _room(tmp_path, DOOR, *records)
+    assert (_params(result, "a")["radius"], _params(result, "c")["radius"]) == (
+        0.15,
+        0.12,
+    )
 
 
 def test_pers_velocity_dist_overrides_default_properties(tmp_path):
@@ -186,6 +329,19 @@ def test_pers_velocity_dist_overrides_default_properties(tmp_path):
     result = _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='A'"))
     params = _params(result, "g")
     assert (params["v0"], params["v0_distribution"]) == (1.1, "constant")
+
+
+def test_entr_takes_the_radius_of_its_pers(tmp_path):
+    pers = "&PERS ID='C', DEFAULT_PROPERTIES='Child' /"
+    entr = "&ENTR ID='In', IOR=1, MAX_FLOW=0.5, XB=0,0,2,4,0.4,1.6, PERS_ID='C' /"
+    assert _params(_room(tmp_path, DOOR, pers, entr), "In")["radius"] == 0.12
+
+
+def test_spawn_without_pers_id_gets_no_radius(tmp_path):
+    pers = "&PERS ID='A', DEFAULT_PROPERTIES='Adult' /"
+    assert "radius" not in _params(
+        _room(tmp_path, DOOR, pers, EVAC.format(extra="")), "g"
+    )
 
 
 def test_missing_pers_is_an_error_naming_both_ids(tmp_path):
