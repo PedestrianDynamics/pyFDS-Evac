@@ -43,8 +43,8 @@ arms are identical, so the smoke-blind arm is the reference:
 | Arm | Exit-E share | ΔE against smoke-blind (95 % CI) | Door split |
 |---|---|---|---|
 | no fire = smoke-blind | 0.520 | 0 | boundary at y = 12.54 ± 0.13 m (per seed) |
-| `gate` | **0.642** | +0.122 (+0.074, +0.170) | no boundary in metres; Δy > 0 in 10 of 10 seeds (post hoc sign test, p = 0.002) |
-| `additive` | 0.452 | −0.068 (−0.088, −0.048) | **Δy = −1.08 m (−1.53, −0.62)**; a valid boundary in 10 of 10 seeds |
+| `gate` | **0.689** | +0.169 (+0.128, +0.209) | no boundary in metres; Δy > 0 in 10 of 10 seeds (post hoc sign test, p = 0.002) |
+| `additive` | 0.447 | −0.074 (−0.088, −0.059) | **Δy = −0.90 m (−1.16, −0.64)**; a valid boundary in 10 of 10 seeds |
 
 Δy is the boundary minus the clear-air boundary of the same seed. A
 positive Δy moves the boundary toward door B, so more agents use door A.
@@ -52,19 +52,19 @@ A change in the E share counts if it exceeds 2 × SD of the smoke-blind
 shares, 0.048.
 
 - **Gate sends more agents through door A to exit E** than clear air does:
-  E share 0.642 against 0.520, in 10 of 10 seeds.
+  E share 0.689 against 0.520, in 10 of 10 seeds.
 - **(Post hoc) Gate's door choice follows mainly when an agent starts
-  moving.** The door-B share is 0.09 for agents starting at 30–120 s and
-  0.87 for those starting at 150–300 s. In clear air it is about 0.5 throughout.
-- **The cause is a hall-wide re-path at 47 s and a wave of fallbacks at
-  151–155 s.** The path search reads the smoke present at decision time,
+  moving.** The door-B share is 0.04 for agents starting at 30–120 s and
+  0.83 for those starting at 150–300 s. In clear air it is about 0.5 throughout.
+- **The cause is a hall-wide re-path at 45 s and a wave of fallbacks
+  peaking at 151–155 s.** The path search reads the smoke present at decision time,
   while the route's τ reads the smoke each point will have when the agent
-  gets there. From 130–134 s every route is refused for the first agents,
+  gets there. From 134–136 s every route is refused for the first agents,
   and the fallback sends most of them to door B and exit F.
-- **Additive shifts the split by −1.08 m** (95 % CI −1.53, −0.62) on the
-  main fire. Its shift depends on the fire: −1.08 m on the main fire,
-  +0.19 m on `a047_pvc_h35` (95 % CI −0.11 to +0.50, not resolved) and
-  +1.29 m on `a012_pvc_h30`.
+- **Additive shifts the split by −0.90 m** (95 % CI −1.16, −0.64) on the
+  main fire. Its shift depends on the fire: −0.90 m on the main fire,
+  +0.25 m on `a047_pvc_h35` (95 % CI −0.00 to +0.50, not resolved) and
+  +1.25 m on `a012_pvc_h30`.
 - **Heat and the 400 s cap.** Heat entered neither routing nor
   tenability. Up to 7 late-starting agents per run were still walking at
   400 s.
@@ -248,41 +248,41 @@ set, the engine silently uses its preset.
 
 ### Exit shares and flows
 
-![Four panels of cumulative agents against time on the main fire, mean of 10 seeds with a min–max band. Door A: gate rises fastest and ends at 132, smoke-blind 104, additive 95. Door B: gate stays at about 10 until 160 s, then rises to 68; smoke-blind 96, additive 105. Exit E: gate 128, smoke-blind 104, additive 89. Exit F: gate stays at about 10 until 170 s, then rises to 70; smoke-blind 96, additive 108.](/images/studies/schroeder2015/p1_counts.png)
+![Four panels of cumulative agents against time on the main fire, mean of 10 seeds with a min–max band. Door A: gate rises fastest and ends at 145, smoke-blind 104, additive 96. Door B: gate stays at about 6 until 160 s, then rises to 55; smoke-blind 96, additive 104. Exit E: gate 137, smoke-blind 104, additive 88. Exit F: gate stays at about 6 until 170 s, then rises to 61; smoke-blind 96, additive 109.](/images/studies/schroeder2015/p1_counts.png)
 
 | Fire | Arm | E share | ΔE against smoke-blind (95 % CI) | Doors A / B | Routes AE / AF / BE / BF |
 |---|---|---|---|---|---|
 | a047_pvc_h40 | smoke-blind | 0.520 | 0 | 104 / 96 | 104.0 / 0.0 / 0.0 / 96.0 |
-| a047_pvc_h40 | gate | 0.642 | +0.122 (+0.074, +0.170) | 132 / 68 | 127.1 / 4.7 / 1.2 / 66.8 |
-| a047_pvc_h40 | additive | 0.452 | −0.068 (−0.088, −0.048) | 95 / 105 | 90.3 / 4.4 / 0.0 / 105.1 |
-| a047_pvc_h35 | gate | 0.756 | +0.236 (+0.201, +0.270) | 151 / 49 | 150.7 / 0.0 / 0.3 / 48.7 |
-| a047_pvc_h35 | additive | 0.529 | +0.009 (−0.004, +0.022) | 106 / 94 | 105.7 / 0.0 / 0.0 / 94.0 |
-| a012_pvc_h30 | gate | 0.892 | +0.372 (+0.349, +0.395) | 178 / 22 | 177.6 / 0.0 / 0.7 / 21.6 |
-| a012_pvc_h30 | additive | 0.576 | +0.056 (+0.042, +0.069) | 115 / 85 | 115.0 / 0.0 / 0.0 / 84.9 |
+| a047_pvc_h40 | gate | 0.689 | +0.169 (+0.128, +0.209) | 145 / 55 | 137.4 / 7.6 / 0.2 / 54.6 |
+| a047_pvc_h40 | additive | 0.447 | −0.074 (−0.088, −0.059) | 96 / 104 | 89.2 / 7.0 / 0.0 / 103.6 |
+| a047_pvc_h35 | gate | 0.777 | +0.257 (+0.235, +0.279) | 155 / 45 | 155.1 / 0.0 / 0.2 / 44.4 |
+| a047_pvc_h35 | additive | 0.532 | +0.012 (+0.002, +0.021) | 106 / 94 | 106.2 / 0.0 / 0.0 / 93.5 |
+| a012_pvc_h30 | gate | 0.918 | +0.398 (+0.373, +0.423) | 183 / 17 | 183.2 / 0.0 / 0.3 / 16.4 |
+| a012_pvc_h30 | additive | 0.574 | +0.054 (+0.044, +0.064) | 115 / 85 | 114.7 / 0.0 / 0.0 / 85.2 |
 
 Mean of 10 seeds. The smoke-blind arm is the same on every fire.
 
 ### Door choice follows movement start (gate)
 
-![Post hoc measure. Six panels against movement start in 30 s bins, mean and 95 % CI over 10 seeds. Top row, share via door B; bottom row, share via exit E; one column per fire. Dotted lines mark the gate medians over 10 seeds of three events: F re-paths via door A, the first pass with every route refused (labelled "all refused"), and E re-paths via door B. Main fire: under gate, the door-B share is about 0.2 for starts at 30–60 s, near 0.03 for starts at 60–120 s, and 0.8 to 0.9 for starts at 150–300 s; markers at 47, 132 and 153 s. In clear air it stays near 0.5. Additive follows clear air until about 135 s and then rises to 0.7 to 0.85. a047_pvc_h35 looks much the same, with markers at 45, 126 and 152 s. a012_pvc_h30: gate sends almost nobody through B for starts at 60–180 s and nearly everyone to E; for later starts the door-B share rises to 0.5–0.8; markers at 57, 172 and 218 s.](/images/studies/schroeder2015/p1_door_by_start.png)
+![Post hoc measure. Six panels against movement start in 30 s bins, mean and 95 % CI over 10 seeds. Top row, share via door B; bottom row, share via exit E; one column per fire. Dotted lines mark the gate medians over 10 seeds of three events: F re-paths via door A, the first pass with every route refused (labelled "all refused"), and E re-paths via door B. Main fire: under gate, the door-B share is about 0.4 for starts before 30 s, below 0.1 for starts at 30–150 s, and 0.75 to 0.9 for starts at 150–300 s; markers at 45, 135 and 158 s. In clear air it stays near 0.5. Additive follows clear air until about 150 s and then rises to 0.6 to 0.9. a047_pvc_h35 looks much the same, with markers at 44, 128 and 172 s. a012_pvc_h30: gate sends almost nobody through B for starts at 60–210 s and everyone to E; for later starts the door-B share rises to 0.35–0.6; markers at 57, 173 and 225 s.](/images/studies/schroeder2015/p1_door_by_start.png)
 
 This measure was added after the first results were seen (post hoc). Under
 `gate`, an agent's door is predicted better by when it starts moving
-than by where it starts: area under the ROC curve 0.82 against 0.68, and
-McFadden R² 0.24 against 0.07 (0.33 for both together). Position still
-matters a little. Under `additive`, start position stays the better predictor (AUC 0.95).
+than by where it starts: area under the ROC curve 0.86 against 0.66, and
+McFadden R² 0.30 against 0.05 (0.38 for both together). Position still
+matters a little. Under `additive`, start position stays the better predictor (AUC 0.96).
 
 {{< details title="Door predictors for all fires" closed="true" >}}
 
 | Fire | Arm | AUC start y | AUC start time | R² start y | R² start time | R² both |
 |---|---|---|---|---|---|---|
 | a047_pvc_h40 | no fire | 1.00 | 0.50 | 0.99 | 0.00 | 0.99 |
-| a047_pvc_h40 | gate | 0.68 | 0.82 | 0.07 | 0.24 | 0.33 |
-| a047_pvc_h40 | additive | 0.95 | 0.59 | 0.60 | 0.02 | 0.68 |
-| a047_pvc_h35 | gate | 0.74 | 0.83 | 0.12 | 0.23 | 0.40 |
-| a047_pvc_h35 | additive | 0.97 | 0.55 | 0.69 | 0.01 | 0.73 |
-| a012_pvc_h30 | gate | 0.81 | 0.58 | 0.19 | 0.04 | 0.23 |
-| a012_pvc_h30 | additive | 0.98 | 0.44 | 0.74 | 0.00 | 0.76 |
+| a047_pvc_h40 | gate | 0.66 | 0.86 | 0.05 | 0.30 | 0.38 |
+| a047_pvc_h40 | additive | 0.96 | 0.58 | 0.64 | 0.02 | 0.71 |
+| a047_pvc_h35 | gate | 0.78 | 0.77 | 0.17 | 0.17 | 0.38 |
+| a047_pvc_h35 | additive | 0.98 | 0.54 | 0.73 | 0.01 | 0.76 |
+| a012_pvc_h30 | gate | 0.81 | 0.45 | 0.17 | 0.00 | 0.18 |
+| a012_pvc_h30 | additive | 0.99 | 0.44 | 0.79 | 0.00 | 0.82 |
 
 Logistic models of door B, seeds pooled. An AUC below 0.5 means later
 starters use door B less.
@@ -291,30 +291,29 @@ starters use door B less.
 
 ### Smoke-blind and gate, animated
 
-![Animation of the main fire, seed 5, at 16 times real time, smoke-blind on the left and gate on the right. Both show the corridor with exits E at the bottom and F at the top, the hall with doors A and B on its left wall, and Room 3 with the red burner above the hall. Grey smoke fills Room 3, spreads into the upper corridor, and from about 145 s lies at the door-A end of the hall; by 300 s the whole plan is grey. Open black rings are agents still waiting; filled dots walk. On the left, agents from the lower hall walk to door A and exit E, those from the upper hall to door B and exit F, and the dots stay dark blue. On the right, from 47 s almost every agent that starts walking goes to door A, also from the upper hall; at 146 s door A counts 107 against 64 on the left. From about 147 s the later starters go to door B instead, and on to F through the smoky upper corridor, where their dots grow and turn orange and red. A text box at the lower right of the gate panel lists the events at 47, 134, 152 and 153 s as they happen. At the end the left panel shows door A 104, door B 96, and the right door A 132, door B 67, with 2 agents still inside.](/images/studies/schroeder2015/agents_smoke_gate.gif)
+![Animation of the main fire, seed 3, at 16 times real time, smoke-blind on the left and gate on the right. Both show the corridor with exits E at the bottom and F at the top, the hall with doors A and B on its left wall, and Room 3 with the red burner above the hall. Grey smoke fills Room 3, spreads into the upper corridor, and from about 145 s lies at the door-A end of the hall; by 398 s the whole plan is dark grey. Open black rings are agents still waiting; filled dots walk. On the left, agents from the lower hall walk to door A and exit E, those from the upper hall to door B and exit F. On the right, after 45 s almost every agent that starts walking goes to door A, also from the upper hall; at 148 s door A counts 86 against 60 on the left. From about 149 s the later starters go to door B instead, and on to F through the smoky upper corridor, where their dots grow and turn orange and red. A text box at the lower right of the gate panel lists the events at 45, 135, 152 and 164 s as they happen. At the end the left panel shows door A 105, door B 95, and the right door A 147, door B 53, with nobody inside](/images/studies/schroeder2015/agents_smoke_gate.gif)
 
-*Main fire `a047_pvc_h40`, seed 5, 0–398 s at 16 times real time. Left
+*Main fire `a047_pvc_h40`, seed 3, 0–398 s at 16 times real time. Left
 smoke-blind, right `gate`; both arms have the same agents, start positions
-and start times. Seed 5 has 132 agents through door A under `gate`; the
-median of the 10 seeds is 133. Background: K at 1.6 m, the slice that routing,
+and start times. Seed 3 has 147 agents through door A under `gate`, the
+median of the 10 seeds. Background: K at 1.6 m, the slice that routing,
 walking speed and gas dose use. Open rings: agents in pre-movement. Dots:
 walking agents, coloured and sized by their speed factor. Regenerated by
 `scripts/docs/study_animations.py`.*
 
 What to watch for:
 
-- **47–145 s.** Under `gate` almost every agent that starts walking heads for
+- **45–145 s.** Under `gate` almost every agent that starts walking heads for
   door A, also from the upper hall. Smoke-blind splits the hall at about
-  y = 12.5 m. By 146 s, 107 agents have passed door A under `gate` against
-  64 for smoke-blind.
-- **From 134 s.** The first agents find every route refused, 45 by 145 s,
-  as smoke at 1.6 m reaches the door-A end of the hall. Under `gate`, 12
-  agents pass door B before 145 s (the last at 118 s) and 55 from 147 s
-  on. Those 55 all go to F through the smoky upper corridor, where their
-  dots grow and turn red.
-- **The end.** Smoke-blind's last agent leaves at 381.7 s, gate's at
-  382.5 s. Under `gate` 2 late starters (310 and 360 s) are still inside
-  at 400 s.
+  y = 12.5 m. By 146 s, 83 agents have passed door A under `gate` against
+  57 for smoke-blind.
+- **From 134 s.** The first agents find every route refused, as smoke at
+  1.6 m reaches the door-A end of the hall. Under `gate`, 10 agents pass
+  door B before 145 s (the last at 70.6 s) and 43 from 149.1 s on. Those
+  43 all go to F through the smoky upper corridor, where their dots grow
+  and turn red.
+- **The end.** Smoke-blind's last agent leaves at 303.4 s, gate's at
+  362.9 s. In this seed nobody is inside at 400 s in either arm.
 
 The route figure below shows the 2.8 m slice for comparison with the
 paper. The animation shows 1.6 m, the slice that routing and walking
@@ -350,24 +349,25 @@ Five facts of the `gate` code explain the pattern
   straight back is blocked for 10 s
   ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
 
-The 47 s re-path happens at the same second in all 10 seeds; the later
+The 45 s re-path happens at the same second in all 10 seeds; the later
 events vary by a few seconds between seeds:
 
 | Time | Event |
 |---|---|
-| **47 s** | Exit F re-paths via door A. Trace smoke on hall→B→F (router τ 0.03) makes the smoke-free path via A win, at 45.1 m against 24.5 m. E via A (23.5 m) is now more than 10 % shorter in time than F via A, so agents bound for F switch to E (`_clears_exit_anchor`): 414 switches at 47 s over 10 seeds, and 454 more at 50–73 s by agents who kept F via door B at 47 s. No route was refused. The switches are logged `smoke_reroute`, a label the engine gives any exit change ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)). |
-| 47–130 s | Almost every hall agent heads for A→E. 1.2 B→E agents per seed pass door B, at 47–132 s. |
-| **130–134 s** | Every route is refused for the first hall agents: A→E's τ, read at the time they would reach each point, passes 6 as smoke piles up at the door-A end. The fallback keeps the current route until a rival's τ is more than 20 % lower. |
-| **151–155 s** | Fallback wave: 531 of the 716 fallback switches over 10 seeds. A→E→B→F 358, B→E→B→F 211, A→E→A→F 99; in all 716 the new route has the lower τ. |
-| **152–156 s** | Exit E re-paths via door B, but B→E is already refused (router τ 21–27, median per pass), so almost nobody turns from A to B→E (`better_path` 1.6 per seed). |
+| **45 s** | Exit F re-paths via door A. Trace smoke on hall→B→F (router τ 0.08) makes the smoke-free path via A win, at 45.1 m against 24.5 m. E via A (23.5 m) is now more than 10 % shorter in time than F via A, so agents bound for F switch to E (`_clears_exit_anchor`): 819 exit changes at 45 s over 10 seeds, and 28 more at 74–80 s, all logged `shorter_path` ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)). No route was refused. |
+| 45–134 s | Almost every hall agent heads for A→E. 0.2 B→E agents per seed pass door B, at 71–87 s. Between 72 and 150 s, 6.1 exit changes per seed are logged `smoke_reroute`. |
+| **134–136 s** | Every route is refused for the first hall agents: A→E's τ, read at the time they would reach each point, passes 6 as smoke piles up at the door-A end. The fallback keeps the current route until a rival's τ is more than 20 % lower. |
+| **from 150 s** | Fallback wave: 307 of the 666 fallback switches over 10 seeds fall in 151–155 s. A→E→B→F 284, B→E→B→F 185, A→E→A→F 141, A→F→A→E 50, B→F→A→E 5, B→E→A→F 1; in all 666 the new route has the lower τ. |
+| **156–164 s** | Exit E re-paths via door B, but B→E is already refused (router τ 22–31, median per pass, at 158–163 s), so almost nobody turns from A to B→E. Same-exit re-paths (`better_path`) number 8.3 per seed, at 136–168 s. |
 
-Per seed, 29–51 switches return to an exit the agent
-had left, none within 2 s. Between two refused routes the 20 % margin and the
-10 s return lockout apply, and a fallback switch is undone 48 times in 10
-seeds (median 36 s later). The underlying sampling issue is
-[#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653).
+Per seed, 30–47 exit changes return to an exit the agent had left earlier,
+none within 2 s of leaving it. Between two refused routes the 20 % margin and
+the 10 s return lockout apply. A fallback switch X→Y is followed by a switch
+Y→X of the same agent 56 times in 10 seeds (median 34 s later). Route smoke
+is read once per grid cell since [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653) (0.5.0), and the returns
+remain with it.
 
-![Three panels of route optical depth τ as the router computed it, gate arm, agents in the hall, 10 seeds, median and interquartile range per 5 s, on a log scale with lines at τ = 6 and 4.8. Main fire: B→F rises to about 0.1 at 35–45 s and disappears, replaced by A→F at about 1; a few agents rank B→F (up to about 3, 65–95 s) or B→E (up to about 1, 60–125 s) from where they stand. A→E stays near 0 until about 130 s, then rises and crosses 6 at about 145–150 s. B→E, ranked by the few agents near door B, rises from about 130 s and crosses 6 at about 135–140 s, before A→E. When the hall re-paths E via door B at 152–156 s, B→E is already at τ 18–25 (5 s medians; 21–27 per pass). Afterwards every route lies above 6 and rises to about 100 by 200 s. The comparison fires show the same steps at other times: on a012_pvc_h30 A→E stays at 0 until about 150 s and passes 6 near 185 s.](/images/studies/schroeder2015/p1_tau.png)
+![Three panels of route optical depth τ as the router computed it, gate arm, agents in the hall, 10 seeds, median and interquartile range per 5 s, on a log scale with lines at τ = 6 and 4.8. Main fire: B→F rises to about 0.1–0.3 at 30–45 s and disappears, replaced by A→F at about 0.7, which rises to about 2 by 110 s; a few agents rank B→E (below 0.05, 90–125 s) from where they stand. A→E stays near 0 until about 130 s, then rises steeply and crosses 6 at about 140 s. B→E, ranked by the few agents near door B, rises with it and crosses 6 just before A→E. When the hall re-paths E via door B at 156–164 s, B→E is already above τ 20. Afterwards every route lies above 6 and rises to about 100–250 by 300 s. The comparison fires show the same steps at other times: on a012_pvc_h30 A→E stays at 0 until about 145 s and passes 6 near 185 s.](/images/studies/schroeder2015/p1_tau.png)
 
 τ is read point by point at the time the agent would reach each point. A
 route appears only while the path search offers it for its exit to at
@@ -377,28 +377,31 @@ least one agent.
 the runs we predicted that B→E would carry more τ than A→E and so move the
 boundary toward door B. The boundary did move toward B, and from 130 s B→E
 does carry more τ than A→E (τ figure), but that comparison does not move
-the agents: almost nobody takes B→E (1.2 per seed). The shift toward door A
-comes from the 47 s re-path of exit F, and the later door-B users reach F
+the agents: almost nobody takes B→E (0.2 per seed). The shift toward door A
+comes from the 45 s re-path of exit F, and the later door-B users reach F
 by the fallback.
 
 {{< details title="Reroutes per seed, main fire" closed="true" >}}
 
 | Arm | Switches | Agents | By reason |
 |---|---|---|---|
-| gate | 160 | 117 | 87 exit changes (`smoke_reroute`), 1.6 same-exit re-paths (`better_path`), 72 fallbacks |
-| additive | 77 | 41 | 75 `smoke_reroute`, 2.1 `better_path` |
+| gate | 165.8 | 118.2 | 84.8 `shorter_path`, 66.6 `fallback`, 8.3 `better_path` (same exit, new path), 6.1 `smoke_reroute` |
+| additive | 53.3 | 36.3 | 42.6 `smoke_reroute`, 10.7 `shorter_path` |
+
+Mean per seed. Since 0.5.0 each exit change is labelled by its cause
+([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)).
 
 {{< /details >}}
 
 ### The additive boundary
 
-![Two panels. (a) Share via door B against start y on the main fire, 2 m bins: in clear air a step from 0 to 1 at y = 12.56 m; additive a smooth curve crossing 0.5 at 11.45 m; gate dots between 0.07 and 0.59 with no fit. (b) Boundary shift per seed with mean and 95 % CI for smoke-blind (all zero) and additive: −1.08 m on the main fire, +0.19 m on a047_pvc_h35 with a CI that includes zero, +1.29 m on a012_pvc_h30. A note says gate is not drawn, with Δy > 0 in 10/10 seeds on each fire.](/images/studies/schroeder2015/p1_boundary.png)
+![Two panels. (a) Share via door B against start y on the main fire, 2 m bins: in clear air a step from 0 to 1 at y = 12.56 m; additive a smooth curve crossing 0.5 at 11.62 m; gate dots between 0.06 and 0.47 with no fit. (b) Boundary shift per seed with mean and 95 % CI for smoke-blind (all zero) and additive: −0.90 m on the main fire, +0.25 m on a047_pvc_h35 with a CI that reaches zero, +1.25 m on a012_pvc_h30. A note says gate is not drawn, with Δy > 0 in 10/10 seeds on each fire.](/images/studies/schroeder2015/p1_boundary.png)
 
 Under `gate`, door B is not a monotone function of start y, so a boundary
-fitted in metres is not meaningful: its CI lies inside the hall in 2 of 10
-seeds on the main fire. Gate is therefore reported by its E share, its
+fitted in metres is not meaningful: its CI lies inside the hall in none of
+the 10 seeds on the main fire. Gate is therefore reported by its E share, its
 sign count and the door share by start. Under `additive` every seed has a
-valid boundary; the shift is −1.08 m (−1.53, −0.62) on the main fire.
+valid boundary; the shift is −0.90 m (−1.16, −0.64) on the main fire.
 Additive charges length in both path and exit ranking and keeps the
 spatial split.
 
@@ -406,17 +409,17 @@ spatial split.
 
 | Fire | Gate ΔE | Gate sign count | Gate re-path times | Additive Δy (95 % CI) | Additive ΔE |
 |---|---|---|---|---|---|
-| a047_pvc_h40 (main) | +0.122 | Δy > 0 in 10 of 10; valid boundary in 2 | 47 / 152–156 s; every route refused from 130–134 s | −1.08 m (−1.53, −0.62); 10 of 10 negative | −0.068 |
-| a047_pvc_h35 | +0.236 | 10 of 10; valid in 2 | 45 / 149–174 s; every route refused from 123–128 s | +0.19 m (−0.11, +0.50); 7 of 10 positive | +0.009, below 0.048 |
-| a012_pvc_h30 | +0.372 | 10 of 10; valid in 0 | F via A 57 s; every route refused from 149–174 s; E via B 203–240 s | +1.29 m (+0.86, +1.73); 10 of 10 positive | +0.056 |
+| a047_pvc_h40 (main) | +0.169 | Δy > 0 in 10 of 10; valid boundary in 0 | 45 / 156–164 s; every route refused from 134–136 s | −0.90 m (−1.16, −0.64); 10 of 10 negative | −0.074 |
+| a047_pvc_h35 | +0.257 | 10 of 10; valid in 4 | 44 / 156–199 s; every route refused from 127–129 s | +0.25 m (−0.00, +0.50); 9 of 10 positive | +0.012, below 0.048 |
+| a012_pvc_h30 | +0.398 | 10 of 10; valid in 0 | F via A 57 s; every route refused from 172–176 s; E via B 221–276 s | +1.25 m (+0.90, +1.59); 10 of 10 positive | +0.054 |
 
-- `a047_pvc_h35` repeats the main-fire order of events: F via A at 45 s,
-  every route refused from 123–128 s, E via B at 149–174 s.
+- `a047_pvc_h35` repeats the main-fire order of events: F via A at 44 s,
+  every route refused from 127–129 s, E via B at 156–199 s.
 - `a012_pvc_h30` reaches the gate's sign by another route. Most agents
-  take A→E (E share 0.892). Its 22.3 door-B users per seed are mostly late
-  starters (40 % started before the 57 s re-path): the fallback, from
-  149–174 s, sends them to door B before E re-paths via B at 203–240 s.
-  Start time predicts door B only weakly (AUC 0.58).
+  take A→E (E share 0.918). Of its 16.7 door-B users per seed, 55 %
+  started before the 57 s re-path; the fallback, from 172–176 s, sends
+  later starters to door B before E re-paths via B at 221–276 s. Start
+  time does not predict door B (AUC 0.45).
 - `h35` and `h40` differ only in ceiling height. The evidence is two growth
   rates and three smoke fields, not three independent fires.
 - Additive's shift depends on the fire and is not resolved on
@@ -424,7 +427,7 @@ spatial split.
 
 {{< details title="Routes of one seed, main fire" closed="true" >}}
 
-![Three plan views of seed 1 on the main fire, trajectories coloured by door and exit, over the 2.8 m smoke slice at 165 s in grey. Smoke-blind: everyone below about y = 12.5 m walks to A and E, everyone above to B and F (AE 114, BF 86). Gate: most agents, including many from the upper hall, walk to A and E; a later group walks to B and F (AE 131, AF 4, BF 65). Additive: the split lies lower in the hall (AE 105, AF 4, BF 91).](/images/studies/schroeder2015/p1_routes_a047_pvc_h40.png)
+![Three plan views of seed 1 on the main fire, trajectories coloured by door and exit, over the 2.8 m smoke slice at 165 s in grey. Smoke-blind: everyone below about y = 12.5 m walks to A and E, everyone above to B and F (AE 114, BF 86). Gate: most agents, including many from the upper hall, walk to A and E; a later group walks to B and F (AE 139, AF 9, BF 52). Additive: the split lies lower in the hall (AE 103, AF 6, BF 91).](/images/studies/schroeder2015/p1_routes_a047_pvc_h40.png)
 
 The background is the 2.8 m slice at 165 s, for display only. Routing used
 the 1.6 m slice.
@@ -442,7 +445,8 @@ the 1.6 m slice.
 - **Clear air.** The no-fire arm reproduces the earlier clear-air runs
   exactly, and smoke-blind runs are identical to no fire on all three
   fires. Start positions are the same in every arm, so the comparisons are
-  paired by seed. The clear-air boundary, 12.54 m per seed (12.56 m
+  paired by seed. The deck's radius is 0.15 m, so [#408](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/408) (stage reach from
+  the agent's own radius, 0.5.0) could have moved these arms; it did not. The clear-air boundary, 12.54 m per seed (12.56 m
   pooled), lies −0.05 m from the shortest-path boundary at 12.60 m. Before
   the fix of [#350](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/350)
   and [#401](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/401)
@@ -459,19 +463,19 @@ the 1.6 m slice.
   | a012_pvc_h30 | 0–1 (3) | 0–1 (2) |
 
   They are late starters (median movement start 286 s; 115 of 121 at 250 s
-  or later) walking at a speed factor of 0.10–0.12. None is stalled: each
+  or later) walking at a speed factor of 0.10. None is stalled: each
   walked at least 0.47 m in the last 30 s.
 - **Gas.** The largest gas FED of any agent in any run is 0.069; nobody is
   incapacitated by gas.
 - **Heat.** Heat FED was off in all 90 fire-arm runs, so heat entered
   neither routing nor tenability, and "nobody incapacitated" covers gas
   only. A post hoc estimate samples the FDS temperature at 1.6 m at the
-  agents' positions every 1 s. On the main fire, agents meet up to 169 °C,
-  and 28 (gate) and 24 (additive) per run on average go above 60 °C. The convective dose peaks
-  at 0.043 clothed and 0.13 unclothed, with the constants of
+  agents' positions every 1 s. On the main fire, agents meet up to 168 °C,
+  and 25 (gate) and 23 (additive) per run on average go above 60 °C. The convective dose peaks
+  at 0.042 clothed and 0.12 unclothed, with the constants of
   `pyfds_evac/core/fed.py`. The unclothed law is Purser and McAllister
   (2026), Eq. 70.42, p. 2318; it is somewhat unconservative at higher
-  temperatures, so the unclothed dose at 169 °C may be underestimated. The
+  temperatures, so the unclothed dose at 168 °C may be underestimated. The
   clothed constants have not been checked against ISO 13571. Radiant heat
   was not assessed.
 - **One LES realisation per fire**, on the 0.2 m grid only.
@@ -557,12 +561,12 @@ the repository root, or from the unpacked zip with `python` instead of
    then this summary, then writes the figures:
 
    ```text
-   main fire, exit-E share: no fire 0.520, gate 0.642, additive 0.452
-   main fire, additive dy: -1.08 m (-1.53, -0.62)
-   main fire, gate door-B share: 0.09 for starts 30-120 s, 0.87 for starts 150-300 s
+   main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447
+   main fire, additive dy: -0.90 m (-1.16, -0.64)
+   main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s
    ```
 
-4. **Animation** of smoke-blind and gate, seed 5, about 1 min. It needs
+4. **Animation** of smoke-blind and gate, about 1 min. It needs
    `ffmpeg` for the colour reduction; without it the GIF is larger:
 
    ```bash
@@ -572,7 +576,7 @@ the repository root, or from the unpacked zip with `python` instead of
    It prints the seed and the numbers of the caption, then writes the GIF:
 
    ```text
-   - gate door-A counts {1: 135, 2: 121, 3: 129, 4: 147, 5: 132, 6: 128, 7: 141, 8: 111, 9: 134, 10: 140}; seed 5 (132, median 133)
+   - gate door-A counts {1: 148, 2: 137, 3: 147, 4: 154, 5: 143, 6: 145, 7: 150, 8: 131, 9: 147, 10: 148}; seed 3 (147, median 147)
    wrote site/static/images/studies/schroeder2015/agents_smoke_gate.gif (2.1 MB, 200 frames)
    ```
 
@@ -582,11 +586,11 @@ the repository root, or from the unpacked zip with `python` instead of
    `uv run python scripts/docs/schroeder2015_fire_figures.py --data "$DATA"`.
 
 **Provenance.** The evacuation runs on this page were made on main at
-`9c820e0f` by steps 2–4 above (seeds 1–10, Python 3.12.13), through the
-release check (`release_check.sh --full --only study-schroeder2015`); each run's
-manifest records the commit with `git_dirty: false` and
-`agent_seeding: spawn-key-blake2b-v2`. The no-fire and smoke-blind arms are
-identical to the earlier runs of `2a94a8da` and `828ae8c3`. The FDS
+`c619a046` by steps 2–4 above (seeds 1–10, Python 3.13.4), run by hand from
+a clean checkout; each run's manifest records the commit with
+`git_dirty: false` and `agent_seeding: spawn-key-blake2b-v2`. The no-fire
+and smoke-blind arms give the same numbers as the earlier runs of
+`9c820e0f`, `2a94a8da` and `828ae8c3`. The FDS
 runs used `FDS-6.10.1-0-g12efa16-release`.
 
 ## Limits and open issues
@@ -608,11 +612,6 @@ runs used `FDS-6.10.1-0-g12efa16-release`.
   ([routing model](/models/routing.md#how-smoke-enters-route-choice)).
 - One path per exit
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
-- Agents behind the origin node
-  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)).
-- The runs on this page predate
-  [#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92): their
-  `smoke_reroute` counts every exit change, whatever its cause.
 - Perception scope
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 - Anticipation horizon

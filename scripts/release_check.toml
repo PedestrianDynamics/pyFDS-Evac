@@ -468,7 +468,7 @@ mode = "full"
 run = 'uv run python scripts/docs/study_animations.py schroeder2015 --data "$DATA"'
 timeout = 1200
 expect = [
-  "- gate door-A counts {1: 135, 2: 121, 3: 129, 4: 147, 5: 132, 6: 128, 7: 141, 8: 111, 9: 134, 10: 140}; seed 5 (132, median 133)",
+  "- gate door-A counts {1: 148, 2: 137, 3: 147, 4: 154, 5: 143, 6: 145, 7: 150, 8: 131, 9: 147, 10: 148}; seed 3 (147, median 147)",
 ]
 
 [[page.step]]

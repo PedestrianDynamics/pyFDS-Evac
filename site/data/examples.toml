@@ -180,7 +180,7 @@ steps = [
   ["Print the page's numbers and draw its evacuation figures (about 3 min)", [
     "python scripts/docs/schroeder2015_route.py --data \"$DATA\"",
   ]],
-  ["Draw the animation of smoke-blind and gate, seed 5 (about 1 min; ffmpeg reduces the GIF's colours)", [
+  ["Draw the animation of smoke-blind and gate (about 1 min; ffmpeg reduces the GIF's colours)", [
     "python scripts/docs/study_animations.py schroeder2015 --data \"$DATA\"",
   ]],
   ["Optional, for the fire-choice figures: write and run the other six fire decks (about 6 h in all)", [
@@ -195,17 +195,17 @@ fds = "FDS-6.10.1-0-g12efa16-release"
 fds_runtime = "5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS"
 evac_runtime = "about 25-40 s per run, 100 runs"
 expected = [
-  "main fire, exit-E share: no fire 0.520, gate 0.642, additive 0.452",
-  "main fire, additive dy: -1.08 m (-1.53, -0.62)",
-  "main fire, gate door-B share: 0.09 for starts 30-120 s, 0.87 for starts 150-300 s",
+  "main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447",
+  "main fire, additive dy: -0.90 m (-1.16, -0.64)",
+  "main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s",
 ]
 expected_note = """\
 scripts/docs/schroeder2015_route.py prints these lines after its tables \
 and before it writes the figures. The \
 evacuation runs are reproducible for a given seed; FDS output from \
 another FDS build or machine can move them slightly."""
-results_commit = "9c820e0f"
-results_python = "3.12.13"
+results_commit = "c619a046"
+results_python = "3.13.4"
 results_machine = "Apple M3 Pro, macOS"
 
 [walkthrough]
