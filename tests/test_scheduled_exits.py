@@ -146,6 +146,16 @@ def _last_seen(result) -> list[tuple[float, float, float]]:
     return [(frame / fps, x, y) for frame, x, y in last.values()]
 
 
+def _inside_at_end(result) -> set[int]:
+    """The agents recorded in the last trajectory frame."""
+    with contextlib.closing(sqlite3.connect(result.sqlite_file)) as con:
+        rows = con.execute(
+            "SELECT id FROM trajectory_data"
+            " WHERE frame = (SELECT MAX(frame) FROM trajectory_data)"
+        ).fetchall()
+    return {agent_id for (agent_id,) in rows}
+
+
 def _door_at(x: float, y: float) -> str | None:
     """The door the point (x, y) stands in, if any."""
     return next(
@@ -173,6 +183,8 @@ def _run(scenario: Scenario, with_frames: bool = False, **kwargs) -> dict:
             "departures": [(t, _door_at(x, y)) for t, x, y in last_seen],
             "routes": list(result.route_history or []),
             "frames": _frames(result) if with_frames else [],
+            "exits": {r["agent_id"]: r["exit_id"] for r in result.exit_history or []},
+            "inside_at_end": _inside_at_end(result),
             "evacuated": result.agents_evacuated,
             "remaining": result.agents_remaining,
         }
@@ -903,3 +915,17 @@ def test_an_exit_not_open_yet_or_still_open_is_not_adopted(target, time_s):
     state = AgentRouteState()
     adopt_heading_exit(state, wait_info, graph, None, time_s)
     assert (state.current_exit, state.default_exit) == (None, None)
+
+
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_exit_history_of_agents_still_inside_names_the_exit_walked_to(mode):
+    """An agent re-routed off a closed exit and still inside at the end is
+    listed under its new exit, not the closed one."""
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    scenario.sim_params["max_simulation_time"] = 8.0
+    run = _run(scenario, **RUN_MODES[mode])
+    switched = {r["agent_id"]: r["new_exit"] for r in run["routes"]}
+    inside = {a: e for a, e in switched.items() if a in run["inside_at_end"]}
+    assert inside, "every re-routed agent left before the end"
+    assert set(inside.values()) == {"east"}
+    assert {aid: run["exits"][aid] for aid in inside} == inside
