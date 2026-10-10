@@ -114,10 +114,10 @@ def smooth(values):
 
 def k_slice(fds_dir):
     """Times, x, y and K (t, ny, nx) of the z = 2.0 m slice."""
-    import fdsreader
+    from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
     logging.disable(logging.WARNING)
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_simulation(str(fds_dir))
     sl = next(
         s
         for s in sim.slices

@@ -466,10 +466,10 @@ def check_orientation(walkable, grid):
 
 def read_slices(fds_dir):
     """{name: (t, ny, nx) array}, times, x and y of the z = 2.0 m slices."""
-    import fdsreader
+    from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
     logging.disable(logging.WARNING)
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_simulation(str(fds_dir))
     out = {}
     for key, quantity in QUANTITIES.items():
         sl = next(

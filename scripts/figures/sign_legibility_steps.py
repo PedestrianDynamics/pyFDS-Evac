@@ -31,7 +31,6 @@ import json
 import re
 from pathlib import Path
 
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -40,14 +39,12 @@ from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, FancyBboxPatch, Patch, Rectangle
 from shapely import wkt
 
+from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 from pyfds_evac.core.visibility import (
     _build_vismap,
     _extinction_slice_index,
     extract_sign_descriptors,
 )
-
-# fdsreader would otherwise write a pickle cache beside the tracked slices.
-fdsreader.settings.ENABLE_CACHING = False
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSET = ROOT / "assets" / "t_junction"
@@ -77,7 +74,7 @@ def fire_box(fds_file):
 
 def extinction_slice(fds_dir, time):
     """K on the slice the VisMap reads, its height, and the cell centres."""
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_simulation(str(fds_dir))
     slc = sim.slices[_extinction_slice_index(str(fds_dir), SLICE_HEIGHT_M)]
     data, coords = slc.to_global(masked=True, fill=np.nan, return_coordinates=True)
     frame = data[slc.get_nearest_timestep(time)]

@@ -3,10 +3,7 @@
 import pathlib
 from dataclasses import dataclass
 
-try:
-    from fdsreader import Simulation
-except ModuleNotFoundError:
-    Simulation = None
+from .fdsreader_adapter import open_fds_simulation
 
 
 @dataclass
@@ -65,9 +62,7 @@ def inspect_fds_quantities(sim_dir: str) -> FdsQuantityInventory:
       gases, temperature, radiation, and other hazard terms.
     """
 
-    if Simulation is None:
-        raise ModuleNotFoundError("fdsreader is required to inspect FDS quantities.")
-    sim = Simulation(str(sim_dir))
+    sim = open_fds_simulation(sim_dir)
     return FdsQuantityInventory(
         slices=_quantity_names(sim.slices),
         smoke_3d=_quantity_names(sim.smoke_3d),

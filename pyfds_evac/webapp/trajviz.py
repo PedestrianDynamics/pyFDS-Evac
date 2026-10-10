@@ -105,11 +105,11 @@ def _smoke_payload(
         slice_height_m = default("smoke_slice_height")
     try:
         import numpy as np
-        from fdsreader import Simulation
 
         from pyfds_evac.core.fds_sampling import select_horizontal_slice
+        from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
-        sim = Simulation(str(fds_dir))
+        sim = open_fds_simulation(fds_dir)
         matches: list = []
         quantity = _EXTINCTION_QUANTITIES[0]
         for quantity in _EXTINCTION_QUANTITIES:

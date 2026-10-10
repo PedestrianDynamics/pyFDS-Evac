@@ -50,7 +50,6 @@ import json
 import math
 from pathlib import Path
 
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -60,6 +59,8 @@ from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, Patch, Rectangle
 from shapely import wkt
+
+from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "site" / "static" / "images" / "verification"
@@ -103,7 +104,7 @@ def temperature_slice(fds_dir):
     share, the only place where "the slice value at a point" is ambiguous.
     ``shared[i, j]`` is True at such nodes.
     """
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_simulation(str(fds_dir))
     for sl in sim.slices:
         if sl.quantity.name != "TEMPERATURE" or sl.orientation != 3:
             continue

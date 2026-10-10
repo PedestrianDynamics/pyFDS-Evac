@@ -50,7 +50,6 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -59,9 +58,8 @@ from matplotlib.colors import BoundaryNorm
 from scipy import stats
 from scipy.optimize import brentq, minimize
 
+from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 from pyfds_evac.core.fed import HEAT_CLOTHING_LAWS
-
-fdsreader.settings.ENABLE_CACHING = False
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "site" / "static" / "images" / "studies" / "schroeder2015"
@@ -879,7 +877,7 @@ def report_heat(data):
     heading("Heat, post hoc (heat FED was off in the runs)")
     rows = []
     for fire in FIRES:
-        sim = fdsreader.Simulation(str(data / fire))
+        sim = open_fds_simulation(str(data / fire))
         sl = [
             s
             for s in sim.slices
@@ -1290,7 +1288,7 @@ def fig_boundary(ag, ps, pa):
 
 def fig_routes(data, ag):
     geo = _geometry()
-    sim = fdsreader.Simulation(str(data / MAIN))
+    sim = open_fds_simulation(str(data / MAIN))
     sl = [
         s
         for s in sim.slices

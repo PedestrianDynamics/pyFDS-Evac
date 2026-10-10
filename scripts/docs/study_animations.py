@@ -142,9 +142,9 @@ def median_seed(values):
 
 def k_slice(fds_dir, z=maps.Z):
     """Times and K (t, ny, nx) of the slice at z; 2.0 m is the height of the maps."""
-    import fdsreader
+    from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
-    sim = fdsreader.Simulation(str(fds_dir))
+    sim = open_fds_simulation(str(fds_dir))
     sl = next(
         s
         for s in sim.slices
@@ -630,7 +630,7 @@ def route_plan(ax, geo, k0, extent, anim):
 
 def schroeder2015(data):
     """Smoke-blind and gate side by side, main fire, the median gate seed."""
-    import schroeder2015_route as route  # also turns off fdsreader caching
+    import schroeder2015_route as route
 
     geo = route._geometry()
     anim = ffc._animator()

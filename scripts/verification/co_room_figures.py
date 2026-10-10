@@ -46,7 +46,6 @@ import json
 import math
 from pathlib import Path
 
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -56,6 +55,8 @@ from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, Patch, Rectangle
 from shapely import wkt
+
+from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "site" / "static" / "images" / "verification"
@@ -566,7 +567,7 @@ def main():
 
     # --- Data: FDS ---
     z = 1.5
-    sim = fdsreader.Simulation(str(args.data / "fds"))
+    sim = open_fds_simulation(str(args.data / "fds"))
     co_sl, co = slice_at(sim, "CARBON MONOXIDE VOLUME FRACTION", z)
     _, co2 = slice_at(sim, "CARBON DIOXIDE VOLUME FRACTION", z)
     _, o2 = slice_at(sim, "OXYGEN VOLUME FRACTION", z)

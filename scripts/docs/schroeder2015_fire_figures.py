@@ -39,7 +39,6 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import fdsreader
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -49,7 +48,7 @@ from matplotlib.patches import Rectangle
 from scipy import stats
 from shapely import box, unary_union
 
-fdsreader.settings.ENABLE_CACHING = False
+from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "assets" / "schroeder2015_route"
@@ -259,7 +258,7 @@ def score(K, x, y):
 def load_sweep(data):
     rows, snaps = [], {}
     for v in VARIANTS:
-        sim = fdsreader.Simulation(str(data / v))
+        sim = open_fds_simulation(str(data / v))
         for sl in ext_slices(sim):
             g, t, i, x, y, z = field(sl, T_SNAP)
             w = (t >= T_WIN[0]) & (t <= T_WIN[1])
@@ -338,7 +337,7 @@ def devices(data, v):
 
 
 def arrival_map(data, v):
-    sim = fdsreader.Simulation(str(data / v))
+    sim = open_fds_simulation(str(data / v))
     sl = ext_slices(sim)[-1]
     g, c = sl.to_global(masked=True, fill=np.nan, return_coordinates=True)
     t = np.asarray(sl.times)
@@ -557,7 +556,7 @@ def fig_fire_field(data, geo):
     norm = BoundaryNorm(LEVELS, cmap.N)
     fig, axes = plt.subplots(2, 3, figsize=(11, 15.5), sharex=True, sharey=True)
     for j, v in enumerate(P1_FIRES):
-        sim = fdsreader.Simulation(str(data / v))
+        sim = open_fds_simulation(str(data / v))
         sl = ext_slices(sim)
         for row, (zn, t) in enumerate([(2.8, 165.0), (1.6, 145.0)]):
             ax = axes[row][j]

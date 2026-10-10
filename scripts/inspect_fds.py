@@ -21,7 +21,7 @@ from dataclasses import dataclass
 import numpy as np
 
 try:
-    from fdsreader import Simulation
+    import fdsreader  # noqa: F401
 except ModuleNotFoundError:
     print("ERROR: fdsreader is not installed. Run: uv add fdsreader")
     sys.exit(1)
@@ -170,7 +170,9 @@ def _extract_stats(slice_obj, scale: float) -> QuantityStats | None:
 
 def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
     print(f"\nLoading FDS simulation: {fds_dir}")
-    sim = Simulation(fds_dir)
+    from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
+
+    sim = open_fds_simulation(fds_dir)
 
     # Show all available slice quantities
     try:
