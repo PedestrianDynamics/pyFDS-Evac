@@ -2,8 +2,9 @@
 
 An exit with ``open_from_s`` or ``closed_after_s`` accepts agents only while
 ``open_from_s <= t < closed_after_s``. A closed exit removes nobody, and the
-agents heading for it re-decide through the reroute pass, on the exits they
-know.
+agents heading for it re-decide on the exits they know: through the reroute
+pass, or in a run without one (smoke-blind, rerouting off) at the same
+one-second check, by the opening choice's scoring (#395).
 
 The scenario is synthetic: a 30 x 10 m room with one door in the west wall
 and its mirror in the east wall, and one spawn area covering the room.
@@ -64,9 +65,12 @@ def _coords(polygon: Polygon) -> list[list[float]]:
     return [[x, y] for x, y in polygon.exterior.coords]
 
 
-def _scenario(schedules: dict[str, dict], **dist_params) -> Scenario:
-    walkable = box(0.0, 0.0, LENGTH_M, WIDTH_M).union(DOORS["west"])
-    walkable = walkable.union(DOORS["east"])
+def _scenario(
+    schedules: dict[str, dict], doors: dict[str, Polygon] = DOORS, **dist_params
+) -> Scenario:
+    walkable = box(0.0, 0.0, LENGTH_M, WIDTH_M)
+    for door in doors.values():
+        walkable = walkable.union(door)
     exits = {
         name: {
             "type": "polygon",
@@ -75,7 +79,7 @@ def _scenario(schedules: dict[str, dict], **dist_params) -> Scenario:
             "max_throughput": 0,
             **schedules.get(name, {}),
         }
-        for name, poly in DOORS.items()
+        for name, poly in doors.items()
     }
     raw = {
         "project_version": "2.0",
@@ -160,11 +164,21 @@ def _run(scenario: Scenario, **kwargs) -> dict:
         result.cleanup()
 
 
-@pytest.fixture(scope="module")
-def closing_run() -> dict:
+# The three ways a run decides routes: the reroute pass, and the two runs
+# without one, which re-decide only when an exit closes (#395).
+RUN_MODES = {
+    "reroute": {"reroute_config": REROUTE},
+    "no_reroute": {"reroute_config": None},
+    "smoke_blind": {"smoke_blind": True},
+}
+NO_REROUTE_MODES = ["no_reroute", "smoke_blind"]
+
+
+@pytest.fixture(scope="module", params=list(RUN_MODES))
+def closing_run(request) -> dict:
     """The west door closes at T_CLOSE_S."""
     scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
-    return _run(scenario, reroute_config=REROUTE)
+    return _run(scenario, **RUN_MODES[request.param])
 
 
 def test_closed_exit_removes_nobody_after_closing(closing_run):
@@ -230,16 +244,18 @@ def test_agent_knowing_only_the_closed_exit_learns_no_other():
     assert all(west.distance(Point(x, y)) <= WEST_POCKET_M for x, y in waiting)
 
 
-def test_agent_knowing_only_the_closed_exit_takes_the_default_route():
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_agent_knowing_only_the_closed_exit_takes_the_default_route(mode):
     """Under the default no_known_exit the agent takes the open door (#610).
 
     The closed entrance leaves it no known exit, so it follows the default
-    route: the nearest open exit on foot, which is not in its map.
+    route: the nearest open exit on foot, which is not in its map. A run
+    without rerouting does the same (#395).
     """
     scenario = _scenario(
         {"west": {"closed_after_s": T_CLOSE_S}}, familiarity=0.0, entrance="west"
     )
-    run = _run(scenario, reroute_config=REROUTE)
+    run = _run(scenario, **RUN_MODES[mode])
     late = [door for t, door in run["departures"] if t > T_CLOSE_S + FRAME_S]
     assert late and set(late) <= {"east"}
     default = [r for r in run["routes"] if r["reason"] == "default_route"]
@@ -284,10 +300,11 @@ def test_invalid_schedule_is_rejected(schedule, match):
 
 
 @pytest.mark.parametrize("kwargs", [{}, {"smoke_blind": True}])
-def test_schedule_without_rerouting_is_rejected(kwargs):
+def test_schedule_without_rerouting_runs(kwargs):
+    """A scheduled exit no longer needs rerouting (#395)."""
     scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
-    with pytest.raises(ValueError, match="need rerouting"):
-        run_scenario(scenario, **kwargs)
+    run = _run(scenario, **kwargs)
+    assert run["evacuated"] == NUM_AGENTS
 
 
 def test_schedule_with_replay_exits_is_rejected():
@@ -296,7 +313,8 @@ def test_schedule_with_replay_exits_is_rejected():
         run_scenario(scenario, reroute_config=REROUTE, replay_exits={})
 
 
-def test_journey_agent_with_schedule_is_rejected():
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_journey_agent_with_schedule_is_rejected(mode):
     """An agent on a JuPedSim journey leaves by a JuPedSim exit stage."""
     scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
     raw = scenario.raw
@@ -315,4 +333,189 @@ def test_journey_agent_with_schedule_is_rejected():
         {"from": "jps-distributions_0", "to": "east", "journey_id": "j0"}
     ]
     with pytest.raises(ValueError, match="walks a JuPedSim journey"):
-        run_scenario(scenario, reroute_config=REROUTE)
+        run_scenario(scenario, **RUN_MODES[mode])
+
+
+# ── Runs without a reroute pass (#395) ────────────────────────────────
+
+# A third door, in the middle of the north wall: nearer than the east door
+# to every agent bound west.
+NORTH_DOOR = box(
+    LENGTH_M / 2.0 - DOOR_M / 2.0,
+    WIDTH_M,
+    LENGTH_M / 2.0 + DOOR_M / 2.0,
+    WIDTH_M + DOOR_DEPTH_M,
+)
+# Dense smoke over the north door from the start.
+NORTH_SMOKE = (
+    LENGTH_M / 2.0 - 4.0,
+    LENGTH_M / 2.0 + 4.0,
+    WIDTH_M - 4.0,
+    WIDTH_M + DOOR_DEPTH_M,
+)
+NORTH_SMOKE_PER_M = 5.0
+
+
+class _NorthSmoke:
+    """Extinction NORTH_SMOKE_PER_M over NORTH_SMOKE, zero elsewhere."""
+
+    def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+        x0, x1, y0, y1 = NORTH_SMOKE
+        return NORTH_SMOKE_PER_M if x0 <= x <= x1 and y0 <= y <= y1 else 0.0
+
+
+def _smoke_model():
+    from pyfds_evac.core.smoke_speed import SmokeSpeedConfig, SmokeSpeedModel
+
+    return SmokeSpeedModel(
+        _NorthSmoke(), SmokeSpeedConfig(fds_dir=".", update_interval_s=1.0)
+    )
+
+
+def _three_door_closing_run(**kwargs) -> dict:
+    doors = {**DOORS, "north": NORTH_DOOR}
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}}, doors=doors)
+    return _run(scenario, smoke_speed_model=_smoke_model(), **kwargs)
+
+
+def _closed_switches(run: dict) -> set[tuple[str, str]]:
+    return {
+        (r["old_exit"], r["new_exit"])
+        for r in run["routes"]
+        if r["reason"] == "exit_closed"
+    }
+
+
+def test_closure_rechoice_without_rerouting_sees_the_smoke():
+    """Rerouting off changes when routes are re-ranked, not how (D5).
+
+    The north door is nearer than the east door to every agent bound west,
+    and it is filled with smoke: with rerouting off the re-choice avoids it.
+    """
+    run = _three_door_closing_run(reroute_config=None)
+    assert _closed_switches(run) == {("west", "east")}
+
+
+def test_smoke_blind_closure_rechoice_is_made_in_clear_air():
+    """A smoke-blind agent re-chooses as in clear air: the nearer north door."""
+    run = _three_door_closing_run(smoke_blind=True)
+    assert ("west", "north") in _closed_switches(run)
+
+
+def test_smoke_blind_closure_run_walks_as_the_run_without_fire():
+    """Smoke-blind changes no motion and no choice, closure included.
+
+    The smoke fills the open east door, the one every agent bound west
+    switches to.
+    """
+
+    class _EastSmoke:
+        def sample_extinction(self, time_s: float, x: float, y: float) -> float:
+            return NORTH_SMOKE_PER_M if x >= LENGTH_M - 6.0 else 0.0
+
+    from pyfds_evac.core.smoke_speed import SmokeSpeedConfig, SmokeSpeedModel
+
+    smoke = SmokeSpeedModel(
+        _EastSmoke(), SmokeSpeedConfig(fds_dir=".", update_interval_s=1.0)
+    )
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    blind = _run(scenario, smoke_blind=True, smoke_speed_model=smoke)
+    no_fire = _run(scenario, reroute_config=None)
+    assert blind["last_seen"] == no_fire["last_seen"]
+    # JuPedSim numbers agents across runs; the rows are compared without ids.
+    rows = [
+        [{k: v for k, v in r.items() if k != "agent_id"} for r in run["routes"]]
+        for run in (blind, no_fire)
+    ]
+    assert rows[0] == rows[1]
+    assert _closed_switches(blind) == {("west", "east")}
+
+
+def test_closure_rechoice_uses_the_map_the_agent_holds(monkeypatch):
+    """Without rerouting the map does not grow from sight at the re-choice (D6)."""
+    import pyfds_evac.core.scenario as scenario_module
+
+    calls = []
+    expand = scenario_module.expand_from_visibility
+
+    def _spy(*args, **kwargs):
+        calls.append(args)
+        return expand(*args, **kwargs)
+
+    monkeypatch.setattr(scenario_module, "expand_from_visibility", _spy)
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    run = _run(scenario, reroute_config=None)
+    assert _closed_switches(run) == {("west", "east")}
+    assert not calls
+    # The spy sees the expansion the reroute pass makes.
+    _run(scenario, reroute_config=REROUTE)
+    assert calls
+
+
+@pytest.mark.parametrize("mode", NO_REROUTE_MODES)
+def test_exit_opening_changes_no_choice_without_rerouting(mode):
+    """Nobody re-decides when an exit opens (D7).
+
+    Agents by the east door choose the west door at spawn, while the east
+    one is shut; it opens long before they reach the west door.
+    """
+    scenario = _scenario({"east": {"open_from_s": T_OPEN_S}})
+    near_east = box(LENGTH_M - 8.0, 0.3, LENGTH_M - 0.3, WIDTH_M - 0.3)
+    scenario.raw["distributions"]["room"]["coordinates"] = _coords(near_east)
+    run = _run(scenario, **RUN_MODES[mode])
+    assert run["routes"] == []
+    assert {door for _t, door in run["departures"]} == {"west"}
+    assert run["evacuated"] == NUM_AGENTS
+
+
+@pytest.mark.parametrize("mode", NO_REROUTE_MODES)
+def test_agents_wait_when_every_exit_is_closed(mode):
+    """With every exit closed the agents stay, and nothing is recorded."""
+    schedule = {"closed_after_s": T_CLOSE_S}
+    scenario = _scenario({"west": schedule, "east": schedule})
+    scenario.sim_params["max_simulation_time"] = 20.0
+    run = _run(scenario, **RUN_MODES[mode])
+    late = [t for t, door in run["departures"] if door and t < 20.0 - 1.0]
+    assert all(t <= T_CLOSE_S + FRAME_S for t in late)
+    assert run["remaining"] > 0
+    assert run["routes"] == []
+
+
+def test_run_without_schedule_or_rerouting_records_no_routes():
+    """A run without rerouting and without a schedule is left as it was."""
+    run = _run(_scenario({}), reroute_config=None)
+    assert run["routes"] == []
+    assert run["evacuated"] == NUM_AGENTS
+
+
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_flow_spawned_journey_agent_with_schedule_is_rejected(mode, monkeypatch):
+    """A flow agent that walks a JuPedSim journey is refused in every mode.
+
+    The run places nobody at t=0, so only the check that follows a flow
+    spawn can see the agent. The agent is handed to JuPedSim by marking its
+    path state as a journey.
+    """
+    import pyfds_evac.core.simulation_init as simulation_init
+
+    build = simulation_init.build_agent_path_state
+
+    def _journey_state(*args, **kwargs):
+        return {**build(*args, **kwargs), "mode": "journey"}
+
+    monkeypatch.setattr(simulation_init, "build_agent_path_state", _journey_state)
+    scenario = _scenario(
+        {"west": {"closed_after_s": T_CLOSE_S}},
+        number=5,
+        use_flow_spawning=True,
+        flow_start_time=1.0,
+        flow_end_time=2.0,
+    )
+    raw = scenario.raw
+    raw["distributions"] = {"jps-distributions_0": raw["distributions"].pop("room")}
+    raw["journeys"] = [{"id": "j0", "stages": ["jps-distributions_0", "east"]}]
+    raw["transitions"] = [
+        {"from": "jps-distributions_0", "to": "east", "journey_id": "j0"}
+    ]
+    with pytest.raises(ValueError, match="walks a JuPedSim journey"):
+        run_scenario(scenario, **RUN_MODES[mode])

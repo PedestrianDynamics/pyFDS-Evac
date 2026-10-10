@@ -185,19 +185,33 @@ it is closed:
 - an agent whose route ends at it re-evaluates at the next reroute check
   (every second), whatever `--reroute-interval` says, and takes the best open
   exit it knows. The switch is logged with the reason `exit_closed`. An agent
-  that knows no open exit is not told of another one. It heads for a known
-  node it has not visited, or else wanders over the nodes it knows; an agent
-  that knows only its spawn area and the closed exit has neither, so it keeps
-  its route and waits at the closed exit.
+  that knows no open exit acts by its spawn area's `no_known_exit` mode. Under
+  the default, `default_route`, it walks to the nearest open exit on foot,
+  which need not be in its map, and the switch is logged as `default_route`.
+  Under `explore` it is not told of another exit: it heads for a known node it
+  has not visited, or else wanders over the nodes it knows; an agent that
+  knows only its spawn area and the closed exit has neither, so it keeps its
+  route and waits at the closed exit. With every exit closed, an agent keeps
+  its route and waits.
 
 When an exit opens, nobody is made to re-decide: an agent takes it at its next
 regular re-evaluation, up to `--reroute-interval` later.
 
-A schedule needs rerouting: a run with a scheduled exit and
-`--no-enable-rerouting`, `--smoke-blind` or `--replay-exits` stops with an
-error, as does an agent that walks a JuPedSim journey instead of a routed path
-(a spawn area with no journey in a scenario that has journeys). Without a
-schedule nothing changes.
+A run without rerouting (`--no-enable-rerouting` or `--smoke-blind`) honours
+the schedule too
+([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). At the
+same one-second check, only the agents whose route ends at a closed exit
+choose again, once, scored as their opening choice is: on the map they hold,
+without the queue term, with the smoke at that time, or in clear air when the
+run is smoke-blind. An agent that knows no open exit takes the default route
+to the nearest open exit on foot. The switches are logged as `exit_closed` and
+`default_route` in the route history. Without rerouting nobody re-decides when
+an exit opens.
+
+A schedule cannot be combined with `--replay-exits`, and a run with a
+scheduled exit stops with an error when an agent walks a JuPedSim journey
+instead of a routed path (a spawn area with no journey in a scenario that has
+journeys). Without a schedule nothing changes.
 
 ### Signs: `sign`
 

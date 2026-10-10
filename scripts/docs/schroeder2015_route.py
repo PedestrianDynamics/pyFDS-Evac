@@ -194,7 +194,7 @@ def agents(db, exit_csv=None, fed_gz=None):
 
 
 def read_rh(path):
-    """Route history; smoke-blind runs reroute nothing and write none."""
+    """Route history; a smoke-blind run without exit schedules writes none."""
     if not path.exists():
         return pd.DataFrame(columns=["time_s", "agent_id", "reason"])
     return pd.read_csv(path)

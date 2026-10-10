@@ -384,8 +384,15 @@ check, whatever its interval, on the map it holds; the switch is logged as
 walk to follows its `no_known_exit` mode: by default it takes the nearest open
 exit on foot; under `explore` it waits at the closed exit. A closed exit
 removes nobody.
-An opened exit is taken at the agent's next regular re-evaluation. The
-schedule is on
+An opened exit is taken at the agent's next regular re-evaluation.
+In a run without rerouting (`--no-enable-rerouting`, `--smoke-blind`) the
+same one-second check re-decides only the agents whose route ends at a closed
+exit, once, scored as their opening choice: on the map they hold, without the
+queue term, with the smoke at that time or in clear air when smoke-blind
+(`scenario.py`, `_redirect_from_closed_exit`;
+[#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)). An
+agent that knows no open exit takes the nearest one on foot, and nobody
+re-decides when an exit opens. The schedule is on
 [Scenario JSON](/docs/scenario-json.md#exits-exitsid).
 
 *Worked example (clear air).* Every \(\tau\) is 0, both routes are clean,

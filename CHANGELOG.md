@@ -58,6 +58,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   evacuation time goes from 49.43 s to 54.92 s and the `better_path`
   rows of `route_history.csv` from 24 to 17.
 
+- A scenario with an exit that opens or closes on a schedule
+  (`open_from_s`, `closed_after_s`) now runs with `--smoke-blind` and
+  with `--no-enable-rerouting` (and `run_scenario` without a
+  `RerouteConfig`) instead of stopping with "need rerouting" (#395).
+  Imported FDS+Evac decks with `TIME_OPEN` or `TIME_CLOSE`, such as the
+  `HUT_Library` decks, the `OpenFloorOffice` decks and `DoorAlgo2_A`,
+  run without rerouting. Such runs now return and write a route history
+  (`--output-route-history`) holding the `exit_closed` and
+  `default_route` rows of the closures. Runs with rerouting and runs
+  without a schedule are unchanged.
+
 ### Added
 
 - The FDS coverage warning names the frame (#26): when part of the
@@ -103,6 +114,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fit the spawn area at 0.15 m, not at 0.2 m.
 
 ### Fixed
+
+- Scheduled exits work in runs without rerouting (#395). At each
+  one-second check, only an agent whose route ends at a closed exit
+  chooses again, once, scored as its opening choice: on the map it
+  holds, without the queue term, with the smoke at that time, or in
+  clear air when smoke-blind. An agent that knows no open exit takes
+  the default route to the nearest open exit on foot; with every exit
+  closed it waits. Nobody re-decides when an exit opens, which differs
+  from FDS+Evac, whose door choice keeps running. A flow-spawned agent
+  on a JuPedSim journey is refused in these runs too.
 
 - A checkpoint now counts as reached when the agent's centre is inside
   its polygon, as well as within the agent radius plus 0.5 m of its
