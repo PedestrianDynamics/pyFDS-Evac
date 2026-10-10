@@ -2416,7 +2416,56 @@ _ARTIFACT_SPECS = [
 ]
 
 
-def _missing_reason(field: str, opts) -> str:
+def _rerouting_used(result) -> bool | None:
+    """Whether the run rerouted, from its run_settings; None when unknown.
+
+    Smoke-blind turns rerouting off even with the switch on, so the
+    form's ``enable_rerouting`` cannot answer this.
+    """
+    settings = getattr(result, "run_settings", None)
+    if settings is None:
+        return None
+    return settings.get("rerouting") is not None
+
+
+def _route_reason(field: str, result) -> str:
+    """Why a route writer produced nothing, from what the run used.
+
+    The core records route history when the run reroutes or has an exit
+    schedule; route costs only when it reroutes and collects them.
+    """
+    rerouting = _rerouting_used(result)
+    if rerouting is None:
+        return "not produced by this run"
+    if rerouting:
+        if field == "route_cost_history":
+            return "route costs were not collected"
+        return "not produced by this run"
+    off = "rerouting off"
+    if result.run_settings.get("smoke_blind"):
+        off = "rerouting off (smoke-blind)"
+    if field == "route_history":
+        return f"{off} and no exit schedule"
+    return f"{off} for this run"
+
+
+def _route_history_note(result) -> str:
+    """What a written route history holds, from the run's settings."""
+    rows = getattr(result, "route_history", None)
+    rerouting = _rerouting_used(result)
+    if rows is None or rerouting is None:
+        return ""
+    n = len(rows)
+    if rerouting and n:
+        return f"{n} route switch{'' if n == 1 else 'es'}"
+    if rerouting:
+        return "no agent switched route"
+    if n:
+        return f"rerouting off; {n} exit-schedule row{'' if n == 1 else 's'}"
+    return "rerouting off; the exit schedule moved no agent"
+
+
+def _missing_reason(field: str, opts, result=None) -> str:
     """Why a writer produced nothing -- these are settings, not failures."""
     if field in ("smoke_history", "fed_history"):
         no_smoke = not getattr(opts, "fds_dir", None) and not getattr(
@@ -2428,9 +2477,7 @@ def _missing_reason(field: str, opts) -> str:
             return "tenability disabled for this run"
         return "the model recorded no samples"
     if field in ("route_history", "route_cost_history"):
-        if not getattr(opts, "enable_rerouting", False):
-            return "rerouting disabled for this run"
-        return "no agent ever switched route"
+        return _route_reason(field, result)
     if field == "sqlite_file":
         return "no trajectory file was produced"
     return "not produced by this run"
@@ -2454,6 +2501,7 @@ def _artifact_rows(result, opts) -> Div:
         produced = field is None or getattr(result, field, None) is not None
         path = _artifact_path(opts, attr)
         exists = bool(path and path.exists())
+        note = _route_history_note(result) if field == "route_history" else ""
 
         if exists:
             detail, colour, mark = (
@@ -2464,13 +2512,14 @@ def _artifact_rows(result, opts) -> Div:
                         title=str(path.resolve()),
                     ),
                     f" · {_fmt_size(path)}",
+                    f" · {note}" if note else "",
                 ),
                 "var(--ink-dim)",
                 "#F4C430",
             )
         elif not produced:
             detail, colour, mark = (
-                f"not produced: {_missing_reason(field, opts)}",
+                f"not produced: {_missing_reason(field, opts, result)}",
                 "var(--ink-faint)",
                 "var(--surface-raised)",
             )

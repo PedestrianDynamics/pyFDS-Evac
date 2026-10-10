@@ -3182,3 +3182,65 @@ class TestQaFixes595:
         ]
         result = SimpleNamespace(smoke_history=rows, evacuation_time=1.0)
         assert "Mean K: 0.00 to 5.00 1/m" in plots.smoke_summary(result, 1.0)[0]
+
+
+class TestRouteHistoryMessage:
+    """#730: the route rows are explained by what the run used, not files."""
+
+    _HEADER = "time_s,agent_id,old_exit,new_exit,old_cost,new_cost,reason\n"
+
+    def _detail(self, tmp_path, *, rerouting, rows, smoke_blind=False):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _artifact_rows
+
+        csv = tmp_path / "run_route_history.csv"
+        if rows is not None:
+            csv.write_text(self._HEADER + "".join(f"{r}\n" for r in rows))
+        result = SimpleNamespace(
+            sqlite_file=None,
+            route_history=rows,
+            route_cost_history=None,
+            run_settings={
+                "rerouting": {"reevaluation_interval_s": 2.0} if rerouting else None,
+                "smoke_blind": smoke_blind,
+            },
+        )
+        opts = SimpleNamespace(
+            output_route_history=str(csv),
+            output_route_cost_history=str(tmp_path / "run_route_cost_history.csv"),
+        )
+        html = to_xml(_artifact_rows(result, opts))
+        route = html.split("Route switch CSV", 1)[1].split("Route cost CSV", 1)
+        return route[0], route[1]
+
+    def test_rerouting_on_with_switches(self, tmp_path):
+        route, _ = self._detail(tmp_path, rerouting=True, rows=["a", "b"])
+        assert "2 route switches" in route
+        assert "rerouting off" not in route
+
+    def test_rerouting_on_without_switches(self, tmp_path):
+        route, _ = self._detail(tmp_path, rerouting=True, rows=[])
+        assert "no agent switched route" in route
+
+    def test_rerouting_off_without_schedule(self, tmp_path):
+        route, cost = self._detail(tmp_path, rerouting=False, rows=None)
+        assert "not produced: rerouting off and no exit schedule" in route
+        assert "not produced: rerouting off for this run" in cost
+        assert "rerouting disabled" not in route
+
+    def test_rerouting_off_with_schedule_header_only(self, tmp_path):
+        route, cost = self._detail(tmp_path, rerouting=False, rows=[])
+        assert "written" in route
+        assert "rerouting off; the exit schedule moved no agent" in route
+        assert "not produced: rerouting off for this run" in cost
+
+    def test_rerouting_off_with_schedule_and_rows(self, tmp_path):
+        route, _ = self._detail(tmp_path, rerouting=False, rows=["a", "b", "c"])
+        assert "rerouting off; 3 exit-schedule rows" in route
+
+    def test_smoke_blind_run_says_rerouting_was_off(self, tmp_path):
+        # The switch may be on; smoke-blind still turns rerouting off.
+        route, _ = self._detail(tmp_path, rerouting=False, rows=None, smoke_blind=True)
+        assert "rerouting off (smoke-blind) and no exit schedule" in route
+        assert "no agent ever switched route" not in route
