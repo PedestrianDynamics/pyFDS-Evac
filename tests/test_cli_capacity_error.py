@@ -223,19 +223,29 @@ def test_export_only_checks_the_walkable_area_of_a_deck_without_spawn_areas(
     assert export == run
 
 
-def test_refused_agent_is_a_one_line_error_without_capacity_advice(monkeypatch):
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_refused_agent_is_a_one_line_error_without_capacity_advice(
+    monkeypatch, with_journeys
+):
     """An agent JuPedSim refuses to add is not a capacity problem (#508)."""
 
     def refuse(_self, _params):
         raise RuntimeError("Agent references unknown journey")
 
+    def scenario():
+        scenario = _scenario(ENOUGH_S)
+        if not with_journeys:
+            scenario.raw["journeys"] = []
+            scenario.raw["transitions"] = []
+        return scenario
+
     monkeypatch.setattr(jps.Simulation, "add_agent", refuse)
     with pytest.raises(SystemExit) as exit_:
-        _main(monkeypatch, _scenario(ENOUGH_S))
+        _main(monkeypatch, scenario())
     assert exit_.value.code == (
         f"pyfds-evac: error: Distribution '{D}': JuPedSim could not add an agent "
         "to the simulation (Agent references unknown journey)."
     )
     with pytest.raises(simulation_init.AgentInsertionError) as error:
-        run_scenario(_scenario(ENOUGH_S))
+        run_scenario(scenario())
     assert isinstance(error.value.__cause__, RuntimeError)

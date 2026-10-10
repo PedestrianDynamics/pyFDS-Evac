@@ -45,9 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   exit 1, instead of a traceback ending in `Exception: CRITICAL: Failed
   to place agents ...` (#508). `run_scenario` raises
   `SpawnCapacityError` with JuPedSim's error as `__cause__`. An agent
-  that JuPedSim refuses to add there stops the run with `pyfds-evac:
-  error: Distribution '<id>': JuPedSim could not add an agent to the
-  simulation (...).` and exit 1; `run_scenario` raises
+  that JuPedSim refuses to add, with or without journeys, stops the run
+  with `pyfds-evac: error: Distribution '<id>': JuPedSim could not add
+  an agent to the simulation (...).` and exit 1; `run_scenario` raises
   `AgentInsertionError`, a `RuntimeError`. Results do not change.
 
 - `pyfds-evac --scenario DIR --export-only`, with or without

@@ -111,6 +111,14 @@ def _unplaced_error(dist_keys, requested, capacity, error) -> SpawnCapacityError
     )
 
 
+def _insertion_error(dist_key, error) -> AgentInsertionError:
+    """Name the distribution whose agent ``Simulation.add_agent`` refused."""
+    return AgentInsertionError(
+        f"Distribution '{dist_key}': JuPedSim could not add an agent "
+        f"to the simulation ({error})."
+    )
+
+
 def _placing(call, *args, **kwargs):
     """Run one placement call; report its failure as ``_AgentPlacementError``."""
     try:
@@ -1616,7 +1624,10 @@ def _initialize_with_fallback(
                 stage_id=global_ds_stage_id,
             )
 
-            agent_id = simulation.add_agent(agent_params)
+            try:
+                agent_id = simulation.add_agent(agent_params)
+            except RuntimeError as error:
+                raise _insertion_error(spawn_data["dist_key"], error) from error
             key = assign_spawn_key(spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN)
             all_positions.append(pos)
             agent_radii[agent_id] = agent_radius
@@ -2981,10 +2992,7 @@ def _add_agents(
                     current_agent_id += 1
 
         except _AgentPlacementError as e:
-            raise AgentInsertionError(
-                f"Distribution '{dist_key}': JuPedSim could not add an agent "
-                f"to the simulation ({e})."
-            ) from e.__cause__
+            raise _insertion_error(dist_key, e) from e.__cause__
 
     spawning_info = {
         "has_flow_spawning": has_flow_spawning,
