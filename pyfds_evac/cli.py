@@ -202,12 +202,15 @@ def _warn_if_not_runnable(scenario_path: str) -> None:
 
 
 def _run_or_exit(scenario, run_kwargs):
-    """Run the scenario; report an over-full spawn area in one line (#692)."""
-    from pyfds_evac.core.simulation_init import SpawnCapacityError
+    """Run the scenario; report a spawn area that fails placement in one line."""
+    from pyfds_evac.core.simulation_init import (
+        AgentInsertionError,
+        SpawnCapacityError,
+    )
 
     try:
         return run_scenario(scenario, **run_kwargs)
-    except SpawnCapacityError as exc:
+    except (SpawnCapacityError, AgentInsertionError) as exc:
         raise SystemExit(f"pyfds-evac: error: {exc}") from None
 
 
@@ -215,11 +218,11 @@ def _check_capacity_or_exit(scenario):
     """Report an over-full spawn area as the run does, without running (#508)."""
     from pyfds_evac.core.simulation_init import (
         SpawnCapacityError,
-        check_spawn_capacity,
+        _check_spawn_capacity,
     )
 
     try:
-        check_spawn_capacity(
+        _check_spawn_capacity(
             scenario.raw,
             scenario.walkable_polygon,
             SimpleNamespace(**scenario.sim_params),

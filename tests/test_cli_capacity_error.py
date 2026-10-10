@@ -172,8 +172,70 @@ def test_capacity_check_counts_a_shared_polygon_once_without_journeys():
         simulation_init.SpawnCapacityError,
         match=rf"^Distributions '{D}', 'other': requested 100 agents ",
     ):
-        simulation_init.check_spawn_capacity(*_two_on_one_polygon(False))
+        simulation_init._check_spawn_capacity(*_two_on_one_polygon(False))
 
 
 def test_capacity_check_counts_each_distribution_with_journeys():
-    simulation_init.check_spawn_capacity(*_two_on_one_polygon(True))
+    simulation_init._check_spawn_capacity(*_two_on_one_polygon(True))
+
+
+def _export_and_run_messages(monkeypatch, make_scenario):
+    with pytest.raises(SystemExit) as run:
+        _main(monkeypatch, make_scenario())
+    with pytest.raises(SystemExit) as export:
+        _main(monkeypatch, make_scenario(), "--print-summary", "--export-only")
+    return export.value.code, run.value.code
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_export_only_checks_the_stored_number_of_a_fill_area_spawn(
+    monkeypatch, with_journeys
+):
+    """The run checks ``number`` whatever the ``distribution_mode`` (#508)."""
+
+    def fill_area():
+        scenario = _over_full(with_journeys)
+        scenario.distributions[D]["parameters"]["distribution_mode"] = "fill_area"
+        return scenario
+
+    export, run = _export_and_run_messages(monkeypatch, fill_area)
+    assert re.match(PATTERN, export), export
+    assert export == run
+
+
+def test_export_only_checks_the_walkable_area_of_a_deck_without_spawn_areas(
+    monkeypatch,
+):
+    """Without distributions the run fills the walkable area (#508)."""
+
+    def no_spawn_areas():
+        scenario = _scenario(ENOUGH_S)
+        scenario.raw["distributions"] = {}
+        scenario.sim_params["number"] = 500
+        return scenario
+
+    export, run = _export_and_run_messages(monkeypatch, no_spawn_areas)
+    assert re.match(
+        r"^pyfds-evac: error: Distribution '__walkable_area__': requested 500 "
+        r"agents but area can hold at most ~\d+\. ",
+        export,
+    ), export
+    assert export == run
+
+
+def test_refused_agent_is_a_one_line_error_without_capacity_advice(monkeypatch):
+    """An agent JuPedSim refuses to add is not a capacity problem (#508)."""
+
+    def refuse(_self, _params):
+        raise RuntimeError("Agent references unknown journey")
+
+    monkeypatch.setattr(jps.Simulation, "add_agent", refuse)
+    with pytest.raises(SystemExit) as exit_:
+        _main(monkeypatch, _scenario(ENOUGH_S))
+    assert exit_.value.code == (
+        f"pyfds-evac: error: Distribution '{D}': JuPedSim could not add an agent "
+        "to the simulation (Agent references unknown journey)."
+    )
+    with pytest.raises(simulation_init.AgentInsertionError) as error:
+        run_scenario(_scenario(ENOUGH_S))
+    assert isinstance(error.value.__cause__, RuntimeError)

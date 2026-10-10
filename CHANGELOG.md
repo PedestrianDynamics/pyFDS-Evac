@@ -44,16 +44,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   cannot all place stops `pyfds-evac --scenario` with the same line and
   exit 1, instead of a traceback ending in `Exception: CRITICAL: Failed
   to place agents ...` (#508). `run_scenario` raises
-  `SpawnCapacityError` with JuPedSim's error as `__cause__`. Results do
-  not change.
+  `SpawnCapacityError` with JuPedSim's error as `__cause__`. An agent
+  that JuPedSim refuses to add there stops the run with `pyfds-evac:
+  error: Distribution '<id>': JuPedSim could not add an agent to the
+  simulation (...).` and exit 1; `run_scenario` raises
+  `AgentInsertionError`, a `RuntimeError`. Results do not change.
 
 - `pyfds-evac --scenario DIR --export-only`, with or without
   `--print-summary`, reported a spawn area that asks for more agents
   than its capacity estimate as `Agents: ~N` and exited 0. It now prints
   the run's line, `pyfds-evac: error: Distribution '<id>': requested N
-  agents but area can hold at most ~C. ...`, and exits 1 (#508). A count
-  within the estimate that JuPedSim cannot place is still found by the
-  run only.
+  agents but area can hold at most ~C. ...`, and exits 1 (#508). It
+  counts as the run does: the stored `number` in every
+  `distribution_mode`, and the whole walkable area for a deck without
+  spawn areas. A count within the estimate that JuPedSim cannot place is
+  still found by the run only.
 
 ## [0.4.0] - 2026-10-09
 
