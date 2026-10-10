@@ -780,10 +780,13 @@ chosen z, and the fix as a deck line.
 | `DT_SLCF` | | `&DUMP DT_SLCF`, else (T_END − T_BEGIN)/NFRAMES; `!` when coarser than 1 s, the run's smoke update interval |
 | `&REAC SOOT_YIELD`, `CO_YIELD` | | `!` when a simple-chemistry deck declares the slice but the yield is absent or 0 |
 
-The z printed is the one FDS writes: the nearest cell face of the `&MESH`
-grid (`IJK` and `XB`), with the deck's z after it (`deck z 1.6 m`) when it
-differs; `nearest_pbz` in the report is that grid z. A deck with `&TRNZ`
-keeps the deck's z. `-o`, `--walkable`, `--exit`, `--agents`, `--exit-depth`,
+The z printed is the one the run ranks: the grid node FDS writes the slice
+at, from `&MESH` `IJK` and `XB` (the nearest cell face; for
+`CELL_CENTERED=.TRUE.` the top of the cell that holds z; only the mesh
+`MESH_NUMBER` names, if given), the lowest across meshes, as fdsreader
+reads it. The deck's z follows (`deck z 1.6 m`) when it differs;
+`nearest_pbz` in the report is that z. A deck with `&TRNZ` keeps the
+deck's z. `-o`, `--walkable`, `--exit`, `--agents`, `--exit-depth`,
 `--force`, `--no-fds` and `-v` shape the written scenario and are refused
 with `--check`.
 
