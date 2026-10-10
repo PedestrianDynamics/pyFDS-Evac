@@ -3587,8 +3587,8 @@ def run_scenario(
             )
 
         # A run without rerouting switches routes only when an exit closes.
-        # The key is present whenever the history has rows; first exits
-        # (initial or default_route with no old exit) are not switches (#733).
+        # The key is present whenever the history has rows; a first exit
+        # (a row with no old exit) is not a switch (#733).
         records_routes = reroute_config is not None or has_exit_schedule
         if records_routes and route_history:
             metrics["route_switches"] = count_route_switches(route_history)

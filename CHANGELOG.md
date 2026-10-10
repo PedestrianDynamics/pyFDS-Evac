@@ -225,9 +225,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `metrics["route_switches"]` counts route switches, not route-history
-  rows (#733). A row that gives an agent its first exit, `initial` or
-  `default_route` with no old exit, is no longer counted; a
-  `default_route` row that leaves a closed exit still is. The key is
+  rows (#733). A row that gives an agent its first exit, one with no
+  old exit and reason `initial`, `default_route` or `fallback`, is no
+  longer counted; a `default_route` row that leaves a closed exit, and
+  the `explore`, `wander`, `return` and `stay` rows of an agent with no
+  exit, still are. The key is
   still written whenever the history has rows, so it can now be 0:
   `assets/t_junction` under seed 42 with rerouting reported 295 (150
   `default_route` and 145 `initial` rows) and now reports 0. The GUI

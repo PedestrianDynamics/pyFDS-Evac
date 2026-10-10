@@ -414,3 +414,46 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
         rows = [r for r in csv.DictReader(f) if float(r["time_s"]) == 1.0]
     reasons = collections.Counter(r["reason"] for r in rows)
     assert reasons == {"learned_exit": 10, "congestion": 13}
+
+
+# ── Which rows the route_switches metric counts (#733) ──
+
+
+@pytest.mark.parametrize("old_exit", ["", None])
+@pytest.mark.parametrize("reason", ["initial", "default_route", "fallback"])
+def test_a_first_exit_is_not_a_switch(reason, old_exit):
+    """A row with no old exit gives the agent its first exit.
+
+    ``fallback`` is decided before ``initial``, so an agent with no exit
+    whose every route is refused gets its first exit as a fallback row.
+    """
+    from pyfds_evac.core.route_graph import is_route_switch
+
+    assert not is_route_switch({"reason": reason, "old_exit": old_exit})
+
+
+@pytest.mark.parametrize("reason", ["explore", "wander", "return", "stay"])
+def test_a_no_exit_target_change_is_a_switch(reason):
+    """These rows have no old exit by design, and still change the target."""
+    from pyfds_evac.core.route_graph import is_route_switch
+
+    assert is_route_switch({"reason": reason, "old_exit": ""})
+
+
+def test_every_reason_with_an_old_exit_is_a_switch():
+    from pyfds_evac.core.route_graph import SWITCH_REASONS, is_route_switch
+
+    assert all(is_route_switch({"reason": r, "old_exit": "A"}) for r in SWITCH_REASONS)
+
+
+def test_count_route_switches_reads_the_old_exit():
+    from pyfds_evac.core.route_graph import count_route_switches
+
+    rows = [
+        {"reason": "initial", "old_exit": ""},
+        {"reason": "fallback", "old_exit": ""},
+        {"reason": "default_route", "old_exit": "west"},
+        {"reason": "fallback", "old_exit": "west"},
+        {"reason": "explore", "old_exit": ""},
+    ]
+    assert count_route_switches(rows) == 3

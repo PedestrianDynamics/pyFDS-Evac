@@ -2954,21 +2954,23 @@ SWITCH_REASONS = (
     "stay",
 )
 
-#: Reasons of a route-history row that gives an agent its first exit, when
-#: the row has no old exit. A ``default_route`` row with an old exit is a
-#: change of exit (the agent's known exits closed).
-FIRST_ASSIGNMENT_REASONS = frozenset({"initial", "default_route"})
+#: Reasons of a row that sends an agent with no exit to a node: written
+#: without an old exit, they still change the agent's target.
+NO_EXIT_REASONS = frozenset({"explore", "wander", "return", "stay"})
 
 
 def is_route_switch(row: Mapping[str, Any]) -> bool:
     """Whether a route-history *row* changes a target, not assigns a first exit.
 
-    *row* is a route-history row as in ``ScenarioResult.route_history``: an
-    empty, ``None`` or missing ``old_exit`` means the agent had no exit.
+    *row* is a route-history row as in ``ScenarioResult.route_history``. A
+    row with an old exit is a switch. A row without one (empty, ``None`` or
+    missing ``old_exit``) gives the agent its first exit, whatever its
+    reason (``initial``, ``default_route`` or ``fallback``), unless its
+    reason is in :data:`NO_EXIT_REASONS`.
     """
-    if row.get("reason") not in FIRST_ASSIGNMENT_REASONS:
+    if row.get("old_exit"):
         return True
-    return bool(row.get("old_exit"))
+    return row.get("reason") in NO_EXIT_REASONS
 
 
 def count_route_switches(rows: Iterable[Mapping[str, Any]]) -> int:

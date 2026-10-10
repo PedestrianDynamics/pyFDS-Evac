@@ -3224,6 +3224,8 @@ class TestRouteHistoryMessage:
 
     def test_rerouting_on_with_switches(self, tmp_path):
         rows = self._rows("initial", "smoke_reroute", "exit_closed")
+        # A change of exit has an old exit; a first exit has none.
+        rows[1]["old_exit"] = rows[2]["old_exit"] = "west"
         route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
         assert "3 route-history rows (2 switches)" in route
         assert "rerouting off" not in route
