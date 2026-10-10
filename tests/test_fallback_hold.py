@@ -16,6 +16,8 @@ the tau rule switches a west-bound agent east.
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import pytest
 import test_rerouting_golden as golden
 
@@ -140,3 +142,116 @@ def test_default_is_tau_and_no_scenario_key_sets_it():
 def test_unknown_rule_is_rejected():
     with pytest.raises(ValueError, match="fallback_rule 'nearest'"):
         RouteCostConfig(fallback_rule="nearest")
+
+
+def _reroute(graph, config, rs, smoke, fed=None, target=None, time_s=5.0):
+    """One reevaluation of agent 7 at the spawn; (new exit, reason) or stay."""
+    switch = evaluate_and_reroute(
+        7,
+        golden._wait_info(graph, "spawn", target or rs.current_exit or "spawn"),
+        rs,
+        graph,
+        time_s,
+        0.0,
+        smoke,
+        fed,
+        RerouteConfig(cost_config=config),
+        {},
+    )
+    if switch is None:
+        return ("stay", None)
+    return (switch.new_exit, switch.reason)
+
+
+@pytest.mark.parametrize("rule", ["tau", "hold"])
+def test_lethal_current_route_overrides_the_return_lockout(rule):
+    """The agent left east for west 1 s ago; west turns lethal.
+
+    Both routes stay refused and the return to east is inside the 10 s
+    lockout. Must-flee orders first, so the agent goes back to east under
+    hold too.
+    """
+    rs = AgentRouteState(
+        current_exit="west",
+        current_path=["spawn", "west"],
+        refused_switch_from="east",
+        refused_switch_time_s=4.0,
+    )
+    decision = _reroute(golden._star2(), _config(rule), rs, SMOKE, LETHAL_WEST)
+    assert decision == ("east", "fallback")
+
+
+def test_lockout_holds_without_a_lethal_route():
+    """Control for the test above: no dose, tau rule, the lockout holds."""
+    rs = AgentRouteState(
+        current_exit="west",
+        current_path=["spawn", "west"],
+        refused_switch_from="east",
+        refused_switch_time_s=4.0,
+    )
+    assert _reroute(golden._star2(), _config("tau"), rs, SMOKE) == ("stay", None)
+
+
+@pytest.mark.parametrize("rule", ["tau", "hold"])
+def test_feasible_rival_is_taken_under_both_rules(rule):
+    """West refused (tau 10.91), east clear and feasible: hold does not apply."""
+    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
+    smoke = golden.ArmField({"west": 0.6})
+    assert _reroute(golden._star2(), _config(rule), rs, smoke) == (
+        "east",
+        "smoke_reroute",
+    )
+
+
+# Star3: west 10 m, east 30 m, north 50 m. East at K 0.6 (tau about 17)
+# and north at K 0.15 (tau about 7.4) are both over the rival budget 4.8.
+# The lowest tau is north, the nearest is east.
+STAR3_SMOKE = golden.ArmField({"west": 1.0, "east": 0.6, "north": 0.15})
+
+
+def _closed_west():
+    graph = golden._star3()
+    graph.nodes["west"] = replace(graph.nodes["west"], closed_after_s=4.0)
+    return graph, AgentRouteState("west"), None
+
+
+def _no_route():
+    return golden._star3(), AgentRouteState("gone"), "west"
+
+
+def _no_exit_yet():
+    return golden._star3(), AgentRouteState(), None
+
+
+@pytest.mark.parametrize("rule", ["tau", "hold"])
+@pytest.mark.parametrize("case", [_closed_west, _no_route, _no_exit_yet])
+def test_unavailable_current_exit_takes_the_lowest_tau(rule, case):
+    """Hold has no exit to keep: the lowest tau wins, not the nearest.
+
+    Only the exit is checked. The switch is labelled ``fallback`` here,
+    which the reason precedence decides, not the fallback rule.
+    """
+    graph, rs, target = case()
+    decision = _reroute(graph, _config(rule), rs, STAR3_SMOKE, target=target)
+    assert decision[0] == "north"
+
+
+@pytest.mark.parametrize(("rule", "expected"), [("tau", "east"), ("hold", "stay")])
+def test_additive_both_lethal_follow_the_rule(rule, expected):
+    """Additive: both arms dose 6 FED/min, so both routes must be fled.
+
+    Must-flee does not separate them; tau switches east (5.71 < 0.8 x
+    10.91), hold keeps west.
+    """
+    config = golden._additive(fallback_rule=rule)
+    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
+    fed = golden.ArmFed({"west": 6.0, "east": 6.0})
+    decision = _reroute(golden._star2(), config, rs, SMOKE, fed)
+    assert decision[0] == expected
+
+
+@pytest.mark.parametrize("rule", ["tau", "hold"])
+def test_additive_lethal_current_is_left(rule):
+    config = golden._additive(fallback_rule=rule)
+    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
+    assert _reroute(golden._star2(), config, rs, SMOKE, LETHAL_WEST)[0] == "east"
