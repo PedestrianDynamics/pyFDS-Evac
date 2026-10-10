@@ -14,11 +14,12 @@ from __future__ import annotations
 import contextlib
 import io
 import json
+import pathlib
 
 import pytest
 from test_run_outcome import ENOUGH_S, SEED, D, _scenario
 
-from pyfds_evac.core.scenario import load_scenario, run_scenario
+from pyfds_evac.core.scenario import _migrate_journeys_v2, load_scenario, run_scenario
 from pyfds_evac.core.simulation_init import check_journey_transitions
 
 
@@ -68,4 +69,66 @@ def test_a_deck_without_distributions_is_not_checked():
     # journey to steer along.
     raw = _without_transitions().raw
     raw["distributions"] = {}
+    check_journey_transitions(raw)
+
+
+def _run_completes(scenario) -> None:
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(scenario, seed=SEED)
+    try:
+        assert result.agents_remaining == 0
+    finally:
+        result.cleanup()
+
+
+def _with_second_exit(scenario):
+    scenario.raw["exits"]["E2"] = {
+        "type": "polygon",
+        "coordinates": [[0.0, 2.0], [0.2, 2.0], [0.2, 4.0], [0.0, 4.0], [0.0, 2.0]],
+    }
+    return scenario
+
+
+@pytest.mark.parametrize(
+    "stages",
+    [["E", "E2"], ["E"], [D]],
+    ids=["exits-only", "one-exit", "distribution-only"],
+)
+def test_a_journey_without_agents_is_not_refused(stages):
+    """A journey that places nobody leaves the agents to the nearest exit.
+
+    It needs no transitions; before the restriction of #504 an exit-only
+    journey of a deck with distributions was refused at load.
+    """
+    scenario = _with_second_exit(_without_transitions())
+    scenario.raw["journeys"] = [{"id": "J", "stages": stages}]
+    check_journey_transitions(scenario.raw)
+    _run_completes(scenario)
+
+
+def test_editor_journeys_migrate_when_journeys_is_empty(tmp_path):
+    scenario = _without_transitions()
+    raw = scenario.raw
+    raw["journeys"] = []
+    raw["journeys_v2"] = [{"id": "j1", "sequence": ["E"]}]
+    raw["distributions"][D]["journey_weights"] = [{"journey_id": "j1", "weight": 100}]
+    (tmp_path / "config.json").write_text(json.dumps(raw))
+    (tmp_path / "geometry.wkt").write_text(scenario.walkable_area_wkt)
+    loaded = load_scenario(str(tmp_path))
+    assert loaded.raw["transitions"] == [{"from": D, "to": "E", "journey_id": "j1"}]
+    _run_completes(loaded)
+
+
+SHIPPED = sorted(
+    p
+    for p in pathlib.Path("assets").rglob("*.json")
+    if "exits" in json.loads(p.read_text(encoding="utf-8"))
+)
+
+
+@pytest.mark.parametrize("config", SHIPPED, ids=str)
+def test_every_shipped_deck_passes(config):
+    """Including the explore, patrol and no-journey decks."""
+    raw = json.loads(config.read_text(encoding="utf-8"))
+    _migrate_journeys_v2(raw)
     check_journey_transitions(raw)

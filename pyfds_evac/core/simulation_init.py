@@ -743,13 +743,25 @@ def _uses_fallback(data) -> bool:
     return not data.get("distributions") or no_routes
 
 
+def _places_agents(journey: dict, distributions) -> bool:
+    """Whether set-up puts agents on *journey*: it lists a deck distribution
+    and a stage that is not a distribution."""
+    stages = journey.get("stages") or []
+    starts = [k for k in _distribution_stage_keys(stages) if k in distributions]
+    return bool(starts) and any(
+        not str(stage).startswith("jps-distributions_") for stage in stages
+    )
+
+
 def check_journey_transitions(data) -> None:
-    """Raise for a journey that no entry in ``transitions`` names (#504).
+    """Raise for an agents' journey that no entry in ``transitions`` names (#504).
 
     An agent on a journey is steered along that journey's transitions
     only; journey stages alone give it no route, and it stands still
-    until the time limit. A deck the fallback set-up places is not
-    checked: its journeys are not used.
+    until the time limit. Only journeys that place agents are checked: a
+    deck distribution among their stages and a stage to walk to. Other
+    journeys leave their agents to the nearest-exit set-up, and a deck the
+    fallback set-up places does not use its journeys at all.
     """
     if _uses_fallback(data):
         return
@@ -762,8 +774,8 @@ def check_journey_transitions(data) -> None:
         journey.get("id")
         for journey in data.get("journeys") or []
         if isinstance(journey, dict)
-        and len(journey.get("stages") or []) > 1
         and journey.get("id") not in named
+        and _places_agents(journey, data.get("distributions") or {})
     ]
     if not missing:
         return

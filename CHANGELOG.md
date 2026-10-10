@@ -9,10 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
-- A deck whose `journeys` list stages but whose `transitions` name none
-  of them now fails to load (#504): `Journey(s) 'J' list stages but no
-  entry in 'transitions' names them, so their agents would never move:
-  ...`. Such a deck used to run to `max_simulation_time` with every
+- A deck with a journey from a distribution to a stage that no entry in
+  `transitions` names now fails to load (#504): `Journey(s) 'J' list
+  stages but no entry in 'transitions' names them, so their agents
+  would never move: ...`. Such a deck used to run to `max_simulation_time` with every
   agent on that journey standing still. Add the transitions between the
   journey's stages, or, for an editor export that also carries
   `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
@@ -168,8 +168,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `transitions` names, with an error naming the journey (#504). Agents
   on it had no route and stood still, without a warning; the
   `--print-summary`, `--export-only` and GUI upload paths now stop on it
-  too. Decks without distributions, which the fallback set-up places,
-  are not checked.
+  too. Only journeys that place agents are checked: one that lists a
+  distribution of the deck and a stage to walk to. A journey of exits
+  only, or of a distribution only, places nobody and needs no
+  transitions; decks without distributions use no journeys.
 
 - The per-agent steering state stores the agent's radius (#408). It was
   read with a 0.2 m default but never written, so stage reach
