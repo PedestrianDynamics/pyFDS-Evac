@@ -890,26 +890,17 @@ def test_seated_count_is_read_from_the_installed_jupedsim():
     assert seated is not None and 0 < seated < 50
 
 
-def test_boundary_distance_keeps_the_sampled_positions():
-    """The wall-distance workaround places exactly as JuPedSim does (#436)."""
-    room = box(2.0, 2.0, 8.0, 8.0)
-    agents = jps.distribute_by_number(
-        polygon=room,
-        number_of_agents=30,
-        distance_to_agents=0.4,
-        distance_to_polygon=0.2,
-        seed=5,
-    )
-    free = simulation_init._free_area(room, 0.2, [(room, agents, 0.2, ["b"])])
-    assert len(free.interiors) > 0
-    module = jps.distributions
-    original = module.__dict__[simulation_init._JPS_WALL_DISTANCE]
-    plain = jps.distribute_by_number(
-        polygon=free,
-        number_of_agents=60,
-        distance_to_agents=0.4,
-        distance_to_polygon=0.2,
-        seed=7,
-    )
-    assert simulation_init._by_number(free, 60, 0.2, 7) == plain
-    assert module.__dict__[simulation_init._JPS_WALL_DISTANCE] is original
+def test_fill_search_without_jupedsims_count_finds_the_same_prefix(monkeypatch):
+    """When the error does not say how many were seated, the search does (#436)."""
+    fast = simulation_init._most_that_fit(STRIP, 79, 0.2, 3)
+    calls = []
+    sampler = jps.distribute_by_number
+
+    def counted(**kwargs):
+        calls.append(kwargs["number_of_agents"])
+        return sampler(**kwargs)
+
+    monkeypatch.setattr(jps, "distribute_by_number", counted)
+    monkeypatch.setattr(simulation_init, "_seated_before_failure", lambda _: None)
+    assert simulation_init._most_that_fit(STRIP, 79, 0.2, 3) == fast
+    assert len(calls) > 2

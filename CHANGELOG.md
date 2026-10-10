@@ -230,8 +230,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whole number (`2.7`, `0.5`), entries that are not objects and a
   schedule that is not a list, with a `SpawnConfigError`, a
   `ValueError`, that names the distribution; the CLI prints it in one
-  line, also for `--print-summary` and `--export-only`. `initial_number` without a schedule, and `number` in a
-  percentage mode, are neither read nor checked.
+  line, also for `--print-summary` and `--export-only`, and
+  `--show-config` lists it, with an over-full spawn area, under
+  `Errors:` and exits 1. `initial_number` without a schedule, and
+  `number` in a percentage mode, are neither read nor checked.
 
 - `distribution_mode: "by_percentage"` ignored `percentage` for agents
   placed at the start and placed `number` agents, as `by_number` does

@@ -1,4 +1,3 @@
-import contextlib
 import importlib.util
 import json
 import logging
@@ -492,49 +491,15 @@ def _get_max_agent_radius(params):
     return mean_radius
 
 
-_JPS_WALL_DISTANCE = "__min_distance_to_polygon"
-
-
-@contextlib.contextmanager
-def _wall_distance_by_boundary():
-    """Let JuPedSim's sampler measure the distance to the edges in one call.
-
-    Workaround: JuPedSim 1.4.2's ``distribute_by_number`` measures each
-    candidate's distance to a polygon's exterior and then to every hole in
-    a Python loop. The holes cut around agents already placed (#402) make
-    that the cost of a spawn area: a fill mode around 30 agents took about
-    5 s per call (#436). The distance to ``polygon.boundary`` is the same
-    minimum over the same rings in one GEOS call, so the positions do not
-    change. No upstream issue yet; drop this once JuPedSim measures the
-    boundary in one call. Without the private function the sampler is
-    left as it is.
-    """
-    module = jps.distributions
-    original = module.__dict__.get(_JPS_WALL_DISTANCE)
-    if original is None:
-        yield
-        return
-    setattr(module, _JPS_WALL_DISTANCE, _boundary_distance)
-    try:
-        yield
-    finally:
-        setattr(module, _JPS_WALL_DISTANCE, original)
-
-
-def _boundary_distance(pt, polygon):
-    return polygon.boundary.distance(shapely.Point(pt))
-
-
 def _by_number(polygon, count, max_radius, seed):
     """``jps.distribute_by_number`` with the spacing of agents of *max_radius*."""
-    with _wall_distance_by_boundary():
-        return jps.distribute_by_number(
-            polygon=polygon,
-            number_of_agents=count,
-            distance_to_agents=2 * max_radius,
-            distance_to_polygon=max_radius,
-            seed=seed,
-        )
+    return jps.distribute_by_number(
+        polygon=polygon,
+        number_of_agents=count,
+        distance_to_agents=2 * max_radius,
+        distance_to_polygon=max_radius,
+        seed=seed,
+    )
 
 
 def _distribute(area, dist_keys, number, capacity, max_radius, seed):

@@ -401,3 +401,46 @@ def test_an_unreadable_flow_schedule_is_a_one_line_error(monkeypatch, args):
     assert message.startswith(
         f"pyfds-evac: error: Distribution '{D}': flow_schedule: Invalid flow window"
     ), message
+
+
+def test_print_summary_reports_an_unreadable_initial_number_in_one_line(
+    monkeypatch,
+):
+    """The summary reads ``initial_number`` as the run does (#390)."""
+    scenario = _scheduled(True, {"flow_start_time": 0, "flow_end_time": 5, "number": 2})
+    scenario.distributions[D]["parameters"]["initial_number"] = "abc"
+    with pytest.raises(SystemExit) as exit_:
+        _main(monkeypatch, scenario, "--print-summary", "--export-only")
+    assert exit_.value.code == (
+        f"pyfds-evac: error: Distribution '{D}': initial_number must be a "
+        "number, got 'abc'"
+    )
+
+
+@pytest.mark.parametrize(
+    "spoil",
+    [
+        lambda s: s.distributions[D]["parameters"].update(
+            flow_schedule=[{"flow_start_time": -1, "flow_end_time": 5, "number": 2}]
+        ),
+        lambda s: s.distributions[D]["parameters"].update(
+            flow_schedule=[{"flow_start_time": 0, "flow_end_time": 0.02, "number": 3}]
+        ),
+        lambda s: s.distributions[D]["parameters"].update(number=500),
+    ],
+    ids=["bad-schedule", "short-window", "over-full"],
+)
+def test_show_config_reports_what_the_run_refuses_at_set_up(monkeypatch, spoil):
+    """--show-config lists a spawn area the run refuses and exits 1."""
+    scenario = _scenario(ENOUGH_S)
+    spoil(scenario)
+    monkeypatch.setattr(cli, "load_scenario", lambda _path: scenario)
+    monkeypatch.setattr(
+        "sys.argv", ["pyfds-evac", "--scenario", "unused", "--show-config"]
+    )
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        code = cli.main()
+    assert code == 1
+    text = out.getvalue()
+    assert f"Distribution '{D}'" in text.split("Errors:", 1)[1]

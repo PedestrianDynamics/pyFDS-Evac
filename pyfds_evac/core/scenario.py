@@ -45,6 +45,7 @@ from .agent_params import (
     SpawnConfigError,
     _normalize_flow_schedule_entry,
     _normalized_flow_schedule,
+    _spawn_value,
     deck_default_number,
     parameters_as_dict,
 )
@@ -307,10 +308,20 @@ def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
     views pass the run's default, :func:`deck_default_number` (#647).
     """
     params = parameters_as_dict(dist.get("parameters")) or {}
-    schedule = _normalized_flow_schedule(params)
+    try:
+        schedule = _normalized_flow_schedule(params)
+    except SpawnConfigError as error:
+        raise SpawnConfigError(f"flow_schedule: {error}") from error
     if schedule:
-        initial_number = int(params.get("initial_number", 0) or 0)
-        return initial_number + sum(entry["number"] for entry in schedule)
+        initial = params.get("initial_number")
+        if initial is None:
+            initial = 0
+        else:
+            try:
+                initial = _spawn_value("number", initial, "initial_number")
+            except ValueError as error:
+                raise SpawnConfigError(str(error)) from error
+        return initial + sum(entry["number"] for entry in schedule)
     return int(params.get("number", default_number) or 0)
 
 
@@ -410,9 +421,7 @@ class Scenario:
         try:
             return _distribution_agent_budget(dist, default_number)
         except SpawnConfigError as error:
-            raise SpawnConfigError(
-                f"Distribution {dist_id!r}: flow_schedule: {error}"
-            ) from error
+            raise SpawnConfigError(f"Distribution {dist_id!r}: {error}") from error
 
     def summary(self) -> str:
         default_number = deck_default_number(self.sim_params)
