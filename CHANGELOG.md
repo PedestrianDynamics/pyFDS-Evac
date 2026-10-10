@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- A deck whose `journeys` list stages but whose `transitions` name none
+  of them now fails to load (#504): `Journey(s) 'J' list stages but no
+  entry in 'transitions' names them, so their agents would never move:
+  ...`. Such a deck used to run to `max_simulation_time` with every
+  agent on that journey standing still. Add the transitions between the
+  journey's stages, or, for an editor export that also carries
+  `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
+  No shipped deck has this shape.
+
 - `fed_max_route` in the route-cost history rises for an agent behind
   its route's origin node in runs with a FED field (#171). Under
   `additive` the route cost rises by `w_fed` times that change, so
@@ -120,6 +129,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fit the spawn area at 0.15 m, not at 0.2 m.
 
 ### Fixed
+
+- `load_scenario` and the run refuse a journey that no entry in
+  `transitions` names, with an error naming the journey (#504). Agents
+  on it had no route and stood still, without a warning; the
+  `--print-summary`, `--export-only` and GUI upload paths now stop on it
+  too. Decks without distributions, which the fallback set-up places,
+  are not checked.
 
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or

@@ -1491,6 +1491,9 @@ def load_scenario(path: str) -> Scenario:
             walkable_wkt = zf.read(wkt_name).decode("utf-8").strip()
 
     _migrate_journeys_v2(data)
+    from .simulation_init import check_journey_transitions
+
+    check_journey_transitions(data)
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
     sim_params = sim_settings.get("simulationParams", {})

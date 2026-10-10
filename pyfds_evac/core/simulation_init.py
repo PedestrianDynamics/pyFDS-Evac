@@ -743,6 +743,42 @@ def _uses_fallback(data) -> bool:
     return not data.get("distributions") or no_routes
 
 
+def check_journey_transitions(data) -> None:
+    """Raise for a journey that no entry in ``transitions`` names (#504).
+
+    An agent on a journey is steered along that journey's transitions
+    only; journey stages alone give it no route, and it stands still
+    until the time limit. A deck the fallback set-up places is not
+    checked: its journeys are not used.
+    """
+    if _uses_fallback(data):
+        return
+    named = {
+        tr.get("journey_id")
+        for tr in data.get("transitions") or []
+        if isinstance(tr, dict)
+    }
+    missing = [
+        journey.get("id")
+        for journey in data.get("journeys") or []
+        if isinstance(journey, dict)
+        and len(journey.get("stages") or []) > 1
+        and journey.get("id") not in named
+    ]
+    if not missing:
+        return
+    hint = (
+        "; or set 'journeys' to [] to use the editor's 'journeys_v2'"
+        if data.get("journeys_v2")
+        else ""
+    )
+    raise ValueError(
+        f"Journey(s) {', '.join(repr(j) for j in missing)} list stages but no "
+        "entry in 'transitions' names them, so their agents would never move: "
+        f"add the transitions between their stages with that journey_id{hint}."
+    )
+
+
 def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> None:
     """Raise the run's ``SpawnCapacityError`` for an over-full spawn area (#508).
 
@@ -1296,6 +1332,7 @@ def initialize_simulation_from_json(
     # Without distributions, or without journeys and transitions, the
     # fallback set-up places the agents.
     needs_fallback = _uses_fallback(data)
+    check_journey_transitions(data)
 
     if "checkpoints" not in data and "waiting_polygons" not in data:
         data["checkpoints"] = {}
