@@ -390,6 +390,15 @@ def test_grid_z_matches_fdsreaders_extent(tmp_path, options, writes, grids, z):
     assert item["nearest_pbz"] == z
 
 
+def test_evacuation_only_deck_does_not_get_the_trnz_note(tmp_path, capsys):
+    evac = PLAIN.replace("XB=0,10,0,10,0,3 /", "XB=0,10,0,10,0,3, EVACUATION=.TRUE. /")
+    deck = tmp_path / "evac.fds"
+    deck.write_text(evac.format(time=TIME, records="\n".join((SOOT, *GASES))))
+    _, lines = _check(capsys, deck, "--check")
+    assert "&TRNZ" not in lines[0]
+    assert "(z on the mesh grid, where FDS writes the slice)" in lines[0]
+
+
 def _extent(z: float):
     return types.SimpleNamespace(z_start=z, z_end=z)
 

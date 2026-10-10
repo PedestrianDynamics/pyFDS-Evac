@@ -169,7 +169,8 @@ def check_slices(deck: FdsDeck, height: float) -> SliceCheck:
     """Check *deck* for the slices a run at *height* reads; see the module."""
     meshes = _grid_meshes(deck)
     slices = [_on_grid(s, meshes) for s in map(_slice, deck.group("SLCF")) if s]
-    check = SliceCheck(height, grid_note=GRID_NOTE if meshes else DECK_Z_NOTE)
+    note = DECK_Z_NOTE if deck.group("TRNZ") else GRID_NOTE
+    check = SliceCheck(height, grid_note=note)
     check.items.append(_extinction(deck, slices, height))
     gases = [_gas(slices, label, spec, height) for label, spec in FED_GASES]
     check.items += gases
