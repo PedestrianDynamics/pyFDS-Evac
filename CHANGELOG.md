@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- The FDS coverage warning names the frame (#26): when part of the
+  walkable area lies outside the FDS slices, it ends with the bounds of
+  the walkable area and of the FDS domain, and says so when swapping x and
+  y, or shifting the walkable area onto the domain, would bring it inside
+  (`With x and y swapped ...`, `Shifted by (dx, dy) m ...`). The run
+  manifest records the end-of-run count of samples outside as
+  `fds_outside`. Results are unchanged; outside the slices agents still
+  read ambient air and clear sight.
 - `pyfds-evac --scenario DIR` prints one warning before the run when
   `DIR/import_report.json` says `runnable: false`, with the report's
   `not_runnable_reasons` (#701): `pyfds-evac: warning:

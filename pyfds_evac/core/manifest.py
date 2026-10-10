@@ -287,6 +287,7 @@ def build_manifest(
     smoke_blind: bool = False,
     replay_exits: dict[str, Any] | None = None,
     fds_coverage: dict[str, Any] | None = None,
+    fds_outside: dict[str, Any] | None = None,
     outcome: dict[str, Any] | None = None,
     sfm: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
@@ -305,6 +306,8 @@ def build_manifest(
     ``replay_exits`` holds the replayed agent count and a sha256 of the rows.
     ``fds_coverage`` is the setup check of the scenario geometry against the
     FDS slices (``FdsCoverageReport.to_dict``), recorded when FDS is sampled.
+    ``fds_outside`` is the count of history rows sampled outside the FDS
+    slices (``rows``, ``agents``, ``agent_seconds``), recorded with it.
     ``outcome`` is how the run ended: ``status`` (``"completed"`` or
     ``"incomplete"``), ``agents_remaining`` and ``agents_not_spawned``.
     ``sfm`` is what a SocialForceModel run gave JuPedSim: ``body_force``,
@@ -342,6 +345,8 @@ def build_manifest(
         manifest["replay_exits"] = replay_exits
     if fds_coverage is not None:
         manifest["fds_coverage"] = fds_coverage
+    if fds_outside is not None:
+        manifest["fds_outside"] = fds_outside
     if outcome is not None:
         manifest["outcome"] = outcome
     if sfm is not None:

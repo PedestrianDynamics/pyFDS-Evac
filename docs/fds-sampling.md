@@ -122,7 +122,18 @@ slices. The check runs when an agent reaches such a point, not at setup.
 scenario with the slices of every sampled quantity. The domain is the area
 that every quantity covers. The report gives the walkable area outside
 (m² and share), each exit, checkpoint and spawn area outside (m²), each
-sign outside, and each route edge outside (m). It is logged once and
+sign outside, and each route edge outside (m). When part of the walkable
+area lies outside, it ends with the bounds of the walkable area and of the
+FDS domain, so that an offset origin or swapped x and y shows at a glance.
+If swapping x and y, shifting the walkable area onto the domain's
+lower-left corner, or both, would leave at most 1 % of it outside, the
+report says so: `With x and y swapped the walkable area would lie inside
+the FDS domain`, `Shifted by (dx, dy) m the walkable area would lie inside
+the FDS domain`, or `With x and y swapped and shifted by (dx, dy) m ...` ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)).
+The hint is a prompt to check the frame, not a diagnosis: a walkable area
+that reaches past the meshes on one side, a fire meshed over one part
+only, also fits after a shift when it is narrower than the domain along
+that axis. One wider than the domain gets the bounds and no hint. It is logged once and
 stored as `fds_coverage` in `metrics` and in the
 [run manifest](outputs.md#run-manifest). For a T-junction whose west
 corridor extends 12 m past the FDS mesh, the log reads:
@@ -133,14 +144,15 @@ MONOXIDE VOLUME FRACTION, HYDROGEN CHLORIDE VOLUME FRACTION, OXYGEN VOLUME
 FRACTION, SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear
 sight: walkable area 36.00 m² (19.4 %); exit exit_A_left 3.00 m²;
 distribution jps-distributions_out 6.00 m²; sign exit_A_left; edge
-jps-checkpoints_0 -> exit_A_left 11.50 m; ...
+jps-checkpoints_0 -> exit_A_left 11.50 m; ... Walkable area x
+-12.00..30.00, y 0.00..13.00 m, FDS domain x 0.00..30.00, y 0.00..13.00 m.
 ```
 
 **Flag and count.** Each smoke and FED history row carries `in_fds_domain`,
 `False` where the agent stood outside
 ([Outputs](outputs.md#smoke-history)). At the end, the run logs the number
 of agents, samples and agent-seconds outside, stored as
-`metrics["fds_outside"]`:
+`metrics["fds_outside"]` and as `fds_outside` in the run manifest:
 
 ```
 Outside the FDS domain: 8 agent(s), 56 sample(s), about 56.0 agent-seconds

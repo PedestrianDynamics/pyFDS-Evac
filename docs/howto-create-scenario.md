@@ -348,7 +348,7 @@ its zone removed, run with `--fds-dir assets/iso_table21_coupled/fds` and
 exceeds the 150 s of FDS output:
 
 ```text
-WARNING:pyfds_evac.core.fds_coverage:FDS coverage: outside the FDS slices (SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear sight: walkable area 185.00 m² (90.2 %); exit jps-exits_0 18.00 m²; distribution jps-distributions_0 34.00 m²; sign jps-exits_0; edge jps-distributions_0 -> jps-exits_0 21.50 m.
+WARNING:pyfds_evac.core.fds_coverage:FDS coverage: outside the FDS slices (SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear sight: walkable area 185.00 m² (90.2 %); exit jps-exits_0 18.00 m²; distribution jps-distributions_0 34.00 m²; sign jps-exits_0; edge jps-distributions_0 -> jps-exits_0 21.50 m. Walkable area x 0.00..25.00, y 0.00..10.00 m, FDS domain x -50.00..50.00, y -1.00..1.00 m.
 ...
 Simulation finished in 59.21 s (50/50 evacuated).
 Outside the FDS domain: 50 agent(s), 2106 sample(s), about 2106.0 agent-seconds of ambient air and clear sight.

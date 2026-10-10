@@ -3434,6 +3434,7 @@ def run_scenario(
                 ),
                 smoke_blind=smoke_blind,
                 fds_coverage=metrics.get("fds_coverage"),
+                fds_outside=metrics.get("fds_outside"),
                 outcome={
                     key: metrics[key]
                     for key in ("status", "agents_remaining", "agents_not_spawned")
