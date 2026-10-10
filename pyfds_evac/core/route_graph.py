@@ -2680,6 +2680,9 @@ def reroute_agent(
     Modifies path_choices so that each stage in the new path leads
     deterministically to the next stage.  Retargets the agent to the
     first remaining stage in the new path that it hasn't passed yet.
+    A route is priced as a walk from the node the agent last left to the
+    node after it, so when the current target lies further along the new
+    path than that node, the agent is retargeted to that node.
 
     Returns True if the route was actually changed.
     """
@@ -2700,6 +2703,21 @@ def reroute_agent(
     if insert_idx is None:
         # Agent is not on the new path yet; retarget from first stage.
         insert_idx = 0
+
+    # The new path was priced from current_origin to the node after it. If
+    # the current target is further along, anchoring there would keep the
+    # agent on the leg the new path replaced, so anchor at the origin and
+    # retarget to the node after it. An idle or waiting agent already stands
+    # on its target, so its route goes on from there.
+    skips_ahead = False
+    if (
+        wait_info.get("state") not in ("idle", "waiting")
+        and current_origin in new_path
+        and current_stage in new_path
+        and new_path.index(current_stage) > new_path.index(current_origin) + 1
+    ):
+        insert_idx = new_path.index(current_origin)
+        skips_ahead = True
 
     # Build deterministic path_choices: each stage → next stage at 100%.
     remaining = new_path[insert_idx:]
@@ -2730,7 +2748,7 @@ def reroute_agent(
     # given path_choices it never consults, and would stand there for the rest
     # of the run.
     idle = wait_info.get("state") == "idle"
-    if (current_stage not in remaining or idle) and len(remaining) >= 2:
+    if (current_stage not in remaining or idle or skips_ahead) and len(remaining) >= 2:
         next_stage = remaining[1]
         if next_stage in stage_configs:
             from .direct_steering_runtime import pick_stage_target
