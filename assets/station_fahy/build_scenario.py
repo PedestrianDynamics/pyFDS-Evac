@@ -87,11 +87,11 @@ V0_STD = 0.2
 RADIUS = 0.20
 RADIUS_STD = 0.02
 
-# Agents steer straight at their next route node, so every leg of a route has to
-# be one an agent can walk in a straight line. The last node before the front
-# door sits east of the vestibule opening with the wall between it and the exit:
-# agents reaching it then press into that wall instead of turning into the
-# doorway. This checkpoint stands inside the vestibule, in sight of both.
+# A checkpoint inside the vestibule, between the last node before the front
+# door and the exit. Agents do not need it to find the doorway: JuPedSim
+# (>= 1.4.2) walks them along the navigation mesh to their target, round
+# walls, not in a straight line (#114, closed). It stays because the deck is
+# calibrated with it (w_queue below).
 VESTIBULE_CHECKPOINT = ("jps-checkpoints_6", (-0.25, -6.6), 0.35)
 
 
@@ -184,9 +184,9 @@ def build() -> tuple[dict, Polygon]:
     sim = cfg["config"]["simulation_settings"]["simulationParams"]
     # Collision-free speed is the model whose speed-density relation would limit
     # door flow, which is what these egress times need. It cannot be used yet:
-    # agents steer straight at route nodes they cannot see (#114), and without a
-    # model that slides them along walls they stop dead against one. On this deck
-    # that leaves 141 of 333 standing in a four-way crossing at the 600 s cap.
+    # under it a crowd deadlocks in the four-way crossing at jps-checkpoints_2
+    # (#706), with or without the vestibule checkpoint. With seed 420, 100 of
+    # 333 are left at the 600 s cap, 80 of them within 3 m of that checkpoint.
     sim["model_type"] = "WarpDriverModel"
     sim["max_simulation_time"] = 600.0
     # The library default is 0 -- congestion-aware routing is opt-in, because
