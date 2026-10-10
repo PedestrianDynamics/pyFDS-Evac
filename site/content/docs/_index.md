@@ -25,6 +25,7 @@ results:
 {{< cards >}}
   {{< card link="using/fds-case-requirements" title="Your FDS case" subtitle="Which slices and yields a deck must provide, and the silent failure modes." >}}
   {{< card link="using/howto-create-scenario" title="Create a scenario" subtitle="Draw it in JuPedSim Web, start from an example, or match the FDS deck." >}}
+  {{< card link="using/howto-place-checkpoints" title="Place checkpoints" subtitle="Where to draw checkpoints, how large, and how they join the route graph." >}}
   {{< card link="using/usage" title="Usage" subtitle="Running simulations, every CLI flag, and the post-processing scripts." >}}
   {{< card link="using/scenario-json" title="Scenario JSON" subtitle="The keys a scenario reads, with their defaults." >}}
   {{< card link="using/outputs" title="Outputs" subtitle="Every file a run writes, column by column, and how to read the results." >}}

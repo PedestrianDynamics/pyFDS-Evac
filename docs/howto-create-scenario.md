@@ -140,11 +140,11 @@ one `journey_weights` entry. A spawn area split over several journeys is not
 converted.
 {{< /details >}}
 
-{{< details title="Agents that never move: journeys without transitions" closed="true" >}}
-A file whose `journeys` list `stages` but which has no `transitions` runs
-with agents that never move. No warning is printed, and `--print-summary`
-looks normal
-([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504)).
+{{< details title="Journeys without transitions" closed="true" >}}
+A file whose `journeys` list `stages` but which has no `transitions` is
+refused at load with an error that names each journey
+([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504),
+`check_journey_transitions`).
 Older app exports have this shape, for example the `bottleneck-zone` example
 and 23 of the 55 scenario ZIPs of jupedsim-web-community, which also carry
 `journeys_v2`.

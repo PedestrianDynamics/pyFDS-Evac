@@ -65,16 +65,16 @@ nearest target is kept. Crossings thus define which nodes are neighbours.
 Where to draw them is on
 [How do I place checkpoints?](howto-place-checkpoints.md).
 
-Crossings are therefore part of the routes, in clear air too. Every run picks
-each agent's first route on this graph, with or without rerouting
+Crossings are therefore part of the routes, in clear air too. In a deck
+without journeys, every run picks each agent's first route on this graph, with or without rerouting
 (`scenario.py`, `_assign_initial_exit`), and the agent follows the whole path.
 When crossing C has replaced the direct edge from spawn area A to exit B, the
 agent walks into C first and then on to B. Between node points the detour is
-at most 5 %; the agent aims at a random point inside C, so a large crossing
-adds more. A crossing that lies off the walking line keeps the direct edge,
+at most 5 %. A crossing that lies off the walking line keeps the direct edge,
 and agents go through it only when that route is cheaper, for example when
-smoke lies on the direct one. Without `distributions`, agents start at their
-nearest exit's node and walk straight to it.
+smoke lies on the direct one. Without `distributions`, agents are placed over
+the whole walkable area; their route starts at their nearest exit's node, so
+they walk straight to that exit and pass no crossing.
 
 Explicit `transitions` remain authoritative and skip this path entirely.
 

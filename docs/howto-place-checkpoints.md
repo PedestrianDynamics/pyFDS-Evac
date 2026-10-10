@@ -1,7 +1,7 @@
 ---
 title: "How do I place checkpoints?"
 linkTitle: "How-to: place checkpoints"
-weight: 12
+weight: 6
 aliases: [/docs/howto-place-checkpoints/]
 ---
 
@@ -24,10 +24,12 @@ check list.
 1. Draw a box across the doorway that reaches into the rooms on both sides.
    Do not stop it at the wall faces.
 2. Keep the whole box inside the walkable area.
-3. Keep its centre (the *node point*, see [below](#reference-node-point-target-point-and-arrival))
-   more than one agent radius from any wall, and more than one visibility
-   cell from any wall face.
-4. With a `sign`, keep the sign point at the same distance from walls.
+3. Keep its node point (the centroid for a convex box, see
+   [below](#reference-node-point-target-point-and-arrival)) more than one
+   agent radius from any wall, and more than one visibility cell from any
+   wall face.
+4. With a `sign`, keep the sign point more than one visibility cell from any
+   wall face.
 
 The `blind_spawn_discovery` asset draws its door checkpoints this way:
 2 m × 2 m boxes centred on 0.4 m thick doorways. Its geometry builder
@@ -35,7 +37,9 @@ The `blind_spawn_discovery` asset draws its door checkpoints this way:
 a checkpoint that is shallower than 1.5 m, because "agents jam aiming for the
 same sliver", and one that is not wholly inside the walkable area, because
 "direct steering could pick a target point inside a wall". The 1.5 m is that
-builder's own check. pyFDS-Evac enforces no minimum checkpoint size.
+builder's own check. The shipped `familiarity_test_*` checkpoints
+(0.55–1.22 m) are smaller than that, and agents pass through them in clear
+air; do not use them as templates.
 
 {{< details title="Why a thin checkpoint jams" closed="true" >}}
 Each agent steers to a random point inside the checkpoint, kept away from its
@@ -46,6 +50,11 @@ same line in the doorway. A box that spans both rooms spreads the targets.
 Issue [#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)
 reports the same failure for earlier Station checkpoints: "1.5 m -> 4.0 m
 fixed 210 agents". That number is from the issue and was not re-run.
+
+The builder's check and #69 predate the polygon arrival rule
+([#726](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726)), under
+which an agent arrives on entering the checkpoint. Whether a wall-deep
+checkpoint still jams has not been re-run.
 {{< /details >}}
 
 {{< checkpoint title="The checkpoint is well placed" >}}
@@ -71,8 +80,8 @@ You choose between two ways.
 when both ends exist. Nothing else is added. A checkpoint with more than one
 outgoing transition in a journey needs routing percentages; see
 [Journey splits](scenario-json.md#journey-splits-waypoint_routing). A journey
-whose stages appear in no transition is refused at load
-(`simulation_init.py`, `check_journey_transitions`).
+that places agents but that no transition names in its `journey_id` is
+refused at load (`simulation_init.py`, `check_journey_transitions`).
 
 **Without `transitions`.** The graph wires itself: spawn areas and checkpoints
 connect to checkpoints and exits, but not to a node when another checkpoint
@@ -87,11 +96,12 @@ For placement it means:
   each such checkpoint.
 - A checkpoint that lies a little off the walking line, so that the detour
   through it is more than 5 % longer, does not remove the direct edge.
-- Agents walk through every checkpoint that removed their direct edge, in
-  clear air too: their path bends to a random point inside it. A waiting time
-  set on that checkpoint applies to all of them. Keep such checkpoints small
-  and on the walking line, or use `transitions` if agents must not pass
-  through them.
+- When a checkpoint has removed the direct edge from a spawn area to an
+  exit, agents who take that exit walk through the checkpoint, in clear air
+  too: their path bends to a random point inside it. A `waiting_time` or
+  `max_throughput` set on that checkpoint applies to all of them. If agents
+  must not pass through such a checkpoint, move it off the walking line so
+  the detour through it exceeds 5 %, or use `transitions`.
 
 Shipped scenarios use both ways:
 
@@ -109,10 +119,11 @@ Visibility is computed on a grid: the FDS mesh cells, or `cell_size_m`
 (default 0.25 m) for the clear-air model (`visibility.py`,
 `VisibilityModel.clear_air`). A sign or node point within about one cell of a
 wall can fall onto the wall cell. Its sightlines then count as blocked at
-every time, in clear air too, and exploring agents never see that checkpoint.
+every time, in clear air too: agents cannot see that checkpoint's sign, and
+an agent at the node cannot see signs from it.
 
 Issue [#100](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/100)
-reports this for checkpoint 3 of `familiarity_test`, placed at y = 13.095 m
+reports the second case for checkpoint 3 of `familiarity_test`, placed at y = 13.095 m
 next to a partition at 13.0–13.1 m on a 0.25 m mesh. The shipped decks now
 have its centre near y = 13.5 m. The rounding happens inside fdsvismap and
 was not re-checked for this page.
@@ -130,9 +141,11 @@ does not.
 No code rule or measured study gives a spacing. A spacing number would be
 not established. What is known:
 
-- An exploring agent learns a neighbour when it arrives at a node and when it
-  sees the neighbour's sign from where it stands (`cognitive_map.py`,
-  `expand_on_arrival`, `expand_from_visibility`). An edge between two distant
+- With a visibility model, an exploring agent learns a neighbour only if it
+  can see that neighbour's sign from where it stands, on arrival at a node or
+  while walking (`cognitive_map.py`, `expand_on_arrival`,
+  `expand_from_visibility`). Without one, arrival at a node reveals all its
+  neighbours. An edge between two distant
   checkpoints rests on one long sightline. Fewer checkpoints mean fewer, longer
   sightlines.
 - Every shipped discovery scenario puts a checkpoint at each doorway or
