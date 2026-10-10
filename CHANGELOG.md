@@ -12,8 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A deck with a journey from a distribution to a stage that no entry in
   `transitions` names now fails to load (#504): `Journey(s) 'J' list
   stages but no entry in 'transitions' names them, so their agents
-  would never move: ...`. Such a deck used to run to `max_simulation_time` with every
-  agent on that journey standing still. Add the transitions between the
+  would never move: ...`. Such a deck used to run to
+  `max_simulation_time` with every agent on that journey standing
+  still. Add the transitions between the
   journey's stages, or, for an editor export that also carries
   `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
   No shipped deck has this shape.
@@ -29,8 +30,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by -0.36 to +1.11 s, all 30 agents still get out. The
   `heat_default` verification baseline (0.15 m) moves by up to 12 mm in
   `x`/`y`, its FED values do not. Clear-air runs of the shipped decks:
-  `station_fahy` (Gaussian radius, seed 420) 331 → 330 of 333 out at
-  600 s; `l_corridor` and `schroeder2015_route` end 0.03 s later;
+  `station_fahy` (Gaussian radius, seed 420) still gets 331 of 333 out
+  at 600 s together with #709 below, on other trajectories (330 with
+  this change alone); `l_corridor` and `schroeder2015_route` end
+  0.03 s later;
   `t_junction` and `schroeder2020_room` end with the same counts and
   times; decks with 0.2 m are unchanged. In the first FDS case
   (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get out
