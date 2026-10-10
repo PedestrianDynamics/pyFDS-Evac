@@ -251,15 +251,22 @@ def test_flow_spawn_does_not_swallow_the_horizon():
 
 
 class _CorridorSlice(_Slice):
-    """Slice over x 0..20 m, y -1..1 m, frames 0..10 s; K = 0.01 x frame index."""
+    """Slice over x 0..20 m, y -1..1 m, frames 0..10 s; K = 0.01 x frame index.
+
+    Nodes every 2 m in x, so route smoke, read once per grid cell (#653),
+    is read at x = 0, 2, ..., 20 along the corridor.
+    """
 
     def __init__(self):
         super().__init__()
         extent = SimpleNamespace(x_start=0.0, x_end=20.0, y_start=-1.0, y_end=1.0)
         mesh = SimpleNamespace(
-            coordinates={"x": np.array([0.0, 20.0]), "y": np.array([-1.0, 1.0])}
+            coordinates={
+                "x": np.arange(0.0, 21.0, 2.0),
+                "y": np.array([-1.0, 1.0]),
+            }
         )
-        data = 0.01 * np.arange(11.0)[:, None, None] * np.ones((1, 2, 2))
+        data = 0.01 * np.arange(11.0)[:, None, None] * np.ones((1, 11, 2))
         self.subslices = [
             SimpleNamespace(extent=extent, mesh=mesh, cell_centered=False, data=data)
         ]

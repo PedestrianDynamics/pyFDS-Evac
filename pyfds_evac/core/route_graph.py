@@ -10,8 +10,10 @@ from collections.abc import Callable
 from dataclasses import dataclass, field, replace
 from typing import Protocol
 
+import numpy as np
 from shapely.geometry import Polygon
 
+from .fds_sampling import LinePart
 from .geometry import node_position as _node_position
 from .smoke_speed import speed_factor_from_extinction
 
@@ -527,9 +529,11 @@ def integrated_extinction_along_los(
 ) -> float:
     """Return the Beer-Lambert path-integrated mean extinction coefficient.
 
-    Computes the arithmetic mean of K sampled at uniform intervals along
-    the line of sight from (x_from, y_from) to (x_to, y_to), which is
-    the discrete form of Boerger et al. (2024) Eq. 8-9:
+    Computes the arithmetic mean of K sampled along the line of sight from
+    (x_from, y_from) to (x_to, y_to), once per grid cell of an FDS field
+    and at uniform intervals for a field without a grid (see
+    :func:`_los_stats`), which is the discrete form of Boerger et al.
+    (2024) Eq. 8-9:
 
         sigma_bar = (1 / |P|) * sum_p K_p
 
@@ -548,7 +552,8 @@ def integrated_extinction_along_los(
     extinction_sampler : ExtinctionSampler
         Provides ``sample_extinction(time_s, x, y) -> float``.
     step_m : float
-        Maximum spacing between sample points along the ray.
+        Maximum spacing between sample points along the ray, for a field
+        without a grid and where the ray leaves the FDS slice.
 
     Returns
     -------
@@ -585,7 +590,42 @@ def _los_stats(
 
     Every sample is read at *time_s*, or with a *clock* at the time the agent
     reaches it (#650).
+
+    A sampler with a grid (``line_parts``, an FDS ``ExtinctionField``) is
+    read once per grid cell the line crosses, at points fixed to the grid,
+    as FDS+Evac ``See_door`` does (#653); *step_m* then applies only where
+    the line leaves the slice. Other samplers are read at evenly spaced
+    points at most *step_m* apart, both ends included.
     """
+    line_parts = getattr(extinction_sampler, "line_parts", None)
+    parts = None if line_parts is None else line_parts(x_from, y_from, x_to, y_to)
+    if parts is not None:
+        return _cell_los_stats(
+            parts,
+            (x_from, y_from, x_to, y_to),
+            time_s,
+            extinction_sampler,
+            step_m,
+            length,
+            clock,
+        )
+    return _step_los_stats(
+        x_from, y_from, x_to, y_to, time_s, extinction_sampler, step_m, length, clock
+    )
+
+
+def _step_los_stats(
+    x_from: float,
+    y_from: float,
+    x_to: float,
+    y_to: float,
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+    length: float,
+    clock: _ForesightClock | None = None,
+) -> tuple[float, float]:
+    """``_los_stats`` at evenly spaced points at most *step_m* apart."""
     n_samples = max(2, int(math.ceil(length / step_m)) + 1)
     total = 0.0
     worst = 0.0
@@ -600,6 +640,71 @@ def _los_stats(
     return total / n_samples, worst
 
 
+def _cell_los_stats(
+    parts: tuple[LinePart, ...],
+    line: tuple[float, float, float, float],
+    time_s: float,
+    extinction_sampler: ExtinctionSampler,
+    step_m: float,
+    length: float,
+    clock: _ForesightClock | None,
+) -> tuple[float, float]:
+    """``_los_stats`` on the parts of a line given by ``line_parts`` (#653).
+
+    A part on the grid is the plain mean of its samples, one per cell; a
+    part off the slice is sampled every *step_m*. Parts are combined
+    weighted by their length, as the segments of a polyline are.
+    """
+    x0, y0, x1, y1 = line
+    part_means: list[tuple[float, float]] = []
+    worst = 0.0
+    for part in parts:
+        ta, tb = part.t_start, part.t_end
+        part_len = (tb - ta) * length
+        if part.fractions is None:
+            mean, part_worst = _step_los_stats(
+                x0 + ta * (x1 - x0),
+                y0 + ta * (y1 - y0),
+                x0 + tb * (x1 - x0),
+                y0 + tb * (y1 - y0),
+                time_s,
+                extinction_sampler,
+                step_m,
+                part_len,
+                None if clock is None else clock.shifted(ta * length),
+            )
+        else:
+            mean, part_worst = _read_part(
+                part, time_s, extinction_sampler, length, clock
+            )
+        part_means.append((mean, part_len))
+        worst = max(worst, part_worst)
+    return _length_weighted_mean(part_means, []), worst
+
+
+def _read_part(
+    part: LinePart,
+    time_s: float,
+    extinction_sampler,
+    length: float,
+    clock: _ForesightClock | None,
+) -> tuple[float, float]:
+    """Mean and worst K at the samples of a grid part of a line.
+
+    Each sample is read at *time_s*, or with a *clock* when the agent
+    reaches it (#650). The mean is summed in sample order.
+    """
+    fractions = part.fractions
+    if fractions is None:
+        raise ValueError("_read_part needs a part on the grid, not one off the slice")
+    if clock is None:
+        times = np.full(len(fractions), float(time_s))
+    else:
+        times = clock.at_many(fractions * length)
+    values = extinction_sampler.read_cells(part, times).tolist()
+    return sum(values) / len(values), max(0.0, *values)
+
+
 def integrated_extinction_along_polyline(
     waypoints: list[tuple[float, float]],
     time_s: float,
@@ -608,8 +713,8 @@ def integrated_extinction_along_polyline(
 ) -> float:
     """Return the Beer-Lambert path-integrated mean extinction along a polyline.
 
-    Samples K at uniform intervals along each segment of the polyline,
-    takes the mean per segment and returns the mean of those, weighted by
+    Samples K along each segment of the polyline as
+    :func:`integrated_extinction_along_los` does, takes the mean per segment and returns the mean of those, weighted by
     segment length (see :func:`_polyline_stats`).
     """
     if step_m <= 0:
@@ -785,6 +890,10 @@ class RouteCostConfig:
     # (S ~ C/K); NOT calibrated, but chosen to sit well above the mild haze that
     # caused the demo flip-flop (k_ave <= ~0.9) and below genuine walls of smoke.
     impassable_extinction_threshold: float = 3.0
+    # Spacing of route smoke samples [m] for a field without a grid
+    # (constant K, test fields) and where a route leaves the FDS slice. An
+    # FDS field is read once per grid cell instead (#653), and the FED rate
+    # of the walk dose (#171) every sampling_step_m.
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
     alpha: float = 0.706
@@ -1247,6 +1356,15 @@ class _ForesightClock:
         """The time the agent reaches *d* metres along [s]."""
         t = min(self.t0 + (self.d0 + d) / self.speed, self.horizon_end_s)
         return _cap_at_fds_end(self.decision_time_s, t, self.end_s, self.end_owner)
+
+    def at_many(self, d: np.ndarray) -> np.ndarray:
+        """:meth:`at` for every distance in *d*, logging the cap as it does."""
+        t = np.minimum(self.t0 + (self.d0 + d) / self.speed, self.horizon_end_s)
+        cap = max(self.decision_time_s, self.end_s)
+        over = t > cap
+        if over.any():
+            self.at(float(d[int(over.argmax())]))
+        return np.minimum(t, cap)
 
     def shifted(self, d: float) -> _ForesightClock:
         """The clock of the geometry that starts *d* metres further on."""
@@ -1743,7 +1861,7 @@ def _measure_route(
     # an agent past a smoke blob read its committed route as clean and every
     # rival as dirty, on smoke none of them would walk through.
     #
-    # Sampled along the walk itself, around walls, at sampling_step_m over its
+    # Sampled along the walk itself, around walls, once per grid cell over its
     # real length -- which, behind the origin node, is longer than the capped
     # first_share of the segment.
     if first_leg is not None:
