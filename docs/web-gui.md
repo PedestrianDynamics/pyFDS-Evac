@@ -275,7 +275,8 @@ The outcome line comes from the run's status, not from whether the run
 raised an error. It reads "Complete: all agents evacuated" when every agent
 has entered and left, and "Incomplete: time limit reached, *k* agents
 inside" when the time limit stopped the run first. When flow agents were
-still to enter, it adds ", *m* not spawned", a Not spawned tile appears, and
+still to enter, cut off by the time limit or without a free position before
+their flow window closed (the run still goes on to the time limit), it adds ", *m* not spawned", a Not spawned tile appears, and
 the Evacuated tile reads "*e* of *n* that entered", where *n* counts the
 agents that entered
 ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).

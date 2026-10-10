@@ -146,8 +146,10 @@ refused at load with an error that names each journey
 ([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504),
 `check_journey_transitions`).
 Older app exports have this shape, for example the `bottleneck-zone` example
-and 23 of the 55 scenario ZIPs of jupedsim-web-community, which also carry
-`journeys_v2`.
+and 24 of the 55 scenario ZIPs of jupedsim-web-community at commit
+`82404ee`. Of those, 23 also carry `journeys_v2`;
+`standards/rimea/scenario_files/Rimea-12d-bottleneck.zip` does not and needs
+a re-export or hand-written transitions.
 
 If the file also has `journeys_v2`, set `"journeys": []` and
 `"transitions": []` so that `journeys_v2` is converted. Otherwise export the

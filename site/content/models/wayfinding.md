@@ -466,9 +466,11 @@ the agent's position is given, the first leg is sampled along the walk from the 
 every familiarity tier (`_first_leg`, `_polyline_stats` in `route_graph.py`).
 That walk is the routing engine's path through the walkable area, the same one
 that measures the first leg's length; without an engine, or when the query
-fails, it is the straight line. Samples are spaced at most `sampling_step_m`
-along the walk's full length, including any stretch behind the route's origin
-node. The walk's mean \(\bar K\), length and travel time enter the route
+fails, it is the straight line. On an FDS field the walk is read once in
+every grid cell it crosses, as every route polyline is
+([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)),
+including any stretch behind the route's origin node; samples every
+`sampling_step_m` are used only off the grid. The walk's mean \(\bar K\), length and travel time enter the route
 mean \(\bar K\), \(\tau\), the gate and the ranking, so the agent is charged
 for the smoke ahead of it only (`_measure_route`). The walk also gives the
 route's worst sample `k_max_route`, which is reported but decides nothing,
@@ -506,10 +508,12 @@ All defaults that differ between `run.py` and `run_scenario()` are listed in
 The `--vis-cell-size` docstring advises a cell smaller than the thinnest wall
 (`visibility.py`, `VisibilityModel.clear_air`), and the build warns when it is
 not ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)). On the familiarity deck,
-over 30 seeds, the median discovery egress time changes by less than 1 % at
-both halvings. The P90 changes by +1.4 % from 0.05 to 0.025 m (90 % interval
-up to +10 %) and by −5.2 % from 0.1 to 0.05 m, because two runs at 0.1 m end
-in doorway deadlocks
+over 30 seeds, the median discovery egress time changes by about 1 % at
+both halvings. The P90 changes by more than 5 % at both, because 2 to 4 runs
+per grid end in doorway deadlocks
+([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) and
+count as 300 s; without them it changes by −3.0 % from 0.1 to 0.05 m and
++1.1 % from 0.05 to 0.025 m
 ([criterion 6](/verification/testing-familiarity.md#pass-criteria);
 [#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
 
@@ -618,12 +622,12 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   not modelled ([#78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78)).
   The opt-in modes are mechanisms, not validated behaviour: we found no
   published data on how occupants explore unknown space.
-- **FED on the first leg**
-  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
-  The first-leg smoke and travel time follow the walked path at
-  `sampling_step_m`, but the first-leg FED is a share of the first segment's
-  FED growth, in proportion to the walk's length, so the dose over a walk
-  behind the route's origin node is not counted. Anticipated times are
+- **FED of node-to-node legs.** Each leg after the first takes its FED
+  growth from one FED-rate sample at the polyline midpoint. The first leg's
+  dose, including a walk behind the route's origin node, is charged as
+  [Routing](/models/routing.md#limitations) describes
+  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), fixed
+  in 0.5.0). Anticipated times are
   counted from the agent's position, and each smoke sample is read when the
   agent reaches it (`route_graph.py`, `_measure_route`;
   [#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)). See
@@ -673,16 +677,16 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   to explore looks from the node point before it patrols (#250), and the
   patrols that used to clear such stands no longer pass.
   `familiarity_test_no_journey`, in clear air on the 0.05 m grid with the
-  settings of `tests/test_familiarity_no_journey.py`, ends with up to 4
-  agents left in 5 of 150 runs of 5 agents (seeds 1–150; 3 before #250)
-  and in 5 of 60 runs of 20 agents (seeds 1–60; none before #250). That
-  test bounds the rate.
+  settings of `tests/test_familiarity_no_journey.py`, ends at `c619a046`
+  with 2 agents left in 3 of 150 runs of 5 agents (seeds 1–150) and with 2
+  to 6 agents left in 7 of 60 runs of 20 agents (seeds 1–60). At 0.4.0 it
+  was up to 4 agents in 5 of 150 and 5 of 60 runs (3 and none before
+  #250). That test bounds the rate.
 - **Discovery results depend on the clear-air grid**
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). On
-  the familiarity deck the 30-seed criterion passes from 0.05 to 0.025 m on
-  this sample (the 90 % interval of the P90 change reaches +10 %) and
-  fails from 0.1 to 0.05 m because of #359 deadlocks; #168 stays open,
-  blocked on the #359 fix. Use a cell at most half the thinnest wall. Do
+  the familiarity deck the 30-seed criterion fails on both halvings because
+  of #359 deadlocks, and passes on both without the deadlocked runs; #168
+  stays open, blocked on the #359 fix. Use a cell at most half the thinnest wall. Do
   not report a discovery egress time without its grid;
   [Wayfinding in practice](/docs/wayfinding.md) gives the measured spread.
 - **No per-exit familiarity**
@@ -782,11 +786,10 @@ Details, with line numbers:
 These tests check implementation behaviour. They do not validate human
 wayfinding or evacuation times. The coupled check, in clear air, is
 [Verification › Familiarity](/verification/testing-familiarity.md): its
-criteria 1–5 pass, except criterion 4 on the 0.1 m grid, where 4 agents
-deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
-Its grid-convergence criterion passes from 0.05 to 0.025 m on this 30-seed
-sample (the 90 % interval of the P90 change reaches +10 %) and fails from
-0.1 to 0.05 m because of #359 deadlocks
+criteria 1–5 pass, except criterion 4 on the 0.05 m reference grid, where 4
+agents deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
+Its grid-convergence criterion fails on both halvings on this 30-seed sample
+because of #359 deadlocks, and passes on both without the deadlocked runs
 ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), open).
 
 - `tests/test_exit_visibility_alpha.py` (`assets/exit_visibility_alpha`): the

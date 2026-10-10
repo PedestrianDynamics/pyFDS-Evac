@@ -378,7 +378,9 @@ the effect of #172. The run of Figure 7 gives the same numbers before and
 after #174. For both tiers, the first leg's smoke is resampled along the
 walked path from the agent to its next node, the path that also measures the
 first leg's length
-([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)).
+([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)). Since
+0.5.0 the dose of a walk behind the route's origin node is charged as well
+(#171).
 
 The patrol can stall: when smoke limits legibility to a few metres, a patrol
 over a few known nodes may never pass a legible new sign
@@ -387,23 +389,25 @@ over a few known nodes may never pass a legible new sign
 **Discovery times depend on the grid.** On
 `assets/familiarity_test_discovery`, seeds 1–30, the grid study of the
 [familiarity verification](testing-familiarity.md#pass-criteria) (criterion
-6, at `828ae8c3`) gives the following last-out times of the discovery tier,
+6, at `c619a046`) gives the following last-out times of the discovery tier,
 read from the simulation clock, with a run that does not finish counted as
 300 s:
 
 | Clear-air cell | Median | P90 | Runs not finished ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
 |---|---|---|---|
-| 0.25 m (does not resolve the walls) | 76.6 s | 90.7 s | 2 of 30 |
-| 0.1 m | 76.7 s | 87.3 s | 2 of 30 |
-| 0.05 m | 76.2 s | 82.8 s | 0 of 30 |
-| 0.025 m | 76.7 s | 83.9 s | 0 of 30 |
+| 0.25 m (does not resolve the walls) | 75.7 s | 104.6 s | 3 of 30 |
+| 0.1 m | 74.6 s | 85.4 s | 2 of 30 |
+| 0.05 m | 74.7 s | 300 s | 4 of 30 |
+| 0.025 m | 75.5 s | 104.3 s | 3 of 30 |
 
 The fully familiar tier took 34.9 s at seed 420. The code advises a cell smaller than the
 thinnest wall and warns when it is not (`visibility.py`, `VisibilityModel.clear_air`). The #168 investigation recommends at
-most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. From
-0.05 to 0.025 m the median and the P90 change by less than 5 %, though the
-bootstrap 90 % interval of the P90 change reaches +10 %; from 0.1 to 0.05 m
-the P90 changes by −5.2 %, because of the two deadlocked runs at 0.1 m
+most half of it, as guidance: 0.05 m for the 0.1 m walls of this deck. The
+median changes by about 1 % at both halvings. The P90 fails the 5 % rule at
+both, because deadlocked runs count as 300 s; without them it changes by
+−3.0 % from 0.1 to 0.05 m and +1.1 % from 0.05 to 0.025 m. Since
+[#726](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726) (0.5.0) the
+deadlocks end 12 of these 120 runs, against 4 before
 ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), open).
 Do not quote a discovery egress time without its grid.
 
