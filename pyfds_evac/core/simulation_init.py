@@ -545,9 +545,24 @@ def _seated(part, count, max_radius, seed):
         return None
 
 
+def _seat_bound(part, max_radius):
+    """More agents than *part* can ever seat: their disks would not fit.
+
+    Every centre keeps *max_radius* from the edges and twice that from
+    the others, so the disks of radius *max_radius* lie in *part* apart.
+    """
+    return math.floor(part.area / (math.pi * max_radius * max_radius))
+
+
 def _most_that_fit(part, wanted, max_radius, seed):
-    """Positions for as many of *wanted* agents as the sampler seats in *part*."""
-    best = _seated(part, wanted, max_radius, seed) if wanted else []
+    """Positions for as many of *wanted* agents as the sampler seats in *part*.
+
+    With one seed the sampler accepts the same positions in the same order
+    whatever the count, so the count it seats is a prefix length and the
+    search over it is exact; counts above ``_seat_bound`` are not tried.
+    """
+    wanted = min(wanted, _seat_bound(part, max_radius))
+    best = _seated(part, wanted, max_radius, seed) if wanted > 0 else []
     if best is not None:
         return best
     low, high, best = 0, wanted - 1, []
@@ -568,7 +583,9 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
     from its own part's edge. Each part takes a share in proportion to its
     capacity estimate; what a part cannot seat goes to the next, smallest
     part first, and a remainder after the largest goes back to the parts
-    with room. Only a remainder no part can seat raises.
+    that seated all they were asked for. A part that seated fewer is full
+    under its seed and is not asked again. A remainder those parts cannot
+    hold raises without asking them.
     """
     capacities = [_estimate_max_capacity(part, max_radius) for part in parts]
     order = sorted(range(len(parts)), key=lambda i: capacities[i])
@@ -580,17 +597,22 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
         for rank in range(len(parts))
     ]
     seated: list = [[] for _ in parts]
+    with_room = []
     for rank, i in enumerate(order):
         placed = sum(len(seated[j]) for j in order[:rank])
         wanted = number - placed - sum(shares[j] for j in order[rank + 1 :])
         seated[i] = _most_that_fit(parts[i], wanted, max_radius, seeds[rank])
-    for rank, i in enumerate(order):
-        missing = number - sum(len(positions) for positions in seated)
+        if len(seated[i]) == wanted:
+            with_room.append((rank, i))
+    missing = number - sum(len(positions) for positions in seated)
+    room = sum(_seat_bound(parts[i], max_radius) - len(seated[i]) for _, i in with_room)
+    for rank, i in with_room if missing <= room else []:
         if missing == 0:
             break
         more = _most_that_fit(
             parts[i], len(seated[i]) + missing, max_radius, seeds[rank]
         )
+        missing -= max(len(more) - len(seated[i]), 0)
         seated[i] = max(seated[i], more, key=len)
     positions = [position for part in seated for position in part]
     if len(positions) < number:

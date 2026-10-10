@@ -22,10 +22,12 @@ import pytest
 from shapely.geometry import Point, box
 from test_run_outcome import D, _coords, _scenario
 
+import pyfds_evac.core.simulation_init as simulation_init_mod
 from pyfds_evac.core.scenario import run_scenario
 from pyfds_evac.core.simulation_init import (
     SpawnCapacityError,
     _distribute_beside,
+    _free_area,
     _seed_shared_areas,
     initialize_simulation_from_json,
 )
@@ -148,6 +150,29 @@ def test_a_split_area_too_small_for_the_count_is_a_capacity_error():
         _distribute_beside(strip, [D1], 12, 12, RADIUS, 1, placed)
 
 
+def test_a_full_part_is_not_asked_again(monkeypatch):
+    """Each failed sampler call stalls 10 000 draws, so their number is bounded.
+
+    The two halves of the strip seat 6 agents; asking for 100 tried the
+    full halves again with ever larger counts (23 failed calls).
+    """
+    failed = []
+    real = jps.distribute_by_number
+
+    def counting(**kwargs):
+        try:
+            return real(**kwargs)
+        except jps.AgentNumberError:
+            failed.append(kwargs["number_of_agents"])
+            raise
+
+    monkeypatch.setattr(simulation_init_mod.jps, "distribute_by_number", counting)
+    placed = [(box(0, 0, 4, 4), [(2.0, 0.25)], 0.3, [D])]
+    with pytest.raises(SpawnCapacityError, match=r"only 6 fit in the 2 parts"):
+        _distribute_beside(box(0, 0, 4, 0.5), [D1], 100, 99, RADIUS, 1, placed)
+    assert len(failed) <= 4
+
+
 def test_no_free_area_is_a_capacity_error():
     """A placed agent in the middle of a 0.5 m square leaves no seat."""
     square = box(0, 0, 0.5, 0.5)
@@ -223,3 +248,28 @@ def test_a_b_a_places_everybody_apart(tmp_path, with_journeys, seed):
     assert len(positions) == 49
     closest = min(math.dist(a, b) for a, b in itertools.combinations(positions, 2))
     assert closest >= 2 * RADIUS
+
+
+@pytest.mark.parametrize("placed_radius", [0.15, RADIUS, 0.3])
+def test_a_hole_keeps_the_full_circle_free(placed_radius):
+    """The buffered hole is a polygon; its edges must not cut into the circle."""
+    agent = (2.0, 2.0)
+    room = box(0, 0, 4, 4)
+    free = _free_area(room, RADIUS, [(room, [agent], placed_radius, [D])])
+    hole = 2 * max(RADIUS, placed_radius) - RADIUS
+    assert free.distance(Point(agent)) >= hole - 1e-9
+
+
+@pytest.mark.parametrize("seed", [44, 65, 69, 96])
+def test_a_dense_room_leaves_the_inner_box_its_spacing(seed):
+    """100 agents in a 5.7 m square, then 2 in a 2 m box inside it.
+
+    Under these seeds a hole inscribed in its circle, not circumscribed,
+    lets an agent of the box land 0.39952-0.39998 m from one of the room's.
+    """
+    spawns = [
+        _spawn(box(0.3, 0.3, 6, 6), 100, RADIUS, 0, D),
+        _spawn(box(2, 2, 4, 4), 2, RADIUS, 1, D1),
+    ]
+    placed = _seed_shared_areas(spawns, seed)
+    assert _closest(placed[0], placed[1]) >= 2 * RADIUS
