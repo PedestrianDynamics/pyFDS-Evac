@@ -327,7 +327,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   placed cut the free part of an area into pieces, the agents are shared
   among the pieces by their capacity; when the pieces cannot seat them
   all, or nothing is left free, the run stops with `SpawnCapacityError`.
-  Flow-spawned agents are not covered.
+  Flow-spawned agents keep the same spacing, see #710 below.
+
+- A flow-spawned agent (`use_flow_spawning`, `flow_schedule`) now keeps
+  twice the larger radius from every agent already in the run, as the
+  agents of overlapping spawn areas do (#710). It used to be checked
+  only by JuPedSim's `add_agent`, which refuses closer than the model's
+  own limit: the sum of the two radii for the collision-free speed
+  models, less for `SocialForceModel` and
+  `GeneralizedCentrifugalForceModel`, nothing for `WarpDriverModel`. A
+  flow of 0.15 m agents into an area where 0.3 m agents wait could
+  enter 0.48 m from one of them instead of 0.6 m, and under
+  `WarpDriverModel` on top of one. A flow that finds no free position
+  waits as before; instead of a `Flow spawn attempt failed` line at
+  every step it is counted in `metrics["flow_spawns_deferred"]`, and
+  the run ends with one line per such flow: `Flow spawning: '<id>'
+  found no free position at N steps between t=A s and t=B s; K of its
+  M agents did not enter`. Agents of equal radius under the
+  collision-free speed models are placed as before: `l_corridor` and
+  the three flow configs of `t_junction` (seeds 1 and 42) add the same
+  agents at the same times and positions, with the same ids and
+  metrics. Of the rerouting goldens only `ft_full_gate_detour` and
+  `ft_full_additive_detour` (`SocialForceModel`, a 0.2 m flow) move:
+  5 of their 30 agents entered 0.19 m from another, now none closer
+  than 0.4 m; all 30 still get out, at 58.18 s instead of 54.39 s and
+  at 48.33 s instead of 48.35 s.
 - An applied route is walked as it was priced (#445). A route is priced
   from the node the agent last left, through the node after it. When
   the agent's current target was further along the new route, the agent

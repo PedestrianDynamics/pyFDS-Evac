@@ -506,6 +506,47 @@ def _free_area(area, max_radius, overlapping):
     return area.difference(unary_union(holes))
 
 
+def _occupied(simulation, agent_radii):
+    """Positions and radii of the agents in *simulation*, for ``_clear_of_agents``."""
+    agents = list(simulation.agents())
+    xy = np.array([agent.position for agent in agents], dtype=float).reshape(-1, 2)
+    radii = np.array([agent_radii.get(int(agent.id), 0.2) for agent in agents])
+    return xy, radii.astype(float)
+
+
+# Workaround: JuPedSim 1.4.2 refuses an agent of these models that is closer
+# to another than the sum of their radii, and spends an agent id on every
+# refused ``add_agent``. A flow candidate that close is still handed to
+# ``add_agent`` so that the ids, and the runs, stay as they were. No upstream
+# issue; drop the exception once ``add_agent`` takes a spacing, or spends no
+# id on a refusal (``test_flow_spawn_spacing.py`` pins both facts).
+_RADIUS_SUM_MODELS = frozenset(
+    {
+        "CollisionFreeSpeedModel",
+        "CollisionFreeSpeedModelV2",
+        "AnticipationVelocityModel",
+    }
+)
+
+
+def _crowds_agents(model_type, agent_parameters, max_radius, occupied):
+    """Whether ``add_agent`` would take a flow agent closer than the spacing (#710).
+
+    As for overlapping spawn areas (#402), two agents keep twice the larger
+    radius apart: *max_radius* is the flow distribution's bound, *occupied*
+    comes from ``_occupied``. A candidate that the model refuses anyway, see
+    ``_RADIUS_SUM_MODELS``, is left to ``add_agent``.
+    """
+    xy, radii = occupied
+    position = agent_parameters.position
+    gaps = np.hypot(xy[:, 0] - position[0], xy[:, 1] - position[1])
+    if np.all(gaps >= 2 * np.maximum(max_radius, radii)):
+        return False
+    if model_type not in _RADIUS_SUM_MODELS:
+        return True
+    return not np.any(gaps < agent_parameters.radius + radii)
+
+
 def _seatable_parts(free, max_radius):
     """The parts of *free* that can seat an agent, in a stable order.
 
