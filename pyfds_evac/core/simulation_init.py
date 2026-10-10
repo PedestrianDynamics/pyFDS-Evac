@@ -413,7 +413,17 @@ def create_agent_parameters(
 
 
 def _estimate_max_capacity(polygon, max_radius):
-    """Estimate how many agents fit in a polygon using packing approximation."""
+    """Estimate how many agents fit in a polygon: half its area over one disc.
+
+    An engineering estimate, not a model quantity. ``distribute_by_number``
+    keeps centres a radius from the edges, which the area ignores, so the
+    estimate is high in thin or small areas and low in large ones. Measured
+    on JuPedSim 1.4.2 over 100 seeds for 33 areas (assets, rectangles,
+    triangles; #508): in the areas up to 56 m2, a count above the estimate
+    is placed in at most 55% of seeds, and the estimate itself in 0% of
+    seeds in a 20 x 1 m strip. In a 400 m2 area at radius 0.1 m it is 1.4%
+    below the median, so a count above it is placed in 99% of seeds.
+    """
     effective_radius = max(max_radius, 0.1)
     theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
     return max(1, math.floor(theoretical * 0.5))

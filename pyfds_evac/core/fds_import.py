@@ -1411,6 +1411,7 @@ def spawn_capacity(area: float, max_radius: float) -> int:
     (half the area over a disc of *max_radius*, at least 0.1 m); the
     runtime refuses to start when a spawn area asks for more. Kept here so
     the importer does not import JuPedSim; a test pins the two together.
+    It is high in thin or small areas and low in large ones; see there.
     """
     radius = max(max_radius, 0.1)
     return max(1, math.floor(area / (math.pi * radius * radius) * 0.5))

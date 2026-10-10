@@ -284,7 +284,11 @@ def _remove_run_files(output_file: str) -> None:
 
 
 def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
-    """Estimate a conservative packing limit for one spawn polygon."""
+    """Estimate a packing limit for one spawn polygon.
+
+    As ``simulation_init._estimate_max_capacity``, which documents where
+    the estimate is high and where it is low.
+    """
     effective_radius = max(max_radius, 0.1)
     theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
     return max(1, math.floor(theoretical * 0.5))
