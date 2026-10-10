@@ -1619,6 +1619,8 @@ def run_scenario(
     from .simulation_init import (
         _crowds_agents,
         _find_nearest_exit,
+        _forget_removed,
+        _jupedsim_positions,
         _occupied,
         _random_point_in_polygon,
         build_agent_path_state,
@@ -2351,6 +2353,7 @@ def run_scenario(
         last_progress_time = -1.0
         # source id -> (steps without a free position, first and last time)
         deferred_spawns: dict[int, tuple[int, float, float]] = {}
+        jupedsim_positions = _jupedsim_positions(simulation)
         last_progress_agents = simulation.agent_count()
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
@@ -2431,7 +2434,9 @@ def run_scenario(
                     flow_radius = max_agent_radius(flow_dist["params"])
                     for _ in range(spawning_freqs_and_numbers[source_id][1]):
                         spawned_this_attempt = False
-                        occupied = _occupied(simulation, agent_radii)
+                        occupied = _occupied(
+                            simulation, agent_radii, jupedsim_positions
+                        )
                         selected_variant = None
                         selected_variant_info = None
                         fallback_exit_id = None
@@ -2590,6 +2595,9 @@ def run_scenario(
                                     spawn_keys, origin_counts, agent_id, pending
                                 )
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)
+                                jupedsim_positions[agent_id] = tuple(
+                                    agent_parameters.position
+                                )
                                 # print(
                                 #     "Spawned flow agent "
                                 #     f"{agent_id} from source {source_id} at t={current_time:.2f}s "
@@ -3429,7 +3437,11 @@ def run_scenario(
                         }
                     )
 
+            if has_flow_spawning:
+                jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
+            if has_flow_spawning:
+                _forget_removed(jupedsim_positions, simulation)
             if frame_recorder is not None:
                 frame_recorder.after_step(
                     simulation,

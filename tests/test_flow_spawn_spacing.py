@@ -24,7 +24,12 @@ from shapely.geometry import Polygon, box
 from test_run_outcome import D, _coords, _scenario
 
 from pyfds_evac.core.scenario import run_scenario
-from pyfds_evac.core.simulation_init import _RADIUS_SUM_MODELS, _crowds_agents
+from pyfds_evac.core.simulation_init import (
+    _CONTACT_OWN_RADIUS,
+    _CONTACT_RADIUS_SUM,
+    _crowds_agents,
+    _jupedsim_positions,
+)
 
 D1 = "jps-distributions_1"
 AREA = box(1.0, 1.0, 4.0, 5.0)
@@ -32,8 +37,11 @@ STANDING_R = 0.3
 FLOW_R = 0.15
 
 
-def _scenario_with_flow(model, area, standing, flow, flow_end_s, max_time_s):
-    """*standing* agents that wait in *area*, and a flow of *flow* into it."""
+def _scenario_with_flow(
+    model, area, standing, flow, flow_end_s, max_time_s, premovement_s=100.0
+):
+    """*standing* agents that wait *premovement_s* in *area*, and a flow of
+    *flow* into it."""
     n_standing, r_standing = standing
     n_flow, r_flow = flow
     scenario = _scenario(
@@ -42,7 +50,7 @@ def _scenario_with_flow(model, area, standing, flow, flow_end_s, max_time_s):
         radius=r_standing,
         use_premovement=True,
         premovement_distribution="constant",
-        premovement_param_a=100.0,
+        premovement_param_a=premovement_s,
     )
     raw = scenario.raw
     raw["config"]["simulation_settings"]["simulationParams"]["model_type"] = model
@@ -110,6 +118,23 @@ def test_flow_agents_keep_twice_the_larger_radius(monkeypatch, model, seed):
     assert min(flow) >= -1e-9
 
 
+@pytest.mark.parametrize("model", ["CollisionFreeSpeedModel", "SocialForceModel"])
+@pytest.mark.parametrize("seed", [1, 2, 3])
+def test_flow_agents_keep_the_spacing_to_walking_agents(monkeypatch, model, seed):
+    """The agents already in the area walk off while the flow enters.
+
+    JuPedSim refuses against where they stood at the start of the last
+    iteration, not where they are; the spacing holds to where they are.
+    """
+    scenario = _scenario_with_flow(
+        model, AREA, (12, STANDING_R), (20, FLOW_R), 2.0, 3.0, premovement_s=0.0
+    )
+    added, _, _ = _run_recording_gaps(monkeypatch, scenario, seed)
+    flow = [slack for radius, slack in added if radius == FLOW_R]
+    assert flow
+    assert min(flow) >= -1e-9
+
+
 def test_a_full_area_defers_the_flow_and_reports_it(monkeypatch):
     """Four agents fill a 1.2 m square; the flow of five never finds room."""
     scenario = _scenario_with_flow(
@@ -136,28 +161,62 @@ def test_an_uncrowded_flow_defers_nothing(monkeypatch):
     assert "found no free position" not in out
 
 
-def _occupied(*agents):
+def _occupied(*agents, seen=None):
+    """*agents* ``(position, radius)``; JuPedSim saw them at *seen*, or there."""
     xy = np.array([position for position, _ in agents], dtype=float).reshape(-1, 2)
-    return xy, np.array([radius for _, radius in agents], dtype=float)
+    radii = np.array([radius for _, radius in agents], dtype=float)
+    seen_xy = xy if seen is None else np.array(seen, dtype=float).reshape(-1, 2)
+    return xy, radii, seen_xy
 
 
 def _parameters(position, radius):
     return jps.CollisionFreeSpeedModelAgentParameters(position=position, radius=radius)
 
 
+# Radii 0.25 and 0.125 m and the gaps below are exact in binary, so that
+# contact (0.375 m, or 0.125 m for the social force model) is tested as is.
+BIG_R = 0.25
+SMALL_R = 0.125
+CONTACT = BIG_R + SMALL_R
+AFTER_CONTACT = float(np.nextafter(CONTACT, 1.0))
+AFTER_OWN = float(np.nextafter(SMALL_R, 1.0))
+
+
 @pytest.mark.parametrize(
     ("gap", "model", "crowds"),
     [
-        (0.61, "CollisionFreeSpeedModel", False),  # clear of 0.6 m
-        (0.5, "CollisionFreeSpeedModel", True),  # the model would add it
-        (0.4, "CollisionFreeSpeedModel", False),  # left to the model's refusal
-        (0.4, "WarpDriverModel", True),  # no refusal to leave it to
+        (0.5, "CollisionFreeSpeedModel", False),  # clear of 2 * 0.25 m
+        (0.4, "CollisionFreeSpeedModel", True),  # the model would add it
+        (AFTER_CONTACT, "CollisionFreeSpeedModel", True),
+        (CONTACT, "CollisionFreeSpeedModel", False),  # left to the refusal
+        (CONTACT, "AnticipationVelocityModel", False),
+        (CONTACT, "SocialForceModel", True),
+        (AFTER_OWN, "SocialForceModel", True),
+        (SMALL_R, "SocialForceModel", False),  # left to the refusal
+        (0.0, "WarpDriverModel", True),  # no refusal to leave it to
+        (0.0, "GeneralizedCentrifugalForceModel", True),  # not mirrored
     ],
 )
 def test_crowds_agents(gap, model, crowds):
-    occupied = _occupied(((0.0, 0.0), STANDING_R))
-    parameters = _parameters((gap, 0.0), FLOW_R)
-    assert _crowds_agents(model, parameters, FLOW_R, occupied) is crowds
+    occupied = _occupied(((0.0, 0.0), BIG_R))
+    parameters = _parameters((gap, 0.0), SMALL_R)
+    assert _crowds_agents(model, parameters, SMALL_R, occupied) is crowds
+
+
+@pytest.mark.parametrize(
+    ("now", "seen", "crowds"),
+    [
+        # Inside contact now, outside where JuPedSim saw it: JuPedSim adds it.
+        (0.375, 0.5, True),
+        # Outside contact now, inside where JuPedSim saw it: JuPedSim refuses.
+        (0.5, 0.375, False),
+    ],
+)
+def test_contact_is_measured_where_jupedsim_saw_the_agent(now, seen, crowds):
+    occupied = _occupied(((-now, 0.0), BIG_R), seen=[(-seen, 0.0)])
+    parameters = _parameters((0.0, 0.0), SMALL_R)
+    model = "CollisionFreeSpeedModel"
+    assert _crowds_agents(model, parameters, SMALL_R, occupied) is crowds
 
 
 def test_an_empty_run_is_never_crowded():
@@ -166,27 +225,42 @@ def test_an_empty_run_is_never_crowded():
     )
 
 
-def _model_and_parameters(model_type):
-    if model_type == "CollisionFreeSpeedModel":
-        return jps.CollisionFreeSpeedModel(), jps.CollisionFreeSpeedModelAgentParameters
-    if model_type == "CollisionFreeSpeedModelV2":
-        return (
-            jps.CollisionFreeSpeedModelV2(),
-            jps.CollisionFreeSpeedModelV2AgentParameters,
-        )
-    return (
-        jps.AnticipationVelocityModel(),
+MODELS = {
+    "CollisionFreeSpeedModel": (
+        jps.CollisionFreeSpeedModel,
+        jps.CollisionFreeSpeedModelAgentParameters,
+    ),
+    "CollisionFreeSpeedModelV2": (
+        jps.CollisionFreeSpeedModelV2,
+        jps.CollisionFreeSpeedModelV2AgentParameters,
+    ),
+    "AnticipationVelocityModel": (
+        jps.AnticipationVelocityModel,
         jps.AnticipationVelocityModelAgentParameters,
-    )
+    ),
+    "SocialForceModel": (
+        jps.SocialForceModel,
+        jps.SocialForceModelAgentParameters,
+    ),
+}
 
 
-@pytest.mark.parametrize("model_type", sorted(_RADIUS_SUM_MODELS))
-def test_jupedsim_refuses_below_the_radius_sum_and_spends_an_id(model_type):
-    """The two JuPedSim facts that ``_RADIUS_SUM_MODELS`` relies on."""
-    model, parameters = _model_and_parameters(model_type)
-    simulation = jps.Simulation(model=model, geometry=box(0, 0, 10, 10))
+@pytest.mark.parametrize("radii", [(BIG_R, SMALL_R), (SMALL_R, BIG_R)])
+@pytest.mark.parametrize(
+    "model_type", sorted(_CONTACT_RADIUS_SUM | _CONTACT_OWN_RADIUS)
+)
+def test_jupedsim_refuses_at_contact_and_spends_an_id(model_type, radii):
+    """The JuPedSim facts that ``_crowds_agents`` mirrors.
+
+    The agent added second is refused at contact, inclusive, accepted one
+    float further, and the refusal spends an agent id.
+    """
+    model, parameters = MODELS[model_type]
+    simulation = jps.Simulation(model=model(), geometry=box(0, 0, 10, 10))
     exit_stage = simulation.add_exit_stage(Polygon(box(9, 9, 9.5, 9.5)))
     journey = simulation.add_journey(jps.JourneyDescription([exit_stage]))
+    standing_r, added_r = radii
+    contact = added_r if model_type in _CONTACT_OWN_RADIUS else standing_r + added_r
 
     def add(x, radius):
         return simulation.add_agent(
@@ -198,8 +272,44 @@ def test_jupedsim_refuses_below_the_radius_sum_and_spends_an_id(model_type):
             )
         )
 
-    first = add(5.0, STANDING_R)
+    first = add(5.0, standing_r)
     with pytest.raises(RuntimeError):
-        add(5.0 + STANDING_R + FLOW_R - 0.01, FLOW_R)
-    second = add(5.0 + STANDING_R + FLOW_R + 0.01, FLOW_R)
+        add(5.0 + contact, added_r)
+    second = add(float(np.nextafter(5.0 + contact, 10.0)), added_r)
     assert second == first + 2
+    standing = next(a for a in simulation.agents() if a.id == first)
+    assert standing.model.radius == standing_r
+
+
+@pytest.mark.parametrize(
+    "model_type", sorted(_CONTACT_RADIUS_SUM | _CONTACT_OWN_RADIUS)
+)
+def test_jupedsim_refuses_where_the_agent_stood_before_the_iteration(model_type):
+    """``add_agent`` measures to where a walking agent stood when the last
+    iteration began, not to where it is now (``_jupedsim_positions``)."""
+    model, parameters = MODELS[model_type]
+    simulation = jps.Simulation(model=model(), geometry=box(0, 0, 10, 10), dt=0.05)
+    exit_stage = simulation.add_exit_stage(Polygon(box(9.5, 4.5, 10, 5.5)))
+    journey = simulation.add_journey(jps.JourneyDescription([exit_stage]))
+
+    def add(x):
+        return simulation.add_agent(
+            parameters(
+                position=(x, 5.0), journey_id=journey, stage_id=exit_stage, radius=0.2
+            )
+        )
+
+    add(2.0)
+    for _ in range(40):
+        simulation.iterate()
+    seen = _jupedsim_positions(simulation)
+    simulation.iterate()
+    walker = next(iter(simulation.agents()))
+    before = seen[walker.id][0]
+    assert walker.position[0] > before
+    contact = 0.2 if model_type in _CONTACT_OWN_RADIUS else 0.4
+    # Within contact of where it stood, beyond contact of where it is.
+    x = (before - contact + walker.position[0] - contact) / 2
+    assert walker.position[0] - x > contact
+    with pytest.raises(RuntimeError):
+        add(x)
