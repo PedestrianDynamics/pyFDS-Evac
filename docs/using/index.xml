@@ -593,8 +593,8 @@ title="Copy code"
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>The spawn area of ISO-table21 is about 0.94 m × 1.81 m. With &lt;code>&amp;quot;number&amp;quot;: 20&lt;/code>
-the summary still reads &lt;code>Agents: ~20&lt;/code>, but the run stops with exit status 1
-and prints:&lt;/p>
+the summary still reads &lt;code>Agents: ~20&lt;/code>, but the run, and &lt;code>--export-only&lt;/code>,
+stop with exit status 1 and print:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>pyfds-evac: error: Distribution &amp;#39;jps-distributions_0&amp;#39;: requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -629,9 +629,11 @@ title="Copy code"
 &lt;li>
 &lt;p>&lt;strong>The files load.&lt;/strong> &lt;code>pyfds-evac --scenario DIR --print-summary --export-only&lt;/code>
 prints the model, seed, maximum time, the counts and the journeys. It
-returns before the JuPedSim set-up. It does not catch an agent that never
-moves, a spawn area too small for its agents, or a polygon outside the
-walkable area.&lt;/p>
+returns before the JuPedSim set-up. A spawn area that asks for more agents
+than its capacity estimate stops it with the run&amp;rsquo;s error line and exit
+status 1. It does not catch an agent that never moves, a count within the
+estimate that JuPedSim cannot place, or a polygon outside the walkable
+area.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>The scenario runs.&lt;/strong> Run it without &lt;code>--export-only&lt;/code>. Set a small
@@ -877,7 +879,7 @@ scenarios and scripts of a source checkout; with pip, replace
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--export-only&lt;/code>&lt;/td>
-&lt;td>Export the bundle without running the simulation.&lt;/td>
+&lt;td>Export the bundle without running the simulation. A spawn area that asks for more agents than its capacity estimate exits with status 1, as the run does.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -6769,13 +6771,18 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>pyfds-evac: error: Distribution '…': requested N agents but area can hold at most ~C. …&lt;/code>&lt;/td>
-&lt;td>A spawn area asks for more agents than the run&amp;rsquo;s capacity estimate.&lt;/td>
+&lt;td>A spawn area asks for more agents than the run&amp;rsquo;s capacity estimate. Also printed by &lt;code>--export-only&lt;/code>.&lt;/td>
 &lt;td>Lower &lt;code>number&lt;/code>, or enlarge the polygon in &lt;code>distributions.&amp;lt;id&amp;gt;.coordinates&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>pyfds-evac: error: Distribution '…': could not place the N requested agents (Only K of N could be placed. …). The capacity estimate ~C is an upper bound. …&lt;/code>&lt;/td>
-&lt;td>The count is within the estimate, but JuPedSim cannot place every agent, for example in a narrow area. Only in scenarios with neither journeys nor transitions.&lt;/td>
+&lt;td>The count is within the estimate, but JuPedSim cannot place every agent, for example in a narrow area.&lt;/td>
 &lt;td>As above.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: Distribution '…': JuPedSim could not add an agent to the simulation (…).&lt;/code>&lt;/td>
+&lt;td>JuPedSim refused an agent at a position the sampler gave, for example for an unknown journey or stage or a model parameter it rejects.&lt;/td>
+&lt;td>Read JuPedSim&amp;rsquo;s message in the parentheses; the spawn area is not too small.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>ValueError: Unknown routing cost_model '…'; expected one of ('gate', 'additive')&lt;/code>&lt;/td>
@@ -7027,7 +7034,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29eab40b07ea21ab7da158046ff83678b3d73e7c">&lt;code>29eab40&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/71aa9ffb346e13a18da5a80f6405d9aaac8402ad">&lt;code>71aa9ff&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7051,7 +7058,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">18a4d4d8aa492a397ffd1160aacbd2f68620b916b69c769f751cbd92c2b05d89&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">aaed9fa5068c82b30a4d257b049b26cb0a60b7993459415f6f52fcfb63b69419&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
