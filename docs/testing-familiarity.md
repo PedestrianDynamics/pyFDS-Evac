@@ -12,9 +12,9 @@ aliases: [/docs/testing-familiarity/, /models/verification/testing-familiarity/]
 | **Level** | Coupled: two full runs in clear air (a uniform zero-extinction field), no FDS |
 | **Asset** | `assets/familiarity_test_full`, `assets/familiarity_test_discovery` |
 | **Expected value from** | the plan alone: shortest paths, sight lines to the signs and the wiring rule, computed without pyFDS-Evac |
-| **Status** | criteria 1–5 pass on the 0.05 and 0.025 m sight grids; at 0.1 m criteria 1–3 and 5 pass, and criterion 4 fails because 4 agents deadlock in CP1's door ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)); the `run.py` default of 0.25 m does not resolve the walls; criterion 6 (30 seeds) passes from 0.05 to 0.025 m on this sample (the 90 % interval of the P90 change reaches +10 %) and fails from 0.1 to 0.05 m, because of #359 deadlocks at 0.1 m ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)) |
+| **Status** | on the 0.05 m reference grid criteria 1–3 and 5 pass, and criterion 4 fails because 4 agents deadlock in CP1's door ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)); criteria 1–5 pass on the 0.1 and 0.025 m grids; the `run.py` default of 0.25 m does not resolve the walls; criterion 6 (30 seeds) fails on both halvings, 0.1 → 0.05 m and 0.05 → 0.025 m, because of #359 deadlocks, and passes on both when the deadlocked runs are left out ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). The deadlocks became more frequent with [#726](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726) (0.5.0), which counts a checkpoint as reached once the agent is inside its box |
 
-![Two copies of the same plan side by side. Left, 20 fully familiar agents walk straight to the one door in the partition and out. Right, 20 discovery agents first explore the dead-end rooms in the west, then walk through the door and out. Agents are coloured by the node they are heading for](/images/verification/familiarity.gif)
+![Two copies of the same plan side by side. Left, 20 fully familiar agents walk straight to the one door in the partition and out. Right, 20 discovery agents first explore the dead-end rooms in the west; 16 then walk through the door and out, and 4 stop in CP1's door, deadlocked. Agents are coloured by the node they are heading for](/images/verification/familiarity.gif)
 
 *Left: `full`. Right: `discovery`, 0.05 m sight grid. Colour: the node the
 agent is heading for (full: CP3 until it passes the door, then the exit;
@@ -118,10 +118,12 @@ visibility-graph shortest paths, the legibility rule and the wiring rule.
 | discovery: tour length | 52.0 m (1.9 × full); \(t_{\text{ref}}\) = 40.0 s | shortest path along the tour |
 | exit sign seen from CP3's door | first legible at y = 12.96–13.08 m, for agent centres 0.2 m clear of the jambs (x = 17.2–18.0 m) | the west jamb blocks the sight line |
 
-The last row matters. Arrival at a stage registers within 0.7 m of a random
-point in its box
-([#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)), so
-arrival at CP3 can register from y = 12.52 m, still south of the door. There
+The last row matters. Arrival at a checkpoint registers when the agent's
+centre is inside its box, or within r + 0.5 m (0.7 m here, r = 0.2 m) of a
+random target point in the box
+([#69](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69)). The
+target is drawn at least 0.8 r = 0.16 m inside the box, so arrival at CP3
+can register from y = 12.68 m, still south of the door and of the sign line. There
 the exit sign is behind the jamb, and arriving teaches nothing. If the agent
 has stepped past the jamb by its next re-evaluation, it sees the exit and
 leaves. If not, it has no frontier left. Before it patrols, it walks until
@@ -130,18 +132,21 @@ again
 ([Models › Wayfinding §2.4](/models/wayfinding.md#2-the-knowledge-contract)).
 The criteria test that each decision matches what the agent could see.
 
-![Zoom on CP3's door: the partition with its 1.2 m door, the CP3 box north of it, the dashed region within 0.7 m of the box where arrival can register, reaching south of the door, the green line above which the exit sign is legible, with its grid tolerance band, and the CP3 node point, marked with a cross inside the box](/images/verification/familiarity_door.png)
+![Zoom on CP3's door: the partition with its 1.2 m door, the CP3 box north of it, the dashed region where arrival can register, within 0.7 m of a target point drawn at least 0.16 m inside the box, reaching south of the door to y = 12.68 m, the green line above which the exit sign is legible, with its grid tolerance band, and the CP3 node point, marked with a cross inside the box](/images/verification/familiarity_door.png)
 
 ## Result
 
-![Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for. Full agents go straight to CP3 and the exit; 19 discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit, one goes from CP1 back to CP3 without CP2](/images/verification/familiarity_paths.png)
+![Walked paths of the 20 agents on the two plans, coloured by the node each agent is heading for. Full agents go straight to CP3 and the exit. Discovery agents walk CP0, CP1, CP2, back through CP0 to CP3 and the exit; one goes from CP1 back to CP3 without CP2, and four stop in CP1's door, deadlocked](/images/verification/familiarity_paths.png)
 
 Full agents never enter the west rooms. All 20 discovery agents explore them
-first, and 19 follow the predicted tour. Agent 11 turns from CP1 to CP3
+first. 15 follow the predicted tour and leave. Agent 11 turns from CP1 to CP3
 without visiting CP2: CP2's sign was not in sight where it stood at CP1, the
-case criterion 4 allows. No agent turns back at CP3's door.
+case criterion 4 allows. Agents 5, 6, 7 and 13 stop in CP1's door at about
+40 s and stand there to the end of the run, the doorway deadlock of
+[#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359): the tours of three end there, and one had followed the predicted
+tour so far. No agent turns back at CP3's door.
 
-![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery at 0.25 m all on the tour; at 0.05 and 0.025 m 19 on the tour and one skipping CP2 because its sign was hidden at CP1. At 0.1 m the curve levels off at 16 of 20 out, because four agents are deadlocked in CP1's door: the bar shows 15 on the tour, one skipping CP2, and four deadlocked: one whose route so far follows the predicted tour and three that had not finished it](/images/verification/familiarity_egress.png)
+![Left: agents out over time for full and for discovery on four sight grids, with the reference times of 21 s and 40 s. Right: the route of each agent per run: full all direct; discovery at 0.25 m all on the tour; at 0.1 and 0.025 m 19 on the tour and one skipping CP2 because its sign was hidden at CP1. At 0.05 m the curve levels off at 16 of 20 out, because four agents are deadlocked in CP1's door: the bar shows 15 on the tour, one skipping CP2, and four deadlocked: one whose route so far follows the predicted tour and three that had not finished it](/images/verification/familiarity_egress.png)
 
 | Check (0.05 m grid) | Expected | Simulated |
 |---|---|---|
@@ -152,31 +157,34 @@ case criterion 4 allows. No agent turns back at CP3's door.
 | full: last agent out | no reference | 34.8 s; the door (y = 13.05 m) passes 20 agents in 7.7–22.1 s, 1.32 persons/s or 1.10 persons/(s·m) of door width |
 | discovery: map at t = 0 | {S, CP0, CP3} | 20 / 20 |
 | discovery: first target | CP0, 20 / 20 | 20 / 20 |
-| discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 59 of 59 |
-| discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | 19 / 20; agent 11 goes from CP1 to CP3, CP2's sign hidden there (see above) |
+| discovery: nodes learnt later | each a neighbour of a known node, its sign in sight | 55 of 55 |
+| discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | **fails**: 16 / 20; agent 11 goes from CP1 to CP3, CP2's sign hidden there; 3 tours end in CP1's door, deadlocked ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
 | discovery: patrols started with the exit in sight | 0 | 0; no agent starts a patrol |
 | discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 40.6 s |
-| discovery: last agent out | no reference | 84.5 s; no agent turned back at CP3 |
+| discovery: last agent out | no reference | 16 of 20 out; 4 deadlocked in CP1's door until the 300 s limit; no agent turned back at CP3 |
 
 On other grids:
 
 | Sight grid | Cells across a 0.1 m wall | Last out |
 |---|---|---|
-| 0.25 m | 0 | 86.3 s |
-| 0.1 m | 1 | 16 of 20 out; 4 deadlocked in CP1's door ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
-| 0.05 m | 2 | 84.5 s |
-| 0.025 m | 4 | 84.3 s |
+| 0.25 m | 0 | 76.3 s |
+| 0.1 m | 1 | 82.4 s |
+| 0.05 m | 2 | 16 of 20 out; 4 deadlocked in CP1's door ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
+| 0.025 m | 4 | 78.8 s |
 
-At 0.1 m, agents 5, 6, 12 and 13 stop in CP1's door between 21 and 40 s,
-heading in opposite directions, and stand there to the end of the run: the
-doorway deadlock of
-[#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359). Over
-seeds 1–30 and 420 (the runs of criterion 6), a doorway deadlock ends 3 of
-31 runs at 0.1 m (seeds 20, 28 and 420), none at 0.05 or 0.025 m, and 2 of
-31 at 0.25 m (seeds 3 and 7). These counts are no evidence that a finer grid
-prevents the deadlock (2 of 30 against 0 of 30, Fisher exact p ≈ 0.49). On
-the other grids all agents are out by
-84.3–86.3 s, and no agent turns back at CP3. At 0.25 m no cell centre falls
+At 0.05 m, agents 5, 6, 7 and 13 stop in CP1's door at 40–41 s, heading in
+opposite directions, and stand there to the end of the run: the doorway
+deadlock of [#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359). Over seeds 1–30 (the runs of criterion 6), a doorway
+deadlock ends 12 of 120 runs: 3 at 0.25 m (seeds 7, 29, 30), 2 at 0.1 m
+(seeds 3, 12), 4 at 0.05 m (seeds 3, 12, 13, 14) and 3 at 0.025 m (seeds
+12, 14, 27). Before [#726](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726) it ended 4 of 120 (0.25 m seeds 3 and 7, 0.1 m
+seeds 20 and 28), and seed 420 deadlocked at 0.1 m instead of 0.05 m. A
+bisection over the same runs ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359#issuecomment-6100209538)) puts the change at #726, which counts
+a checkpoint as reached once the agent is inside its box: its parent
+`a9def615` reproduces the earlier numbers of this page exactly, and #726
+itself gives those of `c619a046`. The deadlock moves between grids and
+seeds; it does not follow the grid. On the other grids all agents are out by
+76.3–82.4 s, and no agent turns back at CP3. At 0.25 m no cell centre falls
 inside the walls, so the sight grid sees through them: agents learn CP2 from
 the next room and the exit from south of the partition.
 
@@ -206,7 +214,7 @@ three rings.
 
 **Precondition.** The grid resolves the walls: at least one cell centre lies
 inside each 0.1 m wall. At 0.25 m it does not, and the criteria below are not
-evaluated; there, with no tolerance, 36 learnt nodes had their sign hidden in
+evaluated; there, with no tolerance, 37 learnt nodes had their sign hidden in
 exact geometry (12 of them CP2, learnt from the next room).
 
 1. **Full.** Every full agent knows all 6 nodes and the 11 wired edges at
@@ -233,30 +241,33 @@ exact geometry (12 of them CP2, learnt from the next room).
    ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
    Unlike the tables above, which read the last trajectory frame, it uses
    the simulation clock at the end of the run.
-   - 0.05 → 0.025 m: median 76.2 → 76.7 s (+0.6 %), P90 82.8 → 83.9 s
-     (+1.4 %): **passes** on this sample. The bootstrap 90 % interval of
-     the P90 change reaches +10 %, so the sample does not exclude a change
-     above 5 %.
-   - 0.1 → 0.05 m: median 76.7 → 76.2 s (−0.6 %), P90 87.3 → 82.8 s
-     (−5.2 %): **fails**. The two runs at 0.1 m that do not finish (seeds 20
-     and 28) are doorway deadlocks
-     ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359))
-     and count as 300 s; without them the P90 changes by −0.6 %.
+   - 0.1 → 0.05 m: median 74.6 → 74.7 s (+0.1 %), P90 85.4 → 300 s
+     (+251 %): **fails**. Four runs at 0.05 m (seeds 3, 12, 13, 14) and two
+     at 0.1 m (seeds 3, 12) do not finish; all are doorway deadlocks
+     ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) and count as 300 s.
+   - 0.05 → 0.025 m: median 74.7 → 75.5 s (+1.1 %), P90 300 → 104.3 s
+     (−65 %): **fails**, for the same reason; three runs at 0.025 m (seeds
+     12, 14, 27) do not finish.
+   - Without the runs that do not finish, both halvings pass: P90 −3.0 %
+     (bootstrap 90 % interval −9.7 to +1.2 %) from 0.1 to 0.05 m, and
+     +1.1 % (−1.8 to +4.2 %) from 0.05 to 0.025 m. The failure is the
+     deadlock, not the grid.
 
 | Grid | 1 | 2 | 3 | 4 | 5 | 6 |
 |---|---|---|---|---|---|---|
-| 0.1 m | pass | pass | pass | **fails**: 3 tours unexplained, agents deadlocked in CP1's door (#359) | pass | – |
-| 0.05 m | pass | pass | pass | pass | pass | **fails** vs 0.1 m (P90 −5.2 %, #359) |
-| 0.025 m | pass | pass | pass | pass | pass | passes vs 0.05 m |
+| 0.1 m | pass | pass | pass | pass | pass | – |
+| 0.05 m | pass | pass | pass | **fails**: 3 tours unexplained, agents deadlocked in CP1's door (#359) | pass | **fails** vs 0.1 m (P90 +251 %, #359) |
+| 0.025 m | pass | pass | pass | pass | pass | **fails** vs 0.05 m (P90 −65 %, #359) |
 
 On every fine grid one agent skips CP2 where its sign was not in sight, which
-criterion 4 allows. At 0.1 m the tours of 3 of the 4 deadlocked agents end
+criterion 4 allows. At 0.05 m the tours of 3 of the 4 deadlocked agents end
 in CP1's door, so they are not the predicted tour; the cause is the deadlock,
-not the map.
+not the map. On the 0.025 m grid, the next finer one, criteria 1–5 all pass
+for seed 420, which also points to the deadlock rather than the grid.
 
-For seed 420, the run shown on this page, the clock gives 84.6 s at 0.05 m
-and 84.4 s at 0.025 m. #168 stays open: it is rerun with the same rule once
-the #359 deadlock is fixed.
+For seed 420, the run shown on this page, the clock gives 300 s at 0.05 m
+(4 agents deadlocked) and 78.85 s at 0.025 m. #168 stays open: it is rerun
+with the same rule once the #359 deadlock is fixed.
 
 With no tolerance (*T* = 0), the results show how close to the edge some
 decisions fall. Criterion 3 flags 7 learnt nodes at 0.1 m, 5 at 0.05 m and
@@ -289,9 +300,7 @@ uv run python scripts/verification/familiarity_figures.py --data <out>
 
 Each run takes seconds. The script prints every number on this page except
 those of criterion 6. The numbers here come from these commands at commit
-`828ae8c3` with the fix to `familiarity_figures.py` that tests criterion 1
-on every trajectory frame (Python 3.13.4, macOS arm64). At `828ae8c3` itself
-the script prints `19/20 pass CP3` for the full run.
+`c619a046` (Python 3.13.4, macOS arm64).
 
 Criterion 6 runs the discovery deck for seeds 1–30 and 420 on each grid,
 with the deck's `no_known_exit` and with `default_route`, one grid and mode
@@ -308,7 +317,7 @@ uv run python $S/familiarity_grid_analysis.py <out>/results.jsonl
 
 Each of the 248 runs takes seconds. The analysis prints the medians, P90s,
 changes, bootstrap intervals and verdicts quoted in criterion 6. The
-numbers are from commit `828ae8c3`. Under `default_route` the agents learn
+numbers are from commit `c619a046`. Under `default_route` the agents learn
 nothing after t = 0 on this deck, so the time (median 35.3 s, P90 36.2 s)
 is the same on every grid; that arm is not a convergence test.
 
@@ -325,10 +334,9 @@ movie.
 
 - **The discovery egress time is not shown to converge in the grid**
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)).
-  Criterion 6 passes from 0.05 to 0.025 m on this 30-seed sample (the 90 %
-  interval of the P90 change reaches +10 %) and fails from 0.1 to 0.05 m,
-  because of doorway deadlocks at 0.1 m
-  ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)).
+  Criterion 6 fails on both halvings on this 30-seed sample, because of
+  doorway deadlocks ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) on every grid, and passes on both when the
+  deadlocked runs are left out.
   #168 stays open, is blocked on the #359 fix and is then rerun with the
   same rule. Do not quote a discovery egress time without its grid, and on
   this deck use 0.05 m or finer.

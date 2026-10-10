@@ -205,11 +205,11 @@ distance cannot separate them and only the agent's own position can. That is
 what makes the asset a test of issue #68 rather than of arithmetic.
 
 **Checkpoint boxes 2 m deep, not 0.4 m.** Direct steering walks each agent to a
-random point inside the stage polygon and counts arrival within 0.7 m of *that
-point*. A box only as deep as the wall gives thirty agents the same sliver to
-aim at. The builder asserts a minimum depth. (Related: `inside_since` and
-`reach_penetration` are written into `wait_info` and never read — arrival is
-proximity to a point, not containment in the polygon.) An explorer with
+random point inside the stage polygon and counts arrival within r + 0.5 m
+(0.7 m for its 0.2 m agents) of *that point*, or when the agent's centre is
+inside the box (#69). A box only as deep as the wall gives thirty agents the
+same sliver to aim at, because the target point still steers. The builder
+asserts a minimum depth. An explorer with
 nothing left to explore first walks to the node's routing point and looks
 from there before it patrols
 ([Models › Wayfinding §2.4](https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#2-the-knowledge-contract)).

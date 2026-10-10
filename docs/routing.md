@@ -130,10 +130,20 @@ the following steps:
 
 ### Line-of-sight extinction
 
-The mean extinction along an edge is computed from its polyline. Each
-segment `s` of length `L_s` is sampled at evenly spaced points, both ends
-included, at most `sampling_step_m` apart, and `K_bar_s` is the mean of
-those samples. The segment means are combined weighted by length:
+The mean extinction along an edge is computed from its polyline. On an
+FDS extinction field each segment `s` of length `L_s` is read once in
+every grid cell it crosses, at points fixed to the grid, as FDS+Evac's
+`See_door` does ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+The segment is split by subslice; each part is marched along its dominant
+axis and sampled at its start, at each value position strictly between
+its end cells, and at its end. Where subslices overlap, the first one in
+order is read, and a segment crossing meshes of different spacing is read
+on each mesh's own grid. Only a field without a grid (a constant or test
+field) and a stretch outside every FDS subslice are sampled at evenly
+spaced points, both ends included, at most `sampling_step_m` apart. Under
+`anticipate` each sample is read at the agent's arrival time there.
+`K_bar_s` is the mean of the samples, and the segment means are combined
+weighted by length:
 
 ```
 sigma_bar = sum(L_s * K_bar_s) / sum(L_s)
@@ -199,7 +209,8 @@ is credited out of `K_ave` and `FED_max`, because it is already carried
 in `current_fed`. For `k_max_route` and `k_leg_max` the first segment is
 resampled along the walk from the agent to its next node: the routing
 engine's path through the walkable area, or the straight line when no
-engine is available, sampled every `sampling_step_m` along its length.
+engine is available, read by the same rule: once per grid cell on an FDS
+field, every `sampling_step_m` only without a grid or off the slice.
 
 ### What each model ranks on
 
@@ -263,27 +274,47 @@ the one to flee ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/
 lowest undiscounted `tau_route`, then the lowest `rank_cost`, with
 `fallback_switch_margin` hysteresis on `tau_route`: the current exit stays
 first unless the rival's `tau` is more than that fraction lower ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Under the
-additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458); the underlying sampling cause is [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The lockout was added while route smoke was sampled at steps that could pass over a narrow plume core; 0.5.0 reads it per grid cell ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)), and the lockout stays as a guard against near-ties of τ.
 
 An experimental alternative exists at code level only:
 `RouteCostConfig(fallback_rule="hold")`. No scenario key, CLI flag or
 GUI control sets it, and the default `"tau"` is the rule above
-([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)). Under
-`"hold"` the first choice with every route refused is still the lowest
-`tau_route`, but after that the agent keeps its exit between refused
-routes. It leaves only for a feasible route, or when its current route
-must be fled and the rival need not be (#128).
+([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
+Closed and unreachable exits are dropped before ranking, so they never
+count as the current route. Under `"hold"`:
+
+- **No current exit among the ranked routes** (the first choice, an exit
+  closed on schedule, or one unreachable from where the agent stands):
+  `"hold"` acts as `"tau"`. The agent takes the route it need not flee with
+  the lowest `tau_route`, then the lowest `rank_cost`.
+- **Current route and rival both must be fled** (both FED-lethal, or both
+  impassable under the additive model): `"hold"` keeps the current exit,
+  whatever their τ. `"tau"` switches when the rival's τ is more than the
+  20 % margin lower.
+- **Current route must be fled, the rival need not be:** the agent switches
+  under both rules (#128).
+- **Rival must be fled, the current route need not be:** the agent holds
+  under both rules.
+- **Two refused routes of the same kind otherwise:** `"hold"` never
+  switches.
+
 `fallback_switch_margin` and `fallback_return_lockout_s` then have no
-effect. On `t_junction` (`fire_2MW_PVC`, R arm of `howto-with-without-fire.md`, seeds 4–13), the
-prototype on the 0.4.0 routing code gave the following results
-(pre-movement 0 / 30 / 60 s).
-Under `"tau"`, 81 / 19 / 0 % of agents went to exit A, with a median
-largest FED of 0.040 / 0.123 / 0.195 and 19 / 149 / 129 switches.
-Under `"hold"`, 100 % went to A at every pre-movement, with a median
-largest FED of 0.006 / 0.028 / 0.145 and no switches. This is one deck
-and one fire, and the evidence that people keep going once they are in
-smoke is expert judgement. A user setting waits for measurements on
-`l_corridor`, `world100` and Schroeder 2015.
+effect. On `t_junction` (`fire_2MW_PVC`, R arm of
+[Evacuation with and without the fire](howto-with-without-fire.md), seeds
+4–23 with no pre-movement and 4–13 at 30 and 60 s, at `c619a046`) the two
+rules give the following. Each cell lists the agents to exit A, median
+[min, max] over seeds; the median of the largest max FED; and the
+fallback exit changes per run, median (max).
+
+| Pre-movement | `"tau"` | `"hold"` |
+|---|---|---|
+| 0 s | 100 [94, 100] %; 0.006; 0 (6) | 100 [100, 100] %; 0.006; 0 (0) |
+| 30 s | 51 [49, 55] %; 0.070; 195 (201) | 100 [100, 100] %; 0.024; 0 (0) |
+| 60 s | 3 [0, 6] %; 0.178; 267 (278) | 100 [100, 100] %; 0.100; 0 (0) |
+
+This is one deck and one fire, and the evidence that people keep going
+once they are in smoke is expert judgement. A user setting waits for
+measurements on `l_corridor`, `world100` and Schroeder 2015.
 
 Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
@@ -379,7 +410,9 @@ library ships no congestion weight at all, and the calibrated value lives with
 the deck it was calibrated on. Issue #89 tracks replacing the global `N` with a
 queue the agent can perceive, which would remove the scale dependence.
 
-**`assets/station_fahy` currently ships `w_queue = 0.024`, not 0.03.** The 0.03
+**`assets/station_fahy` ships `w_queue = 0.024`, fitted under the additive
+model on an older geometry; at 0.5.0 it gives a front-door share of 34.8 %
+against Fahy's 52.9 %, so it no longer reproduces Fahy's split.** The 0.03
 below was swept against a geometry whose doorways were narrower than the
 building's; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
@@ -393,7 +426,11 @@ on main at `81726ea`), within the spread between seeds. With every exit priced
 from the agent's position (#451; `2a94a8da`, the head of its branch, not on
 main) it scores 0.03 at 33.2 % and 0.024
 at 34.7 %, run for run the same as main at `22beb01c`: the deck has no fire.
-The sweep was not run again for 0.4.0.
+At `c619a046` (0.5.0) the sweep
+(`scripts/sweep_queue_weight.py --weights 0.024 0.03 --seeds 420 421 422`)
+scores 0.024 at 34.8 % (34.2–35.2 %, row deviation 22.2 %) and 0.03 at
+32.8 % (31.5–33.4 %, 23.2 %); one agent never reached a door in 3 of the 6
+runs. The 0.5.0 changes leave the share within the spread between seeds.
 
 **Two further caveats on that number.** The sweep was run under the additive
 composite, where `w_queue` multiplies a *distance*

@@ -1,9 +1,9 @@
 # T-junction test: smoke-blocked T-corridor
 
 This scenario was built to exercise speed reduction, FED incapacitation and
-dynamic rerouting. In the run on `7a3617d` (defaults, so no irritant
-slowdown) the first two act; rerouting is enabled but not exercised: the
-agents choose exit A at spawn and no reroute occurs. See the results below
+dynamic rerouting. In the run at `c619a046` (probabilistic
+incapacitation, no irritant slowdown) speed reduction and FED act; rerouting acts once: one agent
+changes exit on the way. See the results below
 and [#195](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/195).
 
 ## Geometry
@@ -25,11 +25,13 @@ walk through the fire zone to reach either exit.
 - Vertical branch: 6 m x 10 m (x = 17 to 23, y = 0 to 10)
 - Exit A at x = 0 (20 m from junction)
 - Exit B at x = 30 (10 m from junction)
-- 50 agents spawn in the branch at t = 0
+- `config.json` and `config_full.json` add 200 agents in the branch over
+  0–400 s (0.5 per second), so 150 have entered at the 300 s limit;
+  `config_initial_pre*.json` place 100 agents there at t = 0
 
 ## Fire setup (t_junction.fds)
 
-A 1 MW PVC-cable fire at the junction produces heavy soot and toxic
+A 2 MW PVC-cable fire at the junction produces heavy soot and toxic
 gases. The fire ramps up over 60 seconds.
 
 
@@ -69,20 +71,26 @@ Frantzich-Nilsson correlation.
 creating a bottleneck at the junction. Agents queuing in heavy smoke
 accumulate CO and HCl exposure. The high HCl yield from PVC drives the
 irritant term, while CO and O2 depletion contribute to narcosis. Measured
-over 150 agents at 2 MW: FED median 0.10 and max 0.33, FIC median 5.7
-(interquartile 5.3-12.4) against a threshold of 1.0, two agents incapacitated by the
-probabilistic per-agent thresholds, and 90 of 150 out within 300 s
-against 143 in clear air (36 of 150 with `--enable-fic-speed`).
+over 150 agents at 2 MW: largest FED per agent median 0.10 and max 0.24,
+largest FIC per agent median 7.4 (interquartile 5.5-17.1) against a
+threshold of 1.0, no agent incapacitated by the probabilistic per-agent
+thresholds, and 97 of 150 out within 300 s against 145 in clear air. With
+`--enable-fic-speed` 35 of 150 get out and two agents are incapacitated.
 
 **Rerouting.** Exit B is initially closer (10 m vs 20 m), and in clear
-air every agent takes it. In the fire, 23 of the first 26 agents, spawned
-in the first 50 s, head for Exit A from spawn, and every other agent that
-gets out leaves by Exit B. No agent changes exit on the way, as in clear
-air.
+air every agent takes it. In the fire, 17 of the first 35 agents, spawned
+in the first 70 s, head for Exit A from spawn and leave by it. Agent 48,
+spawned at 94 s, heads for Exit A and switches to Exit B at 104 s, when
+both routes are refused (`fallback`). Every other agent that gets out
+leaves by Exit B.
 
-Measured at `7a3617d` with the command below, run on `config_full.json`
-against the FDS output in the project's data store (`t_junction/fire_2MW_PVC/`);
-the run files are under `t_junction/rerun_7a3617d/`.
+Measured at `c619a046` with the command in step 2 below (`config_full.json`,
+default seed) against the FDS output in the project's data store
+(`t_junction/fire_2MW_PVC/`); the clear-air run drops `--fds-dir` and the
+FDS history outputs, and the FIC run adds `--enable-fic-speed`.
+The figures of `7a3617d` (90 of 150 out, FED max 0.33, two incapacitated,
+23 of the first 26 agents to Exit A, no exit change) predate the 0.5.0
+routing and sampling changes.
 
 `config_initial_pre0.json`, `config_initial_pre30.json` and `config_initial_pre60.json` place 100 agents over the branch at t = 0 with a constant pre-movement of 0, 30 or 60 s and a 270 s limit; see [Evacuation with and without the fire](../../docs/howto-with-without-fire.md).
 
@@ -98,15 +106,19 @@ fds assets/t_junction/t_junction.fds
 
 ```bash
 uv run python run.py \
-  --scenario assets/t_junction \
+  --scenario assets/t_junction/config_full.json \
   --fds-dir assets/t_junction \
   --incapacitation-mode probabilistic \
   --enable-rerouting \
   --reroute-interval 5 \
   --output-smoke-history smoke.csv \
   --output-fed-history fed.csv \
-  --output-route-history routes.csv
+  --output-route-history routes.csv \
+  --output-exit-history exits.csv \
+  --output-sqlite t_junction.sqlite
 ```
+
+`--fds-dir` is the folder that holds the FDS output of step 1.
 
 ## Smoke-weight sweep: when does smoke actually change the exit?
 

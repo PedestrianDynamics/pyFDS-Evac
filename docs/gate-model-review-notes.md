@@ -212,6 +212,10 @@ to plan section 3.
 | gate w_smoke=0 | 30 | A 30 / B 0 | 27 | 14 | 13 | identical to w_smoke=5 |
 | gate c=8 | 30 | A 28 / B 2 | 31 | 15 | 16 | 4 smoke, 27 fallback |
 
+Before 0.5.0 (#92) every exit change was logged `smoke_reroute`, so "28
+smoke_reroute" means 28 exit changes of any cause; a run today splits them by
+cause.
+
 **Prediction refuted.** No monotone B->A migration: 13 of 27 switches are A->B at
 t = 81-225 s. Additive reproduces the reference baseline (35 switches / 35 out).
 The number that separates the models is the exit split, not the churn.
