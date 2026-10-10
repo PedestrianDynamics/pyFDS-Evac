@@ -41,8 +41,10 @@ CELL_SIZE_M = 0.05
 
 # (agents, seeds, most deadlocked runs allowed); see the rate test.
 RATE_CASES = [(5, range(1, 31), 4), (20, range(1, 21), 5)]
-# A deadlock leaves at most the four agents of the CP1 jam behind.
-MOST_LEFT_IN_A_DEADLOCK = 4
+# A deadlock leaves at most the four agents of the CP1 jam and the two of the
+# CP2 head-on behind; both can occur in one run (seeds 135 and 232 on main,
+# #359).
+MOST_LEFT_IN_A_DEADLOCK = 6
 
 
 def test_deck_declares_what_the_module_assumes():
