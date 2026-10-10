@@ -7,7 +7,8 @@ seeds each spawn area once (``_seed_shared_areas``). Both report the
 distribution, the requested count and the capacity.
 
 A count within the estimate can still fail when the sampler cannot place
-everyone; that is reported in one line as well (#702).
+everyone; that is reported in one line as well, with or without
+journeys (#702, #508).
 """
 
 from __future__ import annotations
@@ -22,6 +23,7 @@ from test_run_outcome import ENOUGH_S, D, _scenario
 
 from pyfds_evac import cli
 from pyfds_evac.core import simulation_init
+from pyfds_evac.core.scenario import load_scenario, run_scenario
 
 PATTERN = (
     rf"^pyfds-evac: error: Distribution '{D}': requested 500 agents "
@@ -71,3 +73,50 @@ def test_unplaceable_agents_within_the_estimate_are_a_one_line_error(monkeypatch
         r"The capacity estimate ~\d+ is an upper bound\. ",
         message,
     ), message
+
+
+def _l_corridor_with_50():
+    scenario = load_scenario("assets/l_corridor")
+    params = scenario.distributions[D]["parameters"]
+    params.update(number=50, use_flow_spawning=False)
+    return scenario
+
+
+def test_unplaceable_agents_with_journeys_are_a_one_line_error(monkeypatch):
+    """A deck with journeys reports the sampler's shortfall in one line (#508).
+
+    ``assets/l_corridor`` spawns agents of radius 0.15 m in a 2.4 x 3 m
+    room: the estimate admits 50, but under ``--seed 3`` the sampler
+    places 49 of them.
+    """
+    scenario = _l_corridor_with_50()
+    monkeypatch.setattr(cli, "load_scenario", lambda _path: scenario)
+    monkeypatch.setattr(
+        "sys.argv", ["pyfds-evac", "--scenario", "unused", "--seed", "3"]
+    )
+    with contextlib.redirect_stdout(io.StringIO()), pytest.raises(SystemExit) as exit_:
+        cli.main()
+    message = exit_.value.code
+    assert isinstance(message, str)
+    assert "\n" not in message
+    assert re.match(
+        rf"^pyfds-evac: error: Distribution '{D}': could not place the 50 "
+        r"requested agents \(Only 49 of 50  could be placed\. .*\)\. "
+        r"The capacity estimate ~50 is an upper bound\. ",
+        message,
+    ), message
+
+
+def test_unplaceable_agents_with_journeys_keep_the_jupedsim_cause():
+    with pytest.raises(simulation_init.SpawnCapacityError) as error:
+        run_scenario(_l_corridor_with_50(), seed=3)
+    assert isinstance(error.value.__cause__, jps.AgentNumberError)
+
+
+def test_runtime_error_of_the_sampler_with_journeys_is_not_capacity(monkeypatch):
+    def fail(**_kwargs):
+        raise RuntimeError("sampler bug")
+
+    monkeypatch.setattr(simulation_init.jps, "distribute_by_number", fail)
+    with pytest.raises(RuntimeError, match="sampler bug"):
+        run_scenario(_l_corridor_with_50(), seed=3)

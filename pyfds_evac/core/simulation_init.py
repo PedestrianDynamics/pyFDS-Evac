@@ -431,6 +431,24 @@ def _get_max_agent_radius(params):
     return mean_radius
 
 
+def _distribute(area, dist_keys, number, capacity, max_radius, seed):
+    """Seed *number* positions in *area*; a shortfall is a ``SpawnCapacityError``.
+
+    Only JuPedSim's distribution errors mean the agents do not fit; any
+    other error propagates unchanged (#702).
+    """
+    try:
+        return jps.distribute_by_number(
+            polygon=area,
+            number_of_agents=number,
+            distance_to_agents=2 * max_radius,
+            distance_to_polygon=max_radius,
+            seed=seed,
+        )
+    except _DISTRIBUTION_ERRORS as error:
+        raise _unplaced_error(dist_keys, number, capacity, error) from error
+
+
 def _seed_shared_areas(spawn_distributions, seed):
     """Place agents once per distinct spawn area, then hand out the positions.
 
@@ -454,17 +472,14 @@ def _seed_shared_areas(spawn_distributions, seed):
         if total > capacity:
             raise _capacity_error([m["dist_key"] for m in members], total, capacity)
         area_key = members[0]["dist_key"]
-        try:
-            positions = jps.distribute_by_number(
-                polygon=area,
-                number_of_agents=total,
-                distance_to_agents=2 * max_radius,
-                distance_to_polygon=max_radius,
-                seed=distribution_seed(seed, area_key, PURPOSE_POSITIONS),
-            )
-        except _DISTRIBUTION_ERRORS as error:
-            keys = [m["dist_key"] for m in members]
-            raise _unplaced_error(keys, total, capacity, error) from error
+        positions = _distribute(
+            area,
+            [m["dist_key"] for m in members],
+            total,
+            capacity,
+            max_radius,
+            distribution_seed(seed, area_key, PURPOSE_POSITIONS),
+        )
         # Shuffle so the profiles interleave across the room instead of one
         # taking whichever corner the sampler happened to fill first.
         random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
@@ -2667,13 +2682,13 @@ def _add_agents(
             max_capacity = _estimate_max_capacity(spawn_data["area"], max_radius)
             if requested_count > max_capacity:
                 raise _capacity_error([dist_key], requested_count, max_capacity)
-            positions = _placing(
-                jps.distribute_by_number,
-                polygon=spawn_data["area"],
-                number_of_agents=requested_count,
-                distance_to_agents=2 * max_radius,
-                distance_to_polygon=max_radius,
-                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            positions = _distribute(
+                spawn_data["area"],
+                [dist_key],
+                requested_count,
+                max_capacity,
+                max_radius,
+                distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
             )
 
             all_positions.extend(positions)
@@ -2911,14 +2926,9 @@ def _add_agents(
                     current_agent_id += 1
 
         except _AgentPlacementError as e:
-            error_msg = (
-                f"CRITICAL: Failed to place agents in distribution '{dist_key}'. "
-                f"Error: {e!s}. This usually means the spawn area is too small or crowded. "
-                f"Consider: 1) Making the distribution area larger, 2) Reducing the number of agents, "
-                f"3) Increasing distance between agents, or 4) Checking for obstacles in the area."
-            )
-            print(f"ERROR: {error_msg}")
-            raise Exception(error_msg) from e
+            raise _unplaced_error(
+                [dist_key], requested_count, max_capacity, e
+            ) from e.__cause__
 
     spawning_info = {
         "has_flow_spawning": has_flow_spawning,

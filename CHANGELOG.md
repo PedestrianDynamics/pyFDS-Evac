@@ -40,6 +40,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   place the N requested agents (...). The capacity estimate ~C is an
   upper bound. ...`. Results do not change.
 
+- In a scenario with journeys, a spawn area whose agents JuPedSim
+  cannot all place stops `pyfds-evac --scenario` with the same line and
+  exit 1, instead of a traceback ending in `Exception: CRITICAL: Failed
+  to place agents ...` (#508). `run_scenario` raises
+  `SpawnCapacityError` with JuPedSim's error as `__cause__`. Results do
+  not change.
+
 ## [0.4.0] - 2026-10-09
 
 ### Upgrading
