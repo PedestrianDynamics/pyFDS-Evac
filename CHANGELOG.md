@@ -64,7 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (none) and 69/31 to 63/37 agents per exit, `l_corridor_additive`
   from 99/1 to 68/32 and 145.1 s to 170.0 s, `t_junction` from 4
   switches to 1 and 14/83 to 17/80, `world100_stream_oval` from 8
-  switches to 13; evacuated counts do not change. In the first FDS
+  switches to 13 (two of them path refinements to the same exit) and
+  95/25 to 90/30, `world100_stream_east` from 85/4/31 to 86/4/30;
+  evacuated counts do not change. In the first FDS
   case (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents still
   get out. `sampling_step_m` keeps its value in every deck, but
   now applies only to fields without a grid (`ConstantExtinctionField`,

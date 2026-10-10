@@ -278,6 +278,80 @@ def test_line_leaving_the_slice_raises_in_strict_mode():
         )
 
 
+def _gap_field(xs_list, **kwargs):
+    # Subslices at 0.5 m with K = 1, each spanning one range of xs_list.
+    ys = np.array([-1.0, 0.0, 1.0])
+    subs = [_SubSlice(xs, ys, np.ones((len(xs), 3))) for xs in xs_list]
+    return _field(subs, **kwargs)
+
+
+START_GAP = [4.0 + np.arange(21) * 0.5]  # slice x = 4..14
+MIDDLE_GAP = [np.arange(9) * 0.5, 8.0 + np.arange(9) * 0.5]  # hole x = 4..8
+
+
+def test_line_starting_off_the_slice_reads_clear_air_there():
+    # 0..4 off the slice, sampled every 2 m at x = 0, 2 (clear) and 4 (K = 1);
+    # 4..14 on the grid at K = 1.
+    k_avg, k_max = _los_stats(
+        0.0, 0.0, 14.0, 0.0, 0.0, _gap_field(START_GAP), STEP_M, 14.0
+    )
+    assert k_avg == pytest.approx((4.0 / 3.0 + 10.0) / 14.0, rel=1e-12)
+    assert k_max == 1.0
+
+
+def test_hole_between_subslices_reads_clear_air_there():
+    # 0..4 and 8..12 on the grid at K = 1; the hole 4..8 is sampled every
+    # 2 m at x = 4, 6, 8: K = 1, 0, 1.
+    k_avg, k_max = _los_stats(
+        0.0, 0.0, 12.0, 0.0, 0.0, _gap_field(MIDDLE_GAP), STEP_M, 12.0
+    )
+    assert k_avg == pytest.approx((4.0 + 4.0 * 2.0 / 3.0 + 4.0) / 12.0, rel=1e-12)
+    assert k_max == 1.0
+
+
+@pytest.mark.parametrize(
+    ("xs_list", "x1"), [(START_GAP, 14.0), (MIDDLE_GAP, 12.0)], ids=["start", "hole"]
+)
+def test_gaps_off_the_slice_raise_in_strict_mode(xs_list, x1):
+    field = _gap_field(xs_list, require_fds_coverage=True)
+    with pytest.raises(FdsDomainError):
+        _los_stats(0.0, 0.0, x1, 0.0, 0.0, field, STEP_M, x1)
+
+
+@pytest.mark.parametrize("order", [(0, 1), (1, 0)])
+def test_overlapping_subslices_first_one_wins(order):
+    # A: x = 0..10 at K = 1; B: x = 5..15 at K = 2. In order A, B the overlap
+    # 5..10 reads A; in order B, A it reads B.
+    ys = np.array([-1.0, 0.0, 1.0])
+    xs_a, xs_b = np.arange(21) * 0.5, 5.0 + np.arange(21) * 0.5
+    subs = [
+        _SubSlice(xs_a, ys, np.ones((21, 3))),
+        _SubSlice(xs_b, ys, np.full((21, 3), 2.0)),
+    ]
+    field = _field([subs[i] for i in order])
+    k_avg, k_max = _los_stats(0.0, 0.0, 15.0, 0.0, 0.0, field, STEP_M, 15.0)
+    a_length = 10.0 if order == (0, 1) else 5.0
+    expected = (a_length * 1.0 + (15.0 - a_length) * 2.0) / 15.0
+    assert k_avg == pytest.approx(expected, rel=1e-12)
+    assert k_max == 2.0
+
+
+def test_foresight_reads_time_varying_smoke_at_each_cell():
+    # Uniform smoke equal to the frame number: each sample reads the frame
+    # nearest its own arrival time, not one frame for the whole line.
+    config = RouteCostConfig(anticipate=True, base_speed_m_per_s=1.0)
+    clock = _foresight_clock(0.0, 0.0, config, math.inf, None)
+    sub = _band_subslice(50)
+    sub.data = np.arange(50.0)[:, None, None] * np.ones_like(sub.data)
+    field = _field([sub], 50)
+    k_avg, k_max = _los_stats(2.1, 0.0, 20.0, 0.0, 0.0, field, STEP_M, 17.9, clock)
+    (part,) = field.line_parts(2.1, 0.0, 20.0, 0.0)
+    frames = [round(clock.at(f * 17.9)) for f in part.fractions]
+    assert len(set(frames)) > 10
+    assert k_avg == pytest.approx(np.mean(frames), rel=1e-12)
+    assert k_max == max(frames)
+
+
 def test_polyline_through_the_band_is_length_weighted():
     # Two legs on the grid: (2, 0)-(10.5, 0) holds two core cells of 35,
     # (10.5, 0)-(20, 0) two of 39 (10.5 is read by both legs).
