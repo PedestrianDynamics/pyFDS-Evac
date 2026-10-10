@@ -92,6 +92,7 @@ HANDLED = {
         "HUMAN_SMOKE_HEIGHT",
         "DIAMETER_DIST",
         "DIA_*",
+        "D_TORSO_MEAN",
     ),
 }
 COSMETIC = (
@@ -480,7 +481,8 @@ def legacy_spawns(ctx: LegacyContext, exit_ids: list[str]) -> list[ImportedSpawn
 
 
 def _pers(ctx: LegacyContext, pers_id: str | None) -> dict[str, Any]:
-    """Speed keys of a ``&PERS``, computed once (its report items once too)."""
+    """Speed and radius keys of a ``&PERS``, computed once (its report items
+    once too)."""
     if pers_id is None:
         return {}
     if pers_id in ctx.pers_cache:
@@ -489,14 +491,14 @@ def _pers(ctx: LegacyContext, pers_id: str | None) -> dict[str, Any]:
     if record is None:
         return {}
     classify_keys(record, ctx.report)
-    people.body_size_note(record, ctx.add)
+    body = people.body_size_parameters(record, ctx.add)
     try:
         speed = people.speed_parameters(record, ctx.add)
     except ValueError as exc:
         ctx.add("D", "warning", "PERS", f"speed not mapped: {exc}", record)
         speed = {}
-    ctx.pers_cache[pers_id] = speed
-    return speed
+    ctx.pers_cache[pers_id] = {**speed, **body}
+    return ctx.pers_cache[pers_id]
 
 
 def _pers_record(ctx, record: NamelistRecord) -> NamelistRecord | None:

@@ -177,8 +177,79 @@ def test_pers_adult_speed_is_gaussian_with_the_uniform_moments(tmp_path):
     assert params["v0"] == 1.25
     assert params["v0_distribution"] == "gaussian"
     assert params["v0_std"] == pytest.approx(0.30 / math.sqrt(3), abs=1e-9)
-    assert "radius" not in params
-    assert any("three circles" in i.message for i in _items(result, "A", "PERS"))
+    assert params["radius"] == 0.15
+    messages = [i.message for i in _items(result, "A", "PERS")]
+    assert any("R_t=0.15" in m and "radius=0.15 m" in m for m in messages)
+    assert any("uniform 0.1294-0.1706, std 0.011887" in m for m in messages)
+    assert not any("body size not mapped" in i.message for i in result.report.items)
+
+
+def _radius_import(tmp_path, keys: str):
+    pers = f"&PERS ID='P', {keys} /"
+    return _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='P'"))
+
+
+@pytest.mark.parametrize(
+    ("keys", "radius"),
+    [
+        # Mean torso radius R_t = D_TORSO_MEAN / 2 of each preset (#699).
+        ("DEFAULT_PROPERTIES='Adult'", 0.15),
+        ("DEFAULT_PROPERTIES='Male'", 0.16),
+        ("DEFAULT_PROPERTIES='Female'", 0.14),
+        ("DEFAULT_PROPERTIES='Child'", 0.12),
+        ("DEFAULT_PROPERTIES='Elderly'", 0.15),
+        ("DEFAULT_PROPERTIES='adult'", 0.15),
+        ("DEFAULT_PROPERTIES='ADULT'", 0.15),
+        # Explicit body: 0.5 * D_TORSO_MEAN * E[D] / DIA_MEAN.
+        ("DIAMETER_DIST=1, DIA_LOW=0.40, DIA_HIGH=0.60", 0.15),  # 0.5*0.30*0.5/0.5
+        (
+            "DIAMETER_DIST=1, DIA_LOW=0.40, DIA_HIGH=0.60, DIA_MEAN=0.60, "
+            "D_TORSO_MEAN=0.36",
+            0.15,  # 0.5 * 0.36 * 0.50 / 0.60
+        ),
+        # DIAMETER_DIST beats the preset: global D_TORSO_MEAN 0.30, not 0.24.
+        ("DEFAULT_PROPERTIES='Child', DIAMETER_DIST=0, DIA_MEAN=0.42", 0.15),
+    ],
+)
+def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
+    params = _params(_radius_import(tmp_path, keys), "g")
+    assert params["radius"] == pytest.approx(radius, abs=1e-9)
+    assert "radius_distribution" not in params
+    assert "radius_std" not in params
+
+
+def test_pers_preset_ignores_body_keys_without_diameter_dist(tmp_path):
+    result = _radius_import(tmp_path, "DEFAULT_PROPERTIES='Adult', D_TORSO_MEAN=0.40")
+    assert _params(result, "g")["radius"] == 0.15
+    assert any("D_TORSO_MEAN ignored" in i.message for i in _items(result, "A", "PERS"))
+
+
+@pytest.mark.parametrize(
+    "keys",
+    [
+        "DEFAULT_PROPERTIES='IMO_Male30-50'",  # IMO presets: separate issue
+        "VELOCITY_DIST=0, VEL_MEAN=1.2",  # no preset, no DIA_*
+        "DIAMETER_DIST=0",  # constant without DIA_MEAN
+    ],
+)
+def test_pers_without_a_defined_body_gets_no_radius(tmp_path, keys):
+    result = _radius_import(tmp_path, keys)
+    assert "radius" not in _params(result, "g")
+    assert any("body not mapped" in i.message for i in _items(result, "D", "PERS"))
+
+
+def test_mixed_pers_types_get_their_own_radius(tmp_path):
+    records = (
+        "&PERS ID='A', DEFAULT_PROPERTIES='Adult' /",
+        "&PERS ID='C', DEFAULT_PROPERTIES='Child' /",
+        "&EVAC ID='a', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=5, PERS_ID='A' /",
+        "&EVAC ID='c', XB=6,9,1,9,1,1, NUMBER_INITIAL_PERSONS=5, PERS_ID='C' /",
+    )
+    result = _room(tmp_path, DOOR, *records)
+    assert (_params(result, "a")["radius"], _params(result, "c")["radius"]) == (
+        0.15,
+        0.12,
+    )
 
 
 def test_pers_velocity_dist_overrides_default_properties(tmp_path):
@@ -186,6 +257,19 @@ def test_pers_velocity_dist_overrides_default_properties(tmp_path):
     result = _room(tmp_path, DOOR, pers, EVAC.format(extra=", PERS_ID='A'"))
     params = _params(result, "g")
     assert (params["v0"], params["v0_distribution"]) == (1.1, "constant")
+
+
+def test_entr_takes_the_radius_of_its_pers(tmp_path):
+    pers = "&PERS ID='C', DEFAULT_PROPERTIES='Child' /"
+    entr = "&ENTR ID='In', IOR=1, MAX_FLOW=0.5, XB=0,0,2,4,0.4,1.6, PERS_ID='C' /"
+    assert _params(_room(tmp_path, DOOR, pers, entr), "In")["radius"] == 0.12
+
+
+def test_spawn_without_pers_id_gets_no_radius(tmp_path):
+    pers = "&PERS ID='A', DEFAULT_PROPERTIES='Adult' /"
+    assert "radius" not in _params(
+        _room(tmp_path, DOOR, pers, EVAC.format(extra="")), "g"
+    )
 
 
 def test_missing_pers_is_an_error_naming_both_ids(tmp_path):

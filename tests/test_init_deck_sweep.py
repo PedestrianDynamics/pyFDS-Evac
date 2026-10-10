@@ -125,6 +125,27 @@ def test_init_outcome_is_pinned(deck):
     assert got["config_sha256"] == want["config_sha256"]
 
 
+@pytest.mark.parametrize(
+    ("deck", "radii"),
+    [
+        ("Validation/HUT_Library/HUT_Library.fds", {"": 0.15}),  # Adult
+        ("Verification/imo/CompTest9a.fds", {"": 0.16}),  # Male
+        (
+            "Validation/SportsHall/sportshall_A.fds",
+            {"Ave": 0.15, "Male": 0.16, "Female": 0.14, "Child": 0.12},
+        ),
+    ],
+)
+def test_guide_deck_radius_is_the_torso_radius(deck, radii):
+    """#699: every spawn area gets the mean torso radius of its &PERS type."""
+    result = import_fds_deck(ROOT / "assets" / "fds_evac_guide" / deck)
+    got = {k: d["parameters"]["radius"] for k, d in result.raw["distributions"].items()}
+    assert got
+    for name, radius in got.items():
+        prefix = max((p for p in radii if name.startswith(p)), key=len)
+        assert radius == radii[prefix], name
+
+
 def _regenerate() -> None:
     rows, exits = [], {}
     for name in _decks():

@@ -14,6 +14,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   node FDS writes it at, no longer the deck's z (#687). On a 0.5 m grid
   a deck `PBZ=1.6` now reads 1.5.
 
+- `pyfds-evac init` now writes a `radius` for FDS+Evac decks: the mean
+  torso radius of each `&PERS` type, 0.12–0.16 m (Adult 0.15, Male
+  0.16, Female 0.14, Child 0.12, Elderly 0.15), instead of leaving the
+  0.2 m default (#699). Results of re-imported decks change; scenarios
+  imported before keep 0.2 m until they are imported again. Some
+  imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
+  deadlock at doors and narrow gaps in some seeds (#706).
+
 ### Added
 
 - `pyfds-evac --scenario DIR` prints one warning before the run when
@@ -30,6 +38,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ValueError`, with JuPedSim's error as `__cause__`, instead of
   `jupedsim.distributions.AgentNumberError` (#702). Code that caught
   `AgentNumberError` must catch `SpawnCapacityError` or `ValueError`.
+
+- `import_report.json` gives, per `&PERS`, the FDS+Evac three-circle body
+  (R_d, R_t, R_s) and the radius taken from it, instead of "body size not
+  mapped". A `&PERS` that sets `DIAMETER_DIST` gets 0.5 · `D_TORSO_MEAN`
+  · mean diameter / `DIA_MEAN`; one with neither a known
+  `DEFAULT_PROPERTIES` nor `DIAMETER_DIST` gets no radius and a warning
+  (#699). `DoorFlowExample.fds` now imports as runnable: its 100 agents
+  fit the spawn area at 0.15 m, not at 0.2 m.
 
 ### Fixed
 
@@ -78,6 +94,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `distribution_mode`, and the whole walkable area for a deck without
   spawn areas. A count within the estimate that JuPedSim cannot place is
   still found by the run only.
+
+### Documentation
+
+- Model comparison: the FDS+Evac body is a torso circle R_t and two
+  shoulder circles R_s inside an enclosing circle R_d; there is no head
+  circle (#699).
 
 ## [0.4.0] - 2026-10-09
 

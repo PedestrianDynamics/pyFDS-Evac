@@ -30,7 +30,7 @@ aliases: [/docs/model-comparison/]
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
 | **Locomotion model** | Social Force Model (Helbing et al. [6], three-circle body shape [1] Table 1), continuous 2-D equation of motion solved with a modified velocity-Verlet integrator ([1] §3.1–3.2, §3.6) | JuPedSim operational model chosen per deck (`model_type`); the default collision-free speed model has no social forces. With `SocialForceModel`, the force model of Helbing et al. [12] on a circle: body force *k* acts, friction is 0 ([#635](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635)) |
-| **Body shape** | Three overlapping circles (torso Rd, shoulder Rs, head Rt) with rotational degree of freedom ([1] Table 1, Fig. 1) | Point agent (circle of configurable radius in JuPedSim) |
+| **Body shape** | Three overlapping circles, a torso circle R<sub>t</sub> and two shoulder circles R<sub>s</sub>, inside an enclosing circle R<sub>d</sub> of half the shoulder width (no head circle), with rotational degree of freedom ([1] Table 1, Fig. 1) | One circle of configurable radius in JuPedSim; `pyfds-evac init` sets it to the mean torso radius R<sub>t</sub> of the `&PERS` type, 0.12–0.16 m ([#699](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699)) |
 | **Counterflow** | Dedicated counterflow collision-avoidance algorithm ([1] §3.3) | Handled by JuPedSim's operational model; no separate counterflow algorithm |
 | **Spatial discretisation** | Rectilinear evacuation mesh (separate from the FDS fire mesh); geometry is fitted to the underlying grid; the cell size is the user's choice, and the guide advises cells of 0.25 m or larger for the flow fields ([1] §1.2, p. 10) | Continuous walkable polygon (Shapely geometry); no grid |
 

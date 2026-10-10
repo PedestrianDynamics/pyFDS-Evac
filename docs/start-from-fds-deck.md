@@ -361,7 +361,8 @@ An FDS+Evac deck carries its own exits and agents:
   is a `COUNT_ONLY` counter and is not an exit.
 - **Agents.** Four `&EVAC` groups, 100 agents. The `&EVHO` area is cut out,
   which splits each group into two pieces. The `&PERS` pre-movement becomes
-  10 s plus a gamma-distributed reaction, mean 20 s. The group that knows no
+  10 s plus a gamma-distributed reaction, mean 20 s, and its Adult body a
+  radius of 0.15 m, the FDS+Evac torso circle. The group that knows no
   door gets familiarity `discovery`.
 
 `--agents` has no effect here: the `&EVAC` records set the numbers. Change
@@ -378,7 +379,7 @@ The run warns that a 0.2 m wall is not wider than the 0.25 m visibility
 cell, and ends with:
 
 ```text
-Simulation finished in 51.85 s (100/100 evacuated).
+Simulation finished in 41.13 s (100/100 evacuated).
 ```
 
 ### Before you couple it to a fire
@@ -489,7 +490,7 @@ with 3 although the scenario can run.
   is a spawn area. `--agents N` shares N agents between them by area;
   without it, 100 placeholder agents.
 - **FDS+Evac deck:** `&EVAC` gives the spawn areas and numbers, `&PERS` the
-  speed and pre-movement, `&ENTR` flow spawning. A point or line `&EVAC` is
+  speed, pre-movement and radius, `&ENTR` flow spawning. A point or line `&EVAC` is
   grown to a 0.6 m band.
 - **Capacity.** A spawn area that asks for more agents than the run can
   place makes the scenario not runnable. The estimate is the run's own

@@ -268,6 +268,20 @@ is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (`&DUMP DT_SLCF`).
 
+**Body shape.** An agent is one circle. `pyfds-evac init` gives an
+FDS+Evac agent type the radius of its torso circle R<sub>t</sub> (Adult
+0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly 0.15), the same value
+for every operational model
+([#699](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699)).
+The circle is as deep as the FDS+Evac body (0.30 m for an adult) but
+narrower than its shoulders (0.51 m), so two agents pass side by side
+through gaps of 0.6–1.0 m where FDS+Evac fits one, and the flow through
+such gaps may be overpredicted. With `SocialForceModel`, whose radius is
+half the shoulder width (Helbing, Farkas & Vicsek 2000), the enclosing
+circle R<sub>d</sub> (0.255 m for an adult) is the closer counterpart.
+FDS+Evac draws the body size per agent; the import uses the mean. Set
+`radius` per spawn area in `config.json` for another value.
+
 **Social force friction.** With `model_type: "SocialForceModel"`, the
 friction *κ* is 0 for agents and walls: JuPedSim 1.4.2 applies the wall
 friction with the wrong sign
@@ -290,6 +304,13 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 
 ## Known defects
 
+- **Crowds deadlock at doors and narrow gaps**
+  ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706), planned for 0.5.0). With the default
+  collision-free speed model, a crowd can stop in front of an opening
+  several body widths wide and never clear it, so the run reaches
+  `max_simulation_time` with agents inside. Imported FDS+Evac decks such
+  as `HUT_Library` and `imo/CompTest9a` show it in some seeds; a smaller
+  radius makes it rarer but does not remove it.
 - **Doorway deadlocks of exploring agents**
   ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359), planned for 0.5.0). Under `no_known_exit: explore`, and
   `return` when it explores, two agents that meet head-on in a door, or
