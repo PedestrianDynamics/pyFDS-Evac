@@ -18,6 +18,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
   No shipped deck has this shape.
 
+- Results change for agents whose radius is not 0.2 m (#408): the
+  runtime now reaches a stage target within the agent's own radius plus
+  0.5 m, and keeps next-stage and reroute target points 0.8 times the
+  agent's own radius from a stage's edge; both used 0.2 m for every
+  agent. This includes decks imported by `pyfds-evac init` since #699
+  (0.12–0.16 m) and decks with a sampled `radius_distribution`. Of the
+  rerouting goldens (darwin-arm64) only the six `tj_*` decks
+  (`t_junction`, 0.15 m, one checkpoint) move: evacuation times change
+  by -0.36 to +1.11 s, all 30 agents still get out. The
+  `heat_default` verification baseline (0.15 m) moves by up to 12 mm in
+  `x`/`y`, its FED values do not. Clear-air runs of the shipped decks:
+  `station_fahy` (Gaussian radius, seed 420) 331 → 330 of 333 out at
+  600 s; `l_corridor` and `schroeder2015_route` end 0.03 s later;
+  `t_junction` and `schroeder2020_room` end with the same counts and
+  times; decks with 0.2 m are unchanged. In the first FDS case
+  (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get out
+  instead of 100, FED max 0.23 instead of 0.24.
+
 - `fed_max_route` in the route-cost history rises for an agent behind
   its route's origin node in runs with a FED field (#171). Under
   `additive` the route cost rises by `w_fed` times that change, so
@@ -136,6 +154,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--print-summary`, `--export-only` and GUI upload paths now stop on it
   too. Decks without distributions, which the fallback set-up places,
   are not checked.
+
+- The per-agent steering state stores the agent's radius (#408). It was
+  read with a 0.2 m default but never written, so stage reach
+  (radius + 0.5 m of the target point) and target clearance used 0.2 m
+  whatever the agent's radius.
 
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or

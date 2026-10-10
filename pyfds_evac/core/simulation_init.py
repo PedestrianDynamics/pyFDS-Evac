@@ -1247,6 +1247,7 @@ def build_agent_path_state(
         "state": "to_target",
         "wait_until": None,
         "step_index": 0,
+        "agent_radius": float(agent_radius),
         **seeds,
     }
 
@@ -1257,6 +1258,7 @@ def build_exit_path_state(
     seed: int,
     spawn_key: SpawnKey,
     *,
+    agent_radius: float,
     familiarity: Any = "full",
     entrance: str | None = None,
     no_known_exit: str | None = None,
@@ -1299,6 +1301,7 @@ def build_exit_path_state(
         "state": "to_target",
         "wait_until": None,
         "step_index": 0,
+        "agent_radius": float(agent_radius),
         **steering_seeds(seed, spawn_key),
         "familiarity": familiarity,
         "entrance": entrance,
@@ -1877,6 +1880,7 @@ def _initialize_with_fallback(
                 "state": "to_target",
                 "wait_until": None,
                 "step_index": 0,
+                "agent_radius": agent_radius,
                 **steering_seeds(seed, key),
                 # Carried so the reroute pass can seed a cognitive map from
                 # them; without these every agent is treated as fully familiar
@@ -3208,6 +3212,7 @@ def _add_agents(
                             direct_steering_info,
                             seed,
                             key,
+                            agent_radius=agent_radius,
                             familiarity=spawn_params.get("familiarity", "full"),
                             entrance=spawn_params.get("entrance"),
                             no_known_exit=spawn_params.get("no_known_exit"),

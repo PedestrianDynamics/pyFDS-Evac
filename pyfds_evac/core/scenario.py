@@ -2683,6 +2683,9 @@ def run_scenario(
                                             "state": "to_target",
                                             "wait_until": None,
                                             "step_index": 0,
+                                            "agent_radius": float(
+                                                flow_params.get("radius", 0.2)
+                                            ),
                                             **steering_seeds(seed, key),
                                             "familiarity": dist_familiarity[
                                                 flow_dist.get("dist_index", source_id)
