@@ -14,7 +14,7 @@ import json
 import jupedsim as jps
 import pedpy
 import pytest
-from shapely.geometry import box
+from shapely.geometry import Polygon, box
 
 import pyfds_evac.core.simulation_init as simulation_init_mod
 from pyfds_evac.core.agent_seed import (
@@ -26,6 +26,8 @@ from pyfds_evac.core.agent_seed import (
 )
 from pyfds_evac.core.scenario import load_scenario
 from pyfds_evac.core.simulation_init import (
+    SpawnCapacityError,
+    _estimate_max_capacity,
     _seed_shared_areas,
     initialize_simulation_from_json,
 )
@@ -100,6 +102,47 @@ def test_over_full_shared_area_names_every_distribution():
         match=rf"^Distributions '{KEYS[0]}', '{KEYS[1]}': requested 600 agents "
         r"but area can hold at most ~\d+\.",
     ):
+        _seed_shared_areas(spawns, 1)
+
+
+def test_unplaceable_count_below_the_estimate_names_the_upper_bound():
+    """A sliver triangle passes the area estimate but cannot seat everyone (#702).
+
+    The 1 m x 10 m triangle has 5 m^2 of area, but only 1.7 m^2 lies at
+    least one radius from its edges, so the sampler places 14-16 of the
+    estimated ~19 agents of radius 0.2 m.
+    """
+    area = Polygon([(0, 0), (1, 0), (0.5, 10)])
+    number = _estimate_max_capacity(area, 0.2)
+    spawns = [
+        {
+            "area": area,
+            "params": {"number": number, "radius": 0.2},
+            "index": 0,
+            "dist_key": KEYS[0],
+        }
+    ]
+    with pytest.raises(
+        SpawnCapacityError,
+        match=rf"^Distribution '{KEYS[0]}': could not place the {number} "
+        rf"requested agents \(Only \d+ of {number} .*\)\. "
+        rf"The capacity estimate ~{number} is an upper bound\.",
+    ):
+        _seed_shared_areas(spawns, 1)
+
+
+def test_runtime_error_of_the_sampler_is_not_reported_as_capacity(monkeypatch):
+    """Only the distribution errors mean "could not place" (#702)."""
+
+    def fail(**_kwargs):
+        raise RuntimeError("sampler bug")
+
+    monkeypatch.setattr(simulation_init_mod.jps, "distribute_by_number", fail)
+    params = {"number": 2, "radius": 0.2}
+    spawns = [
+        {"area": box(0, 0, 4, 4), "params": params, "index": 0, "dist_key": KEYS[0]}
+    ]
+    with pytest.raises(RuntimeError, match="sampler bug"):
         _seed_shared_areas(spawns, 1)
 
 

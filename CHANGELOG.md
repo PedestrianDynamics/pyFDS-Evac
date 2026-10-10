@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `pyfds-evac --scenario DIR` prints one warning before the run when
+  `DIR/import_report.json` says `runnable: false`, with the report's
+  `not_runnable_reasons` (#701): `pyfds-evac: warning:
+  import_report.json marks this scenario not runnable: ...`. The run
+  continues, since the folder may have been fixed by hand after `init`.
+  A missing or unreadable report prints nothing.
+
+### Changed
+
+- In a scenario with neither journeys nor transitions, a spawn area
+  whose agents JuPedSim cannot all place raises `SpawnCapacityError`, a
+  `ValueError`, with JuPedSim's error as `__cause__`, instead of
+  `jupedsim.distributions.AgentNumberError` (#702). Code that caught
+  `AgentNumberError` must catch `SpawnCapacityError` or `ValueError`.
+
 ### Fixed
 
 - `pyfds-evac init` reads a deck as an FDS+Evac deck only when it has a
@@ -14,6 +31,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;
   t_junction with an `&EVHO` lost both exits before (#688). Other
   FDS+Evac namelists in a plain deck are reported as ignored.
+
+- In a scenario with neither journeys nor transitions, a spawn area
+  whose count is within the capacity estimate but where JuPedSim cannot
+  place every agent, for example a narrow area, stops `pyfds-evac
+  --scenario` with one line, exit 1, instead of an `AgentNumberError`
+  traceback (#702): `pyfds-evac: error: Distribution '<id>': could not
+  place the N requested agents (...). The capacity estimate ~C is an
+  upper bound. ...`. Results do not change.
 
 ## [0.4.0] - 2026-10-09
 
