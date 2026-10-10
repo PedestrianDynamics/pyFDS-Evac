@@ -424,13 +424,13 @@ converted.&lt;/p>
 &lt;/details>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
-&lt;strong class="hx-text-lg">Agents that never move: journeys without transitions&lt;/strong>
+&lt;strong class="hx-text-lg">Journeys without transitions&lt;/strong>
 &lt;/summary>
 &lt;div class="hx-p-2 hx-overflow-hidden">
-&lt;p>A file whose &lt;code>journeys&lt;/code> list &lt;code>stages&lt;/code> but which has no &lt;code>transitions&lt;/code> runs
-with agents that never move. No warning is printed, and &lt;code>--print-summary&lt;/code>
-looks normal
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).
+&lt;p>A file whose &lt;code>journeys&lt;/code> list &lt;code>stages&lt;/code> but which has no &lt;code>transitions&lt;/code> is
+refused at load with an error that names each journey
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>,
+&lt;code>check_journey_transitions&lt;/code>).
 Older app exports have this shape, for example the &lt;code>bottleneck-zone&lt;/code> example
 and 23 of the 55 scenario ZIPs of jupedsim-web-community, which also carry
 &lt;code>journeys_v2&lt;/code>.&lt;/p>
@@ -528,7 +528,8 @@ overrides it).&lt;/li>
 &lt;code>config.simulation_settings.simulationParams.max_simulation_time&lt;/code>
 (default 300 s).&lt;/li>
 &lt;/ul>
-&lt;p>Exits, spawn areas and checkpoints must lie inside the walkable area. With
+&lt;p>Exits, spawn areas and checkpoints must lie inside the walkable area; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/">How do I place checkpoints?&lt;/a>. With
 &lt;code>--fds-dir&lt;/code>, &lt;code>max_simulation_time&lt;/code> must not exceed the last FDS slice time by
 more than one output interval, unless you pass &lt;code>--allow-fds-horizon-hold&lt;/code>.&lt;/p>
 &lt;p>For a first try, change the number of agents from 1 to 3:&lt;/p>
@@ -812,7 +813,280 @@ it with your design fire.&lt;/p>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>: the slices and
 yields a coupled run reads.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>: error messages and their fixes.&lt;/li>
-&lt;/ul></description></item><item><title>Usage: running simulations and producing plots</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</guid><description>
+&lt;/ul></description></item><item><title>How do I place checkpoints?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/</guid><description>
+&lt;p>A checkpoint is a polygon you draw in &lt;code>checkpoints.&amp;lt;id&amp;gt;.coordinates&lt;/code>. The
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/">routing pages&lt;/a> call the same nodes &lt;em>crossings&lt;/em>; this page calls
+them checkpoints, after the JSON key.&lt;/p>
+&lt;p>Checkpoints are the nodes of the route graph between spawn areas and exits.
+Agents who explore a building they do not know learn the building from them.
+You do not need a checkpoint to get agents through a door: JuPedSim walks
+agents along the navigation mesh.&lt;/p>
+&lt;p>This page shows where to draw checkpoints, how large, and how they join the
+route graph. A badly placed checkpoint can change
+route lengths, exit choice and the evacuation time. The page ends with a
+check list.&lt;/p>
+&lt;h2>Draw a checkpoint at a door&lt;span class="hx-absolute -hx-mt-20" id="draw-a-checkpoint-at-a-door">&lt;/span>
+&lt;a href="#draw-a-checkpoint-at-a-door" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ol>
+&lt;li>Draw a box across the doorway that reaches into the rooms on both sides.
+Do not stop it at the wall faces.&lt;/li>
+&lt;li>Keep the whole box inside the walkable area.&lt;/li>
+&lt;li>Keep its node point (the centroid for a convex box, see
+&lt;a href="#reference-node-point-target-point-and-arrival">below&lt;/a>) more than one
+agent radius from any wall, and more than one visibility cell from any
+wall face.&lt;/li>
+&lt;li>With a &lt;code>sign&lt;/code>, keep the sign point more than one visibility cell from any
+wall face.&lt;/li>
+&lt;/ol>
+&lt;p>The &lt;code>blind_spawn_discovery&lt;/code> asset draws its door checkpoints this way:
+2 m × 2 m boxes centred on 0.4 m thick doorways. Its geometry builder
+(&lt;code>assets/blind_spawn_discovery/build_geometry.py&lt;/code>, &lt;code>_check_premises&lt;/code>) refuses
+a checkpoint that is shallower than 1.5 m, because &amp;ldquo;agents jam aiming for the
+same sliver&amp;rdquo;, and one that is not wholly inside the walkable area, because
+&amp;ldquo;direct steering could pick a target point inside a wall&amp;rdquo;. The 1.5 m is that
+builder&amp;rsquo;s own check. The shipped &lt;code>familiarity_test_*&lt;/code> checkpoints
+(0.55–1.22 m) are smaller than that, and agents pass through them in clear
+air; do not use them as templates.&lt;/p>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Why a thin checkpoint jams&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>Each agent steers to a random point inside the checkpoint, kept away from its
+edge by a clearance of 0.8 times the agent radius. In a checkpoint as deep as
+the wall, all these points lie on one thin strip, so the crowd aims at the
+same line in the doorway. A box that spans both rooms spreads the targets.&lt;/p>
+&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/69" target="_blank" rel="noopener">#69&lt;/a>
+reports the same failure for earlier Station checkpoints: &amp;ldquo;1.5 m -&amp;gt; 4.0 m
+fixed 210 agents&amp;rdquo;. That number is from the issue and was not re-run.&lt;/p>
+&lt;p>The builder&amp;rsquo;s check and #69 predate the polygon arrival rule
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/pull/726" target="_blank" rel="noopener">#726&lt;/a>), under
+which an agent arrives on entering the checkpoint. Whether a wall-deep
+checkpoint still jams has not been re-run.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;aside class="docs-checkpoint" aria-label="Expected result: The checkpoint is well placed">
+&lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> The checkpoint is well placed&lt;/p>
+&lt;div class="docs-checkpoint__body">
+&lt;p>The run log has neither of these warnings for your checkpoint (the second
+is logged only for scenarios with exploring agents):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Routing &amp;lt;from&amp;gt; -&amp;gt; &amp;lt;to&amp;gt; failed (...); using a straight centroid ray
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Node point (...) of stage &amp;lt;id&amp;gt; leaves no room for an agent of radius ... m: agents patrol from there without looking from it.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The first means the node point is off the navigation mesh: the route cost of
+that edge is a straight line that ignores walls. The second means an
+exploring agent cannot stand on the node point to look for signs. Move the
+checkpoint away from the wall in both cases.&lt;/p>
+&lt;/div>
+&lt;/aside>
+&lt;h2>Wire checkpoints into the route graph&lt;span class="hx-absolute -hx-mt-20" id="wire-checkpoints-into-the-route-graph">&lt;/span>
+&lt;a href="#wire-checkpoints-into-the-route-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>You choose between two ways.&lt;/p>
+&lt;p>&lt;strong>With &lt;code>transitions&lt;/code>.&lt;/strong> The graph has exactly the &lt;code>from → to&lt;/code> pairs you list,
+when both ends exist. Nothing else is added. A checkpoint with more than one
+outgoing transition in a journey needs routing percentages; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journey-splits-waypoint_routing">Journey splits&lt;/a>. A journey
+that places agents but that no transition names in its &lt;code>journey_id&lt;/code> is
+refused at load (&lt;code>simulation_init.py&lt;/code>, &lt;code>check_journey_transitions&lt;/code>).&lt;/p>
+&lt;p>&lt;strong>Without &lt;code>transitions&lt;/code>.&lt;/strong> The graph wires itself: spawn areas and checkpoints
+connect to checkpoints and exits, but not to a node when another checkpoint
+lies on the way to it. The rule is on the routing page,
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#graph-construction-without-a-journey">Graph construction without a journey&lt;/a>.
+For placement it means:&lt;/p>
+&lt;ul>
+&lt;li>Each checkpoint you add on the walking line between two nodes removes their
+direct edge. Checkpoints therefore define which nodes are neighbours, and
+exploring agents learn the building neighbour by neighbour.
+Agents then walk from neighbour to neighbour, so the route bends through
+each such checkpoint.&lt;/li>
+&lt;li>A checkpoint that lies a little off the walking line, so that the detour
+through it is more than 5 % longer, does not remove the direct edge.&lt;/li>
+&lt;li>When a checkpoint has removed the direct edge from a spawn area to an
+exit, agents who take that exit walk through the checkpoint, in clear air
+too: their path bends to a random point inside it. A &lt;code>waiting_time&lt;/code> or
+&lt;code>max_throughput&lt;/code> set on that checkpoint applies to all of them. If agents
+must not pass through such a checkpoint, move it off the walking line so
+the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;p>Shipped scenarios use both ways:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Asset&lt;/th>
+&lt;th>Checkpoints&lt;/th>
+&lt;th>&lt;code>transitions&lt;/code>&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>blind_spawn_discovery&lt;/code>&lt;/td>
+&lt;td>2 × 2 m boxes at the doors&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>familiarity_test_{full,discovery,no_journey}&lt;/code>&lt;/td>
+&lt;td>boxes 0.55–1.22 m on a side&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>station_fahy&lt;/code>&lt;/td>
+&lt;td>circles of radius 0.24–0.36 m&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>t_junction&lt;/code>&lt;/td>
+&lt;td>one 3 × 3 m box&lt;/td>
+&lt;td>3&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>schroeder2015_route&lt;/code> (&lt;code>evac/config_*.json&lt;/code>)&lt;/td>
+&lt;td>0.6 × 2 m boxes across the 0.2 m wall at doors A and B&lt;/td>
+&lt;td>6&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;h2>Keep checkpoints and signs away from walls&lt;span class="hx-absolute -hx-mt-20" id="keep-checkpoints-and-signs-away-from-walls">&lt;/span>
+&lt;a href="#keep-checkpoints-and-signs-away-from-walls" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Visibility is computed on a grid: the FDS mesh cells, or &lt;code>cell_size_m&lt;/code>
+(default 0.25 m) for the clear-air model (&lt;code>visibility.py&lt;/code>,
+&lt;code>VisibilityModel.clear_air&lt;/code>). A sign or node point within about one cell of a
+wall can fall onto the wall cell. Its sightlines then count as blocked at
+every time, in clear air too: agents cannot see that checkpoint&amp;rsquo;s sign, and
+an agent at the node cannot see signs from it.&lt;/p>
+&lt;p>Issue &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/100" target="_blank" rel="noopener">#100&lt;/a>
+reports the second case for checkpoint 3 of &lt;code>familiarity_test&lt;/code>, placed at y = 13.095 m
+next to a partition at 13.0–13.1 m on a 0.25 m mesh. The shipped decks now
+have its centre near y = 13.5 m. The rounding happens inside fdsvismap and
+was not re-checked for this page.&lt;/p>
+&lt;p>Keep the node point and any authored sign more than one visibility cell from
+any wall face. This margin is practice from #100. The software has no such
+constant.&lt;/p>
+&lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/">Create a scenario&lt;/a> asks that checkpoints lie
+inside the walkable area. The two warnings in the check above are the signs that one
+does not.&lt;/p>
+&lt;h2>How many checkpoints&lt;span class="hx-absolute -hx-mt-20" id="how-many-checkpoints">&lt;/span>
+&lt;a href="#how-many-checkpoints" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>No code rule or measured study gives a spacing. A spacing number would be
+not established. What is known:&lt;/p>
+&lt;ul>
+&lt;li>With a visibility model, an exploring agent learns a neighbour only if it
+can see that neighbour&amp;rsquo;s sign from where it stands, on arrival at a node or
+while walking (&lt;code>cognitive_map.py&lt;/code>, &lt;code>expand_on_arrival&lt;/code>,
+&lt;code>expand_from_visibility&lt;/code>). Without one, arrival at a node reveals all its
+neighbours. An edge between two distant
+checkpoints rests on one long sightline. Fewer checkpoints mean fewer, longer
+sightlines.&lt;/li>
+&lt;li>Every shipped discovery scenario puts a checkpoint at each doorway or
+junction that a route must pass (the &lt;code>familiarity_test&lt;/code> decks and
+&lt;code>blind_spawn_discovery&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;h2>Crowds that stop at narrow doors&lt;span class="hx-absolute -hx-mt-20" id="crowds-that-stop-at-narrow-doors">&lt;/span>
+&lt;a href="#crowds-that-stop-at-narrow-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>With the default &lt;code>CollisionFreeSpeedModel&lt;/code>, a crowd can stop in an opening
+several body widths wide
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706" target="_blank" rel="noopener">#706&lt;/a>). Under
+&lt;code>no_known_exit: explore&lt;/code>, two agents can freeze head-on in a doorway
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>). The
+rates are under &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#known-defects">Known defects&lt;/a>.&lt;/p>
+&lt;p>Checkpoint size or placement does not remove these defects. In &lt;code>station_fahy&lt;/code>
+#706 occurs with or without the vestibule checkpoint and with a looser arrival
+rule, which is why that scenario uses &lt;code>WarpDriverModel&lt;/code>. What you can do:&lt;/p>
+&lt;ul>
+&lt;li>Draw door checkpoints that span both sides of the opening.&lt;/li>
+&lt;li>Use smaller agent radii where the scenario allows; the effect is rarer but
+does not vanish.&lt;/li>
+&lt;li>Before you read the evacuation time, check that every agent left before
+&lt;code>max_simulation_time&lt;/code>. A deadlock shows as agents still inside at the end.&lt;/li>
+&lt;/ul>
+&lt;h2>Check list&lt;span class="hx-absolute -hx-mt-20" id="check-list">&lt;/span>
+&lt;a href="#check-list" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>&lt;input disabled="" type="checkbox"> The node point lies inside the walkable area by more than the largest
+agent radius.&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> The node point and every authored sign lie more than one visibility
+cell from any wall face.&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Door checkpoints span both sides of the opening.&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> The log has no &amp;ldquo;Routing &amp;hellip; failed&amp;rdquo; warning and, with exploring
+agents, no &amp;ldquo;Node point &amp;hellip; leaves no room&amp;rdquo; warning.&lt;/li>
+&lt;li>&lt;input disabled="" type="checkbox"> Every agent is out before &lt;code>max_simulation_time&lt;/code>.&lt;/li>
+&lt;/ul>
+&lt;h2>Reference: node point, target point and arrival&lt;span class="hx-absolute -hx-mt-20" id="reference-node-point-target-point-and-arrival">&lt;/span>
+&lt;a href="#reference-node-point-target-point-and-arrival" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Node point&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>Every part of the software that needs one point for a checkpoint uses
+&lt;code>node_position&lt;/code> (&lt;code>geometry.py&lt;/code>): the area centroid if it lies inside the
+polygon, else the pole of inaccessibility (&lt;code>polylabel&lt;/code>, tolerance 0.01 m),
+else shapely&amp;rsquo;s &lt;code>representative_point()&lt;/code>. The node point is&lt;/p>
+&lt;ul>
+&lt;li>the end of each route-graph edge (&lt;code>route_graph.py&lt;/code>,
+&lt;code>StageGraph.from_scenario&lt;/code>, &lt;code>_make_edge&lt;/code>). The edge follows the walkable
+path from JuPedSim&amp;rsquo;s routing engine. If the node point is off the
+navigation mesh, the edge falls back to a straight ray and its cost ignores
+walls;&lt;/li>
+&lt;li>the position of the default sign of a checkpoint without a &lt;code>sign&lt;/code>: omni-directional, &lt;em>c&lt;/em> = 3
+(&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>). An authored &lt;code>sign&lt;/code> keeps its own &lt;code>x, y&lt;/code>
+(&lt;code>extract_sign_descriptors&lt;/code>), so visibility is then computed at the sign;&lt;/li>
+&lt;li>the point an exploring agent walks to and looks from before it patrols on
+(&lt;code>route_graph.py&lt;/code>, &lt;code>_look_point&lt;/code>, &lt;code>_node_point_fits&lt;/code>;
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/250" target="_blank" rel="noopener">#250&lt;/a>; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Wayfinding&lt;/a>). &lt;code>_node_point_fits&lt;/code> requires an agent
+disc of radius &lt;em>r&lt;/em> around the node point to fit in the walkable area.&lt;/li>
+&lt;/ul>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Target point&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>Agents steer to a random target point inside the checkpoint, not to the node
+point. The point is sampled inside the polygon shrunk by a clearance
+(&lt;code>simulation_init.py&lt;/code>, &lt;code>_random_point_in_polygon&lt;/code>):&lt;/p>
+&lt;ul>
+&lt;li>max(0.05, 0.8 &lt;em>r&lt;/em>) m for a stage after the first
+(&lt;code>direct_steering_runtime.py&lt;/code>, &lt;code>pick_stage_target&lt;/code>);&lt;/li>
+&lt;li>max(0.05, 0.8 &lt;em>r&lt;/em>, 0.25) m for the first stage
+(&lt;code>simulation_init.py&lt;/code>, &lt;code>_pick_initial_stage_target&lt;/code>).&lt;/li>
+&lt;/ul>
+&lt;p>&lt;em>r&lt;/em> is the agent&amp;rsquo;s own radius
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/732" target="_blank" rel="noopener">#732&lt;/a>). If the
+shrunk polygon is empty or sampling fails, the point is drawn from the whole
+polygon, and then &lt;code>representative_point()&lt;/code> is used.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
+&lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
+&lt;strong class="hx-text-lg">Arrival&lt;/strong>
+&lt;/summary>
+&lt;div class="hx-p-2 hx-overflow-hidden">
+&lt;p>&lt;code>reached_stage&lt;/code> (&lt;code>direct_steering_runtime.py&lt;/code>) decides when an agent has
+reached a stage:&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Checkpoint:&lt;/strong> the agent&amp;rsquo;s centre is within &lt;em>r&lt;/em> + 0.5 m
+(&lt;code>TARGET_REACH_MARGIN_M&lt;/code>) of its target point, or inside the checkpoint
+polygon.&lt;/li>
+&lt;li>&lt;strong>Exit with a polygon:&lt;/strong> the centre is inside the exit polygon or within
+0.03 m of it (&lt;code>EXIT_REACH_TOLERANCE_M&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>Spawn area walked to on a patrol, zone, exit without a polygon:&lt;/strong> the
+target-point test only.&lt;/li>
+&lt;/ul>
+&lt;p>A large checkpoint therefore does not delay arrival: agents arrive as they
+enter it. A small checkpoint that fits inside the &lt;em>r&lt;/em> + 0.5 m disc around the
+target point, such as the &lt;code>station_fahy&lt;/code> circles, is reached as before the
+polygon test was added. The full steering loop is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#how-agents-are-steered">Models › Routing&lt;/a>.&lt;/p>
+&lt;/div>
+&lt;/details>
+&lt;h2>Next step&lt;span class="hx-absolute -hx-mt-20" id="next-step">&lt;/span>
+&lt;a href="#next-step" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Run the scenario and read the log for the two warnings above. Then follow
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/">Create a scenario&lt;/a> to run it, or look up
+every checkpoint key in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#checkpoints-and-zones">Checkpoints and zones&lt;/a>.&lt;/p></description></item><item><title>Usage: running simulations and producing plots</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/</guid><description>
 &lt;p>This page catalogues every user-facing script in the repository: how to run
 an evacuation simulation, every &lt;code>run.py&lt;/code> flag with its default, and which
 plotting script consumes each artefact. All commands assume the project venv
@@ -965,7 +1239,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--enable-rerouting&lt;/code> / &lt;code>--no-enable-rerouting&lt;/code>&lt;/td>
 &lt;td>on&lt;/td>
-&lt;td>Let agents re-evaluate exits during the run. Needed by an exit with &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#exits-exitsid">Scenario JSON&lt;/a>).&lt;/td>
+&lt;td>Let agents re-evaluate exits during the run. Without it, an agent whose exit has closed (&lt;code>closed_after_s&lt;/code>) or has not opened yet (&lt;code>open_from_s&lt;/code>) still chooses again, once for each closure, as it chose its first exit (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#exits-exitsid">Scenario JSON&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--reroute-interval S&lt;/code>&lt;/td>
@@ -975,7 +1249,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--output-route-history CSV&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
-&lt;td>Write route switches; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#route-history">Outputs&lt;/a>.&lt;/td>
+&lt;td>Write route assignments and switches; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#route-history">Outputs&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-route-cost-history CSV&lt;/code>&lt;/td>
@@ -1034,7 +1308,7 @@ the fully coupled default
 &lt;tr>
 &lt;td>&lt;code>--smoke-blind&lt;/code>&lt;/td>
 &lt;td>off&lt;/td>
-&lt;td>Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say, so a scenario with a scheduled exit cannot run smoke-blind. Gas FED, heat FED and FIC still accumulate and are written to the FED history; &lt;code>incapacitated&lt;/code> stays false. The smoke history holds the sampled K with &lt;code>speed_factor&lt;/code> 1.&lt;/td>
+&lt;td>Sample the fire for the histories only. Agents walk at their free speed, choose their first exit with K = 0 and no FED, and see signs as in a run without the fire. Rerouting and tenability are off whatever the other flags say. An agent whose exit has closed (&lt;code>closed_after_s&lt;/code>) or has not opened yet (&lt;code>open_from_s&lt;/code>) still chooses again, once for each closure, in clear air (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#exits-exitsid">Scenario JSON&lt;/a>). Gas FED, heat FED and FIC still accumulate and are written to the FED history; &lt;code>incapacitated&lt;/code> stays false. The smoke history holds the sampled K with &lt;code>speed_factor&lt;/code> 1.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--output-exit-history CSV&lt;/code>&lt;/td>
@@ -2757,7 +3031,7 @@ fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;
 &lt;tr>
 &lt;td>Route history&lt;/td>
 &lt;td>&lt;code>--output-route-history CSV&lt;/code>&lt;/td>
-&lt;td>rerouting is on (the default)&lt;/td>
+&lt;td>rerouting is on (the default), or an exit has &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code>; without rerouting it then holds only the rows of agents whose exit is closed: &lt;code>exit_closed&lt;/code>, &lt;code>initial&lt;/code> (exit not open yet) or &lt;code>default_route&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395" target="_blank" rel="noopener">#395&lt;/a>)&lt;/td>
 &lt;td>one per change of target: switch, fallback, better path, explore or wander; &lt;code>initial&lt;/code> only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -3106,7 +3380,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>old_exit&lt;/code>, &lt;code>new_exit&lt;/code>&lt;/td>
-&lt;td>exit before and after; &lt;code>old_exit&lt;/code> is empty for the first assignment&lt;/td>
+&lt;td>exit before and after; &lt;code>new_exit&lt;/code> is a node for &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code>. &lt;code>old_exit&lt;/code> is empty for the first assignment, for &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code>, for an &lt;code>initial&lt;/code> row that gives an agent on its default route its first known exit, and for a second &lt;code>default_route&lt;/code> row at spawn in the same time step&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>old_cost&lt;/code>, &lt;code>new_cost&lt;/code>&lt;/td>
@@ -3114,19 +3388,21 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>reason&lt;/code>&lt;/td>
-&lt;td>&lt;code>initial&lt;/code>, &lt;code>default_route&lt;/code>, &lt;code>smoke_reroute&lt;/code>, &lt;code>exit_closed&lt;/code>, &lt;code>fallback&lt;/code>, &lt;code>better_path&lt;/code>, &lt;code>explore&lt;/code> or &lt;code>wander&lt;/code>&lt;/td>
+&lt;td>&lt;code>initial&lt;/code>, &lt;code>default_route&lt;/code>, &lt;code>fed_reroute&lt;/code>, &lt;code>smoke_reroute&lt;/code>, &lt;code>exit_closed&lt;/code>, &lt;code>exit_opened&lt;/code>, &lt;code>learned_exit&lt;/code>, &lt;code>congestion&lt;/code>, &lt;code>shorter_path&lt;/code>, &lt;code>exit_unreachable&lt;/code>, &lt;code>resume&lt;/code>, &lt;code>fallback&lt;/code>, &lt;code>better_path&lt;/code>, &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> or &lt;code>stay&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The reasons are defined on
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#route-switch-reasons">Routing in practice&lt;/a>. &lt;code>smoke_reroute&lt;/code> labels
-every change of exit, whatever caused it
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92" target="_blank" rel="noopener">#92&lt;/a>), except a
-change away from an exit that has closed, which is &lt;code>exit_closed&lt;/code>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#route-switch-reasons">Routing in practice&lt;/a>. A change of exit is
+labelled by its cause
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92" target="_blank" rel="noopener">#92&lt;/a>):
+&lt;code>smoke_reroute&lt;/code> only when smoke made the switch, &lt;code>fed_reroute&lt;/code> when the dose
+did, &lt;code>shorter_path&lt;/code> when time or length alone did.&lt;/p>
 &lt;p>An &lt;code>initial&lt;/code> row is written only when an agent that has no exit at a
-re-evaluation is given its first one. A &lt;code>default_route&lt;/code> row is written once
-at spawn for an agent with no exit in its map that follows its default
-route, the journey or the nearest exit on foot. Other agents that start with
+re-evaluation is given its first one. A &lt;code>default_route&lt;/code> row is written for
+an agent that follows its default route, the journey or the nearest exit on
+foot: at spawn when its map holds no exit, or when its known exits are all
+closed or unreachable. Other agents that start with
 a journey exit get no row until they change target, so a run without any switch (such as the
 example above, &lt;code>Route history rows: 0&lt;/code>) writes a file with only its header. This
 does not mean rerouting was off.&lt;/p>
@@ -3225,7 +3501,11 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>agents_not_spawned&lt;/code>&lt;/td>
-&lt;td>flow agents that had not entered when the run reached &lt;code>max_simulation_time&lt;/code>&lt;/td>
+&lt;td>flow agents that had not entered when the run stopped: cut off by &lt;code>max_simulation_time&lt;/code>, or still waiting for a free position when their flow window closed&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>metrics[&amp;quot;flow_spawns_deferred&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>status&lt;/code>&lt;/td>
@@ -3234,6 +3514,10 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;tr>
 &lt;td>&lt;code>success&lt;/code>&lt;/td>
 &lt;td>&lt;code>True&lt;/code> only for a completed run; &lt;code>run.py&lt;/code> then exits with status 0, and with status 2 for an incomplete run&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>metrics[&amp;quot;route_switches&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>per agent, each later time step whose decision changes the agent&amp;rsquo;s target (&lt;code>new_exit&lt;/code>), or its path to an exit it holds (a row with an &lt;code>old_exit&lt;/code>); the first decision and repeated rows in one time step are not counted, and reasons are not read (#733). Each new &lt;code>explore&lt;/code> or &lt;code>wander&lt;/code> node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>metrics[&amp;quot;fed_max&amp;quot;]&lt;/code>&lt;/td>
@@ -3487,13 +3771,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>radius&lt;/code>&lt;/td>
 &lt;td>&lt;code>simulationParams.radius&lt;/code>, else 0.2 m&lt;/td>
 &lt;td>finite, &amp;gt; 0&lt;/td>
-&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint. An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it.&lt;/td>
+&lt;td>Body radius: packing, spawn spacing, and the &lt;code>radius + 0.5&lt;/code> m arrival distance at a checkpoint (an agent also arrives when its centre is inside the checkpoint polygon). An agent leaves at an exit when its centre enters the exit polygon or comes within 0.03 m of it.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius_distribution&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;constant&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>constant&lt;/code>, &lt;code>gaussian&lt;/code>&lt;/td>
-&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>, clipped to [0.1, 1.0] m.&lt;/td>
+&lt;td>&lt;code>gaussian&lt;/code> draws per agent with &lt;code>radius_std&lt;/code>, clipped to [0.1 m, b], where b = min(max(&lt;code>radius&lt;/code> + 3 × &lt;code>radius_std&lt;/code>, 0.1), 1.0) m is the radius placement spaces agents for.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>radius_std&lt;/code>&lt;/td>
@@ -3541,7 +3825,7 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code>&lt;/td>
 &lt;td>0 s, 10 s&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>Window of flow spawning.&lt;/td>
+&lt;td>Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (&lt;code>agents_not_spawned&lt;/code>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>flow_schedule&lt;/code>&lt;/td>
@@ -3656,19 +3940,38 @@ judged by whether it is open at the time of ranking, not at the time the
 agent would arrive;&lt;/li>
 &lt;li>an agent whose route ends at it re-evaluates at the next reroute check
 (every second), whatever &lt;code>--reroute-interval&lt;/code> says, and takes the best open
-exit it knows. The switch is logged with the reason &lt;code>exit_closed&lt;/code>. An agent
-that knows no open exit is not told of another one. It heads for a known
-node it has not visited, or else wanders over the nodes it knows; an agent
-that knows only its spawn area and the closed exit has neither, so it keeps
-its route and waits at the closed exit.&lt;/li>
+exit it knows. The switch is logged with the reason &lt;code>exit_closed&lt;/code> when the
+exit has closed (&lt;code>closed_after_s&lt;/code> passed). An exit that has not opened yet
+(&lt;code>open_from_s&lt;/code> still ahead) was never the agent&amp;rsquo;s exit: the first open exit
+it is given is logged as &lt;code>initial&lt;/code>. An agent
+that knows no open exit acts by its spawn area&amp;rsquo;s &lt;code>no_known_exit&lt;/code> mode. Under
+the default, &lt;code>default_route&lt;/code>, it walks to the nearest open exit on foot,
+which need not be in its map, and the switch is logged as &lt;code>default_route&lt;/code>.
+Under &lt;code>explore&lt;/code> it is not told of another exit: it heads for a known node it
+has not visited, or else wanders over the nodes it knows; an agent that
+knows only its spawn area and the closed exit has neither, so it keeps its
+route and waits at the closed exit. With every exit closed, an agent keeps
+its route and waits.&lt;/li>
 &lt;/ul>
 &lt;p>When an exit opens, nobody is made to re-decide: an agent takes it at its next
 regular re-evaluation, up to &lt;code>--reroute-interval&lt;/code> later.&lt;/p>
-&lt;p>A schedule needs rerouting: a run with a scheduled exit and
-&lt;code>--no-enable-rerouting&lt;/code>, &lt;code>--smoke-blind&lt;/code> or &lt;code>--replay-exits&lt;/code> stops with an
-error, as does an agent that walks a JuPedSim journey instead of a routed path
-(a spawn area with no journey in a scenario that has journeys). Without a
-schedule nothing changes.&lt;/p>
+&lt;p>A run without rerouting (&lt;code>--no-enable-rerouting&lt;/code> or &lt;code>--smoke-blind&lt;/code>) honours
+the schedule too
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395" target="_blank" rel="noopener">#395&lt;/a>). At the
+same one-second check, only the agents whose route ends at a closed exit
+choose again, once for each closure, scored as their opening choice is: on
+the map they hold, without the queue term, with the smoke at that time, or in
+clear air when the run is smoke-blind. An agent that knows no open exit takes
+the default route to the nearest open exit on foot; with no exit open it waits
+and is checked again every second. The route history logs the switches:
+&lt;code>exit_closed&lt;/code> for an exit that has closed, &lt;code>initial&lt;/code> for an agent whose exit
+has not opened yet and is sent to an open one it knows, and &lt;code>default_route&lt;/code>
+for an agent sent to an exit it does not know. Without rerouting nobody
+re-decides when an exit opens.&lt;/p>
+&lt;p>A schedule cannot be combined with &lt;code>--replay-exits&lt;/code>, and a run with a
+scheduled exit stops with an error when an agent walks a JuPedSim journey
+instead of a routed path (a spawn area with no journey in a scenario that has
+journeys). Without a schedule nothing changes.&lt;/p>
 &lt;h3>Signs: &lt;code>sign&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="signs-sign">&lt;/span>
 &lt;a href="#signs-sign" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Exits, checkpoints and waypoints can carry a &lt;code>sign&lt;/code>. A node without one gets
 an omni-directional sign at its position with &lt;code>c&lt;/code> = 3, so every exit is
@@ -3748,6 +4051,8 @@ subject to smoke-dependent legibility.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>Where to draw checkpoints, how large, and how they join the route graph:
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/">How do I place checkpoints?&lt;/a>.&lt;/p>
 &lt;h2>Journey splits: &lt;code>waypoint_routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journey-splits-waypoint_routing">&lt;/span>
 &lt;a href="#journey-splits-waypoint_routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A journey in which a checkpoint has more than one outgoing transition needs
 the shares of agents that take each branch:&lt;/p>
@@ -7100,7 +7405,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6cbbce8ef6a318b122ed04c22df7ace6ad01fb87">&lt;code>6cbbce8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/c619a0464c0d228b05ec1eceeff713f06b4a1e36">&lt;code>c619a04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7124,7 +7429,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f6bfc118501e65f1e65a861eb353937f7a060c0405efee467b136f0907060a8c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e5cfb5da77ad76b02549db65a57541378dc16dd5cbe06b03823892a384ce0e8d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

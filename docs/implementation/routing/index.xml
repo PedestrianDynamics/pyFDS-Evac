@@ -51,11 +51,25 @@ title="Copy code"
 &lt;h3>Graph construction without a journey&lt;span class="hx-absolute -hx-mt-20" id="graph-construction-without-a-journey">&lt;/span>
 &lt;a href="#graph-construction-without-a-journey" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>When a scenario defines no &lt;code>transitions&lt;/code>, the stage graph wires itself by
 stage type: spawn areas and crossings reach every crossing and every exit,
-exits are terminal, and nothing points back at a spawn area. Crossings
-therefore participate in cost-driven routing without a hand-authored journey.
-In clear air the direct spawn-to-exit edge is cheapest, so agents take the
-nearest exit and crossings sit inert; smoke can make a route through a
-crossing cheaper.&lt;/p>
+exits are terminal, and nothing points back at a spawn area.&lt;/p>
+&lt;p>An edge from A to B is dropped when a third crossing C lies on the way: the
+walkable distance A → C → B is at most 1.05 times A → B
+(&lt;code>route_graph.py&lt;/code>, &lt;code>_passes_through_another_node&lt;/code>,
+&lt;code>_BETWEENNESS_TOLERANCE&lt;/code> = 0.05). Only crossings block; spawn areas and exits
+never do. If pruning would leave a source without an edge, the edge to the
+nearest target is kept. Crossings thus define which nodes are neighbours.
+Where to draw them is on
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/">How do I place checkpoints?&lt;/a>.&lt;/p>
+&lt;p>Crossings are therefore part of the routes, in clear air too. In a deck
+without journeys, every run picks each agent&amp;rsquo;s first route on this graph, with or without rerouting
+(&lt;code>scenario.py&lt;/code>, &lt;code>_assign_initial_exit&lt;/code>), and the agent follows the whole path.
+When crossing C has replaced the direct edge from spawn area A to exit B, the
+agent walks into C first and then on to B. Between node points the detour is
+at most 5 %. A crossing that lies off the walking line keeps the direct edge,
+and agents go through it only when that route is cheaper, for example when
+smoke lies on the direct one. Without &lt;code>distributions&lt;/code>, agents are placed over
+the whole walkable area; their route starts at their nearest exit&amp;rsquo;s node, so
+they walk straight to that exit and pass no crossing.&lt;/p>
 &lt;p>Explicit &lt;code>transitions&lt;/code> remain authoritative and skip this path entirely.&lt;/p>
 &lt;h3>Edge geometry&lt;span class="hx-absolute -hx-mt-20" id="edge-geometry">&lt;/span>
 &lt;a href="#edge-geometry" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Edges carry a polyline that follows the corridor geometry computed
@@ -254,11 +268,33 @@ when a cleaner alternative exists. If every route is fully obscured,
 none are visibility-rejected.&lt;/p>
 &lt;p>If all routes end up rejected, the least-bad one is un-rejected as a
 fallback so the agent always has a path, and its reason is prefixed
-&lt;code>fallback: &lt;/code>. Under the gate the least-bad route is the one with the
+&lt;code>fallback: &lt;/code>. A route the agent must flee (FED-lethal, or impassably
+smoky under the additive model) orders behind every route it need not
+flee, and the current exit never holds against such a rival when it is
+the one to flee (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>). Among the rest, under the gate the least-bad route is the one with the
 lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
 &lt;code>fallback_switch_margin&lt;/code> hysteresis on &lt;code>tau_route&lt;/code>: the current exit stays
 first unless the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than that fraction lower (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). Under the
-additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>; the underlying sampling cause is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/p>
+additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>) (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>; the underlying sampling cause is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/p>
+&lt;p>An experimental alternative exists at code level only:
+&lt;code>RouteCostConfig(fallback_rule=&amp;quot;hold&amp;quot;)&lt;/code>. No scenario key, CLI flag or
+GUI control sets it, and the default &lt;code>&amp;quot;tau&amp;quot;&lt;/code> is the rule above
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696" target="_blank" rel="noopener">#696&lt;/a>). Under
+&lt;code>&amp;quot;hold&amp;quot;&lt;/code> the first choice with every route refused is still the lowest
+&lt;code>tau_route&lt;/code>, but after that the agent keeps its exit between refused
+routes. It leaves only for a feasible route, or when its current route
+must be fled and the rival need not be (#128).
+&lt;code>fallback_switch_margin&lt;/code> and &lt;code>fallback_return_lockout_s&lt;/code> then have no
+effect. On &lt;code>t_junction&lt;/code> (&lt;code>fire_2MW_PVC&lt;/code>, R arm of &lt;code>howto-with-without-fire.md&lt;/code>, seeds 4–13), the
+prototype on the 0.4.0 routing code gave the following results
+(pre-movement 0 / 30 / 60 s).
+Under &lt;code>&amp;quot;tau&amp;quot;&lt;/code>, 81 / 19 / 0 % of agents went to exit A, with a median
+largest FED of 0.040 / 0.123 / 0.195 and 19 / 149 / 129 switches.
+Under &lt;code>&amp;quot;hold&amp;quot;&lt;/code>, 100 % went to A at every pre-movement, with a median
+largest FED of 0.006 / 0.028 / 0.145 and no switches. This is one deck
+and one fire, and the evidence that people keep going once they are in
+smoke is expert judgement. A user setting waits for measurements on
+&lt;code>l_corridor&lt;/code>, &lt;code>world100&lt;/code> and Schroeder 2015.&lt;/p>
 &lt;p>Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
 closes on an exit — the distance in &lt;code>tau&lt;/code> is the distance that remains.&lt;/p>
@@ -546,7 +582,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
-&lt;td>FED over the threshold (× &lt;code>fed_return_margin&lt;/code> for a rival while a current exit is set), then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
+&lt;td>FED over the threshold (× &lt;code>fed_return_margin&lt;/code> for a rival while a current exit is set), then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
 &lt;td>FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as &lt;code>all segments non-visible&lt;/code> while staying feasible&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -556,7 +592,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
-&lt;td>when every route is rejected: re-sorted by raw τ, then &lt;code>rank_cost&lt;/code>; the current exit goes first unless the winner&amp;rsquo;s τ is below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>) and differs from it by more than 1e-9; the first route is un-rejected with a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
+&lt;td>when every route is rejected: re-sorted by must-flee (last), then raw τ, then &lt;code>rank_cost&lt;/code>; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner&amp;rsquo;s τ is below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>) and differs from it by more than 1e-9; the first route is un-rejected with a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -571,7 +607,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
-&lt;td>&lt;code>path_choices&lt;/code> rewritten along the new path, the agent retargeted to its first unvisited stage, the exit and path recorded, a &lt;code>RouteSwitch&lt;/code> recorded; if rerouting fails no &lt;code>RouteSwitch&lt;/code> is recorded&lt;/td>
+&lt;td>&lt;code>path_choices&lt;/code> rewritten along the new path, the agent retargeted to the stage after the one it last left when the new path passes that stage (the route is walked as it was priced, #445), else to its first unvisited stage, the exit and path recorded, a &lt;code>RouteSwitch&lt;/code> recorded; if rerouting fails no &lt;code>RouteSwitch&lt;/code> is recorded&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -666,15 +702,43 @@ though the path to it may still be rewritten, which is recorded as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>default_route&lt;/code>&lt;/td>
-&lt;td>Written once at spawn: the agent has no exit in its map and follows its default route, the journey or the nearest exit on foot (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610" target="_blank" rel="noopener">#610&lt;/a>)&lt;/td>
+&lt;td>The agent follows its default route, the journey or the nearest exit on foot (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610" target="_blank" rel="noopener">#610&lt;/a>): at spawn, or when the agent&amp;rsquo;s known exits are all closed or unreachable&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_reroute&lt;/code>&lt;/td>
+&lt;td>A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (&lt;code>additive&lt;/code>) the dose term contributes to a switch the hazard terms are needed for&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>smoke_reroute&lt;/code>&lt;/td>
-&lt;td>Best route is a different exit (lower &lt;code>rank_cost&lt;/code>), or an idle agent is routed to its current exit&lt;/td>
+&lt;td>A different exit: the route to the old exit is refused on smoke alone (τ, or non-visible under &lt;code>additive&lt;/code>); under &lt;code>gate&lt;/code> the new route is clean where the old one is not, lower in τ by more than the deadband, or would not clear the anchor with clear-air travel times; under &lt;code>additive&lt;/code> the switch needs the smoke term and not the dose term&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>exit_closed&lt;/code>&lt;/td>
-&lt;td>The agent&amp;rsquo;s exit has closed on its schedule; the best open exit it knows&lt;/td>
+&lt;td>The exit the agent walks to has closed on its schedule; the best open exit it knows, also when that route is a gate fallback&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_opened&lt;/code>&lt;/td>
+&lt;td>A different exit, closed at the agent&amp;rsquo;s previous evaluation&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>learned_exit&lt;/code>&lt;/td>
+&lt;td>A different exit, not in the agent&amp;rsquo;s cognitive map at its previous evaluation&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>congestion&lt;/code>&lt;/td>
+&lt;td>A different exit; the switch would not clear the anchor without the queue term&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>shorter_path&lt;/code>&lt;/td>
+&lt;td>A different exit; time (&lt;code>gate&lt;/code>) or length (&lt;code>additive&lt;/code>) alone clears the anchor&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_unreachable&lt;/code>&lt;/td>
+&lt;td>A different exit; the old exit has no route from where the agent stands&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>resume&lt;/code>&lt;/td>
+&lt;td>An idle agent is routed to the exit it already holds&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fallback&lt;/code>&lt;/td>
@@ -692,8 +756,49 @@ though the path to it may still be rewritten, which is recorded as
 &lt;td>&lt;code>wander&lt;/code>&lt;/td>
 &lt;td>Knowledge exhausted; patrolling known nodes&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>return&lt;/code>&lt;/td>
+&lt;td>No exit known; walking back over known legs to a node with a known exit (&lt;code>no_known_exit: &amp;quot;return&amp;quot;&lt;/code>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>stay&lt;/code>&lt;/td>
+&lt;td>No exit known; standing until one becomes known (&lt;code>no_known_exit: &amp;quot;stay&amp;quot;&lt;/code>)&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>For a change of exit the first of these that applies names the cause:
+&lt;code>default_route&lt;/code>, &lt;code>exit_closed&lt;/code>, &lt;code>fallback&lt;/code>, &lt;code>initial&lt;/code>, &lt;code>fed_reroute&lt;/code>,
+&lt;code>smoke_reroute&lt;/code>, &lt;code>exit_opened&lt;/code>, &lt;code>learned_exit&lt;/code>, &lt;code>congestion&lt;/code>,
+&lt;code>shorter_path&lt;/code>. When the exit the agent walks to has closed
+(&lt;code>closed_after_s&lt;/code> passed), the switch is &lt;code>exit_closed&lt;/code> even onto a gate
+fallback route (the decision is still a fallback; with rerouting on, the
+route cost history shows it), unless the agent knows no open exit and takes
+the default route. Either way &lt;code>old_exit&lt;/code> is the closed exit, also for an
+agent that was following its default route. An exit that has not opened yet
+never gives &lt;code>exit_closed&lt;/code>: it was never the agent&amp;rsquo;s exit, so its first open
+exit is &lt;code>initial&lt;/code> with an empty &lt;code>old_exit&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395" target="_blank" rel="noopener">#395&lt;/a>). A route to the
+old exit that is refused gives &lt;code>fed_reroute&lt;/code> when its predicted dose is over
+the limit, else &lt;code>smoke_reroute&lt;/code>. With no route to the old exit, and for an
+idle agent routed to its own exit, &lt;code>exit_opened&lt;/code> and &lt;code>learned_exit&lt;/code> still
+come first, then &lt;code>exit_unreachable&lt;/code> or &lt;code>resume&lt;/code>.&lt;/p>
+&lt;p>A cost term is credited when the switch would not clear the anchor without
+it; the anchor is strict, so a cost of exactly the old cost times
+&lt;code>exit_switch_anchor&lt;/code> does not clear. Under &lt;code>gate&lt;/code> the smoke test also
+compares clear-air travel times (queue term kept): a switch that a slowed old
+route alone makes quicker is &lt;code>smoke_reroute&lt;/code>. Under &lt;code>additive&lt;/code> the dose and
+smoke terms are first removed together: if the switch still clears, neither is
+credited. If it does not, the dose is credited (&lt;code>fed_reroute&lt;/code>) when the dose
+term alone suffices or the switch fails without it, else the smoke
+(&lt;code>smoke_reroute&lt;/code>); so two redundant hazards credit the dose. The dose term
+here is &lt;code>w_fed&lt;/code> times the dose each route adds, not its &lt;code>FED_max&lt;/code>: the dose
+already taken is the same on both routes, and under the ratio anchor
+removing it would hide a switch the added dose made. &lt;code>learned_exit&lt;/code>
+compares with the agent&amp;rsquo;s map at its previous evaluation, or at spawn before
+the first. The order of &lt;code>SWITCH_REASONS&lt;/code> is not this precedence.
+The label is read from the routes already priced and does not change the
+decision. &lt;code>RouteSwitch&lt;/code> and &lt;code>SWITCH_REASONS&lt;/code> in &lt;code>route_graph.py&lt;/code> list the same
+values.&lt;/p>
 &lt;h3>Segment caching&lt;span class="hx-absolute -hx-mt-20" id="segment-caching">&lt;/span>
 &lt;a href="#segment-caching" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Route evaluation supports an optional &lt;code>cached_segments&lt;/code> dictionary.
 When provided, segment costs are cached by &lt;code>(source, target)&lt;/code> key and
@@ -888,6 +993,11 @@ title="Copy code"
 &lt;td>&lt;code>rejection_reason&lt;/code>&lt;/td>
 &lt;td>&lt;code>str | None&lt;/code>&lt;/td>
 &lt;td>Reason for rejection; &lt;code>fallback: &lt;/code> prefix when un-rejected&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>violation_kinds&lt;/code>&lt;/td>
+&lt;td>&lt;code>tuple[str, ...]&lt;/code>&lt;/td>
+&lt;td>Limits the route breaks, in recorded order: &lt;code>&amp;quot;fed&amp;quot;&lt;/code>, &lt;code>&amp;quot;tau&amp;quot;&lt;/code>, &lt;code>&amp;quot;all_segments_non_visible&amp;quot;&lt;/code>; kept when the fallback un-rejects it. Must-flee reads these (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1407,7 +1517,8 @@ as the agent closes in: smoke that refuses a door at 40 m accepts it at 2 m.
 Every tick re-decides from the current field; there is no permanent exit death.&lt;/p>
 &lt;h3>When every route is refused&lt;span class="hx-absolute -hx-mt-20" id="when-every-route-is-refused">&lt;/span>
 &lt;a href="#when-every-route-is-refused" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The agent still has to move. &lt;code>rank_routes&lt;/code> re-sorts the refused routes by
-&lt;code>(tau_route, rank_cost)&lt;/code> — least smoke to walk through, then quickest — and
+&lt;code>(must_flee, tau_route, rank_cost)&lt;/code> — a dose-lethal route last, then least
+smoke to walk through, then quickest — and
 un-rejects the head with a &lt;code>fallback:&lt;/code> prefix on its reason. The agent keeps its
 current target unless the rival&amp;rsquo;s optical depth is more than
 &lt;code>fallback_switch_margin&lt;/code> (default 0.2) lower, i.e. unless&lt;/p>
@@ -1424,6 +1535,9 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>Equality holds, and so does a tie: with both &lt;code>tau&lt;/code> 0 the current exit stays.
+The &lt;code>tau&lt;/code> rule decides only between two routes of a kind: a dose-lethal
+current exit is left for a rival that is not, whatever their &lt;code>tau&lt;/code>, and a
+dose-lethal rival never displaces a current exit that is not (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>).
 The anchor applies the same rule whenever two refused routes meet
 (&lt;code>_fallback_rival_wins&lt;/code>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). Before 0.4.0 the fallback compared
 &lt;code>k_max_route&lt;/code> and the anchor then compared travel time, so a rival with the
@@ -1442,7 +1556,9 @@ when its rank cost beats &lt;code>old_cost * exit_switch_anchor&lt;/code> (defau
 the gate, &lt;code>_anchor_allows&lt;/code> decides in this order (&lt;code>25a6f8f&lt;/code>):&lt;/p>
 &lt;ol>
 &lt;li>The current exit is a &amp;ldquo;must flee&amp;rdquo; rejection — adopt. In practice only a
-dose rejection reaches this; see &lt;a href="#known-limitations">limitations&lt;/a>.&lt;/li>
+dose rejection reaches this, including a route over both the dose and the
+&lt;code>tau&lt;/code> limit, whose reason names &lt;code>tau&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>); see
+&lt;a href="#known-limitations">limitations&lt;/a>.&lt;/li>
 &lt;li>Both the rival and the current exit are refused (not &lt;code>feasible&lt;/code>) — adopt
 only if the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than &lt;code>fallback_switch_margin&lt;/code> lower, as in
 the fallback above; the clean bypass below is not consulted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>).
@@ -1867,8 +1983,9 @@ citable from FDS+Evac&amp;rsquo;s tier-4 rule, but that rule applies it to a str
 sight line, not to a walked route, and nothing here checks 6 against a
 soot-dose or FED-equivalent limit.&lt;/li>
 &lt;li>&lt;strong>&lt;code>impassable_extinction_threshold&lt;/code> is dead code under the default model.&lt;/strong>
-&lt;code>_must_flee_rejection&lt;/code> fires only on a rejection reason starting &lt;code>FED&lt;/code> or
-containing &lt;code>&amp;quot;visible&amp;quot;&lt;/code>; the gate&amp;rsquo;s only reason string starts &lt;code>tau&lt;/code>. So no
+&lt;code>_must_flee_rejection&lt;/code> fires only on a FED violation or the additive
+&lt;code>all segments non-visible&lt;/code> rejection; the gate refuses on dose and &lt;code>tau&lt;/code>
+only. So no
 smoke rejection bypasses the exit-switch anchor, at any density, and the key
 still takes a value and does nothing. &lt;code>visibility_extinction_threshold&lt;/code>
 (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
