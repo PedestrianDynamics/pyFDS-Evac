@@ -1060,11 +1060,11 @@ nearest slice by the rule above
 extinction and FED fields from the same case, load the &lt;code>Simulation&lt;/code>
 once and pass it to both factory methods:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> fdsreader &lt;span style="color:#f92672">import&lt;/span> Simulation
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fdsreader_adapter &lt;span style="color:#f92672">import&lt;/span> open_fds_simulation
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.smoke_speed &lt;span style="color:#f92672">import&lt;/span> ExtinctionField
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">from&lt;/span> pyfds_evac.core.fed &lt;span style="color:#f92672">import&lt;/span> FdsFedField
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sim &lt;span style="color:#f92672">=&lt;/span> Simulation(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>sim &lt;span style="color:#f92672">=&lt;/span> open_fds_simulation(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>extinction &lt;span style="color:#f92672">=&lt;/span> ExtinctionField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>fed_field &lt;span style="color:#f92672">=&lt;/span> FdsFedField&lt;span style="color:#f92672">.&lt;/span>from_fds(&lt;span style="color:#e6db74">&amp;#34;path/to/fds_case&amp;#34;&lt;/span>, simulation&lt;span style="color:#f92672">=&lt;/span>sim)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -1080,6 +1080,10 @@ title="Copy code"
 &lt;code>ExtinctionField.from_fds&lt;/code>, &lt;code>FdsFedField.from_fds&lt;/code>) accept an optional
 &lt;code>simulation&lt;/code> keyword argument. When omitted, each creates its own
 &lt;code>Simulation&lt;/code> instance internally.&lt;/p>
+&lt;p>&lt;code>open_fds_simulation&lt;/code> returns an &lt;code>fdsreader.Simulation&lt;/code> and leaves the
+case directory unchanged. A plain &lt;code>fdsreader.Simulation(...)&lt;/code> writes a
+&lt;code>&amp;lt;CHID&amp;gt;.pickle&lt;/code> cache into the case directory, or deletes one there when
+fdsreader&amp;rsquo;s caching is off (#716).&lt;/p>
 &lt;h2>Integration with models&lt;span class="hx-absolute -hx-mt-20" id="integration-with-models">&lt;/span>
 &lt;a href="#integration-with-models" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;h3>Smoke-speed model&lt;span class="hx-absolute -hx-mt-20" id="smoke-speed-model">&lt;/span>
 &lt;a href="#smoke-speed-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>ExtinctionField&lt;/code> wraps a &lt;code>SliceFieldSampler&lt;/code> for the
