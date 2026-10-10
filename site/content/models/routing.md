@@ -218,7 +218,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
 | `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
 | `visibility_extinction_threshold` | `0.5` | Extinction [1/m] above which a segment counts as not visible; additive model only |
-| `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples along a polyline [m] |
+| `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples where the field has no grid (a constant or test field) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose [m]. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)) |
 | `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
 | `alpha` | `0.706` | Router's copy of \(\alpha\) [m/s], for travel time only |
 | `beta` | `-0.057` | Router's copy of \(\beta\) [m²/s], for travel time only |
@@ -291,8 +291,10 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    one step: a route the agent must flee never displaces one it need not flee,
    and always yields to one, whatever their `tau`
    ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
-   A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked while at most `fallback_return_lockout_s` (10 s) have passed since the first switch, and allowed after; a feasible route on either side, must-flee and a third exit are not blocked (`_return_locked`). It guards against route smoke sampling that
-   steps over a narrow plume core ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+   A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked while at most `fallback_return_lockout_s` (10 s) have passed since the first switch, and allowed after; a feasible route on either side, must-flee and a third exit are not blocked (`_return_locked`). The lockout was added while route smoke
+   was sampled at steps that could pass over a narrow plume core; 0.5.0 reads
+   it per grid cell ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)),
+   and the lockout stays as a guard against near-ties of `tau`.
 4. Otherwise the cost model decides (`improvement`):
    - **Gate** (`GatePolicy.improvement`): a clean candidate leaves a dirty
      exit; an infeasible candidate needs `rank_cost` below
@@ -351,7 +353,7 @@ pyFDS-Evac, in Python, in the main loop of `run_scenario` (`scenario.py`):
   within the agent radius plus `TARGET_REACH_MARGIN_M` = 0.5 m of its target
   point, or when the agent's centre is inside the checkpoint polygon (#726).
   A spawn area walked to on a patrol, a zone and an exit without a polygon
-  are reached at the target point only;
+  are reached only within the agent radius plus 0.5 m of the target point;
 - applies checkpoint waiting times, throughput caps, exit schedules and zone
   speed factors;
 - removes an agent that reaches an exit with
@@ -510,11 +512,16 @@ Exit throughput throttling has no general test yet
   carry a higher `tau` on arrival than another path to the same exit.
 - The search never offers "walk back to the origin node, then on". When that
   is the only way round the smoke, the direct walk is priced on its own smoke.
-- The first-leg FED is a share of the first segment's FED growth, in
-  proportion to the walk's length and at most the whole segment; the dose on
-  the walk itself is not sampled
-  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), open).
-  Anticipated times are counted from the agent's position
+- Node-to-node legs take their FED growth from one FED-rate sample at the
+  polyline midpoint. The first leg is charged by its own rule
+  ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)): an
+  agent on or ahead of the origin node is charged the share of the first
+  segment's FED growth that is left of it; an agent behind it is charged the
+  whole first segment plus the stretch by which the walk is longer than the
+  segment, at the mean FED rate sampled along that stretch every
+  `sampling_step_m` at decision time, over the walk's pace
+  (`_first_leg_dose`). The candidate search charges each first hop the same
+  way. Anticipated times are counted from the agent's position
   ([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)).
 - The ordering treats `tau` differences up to 1e-9 as ties, so round-off no
   longer decides it

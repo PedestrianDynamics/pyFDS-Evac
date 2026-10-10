@@ -2,8 +2,9 @@
 
 Plan view of a non-convex room with a prescribed toy extinction field (no
 simulation). The straight agent-to-exit line cuts through a wall; the walked
-polyline is sampled every ``RouteCostConfig.sampling_step_m`` and each sample
-is coloured by the extinction K at the time the agent would reach it at
+polyline is read once in every cell of a notional 0.5 m FDS grid that it
+crosses, as ``fds_sampling._cell_fractions`` places the samples (#653), and
+each sample is coloured by the extinction K at the time the agent would reach it at
 ``RouteCostConfig.base_speed_m_per_s``. ``draw_spacetime`` draws the same route
 in space-time; it is not used in the rendered figure.
 
@@ -23,9 +24,13 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.patches import Rectangle
 
 from pyfds_evac import RouteCostConfig
+from pyfds_evac.core.fds_sampling import _cell_fractions
 
 OUT = Path(__file__).resolve().parents[2] / "site" / "static" / "images" / "concepts"
 ROUTING = RouteCostConfig()
+CELL = 0.5  # notional FDS grid spacing [m]
+GRID_EXTENT = (11.0, 5.6)  # room size [m]
+GRID_LINE = "#d9d9d9"
 
 # Shared palette of the concept figures: one meaning, one colour, one style.
 SMOKE = LinearSegmentedColormap.from_list("smoke", ["#f7f7f7", "#9a9a9a", "#2b2b2b"])
@@ -51,21 +56,24 @@ def smoke_field(x, y, t):
     return 1.6 * (0.35 + 0.65 * t / 40.0) * np.exp(-r2 / 6.0)
 
 
-def route_points(ds=ROUTING.sampling_step_m):
-    """Walked polyline from agent to exit, sampled as the router samples it.
+def route_points(cell=CELL):
+    """Walked polyline from agent to exit, sampled as the router reads FDS.
 
-    Each straight piece gets ``max(2, ceil(length / ds) + 1)`` evenly spaced
-    samples including both ends, so the spacing never exceeds ds.
+    Each straight piece is marched along its dominant axis on a grid of
+    ``cell`` m with cell-centred values: one sample at its start, one at each
+    value position strictly between its end cells, and one at its end
+    (``_cell_fractions``). A shared vertex is drawn once.
     """
     verts = np.array([[1.2, 4.2], [2.6, 3.0], [3.6, 1.4], [9.6, 1.4], [9.6, 5.5]])
     seg = np.diff(verts, axis=0)
     lens = np.hypot(seg[:, 0], seg[:, 1])
     s_knots = np.concatenate([[0.0], np.cumsum(lens)])
-    pieces = [
-        np.linspace(s_knots[i], s_knots[i + 1], max(2, int(np.ceil(length / ds)) + 1))
-        for i, length in enumerate(lens)
-    ]
-    s = np.concatenate(pieces)
+    axes = tuple(np.arange(cell / 2, extent, cell) for extent in GRID_EXTENT)
+    pieces = []
+    for i, ((x0, y0), (dx, dy)) in enumerate(zip(verts[:-1], seg)):
+        fractions = _cell_fractions(x0, y0, dx, dy, 0.0, 1.0, axes)
+        pieces.append(s_knots[i] + fractions * lens[i])
+    s = np.unique(np.round(np.concatenate(pieces), 9))
     x = np.interp(s, s_knots, verts[:, 0])
     y = np.interp(s, s_knots, verts[:, 1])
     return verts, s, x, y
@@ -74,6 +82,11 @@ def route_points(ds=ROUTING.sampling_step_m):
 def draw_plan(ax, verts, s, x, y, v0=ROUTING.base_speed_m_per_s):
     """Top panel: bee-line through the wall vs the walked polyline."""
     ax.add_patch(Rectangle((0, 0), 11, 5.6, fc=FLOOR, ec=WALL, lw=1.6, zorder=0))
+    # notional FDS grid: one smoke value per cell
+    for gx_line in np.arange(CELL, GRID_EXTENT[0], CELL):
+        ax.plot([gx_line] * 2, [0, GRID_EXTENT[1]], color=GRID_LINE, lw=0.4, zorder=2)
+    for gy_line in np.arange(CELL, GRID_EXTENT[1], CELL):
+        ax.plot([0, GRID_EXTENT[0]], [gy_line] * 2, color=GRID_LINE, lw=0.4, zorder=2)
     # internal wall separating the entrance hall from the corridor
     ax.add_patch(Rectangle((3.0, 2.4), 6.0, 0.25, fc=WALL, ec="none", zorder=3))
     ax.add_patch(Rectangle((3.0, 2.4), 0.25, 3.2, fc=WALL, ec="none", zorder=3))
@@ -113,7 +126,7 @@ def draw_plan(ax, verts, s, x, y, v0=ROUTING.base_speed_m_per_s):
         bbox=LABEL_BOX,
     )
 
-    # walked polyline sampled every Delta s, coloured by K at arrival time
+    # walked polyline read once per grid cell, coloured by K at arrival time
     k = smoke_field(x, y, s / v0)
     ax.plot(verts[:, 0], verts[:, 1], color=CHOSEN, lw=2.4, zorder=4)
     sc = ax.scatter(
@@ -129,9 +142,9 @@ def draw_plan(ax, verts, s, x, y, v0=ROUTING.base_speed_m_per_s):
         zorder=5,
     )
     ax.text(
-        6.4,
+        6.0,
         0.2,
-        rf"walked polyline, $\Delta s \leq {ROUTING.sampling_step_m:g}$ m,"
+        f"walked polyline: one sample per {CELL:g} m cell,"
         "\n"
         r"$\bar K_{uv}$ = mean of the samples",
         color=TEXT,

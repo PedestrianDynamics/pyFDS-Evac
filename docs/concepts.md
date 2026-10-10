@@ -154,8 +154,8 @@ Script: `scripts/generate_tenability_curves.py`.*
 Routes are paths on a directed graph whose nodes are the spawn areas,
 checkpoints and exits. Each edge carries a polyline that JuPedSim computes
 along the walkable area, so it follows the corridors, not a straight line
-through walls. Smoke is sampled at short steps along it, and the mean of the
-samples, \(\bar K_{uv}\), is a discrete Beer–Lambert mean (see
+through walls. Smoke is read once in every grid cell of the FDS slice that
+the polyline crosses, and the mean of the samples, \(\bar K_{uv}\), is a discrete Beer–Lambert mean (see
 [Extinction coefficient](/fundamentals/extinction.md)) taken along a walked
 path instead of a line of sight.
 
@@ -167,11 +167,12 @@ field. pyFDS-Evac sets each agent's target itself and
 JuPedSim walks the agent there; see
 [How agents are steered](/models/routing.md#how-agents-are-steered).
 
-![Plan view of a room with an internal wall; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with sample points coloured by extinction](/images/concepts/stage_graph.png)
+![Plan view of a room with an internal wall over a light 0.5 m grid; a dashed straight line from agent to exit crosses the wall, a solid walked polyline goes around it with one sample point in each grid cell it crosses, coloured by extinction](/images/concepts/stage_graph.png)
 
 *Figure 3. Schematic with a toy extinction field, not a simulation. The
 straight line (dashed) passes through a wall; the walked polyline (solid) goes
-around it, its samples coloured by K [1/m] at the time the agent would reach
+around it, read once in each cell of a notional 0.5 m FDS grid that it
+crosses, its samples coloured by K [1/m] at the time the agent would reach
 them. \(d_W\) is the walkable distance to the first node.
 Script: `scripts/figures/stage_graph.py`.*
 
@@ -359,7 +360,7 @@ pages. Defaults are on the Models pages.
 | \(L_k\) | Walkable distance still to go on route *k* | m | `effective_length` |
 | \(\tau_k = \bar K_k L_k\) | Optical depth along route *k* | - | `tau_route` |
 | \(\tau_{\max}\) | Refusal budget for \(\tau\) | - | `tau_max` |
-| \(\Delta s\) | Maximum spacing of smoke samples along a polyline | m | `sampling_step_m` |
+| \(\Delta s\) | Spacing of smoke samples where the field has no grid, and of the walk-dose FED rate | m | `sampling_step_m` |
 | \(\alpha_s\) | Bearing of a sign, degrees clockwise from north | ° | sign `alpha` |
 
 The same code name `alpha` is used for the Frantzich–Nilsson coefficient, for

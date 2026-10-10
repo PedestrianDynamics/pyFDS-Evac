@@ -3,7 +3,7 @@
 
     .venv/bin/python scripts/sweep_queue_weight.py
 
-The Station asset ships ``routing.w_queue = 0.03`` -- its own calibration,
+The Station asset ships ``routing.w_queue = 0.024`` -- its own calibration,
 since the library default is 0. This script overrides that value per variant:
 it writes one scenario bundle per (w_queue, seed) into the
 output directory -- the committed asset is never edited -- runs each with

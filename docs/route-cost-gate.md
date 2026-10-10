@@ -63,8 +63,8 @@ route may carry before it is refused:
 
 **No vismap precondition.** The gate reads no visibility model: its criterion
 is the optical depth along the route polyline. A deck of fully familiar agents
-therefore builds no visibility model and needs no `--vis-cache`: `l_corridor`
-takes 5 seconds and reproduces the cached run's 82/18. A visibility model is
+therefore builds no visibility model and needs no `--vis-cache`: at
+`7a3617d`, `l_corridor` took 5 seconds and reproduced the cached run's 82/18. A visibility model is
 still built for decks with discovery agents, which consult it to learn the
 graph.
 
@@ -522,8 +522,9 @@ the gate, `_anchor_allows` decides in this order (`25a6f8f`):
    the fallback above; the clean bypass below is not consulted ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
    If the last exit switch was also between two refused routes, a return to
    the exit it left is refused for `fallback_return_lockout_s` (10 s) after
-   it, including at exactly 10 s ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The lockout stands in for a
-   finer smoke sampling step ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
+   it, including at exactly 10 s ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). The lockout was added while
+   route smoke was sampled at steps that could pass over a narrow plume; 0.5.0
+   reads it per grid cell ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)), and the lockout stays.
 3. The rival is clean and the current exit is not — adopt.
 4. The rival is not `feasible` — fall through to the `rank_cost` comparison.
 5. Otherwise a **symmetric deadband** on `tau`, with
@@ -673,7 +674,7 @@ Every key below is read from the scenario's `routing` block by
 | `w_queue` | `0.0` | Congestion weight, off by default. | active (as `w_queue * queue_time_s` on the rank cost) | active (as distance-equivalent in the composite) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused. Veto only: dose never ranks. | active | active |
 | `visibility_extinction_threshold` | `0.5` | `K` above which a segment is flagged non-visible; a route whose segments are *all* non-visible is refused when some other route has a visible segment. | **inert** | active |
-| `sampling_step_m` | `2.0` | Spacing of extinction samples along an edge polyline. | active | active |
+| `sampling_step_m` | `2.0` | Spacing of extinction samples where the field has no grid (constant or test fields) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)). | active | active |
 | `base_speed_m_per_s` | `1.3` | Clear-air walking speed. Sets travel time, anticipation, and the queue conversion. It is not a speed floor; `min_speed_factor` is. | active | active |
 | `alpha` | `0.706` | Router's copy of the linear speed-law coefficient, for travel time only; agents walk with `SmokeSpeedConfig` ([smoke-speed model](/models/smoke-speed.md)). | active | active |
 | `beta` | `-0.057` | Same, the slope. | active | active |
@@ -717,8 +718,13 @@ it alone.
   reference deck (`scripts/golden_rerouting.py`) switches went from 28 to 58
   and exit reversals from 16 to 40, 28 of them within 2 s. Since
   [#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650), which
-  reads each sample at the agent's arrival time, the deck gives 17 switches
-  and 8 reversals, 5 within 2 s; the oscillation is reduced, not removed.
+  reads each sample at the agent's arrival time, the deck gave 17 switches
+  and 8 reversals, 5 within 2 s. Since
+  [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653) (0.5.0),
+  which reads route smoke once per grid cell, it gives 9 switches (4
+  `shorter_path`, 5 `smoke_reroute`) and no reversals, with all 100 agents
+  out by 130.8 s (`golden_rerouting.py` at `867cedab`). #124 stays open:
+  the crossover itself is not modelled away.
 - **[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125) — route
   choice is not perception-limited.** See
   [Route choice is an optimality bound](#route-choice-is-an-optimality-bound-not-a-perception-limited-model).
@@ -814,6 +820,11 @@ familiarity 1.0):
 The control run puts the fire east of the junction, where the far route smokes
 first; the gate then diverts 1 agent instead of 16, so it is not simply
 preferring long routes.
+
+Before 0.5.0 ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92))
+every exit change was logged `smoke_reroute`, so "14 `smoke_reroute`" and "23
+`smoke_reroute`" count exit changes of any cause; today's runs split them by
+cause.
 
 The table is the run made at `b3babc0`, before the band left the ordering. The
 84/16 split was re-measured after `cea33ce` and reported unchanged; that re-run
