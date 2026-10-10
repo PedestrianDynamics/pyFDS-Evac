@@ -73,7 +73,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   walkable area, exits and obstructions use these coordinates rounded to
   1e-9 m, so faces that `MULT` copies leave a few ulp apart coincide:
   such a seam between mesh rows could split the walkable area in two and
-  leave no agents placed. No tracked deck's `init` output changes.
+  leave no agents placed. No tracked deck's `init` output changes. The
+  rounding closes such seams up to coordinates of about 2e6 m; at
+  larger ones, such as UTM northings (~5e6 m), one ulp exceeds 0.5e-9 m
+  and a seam can remain.
 - `pyfds-evac init` reads a deck as an FDS+Evac deck only when it has a
   `&MESH` with `EVACUATION=.TRUE.`. An `&EVHO` in a plain deck is cut out
   of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;

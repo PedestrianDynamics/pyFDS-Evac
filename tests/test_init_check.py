@@ -622,6 +622,22 @@ def test_mult_bounds_are_the_ones_fds_computes():
     assert _culls(deck + _soot("PBZ=1.6, MESH_NUMBER=2")) == []
 
 
+def test_cull_reads_the_unrounded_mesh_bounds():
+    """FDS's mesh 2 top is (0.7 + 0.1) + 0.3 = 1.0999999999999999, below
+    PBZ=1.1, so READ_SLCF culls the slice; xb() rounds it to 1.1 (#705)."""
+    from pyfds_evac.core.fds_deck import parse_fds_text
+
+    deck = (
+        "&MULT ID='Z', DZ0=0.1, DZ=0.3, K_UPPER=1 /\n"
+        "&MESH IJK=10,10,6, XB=0,10,0,10,0.1,0.7, MULT_ID='Z' /\n"
+    )
+    mesh = parse_fds_text(deck).group("MESH")[1]
+    assert (mesh.fds_xb()[5], mesh.xb()[5]) == (1.0999999999999999, 1.1)
+    assert _culls(deck + _soot("PBZ=1.1, MESH_NUMBER=2")) == [
+        "&MESH 2 (MESH_NUMBER) does not hold it"
+    ]
+
+
 def test_mesh_number_without_fire_meshes_is_culled():
     """With no fire mesh the check keeps a slice it cannot judge, but not
     one whose MESH_NUMBER names a mesh that does not exist (#705)."""
