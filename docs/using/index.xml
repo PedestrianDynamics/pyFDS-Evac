@@ -2250,6 +2250,12 @@ not cut out.&lt;/li>
 &lt;td>Add the evacuation meshes for an FDS+Evac import, or remove the records.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>Check note &lt;code>dropped &amp;amp;SLCF line N (QUANTITY, z Z m): REASON, so FDS writes no such slice&lt;/code>, or on an FDS 6.7.6 deck &lt;code>dropped &amp;amp;SLCF line N (QUANTITY, z Z m): FDS 6.7.6 writes it in &amp;amp;MESH M with zero width in x, and fdsreader then reads no horizontal slice&lt;/code> (the orientation in place of z for a vertical or volume slice)&lt;/td>
+&lt;td>3 with &lt;code>--check&lt;/code> when no other slice gives the item, else 0&lt;/td>
+&lt;td>FDS culls the slice: it lies outside every fire &lt;code>&amp;amp;MESH&lt;/code> (FDS 6.10: a slice that only touches a mesh in a direction it spans counts as outside), or its &lt;code>MESH_NUMBER&lt;/code> names a mesh that does not hold it or no fire mesh. On a deck with evacuation meshes, which FDS 6.7.6 runs, a horizontal slice that touches a mesh in x or y is kept there at zero width, and the run then reads no horizontal slice; the note says so. The check reads the deck as if the slice were absent (#705).&lt;/td>
+&lt;td>Move the slice into a fire mesh, or fix or drop &lt;code>MESH_NUMBER&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>… holds a config.json that the importer did not write …&lt;/code>&lt;/td>
 &lt;td>1&lt;/td>
 &lt;td>&lt;code>-o&lt;/code> points at an authored scenario.&lt;/td>
@@ -2348,7 +2354,7 @@ not cut out.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>recommendations&lt;/code>&lt;/td>
-&lt;td>&lt;code>smoke_slice_height&lt;/code>; &lt;code>slices&lt;/code> (one entry per item of the check: &lt;code>status&lt;/code>, &lt;code>required&lt;/code>, &lt;code>z_requested&lt;/code>, &lt;code>nearest_pbz&lt;/code>, &lt;code>orientation_found&lt;/code>, &lt;code>ok&lt;/code>, &lt;code>fix&lt;/code>, &lt;code>message&lt;/code>); &lt;code>slice_check_ok&lt;/code>; &lt;code>coverage&lt;/code> (walkable area and exits outside the fire meshes); &lt;code>fds_meshes&lt;/code>, &lt;code>fds_output_found&lt;/code>, &lt;code>fds_dir&lt;/code>, &lt;code>run_command&lt;/code>&lt;/td>
+&lt;td>&lt;code>smoke_slice_height&lt;/code>; &lt;code>slices&lt;/code> (one entry per item of the check: &lt;code>status&lt;/code>, &lt;code>required&lt;/code>, &lt;code>z_requested&lt;/code>, &lt;code>nearest_pbz&lt;/code>, &lt;code>orientation_found&lt;/code>, &lt;code>ok&lt;/code>, &lt;code>fix&lt;/code>, &lt;code>message&lt;/code>); &lt;code>slice_check_ok&lt;/code>; &lt;code>slices_dropped&lt;/code> (the slices FDS culls: &lt;code>line&lt;/code>, &lt;code>quantity&lt;/code>, &lt;code>spec_id&lt;/code>, &lt;code>orientation&lt;/code>, &lt;code>z&lt;/code>, &lt;code>reason&lt;/code>); &lt;code>coverage&lt;/code> (walkable area and exits outside the fire meshes); &lt;code>fds_meshes&lt;/code>, &lt;code>fds_output_found&lt;/code>, &lt;code>fds_dir&lt;/code>, &lt;code>run_command&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>runnable&lt;/code>, &lt;code>not_runnable_reasons&lt;/code>&lt;/td>
@@ -2373,7 +2379,7 @@ title="Copy code"
 floor as &lt;code>init&lt;/code> does and checks, at the smoke slice height &lt;code>init&lt;/code> would
 write (the floor plus the last &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>, else 1.6 m;
 &lt;code>--smoke-slice-height Z&lt;/code> checks another absolute z), the FDS output the run
-reads. It uses the run&amp;rsquo;s rule: a horizontal slice (&lt;code>PBZ&lt;/code>, or &lt;code>XB&lt;/code> with equal
+reads. It uses the run&amp;rsquo;s rule: a horizontal slice (&lt;code>PBZ&lt;/code> alone, or &lt;code>XB&lt;/code> with equal
 z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie, with each
 slice&amp;rsquo;s z moved to the mesh grid as FDS moves it; slices with
 &lt;code>EVACUATION=.TRUE.&lt;/code> do not count. Each line prints the requested and the
@@ -2429,10 +2435,18 @@ at, from &lt;code>&amp;amp;MESH&lt;/code> &lt;code>IJK&lt;/code> and &lt;code>XB
 &lt;code>CELL_CENTERED=.TRUE.&lt;/code> the top of the cell that holds z; only the mesh
 &lt;code>MESH_NUMBER&lt;/code> names, if given), the lowest across meshes, as fdsreader
 reads it. The deck&amp;rsquo;s z follows (&lt;code>deck z 1.6 m&lt;/code>) when it differs;
-&lt;code>nearest_pbz&lt;/code> in the report is that z. A deck with &lt;code>&amp;amp;TRNZ&lt;/code> keeps the
-deck&amp;rsquo;s z. &lt;code>-o&lt;/code>, &lt;code>--walkable&lt;/code>, &lt;code>--exit&lt;/code>, &lt;code>--agents&lt;/code>, &lt;code>--exit-depth&lt;/code>,
-&lt;code>--force&lt;/code>, &lt;code>--no-fds&lt;/code> and &lt;code>-v&lt;/code> shape the written scenario and are refused
-with &lt;code>--check&lt;/code>.&lt;/p>
+&lt;code>nearest_pbz&lt;/code> in the report is that z. A slice FDS culls (outside every
+fire mesh, or a &lt;code>MESH_NUMBER&lt;/code> that names a mesh not holding it or no fire
+mesh) counts as absent and is named in a &lt;code>dropped &amp;amp;SLCF&lt;/code> line. The cull
+follows FDS 6.10 &lt;code>READ_SLCF&lt;/code>, and FDS 6.7.6 for a deck with evacuation
+meshes, which only that version runs: 6.10 culls a planar slice that
+only touches a mesh in a direction it spans, 6.7.6 keeps it at zero
+width, which the run cannot read as horizontal. &lt;code>MESH_NUMBER&lt;/code> counts the
+fire meshes only, the &lt;code>MULT&lt;/code> copies in order. A deck with &lt;code>&amp;amp;TRNZ&lt;/code> keeps
+the deck&amp;rsquo;s z, since the check does not compute the stretched grid; the cull still applies, as &lt;code>&amp;amp;TRNZ&lt;/code> moves
+the nodes and not the mesh bounds. &lt;code>-o&lt;/code>, &lt;code>--walkable&lt;/code>, &lt;code>--exit&lt;/code>,
+&lt;code>--agents&lt;/code>, &lt;code>--exit-depth&lt;/code>, &lt;code>--force&lt;/code>, &lt;code>--no-fds&lt;/code> and &lt;code>-v&lt;/code> shape the
+written scenario and are refused with &lt;code>--check&lt;/code>.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -7074,7 +7088,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/c81de385cefb8f72e2de93c0f007c1ddf877c5c9">&lt;code>c81de38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/377052eb8e3bc76be7e94ef3396491a4d6516338">&lt;code>377052e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7098,7 +7112,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d3de14255dc300e85a24977f5494f04da0298e32fefb1cdbd1f2d91d7bc8dd12&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">692d7c285b07c6c9a540529784f49c31877e73a8d4fcf37c7720919bd2965176&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
