@@ -13,6 +13,7 @@ import numpy as np
 import pedpy
 import shapely
 from shapely.geometry import Point, Polygon
+from shapely.ops import unary_union
 
 from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
@@ -80,6 +81,10 @@ class SpawnCapacityError(ValueError):
     """A distribution asks for more agents than its spawn area can hold."""
 
 
+class AgentInsertionError(RuntimeError):
+    """JuPedSim refused an agent at a position the sampler had given."""
+
+
 def _capacity_error(dist_keys, requested, capacity) -> SpawnCapacityError:
     """Name the distributions, the requested count and the capacity."""
     names = ", ".join(f"'{key}'" for key in dist_keys)
@@ -103,6 +108,14 @@ def _unplaced_error(dist_keys, requested, capacity, error) -> SpawnCapacityError
         f"{label} {names}: could not place the {requested} requested agents "
         f"({error}). The capacity estimate ~{capacity} is an upper bound. "
         f"Reduce the number of agents or enlarge the distribution area."
+    )
+
+
+def _insertion_error(dist_key, error) -> AgentInsertionError:
+    """Name the distribution whose agent ``Simulation.add_agent`` refused."""
+    return AgentInsertionError(
+        f"Distribution '{dist_key}': JuPedSim could not add an agent "
+        f"to the simulation ({error})."
     )
 
 
@@ -413,7 +426,17 @@ def create_agent_parameters(
 
 
 def _estimate_max_capacity(polygon, max_radius):
-    """Estimate how many agents fit in a polygon using packing approximation."""
+    """Estimate how many agents fit in a polygon: half its area over one disc.
+
+    An engineering estimate, not a model quantity. ``distribute_by_number``
+    keeps centres a radius from the edges, which the area ignores, so the
+    estimate is high in thin or small areas and low in large ones. Measured
+    on JuPedSim 1.4.2 over 100 seeds for 33 areas (assets, rectangles,
+    triangles; #508): in the areas up to 56 m2, a count above the estimate
+    is placed in at most 55% of seeds, and the estimate itself in 0% of
+    seeds in a 20 x 1 m strip. In a 400 m2 area at radius 0.1 m it is 1.4%
+    below the median, so a count above it is placed in 99% of seeds.
+    """
     effective_radius = max(max_radius, 0.1)
     theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
     return max(1, math.floor(theoretical * 0.5))
@@ -431,6 +454,24 @@ def _get_max_agent_radius(params):
     return mean_radius
 
 
+def _distribute(area, dist_keys, number, capacity, max_radius, seed):
+    """Seed *number* positions in *area*; a shortfall is a ``SpawnCapacityError``.
+
+    Only JuPedSim's distribution errors mean the agents do not fit; any
+    other error propagates unchanged (#702).
+    """
+    try:
+        return jps.distribute_by_number(
+            polygon=area,
+            number_of_agents=number,
+            distance_to_agents=2 * max_radius,
+            distance_to_polygon=max_radius,
+            seed=seed,
+        )
+    except _DISTRIBUTION_ERRORS as error:
+        raise _unplaced_error(dist_keys, number, capacity, error) from error
+
+
 def _seed_shared_areas(spawn_distributions, seed):
     """Place agents once per distinct spawn area, then hand out the positions.
 
@@ -441,30 +482,20 @@ def _seed_shared_areas(spawn_distributions, seed):
     reject when the agent is added. Seeding the polygon once, for everybody who
     starts in it, keeps the spacing that ``distance_to_agents`` promises.
     """
-    by_area: dict = {}
-    for spawn in spawn_distributions:
-        by_area.setdefault(spawn["area"].wkt, []).append(spawn)
-
     positions_by_index: dict = {}
-    for members in by_area.values():
+    for members in _shared_areas(spawn_distributions):
         area = members[0]["area"]
         max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
-        total = sum(int(m["params"]["number"]) for m in members)
-        capacity = _estimate_max_capacity(area, max_radius)
-        if total > capacity:
-            raise _capacity_error([m["dist_key"] for m in members], total, capacity)
+        total, capacity = _checked_shared_area(members)
         area_key = members[0]["dist_key"]
-        try:
-            positions = jps.distribute_by_number(
-                polygon=area,
-                number_of_agents=total,
-                distance_to_agents=2 * max_radius,
-                distance_to_polygon=max_radius,
-                seed=distribution_seed(seed, area_key, PURPOSE_POSITIONS),
-            )
-        except _DISTRIBUTION_ERRORS as error:
-            keys = [m["dist_key"] for m in members]
-            raise _unplaced_error(keys, total, capacity, error) from error
+        positions = _distribute(
+            area,
+            [m["dist_key"] for m in members],
+            total,
+            capacity,
+            max_radius,
+            distribution_seed(seed, area_key, PURPOSE_POSITIONS),
+        )
         # Shuffle so the profiles interleave across the room instead of one
         # taking whichever corner the sampler happened to fill first.
         random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
@@ -472,10 +503,93 @@ def _seed_shared_areas(spawn_distributions, seed):
         )
         taken = 0
         for member in members:
-            count = int(member["params"]["number"])
+            count = _initial_spawn_count(member["params"]) or 0
             positions_by_index[member["index"]] = positions[taken : taken + count]
             taken += count
     return positions_by_index
+
+
+def _shared_areas(spawns):
+    """*spawns* grouped by area: the set-up without journeys seeds each once."""
+    by_area: dict = {}
+    for spawn in spawns:
+        by_area.setdefault(spawn["area"].wkt, []).append(spawn)
+    return list(by_area.values())
+
+
+def _checked_shared_area(members):
+    """Total count and capacity of one spawn area; over-full raises."""
+    total = sum(_initial_spawn_count(m["params"]) or 0 for m in members)
+    max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
+    capacity = _estimate_max_capacity(members[0]["area"], max_radius)
+    if total > capacity:
+        raise _capacity_error([m["dist_key"] for m in members], total, capacity)
+    return total, capacity
+
+
+def _initial_spawn_count(params) -> int | None:
+    """Agents a distribution places at the start of the run, None if it has none.
+
+    The count both set-up paths place and check against the capacity: the
+    stored ``number`` whatever the ``distribution_mode``, ``initial_number``
+    beside a flow schedule. None for flow spawning, for a schedule without
+    initial agents and for a ``number`` of 0 by number: the set-up places
+    nobody there at the start.
+    """
+    mode, requested = _get_distribution_mode_and_count(params)
+    flow_schedule = _normalize_flow_schedule_entries(params)
+    initial = int(params.get("initial_number", 0 if flow_schedule else requested) or 0)
+    if mode == "by_number" and requested <= 0 and initial <= 0 and not flow_schedule:
+        return None
+    if flow_schedule:
+        return initial if initial > 0 else None
+    if params.get("use_flow_spawning", False):
+        return None
+    return int(params.get("number", 0))
+
+
+def _uses_fallback(data) -> bool:
+    """Whether the set-up without journeys places the agents."""
+    no_routes = not data.get("journeys") and not data.get("transitions")
+    return not data.get("distributions") or no_routes
+
+
+def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> None:
+    """Raise the run's ``SpawnCapacityError`` for an over-full spawn area (#508).
+
+    The run's check before placement, without JuPedSim, built from the same
+    parameters, areas, counts and grouping as the set-up. Nothing is placed,
+    so a count within the estimate that JuPedSim cannot place is found by
+    the run only.
+    """
+    if not _uses_fallback(data):
+        geometry, params = _process_distributions(
+            data, global_parameters, premovement_default=False
+        )
+        for key, coords in geometry.items():
+            if _initial_spawn_count(params[key]) is None:
+                continue
+            try:
+                area = _journey_spawn_area(coords, walkable_polygon)
+            except Exception:
+                # The run warns and skips a distribution it cannot process.
+                continue
+            if not area.is_empty:
+                _checked_shared_area(
+                    [{"area": area, "params": params[key], "dist_key": key}]
+                )
+        return
+    spawn_defaults = _deck_spawn_defaults(global_parameters)
+    areas, params, keys = _fallback_spawn_areas(
+        data, walkable_polygon, spawn_defaults, premovement_default=False
+    )
+    spawns = [
+        {"area": _clip_spawn_area(area, walkable_polygon), "params": p, "dist_key": k}
+        for area, p, k in zip(areas, params, keys)
+        if _initial_spawn_count(p) is not None
+    ]
+    for members in _shared_areas(s for s in spawns if not s["area"].is_empty):
+        _checked_shared_area(members)
 
 
 def _get_distribution_mode_and_count(params):
@@ -994,19 +1108,9 @@ def initialize_simulation_from_json(
     if "exits" not in data or not data["exits"]:
         raise ValueError("At least one exit is required in JSON configuration")
 
-    # Check what's missing and use fallback logic
-    needs_fallback = False
-    fallback_reasons = []
-
-    if "distributions" not in data or not data["distributions"]:
-        needs_fallback = True
-        fallback_reasons.append("No distributions defined")
-
-    if ("journeys" not in data or not data["journeys"]) and (
-        "transitions" not in data or not data["transitions"]
-    ):
-        needs_fallback = True
-        fallback_reasons.append("No journeys or transitions defined")
+    # Without distributions, or without journeys and transitions, the
+    # fallback set-up places the agents.
+    needs_fallback = _uses_fallback(data)
 
     if "checkpoints" not in data and "waiting_polygons" not in data:
         data["checkpoints"] = {}
@@ -1093,14 +1197,10 @@ def _initialize_with_fallback(
     """Fallback initialization logic"""
     import numpy as np
     from shapely.geometry import Polygon
-    from shapely.ops import unary_union
 
     # print("Data:", data)
 
     spawn_defaults = _deck_spawn_defaults(global_parameters)
-    default_agent_radius = spawn_defaults["radius"]
-    default_v0 = spawn_defaults["v0"]
-    default_n_agents = spawn_defaults["number"]
 
     # Step 1: Add exits to simulation
     stage_map = {}
@@ -1189,92 +1289,11 @@ def _initialize_with_fallback(
         }
 
     # Step 2: Handle distributions (use walkable area if none provided)
-    distributions = []
-    distribution_params = []  # Store parameters for each distribution
-    distribution_keys = []  # Parallel list of dist_id strings
-    total_agents = 0
-
-    if data.get("distributions"):
-        # Use provided distributions
-        for dist_id, dist_data in data["distributions"].items():
-            if "coordinates" in dist_data:
-                coords = dist_data["coordinates"]
-                if isinstance(coords, list) and len(coords) >= 3:
-                    dist_polygon = Polygon(coords)
-                    distributions.append(dist_polygon)
-                    distribution_keys.append(dist_id)
-
-                    # Get parameters for this specific distribution
-                    params = parameters_as_dict(dist_data.get("parameters")) or {}
-                    _convert_distribution_spawn_values(params, dist_id)
-                    params = _apply_default_premovement(params, dist_id)
-
-                    # Use distribution-specific parameters or fall back to defaults
-                    dist_params = {
-                        "number": params.get("number", default_n_agents),
-                        "radius": params.get("radius", default_agent_radius),
-                        "v0": params.get("v0", default_v0),
-                        "distribution_mode": params.get(
-                            "distribution_mode", "by_number"
-                        ),
-                        "percentage": params.get("percentage", None),
-                        "use_flow_spawning": params.get("use_flow_spawning", False),
-                        "flow_start_time": params.get("flow_start_time", 0),
-                        "flow_end_time": params.get("flow_end_time", 10),
-                        "use_premovement": params.get("use_premovement", False),
-                        "premovement_distribution": params.get(
-                            "premovement_distribution", "gamma"
-                        ),
-                        "premovement_param_a": params.get("premovement_param_a", None),
-                        "premovement_param_b": params.get("premovement_param_b", None),
-                        "premovement_seed": params.get("premovement_seed", None),
-                        "radius_distribution": params.get(
-                            "radius_distribution", "constant"
-                        ),
-                        "radius_std": params.get("radius_std", None),
-                        "v0_distribution": params.get("v0_distribution", "constant"),
-                        "v0_std": params.get("v0_std", None),
-                        # Knowledge, not kinematics, but it travels with the
-                        # spawn area: the reroute pass seeds each agent's
-                        # cognitive map from these two.
-                        "familiarity": params.get("familiarity", "full"),
-                        "entrance": params.get("entrance"),
-                        "no_known_exit": params.get("no_known_exit"),
-                    }
-                    _copy_premovement_offset(params, dist_params, dist_id)
-
-                    distribution_params.append(dist_params)
-                    total_agents += int(dist_params["number"])
-
-    # Fallback: use walkable area if no valid distributions
-    if not distributions:
+    distributions, distribution_params, distribution_keys = _fallback_spawn_areas(
+        data, walkable_area.polygon, spawn_defaults
+    )
+    if distribution_keys == [WALKABLE_AREA_KEY]:
         print("No valid distributions found; using walkable area as fallback")
-        distributions = [walkable_area.polygon]
-        distribution_keys = ["__walkable_area__"]
-        distribution_params = [
-            {
-                "number": default_n_agents,
-                "radius": default_agent_radius,
-                "v0": default_v0,
-                "distribution_mode": "by_number",
-                "percentage": None,
-                "use_flow_spawning": False,
-                "flow_start_time": 0,
-                "flow_end_time": 10,
-                "use_premovement": False,
-                "premovement_distribution": "gamma",
-                "premovement_param_a": None,
-                "premovement_param_b": None,
-                "premovement_seed": None,
-                "familiarity": "full",
-                "entrance": None,
-                "no_known_exit": None,
-            }
-        ]
-        distribution_params[0].update(
-            _apply_default_premovement({}, "__walkable_area__")
-        )
-        total_agents = default_n_agents
 
     # Walking distances for the nearest-exit assignment (#610, D4).
     routing_engine = jps.RoutingEngine(walkable_area.polygon)
@@ -1283,10 +1302,6 @@ def _initialize_with_fallback(
     global_ds_stage_id = simulation.add_direct_steering_stage()
     global_ds_journey = jps.JourneyDescription([global_ds_stage_id])
     global_ds_journey_id = simulation.add_journey(global_ds_journey)
-
-    # Step 4: Handle obstacles (holes in walkable area)
-    holes = [Polygon(interior) for interior in walkable_area.polygon.interiors]
-    obstacles_union = unary_union(holes) if holes else None
 
     # Step 5: Handle flow spawning vs immediate spawning
     spawning_freqs_and_numbers = []
@@ -1328,14 +1343,7 @@ def _initialize_with_fallback(
         ):
             continue
 
-        # Remove obstacles from distribution area
-        if obstacles_union and not obstacles_union.is_empty:
-            clean_dist_area = dist_area.difference(obstacles_union)
-        else:
-            clean_dist_area = dist_area
-
-        # Ensure distribution area is within walkable area
-        clean_dist_area = shapely.intersection(clean_dist_area, walkable_area.polygon)
+        clean_dist_area = _clip_spawn_area(dist_area, walkable_area.polygon)
 
         if clean_dist_area.is_empty:
             print(f"Warning: Distribution area {i} is outside walkable area")
@@ -1618,7 +1626,10 @@ def _initialize_with_fallback(
                 stage_id=global_ds_stage_id,
             )
 
-            agent_id = simulation.add_agent(agent_params)
+            try:
+                agent_id = simulation.add_agent(agent_params)
+            except RuntimeError as error:
+                raise _insertion_error(spawn_data["dist_key"], error) from error
             key = assign_spawn_key(spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN)
             all_positions.append(pos)
             agent_radii[agent_id] = agent_radius
@@ -1929,44 +1940,120 @@ def _add_stages(
 def _process_distributions(
     data: dict[str, Any],
     global_parameters=None,
+    *,
+    premovement_default: bool = True,
 ) -> tuple[dict[str, list[list[float]]], dict[str, dict[str, Any]]]:
-    """Process distribution geometries from JSON."""
+    """Process distribution geometries from JSON.
+
+    ``premovement_default=False`` leaves out the FDS+Evac pre-movement
+    default and its warning, for a check that reads counts and radii only.
+    """
     dist_geom = {}
     dist_params = {}
     spawn_defaults = _deck_spawn_defaults(global_parameters)
 
     for dist_id, dist_data in data.get("distributions", {}).items():
         dist_geom[dist_id] = dist_data["coordinates"]
-
-        params = parameters_as_dict(dist_data.get("parameters")) or {}
-        _convert_distribution_spawn_values(params, dist_id)
-        params = _apply_default_premovement(params, dist_id)
-
-        dist_params[dist_id] = {
-            "number": params.get("number", spawn_defaults["number"]),
-            "radius": params.get("radius", spawn_defaults["radius"]),
-            "v0": params.get("v0", spawn_defaults["v0"]),
-            "use_flow_spawning": params.get("use_flow_spawning", False),
-            "flow_start_time": params.get("flow_start_time", 0),
-            "flow_end_time": params.get("flow_end_time", 10),
-            "use_premovement": params.get("use_premovement", False),
-            "premovement_distribution": params.get("premovement_distribution", "gamma"),
-            "premovement_param_a": params.get("premovement_param_a", None),
-            "premovement_param_b": params.get("premovement_param_b", None),
-            "premovement_seed": params.get("premovement_seed", None),
-            "radius_distribution": params.get("radius_distribution", "constant"),
-            "radius_std": params.get("radius_std", None),
-            "v0_distribution": params.get("v0_distribution", "constant"),
-            "v0_std": params.get("v0_std", None),
-            "distribution_mode": params.get("distribution_mode", "by_number"),
-            "percentage": params.get("percentage", None),
-            "familiarity": params.get("familiarity", "full"),
-            "entrance": params.get("entrance"),
-            "no_known_exit": params.get("no_known_exit"),
-        }
-        _copy_premovement_offset(params, dist_params[dist_id], dist_id)
+        dist_params[dist_id] = _distribution_params(
+            dist_id, dist_data, spawn_defaults, premovement_default
+        )
 
     return dist_geom, dist_params
+
+
+def _distribution_params(dist_id, dist_data, spawn_defaults, premovement_default):
+    """The spawn parameters of one distribution, as both set-up paths read them."""
+    params = parameters_as_dict(dist_data.get("parameters")) or {}
+    _convert_distribution_spawn_values(params, dist_id)
+    if premovement_default:
+        params = _apply_default_premovement(params, dist_id)
+    spawn_params = _spawn_params(params, spawn_defaults)
+    _copy_premovement_offset(params, spawn_params, dist_id)
+    return spawn_params
+
+
+def _spawn_params(params: dict[str, Any], spawn_defaults) -> dict[str, Any]:
+    """*params* on the fixed key list of the set-up, deck defaults filled in."""
+    return {
+        "number": params.get("number", spawn_defaults["number"]),
+        "radius": params.get("radius", spawn_defaults["radius"]),
+        "v0": params.get("v0", spawn_defaults["v0"]),
+        "use_flow_spawning": params.get("use_flow_spawning", False),
+        "flow_start_time": params.get("flow_start_time", 0),
+        "flow_end_time": params.get("flow_end_time", 10),
+        "use_premovement": params.get("use_premovement", False),
+        "premovement_distribution": params.get("premovement_distribution", "gamma"),
+        "premovement_param_a": params.get("premovement_param_a", None),
+        "premovement_param_b": params.get("premovement_param_b", None),
+        "premovement_seed": params.get("premovement_seed", None),
+        "radius_distribution": params.get("radius_distribution", "constant"),
+        "radius_std": params.get("radius_std", None),
+        "v0_distribution": params.get("v0_distribution", "constant"),
+        "v0_std": params.get("v0_std", None),
+        "distribution_mode": params.get("distribution_mode", "by_number"),
+        "percentage": params.get("percentage", None),
+        # Knowledge, not kinematics, but it travels with the spawn area: the
+        # reroute pass seeds each agent's cognitive map from these two.
+        "familiarity": params.get("familiarity", "full"),
+        "entrance": params.get("entrance"),
+        "no_known_exit": params.get("no_known_exit"),
+    }
+
+
+WALKABLE_AREA_KEY = "__walkable_area__"
+"""Key of the spawn area the set-up without journeys uses when a deck has none."""
+
+
+def _fallback_spawn_areas(
+    data, walkable_polygon, spawn_defaults, *, premovement_default=True
+):
+    """Polygons, parameters and keys of the set-up without journeys.
+
+    Distributions with fewer than three corners are left out; with none
+    left, the whole walkable area spawns the deck's default count.
+    """
+    distributions = []
+    distribution_params = []
+    distribution_keys = []
+    for dist_id, dist_data in (data.get("distributions") or {}).items():
+        coords = dist_data.get("coordinates")
+        if not isinstance(coords, list) or len(coords) < 3:
+            continue
+        distributions.append(Polygon(coords))
+        distribution_keys.append(dist_id)
+        distribution_params.append(
+            _distribution_params(
+                dist_id, dist_data, spawn_defaults, premovement_default
+            )
+        )
+    if distributions:
+        return distributions, distribution_params, distribution_keys
+    params = (
+        _apply_default_premovement({}, WALKABLE_AREA_KEY) if premovement_default else {}
+    )
+    return (
+        [walkable_polygon],
+        [_spawn_params(params, spawn_defaults)],
+        [WALKABLE_AREA_KEY],
+    )
+
+
+def _journey_spawn_area(coords, walkable_polygon):
+    """The spawn area of the set-up with journeys: *coords* within the walkable area.
+
+    Raises for coordinates that make no valid polygon; that set-up warns and
+    skips the distribution.
+    """
+    return shapely.intersection(Polygon(coords), walkable_polygon)
+
+
+def _clip_spawn_area(dist_area, walkable_polygon):
+    """*dist_area* without the obstacles, within the walkable area."""
+    holes = [Polygon(interior) for interior in walkable_polygon.interiors]
+    obstacles_union = unary_union(holes) if holes else None
+    if obstacles_union and not obstacles_union.is_empty:
+        dist_area = dist_area.difference(obstacles_union)
+    return shapely.intersection(dist_area, walkable_polygon)
 
 
 def _is_routing_split_node(stage_key: Any) -> bool:
@@ -2486,8 +2573,7 @@ def _add_agents(
             continue
 
         try:
-            polygon_obj = Polygon(polygon)
-            dist_area = shapely.intersection(polygon_obj, walkable_area.polygon)
+            dist_area = _journey_spawn_area(polygon, walkable_area.polygon)
 
             if dist_area.is_empty:
                 print(f"Warning: Distribution {dist_key} is outside walkable area")
@@ -2663,17 +2749,22 @@ def _add_agents(
         try:
             spawn_params = spawn_data["params"]
             max_radius = _get_max_agent_radius(spawn_params)
-            requested_count = int(spawn_params.get("number", 0))
-            max_capacity = _estimate_max_capacity(spawn_data["area"], max_radius)
-            if requested_count > max_capacity:
-                raise _capacity_error([dist_key], requested_count, max_capacity)
-            positions = _placing(
-                jps.distribute_by_number,
-                polygon=spawn_data["area"],
-                number_of_agents=requested_count,
-                distance_to_agents=2 * max_radius,
-                distance_to_polygon=max_radius,
-                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            requested_count, max_capacity = _checked_shared_area(
+                [
+                    {
+                        "area": spawn_data["area"],
+                        "params": spawn_params,
+                        "dist_key": dist_key,
+                    }
+                ]
+            )
+            positions = _distribute(
+                spawn_data["area"],
+                [dist_key],
+                requested_count,
+                max_capacity,
+                max_radius,
+                distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
             )
 
             all_positions.extend(positions)
@@ -2911,14 +3002,7 @@ def _add_agents(
                     current_agent_id += 1
 
         except _AgentPlacementError as e:
-            error_msg = (
-                f"CRITICAL: Failed to place agents in distribution '{dist_key}'. "
-                f"Error: {e!s}. This usually means the spawn area is too small or crowded. "
-                f"Consider: 1) Making the distribution area larger, 2) Reducing the number of agents, "
-                f"3) Increasing distance between agents, or 4) Checking for obstacles in the area."
-            )
-            print(f"ERROR: {error_msg}")
-            raise Exception(error_msg) from e
+            raise _insertion_error(dist_key, e) from e.__cause__
 
     spawning_info = {
         "has_flow_spawning": has_flow_spawning,

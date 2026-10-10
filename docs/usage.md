@@ -43,7 +43,7 @@ scenarios and scripts of a source checkout; with pip, replace
 | `--output-sqlite PATH` | Copy the JuPedSim trajectory SQLite here, with the run manifest beside it as `<stem>.manifest.json`. When FED is computed, also writes an optional `agent_scalars(frame, id, fed, heat_fed, speed)` side table (base JuPedSim schema untouched) so [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer) can colour agents by FED or speed. |
 | `--cleanup` | Kept for compatibility: the temporary trajectory SQLite and its manifest are always removed after the run. |
 | `--export-app-bundle DIR` | Write `config.json` and `geometry.wkt` [for the app](howto-create-scenario.md#open-a-scenario-in-the-app-again). |
-| `--export-only` | Export the bundle without running the simulation. |
+| `--export-only` | Export the bundle without running the simulation. A spawn area that asks for more agents than its capacity estimate exits with status 1, as the run does. |
 
 ### FDS coupling (smoke, FED, visibility)
 

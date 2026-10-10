@@ -6,6 +6,7 @@ import importlib
 import json
 import pathlib
 import sys
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
@@ -201,11 +202,31 @@ def _warn_if_not_runnable(scenario_path: str) -> None:
 
 
 def _run_or_exit(scenario, run_kwargs):
-    """Run the scenario; report an over-full spawn area in one line (#692)."""
-    from pyfds_evac.core.simulation_init import SpawnCapacityError
+    """Run the scenario; report a spawn area that fails placement in one line."""
+    from pyfds_evac.core.simulation_init import (
+        AgentInsertionError,
+        SpawnCapacityError,
+    )
 
     try:
         return run_scenario(scenario, **run_kwargs)
+    except (SpawnCapacityError, AgentInsertionError) as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
+
+
+def _check_capacity_or_exit(scenario):
+    """Report an over-full spawn area as the run does, without running (#508)."""
+    from pyfds_evac.core.simulation_init import (
+        SpawnCapacityError,
+        _check_spawn_capacity,
+    )
+
+    try:
+        _check_spawn_capacity(
+            scenario.raw,
+            scenario.walkable_polygon,
+            SimpleNamespace(**scenario.sim_params),
+        )
     except SpawnCapacityError as exc:
         raise SystemExit(f"pyfds-evac: error: {exc}") from None
 
@@ -235,6 +256,7 @@ def main() -> int:
         _export_app_bundle(scenario, args.export_app_bundle)
 
     if args.export_only:
+        _check_capacity_or_exit(scenario)
         return 0
 
     if args.inspect_fds:
