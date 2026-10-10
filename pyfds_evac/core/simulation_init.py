@@ -493,6 +493,53 @@ def _seed_shared_areas(spawn_distributions, seed):
     return positions_by_index
 
 
+def check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> None:
+    """Raise the run's ``SpawnCapacityError`` for an over-full spawn area (#508).
+
+    The run's check before placement, without JuPedSim: the agents a
+    distribution places at the start, by number, against the capacity
+    estimate of its area clipped to the walkable area. Without journeys
+    and transitions the run seeds each polygon once, so distributions that
+    share one are counted together. Nothing is placed, so a count within
+    the estimate that JuPedSim cannot place is found by the run only.
+    """
+    defaults = _deck_spawn_defaults(global_parameters)
+    shared = not data.get("journeys") and not data.get("transitions")
+    groups: dict = {}
+    for key, dist in data.get("distributions", {}).items():
+        spawn = _initial_spawn(key, dist, defaults, walkable_polygon)
+        if spawn is None:
+            continue
+        groups.setdefault(spawn["area"].wkt if shared else key, []).append(spawn)
+    for members in groups.values():
+        total = sum(m["number"] for m in members)
+        radius = max(m["radius"] for m in members)
+        capacity = _estimate_max_capacity(members[0]["area"], radius)
+        if total > capacity:
+            raise _capacity_error([m["key"] for m in members], total, capacity)
+
+
+def _initial_spawn(key, dist, defaults, walkable_polygon):
+    """The area, count and radius a distribution places at the start, or None."""
+    coords = dist.get("coordinates")
+    if not isinstance(coords, list) or len(coords) < 3:
+        return None
+    params = dict(parameters_as_dict(dist.get("parameters")) or {})
+    _convert_distribution_spawn_values(params, key)
+    if params.get("use_flow_spawning", False):
+        return None
+    params.setdefault("number", defaults["number"])
+    params.setdefault("radius", defaults["radius"])
+    mode, number = _get_distribution_mode_and_count(params)
+    if mode != "by_number" or number <= 0:
+        return None
+    area = shapely.intersection(Polygon(coords), walkable_polygon)
+    if area.is_empty:
+        return None
+    radius = _get_max_agent_radius(params)
+    return {"key": key, "area": area, "number": number, "radius": radius}
+
+
 def _get_distribution_mode_and_count(params):
     """Get distribution mode and agent count based on distribution_mode parameter.
 

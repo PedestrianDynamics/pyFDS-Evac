@@ -6,6 +6,7 @@ import importlib
 import json
 import pathlib
 import sys
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 from rich_argparse import RawDescriptionRichHelpFormatter
@@ -210,6 +211,23 @@ def _run_or_exit(scenario, run_kwargs):
         raise SystemExit(f"pyfds-evac: error: {exc}") from None
 
 
+def _check_capacity_or_exit(scenario):
+    """Report an over-full spawn area as the run does, without running (#508)."""
+    from pyfds_evac.core.simulation_init import (
+        SpawnCapacityError,
+        check_spawn_capacity,
+    )
+
+    try:
+        check_spawn_capacity(
+            scenario.raw,
+            scenario.walkable_polygon,
+            SimpleNamespace(**scenario.sim_params),
+        )
+    except SpawnCapacityError as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
+
+
 def main() -> int:
     """Parse arguments, run the scenario, and export requested outputs."""
     if sys.argv[1:2] == ["init"]:
@@ -235,6 +253,7 @@ def main() -> int:
         _export_app_bundle(scenario, args.export_app_bundle)
 
     if args.export_only:
+        _check_capacity_or_exit(scenario)
         return 0
 
     if args.inspect_fds:

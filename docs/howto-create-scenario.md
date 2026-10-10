@@ -266,8 +266,8 @@ Simulation finished in 80.11 s (3/3 evacuated).
 
 {{< details title="If the run stops with \"requested 20 agents but area can hold at most ~6\"" closed="true" >}}
 The spawn area of ISO-table21 is about 0.94 m × 1.81 m. With `"number": 20`
-the summary still reads `Agents: ~20`, but the run stops with exit status 1
-and prints:
+the summary still reads `Agents: ~20`, but the run, and `--export-only`,
+stop with exit status 1 and print:
 
 ```text
 pyfds-evac: error: Distribution 'jps-distributions_0': requested 20 agents but area can hold at most ~6. Reduce the number of agents or enlarge the distribution area.
@@ -290,9 +290,11 @@ Three checks, from weakest to strongest:
 
 1. **The files load.** `pyfds-evac --scenario DIR --print-summary --export-only`
    prints the model, seed, maximum time, the counts and the journeys. It
-   returns before the JuPedSim set-up. It does not catch an agent that never
-   moves, a spawn area too small for its agents, or a polygon outside the
-   walkable area.
+   returns before the JuPedSim set-up. A spawn area that asks for more agents
+   than its capacity estimate stops it with the run's error line and exit
+   status 1. It does not catch an agent that never moves, a count within the
+   estimate that JuPedSim cannot place, or a polygon outside the walkable
+   area.
 2. **The scenario runs.** Run it without `--export-only`. Set a small
    `max_simulation_time` first if the full run is long. A complete run ends
    with `Simulation finished in … s (N/N evacuated).` and exit status 0.

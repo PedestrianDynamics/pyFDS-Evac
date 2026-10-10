@@ -120,3 +120,60 @@ def test_runtime_error_of_the_sampler_with_journeys_is_not_capacity(monkeypatch)
     monkeypatch.setattr(simulation_init.jps, "distribute_by_number", fail)
     with pytest.raises(RuntimeError, match="sampler bug"):
         run_scenario(_l_corridor_with_50(), seed=3)
+
+
+def _main(monkeypatch, scenario, *args):
+    monkeypatch.setattr(cli, "load_scenario", lambda _path: scenario)
+    monkeypatch.setattr("sys.argv", ["pyfds-evac", "--scenario", "unused", *args])
+    with contextlib.redirect_stdout(io.StringIO()):
+        return cli.main()
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_export_only_reports_an_over_full_spawn_area_as_the_run(
+    monkeypatch, with_journeys
+):
+    """``--print-summary --export-only`` stops with the run's line (#508)."""
+    with pytest.raises(SystemExit) as run:
+        _main(monkeypatch, _over_full(with_journeys))
+    with pytest.raises(SystemExit) as export:
+        _main(
+            monkeypatch,
+            _over_full(with_journeys),
+            "--print-summary",
+            "--export-only",
+        )
+    assert re.match(PATTERN, export.value.code), export.value.code
+    assert export.value.code == run.value.code
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [{}, {"number": 500, "use_flow_spawning": True}],
+    ids=["within-estimate", "flow-spawned"],
+)
+def test_export_only_passes_a_spawn_area_the_run_admits(monkeypatch, extra):
+    scenario = _scenario(ENOUGH_S, **extra)
+    assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
+
+
+def _two_on_one_polygon(with_journeys: bool):
+    """Two distributions of 50 over one 3 x 4 m polygon that holds ~84."""
+    scenario = _over_full(with_journeys)
+    raw = scenario.raw
+    raw["distributions"][D]["parameters"]["number"] = 50
+    raw["distributions"]["other"] = raw["distributions"][D]
+    return raw, scenario.walkable_polygon
+
+
+def test_capacity_check_counts_a_shared_polygon_once_without_journeys():
+    """Without journeys the run seeds a shared polygon once, for everybody."""
+    with pytest.raises(
+        simulation_init.SpawnCapacityError,
+        match=rf"^Distributions '{D}', 'other': requested 100 agents ",
+    ):
+        simulation_init.check_spawn_capacity(*_two_on_one_polygon(False))
+
+
+def test_capacity_check_counts_each_distribution_with_journeys():
+    simulation_init.check_spawn_capacity(*_two_on_one_polygon(True))

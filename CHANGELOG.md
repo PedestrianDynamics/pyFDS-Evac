@@ -47,6 +47,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SpawnCapacityError` with JuPedSim's error as `__cause__`. Results do
   not change.
 
+- `pyfds-evac --scenario DIR --export-only`, with or without
+  `--print-summary`, reported a spawn area that asks for more agents
+  than its capacity estimate as `Agents: ~N` and exited 0. It now prints
+  the run's line, `pyfds-evac: error: Distribution '<id>': requested N
+  agents but area can hold at most ~C. ...`, and exits 1 (#508). A count
+  within the estimate that JuPedSim cannot place is still found by the
+  run only.
+
 ## [0.4.0] - 2026-10-09
 
 ### Upgrading
