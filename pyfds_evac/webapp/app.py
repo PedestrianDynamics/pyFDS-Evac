@@ -53,6 +53,7 @@ from pyfds_evac.config.parameters import default
 from pyfds_evac.config.rules import no_known_exit_issue, scenario_issue
 from pyfds_evac.core import load_scenario
 from pyfds_evac.core.manifest import manifest_path_for
+from pyfds_evac.core.route_graph import count_route_switches
 from pyfds_evac.core.run_config import build_run_kwargs, validate_opts
 from pyfds_evac.core.run_outputs import apply_outputs
 
@@ -2454,10 +2455,6 @@ def _rerouting_off(result) -> str:
     return "rerouting off"
 
 
-# Route-history reasons that assign a first exit rather than switch one.
-_FIRST_ASSIGNMENT_REASONS = frozenset({"initial", "default_route"})
-
-
 def _plural(n: int, word: str, suffix: str = "s") -> str:
     return f"{n} {word}{'' if n == 1 else suffix}"
 
@@ -2470,9 +2467,7 @@ def _route_history_note(result) -> str:
         return ""
     n = len(rows)
     if rerouting and n:
-        switches = sum(
-            row.get("reason") not in _FIRST_ASSIGNMENT_REASONS for row in rows
-        )
+        switches = count_route_switches(rows)
         return (
             f"{_plural(n, 'route-history row')} ({_plural(switches, 'switch', 'es')})"
         )

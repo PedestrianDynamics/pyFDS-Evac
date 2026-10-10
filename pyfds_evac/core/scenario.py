@@ -127,6 +127,7 @@ from .route_graph import (
     _reconstruct_committed_path,
     adopt_heading_exit,
     compute_eval_offset,
+    count_route_switches,
     end_look,
     evaluate_and_reroute,
     look_radius,
@@ -3586,9 +3587,11 @@ def run_scenario(
             )
 
         # A run without rerouting switches routes only when an exit closes.
+        # The key is present whenever the history has rows; an agent's first
+        # decision is not a switch (#733).
         records_routes = reroute_config is not None or has_exit_schedule
         if records_routes and route_history:
-            metrics["route_switches"] = len(route_history)
+            metrics["route_switches"] = count_route_switches(route_history)
         # Agents that left through an exit absent from their map: on the
         # default route, the FDS+Evac counterpart, this is modeller knowledge
         # (#610).

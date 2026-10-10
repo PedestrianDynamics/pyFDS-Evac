@@ -6,9 +6,9 @@ import heapq
 import logging
 import math
 import weakref
-from collections.abc import Callable
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
-from typing import Protocol
+from typing import Any, Protocol
 
 import numpy as np
 from shapely.geometry import Polygon
@@ -2953,6 +2953,55 @@ SWITCH_REASONS = (
     "return",
     "stay",
 )
+
+
+def _agent_steps(
+    rows: Iterable[Mapping[str, Any]],
+) -> dict[Any, list[Mapping[str, Any]]]:
+    """Each agent's route-history rows, one per time step, in history order.
+
+    Rows of one agent with equal ``time_s`` were written in one step; the
+    last of them is the decision the agent acts on.
+    """
+    steps: dict[Any, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        agent = steps.setdefault(row["agent_id"], [])
+        if agent and agent[-1]["time_s"] == row["time_s"]:
+            agent[-1] = row
+        else:
+            agent.append(row)
+    return steps
+
+
+def route_switches(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[tuple[str, Mapping[str, Any]]]:
+    """The route switches in a route history, as (previous target, row).
+
+    *rows* are route-history rows as in ``ScenarioResult.route_history``,
+    in history order. A target is a row's ``new_exit``: an exit, or the node
+    of an ``explore``, ``wander``, ``return`` or ``stay`` row. Per agent and
+    time step (see :func:`_agent_steps`), a step is a switch when the agent
+    already had a target and the step either names an old exit (a change of
+    exit, or of the path to the exit held) or a different target. An agent's
+    target before its first step is that row's old exit, the exit seeded at
+    spawn, if any. Reasons are not read: ``initial`` also labels the first
+    known exit of an agent already on its default route (#733).
+    """
+    found: list[tuple[str, Mapping[str, Any]]] = []
+    for steps in _agent_steps(rows).values():
+        previous = steps[0].get("old_exit") or None
+        for row in steps:
+            changed = bool(row.get("old_exit")) or row["new_exit"] != previous
+            if previous is not None and changed:
+                found.append((previous, row))
+            previous = row["new_exit"]
+    return found
+
+
+def count_route_switches(rows: Iterable[Mapping[str, Any]]) -> int:
+    """Number of route switches in a route history, see :func:`route_switches`."""
+    return len(route_switches(rows))
 
 
 def compute_eval_offset(

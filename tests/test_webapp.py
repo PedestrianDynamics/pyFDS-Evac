@@ -3220,10 +3220,22 @@ class TestRouteHistoryMessage:
 
     @staticmethod
     def _rows(*reasons):
-        return [{"agent_id": i, "reason": r} for i, r in enumerate(reasons)]
+        # One row per agent, as at its first decision.
+        return [
+            {
+                "time_s": 0.0,
+                "agent_id": i,
+                "old_exit": "",
+                "new_exit": "east",
+                "reason": r,
+            }
+            for i, r in enumerate(reasons)
+        ]
 
     def test_rerouting_on_with_switches(self, tmp_path):
         rows = self._rows("initial", "smoke_reroute", "exit_closed")
+        # A change of exit names the exit the agent held.
+        rows[1]["old_exit"] = rows[2]["old_exit"] = "west"
         route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
         assert "3 route-history rows (2 switches)" in route
         assert "rerouting off" not in route
@@ -3234,6 +3246,13 @@ class TestRouteHistoryMessage:
         route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
         assert "4 route-history rows (0 switches)" in route
         assert "4 route switches" not in route
+
+    def test_default_route_from_a_closed_exit_is_a_switch(self, tmp_path):
+        # A default_route row with an old exit leaves a closed exit (#733).
+        rows = self._rows("default_route", "default_route")
+        rows[1]["old_exit"] = "west"
+        route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
+        assert "2 route-history rows (1 switch)" in route
 
     def test_rerouting_on_without_switches(self, tmp_path):
         route, _ = self._detail(tmp_path, rerouting=True, rows=[])
