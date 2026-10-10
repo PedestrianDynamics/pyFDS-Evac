@@ -606,9 +606,11 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The estimate is an upper bound. With &lt;code>&amp;quot;number&amp;quot;: 5&lt;/code> the traceback ends in:&lt;/p>
+&lt;p>The estimate is an upper bound. With &lt;code>&amp;quot;number&amp;quot;: 5&lt;/code> the count passes the
+check, but JuPedSim places only 4 agents, and the run stops with exit
+status 1 and prints:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>jupedsim.distributions.AgentNumberError: Only 4 of 5 could be placed. density: 2.35 p/m²&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>pyfds-evac: error: Distribution &amp;#39;jps-distributions_0&amp;#39;: could not place the 5 requested agents (Only 4 of 5 could be placed. density: 2.35 p/m²). The capacity estimate ~6 is an upper bound. Reduce the number of agents or enlarge the distribution area.&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -6766,6 +6768,16 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;td>Use a value in [0.25, 1].&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: Distribution '…': requested N agents but area can hold at most ~C. …&lt;/code>&lt;/td>
+&lt;td>A spawn area asks for more agents than the run&amp;rsquo;s capacity estimate.&lt;/td>
+&lt;td>Lower &lt;code>number&lt;/code>, or enlarge the polygon in &lt;code>distributions.&amp;lt;id&amp;gt;.coordinates&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: Distribution '…': could not place the N requested agents (Only K of N could be placed. …). The capacity estimate ~C is an upper bound. …&lt;/code>&lt;/td>
+&lt;td>The count is within the estimate, but JuPedSim cannot place every agent, for example in a narrow area. Only in scenarios with neither journeys nor transitions.&lt;/td>
+&lt;td>As above.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>ValueError: Unknown routing cost_model '…'; expected one of ('gate', 'additive')&lt;/code>&lt;/td>
 &lt;td>&lt;code>routing.cost_model&lt;/code> in the scenario JSON is not one of the two names. The match is exact and case-sensitive: &lt;code>&amp;quot;Gate&amp;quot;&lt;/code> fails. Raised with rerouting on or off.&lt;/td>
 &lt;td>Write &lt;code>&amp;quot;gate&amp;quot;&lt;/code> or &lt;code>&amp;quot;additive&amp;quot;&lt;/code>, or drop the key for &lt;code>&amp;quot;gate&amp;quot;&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#route-choice-routing">Scenario JSON&lt;/a>.&lt;/td>
@@ -6895,6 +6907,11 @@ Each message, its cause and its fix are in
 &lt;td>The spawn area has no pre-movement keys.&lt;/td>
 &lt;td>Set &lt;code>use_premovement&lt;/code> and the &lt;code>premovement_*&lt;/code> keys (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/">Scenario JSON&lt;/a>).&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac: warning: import_report.json marks this scenario not runnable&lt;/code>&lt;/td>
+&lt;td>&lt;code>pyfds-evac init&lt;/code> wrote the folder as not runnable and lists why. The run goes on, since the folder may have been fixed by hand after &lt;code>init&lt;/code>; a stale cause can still stop it later.&lt;/td>
+&lt;td>Fix what the reasons name and import again, or edit the folder by hand (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from an FDS deck&lt;/a>).&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;h2>Harmless log lines&lt;span class="hx-absolute -hx-mt-20" id="harmless-log-lines">&lt;/span>
@@ -7010,7 +7027,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/d65dc7d3f1fbd8814da72049e0350ee9957e9a96">&lt;code>d65dc7d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29eab40b07ea21ab7da158046ff83678b3d73e7c">&lt;code>29eab40&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7034,7 +7051,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6cac7cff4cbb4324489a20931ca75d6a2a76177ad45775347e3e64a6c26cab70&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">18a4d4d8aa492a397ffd1160aacbd2f68620b916b69c769f751cbd92c2b05d89&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
