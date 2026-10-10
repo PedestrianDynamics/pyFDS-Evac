@@ -529,8 +529,7 @@ with 3 although the scenario can run.
   plain deck, rerun `init` with `--walkable FILE.wkt`, a walkable area
   without the surface, or cut a notch around it from the edge of the spawn
   polygon in `config.json`. An `&EVHO` over the surface, in a copy of the
-  deck, also cuts it out of the walkable area; the deck stays a plain deck
-  and keeps its exits.
+  deck, also cuts it out of the walkable area.
 - **No cross-check after the run.** The derived area and the FDS domain are
   not compared after the run
   ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)); exit

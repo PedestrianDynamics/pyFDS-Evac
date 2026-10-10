@@ -626,7 +626,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 - **Deck type.** An FDS+Evac deck has a `&MESH` with `EVACUATION=.TRUE.`;
   any other deck is a plain FDS deck. On a plain deck, `&EVAC`, `&EXIT`,
   `&PERS`, `&DOOR`, `&ENTR`, `&CORR`, `&EVSS`, `&STRS` and `&EDEV` are
-  ignored with a warning; `&EVHO` is applied (see Walkable area).
+  ignored with a warning; `&EVHO` is applied (see `&EVHO`, plain deck).
 - **Floor, FDS+Evac deck.** The main evacuation meshes (`EVAC_HUMANS=.TRUE.`,
   else all evacuation meshes), grouped by overlapping z. The lowest group is
   imported; `--floor MESH_ID` picks another. The floor level is the mesh
@@ -648,9 +648,10 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   stops the import. Two touching evacuation meshes of one floor are joined,
   with a warning (FDS+Evac keeps their shared edge a wall).
 - **`&EVHO`, plain deck.** An `&EVHO` whose z range meets the floor level up
-  to the top of the walking band is cut out of the walkable area, so agents
-  neither spawn nor walk there; `walkable.diagnostics` notes
-  `N &EVHO cut out`. With `--walkable` the polygon is taken as given and the
+  to the top of the walking band, whose `MESH_ID`, if given, names a mesh
+  of the floor, and that overlaps the walkable area is cut out of it, so
+  agents neither spawn nor walk there; `walkable.diagnostics` notes
+  `N &EVHO cut out`. Any other `&EVHO` is ignored with a warning. With `--walkable` the polygon is taken as given and the
   `&EVHO` is ignored. On an FDS+Evac deck, `&EVHO` is cut out of the spawn
   areas only (see Agents).
 - **Kept parts.** The parts of the walkable area that hold a spawn area are
@@ -720,7 +721,9 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Error item `exit dropped: its strip on the room side is empty; the line is D m from the walkable area` | 3, runnable | The exit is not next to the kept walkable area. | Check the floor and the band (`--z-band`), or pass `--exit`. The run works without that exit. |
 | Error item `exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m` | 3, runnable | A slot narrower than 0.1 m. | Widen the exit in a copy of the deck, or pass `--exit`. |
 | Item `EVHO` `cut out of the walkable area (plain deck)` (info) | 0 | An `&EVHO` on the floor of a plain deck. | None; agents neither spawn nor walk in it. |
-| Item `EVHO` `not on the imported floor: ignored` (warning) | 0 | The `&EVHO` z range misses the floor up to the top of the walking band. | Check its `XB` z values, or `--floor-z`/`--z-band`. |
+| Item `EVHO` `ignored: not on the imported floor` (warning) | 0 | The `&EVHO` z range misses the floor up to the top of the walking band. | Check its `XB` z values, or `--floor-z`/`--z-band`. |
+| Item `EVHO` `ignored: MESH_ID 'X' is not a mesh of the imported floor` (warning) | 0 | The `&EVHO` names a mesh of another floor. | Check its `MESH_ID`, or `--floor-z`/`--z-band`. |
+| Item `EVHO` `ignored: outside the walkable area` (warning) | 0 | The `&EVHO` footprint does not overlap the derived walkable area. | Check its `XB`. |
 | Item `EVHO` `ignored: the --walkable polygon is taken as given` (warning) | 0 | `--walkable` on a plain deck with an `&EVHO`. | Cut the area out of the WKT. |
 | Item `ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck` (warning) | 0 | `&EVAC`, `&EXIT`, `&DOOR` or another FDS+Evac namelist in a plain deck. | Add the evacuation meshes for an FDS+Evac import, or remove the records. |
 | `… holds a config.json that the importer did not write …` | 1 | `-o` points at an authored scenario. | Another `-o`, or `--force`. |
