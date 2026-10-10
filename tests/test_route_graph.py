@@ -1918,6 +1918,15 @@ class TestQueueConfigAndFields:
         assert RouteCostConfig.from_routing_params({}).w_queue == 0.0
         assert RouteCostConfig.from_routing_params(None).w_queue == 0.0
 
+    def test_route_cost_config_empty_routing_uses_field_defaults(self):
+        """An empty routing block gives the dataclass defaults, field for field.
+
+        from_routing_params once repeated its own literal defaults, and the
+        two sets could drift apart (#151).
+        """
+        assert RouteCostConfig.from_routing_params({}) == RouteCostConfig()
+        assert RouteCostConfig.from_routing_params(None) == RouteCostConfig()
+
     def test_route_cost_has_queue_time_field(self, linear_graph):
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig()

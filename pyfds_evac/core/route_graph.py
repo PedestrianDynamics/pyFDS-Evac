@@ -800,11 +800,6 @@ class RouteCostConfig:
     # 1 -> 20 on assets/world_100 moved 12 of 120 agents). Matched exactly;
     # any other value raises ValueError.
     cost_model: str = "gate"
-    # A route is refused when the sighting distance at its worst point falls
-    # below this fraction of the distance still to walk -- FDS+Evac's own door
-    # criterion (evac.f90: "Check that visibility > 0.5*distance to the door").
-    # Being distance-relative is the point: haze 5 m from an exit is usable and
-    # the same haze at 40 m is not, which no absolute extinction limit can say.
     # Tier 1: an exit is "clean" while the smokiest leg of the route to it
     # stays under this. Off by default -- see docs/gate-model-review-notes.md
     # for why it does not survive contact with either reference deck.
@@ -898,8 +893,10 @@ class RouteCostConfig:
         """
         routing = routing or {}
         return cls(
-            cost_model=routing.get("cost_model", "gate"),
-            clean_extinction_threshold=routing.get("clean_extinction_threshold", 0.0),
+            cost_model=routing.get("cost_model", RouteCostConfig.cost_model),
+            clean_extinction_threshold=routing.get(
+                "clean_extinction_threshold", RouteCostConfig.clean_extinction_threshold
+            ),
             clean_exit_margin=routing.get(
                 "clean_exit_margin", RouteCostConfig.clean_exit_margin
             ),
@@ -911,25 +908,40 @@ class RouteCostConfig:
             tau_return_margin=routing.get(
                 "tau_return_margin", RouteCostConfig.tau_return_margin
             ),
-            anticipate=routing.get("anticipate", True),
-            foresight_horizon_s=routing.get("foresight_horizon_s", math.inf),
-            fallback_switch_margin=routing.get("fallback_switch_margin", 0.2),
+            anticipate=routing.get("anticipate", RouteCostConfig.anticipate),
+            foresight_horizon_s=routing.get(
+                "foresight_horizon_s", RouteCostConfig.foresight_horizon_s
+            ),
+            fallback_switch_margin=routing.get(
+                "fallback_switch_margin", RouteCostConfig.fallback_switch_margin
+            ),
             fallback_return_lockout_s=routing.get(
                 "fallback_return_lockout_s", RouteCostConfig.fallback_return_lockout_s
             ),
-            w_smoke=routing.get("w_smoke", 1.0),
-            w_fed=routing.get("w_fed", 10.0),
-            w_queue=routing.get("w_queue", 0.0),
-            fed_rejection_threshold=routing.get("fed_rejection_threshold", 1.0),
-            visibility_extinction_threshold=routing.get(
-                "visibility_extinction_threshold", 0.5
+            w_smoke=routing.get("w_smoke", RouteCostConfig.w_smoke),
+            w_fed=routing.get("w_fed", RouteCostConfig.w_fed),
+            w_queue=routing.get("w_queue", RouteCostConfig.w_queue),
+            fed_rejection_threshold=routing.get(
+                "fed_rejection_threshold", RouteCostConfig.fed_rejection_threshold
             ),
-            sampling_step_m=routing.get("sampling_step_m", 2.0),
-            base_speed_m_per_s=routing.get("base_speed_m_per_s", 1.3),
-            alpha=routing.get("alpha", 0.706),
-            beta=routing.get("beta", -0.057),
-            min_speed_factor=routing.get("min_speed_factor", 0.1),
-            default_exit_capacity=routing.get("default_exit_capacity", 1.3),
+            visibility_extinction_threshold=routing.get(
+                "visibility_extinction_threshold",
+                RouteCostConfig.visibility_extinction_threshold,
+            ),
+            sampling_step_m=routing.get(
+                "sampling_step_m", RouteCostConfig.sampling_step_m
+            ),
+            base_speed_m_per_s=routing.get(
+                "base_speed_m_per_s", RouteCostConfig.base_speed_m_per_s
+            ),
+            alpha=routing.get("alpha", RouteCostConfig.alpha),
+            beta=routing.get("beta", RouteCostConfig.beta),
+            min_speed_factor=routing.get(
+                "min_speed_factor", RouteCostConfig.min_speed_factor
+            ),
+            default_exit_capacity=routing.get(
+                "default_exit_capacity", RouteCostConfig.default_exit_capacity
+            ),
         )
 
 
