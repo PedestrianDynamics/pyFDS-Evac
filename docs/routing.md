@@ -249,6 +249,26 @@ lowest undiscounted `tau_route`, then the lowest `rank_cost`, with
 first unless the rival's `tau` is more than that fraction lower ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)). Under the
 additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for `fallback_return_lockout_s` (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458); the underlying sampling cause is [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
 
+An experimental alternative exists at code level only:
+`RouteCostConfig(fallback_rule="hold")`. No scenario key, CLI flag or
+GUI control sets it, and the default `"tau"` is the rule above
+([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)). Under
+`"hold"` the first choice with every route refused is still the lowest
+`tau_route`, but after that the agent keeps its exit between refused
+routes. It leaves only for a feasible route, or when its current route
+must be fled and the rival need not be (#128).
+`fallback_switch_margin` and `fallback_return_lockout_s` then have no
+effect. On `t_junction` (`fire_2MW_PVC`, R arm of `howto-with-without-fire.md`, seeds 4–13), the
+prototype on the 0.4.0 routing code gave the following results
+(pre-movement 0 / 30 / 60 s).
+Under `"tau"`, 81 / 19 / 0 % of agents went to exit A, with a median
+largest FED of 0.040 / 0.123 / 0.195 and 19 / 149 / 129 switches.
+Under `"hold"`, 100 % went to A at every pre-movement, with a median
+largest FED of 0.006 / 0.028 / 0.145 and no switches. This is one deck
+and one fire, and the evidence that people keep going once they are in
+smoke is expert judgement. A user setting waits for measurements on
+`l_corridor`, `world100` and Schroeder 2015.
+
 Rejections are never remembered. Each tick re-decides from the current
 field, which is what lets the optical-depth criterion relax as an agent
 closes on an exit — the distance in `tau` is the distance that remains.

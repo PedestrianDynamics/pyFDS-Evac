@@ -76,6 +76,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   import_report.json marks this scenario not runnable: ...`. The run
   continues, since the folder may have been fixed by hand after `init`.
   A missing or unreadable report prints nothing.
+- `RouteCostConfig.fallback_rule` (#696), an experimental code-level
+  option with no scenario key, CLI flag or GUI control. `"tau"` (the
+  default) keeps the lowest-tau rule when every route is refused.
+  `"hold"` keeps the agent's exit between refused routes, unless the
+  current route must be fled (#128). Default results are unchanged.
+  The run manifest's `cost_config` gains `"fallback_rule": "tau"`.
+  #696 stays open as a documented finding: on `t_junction` the default
+  still sends agents past the burner.
 
 ### Changed
 

@@ -490,7 +490,8 @@ def _routing(raw: Mapping[str, Any]) -> tuple[RoutingValue, ...]:
     base = RouteCostConfig.from_routing_params({})
     rows = []
     for key in sorted(given):
-        default = getattr(base, key, None)
+        # fallback_rule is a code-level field, not a routing key (#696).
+        default = None if key == "fallback_rule" else getattr(base, key, None)
         rows.append(RoutingValue(key, given[key], default, given[key] != default))
     return tuple(rows)
 
