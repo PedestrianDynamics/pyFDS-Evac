@@ -2423,9 +2423,9 @@ def _rerouting_used(result) -> bool | None:
     form's ``enable_rerouting`` cannot answer this.
     """
     settings = getattr(result, "run_settings", None)
-    if settings is None:
+    if not settings or "rerouting" not in settings:
         return None
-    return settings.get("rerouting") is not None
+    return settings["rerouting"] is not None
 
 
 def _route_reason(field: str, result) -> str:

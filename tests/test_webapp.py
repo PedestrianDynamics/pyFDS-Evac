@@ -3189,7 +3189,7 @@ class TestRouteHistoryMessage:
 
     _HEADER = "time_s,agent_id,old_exit,new_exit,old_cost,new_cost,reason\n"
 
-    def _detail(self, tmp_path, *, rerouting, rows, smoke_blind=False):
+    def _detail(self, tmp_path, *, rerouting, rows, smoke_blind=False, settings=...):
         from fasthtml.common import to_xml
 
         from pyfds_evac.webapp.app import _artifact_rows
@@ -3197,16 +3197,20 @@ class TestRouteHistoryMessage:
         csv = tmp_path / "run_route_history.csv"
         if rows is not None:
             csv.write_text(self._HEADER + "".join(f"{r}\n" for r in rows))
+        if settings is ...:
+            settings = {
+                "rerouting": {"reevaluation_interval_s": 2.0} if rerouting else None,
+                "smoke_blind": smoke_blind,
+            }
         result = SimpleNamespace(
             sqlite_file=None,
             route_history=rows,
             route_cost_history=None,
-            run_settings={
-                "rerouting": {"reevaluation_interval_s": 2.0} if rerouting else None,
-                "smoke_blind": smoke_blind,
-            },
+            run_settings=settings,
         )
+        # The form switch is on in every case: the message must not use it.
         opts = SimpleNamespace(
+            enable_rerouting=True,
             output_route_history=str(csv),
             output_route_cost_history=str(tmp_path / "run_route_cost_history.csv"),
         )
@@ -3244,3 +3248,19 @@ class TestRouteHistoryMessage:
         route, _ = self._detail(tmp_path, rerouting=False, rows=None, smoke_blind=True)
         assert "rerouting off (smoke-blind) and no exit schedule" in route
         assert "no agent ever switched route" not in route
+
+    def test_rerouting_on_without_cost_collection(self, tmp_path):
+        _, cost = self._detail(tmp_path, rerouting=True, rows=[])
+        assert "not produced: route costs were not collected" in cost
+
+    @pytest.mark.parametrize("settings", [None, {}, {"smoke_blind": False}])
+    def test_unknown_settings_make_no_claim(self, tmp_path, settings):
+        route, cost = self._detail(
+            tmp_path, rerouting=False, rows=None, settings=settings
+        )
+        assert "not produced: not produced by this run" in route
+        assert "not produced: not produced by this run" in cost
+        route, _ = self._detail(tmp_path, rerouting=False, rows=[], settings=settings)
+        assert "written" in route
+        assert "rerouting" not in route
+        assert "switch" not in route.split("written", 1)[1]
