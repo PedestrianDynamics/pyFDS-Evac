@@ -2037,7 +2037,8 @@ with a warning (FDS+Evac keeps their shared edge a wall).&lt;/li>
 to the top of the walking band, whose &lt;code>MESH_ID&lt;/code>, if given, names a mesh
 of the floor, and that overlaps the walkable area is cut out of it, so
 agents neither spawn nor walk there; &lt;code>walkable.diagnostics&lt;/code> notes
-&lt;code>N &amp;amp;EVHO cut out&lt;/code>. Any other &lt;code>&amp;amp;EVHO&lt;/code> is ignored with a warning. With &lt;code>--walkable&lt;/code> the polygon is taken as given and the
+&lt;code>N &amp;amp;EVHO cut out&lt;/code>. When they leave no walkable area, &lt;code>init&lt;/code> stops and
+names them. Any other &lt;code>&amp;amp;EVHO&lt;/code> is ignored with a warning. With &lt;code>--walkable&lt;/code> the polygon is taken as given and the
 &lt;code>&amp;amp;EVHO&lt;/code> is ignored. On an FDS+Evac deck, &lt;code>&amp;amp;EVHO&lt;/code> is cut out of the spawn
 areas only (see Agents).&lt;/li>
 &lt;li>&lt;strong>Kept parts.&lt;/strong> The parts of the walkable area that hold a spawn area are
@@ -2230,6 +2231,12 @@ not cut out.&lt;/li>
 &lt;td>Cut the area out of the WKT.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>ignored: invalid, XB is missing&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>An &lt;code>&amp;amp;EVHO&lt;/code> without &lt;code>XB&lt;/code> in a plain deck.&lt;/td>
+&lt;td>Give it an &lt;code>XB&lt;/code>, or remove it.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>Item &lt;code>ignored: the deck has no EVACUATION=.TRUE. mesh, so it is not an FDS+Evac deck&lt;/code> (warning)&lt;/td>
 &lt;td>0&lt;/td>
 &lt;td>&lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code> or another FDS+Evac namelist in a plain deck.&lt;/td>
@@ -2276,6 +2283,12 @@ not cut out.&lt;/li>
 &lt;td>1&lt;/td>
 &lt;td>A degenerate deck or WKT.&lt;/td>
 &lt;td>Check the deck, or pass &lt;code>--walkable&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>the walkable area (derived:deck) is empty once &amp;amp;EVHO 'X' (line N) is cut out&lt;/code>&lt;/td>
+&lt;td>1&lt;/td>
+&lt;td>The &lt;code>&amp;amp;EVHO&lt;/code> records of a plain deck cover the whole walkable area.&lt;/td>
+&lt;td>Shrink or remove the named &lt;code>&amp;amp;EVHO&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>cannot read the walkable WKT: …&lt;/code>&lt;/td>
@@ -2354,7 +2367,8 @@ floor as &lt;code>init&lt;/code> does and checks, at the smoke slice height &lt;
 write (the floor plus the last &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>, else 1.6 m;
 &lt;code>--smoke-slice-height Z&lt;/code> checks another absolute z), the FDS output the run
 reads. It uses the run&amp;rsquo;s rule: a horizontal slice (&lt;code>PBZ&lt;/code>, or &lt;code>XB&lt;/code> with equal
-z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie; slices with
+z and unequal x and y, as fdsreader reads it), the one nearest the height, the first declared on a tie, with each
+slice&amp;rsquo;s z moved to the mesh grid as FDS moves it; slices with
 &lt;code>EVACUATION=.TRUE.&lt;/code> do not count. Each line prints the requested and the
 chosen z, and the fix as a deck line.&lt;/p>
 &lt;table>
@@ -2403,8 +2417,13 @@ chosen z, and the fix as a deck line.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The z is the deck&amp;rsquo;s: FDS moves a slice to the nearest grid plane, up to half
-a cell away. &lt;code>-o&lt;/code>, &lt;code>--walkable&lt;/code>, &lt;code>--exit&lt;/code>, &lt;code>--agents&lt;/code>, &lt;code>--exit-depth&lt;/code>,
+&lt;p>The z printed is the one the run ranks: the grid node FDS writes the slice
+at, from &lt;code>&amp;amp;MESH&lt;/code> &lt;code>IJK&lt;/code> and &lt;code>XB&lt;/code> (the nearest cell face; for
+&lt;code>CELL_CENTERED=.TRUE.&lt;/code> the top of the cell that holds z; only the mesh
+&lt;code>MESH_NUMBER&lt;/code> names, if given), the lowest across meshes, as fdsreader
+reads it. The deck&amp;rsquo;s z follows (&lt;code>deck z 1.6 m&lt;/code>) when it differs;
+&lt;code>nearest_pbz&lt;/code> in the report is that z. A deck with &lt;code>&amp;amp;TRNZ&lt;/code> keeps the
+deck&amp;rsquo;s z. &lt;code>-o&lt;/code>, &lt;code>--walkable&lt;/code>, &lt;code>--exit&lt;/code>, &lt;code>--agents&lt;/code>, &lt;code>--exit-depth&lt;/code>,
 &lt;code>--force&lt;/code>, &lt;code>--no-fds&lt;/code> and &lt;code>-v&lt;/code> shape the written scenario and are refused
 with &lt;code>--check&lt;/code>.&lt;/p>
 &lt;table>
@@ -7034,7 +7053,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/71aa9ffb346e13a18da5a80f6405d9aaac8402ad">&lt;code>71aa9ff&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/29064d5f9fc62a9227ee64eb8d543977eb33b8f5">&lt;code>29064d5&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7058,7 +7077,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">aaed9fa5068c82b30a4d257b049b26cb0a60b7993459415f6f52fcfb63b69419&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">52b87125926377c4be26c3c83979781a160504a36b9d8e3ca2c036ae42482cc9&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

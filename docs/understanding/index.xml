@@ -695,11 +695,12 @@ the distance at which a stage counts as reached and the clearance of the
 targets picked on the way use 0.2 m, whatever the agent&amp;rsquo;s &lt;code>radius&lt;/code>. On decks with
 another radius, such as &lt;code>world_100&lt;/code> (0.1 m), or with a radius
 distribution, agents reach stages at the wrong distance.&lt;/li>
-&lt;li>&lt;strong>&lt;code>init --check&lt;/code> ranks slices on the deck&amp;rsquo;s z&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687" target="_blank" rel="noopener">#687&lt;/a>, planned
-for 0.5.0). The check picks the slice nearest the requested height from
-the z in the deck; the run picks it after FDS has moved each slice to the
-mesh grid. Where the two differ, the check names another &lt;code>&amp;amp;SLCF&lt;/code> line or
-turns a pass into a warning, never into a failure.&lt;/li>
+&lt;li>&lt;strong>&lt;code>init --check&lt;/code> keeps the deck&amp;rsquo;s z on a stretched grid.&lt;/strong> The check
+moves each slice to the uniform &lt;code>&amp;amp;MESH&lt;/code> grid as FDS does
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687" target="_blank" rel="noopener">#687&lt;/a>); with
+&lt;code>&amp;amp;TRNZ&lt;/code> it ranks the deck&amp;rsquo;s z. Where that differs from the run&amp;rsquo;s choice,
+the check names another &lt;code>&amp;amp;SLCF&lt;/code> line or turns a pass into a warning,
+never into a failure.&lt;/li>
 &lt;/ul>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
