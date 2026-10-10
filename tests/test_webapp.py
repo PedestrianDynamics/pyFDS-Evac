@@ -3218,10 +3218,22 @@ class TestRouteHistoryMessage:
         route = html.split("Route switch CSV", 1)[1].split("Route cost CSV", 1)
         return route[0], route[1]
 
+    @staticmethod
+    def _rows(*reasons):
+        return [{"agent_id": i, "reason": r} for i, r in enumerate(reasons)]
+
     def test_rerouting_on_with_switches(self, tmp_path):
-        route, _ = self._detail(tmp_path, rerouting=True, rows=["a", "b"])
-        assert "2 route switches" in route
+        rows = self._rows("initial", "smoke_reroute", "exit_closed")
+        route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
+        assert "3 route-history rows (2 switches)" in route
         assert "rerouting off" not in route
+
+    def test_first_assignments_are_not_switches(self, tmp_path):
+        # A run where every row is a first exit: none of them is a switch.
+        rows = self._rows(*["initial"] * 3, "default_route")
+        route, _ = self._detail(tmp_path, rerouting=True, rows=rows)
+        assert "4 route-history rows (0 switches)" in route
+        assert "4 route switches" not in route
 
     def test_rerouting_on_without_switches(self, tmp_path):
         route, _ = self._detail(tmp_path, rerouting=True, rows=[])
@@ -3240,8 +3252,16 @@ class TestRouteHistoryMessage:
         assert "not produced: rerouting off for this run" in cost
 
     def test_rerouting_off_with_schedule_and_rows(self, tmp_path):
-        route, _ = self._detail(tmp_path, rerouting=False, rows=["a", "b", "c"])
+        route, _ = self._detail(
+            tmp_path,
+            rerouting=False,
+            rows=self._rows("exit_closed", "initial", "default_route"),
+        )
         assert "rerouting off; 3 exit-schedule rows" in route
+
+    def test_smoke_blind_written_history_says_smoke_blind(self, tmp_path):
+        route, _ = self._detail(tmp_path, rerouting=False, rows=[], smoke_blind=True)
+        assert "rerouting off (smoke-blind); the exit schedule moved no agent" in route
 
     def test_smoke_blind_run_says_rerouting_was_off(self, tmp_path):
         # The switch may be on; smoke-blind still turns rerouting off.

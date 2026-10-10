@@ -2441,12 +2441,25 @@ def _route_reason(field: str, result) -> str:
         if field == "route_cost_history":
             return "route costs were not collected"
         return "not produced by this run"
-    off = "rerouting off"
-    if result.run_settings.get("smoke_blind"):
-        off = "rerouting off (smoke-blind)"
+    off = _rerouting_off(result)
     if field == "route_history":
         return f"{off} and no exit schedule"
     return f"{off} for this run"
+
+
+def _rerouting_off(result) -> str:
+    """How a run without rerouting is named, smoke-blind or not."""
+    if result.run_settings.get("smoke_blind"):
+        return "rerouting off (smoke-blind)"
+    return "rerouting off"
+
+
+# Route-history reasons that assign a first exit rather than switch one.
+_FIRST_ASSIGNMENT_REASONS = frozenset({"initial", "default_route"})
+
+
+def _plural(n: int, word: str, suffix: str = "s") -> str:
+    return f"{n} {word}{'' if n == 1 else suffix}"
 
 
 def _route_history_note(result) -> str:
@@ -2457,12 +2470,17 @@ def _route_history_note(result) -> str:
         return ""
     n = len(rows)
     if rerouting and n:
-        return f"{n} route switch{'' if n == 1 else 'es'}"
+        switches = sum(
+            row.get("reason") not in _FIRST_ASSIGNMENT_REASONS for row in rows
+        )
+        return (
+            f"{_plural(n, 'route-history row')} ({_plural(switches, 'switch', 'es')})"
+        )
     if rerouting:
         return "no agent switched route"
     if n:
-        return f"rerouting off; {n} exit-schedule row{'' if n == 1 else 's'}"
-    return "rerouting off; the exit schedule moved no agent"
+        return f"{_rerouting_off(result)}; {_plural(n, 'exit-schedule row')}"
+    return f"{_rerouting_off(result)}; the exit schedule moved no agent"
 
 
 def _missing_reason(field: str, opts, result=None) -> str:
