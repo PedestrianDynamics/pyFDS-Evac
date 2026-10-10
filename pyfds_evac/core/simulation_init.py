@@ -3,6 +3,7 @@ import json
 import logging
 import math
 import random
+import re
 import subprocess
 import sys
 from collections import defaultdict
@@ -18,7 +19,9 @@ from shapely.ops import unary_union
 from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
     DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
+    SpawnConfigError,
     _deck_spawn_defaults,
+    _normalized_flow_schedule,
     _spawn_value,
     normalize_distribution_speed_aliases,
     parameters_as_dict,
@@ -26,6 +29,10 @@ from .agent_params import (
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_AGENT_VALUES,
+    PURPOSE_FILL_POSITIONS,
+    PURPOSE_FILL_SHUFFLE,
+    PURPOSE_FLOW_POSITIONS,
+    PURPOSE_FLOW_SHUFFLE,
     PURPOSE_PATH_CHOICE,
     PURPOSE_POSITIONS,
     PURPOSE_PREMOVEMENT,
@@ -140,9 +147,13 @@ def _convert_distribution_spawn_values(params: dict[str, Any], dist_id: Any) -> 
     unset, as for the deck-wide values: the key is removed, so the area
     takes the deck default. A ``ValueError`` names the distribution and the
     key the deck set (``desired_speed`` when that alias gave ``v0``).
+    ``number`` is left as set in a percentage mode, which does not read it.
     """
     for key in _SPAWN_DEFAULT_TYPES:
         if key not in params:
+            continue
+        if key == "number" and params.get("distribution_mode") in _PERCENTAGE_MODES:
+            # Not read by a percentage mode (#436), so not checked either.
             continue
         if params[key] is None:
             del params[key]
@@ -150,6 +161,32 @@ def _convert_distribution_spawn_values(params: dict[str, Any], dist_id: Any) -> 
         shown = "desired_speed" if key == "v0" and "desired_speed" in params else key
         name = f"Distribution {dist_id!r}: {shown}"
         params[key] = _spawn_value(key, params[key], name, zero_v0=True)
+
+
+def _convert_flow_schedule(params: dict[str, Any], dist_id: Any) -> None:
+    """Normalise a distribution's ``flow_schedule`` and ``initial_number`` (#390).
+
+    The schedule is read as ``Scenario.set_flow_schedule`` reads it, alias
+    keys and all, and sorted. ``initial_number`` is read as ``number``
+    beside a schedule and dropped without one; ``null`` is unset. A
+    ``SpawnConfigError`` names the distribution and the key.
+    """
+    try:
+        params["flow_schedule"] = _normalized_flow_schedule(params)
+    except SpawnConfigError as error:
+        raise SpawnConfigError(
+            f"Distribution {dist_id!r}: flow_schedule: {error}"
+        ) from error
+    if params.get("initial_number") is None or not params["flow_schedule"]:
+        # Without a schedule initial_number is not read, so not checked.
+        params.pop("initial_number", None)
+        return
+    name = f"Distribution {dist_id!r}: initial_number"
+    try:
+        value = _spawn_value("number", params["initial_number"], name)
+    except ValueError as error:
+        raise SpawnConfigError(str(error)) from error
+    params["initial_number"] = value
 
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
@@ -454,6 +491,17 @@ def _get_max_agent_radius(params):
     return mean_radius
 
 
+def _by_number(polygon, count, max_radius, seed):
+    """``jps.distribute_by_number`` with the spacing of agents of *max_radius*."""
+    return jps.distribute_by_number(
+        polygon=polygon,
+        number_of_agents=count,
+        distance_to_agents=2 * max_radius,
+        distance_to_polygon=max_radius,
+        seed=seed,
+    )
+
+
 def _distribute(area, dist_keys, number, capacity, max_radius, seed):
     """Seed *number* positions in *area*; a shortfall is a ``SpawnCapacityError``.
 
@@ -461,13 +509,7 @@ def _distribute(area, dist_keys, number, capacity, max_radius, seed):
     other error propagates unchanged (#702).
     """
     try:
-        return jps.distribute_by_number(
-            polygon=area,
-            number_of_agents=number,
-            distance_to_agents=2 * max_radius,
-            distance_to_polygon=max_radius,
-            seed=seed,
-        )
+        return _by_number(area, number, max_radius, seed)
     except _DISTRIBUTION_ERRORS as error:
         raise _unplaced_error(dist_keys, number, capacity, error) from error
 
@@ -534,13 +576,7 @@ def _shares(number, capacities):
 def _seated(part, count, max_radius, seed):
     """``distribute_by_number`` in *part*; None when it cannot seat *count*."""
     try:
-        return jps.distribute_by_number(
-            polygon=part,
-            number_of_agents=count,
-            distance_to_agents=2 * max_radius,
-            distance_to_polygon=max_radius,
-            seed=seed,
-        )
+        return _by_number(part, count, max_radius, seed)
     except _DISTRIBUTION_ERRORS:
         return None
 
@@ -554,17 +590,41 @@ def _seat_bound(part, max_radius):
     return math.floor(part.area / (math.pi * max_radius * max_radius))
 
 
+_SEATED_COUNT = re.compile(r"Only (\d+) of (\d+) ")
+
+
+def _seated_before_failure(error) -> int | None:
+    """How many agents a failed ``distribute_by_number`` call had seated.
+
+    Workaround: JuPedSim 1.4.2's ``AgentNumberError`` gives the count only
+    in its message, "Only K of N  could be placed." No upstream issue
+    yet; drop this once the error carries the count or a call returns the
+    positions it placed. None when the message does not match.
+    """
+    match = _SEATED_COUNT.search(str(getattr(error, "message", error)))
+    return int(match.group(1)) if match else None
+
+
 def _most_that_fit(part, wanted, max_radius, seed):
     """Positions for as many of *wanted* agents as the sampler seats in *part*.
 
     With one seed the sampler accepts the same positions in the same order
-    whatever the count, so the count it seats is a prefix length and the
-    search over it is exact; counts above ``_seat_bound`` are not tried.
+    whatever the count, so the count it seats is a prefix length; counts
+    above ``_seat_bound`` are not tried. A call that cannot seat *wanted*
+    says how many it seated, and a second call for that many returns them
+    (#436). Without that count a search over the prefix length finds it.
     """
     wanted = min(wanted, _seat_bound(part, max_radius))
-    best = _seated(part, wanted, max_radius, seed) if wanted > 0 else []
-    if best is not None:
-        return best
+    if wanted <= 0:
+        return []
+    try:
+        return _by_number(part, wanted, max_radius, seed)
+    except _DISTRIBUTION_ERRORS as error:
+        seated = _seated_before_failure(error)
+    if seated is not None and seated < wanted:
+        best = _seated(part, seated, max_radius, seed) if seated > 0 else []
+        if best is not None:
+            return best
     low, high, best = 0, wanted - 1, []
     while low < high:
         count = (low + high + 1) // 2
@@ -576,7 +636,9 @@ def _most_that_fit(part, wanted, max_radius, seed):
     return best
 
 
-def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
+def _distribute_in_parts(
+    parts, dist_keys, number, capacity, max_radius, seed, at_most=False
+):
     """Seed *number* agents across the separate *parts* of one free area.
 
     Agents of two parts need no hole between them: each keeps *max_radius*
@@ -585,7 +647,8 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
     part first, and a remainder after the largest goes back to the parts
     that seated all they were asked for. A part that seated fewer is full
     under its seed and is not asked again. A remainder those parts cannot
-    hold raises without asking them.
+    hold raises without asking them; with *at_most*, the positions found
+    are returned instead.
     """
     capacities = [_estimate_max_capacity(part, max_radius) for part in parts]
     order = sorted(range(len(parts)), key=lambda i: capacities[i])
@@ -615,7 +678,7 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
         missing -= max(len(more) - len(seated[i]), 0)
         seated[i] = max(seated[i], more, key=len)
     positions = [position for part in seated for position in part]
-    if len(positions) < number:
+    if len(positions) < number and not at_most:
         raise _unplaced_error(
             dist_keys,
             number,
@@ -625,7 +688,9 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
     return positions
 
 
-def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, placed):
+def _distribute_beside(
+    area, dist_keys, number, capacity, max_radius, seed, placed, at_most=False
+):
     """``_distribute`` in the part of *area* that the *placed* agents leave free.
 
     *placed* holds ``(area, positions, max_radius, dist_keys)`` of every
@@ -638,20 +703,29 @@ def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, plac
     (``_seed_shared_areas``): A, B, A seeds both A before B. With journeys
     each distribution is seeded on its own in deck order, so the second A
     is seeded around the first A and B.
+
+    With *at_most*, *number* is an upper bound: as many agents as the
+    sampler seats up to it are placed, and none when nothing is free.
     """
     overlapping = [entry for entry in placed if area.intersection(entry[0]).area > 0]
     free = _free_area(area, max_radius, overlapping)
     parts = [free] if free is area else _seatable_parts(free, max_radius)
+    if not parts and at_most:
+        positions = []
+        placed.append((area, positions, max_radius, dist_keys))
+        return positions
     if not parts:
         others = ", ".join(f"'{key}'" for *_, keys in overlapping for key in keys)
         raise _unplaced_error(
             dist_keys, number, capacity, f"agents of {others} leave no free area"
         )
-    if len(parts) == 1:
+    if len(parts) == 1 and at_most:
+        positions = _most_that_fit(parts[0], number, max_radius, seed)
+    elif len(parts) == 1:
         positions = _distribute(parts[0], dist_keys, number, capacity, max_radius, seed)
     else:
         positions = _distribute_in_parts(
-            parts, dist_keys, number, capacity, max_radius, seed
+            parts, dist_keys, number, capacity, max_radius, seed, at_most
         )
     placed.append((area, positions, max_radius, dist_keys))
     return positions
@@ -671,31 +745,93 @@ def _seed_shared_areas(spawn_distributions, seed):
     """
     positions_by_index: dict = {}
     placed: list = []
-    for members in _shared_areas(spawn_distributions):
-        area = members[0]["area"]
-        max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
-        total, capacity = _checked_shared_area(members)
-        area_key = members[0]["dist_key"]
-        positions = _distribute_beside(
-            area,
-            [m["dist_key"] for m in members],
-            total,
-            capacity,
-            max_radius,
-            distribution_seed(seed, area_key, PURPOSE_POSITIONS),
-            placed,
-        )
-        # Shuffle so the profiles interleave across the room instead of one
-        # taking whichever corner the sampler happened to fill first.
-        random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
-            positions
-        )
-        taken = 0
-        for member in members:
-            count = _initial_spawn_count(member["params"]) or 0
-            positions_by_index[member["index"]] = positions[taken : taken + count]
-            taken += count
+    groups = _shared_areas(spawn_distributions)
+    for members in groups:
+        exact = [m for m in members if not _upper_bound(m["params"])]
+        if exact:
+            _seed_members(exact, members, seed, placed, positions_by_index, False)
+    for members in groups:
+        fill = [m for m in members if _upper_bound(m["params"])]
+        if fill:
+            fill_only = len(fill) == len(members)
+            _seed_members(fill, members, seed, placed, positions_by_index, fill_only)
     return positions_by_index
+
+
+def _seed_members(group, members, seed, placed, positions_by_index, fill_only):
+    """Seed the exact or the fill-mode *group* of one shared spawn area.
+
+    All exact counts are seeded before any fill mode, so a fill mode takes
+    only what they leave (#436): the exact members of an area with the
+    area's ``positions`` and ``shuffle`` streams, as before, then its fill
+    members around them with ``fill_positions`` and ``fill_shuffle``, or
+    with the area's own streams when the area has no exact member. A fill
+    member takes up to its count of what the sampler seats, in deck order.
+    """
+    area = members[0]["area"]
+    area_key = members[0]["dist_key"]
+    at_most = _upper_bound(group[0]["params"])
+    with_area_streams = not at_most or fill_only
+    max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
+    total, capacity = _checked_shared_area(group)
+    positions = _distribute_beside(
+        area,
+        [m["dist_key"] for m in group],
+        total,
+        capacity,
+        max_radius,
+        distribution_seed(
+            seed,
+            area_key,
+            PURPOSE_POSITIONS if with_area_streams else PURPOSE_FILL_POSITIONS,
+        ),
+        placed,
+        at_most=at_most,
+    )
+    # Shuffle so the profiles interleave across the room instead of one
+    # taking whichever corner the sampler happened to fill first.
+    random.Random(
+        distribution_seed(
+            seed,
+            area_key,
+            PURPOSE_SHUFFLE if with_area_streams else PURPOSE_FILL_SHUFFLE,
+        )
+    ).shuffle(positions)
+    taken = 0
+    for member in group:
+        count = min(
+            _initial_spawn_count(member["params"], area), len(positions) - taken
+        )
+        positions_by_index[member["index"]] = positions[taken : taken + count]
+        taken += count
+
+
+def _seed_journey_areas(spawns, seed):
+    """Positions of each spawn area of the set-up with journeys, by key.
+
+    Each area is seeded on its own, around the agents of the areas seeded
+    before it (#402): the exact counts first, in deck order, then the fill
+    modes, so that a fill mode listed first takes only what the exact
+    counts leave (#436).
+    """
+    placed = []
+    positions = {}
+    for dist_key in sorted(spawns, key=lambda key: _upper_bound(spawns[key]["params"])):
+        area, params = spawns[dist_key]["area"], spawns[dist_key]["params"]
+        count, capacity = _checked_shared_area(
+            [{"area": area, "params": params, "dist_key": dist_key}]
+        )
+        positions[dist_key] = _distribute_beside(
+            area,
+            [dist_key],
+            count,
+            capacity,
+            _get_max_agent_radius(params),
+            distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            placed,
+            at_most=_upper_bound(params),
+        )
+    return positions
 
 
 def _shared_areas(spawns):
@@ -707,34 +843,196 @@ def _shared_areas(spawns):
 
 
 def _checked_shared_area(members):
-    """Total count and capacity of one spawn area; over-full raises."""
-    total = sum(_initial_spawn_count(m["params"]) or 0 for m in members)
+    """Total count and capacity of one spawn area; over-full raises.
+
+    The count of a fill mode is an upper bound (#436): it is in the total
+    but not in the count checked against the capacity.
+    """
+    counts = [_initial_spawn_count(m["params"], m["area"]) for m in members]
+    exact = [not _upper_bound(m["params"]) for m in members]
+    required = sum(c for c, e in zip(counts, exact) if e)
     max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
     capacity = _estimate_max_capacity(members[0]["area"], max_radius)
-    if total > capacity:
-        raise _capacity_error([m["dist_key"] for m in members], total, capacity)
-    return total, capacity
+    if required > capacity:
+        keys = [m["dist_key"] for m, e in zip(members, exact) if e]
+        raise _capacity_error(keys, required, capacity)
+    return sum(counts), capacity
 
 
-def _initial_spawn_count(params) -> int | None:
-    """Agents a distribution places at the start of the run, None if it has none.
+_FILL_MODES = ("fill_area", "until_full")
+"""The ``distribution_mode`` values whose count at the start is an upper bound."""
 
-    The count both set-up paths place and check against the capacity: the
-    stored ``number`` whatever the ``distribution_mode``, ``initial_number``
-    beside a flow schedule. None for flow spawning, for a schedule without
-    initial agents and for a ``number`` of 0 by number: the set-up places
-    nobody there at the start.
+
+def _upper_bound(params) -> bool:
+    """Whether a distribution places as many agents as fit up to its count (#436).
+
+    ``fill_area`` and ``until_full`` do, at the start; a flow schedule's
+    ``initial_number`` is exact.
+    """
+    return params.get("distribution_mode") in _FILL_MODES and not (
+        _normalized_flow_schedule(params)
+    )
+
+
+def _report_fill(fill_placement, dist_key, params, area, placed) -> None:
+    """Record and print how many agents a fill mode placed of its upper bound."""
+    if not _upper_bound(params):
+        return
+    bound = _initial_spawn_count(params, area)
+    fill_placement[dist_key] = {"placed": placed, "upper_bound": bound}
+    print(
+        f"Distribution '{dist_key}': {params['distribution_mode']} placed "
+        f"{placed} of at most {bound} agents"
+    )
+
+
+def _places_at_start(params) -> bool:
+    """Whether a distribution places agents at the start of the run.
+
+    Not with flow spawning, with a schedule without initial agents, or
+    with a ``number`` of 0 by number: the set-up places nobody there then.
     """
     mode, requested = _get_distribution_mode_and_count(params)
-    flow_schedule = _normalize_flow_schedule_entries(params)
-    initial = int(params.get("initial_number", 0 if flow_schedule else requested) or 0)
-    if mode == "by_number" and requested <= 0 and initial <= 0 and not flow_schedule:
-        return None
+    flow_schedule = _normalized_flow_schedule(params)
     if flow_schedule:
-        return initial if initial > 0 else None
+        return int(params.get("initial_number") or 0) > 0
     if params.get("use_flow_spawning", False):
-        return None
+        return False
+    return bool(mode != "by_number" or requested > 0)
+
+
+def _initial_spawn_count(params, area) -> int:
+    """Agents a distribution places at the start in *area*, its clipped spawn area.
+
+    The count both set-up paths place and check against the capacity:
+    ``initial_number`` beside a flow schedule; else, by percentage, that
+    share of the capacity estimate of *area* (#436); else ``number``.
+    0 when the distribution places nobody at the start.
+    """
+    if not _places_at_start(params):
+        return 0
+    if _normalized_flow_schedule(params):
+        return int(params.get("initial_number") or 0)
+    if _get_distribution_mode_and_count(params)[0] == "by_percentage":
+        return _percentage_count(params, area)
     return int(params.get("number", 0))
+
+
+def _initial_number(params, flow_schedule, requested: int) -> int:
+    """Agents placed at the start: ``initial_number`` beside a schedule, else *requested*.
+
+    ``initial_number`` is not read without a schedule (#390).
+    """
+    if flow_schedule:
+        return int(params.get("initial_number") or 0)
+    return requested
+
+
+def _percentage_count(params, area) -> int:
+    """Agents that fill *area* to the distribution's ``percentage`` (#436).
+
+    floor(capacity estimate x percentage / 100), at least 1, with the
+    estimate of ``_estimate_max_capacity`` at the distribution's largest
+    radius. ``number`` is not read.
+    """
+    capacity = _estimate_max_capacity(area, _get_max_agent_radius(params))
+    return max(1, int(capacity * _get_distribution_percentage(params) / 100))
+
+
+def _percentage_spawn_count(
+    data, dist_id, walkable_polygon, global_parameters=None
+) -> int | None:
+    """Agents the run places for *dist_id* by percentage, None in other modes.
+
+    The count of the ``Scenario`` views (#436), from the parameters and
+    the clipped area the run reads, for agents placed at the start or by
+    ``use_flow_spawning``; a flow schedule counts its windows instead.
+    0 when the run places nobody there.
+    """
+    dist = data["distributions"][dist_id]
+    raw = parameters_as_dict(dist.get("parameters")) or {}
+    # Read before converting anything, so that the views of a deck in
+    # other modes do not stop on a value only the run reads.
+    if raw.get("distribution_mode") not in _PERCENTAGE_MODES or raw.get(
+        "flow_schedule"
+    ):
+        return None
+    spawn_defaults = _deck_spawn_defaults(global_parameters)
+    params = _distribution_params(dist_id, dist, spawn_defaults, False)
+    coords = dist.get("coordinates")
+    if _uses_fallback(data):
+        if not isinstance(coords, list) or len(coords) < 3:
+            return 0
+        area = _clip_spawn_area(Polygon(coords), walkable_polygon)
+    else:
+        try:
+            area = _journey_spawn_area(coords, walkable_polygon)
+        except _INVALID_SPAWN_POLYGON:
+            return 0
+    return 0 if area.is_empty else _percentage_count(params, area)
+
+
+def _schedule_window(entry, dist_key, dt) -> tuple[float, float]:
+    """Start and end of one scheduled window, as written (#390).
+
+    The run adds at most one agent of a window per time step *dt*, at
+    evenly spaced times; a window shorter than ``number`` steps could not
+    add them all before it ends, and raises ``ValueError``.
+    """
+    start = entry["flow_start_time"]
+    end = entry["flow_end_time"]
+    number = entry["number"]
+    if number * dt > end - start + 1e-9:
+        raise SpawnConfigError(
+            f"Distribution '{dist_key}': flow_schedule window [{start:g}, {end:g}] s "
+            f"is too short for {number} agents: the run adds at most one agent "
+            f"of a window per {dt:g} s step, so it must last at least "
+            f"{number * dt:g} s."
+        )
+    return start, end
+
+
+def _check_flow_rate(dist_key, n_agents, duration, capacity) -> None:
+    """Refuse a flow that adds more agents per second than the area holds."""
+    rate = n_agents / duration
+    if rate > capacity:
+        raise SpawnConfigError(
+            f"Distribution '{dist_key}': flow rate of {rate:.1f} agents/s "
+            f"exceeds area capacity of {capacity} agents. "
+            f"Reduce the number of agents ({n_agents}) or increase "
+            f"the flow duration ({duration:g}s)."
+        )
+
+
+RUN_TIME_STEP_S = 0.01
+"""JuPedSim's time step, which the run keeps; ``simulationParams.dt`` is not read."""
+
+
+def _flows(params) -> bool:
+    """Whether a distribution adds agents over time."""
+    return bool(_normalized_flow_schedule(params) or params.get("use_flow_spawning"))
+
+
+def _check_flows(dist_key, params, area, dt=RUN_TIME_STEP_S) -> None:
+    """Raise the run's errors for the flow spawning of one area, placing nothing.
+
+    The windows of a flow schedule, or the one window of
+    ``use_flow_spawning``, with their counts, as the set-up checks them
+    (#390), for ``--export-only``.
+    """
+    capacity = _estimate_max_capacity(area, _get_max_agent_radius(params))
+    for entry in _normalized_flow_schedule(params):
+        start, end = _schedule_window(entry, dist_key, dt)
+        _check_flow_rate(dist_key, entry["number"], end - start, capacity)
+    if _normalized_flow_schedule(params) or not params.get("use_flow_spawning"):
+        return
+    mode, requested = _get_distribution_mode_and_count(params)
+    n_agents = requested if mode == "by_number" else _percentage_count(params, area)
+    if n_agents <= 0:
+        return
+    start = max(0, params.get("flow_start_time", 0))
+    end = max(start + 0.1, params.get("flow_end_time", 10))
+    _check_flow_rate(dist_key, n_agents, end - start, capacity)
 
 
 def _uses_fallback(data) -> bool:
@@ -756,14 +1054,15 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
             data, global_parameters, premovement_default=False
         )
         for key, coords in geometry.items():
-            if _initial_spawn_count(params[key]) is None:
-                continue
             try:
                 area = _journey_spawn_area(coords, walkable_polygon)
-            except Exception:
+            except _INVALID_SPAWN_POLYGON:
                 # The run warns and skips a distribution it cannot process.
                 continue
-            if not area.is_empty:
+            if area.is_empty:
+                continue
+            _check_flows(key, params[key], area)
+            if _places_at_start(params[key]):
                 _checked_shared_area(
                     [{"area": area, "params": params[key], "dist_key": key}]
                 )
@@ -772,13 +1071,22 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
     areas, params, keys = _fallback_spawn_areas(
         data, walkable_polygon, spawn_defaults, premovement_default=False
     )
-    spawns = [
-        {"area": _clip_spawn_area(area, walkable_polygon), "params": p, "dist_key": k}
-        for area, p, k in zip(areas, params, keys)
-        if _initial_spawn_count(p) is not None
-    ]
-    for members in _shared_areas(s for s in spawns if not s["area"].is_empty):
+    spawns = []
+    for area, p, k in zip(areas, params, keys):
+        if not _places_at_start(p) and not _flows(p):
+            continue
+        clipped = _clip_spawn_area(area, walkable_polygon)
+        if clipped.is_empty:
+            continue
+        _check_flows(k, p, clipped)
+        if _places_at_start(p):
+            spawns.append({"area": clipped, "params": p, "dist_key": k})
+    for members in _shared_areas(spawns):
         _checked_shared_area(members)
+
+
+_PERCENTAGE_MODES = ("by_percentage", "fill_area", "until_full")
+"""The ``distribution_mode`` values that fill a share of the spawn area."""
 
 
 def _get_distribution_mode_and_count(params):
@@ -793,7 +1101,7 @@ def _get_distribution_mode_and_count(params):
     if mode == "by_number":
         number = int(params.get("number", 0))
         return mode, max(0, number)
-    elif mode in {"by_percentage", "fill_area", "until_full"}:
+    elif mode in _PERCENTAGE_MODES:
         return "by_percentage", 0
     else:
         number = int(params.get("number", 0))
@@ -810,43 +1118,6 @@ def _get_distribution_percentage(params):
     except (TypeError, ValueError):
         percentage = default_percentage
     return max(1, min(100, percentage))
-
-
-def _normalize_flow_schedule_entries(params):
-    """Return validated scheduled flow windows for a distribution."""
-    raw_schedule = params.get("flow_schedule", [])
-    if not raw_schedule:
-        return []
-
-    normalized = []
-    for entry in raw_schedule:
-        start_time = entry.get("flow_start_time", entry.get("start_time_s"))
-        end_time = entry.get("flow_end_time", entry.get("end_time_s"))
-        number = entry.get("number", entry.get("sim_count"))
-        if start_time is None or end_time is None or number is None:
-            raise ValueError(
-                "flow_schedule entries must define start/end time and number"
-            )
-
-        start_time = max(0.0, float(start_time))
-        end_time = float(end_time)
-        number = int(number)
-        if end_time <= start_time:
-            raise ValueError(f"Invalid flow_schedule window [{start_time}, {end_time}]")
-        if number <= 0:
-            continue
-        normalized.append(
-            {
-                "flow_start_time": start_time,
-                "flow_end_time": end_time,
-                "number": number,
-            }
-        )
-
-    normalized.sort(
-        key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
-    )
-    return normalized
 
 
 def _sample_agent_values(params, n_agents, rng):
@@ -1122,11 +1393,7 @@ def build_agent_path_state(
     if not path_choices:
         return None
 
-    distribution_stages = [
-        stage
-        for stage in full_stages
-        if isinstance(stage, str) and stage.startswith("jps-distributions_")
-    ]
+    distribution_stages = variant_data.get("distribution_stages", [])
     # Prefer the spawn area this agent was placed in; fall back to the first
     # distribution of the journey only when the caller cannot name one, which
     # is correct for the single-distribution scenarios that predate this.
@@ -1515,13 +1782,9 @@ def _initialize_with_fallback(
         dist_key_str = distribution_keys[i]
         use_flow_spawning = dist_params.get("use_flow_spawning", False)
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(dist_params)
-        flow_schedule = _normalize_flow_schedule_entries(dist_params)
-        initial_n_agents = int(
-            dist_params.get(
-                "initial_number",
-                0 if flow_schedule else requested_n_agents,
-            )
-            or 0
+        flow_schedule = _normalized_flow_schedule(dist_params)
+        initial_n_agents = _initial_number(
+            dist_params, flow_schedule, requested_n_agents
         )
 
         if (
@@ -1545,19 +1808,11 @@ def _initialize_with_fallback(
                 max_radius = _get_max_agent_radius(dist_params)
                 max_capacity = _estimate_max_capacity(clean_dist_area, max_radius)
                 n_agents = schedule_entry["number"]
-                flow_start_time = schedule_entry["flow_start_time"]
-                flow_end_time = max(
-                    flow_start_time + 0.1, schedule_entry["flow_end_time"]
+                flow_start_time, flow_end_time = _schedule_window(
+                    schedule_entry, dist_key_str, simulation.delta_time()
                 )
                 flow_duration = flow_end_time - flow_start_time
-                flow_rate = n_agents / flow_duration
-                if flow_rate > max_capacity:
-                    raise ValueError(
-                        f"Distribution {i}: flow rate of {flow_rate:.1f} agents/s "
-                        f"exceeds area capacity of {max_capacity} agents. "
-                        f"Reduce the number of agents ({n_agents}) or increase "
-                        f"the flow duration ({flow_duration:.1f}s)."
-                    )
+                _check_flow_rate(dist_key_str, n_agents, flow_duration, max_capacity)
 
                 flow_params = dict(dist_params)
                 flow_params["number"] = n_agents
@@ -1575,10 +1830,10 @@ def _initialize_with_fallback(
                     polygon=clean_dist_area,
                     distance_to_agents=2 * max_radius,
                     distance_to_polygon=max_radius,
-                    seed=distribution_seed(seed, dist_key_str, PURPOSE_POSITIONS),
+                    seed=distribution_seed(seed, dist_key_str, PURPOSE_FLOW_POSITIONS),
                 )
                 shuffle_rng = random.Random(
-                    distribution_seed(seed, dist_key_str, PURPOSE_SHUFFLE)
+                    distribution_seed(seed, dist_key_str, PURPOSE_FLOW_SHUFFLE)
                 )
                 shuffle_rng.shuffle(positions)
                 starting_pos_per_source.append(positions)
@@ -1608,7 +1863,7 @@ def _initialize_with_fallback(
                 )
 
             print(
-                f"Flow spawning: Distribution {i} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
+                f"Flow spawning: {dist_key_str} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
             )
 
         elif use_flow_spawning:
@@ -1622,8 +1877,7 @@ def _initialize_with_fallback(
             if dist_mode == "by_number":
                 n_agents = requested_n_agents
             else:  # by_percentage
-                percentage = _get_distribution_percentage(dist_params)
-                n_agents = max(1, int(max_capacity * percentage / 100))
+                n_agents = _percentage_count(dist_params, clean_dist_area)
 
             if n_agents <= 0:
                 print(f"Warning: No agents fit in distribution {i}")
@@ -1637,14 +1891,7 @@ def _initialize_with_fallback(
             flow_duration = flow_end_time - flow_start_time
 
             # Validate flow rate does not exceed area capacity
-            flow_rate = n_agents / flow_duration
-            if flow_rate > max_capacity:
-                raise ValueError(
-                    f"Distribution {i}: flow rate of {flow_rate:.1f} agents/s "
-                    f"exceeds area capacity of {max_capacity} agents. "
-                    f"Reduce the number of agents ({n_agents}) or increase "
-                    f"the flow duration ({flow_duration:.1f}s)."
-                )
+            _check_flow_rate(dist_key_str, n_agents, flow_duration, max_capacity)
 
             dist_params["number"] = n_agents
 
@@ -1680,7 +1927,7 @@ def _initialize_with_fallback(
             )
 
             print(
-                f"Flow spawning: Distribution {i} - {n_agents} agents over {flow_duration}s"
+                f"Flow spawning: {dist_key_str} - {n_agents} agents over {flow_duration}s"
             )
 
         else:
@@ -1699,6 +1946,7 @@ def _initialize_with_fallback(
     has_premovement = False
 
     seeded_positions = _seed_shared_areas(immediate_spawn_distributions, seed)
+    fill_placement: dict[str, dict[str, int]] = {}
     # Spawn key of every agent placed here, assigned as it is added so that
     # every per-agent draw can be seeded from it.
     spawn_keys: dict[int, SpawnKey] = {}
@@ -1716,6 +1964,14 @@ def _initialize_with_fallback(
             )
             print(f"ERROR: {error_msg}")
             raise Exception(error_msg)
+
+        _report_fill(
+            fill_placement,
+            spawn_data["dist_key"],
+            spawn_data["params"],
+            spawn_data["area"],
+            len(positions),
+        )
 
         # Check if this distribution uses premovement
         use_premovement = spawn_data["params"].get("use_premovement", False)
@@ -1883,6 +2139,7 @@ def _initialize_with_fallback(
         "exit_geometries": exit_geometries,
         "exits": exits,
         "has_premovement": has_premovement,
+        "fill_placement": fill_placement,
         "premovement_times": premovement_times,
         "agent_wait_info": fallback_agent_wait_info,
         "spawn_keys": spawn_keys,
@@ -2154,6 +2411,7 @@ def _distribution_params(dist_id, dist_data, spawn_defaults, premovement_default
     """The spawn parameters of one distribution, as both set-up paths read them."""
     params = parameters_as_dict(dist_data.get("parameters")) or {}
     _convert_distribution_spawn_values(params, dist_id)
+    _convert_flow_schedule(params, dist_id)
     if premovement_default:
         params = _apply_default_premovement(params, dist_id)
     spawn_params = _spawn_params(params, spawn_defaults)
@@ -2170,6 +2428,10 @@ def _spawn_params(params: dict[str, Any], spawn_defaults) -> dict[str, Any]:
         "use_flow_spawning": params.get("use_flow_spawning", False),
         "flow_start_time": params.get("flow_start_time", 0),
         "flow_end_time": params.get("flow_end_time", 10),
+        # Scheduled windows replace the single flow window; initial_number is
+        # the count placed at the start beside them, unused without them.
+        "flow_schedule": params.get("flow_schedule", []),
+        "initial_number": params.get("initial_number", 0),
         "use_premovement": params.get("use_premovement", False),
         "premovement_distribution": params.get("premovement_distribution", "gamma"),
         "premovement_param_a": params.get("premovement_param_a", None),
@@ -2236,6 +2498,10 @@ def _journey_spawn_area(coords, walkable_polygon):
     return shapely.intersection(Polygon(coords), walkable_polygon)
 
 
+_INVALID_SPAWN_POLYGON = (shapely.errors.GEOSException, ValueError, TypeError)
+"""What ``_journey_spawn_area`` raises for coordinates that make no valid polygon."""
+
+
 def _clip_spawn_area(dist_area, walkable_polygon):
     """*dist_area* without the obstacles, within the walkable area."""
     holes = [Polygon(interior) for interior in walkable_polygon.interiors]
@@ -2254,12 +2520,14 @@ def _is_routing_split_node(stage_key: Any) -> bool:
     )
 
 
-def _distribution_stage_keys(stages: list[Any]) -> list[str]:
-    """Return unique distribution stage keys preserving first-seen order."""
+def _distribution_stage_keys(stages: list[Any], distributions) -> list[str]:
+    """The spawn areas among *stages*, first-seen order, each once.
+
+    A stage is a spawn area when it is a key of *distributions*, whatever
+    its name (#409).
+    """
     keys = [
-        stage
-        for stage in stages
-        if isinstance(stage, str) and stage.startswith("jps-distributions_")
+        stage for stage in stages if isinstance(stage, str) and stage in distributions
     ]
     return list(dict.fromkeys(keys))
 
@@ -2278,6 +2546,7 @@ def _create_journeys_with_percentages(
     journey_endpoints = {}
 
     direct_steering_keys = direct_steering_keys or set()
+    distributions = data.get("distributions") or {}
 
     # Index transitions by journey id for robust stage ordering decisions.
     transitions_by_journey = defaultdict(list)
@@ -2334,7 +2603,7 @@ def _create_journeys_with_percentages(
 
         # Generate all possible journey variants for this journey
         variants = _generate_journey_variants(
-            jid, base_stages, waypoint_routing, stage_map
+            jid, base_stages, waypoint_routing, stage_map, distributions
         )
         journey_variants[jid] = []
 
@@ -2343,9 +2612,7 @@ def _create_journeys_with_percentages(
 
             # Filter out distributions first.
             actual_stages = [
-                stage
-                for stage in variant_stages
-                if not stage.startswith("jps-distributions_")
+                stage for stage in variant_stages if stage not in distributions
             ]
 
             # JuPedSim DirectSteeringStage may not be mixed with other stages.
@@ -2357,11 +2624,7 @@ def _create_journeys_with_percentages(
             # distribution, start in that direct-steering stage.
             dist_to_ds = None
             journey_transitions = transitions_by_journey.get(jid, [])
-            dist_keys = [
-                s
-                for s in variant_stages
-                if isinstance(s, str) and s.startswith("jps-distributions_")
-            ]
+            dist_keys = _distribution_stage_keys(variant_stages, distributions)
             for tr in journey_transitions:
                 from_key = tr.get("from")
                 to_key = tr.get("to")
@@ -2410,6 +2673,7 @@ def _create_journeys_with_percentages(
                         "stages": variant_stages,  # Keep original stages for reference
                         "actual_stages": actual_stages,  # Add filtered stages
                         "entry_stages": entry_stages,  # Initial stage segment used for the spawned journey
+                        "distribution_stages": dist_keys,
                         "percentage": percentage,
                         "variant_name": variant_id,
                     }
@@ -2428,13 +2692,15 @@ def _create_journeys_with_percentages(
             (j for j in data.get("journeys", []) if j["id"] == jid), None
         )
         journey_distributions = (
-            _distribution_stage_keys(journey_def.get("stages", []))
+            _distribution_stage_keys(journey_def.get("stages", []), distributions)
             if journey_def
             else []
         )
 
         for variant in variants:
-            variant_distributions = _distribution_stage_keys(variant.get("stages", []))
+            variant_distributions = _distribution_stage_keys(
+                variant.get("stages", []), distributions
+            )
             target_distributions = variant_distributions or journey_distributions
 
             for dist_key in target_distributions:
@@ -2455,8 +2721,12 @@ def _generate_journey_variants(
     base_stages: list[str],
     waypoint_routing: dict,
     stage_map: dict[str, int],
+    distributions=(),
 ) -> list[tuple[list[str], float]]:
-    """Generate all possible journey variants with their percentages."""
+    """Generate all possible journey variants with their percentages.
+
+    *distributions* are the deck's spawn-area keys (#409).
+    """
     _ = stage_map  # kept for compatibility with existing call sites
 
     if not waypoint_routing:
@@ -2465,10 +2735,8 @@ def _generate_journey_variants(
     variants = []
 
     # Find ALL distributions for this journey (not just the first one)
-    distributions = [
-        stage for stage in base_stages if stage.startswith("jps-distributions_")
-    ]
-    if not distributions:
+    sources = [stage for stage in base_stages if stage in distributions]
+    if not sources:
         return [(base_stages, 100.0)]
 
     # Routing split nodes may be waypoints or waiting polygons.
@@ -2506,7 +2774,7 @@ def _generate_journey_variants(
             return [(base_stages, 100.0)]
 
     # Generate variants per source distribution so each source can be mapped independently.
-    for reference_distribution in distributions:
+    for reference_distribution in sources:
         for initial_node in initial_routing_nodes:
             paths = _explore_all_paths_from_waypoint(
                 initial_node,
@@ -2744,14 +3012,8 @@ def _add_agents(
         params = dist_params[dist_key]
         dist_mode, requested_n_agents = _get_distribution_mode_and_count(params)
         use_flow_spawning = params.get("use_flow_spawning", False)
-        flow_schedule = _normalize_flow_schedule_entries(params)
-        initial_n_agents = int(
-            params.get(
-                "initial_number",
-                0 if flow_schedule else requested_n_agents,
-            )
-            or 0
-        )
+        flow_schedule = _normalized_flow_schedule(params)
+        initial_n_agents = _initial_number(params, flow_schedule, requested_n_agents)
 
         if (
             dist_mode == "by_number"
@@ -2763,169 +3025,153 @@ def _add_agents(
 
         try:
             dist_area = _journey_spawn_area(polygon, walkable_area.polygon)
+        except _INVALID_SPAWN_POLYGON as e:
+            # Coordinates that make no valid polygon, such as a
+            # self-intersecting one: the export check skips them too.
+            print(f"Warning: Error processing distribution {dist_key}: {e}")
+            continue
 
-            if dist_area.is_empty:
-                print(f"Warning: Distribution {dist_key} is outside walkable area")
-                continue
+        if dist_area.is_empty:
+            print(f"Warning: Distribution {dist_key} is outside walkable area")
+            continue
 
-            # dist_key already matches journey mapping keys (e.g. jps-distributions_0).
-            distribution_journeys = journeys_per_distribution.get(dist_key, [])
+        # dist_key already matches journey mapping keys.
+        distribution_journeys = journeys_per_distribution.get(dist_key, [])
 
-            if flow_schedule:
-                has_flow_spawning = True
+        if flow_schedule:
+            has_flow_spawning = True
 
-                max_radius = _get_max_agent_radius(params)
-                max_capacity = _estimate_max_capacity(dist_area, max_radius)
+            max_radius = _get_max_agent_radius(params)
+            max_capacity = _estimate_max_capacity(dist_area, max_radius)
 
-                positions = jps.distribute_until_filled(
-                    polygon=dist_area,
-                    distance_to_agents=2 * max_radius,
-                    distance_to_polygon=max_radius,
-                    seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
-                )
-                shuffle_rng = random.Random(
-                    distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
-                )
-                shuffle_rng.shuffle(positions)
+            positions = jps.distribute_until_filled(
+                polygon=dist_area,
+                distance_to_agents=2 * max_radius,
+                distance_to_polygon=max_radius,
+                seed=distribution_seed(seed, dist_key, PURPOSE_FLOW_POSITIONS),
+            )
+            shuffle_rng = random.Random(
+                distribution_seed(seed, dist_key, PURPOSE_FLOW_SHUFFLE)
+            )
+            shuffle_rng.shuffle(positions)
 
-                for schedule_entry in flow_schedule:
-                    n_agents = schedule_entry["number"]
-                    flow_start_time = schedule_entry["flow_start_time"]
-                    flow_end_time = max(
-                        flow_start_time + 0.1, schedule_entry["flow_end_time"]
-                    )
-                    flow_duration = flow_end_time - flow_start_time
-                    flow_rate = n_agents / flow_duration
-                    if flow_rate > max_capacity:
-                        raise ValueError(
-                            f"Distribution '{dist_key}': flow rate of {flow_rate:.1f} agents/s "
-                            f"exceeds area capacity of {max_capacity} agents. "
-                            f"Reduce the number of agents ({n_agents}) or increase "
-                            f"the flow duration ({flow_duration:.1f}s)."
-                        )
-
-                    flow_params = dict(params)
-                    flow_params["number"] = n_agents
-                    flow_params["use_flow_spawning"] = True
-                    flow_params["flow_start_time"] = flow_start_time
-                    flow_params["flow_end_time"] = flow_end_time
-
-                    frequency = flow_duration / n_agents
-                    agents_per_spawn = 1
-
-                    spawning_freqs_and_numbers.append([frequency, agents_per_spawn])
-                    num_agents_per_source.append(n_agents)
-                    starting_pos_per_source.append(list(positions))
-
-                    flow_distributions.append(
-                        {
-                            "dist_index": dist_index,
-                            "dist_key": dist_key,
-                            "source_id": len(flow_distributions),
-                            "params": flow_params,
-                            "start_time": flow_start_time,
-                            "end_time": flow_end_time,
-                            "journey_info": distribution_journeys,
-                        }
-                    )
-
-                if initial_n_agents > 0:
-                    immediate_params = dict(params)
-                    immediate_params["number"] = initial_n_agents
-                    immediate_params["use_flow_spawning"] = False
-                    immediate_spawn_distributions[dist_key] = {
-                        "area": dist_area,
-                        "params": immediate_params,
-                    }
-
-                print(
-                    f"Flow spawning: {dist_key} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
-                )
-
-            elif use_flow_spawning:
-                has_flow_spawning = True
-
-                max_radius = _get_max_agent_radius(params)
-                max_capacity = _estimate_max_capacity(dist_area, max_radius)
-
-                # Flow spawning: agents spawn over time so the full requested
-                # count is valid even if it exceeds simultaneous capacity.
-                if dist_mode == "by_number":
-                    n_agents = requested_n_agents
-                else:  # by_percentage
-                    percentage = _get_distribution_percentage(params)
-                    n_agents = max(1, int(max_capacity * percentage / 100))
-
-                if n_agents <= 0:
-                    print(f"Warning: No agents fit in distribution {dist_key}")
-                    continue
-
-                # Get flow parameters
-                flow_start_time = max(0, params.get("flow_start_time", 0))
-                flow_end_time = max(
-                    flow_start_time + 0.1, params.get("flow_end_time", 10)
+            for schedule_entry in flow_schedule:
+                n_agents = schedule_entry["number"]
+                flow_start_time, flow_end_time = _schedule_window(
+                    schedule_entry, dist_key, simulation.delta_time()
                 )
                 flow_duration = flow_end_time - flow_start_time
+                _check_flow_rate(dist_key, n_agents, flow_duration, max_capacity)
 
-                # Validate flow rate does not exceed area capacity
-                flow_rate = n_agents / flow_duration
-                if flow_rate > max_capacity:
-                    raise ValueError(
-                        f"Distribution '{dist_key}': flow rate of {flow_rate:.1f} agents/s "
-                        f"exceeds area capacity of {max_capacity} agents. "
-                        f"Reduce the number of agents ({n_agents}) or increase "
-                        f"the flow duration ({flow_duration:.1f}s)."
-                    )
+                flow_params = dict(params)
+                flow_params["number"] = n_agents
+                flow_params["use_flow_spawning"] = True
+                flow_params["flow_start_time"] = flow_start_time
+                flow_params["flow_end_time"] = flow_end_time
 
-                params["number"] = n_agents
-
-                frequency = flow_duration / n_agents  # seconds between spawns
-                agents_per_spawn = 1  # spawn 1 agent at a time for smooth flow
+                frequency = flow_duration / n_agents
+                agents_per_spawn = 1
 
                 spawning_freqs_and_numbers.append([frequency, agents_per_spawn])
                 num_agents_per_source.append(n_agents)
+                starting_pos_per_source.append(list(positions))
 
-                positions = jps.distribute_until_filled(
-                    polygon=dist_area,
-                    distance_to_agents=2 * max_radius,
-                    distance_to_polygon=max_radius,
-                    seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
-                )
-                shuffle_rng = random.Random(
-                    distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
-                )
-                shuffle_rng.shuffle(positions)
-                starting_pos_per_source.append(positions)
-
-                # Store distribution info for flow spawning
                 flow_distributions.append(
                     {
                         "dist_index": dist_index,
                         "dist_key": dist_key,
                         "source_id": len(flow_distributions),
-                        "params": params,
+                        "params": flow_params,
                         "start_time": flow_start_time,
                         "end_time": flow_end_time,
                         "journey_info": distribution_journeys,
                     }
                 )
 
-                print(
-                    f"Flow spawning: {dist_key} - {n_agents} agents over {flow_duration}s (freq: {frequency:.2f}s, rate: {1 / frequency:.2f} agents/s)"
-                )
-
-            else:
-                # Store for immediate spawning
+            if initial_n_agents > 0:
+                immediate_params = dict(params)
+                immediate_params["number"] = initial_n_agents
+                immediate_params["use_flow_spawning"] = False
                 immediate_spawn_distributions[dist_key] = {
-                    "polygon": polygon,
-                    "params": params,
                     "area": dist_area,
+                    "params": immediate_params,
                     "distribution_journeys": distribution_journeys,
                 }
 
-        except Exception as e:
-            print(f"Warning: Error processing distribution {dist_key}: {e}")
-            continue
+            print(
+                f"Flow spawning: {dist_key} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
+            )
+
+        elif use_flow_spawning:
+            has_flow_spawning = True
+
+            max_radius = _get_max_agent_radius(params)
+            max_capacity = _estimate_max_capacity(dist_area, max_radius)
+
+            # Flow spawning: agents spawn over time so the full requested
+            # count is valid even if it exceeds simultaneous capacity.
+            if dist_mode == "by_number":
+                n_agents = requested_n_agents
+            else:  # by_percentage
+                n_agents = _percentage_count(params, dist_area)
+
+            if n_agents <= 0:
+                print(f"Warning: No agents fit in distribution {dist_key}")
+                continue
+
+            # Get flow parameters
+            flow_start_time = max(0, params.get("flow_start_time", 0))
+            flow_end_time = max(flow_start_time + 0.1, params.get("flow_end_time", 10))
+            flow_duration = flow_end_time - flow_start_time
+
+            # Validate flow rate does not exceed area capacity
+            _check_flow_rate(dist_key, n_agents, flow_duration, max_capacity)
+
+            params["number"] = n_agents
+
+            frequency = flow_duration / n_agents  # seconds between spawns
+            agents_per_spawn = 1  # spawn 1 agent at a time for smooth flow
+
+            spawning_freqs_and_numbers.append([frequency, agents_per_spawn])
+            num_agents_per_source.append(n_agents)
+
+            positions = jps.distribute_until_filled(
+                polygon=dist_area,
+                distance_to_agents=2 * max_radius,
+                distance_to_polygon=max_radius,
+                seed=distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            )
+            shuffle_rng = random.Random(
+                distribution_seed(seed, dist_key, PURPOSE_SHUFFLE)
+            )
+            shuffle_rng.shuffle(positions)
+            starting_pos_per_source.append(positions)
+
+            # Store distribution info for flow spawning
+            flow_distributions.append(
+                {
+                    "dist_index": dist_index,
+                    "dist_key": dist_key,
+                    "source_id": len(flow_distributions),
+                    "params": params,
+                    "start_time": flow_start_time,
+                    "end_time": flow_end_time,
+                    "journey_info": distribution_journeys,
+                }
+            )
+
+            print(
+                f"Flow spawning: {dist_key} - {n_agents} agents over {flow_duration}s (freq: {frequency:.2f}s, rate: {1 / frequency:.2f} agents/s)"
+            )
+
+        else:
+            # Store for immediate spawning
+            immediate_spawn_distributions[dist_key] = {
+                "polygon": polygon,
+                "params": params,
+                "area": dist_area,
+                "distribution_journeys": distribution_journeys,
+            }
 
     agent_counter_per_source = [0] * len(flow_distributions)
 
@@ -2934,28 +3180,18 @@ def _add_agents(
     has_premovement = False
 
     # Handle immediate spawning distributions (existing logic)
-    placed: list = []
+    fill_placement: dict[str, dict[str, int]] = {}
+    seeded_positions = _seed_journey_areas(immediate_spawn_distributions, seed)
     for dist_key, spawn_data in immediate_spawn_distributions.items():
         try:
             spawn_params = spawn_data["params"]
-            max_radius = _get_max_agent_radius(spawn_params)
-            requested_count, max_capacity = _checked_shared_area(
-                [
-                    {
-                        "area": spawn_data["area"],
-                        "params": spawn_params,
-                        "dist_key": dist_key,
-                    }
-                ]
-            )
-            positions = _distribute_beside(
+            positions = seeded_positions[dist_key]
+            _report_fill(
+                fill_placement,
+                dist_key,
+                spawn_params,
                 spawn_data["area"],
-                [dist_key],
-                requested_count,
-                max_capacity,
-                max_radius,
-                distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
-                placed,
+                len(positions),
             )
 
             all_positions.extend(positions)
@@ -3208,6 +3444,7 @@ def _add_agents(
         "exit_to_journey": exit_to_journey,
         "exit_geometries": exit_geometries,
         "has_premovement": has_premovement,
+        "fill_placement": fill_placement,
         "premovement_times": premovement_times,
         "agent_wait_info": agent_wait_info,
         "spawn_keys": spawn_keys,

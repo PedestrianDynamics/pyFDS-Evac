@@ -28,6 +28,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
   deadlock at doors and narrow gaps in some seeds (#706).
 
+- A deck with journeys whose flow-spawning area (`use_flow_spawning`)
+  asks for more agents per second than the area holds now stops the run
+  with `ValueError: Distribution '<id>': flow rate of ... exceeds area
+  capacity ...`, as a deck without journeys does (#118). Before, the
+  area was skipped with a warning and its agents never spawned. Any
+  other error while setting up a spawn area also stops the run instead
+  of skipping the area. No shipped asset is affected.
+
+- A scenario with a `flow_schedule` now runs that schedule (#390):
+  `initial_number` agents at the start, then each window's `number`
+  agents over the window, instead of `number` agents over
+  `flow_start_time`–`flow_end_time`. Results of such scenarios change;
+  no shipped asset, example or documented scenario sets
+  `flow_schedule`. A window that starts below 0 or has no agents now
+  stops the run with a `ValueError` naming the distribution, as
+  `set_flow_schedule()` did; the run had clamped the start to 0 and
+  dropped the window. The scheduled agents' candidate positions are
+  drawn from their own streams (`flow_positions`, `flow_shuffle`),
+  apart from the initial agents'. Each window is kept as written, also
+  below the 0.1 s that `flow_start_time`–`flow_end_time` is stretched
+  to; one shorter than `number` × 0.01 s, too short to add one agent
+  per time step, stops the run with a `ValueError`.
+
+- A spawn area with `distribution_mode` `by_percentage`, `fill_area` or
+  `until_full` now places `percentage` of its capacity estimate at the
+  start (#436), not `number`: 71 agents instead of 10 in a 6 × 6 m area
+  at the default 50 % and radius 0.2 m. Results of such scenarios
+  change; no shipped asset, example or documented scenario uses these
+  modes. A `number` beside a percentage mode is no longer read, so
+  `--export-only` no longer reports it as over-full. `fill_area` and
+  `until_full` default to 100 % and treat the count as an upper bound:
+  they place as many agents as fit up to it, without an error, and the
+  run reports how many (`Distribution '<id>': fill_area placed N of at
+  most M agents`, `ScenarioResult.fill_placement`, the closing summary
+  line). With or without journeys, exact counts are placed before the
+  fill modes, whatever the deck order, and a fill mode takes what they
+  leave. `by_percentage` stays exact.
+
 ### Added
 
 - The FDS coverage warning names the frame (#26): when part of the
@@ -140,10 +178,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   than its capacity estimate as `Agents: ~N` and exited 0. It now prints
   the run's line, `pyfds-evac: error: Distribution '<id>': requested N
   agents but area can hold at most ~C. ...`, and exits 1 (#508). It
-  counts as the run does: the stored `number` in every
-  `distribution_mode`, and the whole walkable area for a deck without
-  spawn areas. A count within the estimate that JuPedSim cannot place is
-  still found by the run only.
+  counts as the run does, `percentage` of the capacity estimate by
+  percentage and `number` otherwise (#436), and the whole walkable area
+  for a deck without spawn areas. A count within the estimate that
+  JuPedSim cannot place is still found by the run only. It also refuses
+  the flow windows the run refuses, too short or too fast (#390).
 
 - Two spawn areas that overlap but are not the same polygon, with or
   without journeys, could place agents of one within a body width of
@@ -157,6 +196,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   among the pieces by their capacity; when the pieces cannot seat them
   all, or nothing is left free, the run stops with `SpawnCapacityError`.
   Flow-spawned agents are not covered.
+
+- A spawn area whose key does not start with `jps-distributions_`, such
+  as `"room"`, can now head a journey. It was kept as a journey stage
+  and the run stopped with `JourneyDescription.__init__(): incompatible
+  constructor arguments ... Invoked with: [-1]` (#409). Journeys,
+  routing variants, the per-agent path state and the `Route:` line of
+  `--print-summary` now take every key of `distributions` as a spawn
+  area, whatever its name. Results with `jps-distributions_<n>` keys do
+  not change.
+
+- In a scenario with journeys, a spawn area with a flow schedule and
+  initial agents (`initial_number`) stopped the set-up with
+  `KeyError: 'distribution_journeys'` instead of placing those agents
+  on the spawn area's journeys (#118). The set-up also no longer turns
+  every error of a spawn area into `Warning: Error processing
+  distribution ...` and skips it: only coordinates that make no valid
+  polygon, such as a self-intersecting one, are skipped that way, as
+  `--export-only` does. Coordinates that are not numbers, such as
+  `[null, 0]`, count as such a polygon.
+
+- A spawn area's `flow_schedule` and `initial_number`, written by
+  `Scenario.set_flow_schedule()` or by hand, never reached the run,
+  which spawned `number` agents over `flow_start_time`–`flow_end_time`
+  instead, while `--print-summary` counted `initial_number` plus the
+  scheduled agents (#390). The run now places `initial_number` agents at
+  the start and adds each window's agents over that window, with and
+  without journeys; `--print-summary`, `--export-only`'s capacity check
+  and the run count the same agents, and the summary lists each spawn
+  area's initial and scheduled agents. The setter and the run read a
+  schedule with one normaliser, which also refuses times that are not
+  finite (`"nan"`, `"inf"`), a start below 0, a `number` that is not a
+  whole number (`2.7`, `0.5`), entries that are not objects and a
+  schedule that is not a list, with a `SpawnConfigError`, a
+  `ValueError`, that names the distribution; the CLI prints it in one
+  line, also for `--print-summary` and `--export-only`, and
+  `--show-config` lists it, with an over-full spawn area, under
+  `Errors:` and exits 1. `initial_number` without a schedule, and
+  `number` in a percentage mode, are neither read nor checked.
+
+- `distribution_mode: "by_percentage"` ignored `percentage` for agents
+  placed at the start and placed `number` agents, as `by_number` does
+  (#436). It now fills the spawn area to `percentage` of its capacity
+  estimate, ⌊estimate × percentage / 100⌋ and at least 1, with and
+  without journeys, as flow spawning by percentage already did; `number`
+  is not read. `--print-summary`, `Scenario.list_distributions()` and
+  `--export-only`'s capacity check count the same agents; for flow
+  spawning by percentage the views counted `number` before.
 
 ### Documentation
 

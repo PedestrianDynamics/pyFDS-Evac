@@ -27,6 +27,8 @@ import pedpy
 import pytest
 from shapely.geometry import MultiPolygon, Point, Polygon, box
 
+from pyfds_evac.core import simulation_init
+from pyfds_evac.core.scenario import Scenario
 from pyfds_evac.core.simulation_init import (
     _find_nearest_exit,
     _get_distribution_mode_and_count,
@@ -358,14 +360,14 @@ def test_fallback_deck_targets_the_nearest_exit(tmp_path):
     assert Counter(targets.values()) == {"E1": 4, "E2": 4}
 
 
-def _split_deck(destinations: list[dict], number: int) -> dict:
+def _split_deck(destinations: list[dict], number: int, key: str = D0) -> dict:
     """One distribution through a checkpoint that splits towards E1 and E2."""
     exits = sorted({d["target"] for d in destinations})
     return _deck(
-        {D0: (box(8.0, 2.0, 12.0, 8.0), _params(number))},
+        {key: (box(8.0, 2.0, 12.0, 8.0), _params(number))},
         checkpoints={CP: {"coordinates": _coords(box(9.5, 8.5, 10.5, 9.5))}},
-        journeys=[{"id": "J", "stages": [D0, CP, *exits]}],
-        transitions=[{"journey_id": "J", "from": D0, "to": CP}]
+        journeys=[{"id": "J", "stages": [key, CP, *exits]}],
+        transitions=[{"journey_id": "J", "from": key, "to": CP}]
         + [{"journey_id": "J", "from": CP, "to": e} for e in exits],
         waypoint_routing={CP: {"J": {"destinations": destinations}}},
     )
@@ -403,6 +405,212 @@ def test_percentage_weights_need_not_sum_to_100(tmp_path):
     )
     _, _, _, info = _initialize(data, tmp_path)
     assert _exit_choices(info) == {"E1": 2, "E2": 6}
+
+
+@pytest.mark.parametrize("key", [D0, "room"])
+def test_journey_finds_its_spawn_area_by_key_not_prefix(tmp_path, key):
+    """A spawn area is any key of ``distributions``, whatever its name (#409)."""
+    data = _deck(
+        {key: (box(2.0, 2.0, 8.0, 8.0), _params(6))},
+        journeys=[{"id": "J", "stages": [key, "E2"]}],
+        transitions=[{"journey_id": "J", "from": key, "to": "E2"}],
+    )
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 6
+    states = info["agent_wait_info"].values()
+    assert [(s["current_origin"], s["current_target_stage"]) for s in states] == [
+        (key, "E2")
+    ] * 6
+
+
+@pytest.mark.parametrize("key", [D0, "room"])
+def test_split_journey_from_a_spawn_area_of_any_name(tmp_path, key):
+    """Routing variants and path states start from the spawn area (#409)."""
+    data = _split_deck(
+        [{"target": "E1", "percentage": 30}, {"target": "E2", "percentage": 70}],
+        10,
+        key=key,
+    )
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 10
+    assert _exit_choices(info) == {"E1": 3, "E2": 7}
+    assert {s["current_origin"] for s in info["agent_wait_info"].values()} == {key}
+
+
+def _journey_deck(distributions: dict) -> dict:
+    """*distributions* on a deck whose one journey leads the first to E2."""
+    first = next(iter(distributions))
+    return _deck(
+        distributions,
+        journeys=[{"id": "J", "stages": [first, "E2"]}],
+        transitions=[{"journey_id": "J", "from": first, "to": "E2"}],
+    )
+
+
+def test_scheduled_spawn_area_places_its_initial_agents(tmp_path):
+    """Initial agents beside a flow schedule start on the journey (#118).
+
+    The area is nearer E1, so an agent left without its journey heads there.
+    """
+    window = {"flow_start_time": 0, "flow_end_time": 10, "number": 4}
+    params = _params(0, initial_number=3, flow_schedule=[window])
+    data = _journey_deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 3
+    targets = [s["current_target_stage"] for s in info["agent_wait_info"].values()]
+    assert targets == ["E2"] * 3
+    assert info["num_agents_per_source"] == [4]
+
+
+_SCHEDULE = [
+    {"start_time_s": 20, "end_time_s": 30, "sim_count": 5},
+    {"flow_start_time": 0, "flow_end_time": 10, "number": 4},
+]
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_flow_schedule_and_initial_number_reach_the_set_up(tmp_path, with_journeys):
+    """The scenario JSON's schedule and initial count are what is placed (#390).
+
+    ``number`` (9) is what ``set_flow_schedule`` stores, the scheduled sum;
+    it is not placed on its own.
+    """
+    params = _params(
+        9, use_flow_spawning=True, initial_number=3, flow_schedule=_SCHEDULE
+    )
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), params)}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 3
+    assert info["num_agents_per_source"] == [4, 5]
+    windows = [(f["start_time"], f["end_time"]) for f in info["flow_distributions"]]
+    assert windows == [(0.0, 10.0), (20.0, 30.0)]
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
+    """A stray ``initial_number`` changes nothing without ``flow_schedule`` (#390).
+
+    D0, with ``number`` 0, lies inside D1, whose 120 agents leave no room;
+    it places nobody, as without ``initial_number``, instead of failing to
+    place 0 agents.
+    """
+    placed = []
+    for extra in ({}, {"initial_number": 3}):
+        area = {
+            D1: (box(2.0, 2.0, 8.0, 8.0), _params(120)),
+            D0: (box(4.0, 4.0, 5.0, 5.0), _params(0, **extra)),
+        }
+        data = _journey_deck(area) if with_journeys else _deck(area)
+        simulation, _, positions, _ = _initialize(data, tmp_path)
+        assert simulation.agent_count() == 120
+        placed.append(positions)
+    assert placed[0] == placed[1]
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize(
+    ("extra", "message"),
+    [
+        (
+            {
+                "flow_schedule": [
+                    {"flow_start_time": -1, "flow_end_time": 5, "number": 2}
+                ]
+            },
+            r"Distribution 'jps-distributions_0': flow_schedule: Invalid flow window"
+            r" \[-1\.0, 5\.0\] - start_time must be >= 0",
+        ),
+        (
+            {
+                "flow_schedule": [
+                    {"flow_start_time": 0, "flow_end_time": 5, "number": 0}
+                ]
+            },
+            r"Distribution 'jps-distributions_0': flow_schedule: .*positive integers",
+        ),
+        (
+            {"flow_schedule": _SCHEDULE, "initial_number": "three"},
+            r"Distribution 'jps-distributions_0': initial_number must be a number",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": "nan", "end_time_s": 5, "number": 2}]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be finite",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": 0, "end_time_s": "inf", "number": 2}]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be finite",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": [0], "end_time_s": 5, "number": 2}]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*times must be numbers",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": 0, "end_time_s": 5, "number": 2.7}]},
+            r"flow_schedule: Flow schedule numbers must be whole numbers, got 2\.7",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": 0, "end_time_s": 5, "number": 0.5}]},
+            r"flow_schedule: Flow schedule numbers must be whole numbers, got 0\.5",
+        ),
+        (
+            {"flow_schedule": [[0, 5, 2]]},
+            r"Distribution 'jps-distributions_0': flow_schedule: .*must be an object",
+        ),
+        (
+            {"flow_schedule": 5},
+            r"Distribution 'jps-distributions_0': flow_schedule: must be a list",
+        ),
+    ],
+    ids=[
+        "negative-start",
+        "empty-window",
+        "initial-not-a-number",
+        "nan-start",
+        "inf-end",
+        "list-time",
+        "fractional-number",
+        "half-number",
+        "entry-not-an-object",
+        "schedule-not-a-list",
+    ],
+)
+def test_invalid_flow_schedule_stops_the_set_up(
+    tmp_path, with_journeys, extra, message
+):
+    """The run reads a schedule as ``Scenario.set_flow_schedule`` does (#390)."""
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), _params(0, **extra))}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    with pytest.raises(ValueError, match=message):
+        _initialize(data, tmp_path)
+
+
+def test_invalid_spawn_polygon_is_skipped_with_a_warning(tmp_path):
+    """A self-intersecting spawn area is warned about and skipped (#118, #508)."""
+    bow = Polygon([(1.1, 1.1), (3.9, 4.9), (3.9, 1.1), (1.1, 4.9)])
+    data = _journey_deck(
+        {D0: (box(12.0, 2.0, 16.0, 8.0), _params(4)), D1: (bow, _params(3))}
+    )
+    path = tmp_path / "deck.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    simulation = jps.Simulation(model=jps.CollisionFreeSpeedModel(), geometry=WALKABLE)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        initialize_simulation_from_json(
+            str(path), simulation, pedpy.WalkableArea(WALKABLE), seed=SEED
+        )
+    assert f"Warning: Error processing distribution {D1}: TopologyException" in (
+        out.getvalue()
+    )
+    assert simulation.agent_count() == 4
+
+
+def test_flow_rate_above_the_area_capacity_stops_a_deck_with_journeys(tmp_path):
+    """Raised as without journeys; it was a warning and no agents (#118)."""
+    params = _params(500, use_flow_spawning=True, flow_end_time=0.1)
+    data = _journey_deck({D0: (box(2.0, 2.0, 3.0, 3.0), params)})
+    with pytest.raises(ValueError, match="exceeds area capacity"):
+        _initialize(data, tmp_path)
 
 
 def test_placement_is_reproducible_and_seed_dependent(tmp_path):
@@ -477,23 +685,222 @@ def test_split_checkpoint_needs_complete_routing(tmp_path, routing, message):
         _initialize(data, tmp_path)
 
 
-@pytest.mark.xfail(
-    strict=True,
-    reason="#436: by_percentage ignores percentage for agents placed at start",
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize(
+    ("extra", "expected"),
+    [
+        ({"percentage": 10}, 14),
+        ({"percentage": 90}, 128),
+        ({"percentage": 90, "number": 3}, 128),
+        ({}, 71),
+        ({"distribution_mode": "fill_area", "percentage": 75}, 107),
+    ],
+    ids=["10", "90", "90-number-ignored", "default-50", "fill-area-75"],
 )
-def test_by_percentage_count_follows_the_percentage(tmp_path):
-    counts = {}
-    for percentage in (10, 90):
-        params = {
-            "distribution_mode": "by_percentage",
-            "percentage": percentage,
-            "use_premovement": False,
-        }
-        data = _deck(
-            {D0: (box(2.0, 2.0, 8.0, 8.0), params)},
-            journeys=[{"id": "J", "stages": [D0, "E2"]}],
-            transitions=[{"journey_id": "J", "from": D0, "to": "E2"}],
+def test_by_percentage_count_follows_the_percentage(
+    tmp_path, with_journeys, extra, expected
+):
+    """At the start, ``by_percentage`` fills the area to ``percentage`` (#436).
+
+    floor(capacity estimate x percentage / 100): 36 m2 at radius 0.2 m is
+    floor(36 / (pi 0.2^2) / 2) = 143 agents, so 10 % is 14 and 50 % 71.
+    ``number`` is not read. ``Scenario.summary()`` counts the same.
+    """
+    params = {"distribution_mode": "by_percentage", "use_premovement": False}
+    params.update(extra)
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), params)}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, _ = _initialize(data, tmp_path)
+    assert simulation.agent_count() == expected
+    scenario = Scenario(
+        raw=data,
+        walkable_area_wkt=WALKABLE.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params={},
+    )
+    assert f"  Agents:        ~{expected}" in scenario.summary().splitlines()
+    assert scenario.list_distributions()[0]["agents"] == expected
+
+
+def test_summary_counts_a_flow_spawn_by_percentage_as_the_run(tmp_path):
+    """The views counted ``number`` for a flow spawn by percentage (#436)."""
+    params = {
+        "distribution_mode": "by_percentage",
+        "percentage": 50,
+        "use_flow_spawning": True,
+        "flow_end_time": 60,
+    }
+    data = _journey_deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
+    _, _, _, info = _initialize(data, tmp_path)
+    assert info["num_agents_per_source"] == [71]
+    scenario = Scenario(
+        raw=data,
+        walkable_area_wkt=WALKABLE.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params={},
+    )
+    assert scenario.list_distributions()[0]["agents"] == 71
+
+
+STRIP = box(2.0, 4.5, 22.0, 5.5)
+"""20 x 1 m: estimate 79 at radius 0.2 m, more than the sampler seats."""
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_fill_area_places_as_many_as_fit_up_to_its_count(tmp_path, with_journeys):
+    """100 % of the estimate is an upper bound for ``fill_area`` (#436).
+
+    Seed 3 seats 65 of the 79; the run places them, says so in one line
+    and records it, instead of stopping with ``SpawnCapacityError``.
+    """
+    walkable = box(0.0, 0.0, 30.0, 10.0)
+    area = {D0: (STRIP, {"distribution_mode": "fill_area", "use_premovement": False})}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    path = tmp_path / "deck.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    simulation = jps.Simulation(model=jps.CollisionFreeSpeedModel(), geometry=walkable)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        _, _, _, info = initialize_simulation_from_json(
+            str(path), simulation, pedpy.WalkableArea(walkable), seed=SEED
         )
-        simulation, _, _, _ = _initialize(data, tmp_path)
-        counts[percentage] = simulation.agent_count()
-    assert counts[90] > counts[10]
+    assert simulation.agent_count() == 65
+    assert info["fill_placement"] == {D0: {"placed": 65, "upper_bound": 79}}
+    assert f"Distribution '{D0}': fill_area placed 65 of at most 79 agents" in (
+        out.getvalue().splitlines()
+    )
+
+
+@pytest.mark.parametrize("fill_first", [False, True], ids=["exact-first", "fill-first"])
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_fill_mode_takes_what_the_exact_counts_leave(
+    tmp_path, with_journeys, fill_first
+):
+    """Exact counts are placed first, whatever the deck order (#436).
+
+    D0 asks for exactly 30 in the 6 x 6 m room and D1, a fill mode on the
+    same polygon, for up to 143. D1 listed first used to take the room,
+    and D0 then failed with "Only 2 of 30" with journeys.
+    """
+    room = box(2.0, 2.0, 8.0, 8.0)
+    exact = (D0, (room, _params(30)))
+    fill = (D1, (room, {"distribution_mode": "until_full", "use_premovement": False}))
+    area = dict([fill, exact] if fill_first else [exact, fill])
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, info = _initialize(data, tmp_path)
+    placed = info["fill_placement"][D1]["placed"]
+    assert info["fill_placement"][D1]["upper_bound"] == 143
+    assert 0 < placed < 143
+    assert simulation.agent_count() == 30 + placed
+
+
+def test_views_show_the_count_of_a_fill_mode_as_an_upper_bound():
+    params = {"distribution_mode": "fill_area", "use_premovement": False}
+    data = _deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
+    scenario = Scenario(
+        raw=data,
+        walkable_area_wkt=WALKABLE.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params={},
+    )
+    lines = scenario.summary().splitlines()
+    assert f"    {D0}: up to 143 agents" in lines
+    assert "  Agents:        ~143" in lines
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_inactive_count_fields_are_not_checked(tmp_path, with_journeys):
+    """A percentage mode does not read ``number``, nor a deck without a
+    schedule ``initial_number``; neither stops the run (#436, #390)."""
+    params = {
+        "distribution_mode": "by_percentage",
+        "percentage": 50,
+        "number": -1,
+        "initial_number": "x",
+        "use_premovement": False,
+    }
+    area = {D0: (box(2.0, 2.0, 8.0, 8.0), params)}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    simulation, _, _, _ = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 71
+
+
+def test_malformed_spawn_coordinates_are_skipped_with_a_warning(tmp_path):
+    """Coordinates that are not numbers are skipped as an invalid polygon (#118)."""
+    data = _journey_deck(
+        {
+            D0: (box(12.0, 2.0, 16.0, 8.0), _params(4)),
+            D1: (box(2.0, 2.0, 4.0, 4.0), _params(3)),
+        }
+    )
+    data["distributions"][D1]["coordinates"] = [[None, 0], [1, 0], [0, 1]]
+    path = tmp_path / "deck.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    simulation = jps.Simulation(model=jps.CollisionFreeSpeedModel(), geometry=WALKABLE)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        initialize_simulation_from_json(
+            str(path), simulation, pedpy.WalkableArea(WALKABLE), seed=SEED
+        )
+    assert f"Warning: Error processing distribution {D1}: float()" in out.getvalue()
+    assert simulation.agent_count() == 4
+
+
+def test_fill_search_asks_the_sampler_at_most_twice(monkeypatch):
+    """The prefix search takes JuPedSim's own count (#436).
+
+    The first call for the upper bound fails and says how many it seated;
+    the second returns those, the same prefix a longer search finds.
+    """
+    calls = []
+    sampler = jps.distribute_by_number
+
+    def counted(**kwargs):
+        calls.append(kwargs["number_of_agents"])
+        return sampler(**kwargs)
+
+    monkeypatch.setattr(jps, "distribute_by_number", counted)
+    positions = simulation_init._most_that_fit(STRIP, 79, 0.2, 3)
+    assert len(calls) == 2
+    assert calls[1] == len(positions) < 79
+    assert positions == sampler(
+        polygon=STRIP,
+        number_of_agents=len(positions),
+        distance_to_agents=0.4,
+        distance_to_polygon=0.2,
+        seed=3,
+    )
+    assert simulation_init._seated(STRIP, len(positions) + 1, 0.2, 3) is None
+
+
+def test_seated_count_is_read_from_the_installed_jupedsim():
+    """Contract of the workaround: JuPedSim's error names the count it seated."""
+    with pytest.raises(jps.AgentNumberError) as error:
+        jps.distribute_by_number(
+            polygon=box(0.0, 0.0, 1.0, 1.0),
+            number_of_agents=50,
+            distance_to_agents=0.4,
+            distance_to_polygon=0.2,
+            seed=1,
+        )
+    seated = simulation_init._seated_before_failure(error.value)
+    assert seated is not None and 0 < seated < 50
+
+
+def test_fill_search_without_jupedsims_count_finds_the_same_prefix(monkeypatch):
+    """When the error does not say how many were seated, the search does (#436)."""
+    fast = simulation_init._most_that_fit(STRIP, 79, 0.2, 3)
+    calls = []
+    sampler = jps.distribute_by_number
+
+    def counted(**kwargs):
+        calls.append(kwargs["number_of_agents"])
+        return sampler(**kwargs)
+
+    monkeypatch.setattr(jps, "distribute_by_number", counted)
+    monkeypatch.setattr(simulation_init, "_seated_before_failure", lambda _: None)
+    assert simulation_init._most_that_fit(STRIP, 79, 0.2, 3) == fast
+    assert len(calls) > 2
