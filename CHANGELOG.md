@@ -62,7 +62,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   they place as many agents as fit up to it, without an error, and the
   run reports how many (`Distribution '<id>': fill_area placed N of at
   most M agents`, `ScenarioResult.fill_placement`, the closing summary
-  line). `by_percentage` stays exact.
+  line). With or without journeys, exact counts are placed before the
+  fill modes, whatever the deck order, and a fill mode takes what they
+  leave. `by_percentage` stays exact.
 
 ### Added
 
@@ -178,8 +180,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   agents but area can hold at most ~C. ...`, and exits 1 (#508). It
   counts as the run does, `percentage` of the capacity estimate by
   percentage and `number` otherwise (#436), and the whole walkable area
-  for a deck without spawn areas. A count within the estimate that JuPedSim cannot place is
-  still found by the run only.
+  for a deck without spawn areas. A count within the estimate that
+  JuPedSim cannot place is still found by the run only. It also refuses
+  the flow windows the run refuses, too short or too fast (#390).
 
 - Two spawn areas that overlap but are not the same polygon, with or
   without journeys, could place agents of one within a body width of
@@ -223,9 +226,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the run count the same agents, and the summary lists each spawn
   area's initial and scheduled agents. The setter and the run read a
   schedule with one normaliser, which also refuses times that are not
-  finite (`"nan"`, `"inf"`), entries that are not objects and a
-  schedule that is not a list, with a `ValueError` that names the
-  distribution. `initial_number` without a schedule, and `number` in a
+  finite (`"nan"`, `"inf"`), a start below 0, a `number` that is not a
+  whole number (`2.7`, `0.5`), entries that are not objects and a
+  schedule that is not a list, with a `SpawnConfigError`, a
+  `ValueError`, that names the distribution; the CLI prints it in one
+  line, also for `--print-summary` and `--export-only`. `initial_number` without a schedule, and `number` in a
   percentage mode, are neither read nor checked.
 
 - `distribution_mode: "by_percentage"` ignored `percentage` for agents

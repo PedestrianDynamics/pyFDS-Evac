@@ -351,3 +351,53 @@ def test_export_only_skips_malformed_spawn_coordinates_the_run_skips(monkeypatch
         "coordinates": [[None, 0], [1, 0], [0, 1]],
     }
     assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
+
+
+def _scheduled(with_journeys, window):
+    scenario = _scenario(ENOUGH_S)
+    if not with_journeys:
+        scenario.raw["journeys"] = []
+        scenario.raw["transitions"] = []
+    scenario.distributions[D]["parameters"]["flow_schedule"] = [window]
+    return scenario
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+@pytest.mark.parametrize(
+    ("window", "message"),
+    [
+        (
+            {"flow_start_time": 0, "flow_end_time": 0.02, "number": 3},
+            r"window \[0, 0\.02\] s is too short for 3 agents",
+        ),
+        (
+            {"flow_start_time": 0, "flow_end_time": 10, "number": 900},
+            r"flow rate of 90\.0 agents/s exceeds area capacity",
+        ),
+    ],
+    ids=["too-short", "too-fast"],
+)
+def test_export_only_checks_the_flow_windows_as_the_run(
+    monkeypatch, with_journeys, window, message
+):
+    """--export-only refuses the windows the run refuses, in one line (#390)."""
+    export, run = _export_and_run_messages(
+        monkeypatch, lambda: _scheduled(with_journeys, window)
+    )
+    assert re.match(rf"^pyfds-evac: error: Distribution '{D}': .*{message}", export)
+    assert export == run
+
+
+@pytest.mark.parametrize("args", [(), ("--export-only",), ("--print-summary",)])
+def test_an_unreadable_flow_schedule_is_a_one_line_error(monkeypatch, args):
+    """A spawn area's schedule error ends the CLI in one line (#390)."""
+    scenario = _scheduled(
+        True, {"flow_start_time": -1, "flow_end_time": 5, "number": 2}
+    )
+    with pytest.raises(SystemExit) as exit_:
+        _main(monkeypatch, scenario, *args)
+    message = exit_.value.code
+    assert isinstance(message, str) and "\n" not in message
+    assert message.startswith(
+        f"pyfds-evac: error: Distribution '{D}': flow_schedule: Invalid flow window"
+    ), message

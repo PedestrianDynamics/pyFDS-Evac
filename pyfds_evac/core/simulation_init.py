@@ -1,8 +1,10 @@
+import contextlib
 import importlib.util
 import json
 import logging
 import math
 import random
+import re
 import subprocess
 import sys
 from collections import defaultdict
@@ -18,6 +20,7 @@ from shapely.ops import unary_union
 from .agent_params import (
     _SPAWN_DEFAULT_TYPES,
     DEFAULT_SPAWN_PARAMS,  # noqa: F401  (tests read it from here)
+    SpawnConfigError,
     _deck_spawn_defaults,
     _normalized_flow_schedule,
     _spawn_value,
@@ -27,6 +30,8 @@ from .agent_params import (
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_AGENT_VALUES,
+    PURPOSE_FILL_POSITIONS,
+    PURPOSE_FILL_SHUFFLE,
     PURPOSE_FLOW_POSITIONS,
     PURPOSE_FLOW_SHUFFLE,
     PURPOSE_PATH_CHOICE,
@@ -164,18 +169,25 @@ def _convert_flow_schedule(params: dict[str, Any], dist_id: Any) -> None:
 
     The schedule is read as ``Scenario.set_flow_schedule`` reads it, alias
     keys and all, and sorted. ``initial_number`` is read as ``number``
-    beside a schedule and dropped without one; ``null`` is unset. A ``ValueError`` names the distribution and the key.
+    beside a schedule and dropped without one; ``null`` is unset. A
+    ``SpawnConfigError`` names the distribution and the key.
     """
     try:
         params["flow_schedule"] = _normalized_flow_schedule(params)
-    except ValueError as error:
-        raise ValueError(f"Distribution {dist_id!r}: flow_schedule: {error}") from error
+    except SpawnConfigError as error:
+        raise SpawnConfigError(
+            f"Distribution {dist_id!r}: flow_schedule: {error}"
+        ) from error
     if params.get("initial_number") is None or not params["flow_schedule"]:
         # Without a schedule initial_number is not read, so not checked.
         params.pop("initial_number", None)
         return
     name = f"Distribution {dist_id!r}: initial_number"
-    params["initial_number"] = _spawn_value("number", params["initial_number"], name)
+    try:
+        value = _spawn_value("number", params["initial_number"], name)
+    except ValueError as error:
+        raise SpawnConfigError(str(error)) from error
+    params["initial_number"] = value
 
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
@@ -480,6 +492,51 @@ def _get_max_agent_radius(params):
     return mean_radius
 
 
+_JPS_WALL_DISTANCE = "__min_distance_to_polygon"
+
+
+@contextlib.contextmanager
+def _wall_distance_by_boundary():
+    """Let JuPedSim's sampler measure the distance to the edges in one call.
+
+    Workaround: JuPedSim 1.4.2's ``distribute_by_number`` measures each
+    candidate's distance to a polygon's exterior and then to every hole in
+    a Python loop. The holes cut around agents already placed (#402) make
+    that the cost of a spawn area: a fill mode around 30 agents took about
+    5 s per call (#436). The distance to ``polygon.boundary`` is the same
+    minimum over the same rings in one GEOS call, so the positions do not
+    change. No upstream issue yet; drop this once JuPedSim measures the
+    boundary in one call. Without the private function the sampler is
+    left as it is.
+    """
+    module = jps.distributions
+    original = module.__dict__.get(_JPS_WALL_DISTANCE)
+    if original is None:
+        yield
+        return
+    setattr(module, _JPS_WALL_DISTANCE, _boundary_distance)
+    try:
+        yield
+    finally:
+        setattr(module, _JPS_WALL_DISTANCE, original)
+
+
+def _boundary_distance(pt, polygon):
+    return polygon.boundary.distance(shapely.Point(pt))
+
+
+def _by_number(polygon, count, max_radius, seed):
+    """``jps.distribute_by_number`` with the spacing of agents of *max_radius*."""
+    with _wall_distance_by_boundary():
+        return jps.distribute_by_number(
+            polygon=polygon,
+            number_of_agents=count,
+            distance_to_agents=2 * max_radius,
+            distance_to_polygon=max_radius,
+            seed=seed,
+        )
+
+
 def _distribute(area, dist_keys, number, capacity, max_radius, seed):
     """Seed *number* positions in *area*; a shortfall is a ``SpawnCapacityError``.
 
@@ -487,13 +544,7 @@ def _distribute(area, dist_keys, number, capacity, max_radius, seed):
     other error propagates unchanged (#702).
     """
     try:
-        return jps.distribute_by_number(
-            polygon=area,
-            number_of_agents=number,
-            distance_to_agents=2 * max_radius,
-            distance_to_polygon=max_radius,
-            seed=seed,
-        )
+        return _by_number(area, number, max_radius, seed)
     except _DISTRIBUTION_ERRORS as error:
         raise _unplaced_error(dist_keys, number, capacity, error) from error
 
@@ -560,13 +611,7 @@ def _shares(number, capacities):
 def _seated(part, count, max_radius, seed):
     """``distribute_by_number`` in *part*; None when it cannot seat *count*."""
     try:
-        return jps.distribute_by_number(
-            polygon=part,
-            number_of_agents=count,
-            distance_to_agents=2 * max_radius,
-            distance_to_polygon=max_radius,
-            seed=seed,
-        )
+        return _by_number(part, count, max_radius, seed)
     except _DISTRIBUTION_ERRORS:
         return None
 
@@ -580,17 +625,41 @@ def _seat_bound(part, max_radius):
     return math.floor(part.area / (math.pi * max_radius * max_radius))
 
 
+_SEATED_COUNT = re.compile(r"Only (\d+) of (\d+) ")
+
+
+def _seated_before_failure(error) -> int | None:
+    """How many agents a failed ``distribute_by_number`` call had seated.
+
+    Workaround: JuPedSim 1.4.2's ``AgentNumberError`` gives the count only
+    in its message, "Only K of N  could be placed." No upstream issue
+    yet; drop this once the error carries the count or a call returns the
+    positions it placed. None when the message does not match.
+    """
+    match = _SEATED_COUNT.search(str(getattr(error, "message", error)))
+    return int(match.group(1)) if match else None
+
+
 def _most_that_fit(part, wanted, max_radius, seed):
     """Positions for as many of *wanted* agents as the sampler seats in *part*.
 
     With one seed the sampler accepts the same positions in the same order
-    whatever the count, so the count it seats is a prefix length and the
-    search over it is exact; counts above ``_seat_bound`` are not tried.
+    whatever the count, so the count it seats is a prefix length; counts
+    above ``_seat_bound`` are not tried. A call that cannot seat *wanted*
+    says how many it seated, and a second call for that many returns them
+    (#436). Without that count a search over the prefix length finds it.
     """
     wanted = min(wanted, _seat_bound(part, max_radius))
-    best = _seated(part, wanted, max_radius, seed) if wanted > 0 else []
-    if best is not None:
-        return best
+    if wanted <= 0:
+        return []
+    try:
+        return _by_number(part, wanted, max_radius, seed)
+    except _DISTRIBUTION_ERRORS as error:
+        seated = _seated_before_failure(error)
+    if seated is not None and seated < wanted:
+        best = _seated(part, seated, max_radius, seed) if seated > 0 else []
+        if best is not None:
+            return best
     low, high, best = 0, wanted - 1, []
     while low < high:
         count = (low + high + 1) // 2
@@ -711,55 +780,93 @@ def _seed_shared_areas(spawn_distributions, seed):
     """
     positions_by_index: dict = {}
     placed: list = []
-    for members in _shared_areas(spawn_distributions):
-        area = members[0]["area"]
-        max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
-        total, capacity = _checked_shared_area(members)
-        area_key = members[0]["dist_key"]
-        positions = _distribute_beside(
-            area,
-            [m["dist_key"] for m in members],
-            total,
-            capacity,
-            max_radius,
-            distribution_seed(seed, area_key, PURPOSE_POSITIONS),
-            placed,
-            at_most=any(_upper_bound(m["params"]) for m in members),
-        )
-        counts = _allotted(members, len(positions), capacity)
-        # Shuffle so the profiles interleave across the room instead of one
-        # taking whichever corner the sampler happened to fill first.
-        random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
-            positions
-        )
-        taken = 0
-        for member, count in zip(members, counts):
-            positions_by_index[member["index"]] = positions[taken : taken + count]
-            taken += count
+    groups = _shared_areas(spawn_distributions)
+    for members in groups:
+        exact = [m for m in members if not _upper_bound(m["params"])]
+        if exact:
+            _seed_members(exact, members, seed, placed, positions_by_index, False)
+    for members in groups:
+        fill = [m for m in members if _upper_bound(m["params"])]
+        if fill:
+            fill_only = len(fill) == len(members)
+            _seed_members(fill, members, seed, placed, positions_by_index, fill_only)
     return positions_by_index
 
 
-def _allotted(members, seated, capacity):
-    """How many of *seated* positions each member of one spawn area takes.
+def _seed_members(group, members, seed, placed, positions_by_index, fill_only):
+    """Seed the exact or the fill-mode *group* of one shared spawn area.
 
-    Members with an exact count take it; the fill modes share what is
-    left, in deck order, each up to its own count (#436). Fewer seats than
-    the exact counts raise ``SpawnCapacityError``.
+    All exact counts are seeded before any fill mode, so a fill mode takes
+    only what they leave (#436): the exact members of an area with the
+    area's ``positions`` and ``shuffle`` streams, as before, then its fill
+    members around them with ``fill_positions`` and ``fill_shuffle``, or
+    with the area's own streams when the area has no exact member. A fill
+    member takes up to its count of what the sampler seats, in deck order.
     """
-    counts = [_initial_spawn_count(m["params"], m["area"]) for m in members]
-    exact = [not _upper_bound(m["params"]) for m in members]
-    required = sum(c for c, e in zip(counts, exact) if e)
-    if seated < required:
-        keys = [m["dist_key"] for m, e in zip(members, exact) if e]
-        raise _unplaced_error(keys, required, capacity, f"only {seated} fit")
-    left = seated - required
-    allotted = []
-    for count, is_exact in zip(counts, exact):
-        if not is_exact:
-            count = min(count, left)
-            left -= count
-        allotted.append(count)
-    return allotted
+    area = members[0]["area"]
+    area_key = members[0]["dist_key"]
+    at_most = _upper_bound(group[0]["params"])
+    with_area_streams = not at_most or fill_only
+    max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
+    total, capacity = _checked_shared_area(group)
+    positions = _distribute_beside(
+        area,
+        [m["dist_key"] for m in group],
+        total,
+        capacity,
+        max_radius,
+        distribution_seed(
+            seed,
+            area_key,
+            PURPOSE_POSITIONS if with_area_streams else PURPOSE_FILL_POSITIONS,
+        ),
+        placed,
+        at_most=at_most,
+    )
+    # Shuffle so the profiles interleave across the room instead of one
+    # taking whichever corner the sampler happened to fill first.
+    random.Random(
+        distribution_seed(
+            seed,
+            area_key,
+            PURPOSE_SHUFFLE if with_area_streams else PURPOSE_FILL_SHUFFLE,
+        )
+    ).shuffle(positions)
+    taken = 0
+    for member in group:
+        count = min(
+            _initial_spawn_count(member["params"], area), len(positions) - taken
+        )
+        positions_by_index[member["index"]] = positions[taken : taken + count]
+        taken += count
+
+
+def _seed_journey_areas(spawns, seed):
+    """Positions of each spawn area of the set-up with journeys, by key.
+
+    Each area is seeded on its own, around the agents of the areas seeded
+    before it (#402): the exact counts first, in deck order, then the fill
+    modes, so that a fill mode listed first takes only what the exact
+    counts leave (#436).
+    """
+    placed = []
+    positions = {}
+    for dist_key in sorted(spawns, key=lambda key: _upper_bound(spawns[key]["params"])):
+        area, params = spawns[dist_key]["area"], spawns[dist_key]["params"]
+        count, capacity = _checked_shared_area(
+            [{"area": area, "params": params, "dist_key": dist_key}]
+        )
+        positions[dist_key] = _distribute_beside(
+            area,
+            [dist_key],
+            count,
+            capacity,
+            _get_max_agent_radius(params),
+            distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
+            placed,
+            at_most=_upper_bound(params),
+        )
+    return positions
 
 
 def _shared_areas(spawns):
@@ -911,13 +1018,56 @@ def _schedule_window(entry, dist_key, dt) -> tuple[float, float]:
     end = entry["flow_end_time"]
     number = entry["number"]
     if number * dt > end - start + 1e-9:
-        raise ValueError(
+        raise SpawnConfigError(
             f"Distribution '{dist_key}': flow_schedule window [{start:g}, {end:g}] s "
             f"is too short for {number} agents: the run adds at most one agent "
             f"of a window per {dt:g} s step, so it must last at least "
             f"{number * dt:g} s."
         )
     return start, end
+
+
+def _check_flow_rate(dist_key, n_agents, duration, capacity) -> None:
+    """Refuse a flow that adds more agents per second than the area holds."""
+    rate = n_agents / duration
+    if rate > capacity:
+        raise SpawnConfigError(
+            f"Distribution '{dist_key}': flow rate of {rate:.1f} agents/s "
+            f"exceeds area capacity of {capacity} agents. "
+            f"Reduce the number of agents ({n_agents}) or increase "
+            f"the flow duration ({duration:g}s)."
+        )
+
+
+RUN_TIME_STEP_S = 0.01
+"""JuPedSim's time step, which the run keeps; ``simulationParams.dt`` is not read."""
+
+
+def _flows(params) -> bool:
+    """Whether a distribution adds agents over time."""
+    return bool(_normalized_flow_schedule(params) or params.get("use_flow_spawning"))
+
+
+def _check_flows(dist_key, params, area, dt=RUN_TIME_STEP_S) -> None:
+    """Raise the run's errors for the flow spawning of one area, placing nothing.
+
+    The windows of a flow schedule, or the one window of
+    ``use_flow_spawning``, with their counts, as the set-up checks them
+    (#390), for ``--export-only``.
+    """
+    capacity = _estimate_max_capacity(area, _get_max_agent_radius(params))
+    for entry in _normalized_flow_schedule(params):
+        start, end = _schedule_window(entry, dist_key, dt)
+        _check_flow_rate(dist_key, entry["number"], end - start, capacity)
+    if _normalized_flow_schedule(params) or not params.get("use_flow_spawning"):
+        return
+    mode, requested = _get_distribution_mode_and_count(params)
+    n_agents = requested if mode == "by_number" else _percentage_count(params, area)
+    if n_agents <= 0:
+        return
+    start = max(0, params.get("flow_start_time", 0))
+    end = max(start + 0.1, params.get("flow_end_time", 10))
+    _check_flow_rate(dist_key, n_agents, end - start, capacity)
 
 
 def _uses_fallback(data) -> bool:
@@ -939,14 +1089,15 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
             data, global_parameters, premovement_default=False
         )
         for key, coords in geometry.items():
-            if not _places_at_start(params[key]):
-                continue
             try:
                 area = _journey_spawn_area(coords, walkable_polygon)
             except _INVALID_SPAWN_POLYGON:
                 # The run warns and skips a distribution it cannot process.
                 continue
-            if not area.is_empty:
+            if area.is_empty:
+                continue
+            _check_flows(key, params[key], area)
+            if _places_at_start(params[key]):
                 _checked_shared_area(
                     [{"area": area, "params": params[key], "dist_key": key}]
                 )
@@ -955,12 +1106,17 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
     areas, params, keys = _fallback_spawn_areas(
         data, walkable_polygon, spawn_defaults, premovement_default=False
     )
-    spawns = [
-        {"area": _clip_spawn_area(area, walkable_polygon), "params": p, "dist_key": k}
-        for area, p, k in zip(areas, params, keys)
-        if _places_at_start(p)
-    ]
-    for members in _shared_areas(s for s in spawns if not s["area"].is_empty):
+    spawns = []
+    for area, p, k in zip(areas, params, keys):
+        if not _places_at_start(p) and not _flows(p):
+            continue
+        clipped = _clip_spawn_area(area, walkable_polygon)
+        if clipped.is_empty:
+            continue
+        _check_flows(k, p, clipped)
+        if _places_at_start(p):
+            spawns.append({"area": clipped, "params": p, "dist_key": k})
+    for members in _shared_areas(spawns):
         _checked_shared_area(members)
 
 
@@ -1691,14 +1847,7 @@ def _initialize_with_fallback(
                     schedule_entry, dist_key_str, simulation.delta_time()
                 )
                 flow_duration = flow_end_time - flow_start_time
-                flow_rate = n_agents / flow_duration
-                if flow_rate > max_capacity:
-                    raise ValueError(
-                        f"Distribution {i}: flow rate of {flow_rate:.1f} agents/s "
-                        f"exceeds area capacity of {max_capacity} agents. "
-                        f"Reduce the number of agents ({n_agents}) or increase "
-                        f"the flow duration ({flow_duration:.1f}s)."
-                    )
+                _check_flow_rate(dist_key_str, n_agents, flow_duration, max_capacity)
 
                 flow_params = dict(dist_params)
                 flow_params["number"] = n_agents
@@ -1749,7 +1898,7 @@ def _initialize_with_fallback(
                 )
 
             print(
-                f"Flow spawning: Distribution {i} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
+                f"Flow spawning: {dist_key_str} - {sum(entry['number'] for entry in flow_schedule)} scheduled agents"
             )
 
         elif use_flow_spawning:
@@ -1777,14 +1926,7 @@ def _initialize_with_fallback(
             flow_duration = flow_end_time - flow_start_time
 
             # Validate flow rate does not exceed area capacity
-            flow_rate = n_agents / flow_duration
-            if flow_rate > max_capacity:
-                raise ValueError(
-                    f"Distribution {i}: flow rate of {flow_rate:.1f} agents/s "
-                    f"exceeds area capacity of {max_capacity} agents. "
-                    f"Reduce the number of agents ({n_agents}) or increase "
-                    f"the flow duration ({flow_duration:.1f}s)."
-                )
+            _check_flow_rate(dist_key_str, n_agents, flow_duration, max_capacity)
 
             dist_params["number"] = n_agents
 
@@ -1820,7 +1962,7 @@ def _initialize_with_fallback(
             )
 
             print(
-                f"Flow spawning: Distribution {i} - {n_agents} agents over {flow_duration}s"
+                f"Flow spawning: {dist_key_str} - {n_agents} agents over {flow_duration}s"
             )
 
         else:
@@ -2954,14 +3096,7 @@ def _add_agents(
                     schedule_entry, dist_key, simulation.delta_time()
                 )
                 flow_duration = flow_end_time - flow_start_time
-                flow_rate = n_agents / flow_duration
-                if flow_rate > max_capacity:
-                    raise ValueError(
-                        f"Distribution '{dist_key}': flow rate of {flow_rate:.1f} agents/s "
-                        f"exceeds area capacity of {max_capacity} agents. "
-                        f"Reduce the number of agents ({n_agents}) or increase "
-                        f"the flow duration ({flow_duration:.1f}s)."
-                    )
+                _check_flow_rate(dist_key, n_agents, flow_duration, max_capacity)
 
                 flow_params = dict(params)
                 flow_params["number"] = n_agents
@@ -3025,14 +3160,7 @@ def _add_agents(
             flow_duration = flow_end_time - flow_start_time
 
             # Validate flow rate does not exceed area capacity
-            flow_rate = n_agents / flow_duration
-            if flow_rate > max_capacity:
-                raise ValueError(
-                    f"Distribution '{dist_key}': flow rate of {flow_rate:.1f} agents/s "
-                    f"exceeds area capacity of {max_capacity} agents. "
-                    f"Reduce the number of agents ({n_agents}) or increase "
-                    f"the flow duration ({flow_duration:.1f}s)."
-                )
+            _check_flow_rate(dist_key, n_agents, flow_duration, max_capacity)
 
             params["number"] = n_agents
 
@@ -3087,31 +3215,12 @@ def _add_agents(
     has_premovement = False
 
     # Handle immediate spawning distributions (existing logic)
-    placed: list = []
     fill_placement: dict[str, dict[str, int]] = {}
+    seeded_positions = _seed_journey_areas(immediate_spawn_distributions, seed)
     for dist_key, spawn_data in immediate_spawn_distributions.items():
         try:
             spawn_params = spawn_data["params"]
-            max_radius = _get_max_agent_radius(spawn_params)
-            requested_count, max_capacity = _checked_shared_area(
-                [
-                    {
-                        "area": spawn_data["area"],
-                        "params": spawn_params,
-                        "dist_key": dist_key,
-                    }
-                ]
-            )
-            positions = _distribute_beside(
-                spawn_data["area"],
-                [dist_key],
-                requested_count,
-                max_capacity,
-                max_radius,
-                distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
-                placed,
-                at_most=_upper_bound(spawn_params),
-            )
+            positions = seeded_positions[dist_key]
             _report_fill(
                 fill_placement,
                 dist_key,

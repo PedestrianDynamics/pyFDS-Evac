@@ -42,6 +42,7 @@ if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
 from .agent_params import (
+    SpawnConfigError,
     _normalize_flow_schedule_entry,
     _normalized_flow_schedule,
     deck_default_number,
@@ -404,9 +405,14 @@ class Scenario:
             self.walkable_polygon,
             SimpleNamespace(**self.sim_params),
         )
-        if count is None:
+        if count is not None:
+            return count
+        try:
             return _distribution_agent_budget(dist, default_number)
-        return count
+        except SpawnConfigError as error:
+            raise SpawnConfigError(
+                f"Distribution {dist_id!r}: flow_schedule: {error}"
+            ) from error
 
     def summary(self) -> str:
         default_number = deck_default_number(self.sim_params)

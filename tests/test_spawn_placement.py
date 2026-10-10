@@ -27,6 +27,7 @@ import pedpy
 import pytest
 from shapely.geometry import MultiPolygon, Point, Polygon, box
 
+from pyfds_evac.core import simulation_init
 from pyfds_evac.core.scenario import Scenario
 from pyfds_evac.core.simulation_init import (
     _find_nearest_exit,
@@ -517,7 +518,8 @@ def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
                     {"flow_start_time": -1, "flow_end_time": 5, "number": 2}
                 ]
             },
-            r"Distribution 'jps-distributions_0': flow_schedule: Invalid flow window",
+            r"Distribution 'jps-distributions_0': flow_schedule: Invalid flow window"
+            r" \[-1\.0, 5\.0\] - start_time must be >= 0",
         ),
         (
             {
@@ -541,7 +543,15 @@ def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
         ),
         (
             {"flow_schedule": [{"start_time_s": [0], "end_time_s": 5, "number": 2}]},
-            r"Distribution 'jps-distributions_0': flow_schedule: .*must be numbers",
+            r"Distribution 'jps-distributions_0': flow_schedule: .*times must be numbers",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": 0, "end_time_s": 5, "number": 2.7}]},
+            r"flow_schedule: Flow schedule numbers must be whole numbers, got 2\.7",
+        ),
+        (
+            {"flow_schedule": [{"start_time_s": 0, "end_time_s": 5, "number": 0.5}]},
+            r"flow_schedule: Flow schedule numbers must be whole numbers, got 0\.5",
         ),
         (
             {"flow_schedule": [[0, 5, 2]]},
@@ -549,7 +559,7 @@ def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
         ),
         (
             {"flow_schedule": 5},
-            r"Distribution 'jps-distributions_0': flow_schedule: .*must be a list",
+            r"Distribution 'jps-distributions_0': flow_schedule: must be a list",
         ),
     ],
     ids=[
@@ -559,6 +569,8 @@ def test_initial_number_without_a_schedule_is_not_read(tmp_path, with_journeys):
         "nan-start",
         "inf-end",
         "list-time",
+        "fractional-number",
+        "half-number",
         "entry-not-an-object",
         "schedule-not-a-list",
     ],
@@ -761,22 +773,27 @@ def test_fill_area_places_as_many_as_fit_up_to_its_count(tmp_path, with_journeys
     )
 
 
-def test_fill_area_shares_a_polygon_after_the_exact_counts(tmp_path):
-    """Without journeys, an exact count on the same polygon is placed first.
+@pytest.mark.parametrize("fill_first", [False, True], ids=["exact-first", "fill-first"])
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_fill_mode_takes_what_the_exact_counts_leave(
+    tmp_path, with_journeys, fill_first
+):
+    """Exact counts are placed first, whatever the deck order (#436).
 
-    The 6 x 6 m area seats 143 at seed 3 of the 100 + 143 asked for; D0
-    takes its 100 and the ``until_full`` area D1 the 43 left.
+    D0 asks for exactly 30 in the 6 x 6 m room and D1, a fill mode on the
+    same polygon, for up to 143. D1 listed first used to take the room,
+    and D0 then failed with "Only 2 of 30" with journeys.
     """
     room = box(2.0, 2.0, 8.0, 8.0)
-    data = _deck(
-        {
-            D0: (room, _params(100)),
-            D1: (room, {"distribution_mode": "until_full", "use_premovement": False}),
-        }
-    )
+    exact = (D0, (room, _params(30)))
+    fill = (D1, (room, {"distribution_mode": "until_full", "use_premovement": False}))
+    area = dict([fill, exact] if fill_first else [exact, fill])
+    data = _journey_deck(area) if with_journeys else _deck(area)
     simulation, _, _, info = _initialize(data, tmp_path)
-    assert simulation.agent_count() == 143
-    assert info["fill_placement"] == {D1: {"placed": 43, "upper_bound": 143}}
+    placed = info["fill_placement"][D1]["placed"]
+    assert info["fill_placement"][D1]["upper_bound"] == 143
+    assert 0 < placed < 143
+    assert simulation.agent_count() == 30 + placed
 
 
 def test_views_show_the_count_of_a_fill_mode_as_an_upper_bound():
@@ -830,3 +847,69 @@ def test_malformed_spawn_coordinates_are_skipped_with_a_warning(tmp_path):
         )
     assert f"Warning: Error processing distribution {D1}: float()" in out.getvalue()
     assert simulation.agent_count() == 4
+
+
+def test_fill_search_asks_the_sampler_at_most_twice(monkeypatch):
+    """The prefix search takes JuPedSim's own count (#436).
+
+    The first call for the upper bound fails and says how many it seated;
+    the second returns those, the same prefix a longer search finds.
+    """
+    calls = []
+    sampler = jps.distribute_by_number
+
+    def counted(**kwargs):
+        calls.append(kwargs["number_of_agents"])
+        return sampler(**kwargs)
+
+    monkeypatch.setattr(jps, "distribute_by_number", counted)
+    positions = simulation_init._most_that_fit(STRIP, 79, 0.2, 3)
+    assert len(calls) == 2
+    assert calls[1] == len(positions) < 79
+    assert positions == sampler(
+        polygon=STRIP,
+        number_of_agents=len(positions),
+        distance_to_agents=0.4,
+        distance_to_polygon=0.2,
+        seed=3,
+    )
+    assert simulation_init._seated(STRIP, len(positions) + 1, 0.2, 3) is None
+
+
+def test_seated_count_is_read_from_the_installed_jupedsim():
+    """Contract of the workaround: JuPedSim's error names the count it seated."""
+    with pytest.raises(jps.AgentNumberError) as error:
+        jps.distribute_by_number(
+            polygon=box(0.0, 0.0, 1.0, 1.0),
+            number_of_agents=50,
+            distance_to_agents=0.4,
+            distance_to_polygon=0.2,
+            seed=1,
+        )
+    seated = simulation_init._seated_before_failure(error.value)
+    assert seated is not None and 0 < seated < 50
+
+
+def test_boundary_distance_keeps_the_sampled_positions():
+    """The wall-distance workaround places exactly as JuPedSim does (#436)."""
+    room = box(2.0, 2.0, 8.0, 8.0)
+    agents = jps.distribute_by_number(
+        polygon=room,
+        number_of_agents=30,
+        distance_to_agents=0.4,
+        distance_to_polygon=0.2,
+        seed=5,
+    )
+    free = simulation_init._free_area(room, 0.2, [(room, agents, 0.2, ["b"])])
+    assert len(free.interiors) > 0
+    module = jps.distributions
+    original = module.__dict__[simulation_init._JPS_WALL_DISTANCE]
+    plain = jps.distribute_by_number(
+        polygon=free,
+        number_of_agents=60,
+        distance_to_agents=0.4,
+        distance_to_polygon=0.2,
+        seed=7,
+    )
+    assert simulation_init._by_number(free, 60, 0.2, 7) == plain
+    assert module.__dict__[simulation_init._JPS_WALL_DISTANCE] is original

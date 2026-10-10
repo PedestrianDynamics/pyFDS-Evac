@@ -176,21 +176,27 @@ def _spawn_value(key: str, value: Any, name: str, zero_v0: bool = False) -> Any:
     return converted
 
 
+class SpawnConfigError(ValueError):
+    """A spawn area's flow schedule or start count cannot be run as written."""
+
+
 def _normalize_flow_schedule_entry(entry: dict) -> dict:
     """Normalize one configured flow schedule entry to canonical keys.
 
     Times are finite seconds, the start >= 0 and the end after it, and
-    ``number`` a positive integer; anything else, an entry that is not
-    an object included, raises ``ValueError``.
+    ``number`` a whole number >= 1; anything else, an entry that is not
+    an object included, raises ``SpawnConfigError``.
     """
     if not isinstance(entry, dict):
-        raise ValueError(f"Each flow schedule entry must be an object, got {entry!r}")
+        raise SpawnConfigError(
+            f"Each flow schedule entry must be an object, got {entry!r}"
+        )
     start_time = entry.get("flow_start_time", entry.get("start_time_s"))
     end_time = entry.get("flow_end_time", entry.get("end_time_s"))
     number = entry.get("number", entry.get("sim_count"))
 
     if start_time is None or end_time is None or number is None:
-        raise ValueError(
+        raise SpawnConfigError(
             "Each flow schedule entry must define start/end time and number. "
             "Accepted keys: flow_start_time|start_time_s, flow_end_time|end_time_s, number|sim_count."
         )
@@ -198,22 +204,26 @@ def _normalize_flow_schedule_entry(entry: dict) -> dict:
     try:
         start_time = float(start_time)
         end_time = float(end_time)
-        number = int(number)
     except (TypeError, ValueError, OverflowError) as error:
-        raise ValueError(
-            f"Flow schedule entry {entry!r}: times and number must be numbers"
+        raise SpawnConfigError(
+            f"Flow schedule entry {entry!r}: times must be numbers"
         ) from error
+    number = _whole_number(number)
 
     if not (math.isfinite(start_time) and math.isfinite(end_time)):
-        raise ValueError(
+        raise SpawnConfigError(
             f"Invalid flow window [{start_time}, {end_time}] - times must be finite."
         )
-    if start_time < 0 or end_time <= start_time:
-        raise ValueError(
+    if start_time < 0:
+        raise SpawnConfigError(
+            f"Invalid flow window [{start_time}, {end_time}] - start_time must be >= 0."
+        )
+    if end_time <= start_time:
+        raise SpawnConfigError(
             f"Invalid flow window [{start_time}, {end_time}] - end_time must be greater than start_time."
         )
     if number <= 0:
-        raise ValueError(
+        raise SpawnConfigError(
             f"Flow schedule numbers must be positive integers, got {number!r}"
         )
 
@@ -224,13 +234,32 @@ def _normalize_flow_schedule_entry(entry: dict) -> dict:
     }
 
 
+def _whole_number(value: Any) -> int:
+    """A flow schedule's ``number``: an integer, also as ``4.0`` or ``"4"``."""
+    if isinstance(value, bool):
+        raise SpawnConfigError(
+            f"Flow schedule numbers must be whole numbers, got {value!r}"
+        )
+    try:
+        number = float(value)
+    except (TypeError, ValueError, OverflowError) as error:
+        raise SpawnConfigError(
+            f"Flow schedule numbers must be whole numbers, got {value!r}"
+        ) from error
+    if not number.is_integer():
+        raise SpawnConfigError(
+            f"Flow schedule numbers must be whole numbers, got {value!r}"
+        )
+    return int(number)
+
+
 def _normalized_flow_schedule(params: dict) -> list[dict]:
     """Return the sorted flow schedule for one distribution."""
     raw_schedule = params.get("flow_schedule", [])
     if not raw_schedule:
         return []
     if not isinstance(raw_schedule, list):
-        raise ValueError(f"flow_schedule must be a list, got {raw_schedule!r}")
+        raise SpawnConfigError(f"must be a list of windows, got {raw_schedule!r}")
     normalized = [_normalize_flow_schedule_entry(entry) for entry in raw_schedule]
     normalized.sort(
         key=lambda entry: (entry["flow_start_time"], entry["flow_end_time"])
