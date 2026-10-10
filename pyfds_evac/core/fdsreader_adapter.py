@@ -14,16 +14,30 @@ This also reaches fdsreader calls made by fdsvismap. Both values are
 restored on exit. The cache only saves parsing the ``.smv`` and slice
 headers: 0.1-0.4 s for a 64-mesh case with 768 slice files.
 
+Both values are process-global. Inside the block, any fdsreader call in
+the process, in any thread, runs without the cache; a lock makes blocks
+in different threads wait for each other, so a block always restores the
+values it found. fdsreader calls in another thread that do not use this
+module are not held by the lock. Child processes start with fdsreader's
+defaults and must open cases through this module too.
+
+A ``Simulation`` returned by ``open_fds_simulation`` deletes nothing on
+``clear_cache(clear_persistent_cache=True)``: it never wrote a pickle,
+and fdsreader would delete ``<CHID>.pickle`` in the case directory.
+
 Workaround record. Reason: fdsreader has no setting for the cache
 folder and deletes the pickle when caching is off. Affected versions:
-fdsreader 1.11.7 (checked by the regression test); an fdsreader without
-the two names refuses to open. Upstream issue: none yet. Regression test:
+fdsreader 1.11.7, checked by the regression test; pyproject.toml pins
+fdsreader to >=1.11.7,<1.12. Re-verify a new fdsreader minor with
+tests/test_fdsreader_adapter.py before widening the pin. An fdsreader
+without the two names refuses to open. Upstream issue: none yet. Regression test:
 tests/test_fdsreader_adapter.py. Remove when fdsreader lets the cache
 folder be set, or turns caching off without deleting the pickle.
 """
 
 from __future__ import annotations
 
+import functools
 import tempfile
 import threading
 from collections.abc import Iterator
@@ -75,7 +89,9 @@ def fdsreader_without_cache() -> Iterator[None]:
 
         def no_pickle(cls: Any, root_path: str, chid: str) -> str:
             # Never created: caching is off, so fdsreader only checks for it.
-            return str(Path(tmp) / f"{chid}.pickle")
+            # One name for every CHID, which a path in the .smv cannot
+            # move out of the empty folder.
+            return str(Path(tmp) / "simulation.pickle")
 
         settings.ENABLE_CACHING = False
         Simulation._get_pickle_filename = classmethod(no_pickle)
@@ -86,9 +102,18 @@ def fdsreader_without_cache() -> Iterator[None]:
             settings.ENABLE_CACHING = caching
 
 
+def _clear_memory_cache(sim: Any, clear_persistent_cache: bool = False) -> None:
+    """``Simulation.clear_cache`` without deleting ``<CHID>.pickle``."""
+    type(sim).clear_cache(sim, clear_persistent_cache=False)
+
+
 def open_fds_simulation(path: str | Path) -> Any:
     """``fdsreader.Simulation(path)`` that leaves the case directory unchanged."""
     with fdsreader_without_cache():
         from fdsreader import Simulation
+        from fdsreader.simulation import Simulation as upstream
 
-        return Simulation(str(path))
+        sim = Simulation(str(path))
+    if isinstance(sim, upstream):
+        sim.clear_cache = functools.partial(_clear_memory_cache, sim)
+    return sim

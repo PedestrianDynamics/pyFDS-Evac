@@ -175,19 +175,102 @@ def test_an_fdsreader_without_the_cache_hooks_is_refused(monkeypatch):
             pass
 
 
-def _fdsreader_names(tree: ast.Module) -> set[str]:
-    """Names bound to the fdsreader package by ``import fdsreader [as x]``."""
-    return {
-        alias.asname or alias.name
-        for node in ast.walk(tree)
-        if isinstance(node, ast.Import)
-        for alias in node.names
-        if alias.name == "fdsreader"
-    }
+def test_a_chid_cannot_move_the_redirected_pickle_out_of_the_temp_folder(
+    tmp_path, upstream_cache
+):
+    """The .smv's CHID ends up in the pickle path; it must not reach a file.
+
+    fdsreader deletes the file at that path when caching is off, so a CHID
+    that is an absolute path or climbs out with ``..`` must not name one.
+    """
+    victim = tmp_path / "elsewhere" / "victim.pickle"
+    victim.parent.mkdir()
+    victim.write_bytes(b"someone's cache")
+    stem = str(victim.with_suffix(""))
+    for chid in (stem, "../" * 40 + stem.lstrip("/"), "sub/dir/case"):
+        case = _copy(VIS_CASE, tmp_path / f"case{len(chid)}", "none")
+        smv = next(case.glob("*.smv"))
+        text = smv.read_text()
+        smv.write_text(text.replace("CHID\n vis_slice_height\n", f"CHID\n {chid}\n"))
+        assert smv.read_text() != text
+        before = _listing(case)
+        open_fds_simulation(case)
+        assert _listing(case) == before
+        assert victim.read_bytes() == b"someone's cache"
+
+
+def test_clearing_the_persistent_cache_keeps_the_case_pickle(tmp_path, upstream_cache):
+    case = _copy(VIS_CASE, tmp_path / "case", "valid")
+    sim = open_fds_simulation(case)
+    before = _listing(case)
+    sim.clear_cache(clear_persistent_cache=True)
+    sim.clear_cache()
+    assert _listing(case) == before
+
+
+def test_nested_blocks_restore_the_settings_after_an_error(upstream_cache):
+    original = Simulation.__dict__["_get_pickle_filename"]
+    with pytest.raises(KeyError):
+        with fdsreader_without_cache():
+            with fdsreader_without_cache():
+                raise KeyError("inner")
+    assert settings.ENABLE_CACHING is upstream_cache
+    assert Simulation.__dict__["_get_pickle_filename"] is original
+
+
+def test_threads_opening_cases_leave_the_cases_and_settings_as_found(
+    tmp_path, upstream_cache
+):
+    from concurrent.futures import ThreadPoolExecutor
+
+    original = Simulation.__dict__["_get_pickle_filename"]
+    cases = [_copy(VIS_CASE, tmp_path / f"case{i}", "valid") for i in range(4)]
+    before = [_listing(case) for case in cases]
+    with ThreadPoolExecutor(4) as pool:
+        list(pool.map(open_fds_simulation, cases * 5))
+    assert [_listing(case) for case in cases] == before
+    assert settings.ENABLE_CACHING is upstream_cache
+    assert Simulation.__dict__["_get_pickle_filename"] is original
+
+
+def _fdsreader_modules(tree: ast.Module) -> set[str]:
+    """Expressions naming fdsreader or fdsreader.simulation in *tree*."""
+    names = {"fdsreader", "fdsreader.simulation"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                if alias.name.split(".")[0] != "fdsreader":
+                    continue
+                names.add(alias.asname or alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom) and node.module == "fdsreader":
+            names |= {
+                alias.asname or alias.name
+                for alias in node.names
+                if alias.name == "simulation"
+            }
+    return names
+
+
+_GUARDS = {"fdsreader_without_cache", "fdsreader_adapter.fdsreader_without_cache"}
+_DEFERRED = (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda, ast.ClassDef)
+
+
+def _calls_run_in(nodes: list[ast.stmt]) -> set[int]:
+    """ids of the calls *nodes* make, not those of functions they define."""
+    found: set[int] = set()
+    todo: list[ast.AST] = list(nodes)
+    while todo:
+        node = todo.pop()
+        if isinstance(node, _DEFERRED):
+            continue
+        if isinstance(node, ast.Call):
+            found.add(id(node))
+        todo.extend(ast.iter_child_nodes(node))
+    return found
 
 
 def _guarded_calls(tree: ast.Module) -> set[int]:
-    """ids of the calls inside ``with fdsreader_without_cache():``."""
+    """ids of the calls run inside ``with fdsreader_without_cache():``."""
     guarded: set[int] = set()
     for node in ast.walk(tree):
         if not isinstance(node, ast.With):
@@ -197,22 +280,18 @@ def _guarded_calls(tree: ast.Module) -> set[int]:
             for item in node.items
             if isinstance(item.context_expr, ast.Call)
         }
-        if not names & {
-            "fdsreader_without_cache",
-            "fdsreader_adapter.fdsreader_without_cache",
-        }:
-            continue
-        guarded |= {id(call) for call in ast.walk(node) if isinstance(call, ast.Call)}
+        if names & _GUARDS:
+            guarded |= _calls_run_in(node.body)
     return guarded
 
 
-def _bare_fdsreader_uses(path: Path) -> list[str]:
-    tree = ast.parse(path.read_text(), filename=str(path))
-    packages = _fdsreader_names(tree)
+def _bare_uses(source: str, name: str) -> list[str]:
+    tree = ast.parse(source, filename=name)
+    modules = _fdsreader_modules(tree)
     guarded = _guarded_calls(tree)
     found = []
     for node in ast.walk(tree):
-        line = f"{path.relative_to(REPO)}:{getattr(node, 'lineno', 0)}"
+        line = f"{name}:{getattr(node, 'lineno', 0)}"
         if isinstance(node, ast.ImportFrom) and (node.module or "").startswith(
             "fdsreader"
         ):
@@ -221,12 +300,14 @@ def _bare_fdsreader_uses(path: Path) -> list[str]:
         elif (
             isinstance(node, ast.Attribute)
             and node.attr == "Simulation"
-            and isinstance(node.value, ast.Name)
-            and node.value.id in packages
+            and ast.unparse(node.value) in modules
         ):
-            found.append(f"{line} uses fdsreader.Simulation")
-        elif isinstance(node, ast.Attribute) and node.attr == "ENABLE_CACHING":
-            found.append(f"{line} touches fdsreader's ENABLE_CACHING")
+            found.append(f"{line} uses fdsreader's Simulation")
+        elif isinstance(node, ast.Attribute) and node.attr in (
+            "ENABLE_CACHING",
+            "_get_pickle_filename",
+        ):
+            found.append(f"{line} touches fdsreader's cache settings")
         elif (
             isinstance(node, ast.Call)
             and isinstance(node.func, ast.Attribute)
@@ -237,14 +318,76 @@ def _bare_fdsreader_uses(path: Path) -> list[str]:
     return found
 
 
+@pytest.mark.parametrize(
+    "source",
+    [
+        "import fdsreader\nfdsreader.Simulation(d)",
+        "import fdsreader as fds\nfds.Simulation(d)",
+        "from fdsreader import Simulation as S\nS(d)",
+        "from fdsreader.simulation import Simulation\nSimulation(d)",
+        "from fdsreader import simulation as s\ns.Simulation(d)",
+        "import fdsreader.simulation as s\ns.Simulation(d)",
+        "import fdsreader.simulation\nfdsreader.simulation.Simulation(d)",
+        "import fdsreader\nfdsreader.settings.ENABLE_CACHING = False",
+        "vis.read_fds_data(d)",
+        "with fdsreader_without_cache():\n    def later():\n        vis.read_fds_data(d)\nlater()",
+        "with fdsreader_without_cache():\n    f = lambda: vis.read_fds_data(d)\nf()",
+    ],
+)
+def test_the_guard_finds_a_bare_fdsreader_use(source):
+    assert _bare_uses(source, "snippet.py")
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "with fdsreader_without_cache():\n    vis.read_fds_data(d)",
+        "with fdsreader_adapter.fdsreader_without_cache():\n    vis.read_fds_data(d)",
+        "import jupedsim as jps\njps.Simulation(model=m)",
+        "open_fds_simulation(d)",
+    ],
+)
+def test_the_guard_accepts_the_adapter(source):
+    assert _bare_uses(source, "snippet.py") == []
+
+
+# The adapter, and its copy for the standalone verification scripts.
+_OWNERS = {
+    Path(fdsreader_adapter.__file__).resolve(),
+    (REPO / "scripts" / "verification" / "_fdsreader_open.py").resolve(),
+}
+
+
 def test_fds_output_is_opened_only_through_the_adapter():
     """Opening a case any other way may write into the user's FDS directory."""
-    adapter = Path(fdsreader_adapter.__file__).resolve()
     files = [
         path
         for folder in ("pyfds_evac", "scripts", "examples", "assets")
         for path in sorted((REPO / folder).rglob("*.py"))
-        if path.resolve() != adapter
+        if path.resolve() not in _OWNERS
     ] + [REPO / "run.py", REPO / "app.py"]
-    found = [use for path in files for use in _bare_fdsreader_uses(path)]
+    found = [
+        use
+        for path in files
+        for use in _bare_uses(path.read_text(), str(path.relative_to(REPO)))
+    ]
     assert found == []
+
+
+def test_the_verification_scripts_open_cases_without_touching_them(
+    tmp_path, upstream_cache
+):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "_fdsreader_open", REPO / "scripts" / "verification" / "_fdsreader_open.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    original = Simulation.__dict__["_get_pickle_filename"]
+    for state in ("none", "valid", "corrupt"):
+        case = _copy(VIS_CASE, tmp_path / state, state)
+        before = _listing(case)
+        assert len(module.open_fds_case(case).slices) == 4
+        assert _listing(case) == before
+    assert Simulation.__dict__["_get_pickle_filename"] is original

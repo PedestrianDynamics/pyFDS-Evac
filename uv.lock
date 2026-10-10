@@ -1472,7 +1472,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "fdsreader" },
+    { name = "fdsreader", specifier = ">=1.11.7,<1.12" },
     { name = "fdsvismap", specifier = "==0.3.2" },
     { name = "jupedsim", specifier = ">=1.4.2" },
     { name = "matplotlib" },

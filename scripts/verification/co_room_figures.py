@@ -1,7 +1,7 @@
 # /// script
 # requires-python = ">=3.12"
 # dependencies = [
-#     "fdsreader",
+#     "fdsreader>=1.11.7,<1.12",
 #     "matplotlib",
 #     "numpy",
 #     "pandas",
@@ -50,13 +50,12 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from _fdsreader_open import open_fds_case
 from matplotlib.animation import PillowWriter
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
 from matplotlib.patches import FancyArrowPatch, Patch, Rectangle
 from shapely import wkt
-
-from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
 ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "site" / "static" / "images" / "verification"
@@ -567,7 +566,7 @@ def main():
 
     # --- Data: FDS ---
     z = 1.5
-    sim = open_fds_simulation(str(args.data / "fds"))
+    sim = open_fds_case(str(args.data / "fds"))
     co_sl, co = slice_at(sim, "CARBON MONOXIDE VOLUME FRACTION", z)
     _, co2 = slice_at(sim, "CARBON DIOXIDE VOLUME FRACTION", z)
     _, o2 = slice_at(sim, "OXYGEN VOLUME FRACTION", z)

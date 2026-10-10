@@ -75,7 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   redirected, and restores both settings afterwards. An existing pickle
   is left as it is and no longer read; each open parses the `.smv` and
   slice headers again, 0.1–0.4 s on a 64-mesh case with 768 slice
-  files (0.01 s from the pickle). Results are unchanged.
+  files (0.01 s from the pickle). Results are unchanged. fdsreader is
+  now pinned to `>=1.11.7,<1.12`, the versions this was checked on.
 
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
