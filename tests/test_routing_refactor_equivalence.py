@@ -257,6 +257,14 @@ _VARIANTS: dict[str, Callable[[RouteCostConfig], RouteCostConfig]] = {
 # ── rank_routes ───────────────────────────────────────────────────────
 
 
+def _without_kinds(ranked: list[RouteCost]) -> list[RouteCost]:
+    """*ranked* without ``violation_kinds``, which the frozen copy predates.
+
+    The kinds were added for must-flee (#128); every other field is compared.
+    """
+    return [replace(rc, violation_kinds=()) for rc in ranked]
+
+
 def _rank(side: str, case: golden.RankCase, with_cache: bool) -> dict:
     mod = _SIDES[side]
     extinction, fed, log = _samplers(case.extinction, case.fed)
@@ -276,7 +284,7 @@ def _rank(side: str, case: golden.RankCase, with_cache: bool) -> dict:
         current_exit=case.current_exit,
     )
     return {
-        "ranked": ranked,
+        "ranked": _without_kinds(ranked),
         "cache": None if cache is None else list(cache.items()),
         "log": log,
     }
@@ -564,8 +572,9 @@ def _assert_reroute_equal(case: golden.RerouteCase) -> None:
 
 
 _EXTRA_REROUTE_CASES: dict[str, golden.RerouteCase] = {
-    # A route that is both FED-lethal and over tau: the tau reason wins and
-    # the must-flee bypass is lost (#128, kept in stage 1).
+    # A route that is both FED-lethal and over tau: the tau reason wins, and
+    # with a feasible rival the tau band switches with or without the
+    # must-flee bypass, so the frozen copy agrees (#128).
     "gate_fed_and_tau_current": golden.RerouteCase(
         _star2,
         golden._gate(),
@@ -736,20 +745,22 @@ def _run_passes(side: str, spec: _Pass) -> list:
                 )
                 if source is not None and source in graph.nodes:
                     trace.append(
-                        mod.rank_routes(
-                            graph,
-                            source,
-                            time_s,
-                            a.current_fed,
-                            extinction,
-                            fed,
-                            spec.config,
-                            cached_segments=cache,
-                            exit_counts=exit_counts,
-                            cognitive_map=None,
-                            agent_position=_NO_POSITION,
-                            current_exit=rs.current_exit or None,
-                            current_target=wait_info.get("current_target_stage"),
+                        _without_kinds(
+                            mod.rank_routes(
+                                graph,
+                                source,
+                                time_s,
+                                a.current_fed,
+                                extinction,
+                                fed,
+                                spec.config,
+                                cached_segments=cache,
+                                exit_counts=exit_counts,
+                                cognitive_map=None,
+                                agent_position=_NO_POSITION,
+                                current_exit=rs.current_exit or None,
+                                current_target=wait_info.get("current_target_stage"),
+                            )
                         )
                     )
             switch = mod.evaluate_and_reroute(
@@ -1195,6 +1206,16 @@ def _rc(exit_id: str, **kw) -> RouteCost:
     return RouteCost(**base)
 
 
+# Each reason with the limits that produce it (#128).
+_FLEE_REASONS = (
+    ("all segments non-visible", ("all_segments_non_visible",)),
+    ("fallback: all segments non-visible", ("all_segments_non_visible",)),
+    ("FED_max 1.2 > 1.0", ("fed",)),
+    ("fallback: FED_max 1.2 > 1.0", ("fed",)),
+    ("tau 7.00 > 6.00 (K_ave 0.300 x 23.3 m)", ("tau",)),
+)
+
+
 def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfig]]:
     out = []
     for model in ("gate", "additive"):
@@ -1255,13 +1276,7 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
         )
         limit = cc.impassable_extinction_threshold
         for i, k in enumerate(_around(limit)):
-            for reason in (
-                "all segments non-visible",
-                "fallback: all segments non-visible",
-                "FED_max 1.2 > 1.0",
-                "fallback: FED_max 1.2 > 1.0",
-                "tau 7.00 > 6.00 (K_ave 0.300 x 23.3 m)",
-            ):
+            for reason, kinds in _FLEE_REASONS:
                 for rejected in (False, True):
                     out.append(
                         (
@@ -1273,6 +1288,7 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
                                 k_ave_route=k,
                                 rejected=rejected,
                                 rejection_reason=reason,
+                                violation_kinds=kinds,
                             ),
                             cfg,
                         )
@@ -1286,6 +1302,14 @@ _ANCHOR_CASES = {name: rest for name, *rest in _anchor_cases()}
 @pytest.mark.parametrize("name", sorted(_ANCHOR_CASES))
 def test_anchor_and_flee_equivalent(name):
     candidate, old_rc, cfg = _ANCHOR_CASES[name]
+    if _promoted_hazard(old_rc, cfg):
+        # #128: a route the fallback promoted keeps its hazard. The frozen
+        # copy dropped it with ``rejected``; in decisions the promoted current
+        # exit ranks first, so the anchor is not consulted there.
+        assert live._must_flee_rejection(old_rc, cfg.cost_config)
+        assert not legacy._must_flee_rejection(old_rc, cfg.cost_config)
+        assert live._anchor_allows(candidate, old_rc, cfg)
+        return
     assert live._anchor_allows(candidate, old_rc, cfg) == legacy._anchor_allows(
         candidate, old_rc, cfg
     )
@@ -1299,6 +1323,18 @@ def test_anchor_and_flee_equivalent(name):
         assert live._adoptable(candidate, ranked, rs, cfg) == legacy._adoptable(
             candidate, ranked, rs, cfg
         )
+
+
+def _promoted_hazard(old_rc: RouteCost | None, cfg: RerouteConfig) -> bool:
+    """Whether *old_rc* is a promoted route with a hazard it must flee."""
+    if old_rc is None or old_rc.rejected:
+        return False
+    if "fed" in old_rc.violation_kinds:
+        return True
+    return (
+        "all_segments_non_visible" in old_rc.violation_kinds
+        and old_rc.k_ave_route > cfg.cost_config.impassable_extinction_threshold
+    )
 
 
 # ── Ties, fallback identity and the K_vis screen ─────────────────────

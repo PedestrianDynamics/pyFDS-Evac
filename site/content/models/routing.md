@@ -58,9 +58,11 @@ comes from is under [Deviations from the literature](#deviations-from-the-litera
 
 Refusals are **not remembered**. The criterion is relative to the distance still
 to walk, so it relaxes on approach: smoke that refuses a door at 40 m accepts it
-at 2 m. When every route is refused the agent still has to move, so it takes the
-one with least smoke to walk through and holds it unless a rival's `tau` is
-clearly lower (`fallback_switch_margin`). Churn is held down by the
+at 2 m. When every route is refused the agent still has to move. It never
+takes a route whose predicted dose is lethal while one that is not remains;
+among the rest it takes the one with least smoke to walk through and holds it
+unless a rival's `tau` is clearly lower (`fallback_switch_margin`)
+([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). Churn is held down by the
 exit-switch anchor, by a stricter budget for a rival exit
 (`tau_return_margin`), and by a discount on the current exit's `tau` in the
 sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`).
@@ -155,9 +157,9 @@ smoke, so routing on both would double-count.
 measured here the dose veto never comes close to firing -- the largest projected
 FED over a whole `l_corridor` run is 0.0016 against a threshold of 1.0 -- and
 `impassable_extinction_threshold` cannot fire under the gate at all, because it
-is reached only from a rejection reason containing `"visible"` and the gate's
-only reason string starts `tau`. So no smoke rejection bypasses the exit-switch
-anchor at any density. What the gate does is exposure-gated wayfinding.
+is reached only from the additive `all segments non-visible` rejection and the
+gate refuses on dose and `tau` only. So no smoke rejection bypasses the
+exit-switch anchor at any density. What the gate does is exposure-gated wayfinding.
 
 The gate at work, with its evidence, is in [docs/route-cost-gate.md](/docs/route-cost-gate.md);
 provenance and the open questions are in
@@ -272,9 +274,12 @@ as equal (after the current-exit discount), so travel time orders them;
 neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor (`_AnchoredPolicy.anchor_allows`) decides in this order:
 
 1. No current route: accept.
-2. **Must flee** (`_must_flee_rejection`): the current route is refused for its
-   projected FED, or for visibility with a route-average *K* above
-   `impassable_extinction_threshold`. Accept, whatever the cost.
+2. **Must flee** (`_must_flee_rejection`): the current route breaks the FED
+   limit, or is refused for visibility with a route-average *K* above
+   `impassable_extinction_threshold`. Accept, whatever the cost. The test reads
+   which limits the route breaks (`RouteCost.violation_kinds`), not its
+   rejection reason, so a route over both the FED and the `tau` limit is fled
+   although its reason names `tau`, and so is a route the fallback re-admitted.
 3. **Two refused routes** (both `feasible` false, which includes a route the
    fallback re-admitted): the candidate is accepted only if its `tau` is
    strictly below the current route's × (1 − `fallback_switch_margin`) and the
@@ -282,7 +287,10 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    time, `k_max_route` nor the clean bypass of step 4 decides, so the agent is not held on a route with three times
    the smoke because it is quicker, and a tie (both `tau` 0 included) holds.
    The fallback order uses the same rule
-   ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
+   ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)), after
+   one step: a route the agent must flee never displaces one it need not flee,
+   and always yields to one, whatever their `tau`
+   ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
    A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked while at most `fallback_return_lockout_s` (10 s) have passed since the first switch, and allowed after; a feasible route on either side, must-flee and a third exit are not blocked (`_return_locked`). It guards against route smoke sampling that
    steps over a narrow plume core ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)).
 4. Otherwise the cost model decides (`improvement`):
@@ -295,11 +303,6 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    - **Additive** (`AdditivePolicy.improvement`): only the top-ranked route is
      tried, and it needs `rank_cost` below `exit_switch_anchor` × the current
      one.
-
-Under the gate, the `tau` test overwrites the rejection reason after the FED
-test sets it, so a route that is both FED-lethal and over `tau_max` loses the
-must-flee bypass
-([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
 
 A new path to the **same** exit is taken when its `rank_cost` is below
 `_PATH_IMPROVEMENT_THRESHOLD` × the walked path's, or when the walked path is
@@ -496,8 +499,6 @@ Exit throughput throttling has no general test yet
 - Routes are priced with smoke the agent cannot perceive, including stretches
   it has never seen
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
-- Under the gate a FED-lethal route over `tau_max` loses the must-flee bypass
-  ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
 - One path is priced per exit
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
 - The path to each exit is chosen on the smoke at decision time.

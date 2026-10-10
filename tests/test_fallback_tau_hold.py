@@ -56,6 +56,7 @@ def _refused(exit_id: str, tau: float, rank_cost: float, k_max: float = 6.0):
         segments=[],
         rejected=True,
         rejection_reason=f"tau {tau:.2f} > 6.00",
+        violation_kinds=("tau",),
         k_max_route=k_max,
         tau_route=tau,
         feasible=False,
@@ -154,6 +155,7 @@ def test_must_flee_overrides_the_hold_at_the_anchor(model):
         _refused(CURRENT, tau=34.0, rank_cost=10.0),
         k_ave_route=cc.impassable_extinction_threshold + 1.0,
         rejection_reason="all segments non-visible",
+        violation_kinds=("all_segments_non_visible",),
     )
     assert _anchor_lets_go(rival, current, model) is True
 
@@ -286,6 +288,7 @@ def test_lockout_yields_to_must_flee(model):
     lethal_west = replace(
         _refused(RIVAL, tau=40.0, rank_cost=20.0),
         rejection_reason="FED_max 1.2 > 1.0",
+        violation_kinds=("fed",),
     )
     assert not _return_locked(east, lethal_west, _locked_state(), 7.0, cfg)
 

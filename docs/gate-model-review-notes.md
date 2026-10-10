@@ -524,10 +524,11 @@ memoryless from call to call, apart from the lone-agent mark.
 
 ## Under the gate, no hazard bypasses the anchor
 
-`_must_flee_rejection` matches `reason.startswith("FED")` or `"visible" in
-reason`. The gate's only rejection reason is `tau ...` (was `sight (path) ...`),
+`_must_flee_rejection` matches a `"fed"` or an `"all_segments_non_visible"`
+violation kind (it matched the reason strings until [#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). The gate's only
+smoke rejection is `tau` (was `sight (path) ...`),
 and `visibility_extinction_threshold` no longer fires under the gate, so the
-`"visible"` branch is unreachable there and `impassable_extinction_threshold` is
+non-visible branch is unreachable there and `impassable_extinction_threshold` is
 dead code under the default model. The only surviving flee path is FED, which on
 these fires never fires (`max fed_max_route = 0.0016` against a threshold of
 1.0). This is defensible if the gate is genuinely not a hazard statement, which
