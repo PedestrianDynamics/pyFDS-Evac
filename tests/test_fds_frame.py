@@ -26,7 +26,7 @@ from pyfds_evac.core.fds_coverage import (
     apply_coverage_policy,
     check_fds_coverage,
 )
-from pyfds_evac.core.fds_sampling import load_slice_sampler
+from pyfds_evac.core.fds_sampling import FdsDomainError, load_slice_sampler
 
 _CORRIDOR = Polygon([(-50, -1), (50, -1), (50, 1), (-50, 1)])
 
@@ -83,14 +83,57 @@ def test_partial_coverage_gives_bounds_but_no_hint(samplers):
     assert "swapped" not in message and "Shifted" not in message
 
 
-def test_partial_coverage_narrower_than_the_domain_gets_a_shift_hint(samplers):
-    """98 m of a 100 m domain, 3 m past one end: a shift fits, so the hint is
-    given although the placement may be intended."""
+def test_partial_coverage_narrower_than_the_domain_gets_no_hint(samplers):
+    """98 m of a 100 m domain, 3 m past one end: a shift would fit, but with
+    3 % outside a frame mistake is not plausible; bounds only."""
     corridor = Polygon([(-45, -1), (53, -1), (53, 1), (-45, 1)])
     message = _summary(corridor, samplers)
     assert "walkable area 6.00 m²" in message
-    assert "Shifted by (-5.00, +0.00) m, at most 1 %" in message
-    assert "if it should lie inside" in message
+    assert "Walkable area x -45.00..53.00, y -1.00..1.00 m" in message
+    assert "at most 1 %" not in message
+
+
+@pytest.mark.parametrize(
+    ("extent", "walkable"),
+    [
+        # A mesh margin of 2 m, the walkable area 1 m past it in x only.
+        ((-2.0, 32.0, -2.0, 15.0), Polygon([(0, 0), (33, 0), (33, 13), (0, 13)])),
+        # A 20 m x 6 m corridor 5 m past the mesh.
+        ((-2.0, 28.0, -2.0, 8.0), Polygon([(13, 0), (33, 0), (33, 6), (13, 6)])),
+    ],
+    ids=["mesh-margin", "corridor-overhang"],
+)
+def test_ordinary_overhang_gets_bounds_only(extent, walkable):
+    samplers = [_sampler("SOOT EXTINCTION COEFFICIENT", extent)]
+    message = _summary(walkable, samplers)
+    assert "Walkable area x" in message and "FDS domain x" in message
+    assert "at most 1 %" not in message
+
+
+def test_strict_error_advice_is_coherent_with_a_hint(samplers):
+    report = check_fds_coverage(
+        walkable=translate(_CORRIDOR, 100.0, 5.0), raw={}, samplers=samplers
+    )
+    with pytest.raises(FdsDomainError) as excinfo:
+        apply_coverage_policy(report, require_fds_coverage=True)
+    message = str(excinfo.value)
+    assert "Walkable area x 50.00..150.00, y 4.00..6.00 m" in message
+    assert (
+        "check the origin of the geometry against the FDS deck. Otherwise extend "
+        "the FDS meshes or slices over these objects, or run without"
+    ) in message
+
+
+def test_only_an_exit_outside_gives_no_bounds():
+    """The walkable area lies inside; an exit and its sign reach outside."""
+    samplers = [_sampler("SOOT EXTINCTION COEFFICIENT", (0.0, 10.0, 0.0, 10.0))]
+    raw = {"exits": {"A": {"coordinates": [(12, 0), (13, 0), (13, 1), (12, 1)]}}}
+    report = check_fds_coverage(walkable=_ROOM, raw=raw, samplers=samplers)
+    message = report.summary()
+    assert not report.is_empty
+    assert "exit A 1.00 m²" in message and "sign A" in message
+    assert message.endswith("sign A.")
+    assert "Walkable area x" not in message
 
 
 _ROOM = Polygon([(0, 0), (10, 0), (10, 10), (0, 10)])

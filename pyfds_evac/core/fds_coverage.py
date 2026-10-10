@@ -38,8 +38,13 @@ _AREA_SECTIONS = ("exits", "checkpoints", "distributions")
 # Share of the walkable area that may stay outside the domain after a swap of
 # x and y or a shift for the frame hint to name that swap or shift.
 _FRAME_FIT_SHARE = 0.01
+# Share of the walkable area that must lie outside the domain before a swap or
+# a shift is offered at all: below it, a mesh margin or an overhang on one
+# side is the likelier cause, and the bounds alone are given.
+_FRAME_MISTAKE_SHARE = 0.5
 # A shift shorter than this prints as zero at centimetre precision and names
-# no frame mismatch.
+# no frame mismatch. Defensive: with most of the walkable area outside, so
+# small a shift cannot bring it inside, so no test reaches this guard.
 _MIN_SHIFT_M = 0.01
 
 
@@ -199,18 +204,21 @@ def _has_area(geometry) -> bool:
 def frame_hint(walkable, domain) -> str | None:
     """Name a swap of x and y or a shift that brings *walkable* into *domain*.
 
-    A hint is given when the swap, the shift onto the domain's lower-left
-    corner, or both leave at most ``_FRAME_FIT_SHARE`` of the walkable area
-    outside. It names a possible explanation, not a diagnosis: a walkable
-    area placed correctly that reaches past the meshes on one side, and is
-    narrower than the domain along that axis, also fits after a shift.
-    None when either area is empty, as when the samplers share no area.
+    Only when more than ``_FRAME_MISTAKE_SHARE`` of the walkable area lies
+    outside, so that a frame mistake is plausible; a mesh margin or an
+    overhang on one side gets no hint. A hint is then given when the swap,
+    the shift onto the domain's lower-left corner, or both leave at most
+    ``_FRAME_FIT_SHARE`` of the walkable area outside. With both, the shift
+    is in the swapped frame. It names a possible explanation, not a
+    diagnosis. None when either area is empty, as when the samplers share
+    no area.
     """
     if not (_has_area(walkable) and _has_area(domain)):
         return None
-    limit = _FRAME_FIT_SHARE * float(walkable.area)
-    if walkable.difference(domain).area <= limit:
+    area = float(walkable.area)
+    if walkable.difference(domain).area <= _FRAME_MISTAKE_SHARE * area:
         return None
+    limit = _FRAME_FIT_SHARE * area
     swapped = _swap_xy(walkable)
     if swapped.difference(domain).area <= limit:
         return _hint_text("With x and y swapped", "axis order")
@@ -330,8 +338,9 @@ def apply_coverage_policy(
         _logger.info(report.summary())
         return
     if require_fds_coverage:
+        extend = "Otherwise extend" if report.frame_hint is not None else "Extend"
         raise FdsDomainError(
-            report.summary() + " Extend the FDS meshes or slices over these "
+            f"{report.summary()} {extend} the FDS meshes or slices over these "
             "objects, or run without --require-fds-coverage."
         )
     _logger.warning(report.summary())
