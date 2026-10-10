@@ -156,13 +156,14 @@ The equations behind each rate are on [Models › FED](/models/fed.md) and
 | `time_s`, `agent_id` | when, and who |
 | `old_exit`, `new_exit` | exit before and after; `old_exit` is empty for the first assignment |
 | `old_cost`, `new_cost` | ranking cost of the two routes, rounded to 4 decimals; `old_cost` is empty when there was none |
-| `reason` | `initial`, `default_route`, `smoke_reroute`, `exit_closed`, `fallback`, `better_path`, `explore` or `wander` |
+| `reason` | `initial`, `default_route`, `fed_reroute`, `smoke_reroute`, `exit_closed`, `exit_opened`, `learned_exit`, `congestion`, `shorter_path`, `exit_unreachable`, `resume`, `fallback`, `better_path`, `explore`, `wander`, `return` or `stay` |
 
 The reasons are defined on
-[Routing in practice](routing.md#route-switch-reasons). `smoke_reroute` labels
-every change of exit, whatever caused it
-([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)), except a
-change away from an exit that has closed, which is `exit_closed`.
+[Routing in practice](routing.md#route-switch-reasons). A change of exit is
+labelled by its cause
+([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)):
+`smoke_reroute` only when smoke made the switch, `shorter_path` when time or
+length alone did.
 
 An `initial` row is written only when an agent that has no exit at a
 re-evaluation is given its first one. A `default_route` row is written once

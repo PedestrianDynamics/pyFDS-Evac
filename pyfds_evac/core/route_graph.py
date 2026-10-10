@@ -2611,6 +2611,10 @@ class AgentRouteState:
     default_exit: str | None = None
     # Whether the agent stands because it has nowhere known to go (#610).
     standing: bool = False
+    # The agent's known nodes at its last evaluation, to tell a switch to an
+    # exit learned since then (``learned_exit``). Labels only; None without a
+    # cognitive map or before the first evaluation.
+    known_at_last_eval: frozenset[str] | None = None
 
     @property
     def counted_exit(self) -> str | None:
@@ -2625,7 +2629,24 @@ class AgentRouteState:
 
 @dataclass(frozen=True)
 class RouteSwitch:
-    """Record of a route switch for diagnostics."""
+    """Record of a route switch for diagnostics.
+
+    ``reason`` is one of :data:`SWITCH_REASONS`. A change of exit is labelled
+    by the decision branch that let it through, first match wins:
+    ``fallback`` (every route refused), ``initial`` (no exit before),
+    ``exit_closed`` (the old exit closed on its schedule), ``fed_reroute``
+    (the old route is refused on dose, or under ``additive`` the switch needs
+    the dose term), ``smoke_reroute`` (the old route is refused on smoke; under
+    ``gate`` the new route is clean where the old is not, or clearly lower in
+    tau; under ``additive`` the switch needs the smoke term), ``exit_opened``
+    (the new exit was closed at the previous evaluation), ``learned_exit``
+    (the new exit was not in the agent's cognitive map at the previous
+    evaluation), ``congestion`` (the switch needs the queue term),
+    ``shorter_path`` (time or length alone clears the anchor). An old exit
+    with no route from where the agent stands gives ``exit_unreachable``,
+    and an idle agent routed to the exit it already holds ``resume``, unless
+    the new exit was opened or learned since the previous evaluation.
+    """
 
     time_s: float
     agent_id: int
@@ -2634,6 +2655,28 @@ class RouteSwitch:
     old_cost: float | None
     new_cost: float
     reason: str
+
+
+#: Every value of :attr:`RouteSwitch.reason`.
+SWITCH_REASONS = (
+    "initial",
+    "default_route",
+    "fed_reroute",
+    "smoke_reroute",
+    "exit_closed",
+    "exit_opened",
+    "learned_exit",
+    "congestion",
+    "shorter_path",
+    "exit_unreachable",
+    "resume",
+    "fallback",
+    "better_path",
+    "explore",
+    "wander",
+    "return",
+    "stay",
+)
 
 
 def compute_eval_offset(
@@ -3001,6 +3044,7 @@ def _decide_exit_change(
     *,
     route_state: AgentRouteState | None = None,
     time_s: float | None = None,
+    news: str | None = None,
 ) -> RouteDecision:
     """Whether to move the agent to *best*'s exit, or give it its first one.
 
@@ -3011,6 +3055,10 @@ def _decide_exit_change(
     None) or when the old exit is no longer reachable and so was never
     priced. Everything else is _anchor_allows, which is also what chose
     `best`, and, given *route_state* and *time_s*, the return lockout.
+
+    *news* is ``exit_opened`` or ``learned_exit`` when *best*'s exit became
+    available to the agent since its previous evaluation; it only labels the
+    switch (see :class:`RouteSwitch`).
     """
     if (
         old_exit is not None
@@ -3022,11 +3070,15 @@ def _decide_exit_change(
     ):
         return RouteDecision(kind="keep")
 
-    reason = "initial" if old_exit is None else "smoke_reroute"
-    if best.rejection_reason and best.rejection_reason.startswith("fallback"):
+    fallback = (best.rejection_reason or "").startswith("fallback")
+    if fallback:
         reason = "fallback"
+    elif old_exit is None:
+        reason = "initial"
+    else:
+        reason = _exit_change_reason(best, old_exit, old_rc, config, news)
     return RouteDecision(
-        kind="fallback" if reason == "fallback" else "switch",
+        kind="fallback" if fallback else "switch",
         path=best.path,
         old_exit=old_exit,
         target_id=best.exit_id,
@@ -3034,6 +3086,115 @@ def _decide_exit_change(
         new_cost=best.rank_cost,
         switch_reason=reason,
     )
+
+
+def _exit_change_reason(
+    best: RouteCost,
+    old_exit: str,
+    old_rc: RouteCost | None,
+    config: RerouteConfig,
+    news: str | None,
+) -> str:
+    """The cause of an allowed change from *old_exit* to *best*.
+
+    Reads only the two priced routes, so it cannot change the decision.
+    """
+    if old_rc is None:
+        fallback = "resume" if best.exit_id == old_exit else "exit_unreachable"
+        return news or fallback
+    if old_rc.rejected:
+        why = (old_rc.rejection_reason or "").removeprefix("fallback: ")
+        return "fed_reroute" if why.startswith("FED") else "smoke_reroute"
+    hazard = _hazard_reason(best, old_rc, config)
+    if hazard is not None:
+        return hazard
+    if news is not None:
+        return news
+    if not _clears_without(best, old_rc, config, _queue_term):
+        return "congestion"
+    return "shorter_path"
+
+
+def _hazard_reason(
+    best: RouteCost, old_rc: RouteCost, config: RerouteConfig
+) -> str | None:
+    """``fed_reroute`` or ``smoke_reroute`` if dose or smoke let *best* win."""
+    cost_config = config.cost_config
+    if cost_config.cost_model == "gate":
+        cleaner = GatePolicy._clean_bypass(best, old_rc) or (
+            GatePolicy._tau_band(best, old_rc, cost_config) > 0
+        )
+        return "smoke_reroute" if cleaner else None
+    if not _clears_without(best, old_rc, config, _fed_term):
+        return "fed_reroute"
+    if not _clears_without(best, old_rc, config, _smoke_term):
+        return "smoke_reroute"
+    return None
+
+
+def _fed_term(rc: RouteCost, config: RouteCostConfig) -> float:
+    """The dose term of the additive composite."""
+    return config.w_fed * rc.fed_max_route
+
+
+def _smoke_term(rc: RouteCost, config: RouteCostConfig) -> float:
+    """The smoke term of the additive composite, w_smoke * K_ave * L."""
+    return config.w_smoke * rc.tau_route
+
+
+def _queue_term(rc: RouteCost, config: RouteCostConfig) -> float:
+    """The queue term of ``rank_cost`` under either cost model."""
+    if config.cost_model == "gate":
+        return config.w_queue * rc.queue_time_s
+    return config.w_queue * config.base_speed_m_per_s * rc.queue_time_s
+
+
+def _clears_without(
+    best: RouteCost,
+    old_rc: RouteCost,
+    config: RerouteConfig,
+    term: Callable[[RouteCost, RouteCostConfig], float],
+) -> bool:
+    """Whether *best* would clear the anchor with *term* taken out of both costs."""
+    cost_config = config.cost_config
+    new_cost = best.rank_cost - term(best, cost_config)
+    old_cost = old_rc.rank_cost - term(old_rc, cost_config)
+    return new_cost < old_cost * config.exit_switch_anchor
+
+
+def _exit_news(
+    exit_id: str,
+    graph: StageGraph,
+    route_state: AgentRouteState,
+    cognitive_map,
+) -> str | None:
+    """Whether *exit_id* became available since the agent's last evaluation.
+
+    ``exit_opened`` if the exit was closed then, ``learned_exit`` if it was not
+    in the agent's cognitive map then, else None. Labels only.
+    """
+    last = route_state.last_eval_time_s
+    if not math.isfinite(last):
+        return None
+    node = graph.nodes.get(exit_id)
+    if node is not None and not node.is_open(last):
+        return "exit_opened"
+    known = route_state.known_at_last_eval
+    if cognitive_map is not None and known is not None and exit_id not in known:
+        return "learned_exit"
+    return None
+
+
+def _remember_known(route_state: AgentRouteState, cognitive_map) -> None:
+    """Keep the agent's known nodes as of this evaluation, for ``learned_exit``.
+
+    A cognitive map only grows, so an unchanged size is an unchanged map.
+    """
+    if cognitive_map is None:
+        return
+    known = route_state.known_at_last_eval
+    if known is None or len(known) != len(cognitive_map.known_nodes):
+        route_state.known_at_last_eval = frozenset(cognitive_map.known_nodes)
 
 
 def _decide_explore(
@@ -3587,6 +3748,7 @@ def evaluate_and_reroute(
         # discovery agent that hasn't found the way out yet). Its
         # distribution's no_known_exit mode decides what it does (#610).
         route_state.last_eval_time_s = current_time_s
+        _remember_known(route_state, cognitive_map)
         if cognitive_map is None:
             return None
         decision = _decide_no_known_exit(
@@ -3623,7 +3785,9 @@ def evaluate_and_reroute(
                 old_cost = rc.rank_cost
                 break
 
+    news = _exit_news(best.exit_id, graph, route_state, cognitive_map)
     route_state.last_eval_time_s = current_time_s
+    _remember_known(route_state, cognitive_map)
 
     # An idle agent stands on a node with no onward plan, so there is no
     # committed path to compare against and no churn to protect it from. It must
@@ -3657,6 +3821,7 @@ def evaluate_and_reroute(
             config,
             route_state=route_state,
             time_s=current_time_s,
+            news=news,
         )
         if decision.kind == "switch" and stage_closed(graph, old_exit, current_time_s):
             decision = replace(decision, switch_reason="exit_closed")

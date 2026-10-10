@@ -542,12 +542,33 @@ Each `RouteSwitch` record includes a `reason` field:
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
 | `default_route` | Written once at spawn: the agent has no exit in its map and follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)) |
-| `smoke_reroute` | Best route is a different exit (lower `rank_cost`), or an idle agent is routed to its current exit |
+| `fed_reroute`   | A different exit: the route to the old exit is refused on FED, or (`additive`) the switch would not clear the anchor without the FED term |
+| `smoke_reroute` | A different exit: the route to the old exit is refused on smoke (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, or lower in τ by more than the deadband; under `additive` the switch would not clear the anchor without the smoke term |
 | `exit_closed`   | The agent's exit has closed on its schedule; the best open exit it knows |
+| `exit_opened`   | A different exit, closed at the agent's previous evaluation |
+| `learned_exit`  | A different exit, not in the agent's cognitive map at its previous evaluation |
+| `congestion`    | A different exit; the switch would not clear the anchor without the queue term |
+| `shorter_path`  | A different exit; time (`gate`) or length (`additive`) alone clears the anchor |
+| `exit_unreachable` | A different exit; the old exit has no route from where the agent stands |
+| `resume`        | An idle agent is routed to the exit it already holds |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
 | `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
 | `explore`       | No exit known yet; heading to the nearest unexplored frontier    |
 | `wander`        | Knowledge exhausted; patrolling known nodes                      |
+| `return`        | No exit known; walking back over known legs to a node with a known exit (`no_known_exit: "return"`) |
+| `stay`          | No exit known; standing until one becomes known (`no_known_exit: "stay"`) |
+
+For a change of exit the first of these that applies names the cause:
+`fallback`, `initial`, `exit_closed`, `fed_reroute`, `smoke_reroute`,
+`exit_opened`, `learned_exit`, `congestion`, `shorter_path`. A route to the
+old exit that is refused gives `fed_reroute` or `smoke_reroute` by its
+refusal; under `gate` a route over both limits reports τ, so it is
+`smoke_reroute`. With no route to the old exit, and for an idle agent routed
+to its own exit, `exit_opened` and `learned_exit` still come first, then
+`exit_unreachable` or `resume`.
+The label is read from the routes already priced and does not change the
+decision. `RouteSwitch` and `SWITCH_REASONS` in `route_graph.py` list the same
+values.
 
 ### Segment caching
 
