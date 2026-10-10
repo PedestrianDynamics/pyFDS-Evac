@@ -272,7 +272,22 @@ def configure_logging(debug: bool) -> None:
 
 
 def summary_line(result) -> str:
-    """One line on how the run ended; a run cut off by the time limit is incomplete."""
+    """One line on how the run ended; a run cut off by the time limit is incomplete.
+
+    A fill mode's placed count of its upper bound follows (#436).
+    """
+    return _ending(result) + _fill_note(result)
+
+
+def _fill_note(result) -> str:
+    fill = getattr(result, "fill_placement", None) or {}
+    return "".join(
+        f" '{key}' placed {counts['placed']} of at most {counts['upper_bound']}."
+        for key, counts in fill.items()
+    )
+
+
+def _ending(result) -> str:
     if result.success:
         return (
             f"Simulation finished in {result.evacuation_time:.2f} s "

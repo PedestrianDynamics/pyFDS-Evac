@@ -53,11 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   start (#436), not `number`: 71 agents instead of 10 in a 6 × 6 m area
   at the default 50 % and radius 0.2 m. Results of such scenarios
   change; no shipped asset, example or documented scenario uses these
-  modes. `fill_area` and `until_full` default to 100 %, a count JuPedSim
-  cannot always seat: in a 6 × 6 m area it fails in half the seeds with
-  `SpawnCapacityError`. Set `percentage` to 90 or less, or use
-  `by_number`. A `number` beside a percentage mode is no longer read,
-  so `--export-only` no longer reports it as over-full.
+  modes. A `number` beside a percentage mode is no longer read, so
+  `--export-only` no longer reports it as over-full. `fill_area` and
+  `until_full` default to 100 % and treat the count as an upper bound:
+  they place as many agents as fit up to it, without an error, and the
+  run reports how many (`Distribution '<id>': fill_area placed N of at
+  most M agents`, `ScenarioResult.fill_placement`, the closing summary
+  line). `by_percentage` stays exact.
 
 ### Added
 

@@ -311,3 +311,33 @@ def test_export_only_skips_a_spawn_polygon_the_run_skips(monkeypatch):
         "coordinates": bow,
     }
     assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
+
+
+def test_export_only_counts_a_fill_mode_as_an_upper_bound(monkeypatch):
+    """An ``until_full`` area beside an exact count on one polygon passes (#436).
+
+    Without journeys, the exact 80 of ~84 are checked; the fill mode
+    takes what is left, up to its own count.
+    """
+
+    def shared():
+        scenario = _scenario(ENOUGH_S, number=80)
+        scenario.raw["journeys"] = []
+        scenario.raw["transitions"] = []
+        other = json.loads(json.dumps(scenario.distributions[D]))
+        other["parameters"]["distribution_mode"] = "until_full"
+        scenario.raw["distributions"]["other"] = other
+        return scenario
+
+    assert _main(monkeypatch, shared(), "--print-summary", "--export-only") == 0
+
+
+def test_run_reports_what_a_fill_mode_placed():
+    """The result and its summary line give placed of the upper bound (#436)."""
+    from pyfds_evac.core.run_outputs import summary_line
+
+    scenario = _scenario(ENOUGH_S, distribution_mode="fill_area", percentage=20)
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(scenario)
+    assert result.fill_placement == {D: {"placed": 16, "upper_bound": 16}}
+    assert summary_line(result).endswith(f" '{D}' placed 16 of at most 16.")

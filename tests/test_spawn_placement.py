@@ -701,3 +701,65 @@ def test_summary_counts_a_flow_spawn_by_percentage_as_the_run(tmp_path):
         sim_params={},
     )
     assert scenario.list_distributions()[0]["agents"] == 71
+
+
+STRIP = box(2.0, 4.5, 22.0, 5.5)
+"""20 x 1 m: estimate 79 at radius 0.2 m, more than the sampler seats."""
+
+
+@pytest.mark.parametrize("with_journeys", [True, False], ids=["journeys", "seeded"])
+def test_fill_area_places_as_many_as_fit_up_to_its_count(tmp_path, with_journeys):
+    """100 % of the estimate is an upper bound for ``fill_area`` (#436).
+
+    Seed 3 seats 65 of the 79; the run places them, says so in one line
+    and records it, instead of stopping with ``SpawnCapacityError``.
+    """
+    walkable = box(0.0, 0.0, 30.0, 10.0)
+    area = {D0: (STRIP, {"distribution_mode": "fill_area", "use_premovement": False})}
+    data = _journey_deck(area) if with_journeys else _deck(area)
+    path = tmp_path / "deck.json"
+    path.write_text(json.dumps(data), encoding="utf-8")
+    simulation = jps.Simulation(model=jps.CollisionFreeSpeedModel(), geometry=walkable)
+    out = io.StringIO()
+    with contextlib.redirect_stdout(out):
+        _, _, _, info = initialize_simulation_from_json(
+            str(path), simulation, pedpy.WalkableArea(walkable), seed=SEED
+        )
+    assert simulation.agent_count() == 65
+    assert info["fill_placement"] == {D0: {"placed": 65, "upper_bound": 79}}
+    assert f"Distribution '{D0}': fill_area placed 65 of at most 79 agents" in (
+        out.getvalue().splitlines()
+    )
+
+
+def test_fill_area_shares_a_polygon_after_the_exact_counts(tmp_path):
+    """Without journeys, an exact count on the same polygon is placed first.
+
+    The 6 x 6 m area seats 143 at seed 3 of the 100 + 143 asked for; D0
+    takes its 100 and the ``until_full`` area D1 the 43 left.
+    """
+    room = box(2.0, 2.0, 8.0, 8.0)
+    data = _deck(
+        {
+            D0: (room, _params(100)),
+            D1: (room, {"distribution_mode": "until_full", "use_premovement": False}),
+        }
+    )
+    simulation, _, _, info = _initialize(data, tmp_path)
+    assert simulation.agent_count() == 143
+    assert info["fill_placement"] == {D1: {"placed": 43, "upper_bound": 143}}
+
+
+def test_views_show_the_count_of_a_fill_mode_as_an_upper_bound():
+    params = {"distribution_mode": "fill_area", "use_premovement": False}
+    data = _deck({D0: (box(2.0, 2.0, 8.0, 8.0), params)})
+    scenario = Scenario(
+        raw=data,
+        walkable_area_wkt=WALKABLE.wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params={},
+    )
+    lines = scenario.summary().splitlines()
+    assert f"    {D0}: up to 143 agents" in lines
+    assert "  Agents:        ~143" in lines

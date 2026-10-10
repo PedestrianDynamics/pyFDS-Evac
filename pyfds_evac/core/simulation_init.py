@@ -597,7 +597,9 @@ def _most_that_fit(part, wanted, max_radius, seed):
     return best
 
 
-def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
+def _distribute_in_parts(
+    parts, dist_keys, number, capacity, max_radius, seed, at_most=False
+):
     """Seed *number* agents across the separate *parts* of one free area.
 
     Agents of two parts need no hole between them: each keeps *max_radius*
@@ -606,7 +608,8 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
     part first, and a remainder after the largest goes back to the parts
     that seated all they were asked for. A part that seated fewer is full
     under its seed and is not asked again. A remainder those parts cannot
-    hold raises without asking them.
+    hold raises without asking them; with *at_most*, the positions found
+    are returned instead.
     """
     capacities = [_estimate_max_capacity(part, max_radius) for part in parts]
     order = sorted(range(len(parts)), key=lambda i: capacities[i])
@@ -636,7 +639,7 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
         missing -= max(len(more) - len(seated[i]), 0)
         seated[i] = max(seated[i], more, key=len)
     positions = [position for part in seated for position in part]
-    if len(positions) < number:
+    if len(positions) < number and not at_most:
         raise _unplaced_error(
             dist_keys,
             number,
@@ -646,7 +649,9 @@ def _distribute_in_parts(parts, dist_keys, number, capacity, max_radius, seed):
     return positions
 
 
-def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, placed):
+def _distribute_beside(
+    area, dist_keys, number, capacity, max_radius, seed, placed, at_most=False
+):
     """``_distribute`` in the part of *area* that the *placed* agents leave free.
 
     *placed* holds ``(area, positions, max_radius, dist_keys)`` of every
@@ -659,20 +664,29 @@ def _distribute_beside(area, dist_keys, number, capacity, max_radius, seed, plac
     (``_seed_shared_areas``): A, B, A seeds both A before B. With journeys
     each distribution is seeded on its own in deck order, so the second A
     is seeded around the first A and B.
+
+    With *at_most*, *number* is an upper bound: as many agents as the
+    sampler seats up to it are placed, and none when nothing is free.
     """
     overlapping = [entry for entry in placed if area.intersection(entry[0]).area > 0]
     free = _free_area(area, max_radius, overlapping)
     parts = [free] if free is area else _seatable_parts(free, max_radius)
+    if not parts and at_most:
+        positions = []
+        placed.append((area, positions, max_radius, dist_keys))
+        return positions
     if not parts:
         others = ", ".join(f"'{key}'" for *_, keys in overlapping for key in keys)
         raise _unplaced_error(
             dist_keys, number, capacity, f"agents of {others} leave no free area"
         )
-    if len(parts) == 1:
+    if len(parts) == 1 and at_most:
+        positions = _most_that_fit(parts[0], number, max_radius, seed)
+    elif len(parts) == 1:
         positions = _distribute(parts[0], dist_keys, number, capacity, max_radius, seed)
     else:
         positions = _distribute_in_parts(
-            parts, dist_keys, number, capacity, max_radius, seed
+            parts, dist_keys, number, capacity, max_radius, seed, at_most
         )
     placed.append((area, positions, max_radius, dist_keys))
     return positions
@@ -705,18 +719,42 @@ def _seed_shared_areas(spawn_distributions, seed):
             max_radius,
             distribution_seed(seed, area_key, PURPOSE_POSITIONS),
             placed,
+            at_most=any(_upper_bound(m["params"]) for m in members),
         )
+        counts = _allotted(members, len(positions), capacity)
         # Shuffle so the profiles interleave across the room instead of one
         # taking whichever corner the sampler happened to fill first.
         random.Random(distribution_seed(seed, area_key, PURPOSE_SHUFFLE)).shuffle(
             positions
         )
         taken = 0
-        for member in members:
-            count = _initial_spawn_count(member["params"], area)
+        for member, count in zip(members, counts):
             positions_by_index[member["index"]] = positions[taken : taken + count]
             taken += count
     return positions_by_index
+
+
+def _allotted(members, seated, capacity):
+    """How many of *seated* positions each member of one spawn area takes.
+
+    Members with an exact count take it; the fill modes share what is
+    left, in deck order, each up to its own count (#436). Fewer seats than
+    the exact counts raise ``SpawnCapacityError``.
+    """
+    counts = [_initial_spawn_count(m["params"], m["area"]) for m in members]
+    exact = [not _upper_bound(m["params"]) for m in members]
+    required = sum(c for c, e in zip(counts, exact) if e)
+    if seated < required:
+        keys = [m["dist_key"] for m, e in zip(members, exact) if e]
+        raise _unplaced_error(keys, required, capacity, f"only {seated} fit")
+    left = seated - required
+    allotted = []
+    for count, is_exact in zip(counts, exact):
+        if not is_exact:
+            count = min(count, left)
+            left -= count
+        allotted.append(count)
+    return allotted
 
 
 def _shared_areas(spawns):
@@ -728,13 +766,47 @@ def _shared_areas(spawns):
 
 
 def _checked_shared_area(members):
-    """Total count and capacity of one spawn area; over-full raises."""
-    total = sum(_initial_spawn_count(m["params"], m["area"]) for m in members)
+    """Total count and capacity of one spawn area; over-full raises.
+
+    The count of a fill mode is an upper bound (#436): it is in the total
+    but not in the count checked against the capacity.
+    """
+    counts = [_initial_spawn_count(m["params"], m["area"]) for m in members]
+    exact = [not _upper_bound(m["params"]) for m in members]
+    required = sum(c for c, e in zip(counts, exact) if e)
     max_radius = max(_get_max_agent_radius(m["params"]) for m in members)
     capacity = _estimate_max_capacity(members[0]["area"], max_radius)
-    if total > capacity:
-        raise _capacity_error([m["dist_key"] for m in members], total, capacity)
-    return total, capacity
+    if required > capacity:
+        keys = [m["dist_key"] for m, e in zip(members, exact) if e]
+        raise _capacity_error(keys, required, capacity)
+    return sum(counts), capacity
+
+
+_FILL_MODES = ("fill_area", "until_full")
+"""The ``distribution_mode`` values whose count at the start is an upper bound."""
+
+
+def _upper_bound(params) -> bool:
+    """Whether a distribution places as many agents as fit up to its count (#436).
+
+    ``fill_area`` and ``until_full`` do, at the start; a flow schedule's
+    ``initial_number`` is exact.
+    """
+    return params.get("distribution_mode") in _FILL_MODES and not (
+        _normalized_flow_schedule(params)
+    )
+
+
+def _report_fill(fill_placement, dist_key, params, area, placed) -> None:
+    """Record and print how many agents a fill mode placed of its upper bound."""
+    if not _upper_bound(params):
+        return
+    bound = _initial_spawn_count(params, area)
+    fill_placement[dist_key] = {"placed": placed, "upper_bound": bound}
+    print(
+        f"Distribution '{dist_key}': {params['distribution_mode']} placed "
+        f"{placed} of at most {bound} agents"
+    )
 
 
 def _places_at_start(params) -> bool:
@@ -1743,6 +1815,7 @@ def _initialize_with_fallback(
     has_premovement = False
 
     seeded_positions = _seed_shared_areas(immediate_spawn_distributions, seed)
+    fill_placement: dict[str, dict[str, int]] = {}
     # Spawn key of every agent placed here, assigned as it is added so that
     # every per-agent draw can be seeded from it.
     spawn_keys: dict[int, SpawnKey] = {}
@@ -1760,6 +1833,14 @@ def _initialize_with_fallback(
             )
             print(f"ERROR: {error_msg}")
             raise Exception(error_msg)
+
+        _report_fill(
+            fill_placement,
+            spawn_data["dist_key"],
+            spawn_data["params"],
+            spawn_data["area"],
+            len(positions),
+        )
 
         # Check if this distribution uses premovement
         use_premovement = spawn_data["params"].get("use_premovement", False)
@@ -1927,6 +2008,7 @@ def _initialize_with_fallback(
         "exit_geometries": exit_geometries,
         "exits": exits,
         "has_premovement": has_premovement,
+        "fill_placement": fill_placement,
         "premovement_times": premovement_times,
         "agent_wait_info": fallback_agent_wait_info,
         "spawn_keys": spawn_keys,
@@ -2983,6 +3065,7 @@ def _add_agents(
 
     # Handle immediate spawning distributions (existing logic)
     placed: list = []
+    fill_placement: dict[str, dict[str, int]] = {}
     for dist_key, spawn_data in immediate_spawn_distributions.items():
         try:
             spawn_params = spawn_data["params"]
@@ -3004,6 +3087,14 @@ def _add_agents(
                 max_radius,
                 distribution_seed(seed, dist_key, PURPOSE_POSITIONS),
                 placed,
+                at_most=_upper_bound(spawn_params),
+            )
+            _report_fill(
+                fill_placement,
+                dist_key,
+                spawn_params,
+                spawn_data["area"],
+                len(positions),
             )
 
             all_positions.extend(positions)
@@ -3256,6 +3347,7 @@ def _add_agents(
         "exit_to_journey": exit_to_journey,
         "exit_geometries": exit_geometries,
         "has_premovement": has_premovement,
+        "fill_placement": fill_placement,
         "premovement_times": premovement_times,
         "agent_wait_info": agent_wait_info,
         "spawn_keys": spawn_keys,

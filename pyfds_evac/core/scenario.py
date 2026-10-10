@@ -452,6 +452,8 @@ class Scenario:
             params = parameters_as_dict(dist.get("parameters")) or {}
             flow = params.get("use_flow_spawning", False)
             n = self._agent_budget(dist_id, dist, default_number)
+            upper = params.get("distribution_mode") in ("fill_area", "until_full")
+            count = f"up to {n}" if upper and not params.get("flow_schedule") else n
             tag = (
                 f" (flow: {params.get('flow_start_time', 0)}-{params.get('flow_end_time', 10)}s)"
                 if flow
@@ -465,7 +467,7 @@ class Scenario:
                     for w in schedule
                 )
                 tag = f" ({initial} at the start, flow: {windows})"
-            lines.append(f"    {dist_id}: {n} agents{tag}")
+            lines.append(f"    {dist_id}: {count} agents{tag}")
         return "\n".join(lines)
 
     def plot(self, ax=None):
@@ -921,6 +923,11 @@ class ScenarioResult:
     def agents_not_spawned(self) -> int:
         """Flow agents that had not entered when the time limit was reached."""
         return int(self.metrics.get("agents_not_spawned", 0))
+
+    @property
+    def fill_placement(self) -> dict[str, dict[str, int]]:
+        """Per ``fill_area``/``until_full`` spawn area, ``placed`` of ``upper_bound``."""
+        return dict(self.metrics.get("fill_placement", {}))
 
     @property
     def evacuation_time(self) -> float:
@@ -3357,6 +3364,10 @@ def run_scenario(
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
+        # Agents a fill mode placed of its upper bound (#436); only decks
+        # with one get the key.
+        if spawning_info.get("fill_placement"):
+            metrics["fill_placement"] = spawning_info["fill_placement"]
         # Only agents that were given an exit can have taken a replayed one.
         _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:
