@@ -574,7 +574,10 @@ route alone makes quicker is `smoke_reroute`. Under `additive` the dose and
 smoke terms are first removed together: if the switch still clears, neither is
 credited. If it does not, the dose is credited (`fed_reroute`) when the dose
 term alone suffices or the switch fails without it, else the smoke
-(`smoke_reroute`); so two redundant hazards credit the dose. `learned_exit`
+(`smoke_reroute`); so two redundant hazards credit the dose. The dose term
+here is `w_fed` times the dose each route adds, not its `FED_max`: the dose
+already taken is the same on both routes, and under the ratio anchor
+removing it would hide a switch the added dose made. `learned_exit`
 compares with the agent's map at its previous evaluation, or at spawn before
 the first. The order of `SWITCH_REASONS` is not this precedence.
 The label is read from the routes already priced and does not change the

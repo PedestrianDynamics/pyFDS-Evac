@@ -166,9 +166,10 @@ labelled by its cause
 did, `shorter_path` when time or length alone did.
 
 An `initial` row is written only when an agent that has no exit at a
-re-evaluation is given its first one. A `default_route` row is written once
-at spawn for an agent with no exit in its map that follows its default
-route, the journey or the nearest exit on foot. Other agents that start with
+re-evaluation is given its first one. A `default_route` row is written for
+an agent that follows its default route, the journey or the nearest exit on
+foot: at spawn when its map holds no exit, or when its known exits are all
+closed or unreachable. Other agents that start with
 a journey exit get no row until they change target, so a run without any switch (such as the
 example above, `Route history rows: 0`) writes a file with only its header. This
 does not mean rerouting was off.

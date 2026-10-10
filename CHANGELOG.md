@@ -97,7 +97,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A route switch is labelled by what caused it, not `smoke_reroute` for
   every change of exit (#92). An agent that switches in clear air to a
   nearer exit, or to one it has just learned, logged a smoke reroute.
-  Routing in practice and Outputs list the values and their order.
+  Outputs lists the values; Routing in practice lists them with their
+  order of precedence and how a cause is credited.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not

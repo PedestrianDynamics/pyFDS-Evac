@@ -1859,7 +1859,6 @@ def run_scenario(
                     eval_offset_s=compute_eval_offset(
                         stagger_index(key), reroute_config.reevaluation_interval_s
                     ),
-                    known_at_last_eval=_known_nodes(cognitive_maps.get(agent_id)),
                 )
             return chosen
 

@@ -3059,6 +3059,7 @@ def _decide_exit_change(
     route_state: AgentRouteState | None = None,
     time_s: float | None = None,
     news: str | None = None,
+    current_fed: float = 0.0,
 ) -> RouteDecision:
     """Whether to move the agent to *best*'s exit, or give it its first one.
 
@@ -3072,7 +3073,8 @@ def _decide_exit_change(
 
     *news* is ``exit_opened`` or ``learned_exit`` when *best*'s exit became
     available to the agent since its previous evaluation; it only labels the
-    switch (see :class:`RouteSwitch`).
+    switch (see :class:`RouteSwitch`), as does *current_fed*, the dose the
+    agent has already taken.
     """
     if (
         old_exit is not None
@@ -3090,7 +3092,9 @@ def _decide_exit_change(
     elif old_exit is None:
         reason = "initial"
     else:
-        reason = _exit_change_reason(best, old_exit, old_rc, config, news)
+        reason = _exit_change_reason(
+            best, old_exit, old_rc, config, news, current_fed=current_fed
+        )
     return RouteDecision(
         kind="fallback" if fallback else "switch",
         path=best.path,
@@ -3108,10 +3112,13 @@ def _exit_change_reason(
     old_rc: RouteCost | None,
     config: RerouteConfig,
     news: str | None,
+    *,
+    current_fed: float = 0.0,
 ) -> str:
     """The cause of an allowed change from *old_exit* to *best*.
 
     Reads only the two priced routes, so it cannot change the decision.
+    *current_fed* is the dose already taken, which both routes carry.
     """
     if old_rc is None:
         fallback = "resume" if best.exit_id == old_exit else "exit_unreachable"
@@ -3120,7 +3127,7 @@ def _exit_change_reason(
         return (
             "fed_reroute" if _over_dose(old_rc, old_exit, config) else "smoke_reroute"
         )
-    hazard = _hazard_reason(best, old_rc, config)
+    hazard = _hazard_reason(best, old_rc, config, current_fed)
     if hazard is not None:
         return hazard
     if news is not None:
@@ -3140,9 +3147,18 @@ def _over_dose(rc: RouteCost, old_exit: str, config: RerouteConfig) -> bool:
 
 
 def _hazard_reason(
-    best: RouteCost, old_rc: RouteCost, config: RerouteConfig
+    best: RouteCost,
+    old_rc: RouteCost,
+    config: RerouteConfig,
+    current_fed: float = 0.0,
 ) -> str | None:
-    """``fed_reroute`` or ``smoke_reroute`` if dose or smoke let *best* win."""
+    """``fed_reroute`` or ``smoke_reroute`` if dose or smoke let *best* win.
+
+    Under ``additive`` the dose term is credited on the dose each route adds,
+    not on the dose already taken: that part is the same on both routes and
+    would decide nothing, yet under the ratio anchor removing it changes the
+    comparison.
+    """
     cost_config = config.cost_config
     if cost_config.cost_model == "gate":
         cleaner = GatePolicy._clean_bypass(best, old_rc) or (
@@ -3153,10 +3169,15 @@ def _hazard_reason(
             if cleaner or _slowed_by_smoke(best, old_rc, config)
             else None
         )
-    if _clears_without(best, old_rc, config, _hazard_terms):
+    fed_term = _fed_growth_term(current_fed)
+
+    def hazard_terms(rc: RouteCost, cfg: RouteCostConfig) -> float:
+        return fed_term(rc, cfg) + _smoke_term(rc, cfg)
+
+    if _clears_without(best, old_rc, config, hazard_terms):
         return None
     if _clears_without(best, old_rc, config, _smoke_term) or not _clears_without(
-        best, old_rc, config, _fed_term
+        best, old_rc, config, fed_term
     ):
         return "fed_reroute"
     return "smoke_reroute"
@@ -3176,14 +3197,15 @@ def _slowed_by_smoke(best: RouteCost, old_rc: RouteCost, config: RerouteConfig) 
     return not new_cost < old_cost * config.exit_switch_anchor
 
 
-def _hazard_terms(rc: RouteCost, config: RouteCostConfig) -> float:
-    """Dose and smoke terms of the additive composite together."""
-    return _fed_term(rc, config) + _smoke_term(rc, config)
+def _fed_growth_term(
+    current_fed: float,
+) -> Callable[[RouteCost, RouteCostConfig], float]:
+    """The dose term of the additive composite for the dose the route adds."""
 
+    def term(rc: RouteCost, config: RouteCostConfig) -> float:
+        return config.w_fed * (rc.fed_max_route - current_fed)
 
-def _fed_term(rc: RouteCost, config: RouteCostConfig) -> float:
-    """The dose term of the additive composite."""
-    return config.w_fed * rc.fed_max_route
+    return term
 
 
 def _smoke_term(rc: RouteCost, config: RouteCostConfig) -> float:
@@ -3870,6 +3892,7 @@ def evaluate_and_reroute(
             route_state=route_state,
             time_s=current_time_s,
             news=news,
+            current_fed=current_fed,
         )
         if decision.kind == "switch" and stage_closed(graph, old_exit, current_time_s):
             decision = replace(decision, switch_reason="exit_closed")

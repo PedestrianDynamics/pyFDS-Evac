@@ -8,12 +8,17 @@ exit was labelled ``smoke_reroute``, in clear air too.
 
 from __future__ import annotations
 
+import collections
+import contextlib
+import csv
+import io
 import math
 from dataclasses import replace
 
 import pytest
 import test_rerouting_golden as golden
 
+from pyfds_evac import cli
 from pyfds_evac.core.cognitive_map import AgentCognitiveMap
 from pyfds_evac.core.route_graph import (
     AgentRouteState,
@@ -342,3 +347,56 @@ def test_smoke_slowdown_credit_at_the_anchor_boundary():
         _exit_change_reason(_rc("east", below), "west", old, config, None)
         == "shorter_path"
     )
+
+
+def test_additive_dose_is_credited_on_its_growth():
+    """w_fed 10; both routes carry the 1.0 already taken, the old one adds 0.1.
+
+    111 against 99.5 clears the anchor (99.9); with the growth removed, 110
+    against 99.5 does not (99.0), so the added dose made the switch. Taking
+    the whole dose out instead compares 100 with 89.5, which clears, and
+    credited the length.
+    """
+    config = RerouteConfig(cost_config=golden._additive(w_smoke=1.0, w_fed=10.0))
+    old = _rc("west", 111.0, fed_max_route=1.1)
+    new = _rc("east", 99.5, fed_max_route=1.0)
+    reason = _exit_change_reason(new, "west", old, config, None, current_fed=1.0)
+    assert reason == "fed_reroute"
+
+
+def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
+    monkeypatch, tmp_path
+):
+    """The map an agent is given at spawn is what learned_exit compares with.
+
+    At its first re-evaluation (t = 1 s) a Station agent that has seen more
+    exits since spawn switches to one of them. Without the spawn snapshot
+    those switches read as shorter_path.
+    """
+    load = cli.load_scenario
+
+    def short(path):
+        scenario = load(path)
+        scenario.set_max_time(1.5)
+        return scenario
+
+    out = tmp_path / "routes.csv"
+    monkeypatch.setattr(cli, "load_scenario", short)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "pyfds-evac",
+            "--scenario",
+            "assets/station_fahy",
+            "--seed",
+            "42",
+            "--output-route-history",
+            str(out),
+        ],
+    )
+    with contextlib.redirect_stdout(io.StringIO()):
+        cli.main()
+    with out.open(encoding="utf-8") as f:
+        rows = [r for r in csv.DictReader(f) if float(r["time_s"]) == 1.0]
+    reasons = collections.Counter(r["reason"] for r in rows)
+    assert reasons == {"learned_exit": 10, "congestion": 13}

@@ -77,8 +77,8 @@ against 143 in clear air (36 of 150 with `--enable-fic-speed`).
 **Rerouting.** Exit B is initially closer (10 m vs 20 m), and in clear
 air every agent takes it. In the fire, 23 of the first 26 agents, spawned
 in the first 50 s, head for Exit A from spawn, and every other agent that
-gets out leaves by Exit B. No agent changes exit on the way: 0 smoke_reroute events,
-as in clear air.
+gets out leaves by Exit B. No agent changes exit on the way, as in clear
+air.
 
 Measured at `7a3617d` with the command below, run on `config_full.json`
 against the FDS output in the project's data store (`t_junction/fire_2MW_PVC/`);
