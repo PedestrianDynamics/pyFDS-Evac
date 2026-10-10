@@ -5,13 +5,14 @@
 run model is untouched (``load_scenario`` reads the written directory as any
 other scenario).
 
-- *Legacy* decks (FDS+Evac: an evacuation ``&MESH`` or any evacuation
-  namelist) map ``&EXIT``/``&DOOR`` to exits and ``&EVAC``/``&EVHO``/
+- *Legacy* decks (FDS+Evac: a ``&MESH`` with ``EVACUATION=.TRUE.``) map ``&EXIT``/``&DOOR`` to exits and ``&EVAC``/``&EVHO``/
   ``&ENTR``/``&PERS`` to spawn areas, on one floor.
 - *Modern* decks get exits from ``SURF_ID='OPEN'`` vents on the exterior of
   the mesh union within the walking band, plus any ``--exit``; spawn areas
   fill each walkable component that has an exit, with a flagged placeholder
-  of 100 agents unless ``agents`` is given.
+  of 100 agents unless ``agents`` is given. An ``&EVHO`` there is cut out
+  of the derived walkable area; the other evacuation namelists are reported
+  and ignored.
 
 Everything stays in the FDS frame. The output is deterministic: sorted keys,
 coordinates rounded to 1e-6 m, IDs from the deck or ``<group>_<n>``.
@@ -71,6 +72,7 @@ from .walkable_provider import (
     WalkableProvider,
     WalkableResult,
     deck_walkable,
+    footprint,
 )
 
 __all__ = [
@@ -81,7 +83,7 @@ __all__ = [
     "parse_fds_deck",
 ]
 
-#: Evacuation namelists that make a deck legacy (FDS+Evac).
+#: FDS+Evac namelists; on a plain deck only ``&EVHO`` is applied.
 EVAC_GROUPS = frozenset(
     {"EVAC", "EXIT", "PERS", "DOOR", "ENTR", "CORR", "EVHO", "EVSS", "STRS", "EDEV"}
 )
@@ -301,8 +303,7 @@ def _check_options(depth: float, agents: int | None) -> None:
 
 def _classify(deck: FdsDeck) -> str:
     evac_mesh = any(m.flag("EVACUATION", False) for m in deck.group("MESH"))
-    evac_records = any(r.group in EVAC_GROUPS for r in deck.records)
-    return "legacy" if evac_mesh or evac_records else "modern"
+    return "legacy" if evac_mesh else "modern"
 
 
 def _parser_items(deck: FdsDeck, report: ImportReport) -> None:
@@ -746,11 +747,13 @@ def _import_modern(
         _floor_obstructions(deck, floor, band, legacy=False, group="HOLE"),
     )
     tol = max(floor.dx or 0.0, 0.05)
+    evhos = _plain_evhos(deck, floor, band, user_wkt is not None, report)
     build = partial(_modern_stages, deck, floor, band, domain, opts)
     walkable, exits, spawns = _walkable_and_stages(
-        deck, spec, user_wkt, provider, report, build
+        deck, spec, user_wkt, _minus_evhos(provider, evhos), report, build
     )
     _upper_floor_warnings(deck, floor, domain, report)
+    _plain_evac_records(deck, report)
     return _finish(
         deck,
         deck_path,
@@ -764,6 +767,67 @@ def _import_modern(
         spawns,
         floor.z_floor + HUMAN_SMOKE_HEIGHT_M,
     )
+
+
+def _plain_evhos(deck, floor, band, user_walkable: bool, report) -> list:
+    """``&EVHO`` records cut out of a plain deck's derived walkable area.
+
+    One applies when its z range meets the floor up to the band top;
+    with ``--walkable`` the polygon is taken as given and none applies.
+    """
+    applied = []
+    for record in deck.group("EVHO"):
+        on_floor = _evho_on_floor(record, floor.z_floor, band[1])
+        status, level, message = _evho_item(on_floor, user_walkable)
+        report.add(status, level, "EVHO", message, record)
+        if on_floor and not user_walkable:
+            applied.append(record)
+    return applied
+
+
+def _evho_on_floor(record: NamelistRecord, z_floor: float, z_top: float) -> bool:
+    xb = record.xb()
+    return xb is not None and xb[5] >= z_floor - 1e-9 and xb[4] <= z_top
+
+
+def _evho_item(on_floor: bool, user_walkable: bool) -> tuple[str, str, str]:
+    if not on_floor:
+        return "D", "warning", "not on the imported floor: ignored"
+    if user_walkable:
+        return "D", "warning", "ignored: the --walkable polygon is taken as given"
+    return "A", "info", "cut out of the walkable area (plain deck)"
+
+
+def _minus_evhos(provider: WalkableProvider, evhos: list) -> WalkableProvider:
+    """*provider* with the footprints of *evhos* cut out of its polygon."""
+    if not evhos:
+        return provider
+
+    def derive(deck: FdsDeck, spec: FloorSpec) -> WalkableResult:
+        result = provider(deck, spec)
+        if result.polygon is None:
+            return result
+        holes = union([footprint(r) for r in evhos])
+        note = f"{len(evhos)} &EVHO cut out"
+        polygon = result.polygon.difference(holes)
+        return WalkableResult(polygon, [*result.diagnostics, note], result.source)
+
+    return derive
+
+
+def _plain_evac_records(deck: FdsDeck, report: ImportReport) -> None:
+    """FDS+Evac namelists other than ``&EVHO`` on a plain deck: ignored."""
+    for record in deck.records:
+        if record.group not in EVAC_GROUPS or record.group == "EVHO":
+            continue
+        report.add(
+            "D",
+            "warning",
+            record.group,
+            "ignored: the deck has no EVACUATION=.TRUE. mesh, "
+            "so it is not an FDS+Evac deck",
+            record,
+        )
 
 
 def _modern_stages(deck, floor, band, domain, opts, walkable, report):
@@ -1145,8 +1209,7 @@ def _fire_surfaces(deck: FdsDeck, z_range, walkable, report) -> None:
     """Burning surfaces between the floor and the band top, in walkable space.
 
     Reported, not excluded: FDS+Evac does not exclude them either. The
-    advice names a way the deck kind supports: an ``&EVHO`` in a plain
-    deck would make it an FDS+Evac deck.
+    advice names a way the deck kind supports.
     """
     if report.kind == "legacy":
         advice = ", as in FDS+Evac; exclude it with &EVHO or the spawn polygon"

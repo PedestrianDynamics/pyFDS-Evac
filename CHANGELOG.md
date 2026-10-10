@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `pyfds-evac init` reads a deck as an FDS+Evac deck only when it has a
+  `&MESH` with `EVACUATION=.TRUE.`. An `&EVHO` in a plain deck is cut out
+  of the derived walkable area and keeps the `SURF_ID='OPEN'` exits;
+  t_junction with an `&EVHO` lost both exits before (#688). Other
+  FDS+Evac namelists in a plain deck are reported as ignored.
+
 ## [0.4.0] - 2026-10-09
 
 ### Upgrading

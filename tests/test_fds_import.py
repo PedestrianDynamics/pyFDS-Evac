@@ -433,6 +433,37 @@ def test_user_exit_is_added(tmp_path):
     assert _same(_poly(exit_["coordinates"]), box(19.5, 2, 20, 3))
 
 
+OPEN_LEFT = "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /"
+
+
+def test_evho_on_a_plain_deck_is_a_walkable_hole(tmp_path):
+    """#688: an &EVHO keeps the deck plain and cuts 2 x 2 m out of 20 x 10 m."""
+    evho = "&EVHO ID='hole', XB=3,5,3,5,0,0 /"
+    result = _modern(tmp_path, OPEN_LEFT, evho, wkt=None)
+    assert result.report.kind == "modern"
+    assert list(result.raw["exits"]) == ["vent_1"]
+    assert result.report.walkable["area_m2"] == pytest.approx(196.0)
+    assert result.report.walkable["holes"] == 1
+    [item] = _items(result, "A", "EVHO")
+    assert (item.id, item.level) == ("hole", "info")
+
+
+def test_evho_on_a_plain_deck_is_not_cut_from_a_given_walkable(tmp_path):
+    result = _modern(tmp_path, OPEN_LEFT, "&EVHO XB=3,5,3,5,0,0 /")
+    assert result.report.walkable["area_m2"] == pytest.approx(200.0)
+    [item] = _items(result, "D", "EVHO")
+    assert "--walkable" in item.message
+
+
+def test_evacuation_namelist_on_a_plain_deck_is_ignored(tmp_path):
+    result = _modern(tmp_path, OPEN_LEFT, "&EXIT ID='E', IOR=1, XB=20,20,4,6,0,2 /")
+    assert result.report.kind == "modern"
+    assert list(result.raw["exits"]) == ["vent_1"]
+    [item] = _items(result, "D", "EXIT")
+    assert item.level == "warning"
+    assert "no EVACUATION=.TRUE. mesh" in item.message
+
+
 def test_spawn_is_the_component_minus_the_strips(tmp_path):
     result = _modern(tmp_path, "&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /")
     [spawn] = result.raw["distributions"].values()
