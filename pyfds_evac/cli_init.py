@@ -35,8 +35,9 @@ EXIT_NOT_RUNNABLE = 3
 _DESCRIPTION = """\
 Start a pyFDS-Evac scenario from an FDS deck. An FDS+Evac deck keeps its
 &EXIT, &DOOR, &EVAC, &EVHO, &ENTR and &PERS records (one floor). A plain FDS
-deck gets exits from SURF_ID='OPEN' vents on the outside of the meshes, and a
-placeholder of 100 agents unless --agents is given. Every approximation is
+deck (no EVACUATION=.TRUE. mesh) gets exits from SURF_ID='OPEN' vents on the
+outside of the meshes, &EVHO holes in its walkable area, and a placeholder of
+100 agents unless --agents is given. Every approximation is
 listed in import_report.json and on the screen."""
 
 _EPILOG = """\

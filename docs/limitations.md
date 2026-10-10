@@ -311,10 +311,6 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   the z in the deck; the run picks it after FDS has moved each slice to the
   mesh grid. Where the two differ, the check names another `&SLCF` line or
   turns a pass into a warning, never into a failure.
-- **`&EVHO` makes a plain deck an FDS+Evac deck** ([#688](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/688)).
-  `pyfds-evac init` reads any deck with an `&EVHO` as an FDS+Evac deck, also
-  without an evacuation mesh. A plain deck with an `&EVHO` then loses its
-  exits, and `init` ends with exit status 3.
 
 ## Reproducibility
 
