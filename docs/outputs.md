@@ -162,8 +162,8 @@ The reasons are defined on
 [Routing in practice](routing.md#route-switch-reasons). A change of exit is
 labelled by its cause
 ([#92](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/92)):
-`smoke_reroute` only when smoke made the switch, `shorter_path` when time or
-length alone did.
+`smoke_reroute` only when smoke made the switch, `fed_reroute` when the dose
+did, `shorter_path` when time or length alone did.
 
 An `initial` row is written only when an agent that has no exit at a
 re-evaluation is given its first one. A `default_route` row is written once

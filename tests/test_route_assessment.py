@@ -83,6 +83,7 @@ def test_projection_carries_every_field():
             k_max_route=18.0,
             tau_route=19.0,
             k_leg_max=20.0,
+            clear_travel_time_s=22.0,
         ),
         feasibility=RouteFeasibility(
             feasible=False,
@@ -111,6 +112,7 @@ def test_projection_carries_every_field():
         "rank_cost": 21.0,
         "k_leg_max": 20.0,
         "clean": False,
+        "clear_travel_time_s": 22.0,
     }
     assert {f.name for f in fields(RouteCost)} == expected.keys()
     assert {f.name: getattr(rc, f.name) for f in fields(RouteCost)} == expected

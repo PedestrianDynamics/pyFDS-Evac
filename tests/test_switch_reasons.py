@@ -8,6 +8,7 @@ exit was labelled ``smoke_reroute``, in clear air too.
 
 from __future__ import annotations
 
+import math
 from dataclasses import replace
 
 import pytest
@@ -17,8 +18,11 @@ from pyfds_evac.core.cognitive_map import AgentCognitiveMap
 from pyfds_evac.core.route_graph import (
     AgentRouteState,
     RerouteConfig,
+    RouteCost,
     StageGraph,
+    _exit_change_reason,
     evaluate_and_reroute,
+    rank_routes,
 )
 
 
@@ -95,6 +99,36 @@ def test_fleeing_a_lethal_dose_is_fed_reroute(config):
     assert _reason(switch) == ("east", "west", "fed_reroute")
 
 
+def test_route_over_dose_and_tau_is_fed_reroute():
+    """Gate reports tau for a route over both limits; the dose names the cause."""
+    graph, config = golden._star2(), golden._gate()
+    smoke, fed = golden.ArmField({"west": 0.4}), golden.ArmFed({"west": 4.0})
+    ranked = rank_routes(
+        graph, "spawn", 5.0, 0.0, smoke, fed, config, current_exit="west"
+    )
+    west = next(rc for rc in ranked if rc.exit_id == "west")
+    assert west.rejection_reason.startswith("tau")
+    assert west.fed_max_route > config.fed_rejection_threshold
+    switch = _reroute(graph, config, AgentRouteState("west"), extinction=smoke, fed=fed)
+    assert _reason(switch) == ("east", "west", "fed_reroute")
+
+
+def test_gate_switch_won_only_by_smoke_slowdown_is_smoke_reroute():
+    """Within the tau deadband, but quicker only because smoke slows the old route.
+
+    West is 20 m, at K = 0.45 beyond the spawn (tau 8.2, under tau_max 100;
+    31 s against 20 s in clear air), east 26 m in clear air.
+    """
+    config = golden._gate(beta=-0.6, tau_max=100.0)
+    switch = _reroute(
+        golden._star({"west": 20.0, "east": 26.0}),
+        config,
+        AgentRouteState("west"),
+        extinction=golden.ArmField({"west": 0.45}),
+    )
+    assert _reason(switch) == ("east", "west", "smoke_reroute")
+
+
 def test_additive_switch_that_needs_the_dose_term_is_fed_reroute():
     """The near route's dose stays under the limit; its cost term decides."""
     switch = _reroute(
@@ -130,6 +164,21 @@ def test_switch_to_an_exit_learned_since_the_last_evaluation_is_learned_exit():
     cmap.known_nodes.add("west")
     cmap.known_edges.add(("spawn", "west"))
     switch = _reroute(graph, golden._gate(), route_state, cmap=cmap, time_s=6.0)
+    assert _reason(switch) == ("west", "east", "learned_exit")
+
+
+def test_exit_learned_before_the_first_evaluation_is_learned_exit():
+    """The map seeded at spawn counts as the previous evaluation's."""
+    graph = golden._star2()
+    cmap = AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={"spawn", "east", "west"},
+        known_edges={("spawn", "east"), ("spawn", "west")},
+    )
+    route_state = AgentRouteState(
+        "east", known_at_last_eval=frozenset({"spawn", "east"})
+    )
+    switch = _reroute(graph, golden._gate(), route_state, cmap=cmap)
     assert _reason(switch) == ("west", "east", "learned_exit")
 
 
@@ -204,3 +253,92 @@ def test_every_label_is_listed():
         "exit_unreachable",
         "resume",
     } <= set(SWITCH_REASONS)
+
+
+# ── Attribution on hand-built routes ──────────────────────────────────
+#
+# A cost term is credited when the switch would not clear the anchor
+# without it. The anchor is strict, as in _clears_exit_anchor: a cost of
+# exactly old * anchor does not clear, the next float below does.
+
+
+def _rc(exit_id: str, rank: float, **kw) -> RouteCost:
+    base = dict(
+        exit_id=exit_id,
+        path=["spawn", exit_id],
+        path_length_m=rank,
+        k_ave_route=0.0,
+        travel_time_s=rank,
+        fed_max_route=0.0,
+        composite_cost=rank,
+        segments=[],
+        rejected=False,
+        rejection_reason=None,
+        rank_cost=rank,
+        clear_travel_time_s=rank,
+    )
+    base.update(kw)
+    return RouteCost(**base)
+
+
+def _additive_reason(old: RouteCost, new: RouteCost) -> str:
+    config = RerouteConfig(cost_config=golden._additive(w_smoke=1.0, w_fed=100.0))
+    return _exit_change_reason(new, "west", old, config, None)
+
+
+@pytest.mark.parametrize(
+    ("smoke_tau", "fed", "reason"),
+    [
+        # Each hazard alone clears the anchor: the dose is credited (#92 P2).
+        (30.0, 0.3, "fed_reroute"),
+        (30.0, 0.0, "smoke_reroute"),
+        (0.0, 0.3, "fed_reroute"),
+        # Neither alone clears (100 < 95.4 fails), both together do (100.8).
+        (6.0, 0.06, "fed_reroute"),
+        # Length alone clears: no hazard is credited.
+        (0.0, 0.0, "shorter_path"),
+    ],
+)
+def test_additive_attribution_of_redundant_hazards(smoke_tau, fed, reason):
+    base = 112.0 if (smoke_tau, fed) == (0.0, 0.0) else 100.0
+    old = _rc(
+        "west",
+        base + smoke_tau + 100.0 * fed,
+        tau_route=smoke_tau,
+        fed_max_route=fed,
+    )
+    assert _additive_reason(old, _rc("east", 100.0)) == reason
+
+
+def test_queue_credit_at_the_anchor_boundary():
+    """Gate, w_queue 1: the old route queues 10 s. Without the queue term the
+    switch clears only strictly below 0.9 x 100 s."""
+    config = RerouteConfig(cost_config=golden._gate(w_queue=1.0))
+    old = _rc(
+        "west", 110.0, travel_time_s=100.0, clear_travel_time_s=100.0, queue_time_s=10.0
+    )
+    at = 100.0 * config.exit_switch_anchor
+    below = math.nextafter(at, 0.0)
+    assert (
+        _exit_change_reason(_rc("east", at), "west", old, config, None) == "congestion"
+    )
+    assert (
+        _exit_change_reason(_rc("east", below), "west", old, config, None)
+        == "shorter_path"
+    )
+
+
+def test_smoke_slowdown_credit_at_the_anchor_boundary():
+    """Gate: the old route takes 100 s in smoke, 50 s in clear air."""
+    config = RerouteConfig(cost_config=golden._gate())
+    old = _rc("west", 100.0, clear_travel_time_s=50.0)
+    at = 50.0 * config.exit_switch_anchor
+    below = math.nextafter(at, 0.0)
+    assert (
+        _exit_change_reason(_rc("east", at), "west", old, config, None)
+        == "smoke_reroute"
+    )
+    assert (
+        _exit_change_reason(_rc("east", below), "west", old, config, None)
+        == "shorter_path"
+    )

@@ -541,9 +541,9 @@ Each `RouteSwitch` record includes a `reason` field:
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment                            |
-| `default_route` | Written once at spawn: the agent has no exit in its map and follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)) |
-| `fed_reroute`   | A different exit: the route to the old exit is refused on FED, or (`additive`) the switch would not clear the anchor without the FED term |
-| `smoke_reroute` | A different exit: the route to the old exit is refused on smoke (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, or lower in τ by more than the deadband; under `additive` the switch would not clear the anchor without the smoke term |
+| `default_route` | The agent follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)): at spawn, or when the agent's known exits are all closed or unreachable |
+| `fed_reroute`   | A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (`additive`) the dose term contributes to a switch the hazard terms are needed for |
+| `smoke_reroute` | A different exit: the route to the old exit is refused on smoke alone (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, lower in τ by more than the deadband, or would not clear the anchor with clear-air travel times; under `additive` the switch needs the smoke term and not the dose term |
 | `exit_closed`   | The agent's exit has closed on its schedule; the best open exit it knows |
 | `exit_opened`   | A different exit, closed at the agent's previous evaluation |
 | `learned_exit`  | A different exit, not in the agent's cognitive map at its previous evaluation |
@@ -561,11 +561,22 @@ Each `RouteSwitch` record includes a `reason` field:
 For a change of exit the first of these that applies names the cause:
 `fallback`, `initial`, `exit_closed`, `fed_reroute`, `smoke_reroute`,
 `exit_opened`, `learned_exit`, `congestion`, `shorter_path`. A route to the
-old exit that is refused gives `fed_reroute` or `smoke_reroute` by its
-refusal; under `gate` a route over both limits reports τ, so it is
-`smoke_reroute`. With no route to the old exit, and for an idle agent routed
-to its own exit, `exit_opened` and `learned_exit` still come first, then
-`exit_unreachable` or `resume`.
+old exit that is refused gives `fed_reroute` when its predicted dose is over
+the limit, else `smoke_reroute`. With no route to the old exit, and for an
+idle agent routed to its own exit, `exit_opened` and `learned_exit` still
+come first, then `exit_unreachable` or `resume`.
+
+A cost term is credited when the switch would not clear the anchor without
+it; the anchor is strict, so a cost of exactly the old cost times
+`exit_switch_anchor` does not clear. Under `gate` the smoke test also
+compares clear-air travel times (queue term kept): a switch that a slowed old
+route alone makes quicker is `smoke_reroute`. Under `additive` the dose and
+smoke terms are first removed together: if the switch still clears, neither is
+credited. If it does not, the dose is credited (`fed_reroute`) when the dose
+term alone suffices or the switch fails without it, else the smoke
+(`smoke_reroute`); so two redundant hazards credit the dose. `learned_exit`
+compares with the agent's map at its previous evaluation, or at spawn before
+the first. The order of `SWITCH_REASONS` is not this precedence.
 The label is read from the routes already priced and does not change the
 decision. `RouteSwitch` and `SWITCH_REASONS` in `route_graph.py` list the same
 values.

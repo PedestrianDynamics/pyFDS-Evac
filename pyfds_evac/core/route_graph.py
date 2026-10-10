@@ -962,6 +962,11 @@ class RouteCost:
     # criterion. Clean exits are preferred outright; time decides among them.
     k_leg_max: float = 0.0
     clean: bool = True
+    # The travel time the route would take in clear air: travel_time_s with
+    # every speed factor 1. Labels only (``smoke_reroute``, #92), so it takes
+    # no part in comparing two routes; None when the route was not measured
+    # by evaluate_route.
+    clear_travel_time_s: float | None = field(default=None, compare=False)
 
 
 # ── Internal route records ───────────────────────────────────────────
@@ -990,6 +995,8 @@ class RouteMeasurements:
     k_max_route: float
     tau_route: float
     k_leg_max: float
+    # travel_time_s with every speed factor 1, for the switch label (#92).
+    clear_travel_time_s: float | None = None
 
 
 @dataclass(frozen=True)
@@ -1073,6 +1080,7 @@ def _project_route_cost(assessment: RouteAssessment) -> RouteCost:
         rank_cost=assessment.rank_cost,
         k_leg_max=m.k_leg_max,
         clean=assessment.clean,
+        clear_travel_time_s=m.clear_travel_time_s,
     )
 
 
@@ -1582,11 +1590,13 @@ def _measure_route(
             [_leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]]
             + [s.travel_time_s for s in segments[1:]]
         )
+        clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)
         total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         travel_time = sum(w * s.travel_time_s for w, s in weighted)
+        clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
         # The share is capped at 1, so an agent behind the route's origin node
         # would be timed over the node legs alone and not the walk to the
         # origin. That stretch is timed at the route's mean pace, the same
@@ -1595,6 +1605,7 @@ def _measure_route(
         # infinite.
         if effective_length > exposure_length > 1e-9:
             travel_time *= effective_length / exposure_length
+            clear_travel_time *= effective_length / exposure_length
     fed_growth = sum(w * s.fed_growth for w, s in weighted)
     fed_max = current_fed + fed_growth
     # The worst point on the route, not its average: a route is refused because
@@ -1688,6 +1699,7 @@ def _measure_route(
         k_max_route=k_max,
         tau_route=tau_route,
         k_leg_max=k_leg_max,
+        clear_travel_time_s=clear_travel_time,
     )
 
 
@@ -2635,13 +2647,15 @@ class RouteSwitch:
     by the decision branch that let it through, first match wins:
     ``fallback`` (every route refused), ``initial`` (no exit before),
     ``exit_closed`` (the old exit closed on its schedule), ``fed_reroute``
-    (the old route is refused on dose, or under ``additive`` the switch needs
-    the dose term), ``smoke_reroute`` (the old route is refused on smoke; under
-    ``gate`` the new route is clean where the old is not, or clearly lower in
-    tau; under ``additive`` the switch needs the smoke term), ``exit_opened``
-    (the new exit was closed at the previous evaluation), ``learned_exit``
-    (the new exit was not in the agent's cognitive map at the previous
-    evaluation), ``congestion`` (the switch needs the queue term),
+    (the old route is over the dose limit, or under ``additive`` the dose term
+    contributes to a switch that needs the hazard terms), ``smoke_reroute``
+    (the old route is refused on smoke alone; under ``gate`` the new route is
+    clean where the old is not, clearly lower in tau, or quicker only with
+    smoke slowdown; under ``additive`` the switch needs the smoke term and not
+    the dose term), ``exit_opened`` (the new exit was closed at the previous
+    evaluation), ``learned_exit`` (the new exit was not in the agent's
+    cognitive map at the previous evaluation, or at spawn before the first),
+    ``congestion`` (the switch needs the queue term),
     ``shorter_path`` (time or length alone clears the anchor). An old exit
     with no route from where the agent stands gives ``exit_unreachable``,
     and an idle agent routed to the exit it already holds ``resume``, unless
@@ -2657,7 +2671,7 @@ class RouteSwitch:
     reason: str
 
 
-#: Every value of :attr:`RouteSwitch.reason`.
+#: Every value of :attr:`RouteSwitch.reason`; not in order of precedence.
 SWITCH_REASONS = (
     "initial",
     "default_route",
@@ -3103,8 +3117,9 @@ def _exit_change_reason(
         fallback = "resume" if best.exit_id == old_exit else "exit_unreachable"
         return news or fallback
     if old_rc.rejected:
-        why = (old_rc.rejection_reason or "").removeprefix("fallback: ")
-        return "fed_reroute" if why.startswith("FED") else "smoke_reroute"
+        return (
+            "fed_reroute" if _over_dose(old_rc, old_exit, config) else "smoke_reroute"
+        )
     hazard = _hazard_reason(best, old_rc, config)
     if hazard is not None:
         return hazard
@@ -3113,6 +3128,15 @@ def _exit_change_reason(
     if not _clears_without(best, old_rc, config, _queue_term):
         return "congestion"
     return "shorter_path"
+
+
+def _over_dose(rc: RouteCost, old_exit: str, config: RerouteConfig) -> bool:
+    """Whether the route to the agent's own exit breaks the dose limit.
+
+    Read from the dose itself, not the rejection message: under ``gate`` a
+    route over both limits reports tau, and the dose still names the cause.
+    """
+    return rc.fed_max_route > _fed_limit(config.cost_config, rc.exit_id, old_exit)
 
 
 def _hazard_reason(
@@ -3124,12 +3148,37 @@ def _hazard_reason(
         cleaner = GatePolicy._clean_bypass(best, old_rc) or (
             GatePolicy._tau_band(best, old_rc, cost_config) > 0
         )
-        return "smoke_reroute" if cleaner else None
-    if not _clears_without(best, old_rc, config, _fed_term):
+        return (
+            "smoke_reroute"
+            if cleaner or _slowed_by_smoke(best, old_rc, config)
+            else None
+        )
+    if _clears_without(best, old_rc, config, _hazard_terms):
+        return None
+    if _clears_without(best, old_rc, config, _smoke_term) or not _clears_without(
+        best, old_rc, config, _fed_term
+    ):
         return "fed_reroute"
-    if not _clears_without(best, old_rc, config, _smoke_term):
-        return "smoke_reroute"
-    return None
+    return "smoke_reroute"
+
+
+def _slowed_by_smoke(best: RouteCost, old_rc: RouteCost, config: RerouteConfig) -> bool:
+    """Whether the switch fails the anchor with clear-air travel times (gate).
+
+    Gate ranks on travel time, which smoke slows; a switch that clears only
+    because of that slowdown is a smoke effect. The queue term is kept.
+    """
+    if best.clear_travel_time_s is None or old_rc.clear_travel_time_s is None:
+        return False
+    queue = config.cost_config.w_queue
+    new_cost = best.clear_travel_time_s + queue * best.queue_time_s
+    old_cost = old_rc.clear_travel_time_s + queue * old_rc.queue_time_s
+    return not new_cost < old_cost * config.exit_switch_anchor
+
+
+def _hazard_terms(rc: RouteCost, config: RouteCostConfig) -> float:
+    """Dose and smoke terms of the additive composite together."""
+    return _fed_term(rc, config) + _smoke_term(rc, config)
 
 
 def _fed_term(rc: RouteCost, config: RouteCostConfig) -> float:
@@ -3171,13 +3220,12 @@ def _exit_news(
     """Whether *exit_id* became available since the agent's last evaluation.
 
     ``exit_opened`` if the exit was closed then, ``learned_exit`` if it was not
-    in the agent's cognitive map then, else None. Labels only.
+    in the agent's cognitive map then (or, before the first evaluation, in the
+    map it was given at spawn), else None. Labels only.
     """
     last = route_state.last_eval_time_s
-    if not math.isfinite(last):
-        return None
     node = graph.nodes.get(exit_id)
-    if node is not None and not node.is_open(last):
+    if math.isfinite(last) and node is not None and not node.is_open(last):
         return "exit_opened"
     known = route_state.known_at_last_eval
     if cognitive_map is not None and known is not None and exit_id not in known:
