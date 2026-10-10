@@ -61,11 +61,11 @@ The run reports where this applies. At setup it logs the walkable area,
 exits, checkpoints, spawn areas, signs and route edges outside the slices,
 and stores them as `fds_coverage` in the run manifest. The smoke and FED
 histories mark each row outside with `in_fds_domain = False`, and
-`metrics["fds_outside"]` counts the agents, samples and agent-seconds
-outside. Check these two; the single warning at the first extinction
-sample outside says nothing about later agents. The route-cost history does
-not record the length outside per row
-([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
+`metrics["fds_outside"]` and the manifest's `fds_outside` count the
+agents, samples and agent-seconds outside. Check these two; the single
+warning at the first extinction sample outside says nothing about later
+agents. The route-cost history does not record the length outside per
+row ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
 `--require-fds-coverage` turns every case outside into an error.
 
 **Signs seen from outside the FDS grid.** An agent beyond the grid of an

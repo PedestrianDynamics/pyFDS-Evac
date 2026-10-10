@@ -18,8 +18,9 @@ import logging
 from dataclasses import dataclass, field
 from typing import Any
 
+from shapely.affinity import translate
 from shapely.geometry import LineString, Point, Polygon, box
-from shapely.ops import unary_union
+from shapely.ops import transform, unary_union
 
 from .fds_sampling import FdsDomainError, SliceFieldSampler
 from .visibility import _sign_positions, extract_sign_descriptors
@@ -34,6 +35,18 @@ _LENGTH_EPS_M = 1e-9
 # Scenario sections whose polygons are reported by name.
 _AREA_SECTIONS = ("exits", "checkpoints", "distributions")
 
+# Share of the walkable area that may stay outside the domain after a swap of
+# x and y or a shift for the frame hint to name that swap or shift.
+_FRAME_FIT_SHARE = 0.01
+# Share of the walkable area that must lie outside the domain before a swap or
+# a shift is offered at all: below it, a mesh margin or an overhang on one
+# side is the likelier cause, and the bounds alone are given.
+_FRAME_MISTAKE_SHARE = 0.5
+# A shift shorter than this prints as zero at centimetre precision and names
+# no frame mismatch. Defensive: with most of the walkable area outside, so
+# small a shift cannot bring it inside, so no test reaches this guard.
+_MIN_SHIFT_M = 0.01
+
 
 @dataclass
 class FdsCoverageReport:
@@ -46,6 +59,9 @@ class FdsCoverageReport:
     signs_outside: list[str] = field(default_factory=list)
     signs_off_vismap_grid: dict[str, float] = field(default_factory=dict)
     edges_outside_m: dict[str, float] = field(default_factory=dict)
+    walkable_bounds: tuple[float, float, float, float] | None = None
+    domain_bounds: tuple[float, float, float, float] | None = None
+    frame_hint: str | None = None
 
     @property
     def is_empty(self) -> bool:
@@ -84,8 +100,26 @@ class FdsCoverageReport:
         return (
             "FDS coverage: outside the FDS slices "
             f"({', '.join(self.quantities)}), agents read ambient air and "
-            "clear sight: " + "; ".join(parts) + "."
+            "clear sight: " + "; ".join(parts) + "." + self._frame_text()
         )
+
+    def _frame_text(self) -> str:
+        """Return the bounds of both areas and the frame hint, if any.
+
+        Only when part of the walkable area lies outside: the bounds show an
+        offset or a swap of x and y at a glance.
+        """
+        if self.walkable_outside_m2 <= _AREA_EPS_M2:
+            return ""
+        if self.walkable_bounds is None or self.domain_bounds is None:
+            return ""
+        text = (
+            f" Walkable area {_bounds_text(self.walkable_bounds)}, "
+            f"FDS domain {_bounds_text(self.domain_bounds)}."
+        )
+        if self.frame_hint is not None:
+            text += f" {self.frame_hint}"
+        return text
 
     def to_dict(self) -> dict[str, Any]:
         """Return the report as JSON-ready data for the run manifest."""
@@ -136,6 +170,96 @@ def coverage_polygon(samplers: list[SliceFieldSampler]):
         area = unary_union(boxes)
         covered = area if covered is None else covered.intersection(area)
     return covered
+
+
+def _float_bounds(geometry) -> tuple[float, float, float, float]:
+    """Return the shapely bounds of *geometry* as plain floats."""
+    x0, y0, x1, y1 = geometry.bounds
+    return float(x0), float(y0), float(x1), float(y1)
+
+
+def _bounds_text(bounds: tuple[float, float, float, float]) -> str:
+    """Return shapely bounds as ``x a..b, y c..d m``."""
+    x0, y0, x1, y1 = bounds
+    return f"x {x0:.2f}..{x1:.2f}, y {y0:.2f}..{y1:.2f} m"
+
+
+def _swap_xy(geometry):
+    """Return *geometry* with x and y swapped."""
+    return transform(lambda x, y, z=None: (y, x), geometry)
+
+
+def _shift_onto(geometry, domain):
+    """Return *geometry* moved so that its lower-left bound meets the domain's."""
+    dx = domain.bounds[0] - geometry.bounds[0]
+    dy = domain.bounds[1] - geometry.bounds[1]
+    return translate(geometry, dx, dy), dx, dy
+
+
+def _has_area(geometry) -> bool:
+    """Return whether *geometry* is non-empty with a positive area."""
+    return not geometry.is_empty and geometry.area > _AREA_EPS_M2
+
+
+def frame_hint(walkable, domain) -> str | None:
+    """Name a swap of x and y or a shift that brings *walkable* into *domain*.
+
+    Only when more than ``_FRAME_MISTAKE_SHARE`` of the walkable area lies
+    outside, so that a frame mistake is plausible; a mesh margin or an
+    overhang on one side gets no hint. A hint is then given when the swap,
+    the shift onto the domain's lower-left corner, or both leave at most
+    ``_FRAME_FIT_SHARE`` of the walkable area outside. With both, the shift
+    is in the swapped frame. It names a possible explanation, not a
+    diagnosis. None when either area is empty, as when the samplers share
+    no area.
+    """
+    if not (_has_area(walkable) and _has_area(domain)):
+        return None
+    area = float(walkable.area)
+    if walkable.difference(domain).area <= _FRAME_MISTAKE_SHARE * area:
+        return None
+    limit = _FRAME_FIT_SHARE * area
+    swapped = _swap_xy(walkable)
+    if swapped.difference(domain).area <= limit:
+        return _hint_text("With x and y swapped", "axis order")
+    for candidate, swap in ((walkable, False), (swapped, True)):
+        moved, dx, dy = _shift_onto(candidate, domain)
+        if max(abs(dx), abs(dy)) < _MIN_SHIFT_M:
+            continue
+        if moved.difference(domain).area > limit:
+            continue
+        shift = f"shifted by ({dx:+.2f}, {dy:+.2f}) m"
+        if swap:
+            return _hint_text(
+                f"With x and y swapped and {shift}", "origin and axis order"
+            )
+        return _hint_text(shift[0].upper() + shift[1:], "origin")
+    return None
+
+
+def _hint_text(change: str, what: str) -> str:
+    """Return the frame hint for *change*, naming *what* to check."""
+    share = f"{100 * _FRAME_FIT_SHARE:.0f} %"
+    return (
+        f"{change}, at most {share} of the walkable area would lie outside the "
+        f"FDS domain; if it should lie inside, check the {what} of the "
+        "geometry against the FDS deck."
+    )
+
+
+def _frame_fields(walkable, domain) -> dict[str, Any]:
+    """Return the bounds of both areas and the frame hint for the report.
+
+    Empty when either area is empty: shapely gives NaN bounds then, and
+    there is no frame to compare.
+    """
+    if not (_has_area(walkable) and _has_area(domain)):
+        return {}
+    return {
+        "walkable_bounds": _float_bounds(walkable),
+        "domain_bounds": _float_bounds(domain),
+        "frame_hint": frame_hint(walkable, domain),
+    }
 
 
 def _outside_areas(raw: dict, domain) -> dict[str, float]:
@@ -191,6 +315,7 @@ def check_fds_coverage(
         walkable_outside_m2=float(walkable.difference(domain).area),
         areas_outside_m2=_outside_areas(raw, domain),
         edges_outside_m=_outside_edges(stage_graph, domain),
+        **_frame_fields(walkable, domain),
     )
     signs = getattr(vis_model, "_sign_xy", None)
     if signs is None:
@@ -213,8 +338,9 @@ def apply_coverage_policy(
         _logger.info(report.summary())
         return
     if require_fds_coverage:
+        extend = "Otherwise extend" if report.frame_hint is not None else "Extend"
         raise FdsDomainError(
-            report.summary() + " Extend the FDS meshes or slices over these "
+            f"{report.summary()} {extend} the FDS meshes or slices over these "
             "objects, or run without --require-fds-coverage."
         )
     _logger.warning(report.summary())

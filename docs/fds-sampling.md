@@ -122,7 +122,23 @@ slices. The check runs when an agent reaches such a point, not at setup.
 scenario with the slices of every sampled quantity. The domain is the area
 that every quantity covers. The report gives the walkable area outside
 (m² and share), each exit, checkpoint and spawn area outside (m²), each
-sign outside, and each route edge outside (m). It is logged once and
+sign outside, and each route edge outside (m). When part of the walkable
+area lies outside, it ends with the bounds of the walkable area and of the
+FDS domain, so that an offset origin or swapped x and y shows at a glance.
+When more than half of the walkable area lies outside, a frame mistake
+is plausible, and the report also tries swapping x and y, shifting the
+walkable area onto the domain's lower-left corner, and both. If one of
+them would leave at most 1 % of the walkable area outside, the report
+names it as a possible explanation, for example `Shifted by (dx, dy) m,
+at most 1 % of the walkable area would lie outside the FDS domain; if it
+should lie inside, check the origin of the geometry against the FDS
+deck` ([#26](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/26)).
+With both, the shift is in the frame after the swap. With half or less
+outside, as for a mesh margin or a corridor reaching past the mesh on
+one side, the report gives the bounds only. When the slices of the
+sampled quantities share no area, it gives neither bounds nor hint. The
+bounds and the hint are in the log and, with `--require-fds-coverage`,
+in the error text, not in `fds_coverage`. The report is logged once and
 stored as `fds_coverage` in `metrics` and in the
 [run manifest](outputs.md#run-manifest). For a T-junction whose west
 corridor extends 12 m past the FDS mesh, the log reads:
@@ -133,14 +149,15 @@ MONOXIDE VOLUME FRACTION, HYDROGEN CHLORIDE VOLUME FRACTION, OXYGEN VOLUME
 FRACTION, SOOT EXTINCTION COEFFICIENT), agents read ambient air and clear
 sight: walkable area 36.00 m² (19.4 %); exit exit_A_left 3.00 m²;
 distribution jps-distributions_out 6.00 m²; sign exit_A_left; edge
-jps-checkpoints_0 -> exit_A_left 11.50 m; ...
+jps-checkpoints_0 -> exit_A_left 11.50 m; ... Walkable area x
+-12.00..30.00, y 0.00..13.00 m, FDS domain x 0.00..30.00, y 0.00..13.00 m.
 ```
 
 **Flag and count.** Each smoke and FED history row carries `in_fds_domain`,
 `False` where the agent stood outside
 ([Outputs](outputs.md#smoke-history)). At the end, the run logs the number
 of agents, samples and agent-seconds outside, stored as
-`metrics["fds_outside"]`:
+`metrics["fds_outside"]` and as `fds_outside` in the run manifest:
 
 ```
 Outside the FDS domain: 8 agent(s), 56 sample(s), about 56.0 agent-seconds

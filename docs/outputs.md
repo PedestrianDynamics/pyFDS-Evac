@@ -72,6 +72,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
 | `smoke_blind` | `true`, only with `--smoke-blind` |
 | `fds_coverage` | when FDS slices are sampled: the setup check of the scenario against the slice coverage, with `quantities`, `walkable_area_m2`, `walkable_outside_m2`, `areas_outside_m2` (exits, checkpoints, spawn areas), `signs_outside`, `signs_off_vismap_grid_m` and `edges_outside_m` (route edges) |
+| `fds_outside` | with `fds_coverage`: the history rows sampled outside the FDS slices, as `rows`, `agents` and `agent_seconds`, the same as `metrics["fds_outside"]` |
 | `replay_exits` | only with `--replay-exits`: `agents`, the number of replayed spawns, and `sha256`, of the sorted `origin<TAB>spawn_index<TAB>exit_id` lines, one per spawn and joined by newlines, to match the run whose exit history was replayed |
 | `heat_fed_method`, `heat_flux_parameters` | only with `--heat-fed-method total-flux`: ε, h, skin temperature, dose *D*, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or `radiant_source`, `u_factor` and `radiant_flux` |
 
