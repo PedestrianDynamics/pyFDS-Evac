@@ -2707,10 +2707,11 @@ def reroute_agent(
     # The new path was priced from current_origin to the node after it. If
     # the current target is further along, anchoring there would keep the
     # agent on the leg the new path replaced, so anchor at the origin and
-    # retarget to the node after it.
+    # retarget to the node after it. An idle or waiting agent already stands
+    # on its target, so its route goes on from there.
     skips_ahead = False
     if (
-        wait_info.get("state") != "idle"
+        wait_info.get("state") not in ("idle", "waiting")
         and current_origin in new_path
         and current_stage in new_path
         and new_path.index(current_stage) > new_path.index(current_origin) + 1

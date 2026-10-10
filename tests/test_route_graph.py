@@ -1381,6 +1381,20 @@ class TestAppliedRouteWalkedAsPriced:
         assert wait_info["current_target_stage"] == "E0"
         assert "D0" not in wait_info["path_choices"]
 
+    def test_waiting_agent_keeps_its_wait(self):
+        """An agent waiting in its target stays there; the route goes on from it."""
+        graph = _detour_graph()
+        wait_info = _make_wait_info(graph, "D0", "C3")
+        wait_info["state"] = "waiting"
+        wait_info["wait_until"] = 99.0
+        reroute_agent(wait_info, ["D0", "C0", "C3", "E0"], wait_info["stage_configs"])
+        assert wait_info["current_origin"] == "D0"
+        assert wait_info["current_target_stage"] == "C3"
+        assert wait_info["state"] == "waiting"
+        assert wait_info["wait_until"] == 99.0
+        assert wait_info["path_choices"]["C3"] == [("E0", 100.0)]
+        assert "D0" not in wait_info["path_choices"]
+
 
 # ── integrated_extinction_along_los tests ─────────────────────────────
 
