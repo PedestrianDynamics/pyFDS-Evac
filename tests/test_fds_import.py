@@ -455,6 +455,44 @@ def test_evho_on_a_plain_deck_is_not_cut_from_a_given_walkable(tmp_path):
     assert "--walkable" in item.message
 
 
+@pytest.mark.parametrize(
+    ("evho", "reason"),
+    [
+        ("&EVHO XB=3,5,3,5,2.5,3 /", "not on the imported floor"),
+        ("&EVHO XB=30,32,3,5,0,0 /", "outside the walkable area"),
+    ],
+)
+def test_evho_on_a_plain_deck_off_the_floor_is_ignored(tmp_path, evho, reason):
+    result = _modern(tmp_path, OPEN_LEFT, evho, wkt=None)
+    assert result.report.walkable["area_m2"] == pytest.approx(200.0)
+    assert result.report.walkable["holes"] == 0
+    [item] = _items(result, "D", "EVHO")
+    assert item.message == f"ignored: {reason}"
+    assert not _items(result, "A", "EVHO")
+
+
+# A ground floor 'room' (z 0-3) under 'upstairs' (z 3-6), both 10 x 10 m.
+STOREYS = """\
+&HEAD CHID='storeys' /
+&MESH ID='room', IJK=50,50,15, XB=0,10,0,10,0,3 /
+&MESH ID='upstairs', IJK=50,50,15, XB=0,10,0,10,3,6 /
+&VENT XB=0,0,4,6,0,2, SURF_ID='OPEN' /
+&EVHO ID='up', MESH_ID='upstairs', XB=3,5,3,5,0,5 /
+&EVHO ID='down', MESH_ID='room', XB=6,7,6,7,0,0 /
+"""
+
+
+def test_evho_on_a_plain_deck_honours_mesh_id(tmp_path):
+    """Only the &EVHO naming a mesh of the floor cuts it: 100 - 1 m2."""
+    result = import_fds_deck(_deck(tmp_path, STOREYS))
+    assert result.report.walkable["area_m2"] == pytest.approx(99.0)
+    [skipped] = _items(result, "D", "EVHO")
+    assert skipped.id == "up"
+    assert "MESH_ID 'upstairs'" in skipped.message
+    [applied] = _items(result, "A", "EVHO")
+    assert applied.id == "down"
+
+
 def test_evacuation_namelist_on_a_plain_deck_is_ignored(tmp_path):
     result = _modern(tmp_path, OPEN_LEFT, "&EXIT ID='E', IOR=1, XB=20,20,4,6,0,2 /")
     assert result.report.kind == "modern"

@@ -750,7 +750,7 @@ def _import_modern(
     evhos = _plain_evhos(deck, floor, band, user_wkt is not None, report)
     build = partial(_modern_stages, deck, floor, band, domain, opts)
     walkable, exits, spawns = _walkable_and_stages(
-        deck, spec, user_wkt, _minus_evhos(provider, evhos), report, build
+        deck, spec, user_wkt, _minus_evhos(provider, evhos, report), report, build
     )
     _upper_floor_warnings(deck, floor, domain, report)
     _plain_evac_records(deck, report)
@@ -770,36 +770,43 @@ def _import_modern(
 
 
 def _plain_evhos(deck, floor, band, user_walkable: bool, report) -> list:
-    """``&EVHO`` records cut out of a plain deck's derived walkable area.
+    """``&EVHO`` records to cut out of a plain deck's derived walkable area.
 
-    One applies when its z range meets the floor up to the band top;
-    with ``--walkable`` the polygon is taken as given and none applies.
+    One applies when its z range meets the floor up to the band top and
+    its ``MESH_ID``, if given, names a mesh of the floor; with
+    ``--walkable`` the polygon is taken as given and none applies. The
+    skipped ones are reported here, the applied ones by :func:`_minus_evhos`.
     """
+    mesh_ids = {m.id for m in floor.meshes}
     applied = []
     for record in deck.group("EVHO"):
-        on_floor = _evho_on_floor(record, floor.z_floor, band[1])
-        status, level, message = _evho_item(on_floor, user_walkable)
-        report.add(status, level, "EVHO", message, record)
-        if on_floor and not user_walkable:
-            applied.append(record)
+        reason = _evho_skipped(record, floor.z_floor, band[1], mesh_ids)
+        if reason is None and user_walkable:
+            reason = "the --walkable polygon is taken as given"
+        if reason is not None:
+            report.add("D", "warning", "EVHO", f"ignored: {reason}", record)
+            continue
+        applied.append(record)
     return applied
 
 
-def _evho_on_floor(record: NamelistRecord, z_floor: float, z_top: float) -> bool:
+def _evho_skipped(record, z_floor: float, z_top: float, mesh_ids) -> str | None:
+    mesh_id = record.text("MESH_ID")
+    if mesh_id is not None and mesh_id not in mesh_ids:
+        return f"MESH_ID {mesh_id!r} is not a mesh of the imported floor"
     xb = record.xb()
-    return xb is not None and xb[5] >= z_floor - 1e-9 and xb[4] <= z_top
+    if xb is None or xb[5] < z_floor - 1e-9 or xb[4] > z_top:
+        return "not on the imported floor"
+    return None
 
 
-def _evho_item(on_floor: bool, user_walkable: bool) -> tuple[str, str, str]:
-    if not on_floor:
-        return "D", "warning", "not on the imported floor: ignored"
-    if user_walkable:
-        return "D", "warning", "ignored: the --walkable polygon is taken as given"
-    return "A", "info", "cut out of the walkable area (plain deck)"
+def _minus_evhos(
+    provider: WalkableProvider, evhos: list, report: ImportReport
+) -> WalkableProvider:
+    """*provider* with the footprints of *evhos* cut out of its polygon.
 
-
-def _minus_evhos(provider: WalkableProvider, evhos: list) -> WalkableProvider:
-    """*provider* with the footprints of *evhos* cut out of its polygon."""
+    An ``&EVHO`` that does not overlap the polygon is reported as ignored.
+    """
     if not evhos:
         return provider
 
@@ -807,12 +814,28 @@ def _minus_evhos(provider: WalkableProvider, evhos: list) -> WalkableProvider:
         result = provider(deck, spec)
         if result.polygon is None:
             return result
-        holes = union([footprint(r) for r in evhos])
-        note = f"{len(evhos)} &EVHO cut out"
-        polygon = result.polygon.difference(holes)
+        holes = [r for r in evhos if _evho_cuts(r, result.polygon, report)]
+        if not holes:
+            return result
+        note = f"{len(holes)} &EVHO cut out"
+        polygon = result.polygon.difference(union([footprint(r) for r in holes]))
         return WalkableResult(polygon, [*result.diagnostics, note], result.source)
 
     return derive
+
+
+def _evho_cuts(record: NamelistRecord, polygon, report: ImportReport) -> bool:
+    if footprint(record).intersection(polygon).area <= 0:
+        report.add(
+            "D",
+            "warning",
+            "EVHO",
+            "ignored: outside the walkable area",
+            record,
+        )
+        return False
+    report.add("A", "info", "EVHO", "cut out of the walkable area (plain deck)", record)
+    return True
 
 
 def _plain_evac_records(deck: FdsDeck, report: ImportReport) -> None:
