@@ -154,7 +154,7 @@ The equations behind each rate are on [Models › FED](/models/fed.md) and
 | Column | Meaning |
 |---|---|
 | `time_s`, `agent_id` | when, and who |
-| `old_exit`, `new_exit` | exit before and after; `old_exit` is empty for the first assignment, and for `explore`, `wander`, `return` and `stay`, which send an agent with no exit to a node |
+| `old_exit`, `new_exit` | exit before and after; `new_exit` is a node for `explore`, `wander`, `return` and `stay`. `old_exit` is empty for the first assignment, for `explore`, `wander`, `return` and `stay`, for an `initial` row that gives an agent on its default route its first known exit, and for a second `default_route` row at spawn in the same time step |
 | `old_cost`, `new_cost` | ranking cost of the two routes, rounded to 4 decimals; `old_cost` is empty when there was none |
 | `reason` | `initial`, `default_route`, `fed_reroute`, `smoke_reroute`, `exit_closed`, `exit_opened`, `learned_exit`, `congestion`, `shorter_path`, `exit_unreachable`, `resume`, `fallback`, `better_path`, `explore`, `wander`, `return` or `stay` |
 
@@ -219,7 +219,7 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 | `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
 | `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
-| `metrics["route_switches"]` | route-history rows that change an agent's target: rows with an `old_exit`, and `explore`, `wander`, `return` and `stay` rows. A row that gives an agent its first exit (empty `old_exit`, reason `initial`, `default_route` or `fallback`) is not counted (#733). Present when the route history has rows, so it can be 0 |
+| `metrics["route_switches"]` | per agent, each later time step whose decision changes the agent's target (`new_exit`), or its path to an exit it holds (a row with an `old_exit`); the first decision and repeated rows in one time step are not counted, and reasons are not read (#733). Each new `explore` or `wander` node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0 |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran |
 

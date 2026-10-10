@@ -934,9 +934,11 @@ def test_exit_history_of_agents_still_inside_names_the_exit_walked_to(mode):
 # ── The route_switches metric (#733) ──
 
 
-def _route_metric(scenario: Scenario) -> tuple[int, int]:
+def _route_metric(
+    scenario: Scenario, config: RerouteConfig = REROUTE
+) -> tuple[int, int]:
     """``metrics["route_switches"]`` and the number of route-history rows."""
-    result = run_scenario(scenario, seed=SEED, reroute_config=REROUTE)
+    result = run_scenario(scenario, seed=SEED, reroute_config=config)
     try:
         return result.metrics["route_switches"], len(result.route_history or [])
     finally:
@@ -960,7 +962,7 @@ def test_route_switches_counts_default_route_after_a_closure():
 
     The agents know only the west door; at each closure they leave the exit
     they walk to for the default route, so every row is a switch. Counting
-    by reason alone would report none.
+    by reason would report none.
     """
     doors = {**DOORS, "north": NORTH_DOOR}
     scenario = _scenario(
@@ -972,3 +974,34 @@ def test_route_switches_counts_default_route_after_a_closure():
     switches, rows = _route_metric(scenario)
     assert rows > 0
     assert switches == rows
+
+
+def test_route_switches_counts_a_first_known_exit_off_the_default_route():
+    """An ``initial`` row with no old exit can still turn the agent.
+
+    The agents enter by the west door and know only it; it opens at T. They
+    walk their default route to the east door, and at T most turn back to
+    the west door under reason ``initial``, with an empty old exit: 22 after
+    a spawn-time pair of rows (west, then east) and 6 after one (east), 28
+    switches in 90 rows under seed 7 (#733).
+    """
+    scenario = _scenario(
+        {"west": {"open_from_s": T_OPEN_S}}, familiarity=0.0, entrance="west"
+    )
+    switches, rows = _route_metric(scenario, REROUTE_OFTEN)
+    assert rows == 90
+    assert switches == 28
+
+
+def test_route_switches_collapses_rows_of_one_time_step():
+    """Two rows of one agent in one time step are one decision.
+
+    At spawn an agent whose journey ends at the east door, not open yet,
+    gets a ``default_route`` row for it and, in the same step, one for the
+    open west door. The agent never walked to the east door: no switch in
+    58 rows under seed 7 (#733).
+    """
+    scenario = _scenario({"east": {"open_from_s": T_OPEN_S}}, familiarity=0.0)
+    switches, rows = _route_metric(scenario, REROUTE_OFTEN)
+    assert rows == 58
+    assert switches == 0

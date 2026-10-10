@@ -225,17 +225,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `metrics["route_switches"]` counts route switches, not route-history
-  rows (#733). A row that gives an agent its first exit, one with no
-  old exit and reason `initial`, `default_route` or `fallback`, is no
-  longer counted; a `default_route` row that leaves a closed exit, and
-  the `explore`, `wander`, `return` and `stay` rows of an agent with no
-  exit, still are. The key is
-  still written whenever the history has rows, so it can now be 0:
-  `assets/t_junction` under seed 42 with rerouting reported 295 (150
-  `default_route` and 145 `initial` rows) and now reports 0. The GUI
-  run summary and the verification harness use the same definition, so
-  the GUI's switch count now includes `default_route` rows that leave a
-  closed exit.
+  rows (#733). Per agent, it counts each later time step whose decision
+  changes the agent's target, or its path to an exit it holds (a row
+  with an old exit). An agent's first decision and repeated rows in one
+  time step are not counted, and reasons are not read: an `initial` row
+  that turns an agent on its default route to another exit counts, one
+  to the exit it already walks to does not. The key is still written
+  whenever the history has rows, so it can now be 0:
+  `assets/t_junction` under seed 42 with rerouting has 298 rows (150
+  `default_route`, 148 `initial`) and reported 298; it now reports 0.
+  The GUI run summary and the verification harness use the same
+  definition, so the GUI's switch count changes too.
 
 - `load_scenario` and the run refuse a journey that no entry in
   `transitions` names, with an error naming the journey (#504). Agents

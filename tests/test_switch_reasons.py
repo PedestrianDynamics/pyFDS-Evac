@@ -419,41 +419,67 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
 # ── Which rows the route_switches metric counts (#733) ──
 
 
-@pytest.mark.parametrize("old_exit", ["", None])
-@pytest.mark.parametrize("reason", ["initial", "default_route", "fallback"])
-def test_a_first_exit_is_not_a_switch(reason, old_exit):
-    """A row with no old exit gives the agent its first exit.
-
-    ``fallback`` is decided before ``initial``, so an agent with no exit
-    whose every route is refused gets its first exit as a fallback row.
-    """
-    from pyfds_evac.core.route_graph import is_route_switch
-
-    assert not is_route_switch({"reason": reason, "old_exit": old_exit})
+def _row(time_s, new_exit, old_exit="", agent_id=0, reason="initial"):
+    return {
+        "time_s": time_s,
+        "agent_id": agent_id,
+        "old_exit": old_exit,
+        "new_exit": new_exit,
+        "reason": reason,
+    }
 
 
-@pytest.mark.parametrize("reason", ["explore", "wander", "return", "stay"])
-def test_a_no_exit_target_change_is_a_switch(reason):
-    """These rows have no old exit by design, and still change the target."""
-    from pyfds_evac.core.route_graph import is_route_switch
-
-    assert is_route_switch({"reason": reason, "old_exit": ""})
-
-
-def test_every_reason_with_an_old_exit_is_a_switch():
-    from pyfds_evac.core.route_graph import SWITCH_REASONS, is_route_switch
-
-    assert all(is_route_switch({"reason": r, "old_exit": "A"}) for r in SWITCH_REASONS)
-
-
-def test_count_route_switches_reads_the_old_exit():
+def _count(*rows):
     from pyfds_evac.core.route_graph import count_route_switches
 
-    rows = [
-        {"reason": "initial", "old_exit": ""},
-        {"reason": "fallback", "old_exit": ""},
-        {"reason": "default_route", "old_exit": "west"},
-        {"reason": "fallback", "old_exit": "west"},
-        {"reason": "explore", "old_exit": ""},
-    ]
-    assert count_route_switches(rows) == 3
+    return count_route_switches(rows)
+
+
+def test_an_agents_first_decision_is_not_a_switch():
+    assert _count(_row(0.0, "A", reason="default_route")) == 0
+    assert _count(_row(3.0, "A", reason="fallback")) == 0
+
+
+def test_rows_of_one_time_step_are_one_decision():
+    """The spawn row and the first evaluation share a time step."""
+    rows = (_row(0.0, "east", reason="default_route"), _row(0.0, "west"))
+    assert _count(*rows) == 0
+    assert _count(*rows, _row(5.0, "east")) == 1
+
+
+def test_the_first_known_exit_counts_only_when_it_differs():
+    """``initial`` after a default route: a switch only to another exit."""
+    default = _row(0.0, "A", reason="default_route")
+    assert _count(default, _row(4.0, "A")) == 0
+    assert _count(default, _row(4.0, "B")) == 1
+
+
+def test_an_explore_chain_then_an_exit():
+    """Each new node counts, as does the exit found at the end."""
+    rows = (
+        _row(0.0, "n1", reason="explore"),
+        _row(2.0, "n2", reason="explore"),
+        _row(4.0, "n3", reason="explore"),
+        _row(6.0, "A"),
+    )
+    assert _count(*rows) == 3
+
+
+def test_a_better_path_to_the_same_exit_is_a_switch():
+    rows = (_row(0.0, "A"), _row(4.0, "A", old_exit="A", reason="better_path"))
+    assert _count(*rows) == 1
+
+
+def test_a_first_row_with_an_old_exit_is_a_switch():
+    """The old exit is the one seeded at spawn without a row."""
+    assert _count(_row(4.0, "B", old_exit="A", reason="exit_closed")) == 1
+
+
+def test_agents_are_counted_apart():
+    rows = (
+        _row(0.0, "A", agent_id=1),
+        _row(0.0, "B", agent_id=2),
+        _row(4.0, "B", agent_id=1),
+        _row(4.0, "B", agent_id=2),
+    )
+    assert _count(*rows) == 1

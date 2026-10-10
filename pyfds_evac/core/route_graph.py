@@ -2954,28 +2954,54 @@ SWITCH_REASONS = (
     "stay",
 )
 
-#: Reasons of a row that sends an agent with no exit to a node: written
-#: without an old exit, they still change the agent's target.
-NO_EXIT_REASONS = frozenset({"explore", "wander", "return", "stay"})
 
+def _agent_steps(
+    rows: Iterable[Mapping[str, Any]],
+) -> dict[Any, list[Mapping[str, Any]]]:
+    """Each agent's route-history rows, one per time step, in history order.
 
-def is_route_switch(row: Mapping[str, Any]) -> bool:
-    """Whether a route-history *row* changes a target, not assigns a first exit.
-
-    *row* is a route-history row as in ``ScenarioResult.route_history``. A
-    row with an old exit is a switch. A row without one (empty, ``None`` or
-    missing ``old_exit``) gives the agent its first exit, whatever its
-    reason (``initial``, ``default_route`` or ``fallback``), unless its
-    reason is in :data:`NO_EXIT_REASONS`.
+    Rows of one agent with equal ``time_s`` were written in one step; the
+    last of them is the decision the agent acts on.
     """
-    if row.get("old_exit"):
-        return True
-    return row.get("reason") in NO_EXIT_REASONS
+    steps: dict[Any, list[Mapping[str, Any]]] = {}
+    for row in rows:
+        agent = steps.setdefault(row["agent_id"], [])
+        if agent and agent[-1]["time_s"] == row["time_s"]:
+            agent[-1] = row
+        else:
+            agent.append(row)
+    return steps
+
+
+def route_switches(
+    rows: Iterable[Mapping[str, Any]],
+) -> list[tuple[str, Mapping[str, Any]]]:
+    """The route switches in a route history, as (previous target, row).
+
+    *rows* are route-history rows as in ``ScenarioResult.route_history``,
+    in history order. A target is a row's ``new_exit``: an exit, or the node
+    of an ``explore``, ``wander``, ``return`` or ``stay`` row. Per agent and
+    time step (see :func:`_agent_steps`), a step is a switch when the agent
+    already had a target and the step either names an old exit (a change of
+    exit, or of the path to the exit held) or a different target. An agent's
+    target before its first step is that row's old exit, the exit seeded at
+    spawn, if any. Reasons are not read: ``initial`` also labels the first
+    known exit of an agent already on its default route (#733).
+    """
+    found: list[tuple[str, Mapping[str, Any]]] = []
+    for steps in _agent_steps(rows).values():
+        previous = steps[0].get("old_exit") or None
+        for row in steps:
+            changed = bool(row.get("old_exit")) or row["new_exit"] != previous
+            if previous is not None and changed:
+                found.append((previous, row))
+            previous = row["new_exit"]
+    return found
 
 
 def count_route_switches(rows: Iterable[Mapping[str, Any]]) -> int:
-    """Number of *rows* that are route switches, see :func:`is_route_switch`."""
-    return sum(1 for row in rows if is_route_switch(row))
+    """Number of route switches in a route history, see :func:`route_switches`."""
+    return len(route_switches(rows))
 
 
 def compute_eval_offset(

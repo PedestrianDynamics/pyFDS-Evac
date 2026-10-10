@@ -42,7 +42,7 @@ from pyfds_evac.core.fed import (
     FdsHeatField,
     TenabilityConfig,
 )
-from pyfds_evac.core.route_graph import count_route_switches, is_route_switch
+from pyfds_evac.core.route_graph import count_route_switches, route_switches
 from pyfds_evac.core.scenario import Scenario
 from pyfds_evac.core.smoke_speed import (
     ExtinctionField,
@@ -541,9 +541,9 @@ def route_switch_count(result) -> int:
 
 
 def route_switch_directions(result) -> dict[tuple[str, str], int]:
-    """Count ``(old_exit, new_exit)`` reroute pairs from ``route_history``."""
+    """Count ``(previous target, new_exit)`` reroute pairs from ``route_history``."""
     counts: dict[tuple[str, str], int] = {}
-    for switch in filter(is_route_switch, result.route_history or []):
-        key = (switch["old_exit"], switch["new_exit"])
+    for previous, switch in route_switches(result.route_history or []):
+        key = (previous, switch["new_exit"])
         counts[key] = counts.get(key, 0) + 1
     return counts
