@@ -506,6 +506,92 @@ def _free_area(area, max_radius, overlapping):
     return area.difference(unary_union(holes))
 
 
+def _jupedsim_positions(simulation):
+    """Agent positions as JuPedSim checks a new agent against, see ``_occupied``.
+
+    Taken right before ``Simulation.iterate``: JuPedSim 1.4.2 files the
+    agents for its neighbour search at the start of an iteration, before
+    they move, so ``add_agent`` measures a new agent against where the
+    others stood then; record each agent added since. An agent listed in
+    ``removed_agents`` after the iteration is still listed and checked
+    against until the next one.
+    """
+    return {int(agent.id): tuple(agent.position) for agent in simulation.agents()}
+
+
+def _occupied(simulation, agent_radii, jupedsim_positions):
+    """Positions and radii of the agents in *simulation*, for ``_crowds_agents``.
+
+    Returns the current positions, the radii, and the positions JuPedSim
+    checks against (``_jupedsim_positions``). The radius is the one
+    JuPedSim holds; a model without one (the generalized centrifugal force
+    model) falls back to *agent_radii*.
+    """
+    agents = list(simulation.agents())
+    xy = np.array([agent.position for agent in agents], dtype=float).reshape(-1, 2)
+    seen = [jupedsim_positions.get(int(a.id), a.position) for a in agents]
+    radii = [
+        getattr(agent.model, "radius", None) or agent_radii.get(int(agent.id), 0.2)
+        for agent in agents
+    ]
+    seen_xy = np.array(seen, dtype=float).reshape(-1, 2)
+    return xy, np.array(radii, dtype=float), seen_xy
+
+
+# Workaround: JuPedSim 1.4.2 spends an agent id on every refused
+# ``add_agent``, and refuses an agent at a distance d from another when
+# d <= r + r_other (collision-free speed models, anticipation velocity
+# model) or d <= r (social force model, r of the agent added), d measured
+# to where the other stood at the start of the last iteration. A flow
+# candidate it refuses is still handed to ``add_agent``, so that the ids,
+# and the runs, stay as they were. The pool keeps candidates the largest
+# radius away from their area's boundary, so the wall check does not
+# refuse them. The generalized centrifugal force model compares ellipses
+# that depend on each agent's speed and orientation; it is not mirrored,
+# so its runs can number agents differently. No upstream issue; drop the
+# exception once ``add_agent`` takes a spacing, or spends no id on a
+# refusal (``test_flow_spawn_spacing.py`` pins these facts).
+_CONTACT_RADIUS_SUM = frozenset(
+    {
+        "CollisionFreeSpeedModel",
+        "CollisionFreeSpeedModelV2",
+        "AnticipationVelocityModel",
+    }
+)
+_CONTACT_OWN_RADIUS = frozenset({"SocialForceModel"})
+
+
+def _gaps(position, xy):
+    """Distances from *position* to *xy*, computed as JuPedSim's ``Point::Norm``."""
+    dx, dy = position[0] - xy[:, 0], position[1] - xy[:, 1]
+    return np.sqrt(dx * dx + dy * dy)
+
+
+def _refused_by_model(model_type, radius, gaps, radii):
+    """Whether JuPedSim 1.4.2 refuses an agent of *radius* at *gaps*."""
+    if model_type in _CONTACT_RADIUS_SUM:
+        return bool(np.any(gaps <= radius + radii))
+    if model_type in _CONTACT_OWN_RADIUS:
+        return bool(np.any(gaps <= radius))
+    return False
+
+
+def _crowds_agents(model_type, agent_parameters, max_radius, occupied):
+    """Whether ``add_agent`` would take a flow agent closer than the spacing (#710).
+
+    As for overlapping spawn areas (#402), two agents keep twice the larger
+    radius apart: *max_radius* is the flow distribution's bound, *occupied*
+    comes from ``_occupied``. A candidate that the model refuses anyway is
+    left to ``add_agent``, see ``_CONTACT_RADIUS_SUM``.
+    """
+    xy, radii, seen_xy = occupied
+    position = agent_parameters.position
+    if np.all(_gaps(position, xy) >= 2 * np.maximum(max_radius, radii)):
+        return False
+    radius = getattr(agent_parameters, "radius", max_radius)
+    return not _refused_by_model(model_type, radius, _gaps(position, seen_xy), radii)
+
+
 def _seatable_parts(free, max_radius):
     """The parts of *free* that can seat an agent, in a stable order.
 

@@ -41,7 +41,7 @@ from pyfds_evac.config import messages
 if TYPE_CHECKING:
     from .plan_view import FrameRecorder
 
-from .agent_params import deck_default_number, parameters_as_dict
+from .agent_params import deck_default_number, max_agent_radius, parameters_as_dict
 from .agent_seed import (
     INITIAL_ORIGIN,
     PURPOSE_FAMILIARITY,
@@ -879,6 +879,51 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _flow_spawn_due(
+    flow_distributions: list,
+    spawning: list,
+    numbers: list,
+    counters: list,
+    time_s: float,
+    dt: float,
+) -> bool:
+    """Whether a flow source may try to add an agent at *time_s*.
+
+    The test of the spawn loop, widened by half a step on each side so
+    that the rounding of the simulated time cannot miss a due attempt.
+    """
+    for source_id, flow in enumerate(flow_distributions):
+        if source_id >= len(spawning) or counters[source_id] >= numbers[source_id]:
+            continue
+        next_spawn = flow["start_time"] + counters[source_id] * spawning[source_id][0]
+        start = max(flow["start_time"], next_spawn)
+        if start - dt / 2 <= time_s <= flow["end_time"] + dt / 2:
+            return True
+    return False
+
+
+def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
+    """Count a step at which flow source *source_id* found no free position."""
+    count, first, _ = deferred.get(source_id, (0, time_s, time_s))
+    deferred[source_id] = (count + 1, first, time_s)
+
+
+def _deferred_spawn_lines(
+    deferred: dict, flow_distributions: list, numbers: list, counters: list
+) -> list[str]:
+    """One line per flow source that had to wait for a free position (#710)."""
+    lines = []
+    for source_id, (count, first, last) in sorted(deferred.items()):
+        key = flow_distributions[source_id].get("dist_key") or source_id
+        lines.append(
+            f"Flow spawning: '{key}' found no free position at {count} steps "
+            f"between t={first:.2f} s and t={last:.2f} s; "
+            f"{numbers[source_id] - counters[source_id]} of its "
+            f"{numbers[source_id]} agents did not enter"
+        )
+    return lines
+
+
 @dataclass(frozen=True)
 class ProgressEvent:
     """A single progress sample emitted while a scenario runs.
@@ -1595,7 +1640,10 @@ def run_scenario(
     """
     _require_jupedsim()
     from .simulation_init import (
+        _crowds_agents,
         _find_nearest_exit,
+        _jupedsim_positions,
+        _occupied,
         _random_point_in_polygon,
         build_agent_path_state,
         create_agent_parameters,
@@ -2325,6 +2373,9 @@ def run_scenario(
                 tuple(scenario.walkable_polygon.bounds),
             )
         last_progress_time = -1.0
+        # source id -> (steps without a free position, first and last time)
+        deferred_spawns: dict[int, tuple[int, float, float]] = {}
+        jupedsim_positions = _jupedsim_positions(simulation)
         last_progress_agents = simulation.agent_count()
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
@@ -2402,8 +2453,13 @@ def run_scenario(
                         continue
 
                     flow_origin = _flow_origin(flow_dist, source_id)
+                    flow_radius = max_agent_radius(flow_dist["params"])
                     for _ in range(spawning_freqs_and_numbers[source_id][1]):
                         spawned_this_attempt = False
+                        # O(agents) per attempt, not per candidate.
+                        occupied = _occupied(
+                            simulation, agent_radii, jupedsim_positions
+                        )
                         selected_variant = None
                         selected_variant_info = None
                         fallback_exit_id = None
@@ -2547,6 +2603,13 @@ def run_scenario(
                                     stage_id=assigned_stage_id,
                                 )
 
+                                if _crowds_agents(
+                                    spawning_info["model_type"],
+                                    agent_parameters,
+                                    flow_radius,
+                                    occupied,
+                                ):
+                                    continue
                                 agent_id = simulation.add_agent(agent_parameters)
                                 # From here on the agent exists, so a failure
                                 # is raised rather than retried elsewhere.
@@ -2555,6 +2618,9 @@ def run_scenario(
                                     spawn_keys, origin_counts, agent_id, pending
                                 )
                                 agent_radii[agent_id] = flow_params.get("radius", 0.2)
+                                jupedsim_positions[agent_id] = tuple(
+                                    agent_parameters.position
+                                )
                                 # print(
                                 #     "Spawned flow agent "
                                 #     f"{agent_id} from source {source_id} at t={current_time:.2f}s "
@@ -2728,11 +2794,8 @@ def run_scenario(
                                 continue
 
                         if not spawned_this_attempt:
-                            print(
-                                "Flow spawn attempt failed "
-                                f"for source {source_id} at t={current_time:.2f}s "
-                                f"after trying {len(starting_pos_per_source[source_id])} candidate positions"
-                            )
+                            # Retried at the next step while the window lasts.
+                            _defer_flow_spawn(deferred_spawns, source_id, current_time)
                             break
                         agent_counter_per_source[source_id] += 1
 
@@ -3397,6 +3460,16 @@ def run_scenario(
                         }
                     )
 
+            # Read only by a flow spawn at the next step.
+            if has_flow_spawning and _flow_spawn_due(
+                flow_distributions,
+                spawning_freqs_and_numbers,
+                num_agents_per_source,
+                agent_counter_per_source,
+                simulation.elapsed_time() + simulation.delta_time(),
+                simulation.delta_time(),
+            ):
+                jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
             if frame_recorder is not None:
                 frame_recorder.after_step(
@@ -3435,6 +3508,13 @@ def run_scenario(
             f"  wall={wall_m}m{wall_s:02d}s"
             f"  done   "
         )
+        for line in _deferred_spawn_lines(
+            deferred_spawns,
+            flow_distributions,
+            num_agents_per_source,
+            agent_counter_per_source,
+        ):
+            print(line)
 
         evacuation_time = simulation.elapsed_time()
         remaining = simulation.agent_count()
@@ -3442,7 +3522,8 @@ def run_scenario(
         if has_flow_spawning:
             total_agents += sum(agent_counter_per_source)
 
-        # Flow agents the time limit cut off before they entered.
+        # Flow agents that never entered: cut off by the time limit, or
+        # still without a free position when their window closed.
         not_spawned = (
             max(0, sum(num_agents_per_source) - sum(agent_counter_per_source))
             if has_flow_spawning
@@ -3460,6 +3541,7 @@ def run_scenario(
             "agents_evacuated": total_agents - remaining,
             "agents_remaining": remaining,
             "agents_not_spawned": not_spawned,
+            "flow_spawns_deferred": sum(c for c, _, _ in deferred_spawns.values()),
             "all_evacuated": remaining == 0,
             "frame_rate": 10.0,
             "dt": 0.01,
