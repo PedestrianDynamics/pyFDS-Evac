@@ -569,13 +569,15 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
         for key, coords in geometry.items():
             if _initial_spawn_count(params[key]) is None:
                 continue
-            spawn = {
-                "area": shapely.intersection(Polygon(coords), walkable_polygon),
-                "params": params[key],
-                "dist_key": key,
-            }
-            if not spawn["area"].is_empty:
-                _checked_shared_area([spawn])
+            try:
+                area = _journey_spawn_area(coords, walkable_polygon)
+            except Exception:
+                # The run warns and skips a distribution it cannot process.
+                continue
+            if not area.is_empty:
+                _checked_shared_area(
+                    [{"area": area, "params": params[key], "dist_key": key}]
+                )
         return
     spawn_defaults = _deck_spawn_defaults(global_parameters)
     areas, params, keys = _fallback_spawn_areas(
@@ -2036,6 +2038,15 @@ def _fallback_spawn_areas(
     )
 
 
+def _journey_spawn_area(coords, walkable_polygon):
+    """The spawn area of the set-up with journeys: *coords* within the walkable area.
+
+    Raises for coordinates that make no valid polygon; that set-up warns and
+    skips the distribution.
+    """
+    return shapely.intersection(Polygon(coords), walkable_polygon)
+
+
 def _clip_spawn_area(dist_area, walkable_polygon):
     """*dist_area* without the obstacles, within the walkable area."""
     holes = [Polygon(interior) for interior in walkable_polygon.interiors]
@@ -2562,8 +2573,7 @@ def _add_agents(
             continue
 
         try:
-            polygon_obj = Polygon(polygon)
-            dist_area = shapely.intersection(polygon_obj, walkable_area.polygon)
+            dist_area = _journey_spawn_area(polygon, walkable_area.polygon)
 
             if dist_area.is_empty:
                 print(f"Warning: Distribution {dist_key} is outside walkable area")

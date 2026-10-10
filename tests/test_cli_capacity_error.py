@@ -249,3 +249,18 @@ def test_refused_agent_is_a_one_line_error_without_capacity_advice(
     with pytest.raises(simulation_init.AgentInsertionError) as error:
         run_scenario(scenario())
     assert isinstance(error.value.__cause__, RuntimeError)
+
+
+def test_export_only_skips_a_spawn_polygon_the_run_skips(monkeypatch):
+    """A self-intersecting spawn polygon is warned about and skipped (#508).
+
+    With journeys the run skips a distribution it cannot process; the
+    export check skips it too instead of failing on the invalid polygon.
+    """
+    scenario = _scenario(ENOUGH_S)
+    bow = [[1.1, 1.1], [3.9, 4.9], [3.9, 1.1], [1.1, 4.9], [1.1, 1.1]]
+    scenario.raw["distributions"]["bow"] = {
+        **scenario.raw["distributions"][D],
+        "coordinates": bow,
+    }
+    assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
