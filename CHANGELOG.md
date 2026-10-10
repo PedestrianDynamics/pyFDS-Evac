@@ -339,10 +339,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SocialForceModel`, an ellipse spacing for
   `GeneralizedCentrifugalForceModel`, nothing for `WarpDriverModel`. A
   flow of 0.15 m agents into an area where 0.3 m agents wait could
-  enter 0.48 m from one of them instead of 0.6 m, closer still next to
-  agents walking off, and under `WarpDriverModel` on top of one. A flow
-  that finds no free position waits as before; instead of a
-  `Flow spawn attempt failed` line at every step it is counted in
+  enter 0.48 m from one of them instead of 0.6 m, and under
+  `WarpDriverModel` on top of one. A flow that finds no free position
+  waits as before; instead of a `Flow spawn attempt failed` line at
+  every step it is counted in
   `metrics["flow_spawns_deferred"]`, and the run ends with one line per
   such flow: `Flow spawning: '<id>' found no free position at N steps
   between t=A s and t=B s; K of its M agents did not enter`. A
@@ -354,7 +354,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   flow configs of `t_junction` (seeds 1 and 42) add the same agents at
   the same times and positions, with the same ids and metrics, but for
   one agent of `t_junction/config_full.json` under seed 42: at t = 222 s
-  it entered 0.296 m from a waiting agent, where 0.3 m is kept now, and
+  it entered 0.296 m from another agent, where 0.3 m is kept now, and
   enters at the next free position. Of the rerouting goldens only
   `ft_full_gate_detour` and `ft_full_additive_detour`
   (`SocialForceModel`, a 0.2 m flow) move: 5 of their 30 agents entered
