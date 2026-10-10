@@ -54,7 +54,18 @@ graph = StageGraph.from_scenario(
 
 When a scenario defines no `transitions`, the stage graph wires itself by
 stage type: spawn areas and crossings reach every crossing and every exit,
-exits are terminal, and nothing points back at a spawn area. Crossings
+exits are terminal, and nothing points back at a spawn area.
+
+An edge from A to B is dropped when a third crossing C lies on the way: the
+walkable distance A → C → B is at most 1.05 times A → B
+(`route_graph.py`, `_passes_through_another_node`,
+`_BETWEENNESS_TOLERANCE` = 0.05). Only crossings block; spawn areas and exits
+never do. If pruning would leave a source without an edge, the edge to the
+nearest target is kept. Crossings thus define which nodes are neighbours.
+Where to draw them is on
+[How do I place checkpoints?](howto-place-checkpoints.md).
+
+Crossings
 therefore participate in cost-driven routing without a hand-authored journey.
 In clear air the direct spawn-to-exit edge is cheapest, so agents take the
 nearest exit and crossings sit inert; smoke can make a route through a

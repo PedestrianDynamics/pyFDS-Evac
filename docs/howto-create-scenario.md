@@ -226,7 +226,8 @@ The keys most often changed:
   `config.simulation_settings.simulationParams.max_simulation_time`
   (default 300 s).
 
-Exits, spawn areas and checkpoints must lie inside the walkable area. With
+Exits, spawn areas and checkpoints must lie inside the walkable area; see
+[How do I place checkpoints?](howto-place-checkpoints.md). With
 `--fds-dir`, `max_simulation_time` must not exceed the last FDS slice time by
 more than one output interval, unless you pass `--allow-fds-horizon-hold`.
 

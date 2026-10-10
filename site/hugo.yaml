@@ -57,6 +57,7 @@ module:
         - "terminal-ui.md"
         - "troubleshooting.md"
         - "howto-rset-ensemble.md"
+        - "howto-place-checkpoints.md"
         - "assets.md"
         - "fds-sampling.md"
         - "smoke-speed-model.md"
@@ -92,6 +93,7 @@ module:
         - "terminal-ui.md"
         - "troubleshooting.md"
         - "howto-rset-ensemble.md"
+        - "howto-place-checkpoints.md"
     - source: ../docs
       target: content/docs/studies
       includeFiles:
