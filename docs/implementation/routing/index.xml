@@ -279,8 +279,8 @@ when a cleaner alternative exists. If every route is fully obscured,
 none are visibility-rejected.&lt;/p>
 &lt;p>If all routes end up rejected, the least-bad one is un-rejected as a
 fallback so the agent always has a path, and its reason is prefixed
-&lt;code>fallback: &lt;/code>. A route the agent must flee (FED-lethal, or impassably
-smoky under the additive model) orders behind every route it need not
+&lt;code>fallback: &lt;/code>. A route the agent must flee (FED-lethal; the additive smoke
+must-flee needs a visible rival, so it never reaches the fallback) orders behind every route it need not
 flee, and the current exit never holds against such a rival when it is
 the one to flee (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>). Among the rest, under the gate the least-bad route is the one with the
 lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
@@ -298,8 +298,8 @@ count as the current route. Under &lt;code>&amp;quot;hold&amp;quot;&lt;/code>:&l
 closed on schedule, or one unreachable from where the agent stands):
 &lt;code>&amp;quot;hold&amp;quot;&lt;/code> acts as &lt;code>&amp;quot;tau&amp;quot;&lt;/code>. The agent takes the route it need not flee with
 the lowest &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>.&lt;/li>
-&lt;li>&lt;strong>Current route and rival both must be fled&lt;/strong> (both FED-lethal, or both
-impassable under the additive model): &lt;code>&amp;quot;hold&amp;quot;&lt;/code> keeps the current exit,
+&lt;li>&lt;strong>Current route and rival both must be fled&lt;/strong> (both FED-lethal):
+&lt;code>&amp;quot;hold&amp;quot;&lt;/code> keeps the current exit,
 whatever their τ. &lt;code>&amp;quot;tau&amp;quot;&lt;/code> switches when the rival&amp;rsquo;s τ is more than the
 20 % margin lower.&lt;/li>
 &lt;li>&lt;strong>Current route must be fled, the rival need not be:&lt;/strong> the agent switches
@@ -309,6 +309,9 @@ under both rules.&lt;/li>
 &lt;li>&lt;strong>Two refused routes of the same kind otherwise:&lt;/strong> &lt;code>&amp;quot;hold&amp;quot;&lt;/code> never
 switches.&lt;/li>
 &lt;/ul>
+&lt;p>&lt;code>&amp;quot;hold&amp;quot;&lt;/code> keeps the agent on its route between refused routes whatever
+the smoke, until the current route crosses the FED limit and a rival does
+not (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750" target="_blank" rel="noopener">#750&lt;/a>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751" target="_blank" rel="noopener">#751&lt;/a>).&lt;/p>
 &lt;p>&lt;code>fallback_switch_margin&lt;/code> and &lt;code>fallback_return_lockout_s&lt;/code> then have no
 effect. On &lt;code>t_junction&lt;/code> (&lt;code>fire_2MW_PVC&lt;/code>, R arm of
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>, seeds
@@ -658,8 +661,8 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
-&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>). Next, between two refused routes the rival needs a τ strictly below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor; a return to the exit left by such a switch waits &lt;code>fallback_return_lockout_s&lt;/code>. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
-&lt;td>only the top-ranked route is tried; the anchor accepts under the same hazard bypasses and the same rule between two refused routes, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
+&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor; a return to the exit left by such a switch waits &lt;code>fallback_return_lockout_s&lt;/code>. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
+&lt;td>only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>), and under the same rule between two refused routes, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
@@ -728,7 +731,7 @@ patrols known nodes when its knowledge is exhausted (&lt;code>wander&lt;/code>).
 &lt;li>That best route leads to a &lt;strong>different exit&lt;/strong> than the current one,
 or the agent is idle (an idle agent is routed even to its current exit).&lt;/li>
 &lt;li>It clears the exit-switch anchor, or qualifies for one of the anchor
-bypasses (old exit FED-lethal or impassably smoky; or, under the gate, a
+bypasses (old exit FED-lethal, or under additive impassably smoky; under the gate also a
 clean rival while the current exit is not, or a feasible rival whose τ is
 lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>).&lt;/li>
 &lt;/ol>
@@ -2048,7 +2051,7 @@ soot-dose or FED-equivalent limit.&lt;/li>
 &lt;code>_must_flee_rejection&lt;/code> fires only on a FED violation or the additive
 &lt;code>all segments non-visible&lt;/code> rejection; the gate refuses on dose and &lt;code>tau&lt;/code>
 only. So no
-smoke rejection bypasses the exit-switch anchor, at any density, and the key
+smoke rejection bypasses the exit-switch anchor, at any density, and the field
 still takes a value and does nothing. &lt;code>visibility_extinction_threshold&lt;/code>
 (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
 survives, and on the fires measured here FED never reaches its threshold, so
