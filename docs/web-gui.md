@@ -276,10 +276,14 @@ raised an error. It reads "Complete: all agents evacuated" when every agent
 has entered and left, and "Incomplete: time limit reached, *k* agents
 inside" when the time limit stopped the run first. When flow agents were
 still to enter, cut off by the time limit or without a free position before
-their flow window closed (the run still goes on to the time limit), it adds ", *m* not spawned", a Not spawned tile appears, and
+their flow window closed, it adds ", *m* not spawned", a Not spawned tile appears, and
 the Evacuated tile reads "*e* of *n* that entered", where *n* counts the
 agents that entered
 ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
+A run whose building emptied after its flow windows closed, with flow agents
+not spawned, ends then and reads "Incomplete: flow windows closed, *m* not
+spawned", with its end time under "Simulated time"
+([#742](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/742)).
 The Incapacitated tile is shown on every finished run; see
 [Results](#results).
 
@@ -444,9 +448,10 @@ times to one decimal:
 - "Complete: all agents evacuated (*e* of *n*), evacuation time *t* s, …";
 - "Incomplete: time limit reached, *k* agents inside[, *m* not spawned],
   simulated time *t* s, …";
+- "Incomplete: flow windows closed, *m* not spawned, simulated time *t* s, …";
 - failed, cancelled, or not recorded.
 
-In the first two, "…" is "*j* incapacitated" when the run modelled
+In the first three, "…" is "*j* incapacitated" when the run modelled
 incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.

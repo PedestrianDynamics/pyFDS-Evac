@@ -39,12 +39,14 @@ more seeds do not supply one, since every seed stops at the same limit;
 ## Why not `result.evacuation_time`?
 
 - `result.evacuation_time` is the time at which the simulation loop stopped.
-  The loop stops when no agent is left, or at `max_simulation_time`. An
+  The loop stops when no agent is left and no flow source can still spawn,
+  or at `max_simulation_time`. An
   incapacitated agent stays in the simulation, so one incapacitation makes
   `evacuation_time` equal to `max_simulation_time`
   ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
 - `result.success` is `False` and `result.status` is `"incomplete"` when the
-  run reaches `max_simulation_time` with agents still inside
+  run reaches `max_simulation_time` with agents still inside, or when the
+  building empties after its flow windows closed with flow agents not spawned
   ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
   Neither says when the last mobile agent left.
 
