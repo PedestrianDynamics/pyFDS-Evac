@@ -518,7 +518,8 @@ not ([#115](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/115)). On th
 over 30 seeds, the median discovery egress time changes by about 1 % at
 both halvings. The P90 changes by more than 5 % at both, because 2 to 4 runs
 per grid end in doorway deadlocks
-([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) and
+([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359);
+`SocialForceModel` deck) and
 count as 300 s; without them it changes by −3.0 % from 0.1 to 0.05 m and
 +1.1 % from 0.05 to 0.025 m
 ([criterion 6](/verification/testing-familiarity.md#pass-criteria);
@@ -683,12 +684,15 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   when it explores, nothing breaks the stand up: an agent with nothing left
   to explore looks from the node point before it patrols (#250), and the
   patrols that used to clear such stands no longer pass.
-  `familiarity_test_no_journey`, in clear air on the 0.05 m grid with the
+  `familiarity_test_no_journey`, an SFM deck (`SocialForceModel`), in
+  clear air on the 0.05 m grid with the
   settings of `tests/test_familiarity_no_journey.py`, ends at `c619a046`
   with 2 agents left in 3 of 150 runs of 5 agents (seeds 1–150) and with 2
   to 6 agents left in 7 of 60 runs of 20 agents (seeds 1–60). At 0.4.0 it
   was up to 4 agents in 5 of 150 and 5 of 60 runs (3 and none before
-  #250). That test bounds the rate.
+  #250). That test bounds the rate. Under `CollisionFreeSpeedModel` the
+  deck does not deadlock
+  ([Movement models](/models/movement.md#deadlock-behaviour)).
 - **Discovery results depend on the clear-air grid**
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). On
   the familiarity deck the 30-seed criterion fails on both halvings because
@@ -798,6 +802,8 @@ agents deadlock in a doorway ([#359](https://github.com/PedestrianDynamics/pyFDS
 Its grid-convergence criterion fails on both halvings on this 30-seed sample
 because of #359 deadlocks, and passes on both without the deadlocked runs
 ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168), open).
+The familiarity decks are SFM decks (`SocialForceModel`;
+[Movement models](/models/movement.md#deadlock-behaviour)).
 
 - `tests/test_exit_visibility_alpha.py` (`assets/exit_visibility_alpha`): the
   bearing of the near sign decides whether the near exit is learned; an

@@ -22,6 +22,7 @@ on [Verification](/verification/_index.md).
 | [Heat](/models/heat.md) | [Heat](/fundamentals/heat.md) | [Heat dose](/verification/testing-heat.md) |
 | [Routing](/models/routing.md) | [Exit choice](/fundamentals/exit-choice.md) | S4 T-junction ([`test_s4_tjunction_reroute.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s4_tjunction_reroute.py)) |
 | [Wayfinding](/models/wayfinding.md) | [Visibility](/fundamentals/visibility.md) | [Familiarity](/verification/testing-familiarity.md) |
+| [Movement models](/models/movement.md) | [JuPedSim models](https://www.jupedsim.org/stable/pedestrian_models/index.html) | Deadlock study ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706#issuecomment-6110206792)) |
 
 {{< svg-figure src="images/concepts/model-responses.svg" min-width="34rem" >}}
 
@@ -89,6 +90,7 @@ on one slice, not a 3-D ray up to the sign.
   {{< card link="heat" title="Heat" subtitle="Opt-in convective heat dose and thermal incapacitation." >}}
   {{< card link="routing" title="Dynamic route rerouting" subtitle="Smoke integrated along the route refuses and orders exits." >}}
   {{< card link="wayfinding" title="Wayfinding" subtitle="Sign legibility through smoke decides what each agent knows." >}}
+  {{< card link="movement" title="Movement models" subtitle="The JuPedSim model that moves the agents, and which one to choose." >}}
 {{< /cards >}}
 
 ## Sources

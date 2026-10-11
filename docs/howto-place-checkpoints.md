@@ -156,18 +156,23 @@ not established. What is known:
 
 With the default `CollisionFreeSpeedModel`, a crowd can stop in an opening
 several body widths wide
-([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706)). Under
-`no_known_exit: explore`, two agents can freeze head-on in a doorway
+([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706)). With
+`SocialForceModel` under `no_known_exit: explore`, two agents can freeze
+head-on in a doorway
 ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)). The
-rates are under [Known defects](limitations.md#known-defects).
+rates are under [Known defects](limitations.md#known-defects), and how each
+model behaves is on [Movement models](/models/movement.md#deadlock-behaviour).
 
 Checkpoint size or placement does not remove these defects. In `station_fahy`
 #706 occurs with or without the vestibule checkpoint and with a looser arrival
-rule, which is why that scenario uses `WarpDriverModel`. What you can do:
+rule. That scenario uses `WarpDriverModel`, which can complete by letting
+agents overlap; its model is under review in
+[#761](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/761). What you
+can do:
 
 - Draw door checkpoints that span both sides of the opening.
-- Use smaller agent radii where the scenario allows; the effect is rarer but
-  does not vanish.
+- Run several seeds. A smaller agent radius does not remove the jam:
+  `HUT_Library` at 0.15 m still jams in 5 of 13 seeds.
 - Before you read the evacuation time, check that every agent left before
   `max_simulation_time`. A deadlock shows as agents still inside at the end.
 
