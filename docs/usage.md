@@ -218,7 +218,7 @@ but the same scenario can behave differently:
 |------|----------|----------------------------------------|
 | Rerouting | on (`--enable-rerouting`) | off: `reroute_config=None` |
 | Re-decision interval | 1.0 s (`--reroute-interval`) | 10.0 s: `RerouteConfig.reevaluation_interval_s` |
-| Route costs | the scenario's `routing` block, for the first exit choice and for rerouting | the `routing` block for the first exit choice. A `RerouteConfig()` built by hand carries the code defaults of `RouteCostConfig` and ignores the `routing` block, for the first choice as well; pass `cost_config=RouteCostConfig.from_routing_params(scenario.raw.get("routing"))` to keep it |
+| Route costs | the scenario's `routing` block, for the first exit choice and for rerouting | the `routing` block, for the first choice and for rerouting; an explicit `cost_config` overrides it |
 | Smoke speed | from `--fds-dir`, or `--constant-extinction` | none |
 | Gas FED, heat FED | from `--fds-dir` (heat with `--enable-heat-fed`) | none |
 | Incapacitation | `TenabilityConfig` whenever a FED track runs, unless `--disable-tenability` | none: `tenability_config=None`; a `fed_model` without `tenability_config` accumulates dose but never incapacitates |

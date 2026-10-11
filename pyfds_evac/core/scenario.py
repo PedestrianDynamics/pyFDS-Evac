@@ -25,7 +25,7 @@ import pathlib
 import sqlite3
 import tempfile
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any
 
@@ -124,6 +124,7 @@ from .route_graph import (
     RouteCostConfig,
     RouteSwitch,
     StageGraph,
+    _cost_config,
     _reconstruct_committed_path,
     adopt_heading_exit,
     compute_eval_offset,
@@ -1652,6 +1653,11 @@ def run_scenario(
     ``frame_recorder`` (a :class:`~pyfds_evac.core.plan_view.FrameRecorder`)
     is called after every step to send plan-view frames; it only reads, so
     the results are the same without it.
+
+    A ``reroute_config`` without a ``cost_config`` takes its route costs
+    from the scenario's ``routing`` block, read when the run starts, for
+    the first exit choice, the closure re-choice and rerouting; an
+    explicit ``cost_config`` overrides the block.
     """
     _require_jupedsim()
     from .simulation_init import (
@@ -1666,6 +1672,13 @@ def run_scenario(
     )
 
     seed = seed if seed is not None else scenario.seed
+    if reroute_config is not None and reroute_config.cost_config is None:
+        reroute_config = replace(
+            reroute_config,
+            cost_config=RouteCostConfig.from_routing_params(
+                scenario.raw.get("routing")
+            ),
+        )
 
     model = _build_model(scenario.model_type, scenario.sim_params)
 
@@ -1867,7 +1880,7 @@ def run_scenario(
         # weights the reroute pass uses, so turning rerouting off changes when
         # routes are re-ranked, not how they are scored.
         initial_cost_config = (
-            reroute_config.cost_config
+            _cost_config(reroute_config)
             if reroute_config is not None
             else RouteCostConfig.from_routing_params(scenario.raw.get("routing"))
         )
@@ -2194,7 +2207,7 @@ def run_scenario(
                         current_fed,
                         extinction_sampler,
                         _fed_rate_adapter,
-                        config.cost_config,
+                        _cost_config(config),
                         cached_segments=route_segment_cache,
                         exit_counts=exit_counts,
                         cognitive_map=_cmap,
@@ -2209,7 +2222,7 @@ def run_scenario(
                             _exit_node.capacity_agents_per_s
                             if _exit_node is not None
                             and _exit_node.capacity_agents_per_s is not None
-                            else config.cost_config.default_exit_capacity
+                            else _cost_config(config).default_exit_capacity
                         )
                         route_cost_history.append(
                             {
