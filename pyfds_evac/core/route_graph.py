@@ -2765,11 +2765,12 @@ def rank_routes(
 
     With *agent_position* the search starts where the agent stands, so every
     exit is priced on the best path from there (see ``_first_hops``).
-    *current_path* is the path the agent is walking; when it leads to
-    *current_exit* and orders ahead of the path the search found to that
-    exit, it is that exit's entry. The search weighs edges at the present
-    time while routes are measured on arrival, so without it the agent's own
-    exit could be priced above the walk it is on.
+    *current_path* is the path the agent is walking (its active path, see
+    :func:`_active_path`); when it leads to *current_exit* and orders ahead
+    of the path the search found to that exit, it is that exit's entry. The
+    search weighs edges at the present time while routes are measured on
+    arrival, so without it the agent's own exit could be priced above the
+    walk it is on.
 
     Returns routes sorted by composite cost (lowest first).
     Rejected routes are sorted to the end.
@@ -2970,6 +2971,11 @@ class AgentRouteState:
     """Per-agent routing state for reevaluation scheduling."""
 
     current_exit: str | None = None
+    # The candidate path: the path the last decision recorded. A same-exit
+    # evaluation records the ranked best path even when the agent keeps
+    # walking its own; other decisions record theirs once applied, and
+    # standing clears it. The path the agent walks is not stored; it is
+    # rebuilt from its wait_info (:func:`_active_path`).
     current_path: list[str] = field(default_factory=list)
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
@@ -2989,6 +2995,11 @@ class AgentRouteState:
     # exit learned since then (``learned_exit``). Labels only; None without a
     # cognitive map or before the first evaluation.
     known_at_last_eval: frozenset[str] | None = None
+
+    @property
+    def candidate_path(self) -> list[str]:
+        """The candidate path, held in ``current_path`` (its public name)."""
+        return self.current_path
 
     @property
     def counted_exit(self) -> str | None:
@@ -3273,6 +3284,15 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     return path
 
 
+def _active_path(wait_info: dict) -> list[str]:
+    """The path the agent walks: rebuilt from *wait_info*, never stored.
+
+    Unlike the candidate path in the route state, it follows the agent's
+    actual plan, so it cannot go stale.
+    """
+    return _reconstruct_committed_path(wait_info)
+
+
 def _anchor_allows(
     candidate: RouteCost,
     old_rc: RouteCost | None,
@@ -3523,7 +3543,7 @@ def _decide_same_exit(
     be reconstructed to this exit. Either way the path is recorded, even if
     applying the switch fails.
     """
-    committed_path = _reconstruct_committed_path(wait_info)
+    committed_path = _active_path(wait_info)
     if (
         committed_path
         and committed_path[-1] == best.exit_id
@@ -3768,7 +3788,7 @@ def _decide_explore(
         # perception runs from the agent's position, so a walked leg can
         # make a sign readable that never was from any node it stood on.
         step = route_state.wander_step
-        if idle and route_state.current_path:
+        if idle and route_state.candidate_path:
             # The previous patrol leg was completed; move on to the next
             # stop, or a single-candidate rotation would re-offer the node
             # the agent is standing on the way to.
@@ -3789,13 +3809,13 @@ def _decide_explore(
     # so comparing against current_target_stage alone re-fires the same
     # switch on every reevaluation until arrival. An idle agent is never
     # suppressed -- it is standing with no onward plan and must be routed.
-    committed = route_state.current_path
+    candidate = route_state.candidate_path
     if not idle and (
         wait_info.get("current_target_stage") == target_node
         or (
-            committed
-            and committed[-1] == target_node
-            and wait_info.get("current_target_stage") in committed
+            candidate
+            and candidate[-1] == target_node
+            and wait_info.get("current_target_stage") in candidate
         )
     ):
         return RouteDecision(kind="keep")
@@ -4213,12 +4233,12 @@ def _decide_return(
     if best is None:
         return None
     _length, node_id, path = best
-    committed = route_state.current_path
+    candidate = route_state.candidate_path
     if (
         wait_info.get("state") != "idle"
-        and committed
-        and committed[-1] == node_id
-        and wait_info.get("current_target_stage") in committed
+        and candidate
+        and candidate[-1] == node_id
+        and wait_info.get("current_target_stage") in candidate
     ):
         return RouteDecision(kind="keep")
     return RouteDecision(
@@ -4276,7 +4296,7 @@ def evaluate_and_reroute(
         agent_position=agent_position,
         current_exit=reference.ranking,
         current_target=current_target,
-        current_path=_reconstruct_committed_path(wait_info),
+        current_path=_active_path(wait_info),
     )
     if not ranked:
         # No exit reachable in the agent's known subgraph (typically a

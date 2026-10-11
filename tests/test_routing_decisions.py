@@ -1427,6 +1427,430 @@ def test_reference_exit_reroute_snapshot():
     golden._check_golden(f"{_SNAPSHOTS}/reference_exit_reroute.json", out)
 
 
+# ── The agent's path: the candidate and the walked one ───────────────
+#
+# Two paths are read: the path the last decision recorded in the route
+# state, and the path the agent walks, rebuilt from its wait_info. In most
+# cases above they are the same path. These cases make them differ at each
+# reader -- ranking, the same-exit check, and the "already committed"
+# checks of explore and return -- and reach each place the recorded path
+# is written, for both models.
+
+
+def _hop_graph() -> StageGraph:
+    """D0 -> C0 -> C1 -> E0 on a straight line."""
+    return golden._graph(
+        {
+            "C0": (10, 0, "checkpoint"),
+            "C1": (20, 0, "checkpoint"),
+            "E0": (30, 0, "exit"),
+        },
+        golden._edges(("D0", "C0"), ("C0", "C1"), ("C1", "E0")),
+    )
+
+
+def _hop_map() -> golden.AgentCognitiveMap:
+    """C1 known but not visited: the frontier, two hops from D0."""
+    return golden.AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={"D0", "C0", "C1"},
+        known_edges={("D0", "C0"), ("C0", "C1")},
+        visited_nodes={"D0", "C0"},
+    )
+
+
+def _return_graph() -> StageGraph:
+    """C1 is a one-way dead end behind C0; C2 leads to E1, out of reach."""
+    return golden._graph(
+        {
+            "C0": (10, 0, "checkpoint"),
+            "C1": (10, 10, "checkpoint"),
+            "C2": (20, 10, "checkpoint"),
+            "E0": (20, 0, "exit"),
+            "E1": (30, 10, "exit"),
+        },
+        golden._edges(("D0", "C0"), ("C0", "C1"), ("C0", "E0"), ("C2", "E1")),
+    )
+
+
+def _return_map() -> golden.AgentCognitiveMap:
+    """E0 is known behind C0, out of reach from C1 along the legs; E1 is
+    known with no known leg to it from C1 at all."""
+    return golden.AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={"D0", "C0", "C1", "C2", "E0", "E1"},
+        known_edges={("D0", "C0"), ("C0", "C1"), ("C0", "E0"), ("C2", "E1")},
+        visited_nodes={"D0", "C0", "C1"},
+    )
+
+
+def _no_return_map() -> golden.AgentCognitiveMap:
+    """No known node leads to a known exit: return falls back to explore."""
+    return golden.AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={"C0", "C1"},
+        known_edges={("C0", "C1")},
+        visited_nodes={"C1"},
+    )
+
+
+def _walkable_linear() -> StageGraph:
+    """D0 -> C0 -> E0 as ``golden._linear``, with a walkable area to look in."""
+    from shapely.geometry import box
+
+    stages = {
+        nid: {"polygon": golden._box(cx, cy), "stage_type": st}
+        for nid, (cx, cy, st) in {
+            "C0": (10, 0, "checkpoint"),
+            "E0": (20, 0, "exit"),
+        }.items()
+    }
+    dists = {"D0": {"coordinates": list(golden._box(0.0, 0.0).exterior.coords)}}
+    return StageGraph.from_scenario(
+        stages,
+        golden._edges(("D0", "C0"), ("C0", "E0")),
+        dists,
+        walkable_polygon=box(-5.0, -5.0, 25.0, 5.0),
+    )
+
+
+def _looking_at(point: tuple[float, float]) -> Callable[[dict], None]:
+    """Put the agent on its way to look from *point*, as _start_look does."""
+
+    def on_world(world: dict) -> None:
+        world["wait_info"].update(look_point=point, target=point, state="to_target")
+
+    return on_world
+
+
+def _set_state(**values: Any) -> Callable[[dict], None]:
+    def on_world(world: dict) -> None:
+        for name, value in values.items():
+            setattr(world["route_state"], name, value)
+
+    return on_world
+
+
+def _set_wait_info(**values: Any) -> Callable[[dict], None]:
+    def on_world(world: dict) -> None:
+        world["wait_info"].update(values)
+
+    return on_world
+
+
+def _drop_origin(world: dict) -> None:
+    world["wait_info"].pop("current_origin")
+
+
+def _agent_path_specs(cc: RouteCostConfig) -> dict[str, tuple]:
+    """Each case: the RerouteCase, its world hook and whether rerouting fails."""
+    case = golden.RerouteCase
+    better = replace(golden.REROUTE_CASES["better_path_ten_percent"], config=cc)
+    explore = {"cognitive_map": _hop_map, "no_known_exit": "explore"}
+    back = {"cognitive_map": _return_map, "no_known_exit": "return"}
+    look = {"cognitive_map": golden._exhausted_map, "no_known_exit": "explore"}
+    spawn_only = {"cognitive_map": _known_spawn_only}
+    refused_cc = replace(_SCAN_REFUSED.config, cost_model=cc.cost_model)
+    return {
+        # Same exit: the agent walks the detour, the recorded path is the
+        # best one, and the reverse. Ranking prices the walked path too.
+        "walked_detour_recorded_best": (
+            case(
+                golden._diamond,
+                cc,
+                "D0",
+                "C1",
+                "E0",
+                current_path=("D0", "C0", "E0"),
+                path_choices=golden._choices("D0", "C1", "E0"),
+                agent_position=(0.5, 1.0),
+            ),
+            None,
+            False,
+        ),
+        "walked_best_recorded_detour": (
+            case(
+                golden._diamond,
+                cc,
+                "D0",
+                "C0",
+                "E0",
+                current_path=("D0", "C1", "E0"),
+                path_choices=golden._choices("D0", "C0", "E0"),
+                agent_position=(0.5, 1.0),
+            ),
+            None,
+            False,
+        ),
+        # The walked path stops where its choices loop back, or is unknown
+        # without an origin.
+        "walked_loops_back": (
+            case(
+                golden._diamond,
+                cc,
+                "D0",
+                "C1",
+                "E0",
+                current_path=("D0", "C1", "E0"),
+                path_choices={"C1": [("D0", 100.0)]},
+                agent_position=(0.5, 1.0),
+            ),
+            None,
+            False,
+        ),
+        "walked_without_origin": (better, _drop_origin, False),
+        # Applying fails: a same-exit switch still records its path, an
+        # exit change does not.
+        "failed_better_path": (better, None, True),
+        "failed_exit_change": (
+            replace(golden.REROUTE_CASES["gate_anchor_cleaner"], config=cc),
+            None,
+            True,
+        ),
+        # A refused route the scan lands on: no decision, nothing recorded.
+        "scan_lands_on_refused": (
+            replace(_SCAN_REFUSED, config=refused_cc),
+            None,
+            False,
+        ),
+        # A standing agent that switches walks again.
+        "standing_then_switch": (
+            case(golden._star2, cc, "spawn", "west", None),
+            _set_state(standing=True, current_path=["spawn", "east"]),
+            False,
+        ),
+        # Explore toward the frontier C1, two hops away, while walking to C0.
+        "explore_recorded_committed": (
+            case(
+                _hop_graph,
+                cc,
+                "D0",
+                "C0",
+                None,
+                current_path=("D0", "C0", "C1"),
+                path_choices=golden._choices("D0", "C0"),
+                **explore,
+            ),
+            None,
+            False,
+        ),
+        "explore_walked_committed": (
+            case(
+                _hop_graph,
+                cc,
+                "D0",
+                "C0",
+                None,
+                path_choices=golden._choices("D0", "C0", "C1"),
+                **explore,
+            ),
+            None,
+            False,
+        ),
+        "explore_recorded_elsewhere": (
+            case(
+                _hop_graph,
+                cc,
+                "D0",
+                "C0",
+                None,
+                current_path=("D0", "C1"),
+                path_choices=golden._choices("D0", "C0"),
+                **explore,
+            ),
+            None,
+            False,
+        ),
+        "wander_idle_nothing_recorded": (
+            case(golden._linear, cc, "C0", "C0", None, state="idle", **look),
+            None,
+            False,
+        ),
+        # Look from the node point before patrolling; keep walking there;
+        # a frontier replaces the look.
+        "look_before_patrol": (
+            case(
+                _walkable_linear,
+                cc,
+                "C0",
+                "C0",
+                None,
+                state="idle",
+                current_path=("D0", "C0"),
+                agent_position=(11.0, 0.5),
+                **look,
+            ),
+            None,
+            False,
+        ),
+        "look_walking_there": (
+            case(
+                _walkable_linear,
+                cc,
+                "C0",
+                "C0",
+                None,
+                current_path=("D0", "C0"),
+                agent_position=(10.5, 0.5),
+                **look,
+            ),
+            _looking_at((10.0, 0.0)),
+            False,
+        ),
+        "look_replaced_by_frontier": (
+            case(
+                _walkable_linear,
+                cc,
+                "D0",
+                "D0",
+                None,
+                current_path=("C0", "D0"),
+                agent_position=(0.5, 0.5),
+                cognitive_map=golden._explore_map,
+                no_known_exit="explore",
+            ),
+            _looking_at((0.0, 0.0)),
+            False,
+        ),
+        # Return to C0, from the one-way dead end C1.
+        "return_idle": (
+            case(
+                _return_graph,
+                cc,
+                "C1",
+                "C1",
+                None,
+                state="idle",
+                current_path=("C1", "C0"),
+                **back,
+            ),
+            None,
+            False,
+        ),
+        "return_recorded_committed": (
+            case(
+                _return_graph, cc, "C1", "C1", None, current_path=("C1", "C0"), **back
+            ),
+            None,
+            False,
+        ),
+        "return_walked_committed": (
+            case(
+                _return_graph,
+                cc,
+                "C1",
+                "C1",
+                None,
+                path_choices={"C1": [("C0", 100.0)]},
+                **back,
+            ),
+            None,
+            False,
+        ),
+        "return_recorded_elsewhere": (
+            case(
+                _return_graph, cc, "C1", "C1", None, current_path=("C1", "D0"), **back
+            ),
+            None,
+            False,
+        ),
+        "return_nowhere": (
+            case(
+                _return_graph,
+                cc,
+                "C1",
+                "C1",
+                None,
+                current_path=("C1", "C0"),
+                cognitive_map=_no_return_map,
+                no_known_exit="return",
+            ),
+            None,
+            False,
+        ),
+        # Stand where the agent is, with and without a recorded position.
+        "stay_at_position": (
+            case(
+                golden._star2,
+                cc,
+                "spawn",
+                "west",
+                None,
+                current_path=("spawn", "west"),
+                path_choices=golden._choices("spawn", "west"),
+                no_known_exit="stay",
+                **spawn_only,
+            ),
+            _set_wait_info(current_position=(0.5, 0.25)),
+            False,
+        ),
+        "stay_without_position": (
+            case(
+                golden._star2,
+                cc,
+                "spawn",
+                "west",
+                None,
+                current_path=("spawn", "west"),
+                path_choices=golden._choices("spawn", "west"),
+                no_known_exit="stay",
+                **spawn_only,
+            ),
+            None,
+            False,
+        ),
+        # The scripted plan already ends at the default exit: no reroute.
+        "default_route_scripted": (
+            case(
+                golden._star2,
+                cc,
+                "spawn",
+                "west",
+                None,
+                current_path=("spawn", "east"),
+                path_choices=golden._choices("spawn", "west"),
+                no_known_exit="default_route",
+                **spawn_only,
+            ),
+            None,
+            False,
+        ),
+    }
+
+
+def _agent_path_run(case: golden.RerouteCase, on_world, fails: bool) -> dict:
+    if not fails:
+        return _reroute(case, with_cache=False, on_world=on_world)
+    with pytest.MonkeyPatch.context() as mp:
+        failing = _FailingReroute(mp)
+        return _reroute(case, with_cache=False, on_world=failing.on_world)
+
+
+def test_agent_path_snapshot():
+    out = {}
+    for model, cc in (("gate", golden._gate()), ("additive", golden._additive())):
+        for name, (case, on_world, fails) in _agent_path_specs(cc).items():
+            result = _agent_path_run(case, on_world, fails)
+            out[f"{model}-{name}"] = {
+                "switch": golden._switch_snapshot(result["switch"]),
+                "route_state": _plain(result["route_state"]),
+                "wait_info": _wait_info_snapshot(result["wait_info"]),
+                "samples": _samples_snapshot(result["log"]),
+            }
+    out = dict(sorted(out.items()))
+    reasons = {v["switch"]["reason"] for v in out.values() if v["switch"] is not None}
+    assert {
+        "better_path",
+        "explore",
+        "wander",
+        "return",
+        "stay",
+        "default_route",
+    } <= reasons
+    assert any("look_point" in v["wait_info"] for v in out.values())
+    golden._check_golden(f"{_SNAPSHOTS}/agent_path.json", out)
+
+
 # ── Ties, fallback identity and the K_vis screen ─────────────────────
 
 

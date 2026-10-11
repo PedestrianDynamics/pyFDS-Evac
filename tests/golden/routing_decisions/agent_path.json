@@ -1,0 +1,4295 @@
+{
+ "additive-default_route_scripted": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": "west",
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "default_route",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": "default_route",
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-explore_recorded_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0",
+    "C1"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-explore_recorded_elsewhere": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0",
+    "C1"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "C1",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-explore_walked_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0",
+    "C1"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "C1",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-failed_better_path": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 2.0 10.0",
+   "k 19.0 4.0 10.0",
+   "k 21.0 6.0 10.0",
+   "k 23.0 8.0 10.0",
+   "k 25.0 10.0 10.0",
+   "k 27.0 12.0 10.0",
+   "k 29.0 14.0 10.0",
+   "k 31.0 16.0 10.0",
+   "k 33.0 18.0 10.0",
+   "k 35.0 20.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 35.0 0.0 30.0",
+   "k 36.8856 1.3333 28.6667",
+   "k 38.7712 2.6667 27.3333",
+   "k 40.6569 4.0 26.0",
+   "k 42.5425 5.3333 24.6667",
+   "k 44.4281 6.6667 23.3333",
+   "k 46.3137 8.0 22.0",
+   "k 48.1993 9.3333 20.6667",
+   "k 50.0849 10.6667 19.3333",
+   "k 51.9706 12.0 18.0",
+   "k 53.8562 13.3333 16.6667",
+   "k 55.7418 14.6667 15.3333",
+   "k 57.6274 16.0 14.0",
+   "k 59.513 17.3333 12.6667",
+   "k 61.3987 18.6667 11.3333",
+   "k 63.2843 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C1",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    30.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-failed_exit_change": {
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 -0.0 0.0",
+   "k 5.0 -2.0 0.0",
+   "k 5.0 -4.0 0.0",
+   "k 5.0 -6.0 0.0",
+   "k 5.0 -8.0 0.0",
+   "k 5.0 -10.0 0.0",
+   "k 5.0 -12.0 0.0",
+   "k 5.0 -14.0 0.0",
+   "k 5.0 -16.0 0.0",
+   "k 5.0 -18.0 0.0",
+   "k 5.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 22.0 0.0",
+   "k 5.0 24.0 0.0",
+   "k 5.0 26.0 0.0",
+   "k 5.0 28.0 0.0",
+   "k 5.0 30.0 0.0",
+   "k 5.0 32.0 0.0",
+   "k 5.0 34.0 0.0",
+   "k 5.0 36.0 0.0",
+   "k 5.0 38.0 0.0",
+   "k 5.0 40.0 0.0",
+   "k 5.0 -0.0 0.0",
+   "k 7.0 -2.0 0.0",
+   "k 9.0 -4.0 0.0",
+   "k 11.0 -6.0 0.0",
+   "k 13.0 -8.0 0.0",
+   "k 15.0 -10.0 0.0",
+   "k 17.0 -12.0 0.0",
+   "k 19.0 -14.0 0.0",
+   "k 21.0 -16.0 0.0",
+   "k 23.0 -18.0 0.0",
+   "k 25.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0",
+   "k 37.0 32.0 0.0",
+   "k 39.0 34.0 0.0",
+   "k 41.0 36.0 0.0",
+   "k 43.0 38.0 0.0",
+   "k 45.0 40.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-look_before_patrol": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "look_point": [
+    10.0,
+    -0.0
+   ],
+   "looked_node": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-look_replaced_by_frontier": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0",
+   "k 5.0 0.5 0.5",
+   "k 5.0 2.4 0.4",
+   "k 5.0 4.3 0.3",
+   "k 5.0 6.2 0.2",
+   "k 5.0 8.1 0.1",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-look_walking_there": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "look_point": [
+    10.0,
+    0.0
+   ],
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-return_idle": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "return",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {
+    "C1": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-return_nowhere": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-return_recorded_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-return_recorded_elsewhere": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "return",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {
+    "C1": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-return_walked_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "return",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {
+    "C1": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-scan_lands_on_refused": {
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [
+    "spawn",
+    "east"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 -0.0 0.0",
+   "k 5.0 -2.0 0.0",
+   "k 5.0 -4.0 0.0",
+   "k 5.0 -6.0 0.0",
+   "k 5.0 -8.0 0.0",
+   "k 5.0 -10.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 22.0 0.0",
+   "k 5.0 24.0 0.0",
+   "k 5.0 26.0 0.0",
+   "k 5.0 28.0 0.0",
+   "k 5.0 30.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 32.0",
+   "k 5.0 0.0 34.0",
+   "k 5.0 0.0 36.0",
+   "k 5.0 0.0 38.0",
+   "k 5.0 0.0 40.0",
+   "k 5.0 0.0 42.0",
+   "k 5.0 0.0 44.0",
+   "k 5.0 0.0 46.0",
+   "k 5.0 0.0 48.0",
+   "k 5.0 0.0 50.0",
+   "k 5.0 -0.0 0.0",
+   "k 7.0 -2.0 0.0",
+   "k 9.0 -4.0 0.0",
+   "k 11.0 -6.0 0.0",
+   "k 13.0 -8.0 0.0",
+   "k 15.0 -10.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 37.0 0.0 32.0",
+   "k 39.0 0.0 34.0",
+   "k 41.0 0.0 36.0",
+   "k 43.0 0.0 38.0",
+   "k 45.0 0.0 40.0",
+   "k 47.0 0.0 42.0",
+   "k 49.0 0.0 44.0",
+   "k 51.0 0.0 46.0",
+   "k 53.0 0.0 48.0",
+   "k 55.0 0.0 50.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    30.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-standing_then_switch": {
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 -0.0 0.0",
+   "k 5.0 -2.0 0.0",
+   "k 5.0 -4.0 0.0",
+   "k 5.0 -6.0 0.0",
+   "k 5.0 -8.0 0.0",
+   "k 5.0 -10.0 0.0",
+   "k 5.0 -12.0 0.0",
+   "k 5.0 -14.0 0.0",
+   "k 5.0 -16.0 0.0",
+   "k 5.0 -18.0 0.0",
+   "k 5.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 22.0 0.0",
+   "k 5.0 24.0 0.0",
+   "k 5.0 26.0 0.0",
+   "k 5.0 28.0 0.0",
+   "k 5.0 30.0 0.0",
+   "k 5.0 32.0 0.0",
+   "k 5.0 34.0 0.0",
+   "k 5.0 36.0 0.0",
+   "k 5.0 38.0 0.0",
+   "k 5.0 40.0 0.0",
+   "k 5.0 -0.0 0.0",
+   "k 7.0 -2.0 0.0",
+   "k 9.0 -4.0 0.0",
+   "k 11.0 -6.0 0.0",
+   "k 13.0 -8.0 0.0",
+   "k 15.0 -10.0 0.0",
+   "k 17.0 -12.0 0.0",
+   "k 19.0 -14.0 0.0",
+   "k 21.0 -16.0 0.0",
+   "k 23.0 -18.0 0.0",
+   "k 25.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0",
+   "k 37.0 32.0 0.0",
+   "k 39.0 34.0 0.0",
+   "k 41.0 36.0 0.0",
+   "k 43.0 38.0 0.0",
+   "k 45.0 40.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-stay_at_position": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": true,
+   "wander_step": 0
+  },
+  "samples": [],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "spawn",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "stay",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_position": [
+    0.5,
+    0.25
+   ],
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": "stay",
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "idle",
+   "step_index": 0,
+   "target": [
+    0.5,
+    0.25
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-stay_without_position": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": true,
+   "wander_step": 0
+  },
+  "samples": [],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "spawn",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "stay",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": "stay",
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "idle",
+   "step_index": 0,
+   "target": null,
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-walked_best_recorded_detour": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4 2.8",
+   "k 5.0 0.3 4.6",
+   "k 5.0 0.2 6.4",
+   "k 5.0 0.1 8.2",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4667 2.9333",
+   "k 5.0 0.4333 4.8667",
+   "k 5.0 0.4 6.8",
+   "k 5.0 0.3667 8.7333",
+   "k 5.0 0.3333 10.6667",
+   "k 5.0 0.3 12.6",
+   "k 5.0 0.2667 14.5333",
+   "k 5.0 0.2333 16.4667",
+   "k 5.0 0.2 18.4",
+   "k 5.0 0.1667 20.3333",
+   "k 5.0 0.1333 22.2667",
+   "k 5.0 0.1 24.2",
+   "k 5.0 0.0667 26.1333",
+   "k 5.0 0.0333 28.0667",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-walked_detour_recorded_best": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4 2.8",
+   "k 5.0 0.3 4.6",
+   "k 5.0 0.2 6.4",
+   "k 5.0 0.1 8.2",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4667 2.9333",
+   "k 5.0 0.4333 4.8667",
+   "k 5.0 0.4 6.8",
+   "k 5.0 0.3667 8.7333",
+   "k 5.0 0.3333 10.6667",
+   "k 5.0 0.3 12.6",
+   "k 5.0 0.2667 14.5333",
+   "k 5.0 0.2333 16.4667",
+   "k 5.0 0.2 18.4",
+   "k 5.0 0.1667 20.3333",
+   "k 5.0 0.1333 22.2667",
+   "k 5.0 0.1 24.2",
+   "k 5.0 0.0667 26.1333",
+   "k 5.0 0.0333 28.0667",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 6.9336 0.4667 2.9333",
+   "k 8.8672 0.4333 4.8667",
+   "k 10.8009 0.4 6.8",
+   "k 12.7345 0.3667 8.7333",
+   "k 14.6681 0.3333 10.6667",
+   "k 16.6017 0.3 12.6",
+   "k 18.5353 0.2667 14.5333",
+   "k 20.469 0.2333 16.4667",
+   "k 22.4026 0.2 18.4",
+   "k 24.3362 0.1667 20.3333",
+   "k 26.2698 0.1333 22.2667",
+   "k 28.2034 0.1 24.2",
+   "k 30.1371 0.0667 26.1333",
+   "k 32.0707 0.0333 28.0667",
+   "k 34.0043 0.0 30.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 34.0043 0.0 30.0",
+   "k 35.8899 1.3333 28.6667",
+   "k 37.7755 2.6667 27.3333",
+   "k 39.6612 4.0 26.0",
+   "k 41.5468 5.3333 24.6667",
+   "k 43.4324 6.6667 23.3333",
+   "k 45.318 8.0 22.0",
+   "k 47.2036 9.3333 20.6667",
+   "k 49.0893 10.6667 19.3333",
+   "k 50.9749 12.0 18.0",
+   "k 52.8605 13.3333 16.6667",
+   "k 54.7461 14.6667 15.3333",
+   "k 56.6317 16.0 14.0",
+   "k 58.5173 17.3333 12.6667",
+   "k 60.403 18.6667 11.3333",
+   "k 62.2886 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 6.9336 0.4667 2.9333",
+   "k 8.8672 0.4333 4.8667",
+   "k 10.8009 0.4 6.8",
+   "k 12.7345 0.3667 8.7333",
+   "k 14.6681 0.3333 10.6667",
+   "k 16.6017 0.3 12.6",
+   "k 18.5353 0.2667 14.5333",
+   "k 20.469 0.2333 16.4667",
+   "k 22.4026 0.2 18.4",
+   "k 24.3362 0.1667 20.3333",
+   "k 26.2698 0.1333 22.2667",
+   "k 28.2034 0.1 24.2",
+   "k 30.1371 0.0667 26.1333",
+   "k 32.0707 0.0333 28.0667",
+   "k 34.0043 0.0 30.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 34.0043 0.0 30.0",
+   "k 35.8899 1.3333 28.6667",
+   "k 37.7755 2.6667 27.3333",
+   "k 39.6612 4.0 26.0",
+   "k 41.5468 5.3333 24.6667",
+   "k 43.4324 6.6667 23.3333",
+   "k 45.318 8.0 22.0",
+   "k 47.2036 9.3333 20.6667",
+   "k 49.0893 10.6667 19.3333",
+   "k 50.9749 12.0 18.0",
+   "k 52.8605 13.3333 16.6667",
+   "k 54.7461 14.6667 15.3333",
+   "k 56.6317 16.0 14.0",
+   "k 58.5173 17.3333 12.6667",
+   "k 60.403 18.6667 11.3333",
+   "k 62.2886 20.0 10.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 29.0139,
+   "new_exit": "E0",
+   "old_cost": 57.2886,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-walked_loops_back": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4 2.8",
+   "k 5.0 0.3 4.6",
+   "k 5.0 0.2 6.4",
+   "k 5.0 0.1 8.2",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4667 2.9333",
+   "k 5.0 0.4333 4.8667",
+   "k 5.0 0.4 6.8",
+   "k 5.0 0.3667 8.7333",
+   "k 5.0 0.3333 10.6667",
+   "k 5.0 0.3 12.6",
+   "k 5.0 0.2667 14.5333",
+   "k 5.0 0.2333 16.4667",
+   "k 5.0 0.2 18.4",
+   "k 5.0 0.1667 20.3333",
+   "k 5.0 0.1333 22.2667",
+   "k 5.0 0.1 24.2",
+   "k 5.0 0.0667 26.1333",
+   "k 5.0 0.0333 28.0667",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C1": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    30.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-walked_without_origin": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "C1",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 6.8856 1.3333 28.6667",
+   "k 8.7712 2.6667 27.3333",
+   "k 10.6569 4.0 26.0",
+   "k 12.5425 5.3333 24.6667",
+   "k 14.4281 6.6667 23.3333",
+   "k 16.3137 8.0 22.0",
+   "k 18.1993 9.3333 20.6667",
+   "k 20.0849 10.6667 19.3333",
+   "k 21.9706 12.0 18.0",
+   "k 23.8562 13.3333 16.6667",
+   "k 25.7418 14.6667 15.3333",
+   "k 27.6274 16.0 14.0",
+   "k 29.513 17.3333 12.6667",
+   "k 31.3987 18.6667 11.3333",
+   "k 33.2843 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C1",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    30.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "additive-wander_idle_nothing_recorded": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-default_route_scripted": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": "west",
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "default_route",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": "default_route",
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-explore_recorded_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0",
+    "C1"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-explore_recorded_elsewhere": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0",
+    "C1"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "C1",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-explore_walked_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0",
+    "C1"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C1",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "C1",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-failed_better_path": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 2.0 10.0",
+   "k 19.0 4.0 10.0",
+   "k 21.0 6.0 10.0",
+   "k 23.0 8.0 10.0",
+   "k 25.0 10.0 10.0",
+   "k 27.0 12.0 10.0",
+   "k 29.0 14.0 10.0",
+   "k 31.0 16.0 10.0",
+   "k 33.0 18.0 10.0",
+   "k 35.0 20.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 35.0 0.0 30.0",
+   "k 36.8856 1.3333 28.6667",
+   "k 38.7712 2.6667 27.3333",
+   "k 40.6569 4.0 26.0",
+   "k 42.5425 5.3333 24.6667",
+   "k 44.4281 6.6667 23.3333",
+   "k 46.3137 8.0 22.0",
+   "k 48.1993 9.3333 20.6667",
+   "k 50.0849 10.6667 19.3333",
+   "k 51.9706 12.0 18.0",
+   "k 53.8562 13.3333 16.6667",
+   "k 55.7418 14.6667 15.3333",
+   "k 57.6274 16.0 14.0",
+   "k 59.513 17.3333 12.6667",
+   "k 61.3987 18.6667 11.3333",
+   "k 63.2843 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C1",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    30.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-failed_exit_change": {
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 -0.0 0.0",
+   "k 5.0 -2.0 0.0",
+   "k 5.0 -4.0 0.0",
+   "k 5.0 -6.0 0.0",
+   "k 5.0 -8.0 0.0",
+   "k 5.0 -10.0 0.0",
+   "k 5.0 -12.0 0.0",
+   "k 5.0 -14.0 0.0",
+   "k 5.0 -16.0 0.0",
+   "k 5.0 -18.0 0.0",
+   "k 5.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 22.0 0.0",
+   "k 5.0 24.0 0.0",
+   "k 5.0 26.0 0.0",
+   "k 5.0 28.0 0.0",
+   "k 5.0 30.0 0.0",
+   "k 5.0 32.0 0.0",
+   "k 5.0 34.0 0.0",
+   "k 5.0 36.0 0.0",
+   "k 5.0 38.0 0.0",
+   "k 5.0 40.0 0.0",
+   "k 5.0 -0.0 0.0",
+   "k 7.0 -2.0 0.0",
+   "k 9.0 -4.0 0.0",
+   "k 11.0 -6.0 0.0",
+   "k 13.0 -8.0 0.0",
+   "k 15.0 -10.0 0.0",
+   "k 17.0 -12.0 0.0",
+   "k 19.0 -14.0 0.0",
+   "k 21.0 -16.0 0.0",
+   "k 23.0 -18.0 0.0",
+   "k 25.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0",
+   "k 37.0 32.0 0.0",
+   "k 39.0 34.0 0.0",
+   "k 41.0 36.0 0.0",
+   "k 43.0 38.0 0.0",
+   "k 45.0 40.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    40.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-look_before_patrol": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "look_point": [
+    10.0,
+    -0.0
+   ],
+   "looked_node": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-look_replaced_by_frontier": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0",
+   "k 5.0 0.5 0.5",
+   "k 5.0 2.4 0.4",
+   "k 5.0 4.3 0.3",
+   "k 5.0 6.2 0.2",
+   "k 5.0 8.1 0.1",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "explore",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-look_walking_there": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "D0",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 -0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "C0",
+   "look_point": [
+    10.0,
+    0.0
+   ],
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-return_idle": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "return",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {
+    "C1": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-return_nowhere": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-return_recorded_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-return_recorded_elsewhere": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "return",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {
+    "C1": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-return_walked_committed": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C1",
+    "C0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "C1",
+    "C2",
+    "D0",
+    "E0",
+    "E1"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 10.0 0.0",
+   "k 5.0 10.0 2.0",
+   "k 5.0 10.0 4.0",
+   "k 5.0 10.0 6.0",
+   "k 5.0 10.0 8.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 22.0 10.0",
+   "k 5.0 24.0 10.0",
+   "k 5.0 26.0 10.0",
+   "k 5.0 28.0 10.0",
+   "k 5.0 30.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "C0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "return",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C1",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": "return",
+   "path_choices": {
+    "C1": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    10.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-scan_lands_on_refused": {
+  "route_state": {
+   "current_exit": "east",
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": -Infinity,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 -0.0 0.0",
+   "k 5.0 -2.0 0.0",
+   "k 5.0 -4.0 0.0",
+   "k 5.0 -6.0 0.0",
+   "k 5.0 -8.0 0.0",
+   "k 5.0 -10.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 22.0 0.0",
+   "k 5.0 24.0 0.0",
+   "k 5.0 26.0 0.0",
+   "k 5.0 28.0 0.0",
+   "k 5.0 30.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 32.0",
+   "k 5.0 0.0 34.0",
+   "k 5.0 0.0 36.0",
+   "k 5.0 0.0 38.0",
+   "k 5.0 0.0 40.0",
+   "k 5.0 0.0 42.0",
+   "k 5.0 0.0 44.0",
+   "k 5.0 0.0 46.0",
+   "k 5.0 0.0 48.0",
+   "k 5.0 0.0 50.0",
+   "k 5.0 -0.0 0.0",
+   "k 7.0 -2.0 0.0",
+   "k 9.0 -4.0 0.0",
+   "k 11.0 -6.0 0.0",
+   "k 13.0 -8.0 0.0",
+   "k 15.0 -10.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 37.0 0.0 32.0",
+   "k 39.0 0.0 34.0",
+   "k 41.0 0.0 36.0",
+   "k 43.0 0.0 38.0",
+   "k 45.0 0.0 40.0",
+   "k 47.0 0.0 42.0",
+   "k 49.0 0.0 44.0",
+   "k 51.0 0.0 46.0",
+   "k 53.0 0.0 48.0",
+   "k 55.0 0.0 50.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "east",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    30.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-standing_then_switch": {
+  "route_state": {
+   "current_exit": "west",
+   "current_path": [
+    "spawn",
+    "west"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 -0.0 0.0",
+   "k 5.0 -2.0 0.0",
+   "k 5.0 -4.0 0.0",
+   "k 5.0 -6.0 0.0",
+   "k 5.0 -8.0 0.0",
+   "k 5.0 -10.0 0.0",
+   "k 5.0 -12.0 0.0",
+   "k 5.0 -14.0 0.0",
+   "k 5.0 -16.0 0.0",
+   "k 5.0 -18.0 0.0",
+   "k 5.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0",
+   "k 5.0 12.0 0.0",
+   "k 5.0 14.0 0.0",
+   "k 5.0 16.0 0.0",
+   "k 5.0 18.0 0.0",
+   "k 5.0 20.0 0.0",
+   "k 5.0 22.0 0.0",
+   "k 5.0 24.0 0.0",
+   "k 5.0 26.0 0.0",
+   "k 5.0 28.0 0.0",
+   "k 5.0 30.0 0.0",
+   "k 5.0 32.0 0.0",
+   "k 5.0 34.0 0.0",
+   "k 5.0 36.0 0.0",
+   "k 5.0 38.0 0.0",
+   "k 5.0 40.0 0.0",
+   "k 5.0 -0.0 0.0",
+   "k 7.0 -2.0 0.0",
+   "k 9.0 -4.0 0.0",
+   "k 11.0 -6.0 0.0",
+   "k 13.0 -8.0 0.0",
+   "k 15.0 -10.0 0.0",
+   "k 17.0 -12.0 0.0",
+   "k 19.0 -14.0 0.0",
+   "k 21.0 -16.0 0.0",
+   "k 23.0 -18.0 0.0",
+   "k 25.0 -20.0 0.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 2.0 0.0",
+   "k 9.0 4.0 0.0",
+   "k 11.0 6.0 0.0",
+   "k 13.0 8.0 0.0",
+   "k 15.0 10.0 0.0",
+   "k 17.0 12.0 0.0",
+   "k 19.0 14.0 0.0",
+   "k 21.0 16.0 0.0",
+   "k 23.0 18.0 0.0",
+   "k 25.0 20.0 0.0",
+   "k 27.0 22.0 0.0",
+   "k 29.0 24.0 0.0",
+   "k 31.0 26.0 0.0",
+   "k 33.0 28.0 0.0",
+   "k 35.0 30.0 0.0",
+   "k 37.0 32.0 0.0",
+   "k 39.0 34.0 0.0",
+   "k 41.0 36.0 0.0",
+   "k 43.0 38.0 0.0",
+   "k 45.0 40.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 20.0,
+   "new_exit": "west",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "initial",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "west",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {},
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -20.0,
+    -0.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-stay_at_position": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": true,
+   "wander_step": 0
+  },
+  "samples": [],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "spawn",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "stay",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_position": [
+    0.5,
+    0.25
+   ],
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": "stay",
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "idle",
+   "step_index": 0,
+   "target": [
+    0.5,
+    0.25
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-stay_without_position": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "spawn"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": true,
+   "wander_step": 0
+  },
+  "samples": [],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "spawn",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "stay",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "spawn",
+   "current_target_stage": "spawn",
+   "mode": "path",
+   "no_known_exit": "stay",
+   "path_choices": {
+    "spawn": [
+     [
+      "west",
+      100.0
+     ]
+    ]
+   },
+   "state": "idle",
+   "step_index": 0,
+   "target": null,
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-walked_best_recorded_detour": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4 2.8",
+   "k 5.0 0.3 4.6",
+   "k 5.0 0.2 6.4",
+   "k 5.0 0.1 8.2",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4667 2.9333",
+   "k 5.0 0.4333 4.8667",
+   "k 5.0 0.4 6.8",
+   "k 5.0 0.3667 8.7333",
+   "k 5.0 0.3333 10.6667",
+   "k 5.0 0.3 12.6",
+   "k 5.0 0.2667 14.5333",
+   "k 5.0 0.2333 16.4667",
+   "k 5.0 0.2 18.4",
+   "k 5.0 0.1667 20.3333",
+   "k 5.0 0.1333 22.2667",
+   "k 5.0 0.1 24.2",
+   "k 5.0 0.0667 26.1333",
+   "k 5.0 0.0333 28.0667",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    10.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-walked_detour_recorded_best": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4 2.8",
+   "k 5.0 0.3 4.6",
+   "k 5.0 0.2 6.4",
+   "k 5.0 0.1 8.2",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4667 2.9333",
+   "k 5.0 0.4333 4.8667",
+   "k 5.0 0.4 6.8",
+   "k 5.0 0.3667 8.7333",
+   "k 5.0 0.3333 10.6667",
+   "k 5.0 0.3 12.6",
+   "k 5.0 0.2667 14.5333",
+   "k 5.0 0.2333 16.4667",
+   "k 5.0 0.2 18.4",
+   "k 5.0 0.1667 20.3333",
+   "k 5.0 0.1333 22.2667",
+   "k 5.0 0.1 24.2",
+   "k 5.0 0.0667 26.1333",
+   "k 5.0 0.0333 28.0667",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 6.9336 0.4667 2.9333",
+   "k 8.8672 0.4333 4.8667",
+   "k 10.8009 0.4 6.8",
+   "k 12.7345 0.3667 8.7333",
+   "k 14.6681 0.3333 10.6667",
+   "k 16.6017 0.3 12.6",
+   "k 18.5353 0.2667 14.5333",
+   "k 20.469 0.2333 16.4667",
+   "k 22.4026 0.2 18.4",
+   "k 24.3362 0.1667 20.3333",
+   "k 26.2698 0.1333 22.2667",
+   "k 28.2034 0.1 24.2",
+   "k 30.1371 0.0667 26.1333",
+   "k 32.0707 0.0333 28.0667",
+   "k 34.0043 0.0 30.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 34.0043 0.0 30.0",
+   "k 35.8899 1.3333 28.6667",
+   "k 37.7755 2.6667 27.3333",
+   "k 39.6612 4.0 26.0",
+   "k 41.5468 5.3333 24.6667",
+   "k 43.4324 6.6667 23.3333",
+   "k 45.318 8.0 22.0",
+   "k 47.2036 9.3333 20.6667",
+   "k 49.0893 10.6667 19.3333",
+   "k 50.9749 12.0 18.0",
+   "k 52.8605 13.3333 16.6667",
+   "k 54.7461 14.6667 15.3333",
+   "k 56.6317 16.0 14.0",
+   "k 58.5173 17.3333 12.6667",
+   "k 60.403 18.6667 11.3333",
+   "k 62.2886 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 6.9336 0.4667 2.9333",
+   "k 8.8672 0.4333 4.8667",
+   "k 10.8009 0.4 6.8",
+   "k 12.7345 0.3667 8.7333",
+   "k 14.6681 0.3333 10.6667",
+   "k 16.6017 0.3 12.6",
+   "k 18.5353 0.2667 14.5333",
+   "k 20.469 0.2333 16.4667",
+   "k 22.4026 0.2 18.4",
+   "k 24.3362 0.1667 20.3333",
+   "k 26.2698 0.1333 22.2667",
+   "k 28.2034 0.1 24.2",
+   "k 30.1371 0.0667 26.1333",
+   "k 32.0707 0.0333 28.0667",
+   "k 34.0043 0.0 30.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 17.0 0.0 12.0",
+   "k 19.0 0.0 14.0",
+   "k 21.0 0.0 16.0",
+   "k 23.0 0.0 18.0",
+   "k 25.0 0.0 20.0",
+   "k 27.0 0.0 22.0",
+   "k 29.0 0.0 24.0",
+   "k 31.0 0.0 26.0",
+   "k 33.0 0.0 28.0",
+   "k 35.0 0.0 30.0",
+   "k 34.0043 0.0 30.0",
+   "k 35.8899 1.3333 28.6667",
+   "k 37.7755 2.6667 27.3333",
+   "k 39.6612 4.0 26.0",
+   "k 41.5468 5.3333 24.6667",
+   "k 43.4324 6.6667 23.3333",
+   "k 45.318 8.0 22.0",
+   "k 47.2036 9.3333 20.6667",
+   "k 49.0893 10.6667 19.3333",
+   "k 50.9749 12.0 18.0",
+   "k 52.8605 13.3333 16.6667",
+   "k 54.7461 14.6667 15.3333",
+   "k 56.6317 16.0 14.0",
+   "k 58.5173 17.3333 12.6667",
+   "k 60.403 18.6667 11.3333",
+   "k 62.2886 20.0 10.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 29.0139,
+   "new_exit": "E0",
+   "old_cost": 57.2886,
+   "old_exit": "E0",
+   "reason": "better_path",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C0",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C0": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    9.202
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-walked_loops_back": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "D0",
+    "C0",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4 2.8",
+   "k 5.0 0.3 4.6",
+   "k 5.0 0.2 6.4",
+   "k 5.0 0.1 8.2",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.5 1.0",
+   "k 5.0 0.4667 2.9333",
+   "k 5.0 0.4333 4.8667",
+   "k 5.0 0.4 6.8",
+   "k 5.0 0.3667 8.7333",
+   "k 5.0 0.3333 10.6667",
+   "k 5.0 0.3 12.6",
+   "k 5.0 0.2667 14.5333",
+   "k 5.0 0.2333 16.4667",
+   "k 5.0 0.2 18.4",
+   "k 5.0 0.1667 20.3333",
+   "k 5.0 0.1333 22.2667",
+   "k 5.0 0.1 24.2",
+   "k 5.0 0.0667 26.1333",
+   "k 5.0 0.0333 28.0667",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.5 1.0",
+   "k 6.8028 0.4 2.8",
+   "k 8.6056 0.3 4.6",
+   "k 10.4083 0.2 6.4",
+   "k 12.2111 0.1 8.2",
+   "k 14.0139 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 7.0 0.0 2.0",
+   "k 9.0 0.0 4.0",
+   "k 11.0 0.0 6.0",
+   "k 13.0 0.0 8.0",
+   "k 15.0 0.0 10.0",
+   "k 14.0139 0.0 10.0",
+   "k 16.0139 2.0 10.0",
+   "k 18.0139 4.0 10.0",
+   "k 20.0139 6.0 10.0",
+   "k 22.0139 8.0 10.0",
+   "k 24.0139 10.0 10.0",
+   "k 26.0139 12.0 10.0",
+   "k 28.0139 14.0 10.0",
+   "k 30.0139 16.0 10.0",
+   "k 32.0139 18.0 10.0",
+   "k 34.0139 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "D0",
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C1": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    30.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-walked_without_origin": {
+  "route_state": {
+   "current_exit": "E0",
+   "current_path": [
+    "C1",
+    "E0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": null,
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 0.0",
+   "k 5.0 0.0 2.0",
+   "k 5.0 0.0 4.0",
+   "k 5.0 0.0 6.0",
+   "k 5.0 0.0 8.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 0.0 12.0",
+   "k 5.0 0.0 14.0",
+   "k 5.0 0.0 16.0",
+   "k 5.0 0.0 18.0",
+   "k 5.0 0.0 20.0",
+   "k 5.0 0.0 22.0",
+   "k 5.0 0.0 24.0",
+   "k 5.0 0.0 26.0",
+   "k 5.0 0.0 28.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 0.0 10.0",
+   "k 5.0 2.0 10.0",
+   "k 5.0 4.0 10.0",
+   "k 5.0 6.0 10.0",
+   "k 5.0 8.0 10.0",
+   "k 5.0 10.0 10.0",
+   "k 5.0 12.0 10.0",
+   "k 5.0 14.0 10.0",
+   "k 5.0 16.0 10.0",
+   "k 5.0 18.0 10.0",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 5.0 1.3333 28.6667",
+   "k 5.0 2.6667 27.3333",
+   "k 5.0 4.0 26.0",
+   "k 5.0 5.3333 24.6667",
+   "k 5.0 6.6667 23.3333",
+   "k 5.0 8.0 22.0",
+   "k 5.0 9.3333 20.6667",
+   "k 5.0 10.6667 19.3333",
+   "k 5.0 12.0 18.0",
+   "k 5.0 13.3333 16.6667",
+   "k 5.0 14.6667 15.3333",
+   "k 5.0 16.0 14.0",
+   "k 5.0 17.3333 12.6667",
+   "k 5.0 18.6667 11.3333",
+   "k 5.0 20.0 10.0",
+   "k 5.0 0.0 30.0",
+   "k 6.8856 1.3333 28.6667",
+   "k 8.7712 2.6667 27.3333",
+   "k 10.6569 4.0 26.0",
+   "k 12.5425 5.3333 24.6667",
+   "k 14.4281 6.6667 23.3333",
+   "k 16.3137 8.0 22.0",
+   "k 18.1993 9.3333 20.6667",
+   "k 20.0849 10.6667 19.3333",
+   "k 21.9706 12.0 18.0",
+   "k 23.8562 13.3333 16.6667",
+   "k 25.7418 14.6667 15.3333",
+   "k 27.6274 16.0 14.0",
+   "k 29.513 17.3333 12.6667",
+   "k 31.3987 18.6667 11.3333",
+   "k 33.2843 20.0 10.0"
+  ],
+  "switch": null,
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_target_stage": "C1",
+   "mode": "path",
+   "no_known_exit": null,
+   "path_choices": {
+    "C1": [
+     [
+      "E0",
+      100.0
+     ]
+    ],
+    "D0": [
+     [
+      "C1",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    -0.0,
+    30.0
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ },
+ "gate-wander_idle_nothing_recorded": {
+  "route_state": {
+   "current_exit": null,
+   "current_path": [
+    "C0",
+    "D0"
+   ],
+   "default_exit": null,
+   "eval_offset_s": 0.0,
+   "known_at_last_eval": [
+    "C0",
+    "D0"
+   ],
+   "last_eval_time_s": 5.0,
+   "refused_switch_from": null,
+   "refused_switch_time_s": -Infinity,
+   "standing": false,
+   "wander_step": 0
+  },
+  "samples": [
+   "k 5.0 0.0 0.0",
+   "k 5.0 2.0 0.0",
+   "k 5.0 4.0 0.0",
+   "k 5.0 6.0 0.0",
+   "k 5.0 8.0 0.0",
+   "k 5.0 10.0 0.0"
+  ],
+  "switch": {
+   "agent_id": 7,
+   "new_cost": 0.0,
+   "new_exit": "D0",
+   "old_cost": null,
+   "old_exit": null,
+   "reason": "wander",
+   "time_s": 5.0
+  },
+  "wait_info": {
+   "agent_radius": 0.2,
+   "base_seed": 42,
+   "current_origin": "C0",
+   "current_target_stage": "D0",
+   "mode": "path",
+   "no_known_exit": "explore",
+   "path_choices": {
+    "C0": [
+     [
+      "D0",
+      100.0
+     ]
+    ]
+   },
+   "state": "to_target",
+   "step_index": 0,
+   "target": [
+    0.2342,
+    -0.798
+   ],
+   "target_assigned": false,
+   "wait_until": null
+  }
+ }
+}

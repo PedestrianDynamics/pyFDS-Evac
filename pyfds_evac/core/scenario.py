@@ -124,8 +124,8 @@ from .route_graph import (
     RouteCostConfig,
     RouteSwitch,
     StageGraph,
+    _active_path,
     _cost_config,
-    _reconstruct_committed_path,
     adopt_heading_exit,
     compute_eval_offset,
     count_route_switches,
@@ -2289,7 +2289,7 @@ def run_scenario(
                         agent_position=tuple(_pos) if _pos is not None else None,
                         current_exit=rs.current_exit or None,
                         current_target=wait_info.get("current_target_stage"),
-                        current_path=_reconstruct_committed_path(wait_info),
+                        current_path=_active_path(wait_info),
                     )
                     for route_rank, rc in enumerate(ranked, start=1):
                         _exit_node = graph.nodes.get(rc.exit_id)
