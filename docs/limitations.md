@@ -235,7 +235,13 @@ a discovery agent is therefore not limited by what it has perceived.
 **Route choice.** Route choice has open limitations: switching can oscillate
 where two routes cross in cost ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)), routes are priced with smoke the agent
 cannot perceive ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)), one path is priced per exit ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)), node-to-node legs take their FED rate from one sample at the polyline midpoint, a real optical-depth
-difference inside the anchor's deadband can keep the current exit ranked first, so the anchor is never asked ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); round-off is a tie since [#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)). The full list, with
+difference inside the anchor's deadband can keep the current exit ranked first, so the anchor is never asked ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); round-off is a tie since [#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)).
+Under the default gate, smoke on the current route never bypasses the
+exit-switch anchor as a lethal FED does: however dense it is, the agent
+leaves only for a rival the anchor accepts (clearly lower τ, or clean
+where the current route is not) ([#750](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750)). A dose-based
+comparator is researched in [#751](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751); the wider question is
+[#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696). The full list, with
 one line per issue, is on
 [Models › Routing › Limitations](/models/routing.md#limitations).
 

@@ -769,7 +769,7 @@ prediction from `evac.f90`, not a measured run of it.
   `_must_flee_rejection` fires only on a FED violation or the additive
   `all segments non-visible` rejection; the gate refuses on dose and `tau`
   only. So no
-  smoke rejection bypasses the exit-switch anchor, at any density, and the key
+  smoke rejection bypasses the exit-switch anchor, at any density, and the field
   still takes a value and does nothing. `visibility_extinction_threshold`
   (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
   survives, and on the fires measured here FED never reaches its threshold, so
