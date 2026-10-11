@@ -3382,7 +3382,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>old_exit&lt;/code>, &lt;code>new_exit&lt;/code>&lt;/td>
-&lt;td>exit before and after; &lt;code>new_exit&lt;/code> is a node for &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code>. &lt;code>old_exit&lt;/code> is empty for the first assignment, for &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code>, for an &lt;code>initial&lt;/code> row that gives an agent on its default route its first known exit, and for a second &lt;code>default_route&lt;/code> row at spawn in the same time step&lt;/td>
+&lt;td>exit before and after; &lt;code>new_exit&lt;/code> is a node for &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code>. &lt;code>old_exit&lt;/code> is empty for the first assignment, for &lt;code>explore&lt;/code>, &lt;code>wander&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code>, for an &lt;code>initial&lt;/code> row, and for a &lt;code>default_route&lt;/code> row at spawn. An agent that leaves its default route for another exit while the default exit is open has the default exit as &lt;code>old_exit&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>old_cost&lt;/code>, &lt;code>new_cost&lt;/code>&lt;/td>
@@ -3401,10 +3401,14 @@ labelled by its cause
 &lt;code>smoke_reroute&lt;/code> only when smoke made the switch, &lt;code>fed_reroute&lt;/code> when the dose
 did, &lt;code>shorter_path&lt;/code> when time or length alone did.&lt;/p>
 &lt;p>An &lt;code>initial&lt;/code> row is written only when an agent that has no exit at a
-re-evaluation is given its first one. A &lt;code>default_route&lt;/code> row is written for
+re-evaluation is given its first one: for an agent on its default route,
+when that exit is its default exit or the default exit is not open. A
+&lt;code>default_route&lt;/code> row is written for
 an agent that follows its default route, the journey or the nearest exit on
 foot: at spawn when its map holds no exit, or when its known exits are all
-closed or unreachable. Other agents that start with
+closed or unreachable. For a default exit that has not opened yet, the
+spawn row names the open exit the agent is sent to; with no exit open there
+is none. Other agents that start with
 a journey exit get no row until they change target, so a run without any switch (such as the
 example above, &lt;code>Route history rows: 0&lt;/code>) writes a file with only its header. This
 does not mean rerouting was off.&lt;/p>
@@ -7404,7 +7408,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/47cfeec572690dd860c9a1c2f1030590246c20a7">&lt;code>47cfeec&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/07206fde512501462d13c472c876f2d93dc62e70">&lt;code>07206fd&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7428,7 +7432,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">1fe273d0946b9a2448d0055ff1a01a508f568a9c2e4d565a9bc9f0fe05caa5f7&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0e4bd56ae7ebdd389d2785a03249e2eb615d69a1762c7d9f3beff5aa13c3f781&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

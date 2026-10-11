@@ -740,7 +740,8 @@ lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>
 &lt;li>The agent has not yet reached its offset time.&lt;/li>
 &lt;li>The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).&lt;/li>
 &lt;li>All routes are hard-rejected and none was un-rejected as a fallback.&lt;/li>
-&lt;li>The anchor holds the agent on its current exit.&lt;/li>
+&lt;li>The anchor holds the agent on its current exit, or on its open default
+exit while it follows its default route.&lt;/li>
 &lt;li>The best route leads to the same exit and the agent is not idle —
 though the path to it may still be rewritten, which is recorded as
 &lt;code>better_path&lt;/code>.&lt;/li>
@@ -757,7 +758,7 @@ though the path to it may still be rewritten, which is recorded as
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>initial&lt;/code>&lt;/td>
-&lt;td>Agent had no previous exit assignment&lt;/td>
+&lt;td>Agent had no previous exit assignment, or it follows its default route and takes its default exit or the default exit is not open&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>default_route&lt;/code>&lt;/td>
@@ -793,7 +794,7 @@ though the path to it may still be rewritten, which is recorded as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>exit_unreachable&lt;/code>&lt;/td>
-&lt;td>A different exit; the old exit has no route from where the agent stands&lt;/td>
+&lt;td>A different exit; the old exit has no route from where the agent stands, such as a default exit outside the agent&amp;rsquo;s map&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>resume&lt;/code>&lt;/td>
@@ -840,7 +841,10 @@ exit is &lt;code>initial&lt;/code> with an empty &lt;code>old_exit&lt;/code>
 old exit that is refused gives &lt;code>fed_reroute&lt;/code> when its predicted dose is over
 the limit, else &lt;code>smoke_reroute&lt;/code>. With no route to the old exit, and for an
 idle agent routed to its own exit, &lt;code>exit_opened&lt;/code> and &lt;code>learned_exit&lt;/code> still
-come first, then &lt;code>exit_unreachable&lt;/code> or &lt;code>resume&lt;/code>.&lt;/p>
+come first, then &lt;code>exit_unreachable&lt;/code> or &lt;code>resume&lt;/code>. An agent that leaves its
+default route for another exit while the default exit is open leaves that
+exit: &lt;code>old_exit&lt;/code> is the default exit and the reason is one of the above
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/743" target="_blank" rel="noopener">#743&lt;/a>).&lt;/p>
 &lt;p>A cost term is credited when the switch would not clear the anchor without
 it; the anchor is strict, so a cost of exactly the old cost times
 &lt;code>exit_switch_anchor&lt;/code> does not clear. Under &lt;code>gate&lt;/code> the smoke test also
