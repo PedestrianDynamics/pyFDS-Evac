@@ -649,7 +649,8 @@ and the run can still stop with &lt;code>could not place the N requested agents&
 &lt;code>max_simulation_time&lt;/code> first if the full run is long. A complete run ends
 with &lt;code>Simulation finished in … s (N/N evacuated).&lt;/code> and exit status 0.
 A run in which not every agent left ends with
-&lt;code>Simulation incomplete: time limit reached …&lt;/code> and exit status 2
+&lt;code>Simulation incomplete: time limit reached …&lt;/code> or
+&lt;code>Simulation incomplete: flow windows closed …&lt;/code> and exit status 2
 (&lt;code>EXIT_INCOMPLETE&lt;/code> in &lt;code>pyfds_evac/cli.py&lt;/code>). With &lt;code>max_simulation_time&lt;/code>
 set to 30 in the copy above:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -1805,7 +1806,7 @@ The tracked FDS output of the T-junction fire is not in the repository; run
 &lt;/tr>
 &lt;tr>
 &lt;td>2&lt;/td>
-&lt;td>the run is incomplete: it reached &lt;code>max_simulation_time&lt;/code> with agents inside or flow agents still to enter; all requested outputs are written&lt;/td>
+&lt;td>the run is incomplete: it reached &lt;code>max_simulation_time&lt;/code> with agents inside or flow agents still to enter, or the building emptied after its flow windows closed with flow agents not spawned; all requested outputs are written&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>1&lt;/td>
@@ -3128,7 +3129,7 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>outcome&lt;/code>&lt;/td>
-&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
+&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code> or &lt;code>flows_closed&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_clothing&lt;/code>&lt;/td>
@@ -3515,7 +3516,11 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>status&lt;/code>&lt;/td>
-&lt;td>&lt;code>&amp;quot;completed&amp;quot;&lt;/code> when every agent entered and left; &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> when the run reached &lt;code>max_simulation_time&lt;/code> with agents inside or still to enter&lt;/td>
+&lt;td>&lt;code>&amp;quot;completed&amp;quot;&lt;/code> when every agent entered and left; &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> when the run reached &lt;code>max_simulation_time&lt;/code> with agents inside or still to enter, or when the building emptied after its flow windows closed with flow agents not spawned&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>end_reason&lt;/code>&lt;/td>
+&lt;td>why the run stopped: &lt;code>&amp;quot;all_evacuated&amp;quot;&lt;/code> for a completed run; &lt;code>&amp;quot;time_limit&amp;quot;&lt;/code> when &lt;code>max_simulation_time&lt;/code> stopped it; &lt;code>&amp;quot;flows_closed&amp;quot;&lt;/code> when the building emptied after the last flow window with agents still to enter had closed, before the time limit. Also in &lt;code>metrics[&amp;quot;end_reason&amp;quot;]&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>success&lt;/code>&lt;/td>
@@ -3831,13 +3836,13 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code>&lt;/td>
 &lt;td>0 s, 10 s&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (&lt;code>agents_not_spawned&lt;/code>).&lt;/td>
+&lt;td>Window of flow spawning. A flow agent keeps twice the larger radius from every agent already in the run; while no position in the area is that free, it waits, and one still waiting when the window closes does not enter (&lt;code>agents_not_spawned&lt;/code>); a run whose building then empties ends there (&lt;code>end_reason&lt;/code> &lt;code>flows_closed&lt;/code>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>flow_schedule&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>a list of windows&lt;/td>
-&lt;td>Flow windows that replace &lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code> and &lt;code>number&lt;/code>: each &lt;code>{&amp;quot;flow_start_time&amp;quot;, &amp;quot;flow_end_time&amp;quot;, &amp;quot;number&amp;quot;}&lt;/code> (aliases &lt;code>start_time_s&lt;/code>, &lt;code>end_time_s&lt;/code>, &lt;code>sim_count&lt;/code>) adds &lt;code>number&lt;/code> agents at evenly spaced times within its window, as written, at most one per 0.01 s time step; a window shorter than &lt;code>number&lt;/code> × 0.01 s, or one whose agents per second exceed the area&amp;rsquo;s capacity estimate, stops the run. Agents of a window that the time limit cuts off count as not spawned. An entry that is not an object, a time that is not a finite number, a start below 0, an end not after the start or a &lt;code>number&lt;/code> that is not a whole number ≥ 1 stops the run. Each of these errors is a &lt;code>SpawnConfigError&lt;/code> (a &lt;code>ValueError&lt;/code>) that names the distribution, printed by the CLI in one line; &lt;code>--export-only&lt;/code> reports the same. &lt;code>Scenario.set_flow_schedule()&lt;/code> writes it.&lt;/td>
+&lt;td>Flow windows that replace &lt;code>flow_start_time&lt;/code>, &lt;code>flow_end_time&lt;/code> and &lt;code>number&lt;/code>: each &lt;code>{&amp;quot;flow_start_time&amp;quot;, &amp;quot;flow_end_time&amp;quot;, &amp;quot;number&amp;quot;}&lt;/code> (aliases &lt;code>start_time_s&lt;/code>, &lt;code>end_time_s&lt;/code>, &lt;code>sim_count&lt;/code>) adds &lt;code>number&lt;/code> agents at evenly spaced times within its window, as written, at most one per 0.01 s time step; a window shorter than &lt;code>number&lt;/code> × 0.01 s, or one whose agents per second exceed the area&amp;rsquo;s capacity estimate, stops the run. Agents of a window that the time limit cuts off count as not spawned; a run whose building empties after the last flow window with agents still to enter closed ends then (&lt;code>end_reason&lt;/code> &lt;code>flows_closed&lt;/code>). An entry that is not an object, a time that is not a finite number, a start below 0, an end not after the start or a &lt;code>number&lt;/code> that is not a whole number ≥ 1 stops the run. Each of these errors is a &lt;code>SpawnConfigError&lt;/code> (a &lt;code>ValueError&lt;/code>) that names the distribution, printed by the CLI in one line; &lt;code>--export-only&lt;/code> reports the same. &lt;code>Scenario.set_flow_schedule()&lt;/code> writes it.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>initial_number&lt;/code>&lt;/td>
@@ -4498,10 +4503,15 @@ raised an error. It reads &amp;ldquo;Complete: all agents evacuated&amp;rdquo; w
 has entered and left, and &amp;ldquo;Incomplete: time limit reached, &lt;em>k&lt;/em> agents
 inside&amp;rdquo; when the time limit stopped the run first. When flow agents were
 still to enter, cut off by the time limit or without a free position before
-their flow window closed (the run still goes on to the time limit), it adds &amp;ldquo;, &lt;em>m&lt;/em> not spawned&amp;rdquo;, a Not spawned tile appears, and
+their flow window closed, it adds &amp;ldquo;, &lt;em>m&lt;/em> not spawned&amp;rdquo;, a Not spawned tile appears, and
 the Evacuated tile reads &amp;ldquo;&lt;em>e&lt;/em> of &lt;em>n&lt;/em> that entered&amp;rdquo;, where &lt;em>n&lt;/em> counts the
 agents that entered
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279" target="_blank" rel="noopener">#279&lt;/a>).
+A run whose building emptied after its flow windows closed, with flow agents
+not spawned, ends then and reads &amp;ldquo;Incomplete: flow windows closed, &lt;em>m&lt;/em> not
+spawned&amp;rdquo;, with its end time under &amp;ldquo;Simulated time&amp;rdquo;; the Not spawned tile
+and the &amp;ldquo;&lt;em>e&lt;/em> of &lt;em>n&lt;/em> that entered&amp;rdquo; Evacuated tile appear as above
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/742" target="_blank" rel="noopener">#742&lt;/a>).
 The Incapacitated tile is shown on every finished run; see
 &lt;a href="#results">Results&lt;/a>.&lt;/p>
 &lt;h3>Settings changed&lt;span class="hx-absolute -hx-mt-20" id="settings-changed">&lt;/span>
@@ -4679,9 +4689,10 @@ times to one decimal:&lt;/p>
 &lt;li>&amp;ldquo;Complete: all agents evacuated (&lt;em>e&lt;/em> of &lt;em>n&lt;/em>), evacuation time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
 &lt;li>&amp;ldquo;Incomplete: time limit reached, &lt;em>k&lt;/em> agents inside[, &lt;em>m&lt;/em> not spawned],
 simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
+&lt;li>&amp;ldquo;Incomplete: flow windows closed, &lt;em>m&lt;/em> not spawned, simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
 &lt;li>failed, cancelled, or not recorded.&lt;/li>
 &lt;/ul>
-&lt;p>In the first two, &amp;ldquo;…&amp;rdquo; is &amp;ldquo;&lt;em>j&lt;/em> incapacitated&amp;rdquo; when the run modelled
+&lt;p>In the first three, &amp;ldquo;…&amp;rdquo; is &amp;ldquo;&lt;em>j&lt;/em> incapacitated&amp;rdquo; when the run modelled
 incapacitation and &amp;ldquo;incapacitation not modelled&amp;rdquo; otherwise. The file is named
 &lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_run&amp;lt;N&amp;gt;_&amp;lt;start time&amp;gt;.py&lt;/code>, with the run&amp;rsquo;s UTC start
 time such as &lt;code>20260929T182009Z&lt;/code>.&lt;/p>
@@ -6409,6 +6420,10 @@ font-family: arial;
 &lt;td>2&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&amp;ldquo;Incomplete: flow windows closed, &lt;em>m&lt;/em> not spawned&amp;rdquo;&lt;/td>
+&lt;td>2&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&amp;ldquo;Run failed: …&amp;rdquo;; &amp;ldquo;(during setup; the run was not started)&amp;rdquo; when the run failed before it started&lt;/td>
 &lt;td>1&lt;/td>
 &lt;/tr>
@@ -7388,12 +7403,14 @@ more seeds do not supply one, since every seed stops at the same limit;
 &lt;h2>Why not &lt;code>result.evacuation_time&lt;/code>?&lt;span class="hx-absolute -hx-mt-20" id="why-not-resultevacuation_time">&lt;/span>
 &lt;a href="#why-not-resultevacuation_time" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;code>result.evacuation_time&lt;/code> is the time at which the simulation loop stopped.
-The loop stops when no agent is left, or at &lt;code>max_simulation_time&lt;/code>. An
+The loop stops when no agent is left and no flow source can still spawn,
+or at &lt;code>max_simulation_time&lt;/code>. An
 incapacitated agent stays in the simulation, so one incapacitation makes
 &lt;code>evacuation_time&lt;/code> equal to &lt;code>max_simulation_time&lt;/code>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/li>
 &lt;li>&lt;code>result.success&lt;/code> is &lt;code>False&lt;/code> and &lt;code>result.status&lt;/code> is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> when the
-run reaches &lt;code>max_simulation_time&lt;/code> with agents still inside
+run reaches &lt;code>max_simulation_time&lt;/code> with agents still inside, or when the
+building empties after its flow windows closed with flow agents not spawned
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">#139&lt;/a>).
 Neither says when the last mobile agent left.&lt;/li>
 &lt;/ul>
@@ -7408,7 +7425,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/07206fde512501462d13c472c876f2d93dc62e70">&lt;code>07206fd&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/59fe74d8c71269f72e34f2610e1a2adcc1018137">&lt;code>59fe74d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7432,7 +7449,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0e4bd56ae7ebdd389d2785a03249e2eb615d69a1762c7d9f3beff5aa13c3f781&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">dbf1f413557a18a0af9f620958916bfa60ecdef4e0e8b68ecd0668658c9f263b&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
