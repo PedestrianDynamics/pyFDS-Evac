@@ -672,9 +672,9 @@
    "agent_id": 15,
    "new_cost": 51.808,
    "new_exit": "exit_A_left",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "initial",
+   "old_cost": 91.583,
+   "old_exit": "exit_B_right",
+   "reason": "smoke_reroute",
    "time_s": 13.0
   },
   {
@@ -762,9 +762,9 @@
    "agent_id": 26,
    "new_cost": 195.605,
    "new_exit": "exit_B_right",
-   "old_cost": null,
-   "old_exit": "",
-   "reason": "initial",
+   "old_cost": 254.778,
+   "old_exit": "exit_A_left",
+   "reason": "learned_exit",
    "time_s": 23.0
   },
   {

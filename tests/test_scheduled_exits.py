@@ -758,9 +758,8 @@ def test_exits_opening_together_give_no_closure_rows(mode):
     """Nothing is open before T: no row between spawn and T.
 
     An exit that has not opened yet was never the agent's exit, so any
-    first row is an ``initial`` or ``default_route`` with no old exit. With
-    rerouting, agents that know no open exit get their spawn-time
-    ``default_route`` row at t = 0.
+    first row is an ``initial`` or ``default_route`` with no old exit. A
+    default route to an exit not open yet gets no spawn row (#743).
     """
     schedule = {"open_from_s": T_OPEN_S}
     run = _run(_scenario({"west": schedule, "east": schedule}), **RUN_MODES[mode])
@@ -978,15 +977,21 @@ def _route_metric(
 
 
 def test_route_switches_leaves_out_first_assignments():
-    """No exit is open at spawn: each agent's only row is its first exit.
+    """No exit is open at spawn: nobody switches, and nothing is logged.
 
-    Every agent gets a spawn-time ``default_route`` row with no old exit and
-    keeps that exit, so the history has rows but no agent switched.
+    Each agent walks its default route to an exit not open yet, so it gets
+    no spawn row (#743), and keeps that exit when both open. The history is
+    empty, so the metric is not reported.
     """
     schedule = {"open_from_s": T_OPEN_S}
-    switches, rows = _route_metric(_scenario({"west": schedule, "east": schedule}))
-    assert rows == NUM_AGENTS
-    assert switches == 0
+    scenario = _scenario({"west": schedule, "east": schedule})
+    result = run_scenario(scenario, seed=SEED, reroute_config=REROUTE)
+    try:
+        assert not result.route_history
+        assert "route_switches" not in result.metrics
+        assert result.agents_evacuated == NUM_AGENTS
+    finally:
+        result.cleanup()
 
 
 def test_route_switches_counts_default_route_after_a_closure():
@@ -1009,19 +1014,19 @@ def test_route_switches_counts_default_route_after_a_closure():
 
 
 def test_route_switches_counts_a_first_known_exit_off_the_default_route():
-    """An ``initial`` row with no old exit can still turn the agent.
+    """A first known exit off the default route leaves the default exit.
 
     The agents enter by the west door and know only it; it opens at T. They
-    walk their default route to the east door, and at T most turn back to
-    the west door under reason ``initial``, with an empty old exit: 22 after
-    a spawn-time pair of rows (west, then east) and 6 after one (east), 28
-    switches in 90 rows under seed 7 (#733).
+    walk their default route to the east door, with one spawn row each, and
+    at T 28 turn back to the west door under reason ``exit_opened``, with
+    the east door as old exit (#743): 28 switches in 68 rows under seed 7
+    (#733).
     """
     scenario = _scenario(
         {"west": {"open_from_s": T_OPEN_S}}, familiarity=0.0, entrance="west"
     )
     switches, rows = _route_metric(scenario, REROUTE_OFTEN)
-    assert rows == 90
+    assert rows == 68
     assert switches == 28
 
 
@@ -1029,11 +1034,25 @@ def test_route_switches_collapses_rows_of_one_time_step():
     """Two rows of one agent in one time step are one decision.
 
     At spawn an agent whose journey ends at the east door, not open yet,
-    gets a ``default_route`` row for it and, in the same step, one for the
-    open west door. The agent never walked to the east door: no switch in
-    58 rows under seed 7 (#733).
+    gets no row for it (#743), and one for the open west door. The agent
+    never walked to the east door: no switch in 40 rows under seed 7 (#733).
     """
     scenario = _scenario({"east": {"open_from_s": T_OPEN_S}}, familiarity=0.0)
     switches, rows = _route_metric(scenario, REROUTE_OFTEN)
-    assert rows == 58
+    assert rows == 40
     assert switches == 0
+
+
+def test_no_spawn_row_names_an_exit_not_open_yet():
+    """An agent whose journey ends at the east door, not open yet, gets one
+    row at spawn, for the open west door, and none for the east door (#743).
+    """
+    scenario = _scenario({"east": {"open_from_s": T_OPEN_S}}, familiarity=0.0)
+    run = _run(scenario, **RUN_MODES["reroute"])
+    spawn: dict[int, list[dict]] = {}
+    for r in run["routes"]:
+        if r["time_s"] == 0.0:
+            spawn.setdefault(r["agent_id"], []).append(r)
+    assert spawn
+    assert all(len(rows) == 1 for rows in spawn.values())
+    assert {r["new_exit"] for rows in spawn.values() for r in rows} == {"west"}

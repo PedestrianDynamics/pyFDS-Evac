@@ -177,9 +177,9 @@ Agents that left by an exit not in their map: 87
 ```
 
 `Route history rows` counts the rows of `tj_fire_routes.csv`, not route
-switches: one `default_route` row per agent at spawn (150), 12
-`initial` rows, the agents that choose an exit once they see its sign, and
-one `smoke_reroute` row, an agent that changes exit for smoke
+switches: one `default_route` row per agent at spawn (150), and 13 rows of
+the 12 agents that choose an exit once they see a sign: one `initial`, ten
+`learned_exit` and two `smoke_reroute`, agents that change exit for smoke
 ([Exit usage](#exit-usage)).
 
 The run reaches the 300 s time limit with agents still inside or still to
@@ -263,7 +263,7 @@ if FDS_DIR is not None:
 ```text
 evacuated: 99/150 in 300 s
 FED max:   0.23
-route history rows by reason: {'default_route': 150, 'initial': 12, 'smoke_reroute': 1}
+route history rows by reason: {'default_route': 150, 'initial': 1, 'smoke_reroute': 2, 'learned_exit': 10}
 ```
 
 ## 5. Results
@@ -320,8 +320,10 @@ The route log and the exit history explain the fire run. Every agent starts
 with no exit in its map, so each gets one `default_route` row at spawn: it
 follows the scenario's journey, which sends 99 % of the agents from the
 junction to exit B. Only 12 agents ever learn an exit, all in the first
-27 s. Agents 2–12 read exit A's sign and choose it (`initial`). Agent 1
-learns exit B at 5 s (`initial`) and switches to exit A at 6 s for smoke
+27 s. Agent 1 learns exit B at 5 s (`initial`) and switches to exit A at
+6 s for smoke (`smoke_reroute`). Agents 2–12 read exit A's sign and leave
+their default route to exit B for it, so the row names exit B as the old
+exit: ten as `learned_exit`, and agent 4, which also knows exit B, for smoke
 (`smoke_reroute`). All 12 leave by exit A. The other 138 never learn an
 exit. 87 of them leave by exit B without knowing it:
 they follow the default route, not a choice of theirs, and the exit history
