@@ -172,15 +172,23 @@ MODELS = {
 REFUSES_SPACING = sorted(set(MODELS) - {"WarpDriverModel"})
 
 
-def _add(model_type, **kwargs):
+def _add(model_type, unknown=None, **kwargs):
     """A 10 x 10 m run of *model_type* with one agent at (5, 5); the
-    message ``add_agent`` raises for an agent of *kwargs*, or None."""
+    message ``add_agent`` raises for an agent of *kwargs*, or None.
+
+    *unknown* names ``stage_id`` or ``journey_id`` to give the agent an id
+    this run does not have. JuPedSim numbers stages and journeys from
+    process-wide counters, so a fixed id can be this run's own (#769);
+    the id after the run's last one has not been issued yet.
+    """
     model, parameters = MODELS[model_type]
     simulation = jps.Simulation(model=model(), geometry=box(0, 0, 10, 10))
     exit_stage = simulation.add_exit_stage(Polygon(box(9, 9, 9.5, 9.5)))
     journey = simulation.add_journey(jps.JourneyDescription([exit_stage]))
     agent = {"journey_id": journey, "stage_id": exit_stage, "position": (5.0, 5.0)}
     simulation.add_agent(parameters(**agent))
+    if unknown is not None:
+        kwargs[unknown] = agent[unknown] + 1
     try:
         simulation.add_agent(parameters(**(agent | kwargs)))
     except RuntimeError as error:
@@ -204,10 +212,11 @@ def test_jupedsim_refuses_a_position_outside(model_type):
 
 
 @pytest.mark.parametrize("model_type", sorted(MODELS))
-@pytest.mark.parametrize("ids", [{"stage_id": 99}, {"journey_id": 99}])
-def test_unknown_stages_and_journeys_are_not_refused_positions(model_type, ids):
-    error = _add(model_type, position=(3.0, 3.0), **ids)
+@pytest.mark.parametrize("unknown", ["stage_id", "journey_id"])
+def test_unknown_stages_and_journeys_are_not_refused_positions(model_type, unknown):
+    error = _add(model_type, unknown, position=(3.0, 3.0))
     assert error is not None
+    assert str(error).startswith("Unknown ")
     assert not _refuses_position(error)
 
 
