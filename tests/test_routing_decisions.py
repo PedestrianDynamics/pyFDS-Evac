@@ -36,6 +36,7 @@ These snapshots use grid-less fields, so the per-grid-cell sampling path
 from __future__ import annotations
 
 import copy
+import itertools
 import math
 from collections.abc import Callable
 from dataclasses import dataclass, field, fields, replace
@@ -1206,6 +1207,70 @@ def _promoted_hazard(old_rc: RouteCost | None, cfg: RerouteConfig) -> bool:
         "all_segments_non_visible" in old_rc.violation_kinds
         and old_rc.k_ave_route > cfg.cost_config.impassable_extinction_threshold
     )
+
+
+# ── Switch labels ─────────────────────────────────────────────────────
+#
+# _exit_change_reason over a grid that reaches every label of both cost
+# models: the hazard labels, a learned exit, congestion and shorter_path. A
+# base speed other than 1 makes the two models' queue terms differ.
+
+
+def _label_cases() -> dict[str, tuple]:
+    out = {}
+    grid = itertools.product(
+        # Best rank_cost against 10 under the 0.9 anchor. With an old queue
+        # of 4 s, 7.0 is congestion under additive (queue term 2.6) and a
+        # shorter path under the gate (2.0).
+        (5.0, 7.0, 8.0, 9.5),
+        (0.0, 4.0),  # old queue_time_s
+        (0.0, 3.0),  # old tau_route
+        (0.2, 0.6),  # old fed_max_route
+        (True, False),  # old clean
+        (None, 6.0),  # old clear_travel_time_s
+        (0.0, 0.2),  # current_fed
+        (None, "learned_exit"),  # news
+    )
+    for i, (cost, queue, tau, fed, clean, clear, current_fed, news) in enumerate(grid):
+        best = _rc("a", rank_cost=cost, fed_max_route=0.2, clear_travel_time_s=7.0)
+        old_rc = _rc(
+            "b",
+            rank_cost=10.0,
+            queue_time_s=queue,
+            tau_route=tau,
+            fed_max_route=fed,
+            clean=clean,
+            clear_travel_time_s=clear,
+        )
+        for model in ("gate", "additive"):
+            cc = replace(
+                golden._gate(),
+                cost_model=model,
+                base_speed_m_per_s=1.3,
+                w_queue=0.5,
+                w_fed=10.0,
+                w_smoke=0.5,
+            )
+            cfg = RerouteConfig(cost_config=cc, exit_switch_anchor=0.9)
+            out[f"{model}-{i}"] = (best, old_rc, cfg, news, current_fed)
+    return out
+
+
+def test_switch_label_snapshot():
+    cases = _label_cases()
+    labels = {
+        name: live._exit_change_reason(
+            best, "b", old_rc, cfg, news, current_fed=current_fed
+        )
+        for name, (best, old_rc, cfg, news, current_fed) in sorted(cases.items())
+    }
+    for model, expected in (
+        ("gate", {"smoke_reroute", "learned_exit", "congestion", "shorter_path"}),
+        ("additive", {"fed_reroute", "smoke_reroute", "congestion", "shorter_path"}),
+    ):
+        found = {v for k, v in labels.items() if k.startswith(f"{model}-")}
+        assert expected <= found, (model, found)
+    golden._check_golden(f"{_SNAPSHOTS}/switch_labels.json", labels)
 
 
 # ── Ties, fallback identity and the K_vis screen ─────────────────────
