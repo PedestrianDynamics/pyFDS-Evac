@@ -12,6 +12,9 @@ exercise different cache contents::
     <out>/<deck>/<mode>/route_cost_history.csv  every ranked candidate, every
                                                 tick (mode "history_on" only)
     <out>/<deck>/<mode>/egress_summary.json     run metrics and per-agent egress
+    <out>/<deck>/<mode>/trajectory.sqlite       the trajectory run.py writes;
+                                                its rows are compared, not
+                                                its bytes
     <out>/manifest.json                         commit, runs and data root
 
 The familiarity decks come from the repository's ``assets/`` and need no FDS
@@ -24,13 +27,21 @@ other ids.
 Usage::
 
     uv run python scripts/golden_rerouting.py --out DIR [--decks a b ...]
+    uv run python scripts/golden_rerouting.py --step R1 [--decks a b ...]
     uv run python scripts/golden_rerouting.py --compare DIR_A DIR_B
+
+Each refactor step runs the decks at its merge-base and at its head, on the
+same machine; the base run uses the head's copy of this script. ``--step``
+writes into ``<data-root>/golden_187/<step>_<short sha>/``, and the compare
+then names both commits with ``--expect-base`` and ``--expect-head``.
 
 ``--data-root`` defaults to the maintainer's sciebo ``fds-evac-data`` folder.
 A deck whose files are missing there is reported and skipped. ``--compare``
 reports, per run and file, which columns differ and where the first
 difference is; the files must be byte-identical, except that a run metric
-in ``ADDED_METRICS`` present on one side only is listed and not compared. With ``--expect-base`` and
+in ``ADDED_METRICS`` present on one side only is listed and not compared,
+and that a trajectory compares its rows: its metadata holds run-specific
+values. With ``--expect-base`` and
 ``--expect-head`` it also checks that each folder was run at that commit, and
 it fails on a folder run from a dirty tree or on a folder compared with
 itself. Both runs and compare check the full inventory of the selected
@@ -43,12 +54,14 @@ from __future__ import annotations
 import argparse
 import csv
 import hashlib
+import itertools
 import json
 import shutil
 import sqlite3
 import subprocess
 import sys
 import tempfile
+from contextlib import closing
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -64,9 +77,12 @@ MODES: dict[str, tuple[str, ...]] = {
         "route_history.csv",
         "route_cost_history.csv",
         "egress_summary.json",
+        "trajectory.sqlite",
     ),
-    "history_off": ("route_history.csv", "egress_summary.json"),
+    "history_off": ("route_history.csv", "egress_summary.json", "trajectory.sqlite"),
 }
+# The trajectory table, compared row by row in this order.
+TRAJECTORY_QUERY = "SELECT * FROM trajectory_data ORDER BY frame, id"
 # Run metrics a later revision added (#426): the FDS coverage report and the
 # count of samples outside the FDS domain. In an egress summary that holds
 # one of them on one side only, it is listed and left out of the comparison;
@@ -79,19 +95,21 @@ class GoldenDeck:
     """A deck: its config, geometry, FDS run and extra command-line options.
 
     Paths are relative to the data root, or to the repository when *in_repo*
-    is set. A deck without *fds_dir* runs in clear air.
+    is set. A deck without *fds_dir* runs in clear air. *seed* is passed as
+    ``--seed``, so an edit of the config's ``baseSeed`` cannot move it.
     """
 
     config: str
     geometry: str
     fds_dir: str | None
-    seed: int | None = None
+    seed: int
     in_repo: bool = False
     extra_args: tuple[str, ...] = ()
 
 
 DECKS: dict[str, GoldenDeck] = {
-    # Seed 1, as the archived l_corridor results were run.
+    # Seed 1, as the archived l_corridor results were run; the configs say
+    # baseSeed 42. The other seeds are the configs' baseSeed.
     "l_corridor_gate": GoldenDeck(
         "l_corridor/evac/deck_gate/config.json",
         "l_corridor/evac/deck_gate/geometry.wkt",
@@ -108,21 +126,25 @@ DECKS: dict[str, GoldenDeck] = {
         "world100/evac_4exits/deck_config_stream_east.json",
         "world100/evac_4exits/deck_geometry.wkt",
         "world100/fire_4p5MW",
+        seed=100,
     ),
     "world100_stream_oval": GoldenDeck(
         "world100/evac_4exits/deck_config_stream_oval.json",
         "world100/evac_4exits/deck_geometry.wkt",
         "world100/fire_4p5MW",
+        seed=100,
     ),
     "world77": GoldenDeck(
         "world77/evac/deck_config.json",
         "world77/evac/deck_geometry.wkt",
         "world77/fire_2MW",
+        seed=77,
     ),
     "t_junction": GoldenDeck(
         "t_junction/evac/deck_config.json",
         "t_junction/evac/deck_geometry.wkt",
         "t_junction/fire_2MW_PVC",
+        seed=42,
     ),
     # Familiarity tiers, clear air, as docs/testing-familiarity.md runs them.
     "familiarity_test_full": GoldenDeck(
@@ -190,6 +212,7 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
     from pyfds_evac.core import load_scenario, run_scenario
     from pyfds_evac.core.run_config import build_run_kwargs
 
+    _check_imported_from(REPO)
     deck = DECKS[name]
     out.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
@@ -199,6 +222,10 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
             str(bundle),
             "--output-route-history",
             str(out / "route_history.csv"),
+            "--output-sqlite",
+            str(out / "trajectory.sqlite"),
+            "--seed",
+            str(deck.seed),
         ]
         if deck.fds_dir is not None:
             # The t_junction and world100 outputs end before the decks' time
@@ -210,13 +237,16 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
                 "--output-route-cost-history",
                 str(out / "route_cost_history.csv"),
             ]
-        if deck.seed is not None:
-            argv += ["--seed", str(deck.seed)]
         argv += list(deck.extra_args)
         opts = cli._build_parser().parse_args(argv)
         scenario = load_scenario(opts.scenario)
         result = run_scenario(scenario, **build_run_kwargs(scenario, opts, log=print))
         try:
+            if result.metrics.get("seed") != deck.seed:
+                sys.exit(
+                    f"{name}: the run used seed {result.metrics.get('seed')!r}, "
+                    f"the deck pins {deck.seed}"
+                )
             cli.apply_outputs(result, scenario, opts, log=print)
             summary = _egress_summary(result, scenario, deck)
             (out / "egress_summary.json").write_text(
@@ -224,6 +254,18 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
             )
         finally:
             result.cleanup()
+
+
+def _check_imported_from(root: Path) -> None:
+    """Exit with an error unless ``pyfds_evac`` was imported from *root* (#721)."""
+    import pyfds_evac
+
+    package = Path(pyfds_evac.__file__).resolve().parent
+    if not package.is_relative_to(root.resolve()):
+        sys.exit(
+            f"golden run: pyfds_evac was imported from {package}, "
+            f"not from the checkout under test {root}"
+        )
 
 
 def _summary_text(summary: dict) -> str:
@@ -351,6 +393,11 @@ def _provenance(names: list[str], root: Path) -> dict:
             "decks": {name: _deck_fingerprint(DECKS[name], root) for name in names},
         },
     }
+
+
+def _step_folder(root: Path, step: str) -> Path:
+    """Where a refactor step's run at the checked-out commit goes."""
+    return root / "golden_187" / f"{step}_{_git('rev-parse', '--short=8', 'HEAD')}"
 
 
 def _run_all(names: list[str], root: Path, out: Path) -> int:
@@ -521,15 +568,70 @@ def _compare_json(a: bytes, b: bytes) -> list[str]:
     return report
 
 
+def _trajectory_columns(con: sqlite3.Connection) -> list[str]:
+    return [row[1] for row in con.execute("PRAGMA table_info(trajectory_data)")]
+
+
+def _compare_trajectory(a: Path, b: Path) -> list[str]:
+    """Why the trajectory tables of *a* and *b* differ, or nothing.
+
+    Rows are compared as the values sqlite returns, so floats compare at
+    full precision. The metadata table is not compared: it holds values
+    that differ between runs of the same code.
+    """
+    with (
+        closing(sqlite3.connect(f"file:{a}?mode=ro", uri=True)) as con_a,
+        closing(sqlite3.connect(f"file:{b}?mode=ro", uri=True)) as con_b,
+    ):
+        columns = _trajectory_columns(con_a)
+        other = _trajectory_columns(con_b)
+        if not columns or columns != other:
+            return [f"trajectory_data columns differ: {columns} vs {other}"]
+        pairs = itertools.zip_longest(
+            con_a.execute(TRAJECTORY_QUERY), con_b.execute(TRAJECTORY_QUERY)
+        )
+        counts, differing, first = [0, 0], 0, None
+        for index, (row_a, row_b) in enumerate(pairs, start=1):
+            counts[0] += row_a is not None
+            counts[1] += row_b is not None
+            if row_a == row_b:
+                continue
+            differing += 1
+            first = first or (index, row_a, row_b)
+    if first is None:
+        return []
+    report = [f"{differing} differing rows of {max(counts)}"]
+    if counts[0] != counts[1]:
+        report.append(f"row count {counts[0]} vs {counts[1]}")
+    index, row_a, row_b = first
+    if row_a is None or row_b is None:
+        report.append(f"rows end at row {index}: {row_a!r} vs {row_b!r}")
+        return report
+    named_a, named_b = dict(zip(columns, row_a)), dict(zip(columns, row_b))
+    column = next(c for c in columns if named_a[c] != named_b[c])
+    report.append(
+        f"first difference at row {index} (frame {named_a.get('frame')!r}, "
+        f"id {named_a.get('id')!r}), {column}: "
+        f"{named_a[column]!r} vs {named_b[column]!r}"
+    )
+    return report
+
+
 def _compare_file(a: Path, b: Path) -> list[str]:
     """Why *a* and *b* differ, or nothing if they are byte for byte equal.
 
     Bytes decide. The parsed comparison only explains a difference: it
     cannot see every one, since parsing drops an empty container and reads
-    1.0 and 1 as the same number.
+    1.0 and 1 as the same number. A trajectory is the exception: its rows
+    decide.
     """
     if not a.exists() or not b.exists():
         return [f"missing: {a if not a.exists() else b}"]
+    if a.suffix == ".sqlite":
+        try:
+            return _compare_trajectory(a, b)
+        except sqlite3.DatabaseError as exc:
+            return [f"cannot read the trajectories {a} and {b}: {exc}"]
     bytes_a, bytes_b, _ = _comparable_bytes(a, b)
     if bytes_a == bytes_b:
         return []
@@ -716,6 +818,10 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--out", type=Path, help="Folder to write the runs to")
     parser.add_argument(
+        "--step",
+        help="Write the runs to <data-root>/golden_187/<STEP>_<short sha>/",
+    )
+    parser.add_argument(
         "--data-root",
         type=Path,
         default=DEFAULT_DATA_ROOT,
@@ -753,8 +859,12 @@ def main() -> int:
 
     if args.compare:
         return _compare(*args.compare, args.decks, args.expect_base, args.expect_head)
+    if args.out is None and args.step:
+        if not args.step.isalnum():
+            parser.error(f"--step must be letters and digits, got {args.step!r}")
+        args.out = _step_folder(args.data_root, args.step)
     if args.out is None:
-        parser.error("--out is required unless --compare is given")
+        parser.error("--out or --step is required unless --compare is given")
     if args.run_one:
         _run_one(args.run_one, args.mode, args.data_root, args.out)
         return 0
