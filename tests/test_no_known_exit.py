@@ -147,19 +147,133 @@ class TestDefaultRoute:
         assert switch is not None and switch.new_exit == "EA"
         assert state.default_exit == "EA"
 
-    def test_the_first_known_exit_is_an_initial_choice(self):
-        """F5: the default exit is not a known exit to switch away from."""
+    def test_another_known_exit_leaves_the_default_exit(self):
+        """F5, #743: the agent walked to its default exit, so a first known
+        exit elsewhere leaves it; unpriced, it is ``exit_unreachable``."""
         wait_info = _wait_info("default_route", current_origin="C", state="idle")
         state = AgentRouteState(default_exit="EB")
         cmap = _cmap({"S", "C", "EA"}, {("S", "C"), ("C", "EA")}, {"S", "C"})
         switch = _evaluate(wait_info, state, cmap)
         assert switch is not None
         assert (switch.reason, switch.old_exit, switch.old_cost) == (
-            "initial",
-            None,
+            "exit_unreachable",
+            "EB",
             None,
         )
         assert (state.current_exit, state.default_exit) == ("EA", None)
+
+    def test_an_exit_learned_on_the_default_route_is_learned_exit(self):
+        """#743: walking the default route to EB, the agent learns EA."""
+        wait_info = _wait_info("default_route")
+        state = AgentRouteState(
+            default_exit="EB", last_eval_time_s=0.0, known_at_last_eval=frozenset("S")
+        )
+        cmap = _cmap({"S", "C", "EA"}, {("S", "C"), ("C", "EA")})
+        switch = _evaluate(wait_info, state, cmap)
+        assert switch is not None
+        assert (switch.reason, switch.old_exit, switch.new_exit) == (
+            "learned_exit",
+            "EB",
+            "EA",
+        )
+        assert (state.current_exit, state.default_exit) == ("EA", None)
+
+    def test_learning_the_default_exit_is_an_initial_choice(self):
+        """#743: the default exit itself is the agent's first exit, not a
+        switch away from it."""
+        wait_info = _wait_info("default_route", current_origin="C", state="idle")
+        state = AgentRouteState(default_exit="EA")
+        cmap = _cmap({"S", "C", "EA"}, {("S", "C"), ("C", "EA")}, {"S", "C"})
+        switch = _evaluate(wait_info, state, cmap)
+        assert switch is not None
+        assert (switch.reason, switch.old_exit, switch.new_exit) == (
+            "initial",
+            None,
+            "EA",
+        )
+        assert (state.current_exit, state.default_exit) == ("EA", None)
+
+
+class TestDefaultExitAnchor:
+    """The open default exit is the agent's own exit for the anchor (#743).
+
+    Spawn S, checkpoint C at 10 m; EA 30 m east of C in clear air, EB 7 m
+    north in thin haze, ED 10 m west in thicker haze.
+    """
+
+    STAGES = {
+        "C": {"polygon": box(-1, 9, 1, 11), "stage_type": "checkpoint"},
+        "EA": {"polygon": box(29, 9, 31, 11), "stage_type": "exit"},
+        "EB": {"polygon": box(-1, 16, 1, 18), "stage_type": "exit"},
+        "ED": {"polygon": box(-11, 9, -9, 11), "stage_type": "exit"},
+    }
+
+    class Haze:
+        def sample_extinction(self, t, x, y):
+            if y > 11.0:
+                return 0.025
+            return 0.04 if x < -1.0 else 0.0
+
+    def _graph(self, stages) -> StageGraph:
+        return StageGraph.from_scenario(
+            {k: dict(v) for k, v in stages.items()},
+            [{"from": "S", "to": "C"}]
+            + [{"from": "C", "to": e} for e in stages if e != "C"],
+            distributions={"S": {"polygon": box(-1, -1, 1, 1)}},
+        )
+
+    def _evaluate(self, stages, state, extinction):
+        wait_info = _wait_info(
+            "default_route",
+            path_choices={"S": [("C", 100.0)], "C": [("ED", 100.0)]},
+            stage_configs={k: dict(v) for k, v in stages.items()},
+            current_position=(0.0, 5.0),
+        )
+        exits = {e for e in stages if e != "C"}
+        cmap = _cmap({"S", "C", *exits}, {("S", "C")} | {("C", e) for e in exits})
+        return evaluate_and_reroute(
+            agent_id=1,
+            wait_info=wait_info,
+            route_state=state,
+            graph=self._graph(stages),
+            current_time_s=1.0,
+            current_fed=0.0,
+            extinction_sampler=extinction,
+            fed_rate_sampler=None,
+            config=CONFIG,
+            cognitive_map=cmap,
+            agent_position=(0.0, 5.0),
+        )
+
+    @pytest.mark.parametrize(
+        "state",
+        [AgentRouteState(current_exit="ED"), AgentRouteState(default_exit="ED")],
+        ids=["current_exit", "default_exit"],
+    )
+    def test_an_adoptable_exit_behind_a_refused_one_is_found(self, state):
+        """The clean EA ranks first but fails the anchor against ED; EB,
+        ranked behind it, clears it. The agent moves to EB whether ED is its
+        current exit or the exit of its default route."""
+        switch = self._evaluate(self.STAGES, state, self.Haze())
+        assert switch is not None
+        assert (switch.old_exit, switch.new_exit, switch.reason) == (
+            "ED",
+            "EB",
+            "shorter_path",
+        )
+        assert (state.current_exit, state.default_exit) == ("EB", None)
+
+    def test_a_near_tie_keeps_the_default_exit(self):
+        """In clear air EB, 1 m shorter than ED, does not clear the anchor:
+        the agent stays on its default route."""
+        stages = {
+            "C": self.STAGES["C"],
+            "EB": {"polygon": box(9, 9, 11, 11), "stage_type": "exit"},
+            "ED": {"polygon": box(-12, 9, -10, 11), "stage_type": "exit"},
+        }
+        state = AgentRouteState(default_exit="ED")
+        assert self._evaluate(stages, state, ConstantExtinctionField(0.0)) is None
+        assert (state.current_exit, state.default_exit) == (None, "ED")
 
 
 class TestOptInModes:

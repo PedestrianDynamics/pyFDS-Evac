@@ -1079,6 +1079,14 @@ def _known_nodes(cmap) -> frozenset[str] | None:
     return None if cmap is None else frozenset(cmap.known_nodes)
 
 
+def _opens_later(graph: StageGraph, exit_id: str, time_s: float) -> bool:
+    """Whether *exit_id* has not opened yet at *time_s*."""
+    node = graph.nodes.get(exit_id)
+    return (
+        node is not None and node.open_from_s is not None and time_s < node.open_from_s
+    )
+
+
 def _default_route_row(time_s: float, agent_id: int, exit_id: str) -> dict[str, Any]:
     """Route-history row of an agent that takes the default route at spawn."""
     return {
@@ -2086,7 +2094,8 @@ def run_scenario(
             An agent that chose a known exit is counted at it. One that knows
             none follows the default route under ``default_route`` and is
             counted at that exit, with a ``default_route`` row in the route
-            history; under the opt-in modes it heads for no exit (#610).
+            history unless the exit has not opened yet (#743); under the
+            opt-in modes it heads for no exit (#610).
             """
             if reroute_config is None or stage_graph is None:
                 return
@@ -2108,9 +2117,11 @@ def run_scenario(
                     and _no_known_exit(wait_info) == DEFAULT_NO_KNOWN_EXIT
                 ):
                     rs.default_exit = exit_id
-                    route_history.append(
-                        _default_route_row(simulation.elapsed_time(), agent_id, exit_id)
-                    )
+                    spawn_time = simulation.elapsed_time()
+                    if not _opens_later(stage_graph, exit_id, spawn_time):
+                        route_history.append(
+                            _default_route_row(spawn_time, agent_id, exit_id)
+                        )
             if rs.counted_exit is not None:
                 exit_counts[rs.counted_exit] = exit_counts.get(rs.counted_exit, 0) + 1
 

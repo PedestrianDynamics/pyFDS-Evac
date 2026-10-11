@@ -2907,8 +2907,8 @@ class AgentRouteState:
     refused_switch_time_s: float = -math.inf
     # The exit of the default route the agent follows while it knows no exit
     # (no_known_exit "default_route", #610). current_exit holds only exits
-    # the agent knows, so its first known exit is an initial choice, not a
-    # switch away from this one.
+    # the agent knows. Its first known exit is an initial choice when it is
+    # this exit; another exit leaves this one while it is open (#743).
     default_exit: str | None = None
     # Whether the agent stands because it has nowhere known to go (#610).
     standing: bool = False
@@ -2934,7 +2934,8 @@ class RouteSwitch:
 
     ``reason`` is one of :data:`SWITCH_REASONS`. A change of exit is labelled
     by the decision branch that let it through, first match wins:
-    ``fallback`` (every route refused), ``initial`` (no exit before),
+    ``fallback`` (every route refused), ``initial`` (no exit before, or the
+    exit of the default route the agent walks),
     ``exit_closed`` (the old exit closed on its schedule), ``fed_reroute``
     (the old route is over the dose limit, or under ``additive`` the dose term
     contributes to a switch that needs the hazard terms), ``smoke_reroute``
@@ -2945,8 +2946,10 @@ class RouteSwitch:
     evaluation), ``learned_exit`` (the new exit was not in the agent's
     cognitive map at the previous evaluation, or at spawn before the first),
     ``congestion`` (the switch needs the queue term),
-    ``shorter_path`` (time or length alone clears the anchor). An old exit
-    with no route from where the agent stands gives ``exit_unreachable``,
+    ``shorter_path`` (time or length alone clears the anchor). An agent that
+    leaves its default route for another exit leaves the open exit that route
+    leads to. An old exit with no route from where the agent stands, such as
+    a default exit outside the agent's map, gives ``exit_unreachable``,
     and an idle agent routed to the exit it already holds ``resume``, unless
     the new exit was opened or learned since the previous evaluation.
     """
@@ -3229,6 +3232,7 @@ def _select_candidate(
     route_state: AgentRouteState,
     config: RerouteConfig,
     time_s: float | None = None,
+    graph: StageGraph | None = None,
 ) -> RouteCost:
     """The route the agent would move to: rank 1, or the first it can adopt.
 
@@ -3241,10 +3245,12 @@ def _select_candidate(
     adoptable one wins; if none is, nothing changes, as before.
 
     Gate only. The scan stops at the agent's own exit and does not skip
-    refused routes. With *time_s*, the return lockout applies too.
+    refused routes. With *time_s*, the return lockout applies too. With
+    *graph* and *time_s*, an agent on its default route holds its open
+    default exit as its own (see :func:`_anchored_exit`).
     """
     best = ranked[0]
-    current_exit_now = route_state.current_exit
+    current_exit_now = _anchored_exit(route_state, graph, time_s)
     if (
         current_exit_now is not None
         and policy_for(_cost_config(config)).scan_before_current_exit()
@@ -3253,7 +3259,7 @@ def _select_candidate(
         for candidate in ranked:
             if candidate.exit_id == current_exit_now:
                 break  # the agent's own exit outranks the rest: stay
-            if _adoptable(candidate, ranked, route_state, config, time_s):
+            if _adoptable(candidate, ranked, route_state, config, time_s, graph):
                 best = candidate
                 break
     return best
@@ -3265,18 +3271,37 @@ def _adoptable(
     route_state: AgentRouteState,
     config: RerouteConfig,
     time_s: float | None = None,
+    graph: StageGraph | None = None,
 ) -> bool:
     """Whether the agent could switch to *candidate* if the ordering offered it.
 
-    With *time_s*, a return the lockout blocks is not adoptable.
+    With *time_s*, a return the lockout blocks is not adoptable. With *graph*
+    too, the agent's own exit is the one :func:`_anchored_exit` names.
     """
-    old_exit = route_state.current_exit
+    old_exit = _anchored_exit(route_state, graph, time_s)
     if old_exit is None or candidate.exit_id == old_exit:
         return True
     old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
     if not _anchor_allows(candidate, old_rc, config):
         return False
     return not _return_locked(candidate, old_rc, route_state, time_s, config)
+
+
+def _anchored_exit(
+    route_state: AgentRouteState,
+    graph: StageGraph | None,
+    time_s: float | None,
+) -> str | None:
+    """The exit the anchor holds the agent to: its current exit, or else the
+    default exit it walks to while that exit is open at *time_s* (#743).
+
+    Without *graph* or *time_s* only the current exit counts.
+    """
+    if route_state.current_exit is not None or graph is None or time_s is None:
+        return route_state.current_exit
+    default = route_state.default_exit
+    node = graph.nodes.get(default) if default is not None else None
+    return default if node is not None and node.is_open(time_s) else None
 
 
 def _both_refused(candidate: RouteCost, old_rc: RouteCost | None) -> bool:
@@ -4174,7 +4199,7 @@ def evaluate_and_reroute(
             decision, agent_id, wait_info, route_state, current_time_s
         )
 
-    best = _select_candidate(ranked, route_state, config, current_time_s)
+    best = _select_candidate(ranked, route_state, config, current_time_s, graph)
 
     if (
         best.rejected
@@ -4188,6 +4213,11 @@ def evaluate_and_reroute(
     # (#395). An exit that has not opened yet was never the agent's.
     heading_closed = stage_closed_down(graph, route_state.counted_exit, current_time_s)
     old_exit = route_state.counted_exit if heading_closed else route_state.current_exit
+    if old_exit is None:
+        # The agent walked its default route to that open exit, so a move to
+        # another exit leaves it (#743).
+        anchored = _anchored_exit(route_state, graph, current_time_s)
+        old_exit = None if anchored == best.exit_id else anchored
     old_rc = None
     old_cost = None
     if old_exit and old_exit != best.exit_id:
