@@ -886,6 +886,25 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _flow_source_due(
+    flow: dict,
+    frequency: float,
+    number: int,
+    counter: int,
+    time_s: float,
+    margin: float = 0.0,
+) -> bool:
+    """Whether a flow source may try to add an agent at *time_s*.
+
+    True while agents of the source are still to enter, its next spawn is
+    due and its window is open; *margin* widens the test on each side.
+    """
+    if counter >= number:
+        return False
+    start = max(flow["start_time"], flow["start_time"] + counter * frequency)
+    return bool(start - margin <= time_s <= flow["end_time"] + margin)
+
+
 def _flow_spawn_due(
     flow_distributions: list,
     spawning: list,
@@ -899,14 +918,18 @@ def _flow_spawn_due(
     The test of the spawn loop, widened by half a step on each side so
     that the rounding of the simulated time cannot miss a due attempt.
     """
-    for source_id, flow in enumerate(flow_distributions):
-        if source_id >= len(spawning) or counters[source_id] >= numbers[source_id]:
-            continue
-        next_spawn = flow["start_time"] + counters[source_id] * spawning[source_id][0]
-        start = max(flow["start_time"], next_spawn)
-        if start - dt / 2 <= time_s <= flow["end_time"] + dt / 2:
-            return True
-    return False
+    return any(
+        _flow_source_due(
+            flow,
+            spawning[source_id][0],
+            numbers[source_id],
+            counters[source_id],
+            time_s,
+            dt / 2,
+        )
+        for source_id, flow in enumerate(flow_distributions)
+        if source_id < len(spawning)
+    )
 
 
 def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
@@ -2473,22 +2496,13 @@ def run_scenario(
                         continue
 
                     flow_dist = flow_distributions[source_id]
-                    spawn_frequency = spawning_freqs_and_numbers[source_id][0]
-                    next_spawn_time = flow_dist["start_time"] + (
-                        agent_counter_per_source[source_id] * spawn_frequency
-                    )
-
-                    if (
-                        agent_counter_per_source[source_id]
-                        >= num_agents_per_source[source_id]
+                    if not _flow_source_due(
+                        flow_dist,
+                        spawning_freqs_and_numbers[source_id][0],
+                        num_agents_per_source[source_id],
+                        agent_counter_per_source[source_id],
+                        current_time,
                     ):
-                        continue
-                    if (
-                        current_time < flow_dist["start_time"]
-                        or current_time > flow_dist["end_time"]
-                    ):
-                        continue
-                    if current_time < next_spawn_time:
                         continue
 
                     flow_origin = _flow_origin(flow_dist, source_id)
