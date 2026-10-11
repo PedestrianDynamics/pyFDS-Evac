@@ -219,7 +219,7 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 |---|---|
 | `evacuation_time` | simulated time when the run stopped |
 | `total_agents`, `agents_evacuated`, `agents_remaining` | head counts at the end |
-| `agents_not_spawned` | flow agents that had not entered when the run stopped: cut off by `max_simulation_time`, or still waiting for a free position when their flow window closed |
+| `agents_not_spawned` | flow agents that had not entered when the run stopped: cut off by `max_simulation_time`, or still waiting for a free position when their flow window closed. A configuration error while building a flow agent stops the run instead of being counted here |
 | `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
 | `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter, or when the building emptied after its flow windows closed with flow agents not spawned |
 | `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit. Also in `metrics["end_reason"]` |

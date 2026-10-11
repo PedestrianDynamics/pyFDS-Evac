@@ -636,6 +636,27 @@ def _crowds_agents(model_type, agent_parameters, max_radius, occupied):
     return not _refused_by_model(model_type, radius, _gaps(position, seen_xy), radii)
 
 
+# Workaround: JuPedSim 1.4.2 ``add_agent`` raises a plain ``RuntimeError``
+# for every failure, so a refused position is told from a configuration
+# error (unknown stage or journey, radius out of range) by its message
+# only. No upstream issue; drop the matching once ``add_agent`` raises a
+# distinct type for a refused position (``test_flow_spawn_errors.py``
+# pins the messages).
+_REFUSED_TOO_CLOSE = re.compile(
+    r"Model constraint violation: Agent \(.*\) too close to "
+    r"(agent \(|geometry boundaries)"
+)
+_REFUSED_OUTSIDE = re.compile(r"Agent \(.*\) not inside walkable area")
+
+
+def _refuses_position(error: RuntimeError) -> bool:
+    """Whether JuPedSim 1.4.2 refused ``add_agent`` for the position alone (#753)."""
+    message = str(error)
+    return bool(
+        _REFUSED_TOO_CLOSE.match(message) or _REFUSED_OUTSIDE.fullmatch(message)
+    )
+
+
 def _seatable_parts(free, max_radius):
     """The parts of *free* that can seat an agent, in a stable order.
 

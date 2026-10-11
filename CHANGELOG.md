@@ -37,6 +37,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Every other run is unchanged. The metrics and the manifest
   `outcome` record why a run stopped in `end_reason`:
   `all_evacuated`, `time_limit` or `flows_closed` (#742).
+- Flow spawning retries a position only when JuPedSim refuses it (too
+  close to an agent or a wall, or outside the walkable area). Any
+  other error while a flow agent is built, such as no valid entry
+  stage, no exit or exit journey, or an invalid agent parameter, now
+  stops the run with an error naming the distribution, its source and
+  the position, instead of being reported as "found no free position"
+  and counted in `agents_not_spawned`. Valid scenarios are unchanged
+  (#753).
+- `CollisionFreeSpeedModelV2` no longer needs
+  `strength_neighbor_repulsion` and `range_neighbor_repulsion` in the
+  deck: each missing key takes the `CollisionFreeSpeedModel` value,
+  2.6 and 0.1 m. Decks without them stopped with `AttributeError`
+  (#757).
 
 ## [0.5.0] - 2026-10-11
 

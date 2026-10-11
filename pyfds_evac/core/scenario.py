@@ -953,6 +953,16 @@ def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
     deferred[source_id] = (count + 1, first, time_s)
 
 
+def _flow_spawn_error(error, flow_dist, source_id, position) -> Exception:
+    """Name the flow source and the candidate position *error* arose at (#753)."""
+    kind = ValueError if isinstance(error, ValueError) else RuntimeError
+    return kind(
+        f"Flow spawning: '{flow_dist.get('dist_key')}' (source {source_id}) at "
+        f"({float(position[0]):.3f}, {float(position[1]):.3f}): "
+        f"{type(error).__name__}: {error}"
+    )
+
+
 def _deferred_spawn_lines(
     deferred: dict, flow_distributions: list, numbers: list, counters: list
 ) -> list[str]:
@@ -1727,6 +1737,7 @@ def run_scenario(
         _jupedsim_positions,
         _occupied,
         _random_point_in_polygon,
+        _refuses_position,
         build_agent_path_state,
         create_agent_parameters,
         initialize_simulation_from_json,
@@ -2699,7 +2710,12 @@ def run_scenario(
                                     occupied,
                                 ):
                                     continue
-                                agent_id = simulation.add_agent(agent_parameters)
+                                try:
+                                    agent_id = simulation.add_agent(agent_parameters)
+                                except RuntimeError as err:
+                                    if not _refuses_position(err):
+                                        raise
+                                    continue
                                 # From here on the agent exists, so a failure
                                 # is raised rather than retried elsewhere.
                                 added = True
@@ -2877,10 +2893,12 @@ def run_scenario(
                                 break
                             except (FdsHorizonError, ExitReplayError, SpawnKeyError):
                                 raise
-                            except Exception:
+                            except Exception as err:
                                 if added:
                                     raise
-                                continue
+                                raise _flow_spawn_error(
+                                    err, flow_dist, source_id, position
+                                ) from err
 
                         if not spawned_this_attempt:
                             # Retried at the next step while the window lasts.

@@ -169,7 +169,10 @@ def test_refused_flow_positions_do_not_shift_later_draws(monkeypatch):
         calls["n"] += 1
         if calls["n"] % 2:
             _burn_an_id(self, parameters)
-            raise RuntimeError("position refused")
+            raise RuntimeError(
+                "Model constraint violation: Agent (0, 0) too close to "
+                "agent (0, 0): distance 0"
+            )
         return _REAL_ADD_AGENT(self, parameters)
 
     monkeypatch.setattr(jps.Simulation, "add_agent", refuse_every_other)
