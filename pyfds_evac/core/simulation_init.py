@@ -376,11 +376,13 @@ def create_agent_parameters(
         v2_params["desired_speed"] = desired_speed
         v2_params["time_gap"] = 1.0
         if global_params:
-            v2_params["strength_neighbor_repulsion"] = (
-                global_params.strength_neighbor_repulsion
+            # A key the deck omits takes the CollisionFreeSpeedModel default
+            # (scenario._MODEL_BUILDERS), on its own (#757).
+            v2_params["strength_neighbor_repulsion"] = getattr(
+                global_params, "strength_neighbor_repulsion", 2.6
             )
-            v2_params["range_neighbor_repulsion"] = (
-                global_params.range_neighbor_repulsion
+            v2_params["range_neighbor_repulsion"] = getattr(
+                global_params, "range_neighbor_repulsion", 0.1
             )
         v2_fallback = dict(v2_params)
         v2_fallback.pop("desired_speed", None)
