@@ -3306,6 +3306,8 @@ def _select_candidate(
     config: RerouteConfig,
     time_s: float | None = None,
     graph: StageGraph | None = None,
+    *,
+    reference: _ExitReference | None = None,
 ) -> RouteCost:
     """The route the agent would move to: rank 1, or the first it can adopt.
 
@@ -3320,10 +3322,13 @@ def _select_candidate(
     Gate only. The scan stops at the agent's own exit and does not skip
     refused routes. With *time_s*, the return lockout applies too. With
     *graph* and *time_s*, an agent on its default route holds its open
-    default exit as its own (see :func:`_anchored_exit`).
+    default exit as its own (see :func:`_anchored_exit`). *reference* is
+    the evaluation's :class:`_ExitReference`; without it one is built.
     """
     best = ranked[0]
-    current_exit_now = _anchored_exit(route_state, graph, time_s)
+    if reference is None:
+        reference = _exit_reference(route_state, graph, time_s)
+    current_exit_now = reference.anchor
     if (
         current_exit_now is not None
         and policy_for(_cost_config(config)).scan_before_current_exit()
@@ -3332,7 +3337,15 @@ def _select_candidate(
         for candidate in ranked:
             if candidate.exit_id == current_exit_now:
                 break  # the agent's own exit outranks the rest: stay
-            if _adoptable(candidate, ranked, route_state, config, time_s, graph):
+            if _adoptable(
+                candidate,
+                ranked,
+                route_state,
+                config,
+                time_s,
+                graph,
+                reference=reference,
+            ):
                 best = candidate
                 break
     return best
@@ -3345,13 +3358,19 @@ def _adoptable(
     config: RerouteConfig,
     time_s: float | None = None,
     graph: StageGraph | None = None,
+    *,
+    reference: _ExitReference | None = None,
 ) -> bool:
     """Whether the agent could switch to *candidate* if the ordering offered it.
 
     With *time_s*, a return the lockout blocks is not adoptable. With *graph*
     too, the agent's own exit is the one :func:`_anchored_exit` names.
+    *reference* is the evaluation's :class:`_ExitReference`; without it one
+    is built.
     """
-    old_exit = _anchored_exit(route_state, graph, time_s)
+    if reference is None:
+        reference = _exit_reference(route_state, graph, time_s)
+    old_exit = reference.anchor
     if old_exit is None or candidate.exit_id == old_exit:
         return True
     old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
@@ -3375,6 +3394,61 @@ def _anchored_exit(
     default = route_state.default_exit
     node = graph.nodes.get(default) if default is not None else None
     return default if node is not None and node.is_open(time_s) else None
+
+
+@dataclass(frozen=True)
+class _ExitReference:
+    """The agent's exit as each step of one evaluation reads it (#187).
+
+    The readings differ on purpose and are taken once, before any step:
+
+    * ``ranking``, the current exit: the FED, tau and clean budgets, the gate
+      discount, the fallback preference and the walked-path substitution of
+      :func:`rank_routes` apply to it;
+    * ``anchor``, the exit the anchor and the gate scan hold the agent to,
+      which is also an open default exit (:func:`_anchored_exit`, #743);
+    * ``counted``, the exit the agent walks to, known or not, and
+      ``heading_closed``, whether that exit has closed down (#395).
+    """
+
+    ranking: str | None
+    anchor: str | None
+    counted: str | None
+    heading_closed: bool
+
+    def left(self, best_exit: str) -> str | None:
+        """The exit a move to *best_exit* leaves, for the switch record."""
+        # The exit the agent walks to, in its map or not. When it has closed
+        # down, the switch leaves that exit, and the closure is the cause
+        # (#395). An exit that has not opened yet was never the agent's.
+        old_exit = self.counted if self.heading_closed else self.ranking
+        if old_exit is None:
+            # The agent walked its default route to that open exit, so a move to
+            # another exit leaves it (#743).
+            old_exit = None if self.anchor == best_exit else self.anchor
+        return old_exit
+
+
+def _exit_reference(
+    route_state: AgentRouteState,
+    graph: StageGraph | None,
+    time_s: float | None,
+) -> _ExitReference:
+    """The agent's :class:`_ExitReference` at *time_s*.
+
+    Without *graph* or *time_s* no exit has closed down.
+    """
+    counted = route_state.counted_exit
+    return _ExitReference(
+        ranking=route_state.current_exit,
+        anchor=_anchored_exit(route_state, graph, time_s),
+        counted=counted,
+        heading_closed=(
+            graph is not None
+            and time_s is not None
+            and stage_closed_down(graph, counted, time_s)
+        ),
+    )
 
 
 def _both_refused(candidate: RouteCost, old_rc: RouteCost | None) -> bool:
@@ -4186,6 +4260,7 @@ def evaluate_and_reroute(
     # The node the agent is currently walking toward, so position-aware costs can
     # credit progress along that leg and penalize routes that diverge from it.
     current_target = wait_info.get("current_target_stage")
+    reference = _exit_reference(route_state, graph, current_time_s)
 
     ranked = rank_routes(
         graph,
@@ -4199,7 +4274,7 @@ def evaluate_and_reroute(
         exit_counts=exit_counts,
         cognitive_map=cognitive_map,
         agent_position=agent_position,
-        current_exit=route_state.current_exit,
+        current_exit=reference.ranking,
         current_target=current_target,
         current_path=_reconstruct_committed_path(wait_info),
     )
@@ -4219,17 +4294,17 @@ def evaluate_and_reroute(
             cognitive_map,
             agent_position,
         )
-        if decision.kind == "default_route" and stage_closed_down(
-            graph, route_state.counted_exit, current_time_s
-        ):
+        if decision.kind == "default_route" and reference.heading_closed:
             # The exit the agent walked to, known or not, is the one the
             # closure took from it (#395 R-B).
-            decision = replace(decision, old_exit=route_state.counted_exit)
+            decision = replace(decision, old_exit=reference.counted)
         return _apply_decision(
             decision, agent_id, wait_info, route_state, current_time_s
         )
 
-    best = _select_candidate(ranked, route_state, config, current_time_s, graph)
+    best = _select_candidate(
+        ranked, route_state, config, current_time_s, graph, reference=reference
+    )
 
     if (
         best.rejected
@@ -4238,16 +4313,7 @@ def evaluate_and_reroute(
     ):
         return None
 
-    # The exit the agent walks to, in its map or not. When it has closed
-    # down, the switch leaves that exit, and the closure is the cause
-    # (#395). An exit that has not opened yet was never the agent's.
-    heading_closed = stage_closed_down(graph, route_state.counted_exit, current_time_s)
-    old_exit = route_state.counted_exit if heading_closed else route_state.current_exit
-    if old_exit is None:
-        # The agent walked its default route to that open exit, so a move to
-        # another exit leaves it (#743).
-        anchored = _anchored_exit(route_state, graph, current_time_s)
-        old_exit = None if anchored == best.exit_id else anchored
+    old_exit = reference.left(best.exit_id)
     old_rc = None
     old_cost = None
     if old_exit and old_exit != best.exit_id:
@@ -4301,7 +4367,7 @@ def evaluate_and_reroute(
         )
         # A fallback keeps its kind, for the lockout, but the closure is
         # why the agent moved (#395 R-C).
-        if decision.kind in ("switch", "fallback") and heading_closed:
+        if decision.kind in ("switch", "fallback") and reference.heading_closed:
             decision = replace(decision, switch_reason="exit_closed")
     switch = _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
     if decision.kind in ("switch", "fallback") and switch is not None:
