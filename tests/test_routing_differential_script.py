@@ -14,6 +14,7 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from shapely.geometry import box
@@ -108,8 +109,39 @@ def test_child_refuses_code_from_another_checkout(diff, tmp_path):
     assert not (tmp_path / "x").exists()
 
 
-def test_checkout_against_itself_is_identical(diff, capsys):
-    """The case builders this checkout holds run and dump deterministically."""
-    assert diff.compare(REPO, REPO) == 0
-    out = capsys.readouterr().out
-    assert out.rstrip().endswith("identical")
+def test_patch_refuses_a_missing_helper(diff):
+    """A renamed snapshot helper must not leave the rounding in place."""
+    golden = SimpleNamespace(
+        __name__="golden",
+        _r=None,
+        _check_golden=None,
+        _route_snapshot=None,
+        _switch_snapshot=None,
+    )
+    decisions = SimpleNamespace(__name__="decisions")
+    with pytest.raises(SystemExit, match="golden has no _r"):
+        diff._patch(golden, decisions, {})
+
+
+def test_checkout_against_itself_is_identical(diff, capsys, tmp_path):
+    """The case builders this checkout holds run and dump deterministically.
+
+    Cache entries keep their segment values, at full precision.
+    """
+    assert diff.compare(REPO, REPO, keep=tmp_path) == 0
+    assert capsys.readouterr().out.rstrip().endswith("identical")
+    dump = json.loads((tmp_path / "head.json").read_text(encoding="utf-8"))
+    ranks = dump["snapshots"]["routing_decisions/rank_routes.json"]
+    lines = [
+        line
+        for case in ranks.values()
+        for variant in case.values()
+        if isinstance(variant, dict)
+        for line in variant["cache"]
+    ]
+    assert lines
+    for line in lines:
+        values = line.split(" | ")[1].split()
+        assert "length_m" not in values
+        float(values[2])  # length_m
+    assert any(len(v) > 8 for line in lines for v in line.split(" | ")[1].split())

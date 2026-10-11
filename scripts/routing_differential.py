@@ -97,14 +97,28 @@ def _patch(golden, decisions, results: dict) -> None:
             sys.exit(f"routing differential: snapshot {relpath} written twice")
         results[relpath] = _full(actual)
 
-    golden._r = _identity
-    golden._check_golden = collect
-    golden._route_snapshot = _full
-    golden._switch_snapshot = _full
-    decisions._route_snapshot = _full
-    decisions._segment_snapshot = _full
-    decisions._state_snapshot = _full
-    decisions._wait_info_snapshot = _full
+    replacements = (
+        (golden, "_r", _identity),
+        (golden, "_check_golden", collect),
+        (golden, "_route_snapshot", _full),
+        (golden, "_switch_snapshot", _full),
+        (decisions, "_route_snapshot", _full),
+        (decisions, "_segment_snapshot", _segment_values),
+        (decisions, "_state_snapshot", _full),
+        (decisions, "_wait_info_snapshot", _full),
+    )
+    # A renamed helper would leave the rounding in place on both sides and
+    # hide every last-bit difference, so a missing one is an error.
+    for module, name, _ in replacements:
+        if not callable(getattr(module, name, None)):
+            sys.exit(f"routing differential: {module.__name__} has no {name}")
+    for module, name, replacement in replacements:
+        setattr(module, name, replacement)
+
+
+def _segment_values(seg) -> list:
+    """Every field of a cached segment, as the list ``_cache_snapshot`` joins."""
+    return [_full(getattr(seg, f.name)) for f in dataclasses.fields(seg)]
 
 
 def _run_cases(golden, decisions) -> None:
