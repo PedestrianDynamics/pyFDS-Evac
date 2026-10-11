@@ -18,7 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   priced (#445), and agents behind their route's origin under FED
   (#171). A route that must be fled always loses (#128), and journey
   decks price `capacity_agents_per_s` (#394). The first FDS case gets
-  99 of 150 out instead of 93.
+  99 of 150 out instead of 93, and `assets/station_fahy`'s
+  `w_queue = 0.024` now sends 34.8 % through the front door against
+  Fahy's 52.9 %; retune `w_queue` if you calibrate against it.
 - Placement: Gaussian radii are clipped to the spacing bound (#709),
   flow spawns and overlapping areas keep twice the larger radius from
   placed agents (#710, #402), and `flow_schedule` and the percentage
