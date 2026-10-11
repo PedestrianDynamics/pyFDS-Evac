@@ -282,7 +282,8 @@ agents that entered
 ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
 A run whose building emptied after its flow windows closed, with flow agents
 not spawned, ends then and reads "Incomplete: flow windows closed, *m* not
-spawned", with its end time under "Simulated time"
+spawned", with its end time under "Simulated time"; the Not spawned tile
+and the "*e* of *n* that entered" Evacuated tile appear as above
 ([#742](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/742)).
 The Incapacitated tile is shown on every finished run; see
 [Results](#results).
