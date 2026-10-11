@@ -2687,6 +2687,19 @@ def _fallback_rival_wins(
     return rival.tau_route < current.tau_route * margin
 
 
+# The prefix _apply_fallback gives the promoted route's rejection reason.
+_FALLBACK = "fallback"
+
+
+def _is_fallback(rc: RouteCost) -> bool:
+    """Whether *rc* is the route _apply_fallback promoted.
+
+    The public ``RouteCost`` keeps ``rejected=False`` on that route, so its
+    rejection reason is the only mark of it.
+    """
+    return (rc.rejection_reason or "").startswith(_FALLBACK)
+
+
 def _apply_fallback(
     costs: list[RouteCost], config: RouteCostConfig, current_exit: str | None
 ) -> list[RouteCost]:
@@ -2734,7 +2747,7 @@ def _apply_fallback(
         costs[0] = replace(
             best,
             rejected=False,
-            rejection_reason=f"fallback: {best.rejection_reason}",
+            rejection_reason=f"{_FALLBACK}: {best.rejection_reason}",
         )
     return costs
 
@@ -3615,7 +3628,7 @@ def _decide_exit_change(
     ):
         return RouteDecision(kind="keep")
 
-    fallback = (best.rejection_reason or "").startswith("fallback")
+    fallback = _is_fallback(best)
     if fallback:
         reason = "fallback"
     elif old_exit is None:
@@ -4326,11 +4339,7 @@ def evaluate_and_reroute(
         ranked, route_state, config, current_time_s, graph, reference=reference
     )
 
-    if (
-        best.rejected
-        and best.rejection_reason
-        and not best.rejection_reason.startswith("fallback")
-    ):
+    if best.rejected and best.rejection_reason and not _is_fallback(best):
         return None
 
     old_exit = reference.left(best.exit_id)
