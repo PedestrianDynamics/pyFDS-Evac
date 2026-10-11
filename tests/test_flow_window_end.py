@@ -9,6 +9,8 @@ as incomplete with ``end_reason`` ``"flows_closed"``.
 
 from __future__ import annotations
 
+import argparse
+
 import pytest
 from shapely.geometry import box
 from test_flow_spawn_spacing import D1, _run_recording_gaps, _scenario_with_flow
@@ -34,6 +36,16 @@ def test_a_run_ends_when_it_empties_after_its_flow_windows_closed(monkeypatch):
     assert result.success is False
     assert result.status == "incomplete"
     assert result.end_reason == "flows_closed"
+    # The front ends word it from the result event (TUI) and the run
+    # record (GUI); neither says the time limit was reached.
+    from pyfds_evac.core.run_stream import _result_event
+    from pyfds_evac.webapp.runner import _finished_spec, make_run_spec
+
+    event = _result_event(result, (), None)
+    assert event.end_reason == "flows_closed"
+    spec = make_run_spec(argparse.Namespace(), scenario, "t", "t")
+    spec = _finished_spec(spec, "done", result, None)
+    assert spec.end_reason == "flows_closed"
     assert any(
         line.startswith(f"Flow spawning: '{D1}' found no free position")
         and line.endswith("5 of its 5 agents did not enter")

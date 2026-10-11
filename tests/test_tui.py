@@ -610,6 +610,48 @@ def test_a12_run_states(workdir, status, words, never):
     run(go())
 
 
+@pytest.mark.parametrize(
+    ("end_reason", "words", "time_words"),
+    [
+        (
+            "flows_closed",
+            "◐ Incomplete: flow windows closed, 5 not spawned",
+            "Simulated time 9.8 s",
+        ),
+        (
+            "time_limit",
+            "◐ Incomplete: time limit reached, 0 agents inside, 5 not spawned",
+            "Simulated time (limit reached) 9.8 s",
+        ),
+    ],
+)
+def test_a12_outcome_follows_the_end_reason(workdir, end_reason, words, time_words):
+    """#742: a run that emptied after its flow windows closed is not worded
+    as stopped by the time limit."""
+    result = result_event(
+        events.STATUS_INCOMPLETE,
+        evacuated=6,
+        remaining=0,
+        not_spawned=5,
+        end_time_s=9.83,
+        end_reason=end_reason,
+    )
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(100, 30)) as pilot:
+            await _started(pilot, app, workdir)
+            replay(app, result)
+            await pilot.pause()
+            text = str(app.query_one("#res-outcome").render())
+            assert words in text
+            assert time_words in text
+            if end_reason == "flows_closed":
+                assert "limit reached" not in text
+
+    run(go())
+
+
 def test_a12_child_died_without_result(workdir):
     from pyfds_evac.tui.runner import ChildExited
 

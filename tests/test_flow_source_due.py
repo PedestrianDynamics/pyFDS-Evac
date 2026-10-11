@@ -5,6 +5,10 @@ JuPedSim computes ``elapsed_time``) when ``_flow_source_due`` holds. The
 snapshot of the positions that attempt reads is taken one step before, at
 ``(k - 1) * dt + dt``, with the test widened by ``dt / 2``. Whenever the
 loop would try a source, the snapshot must have been taken.
+
+In floating point ``(k - 1) * dt + dt`` differs from ``k * dt`` at some
+steps: at k = 7 and 10 it is below (0.07, 0.1), at k = 6 and 15 above
+(0.06, 0.15). Windows that open or close exactly there need the margin.
 """
 
 from __future__ import annotations
@@ -17,9 +21,29 @@ from pyfds_evac.core.scenario import _flow_source_due, _flow_spawn_due
 
 DT = 0.01
 STEPS = 700
-# (start, end) on and off the step grid.
-WINDOWS = [(0.0, 1.0), (0.5, 2.5), (0.123, 1.777), (1.0 / 3.0, 2.0 / 3.0 + 1.0)]
+# (start, end) on and off the step grid, and opening or closing where the
+# snapshot time falls below or above the step time.
+WINDOWS = [
+    (0.0, 1.0),
+    (0.5, 2.5),
+    (0.123, 1.777),
+    (1.0 / 3.0, 2.0 / 3.0 + 1.0),
+    (0.07, 1.07),
+    (0.1, 0.15),
+    (0.0, 0.06),
+]
 NUMBERS = [1, 3, 7]
+
+
+def _due(flow, frequency, number, counter, time_s):
+    """The spawn loop's test, written out: agents still to enter, the
+    window open (both ends inclusive) and the next spawn reached."""
+    next_spawn = flow["start_time"] + counter * frequency
+    return (
+        counter < number
+        and flow["start_time"] <= time_s <= flow["end_time"]
+        and time_s >= next_spawn
+    )
 
 
 def _sources():
@@ -35,7 +59,9 @@ def test_the_snapshot_is_taken_whenever_the_loop_tries_a_source(
     tried = 0
     for counter in range(number + 1):
         for k in range(1, STEPS):
-            if not _flow_source_due(flow, frequency, number, counter, k * DT):
+            due = _flow_source_due(flow, frequency, number, counter, k * DT)
+            assert due is _due(flow, frequency, number, counter, k * DT), (counter, k)
+            if not due:
                 continue
             tried += 1
             snapshot_time = (k - 1) * DT + DT

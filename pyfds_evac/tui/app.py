@@ -2363,7 +2363,7 @@ def results_text(run: RunState, width: int = 120) -> Content:
     )
     if r is not None and r.status in (events.STATUS_SUCCESS, events.STATUS_INCOMPLETE):
         status = "completed" if r.status == events.STATUS_SUCCESS else "incomplete"
-        outcome = frontend.run_outcome(status, r.remaining, r.not_spawned)
+        outcome = frontend.run_outcome(status, r.remaining, r.not_spawned, r.end_reason)
         glyph, colour = ("✓", "$success") if outcome.complete else ("◐", "$warning")
         line = m(
             f"[b {colour}]$g $l[/]   [dim]exit $x[/]\n",

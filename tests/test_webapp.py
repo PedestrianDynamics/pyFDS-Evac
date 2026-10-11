@@ -2057,6 +2057,14 @@ class TestRunOutcome:
             "Incomplete: time limit reached, 0 agents inside, 50 not spawned, "
             "simulated time 300.0 s, incapacitation not modelled"
         )
+        # #742: emptied after its flow windows closed, before the limit.
+        closed = dataclasses.replace(
+            cut_off, end_reason="flows_closed", evacuation_time=9.8
+        )
+        assert run_status(closed) == (
+            "Incomplete: flow windows closed, 50 not spawned, "
+            "simulated time 9.8 s, incapacitation not modelled"
+        )
         done = dataclasses.replace(
             spec,
             completion="completed",

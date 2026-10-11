@@ -150,6 +150,7 @@ def _result_event(
         seed=metrics.get("seed"),
         exit_counts=exit_counts,
         incapacitation_modelled=frontend.incapacitation_modelled(result.run_settings),
+        end_reason=metrics.get("end_reason"),
     )
 
 

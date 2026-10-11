@@ -77,6 +77,8 @@ class RunSpec:
     # Flow agents that never entered: cut off by the time limit, or without
     # a free position when their flow window closed.
     agents_not_spawned: int | None = None
+    # result.metrics["end_reason"]; None when the run reported none.
+    end_reason: str | None = None
     total_agents: int | None = None
     agents_evacuated: int | None = None
     agents_remaining: int | None = None
@@ -157,6 +159,7 @@ def _finished_spec(
         fields.update(
             completion=result.metrics.get("status"),
             agents_not_spawned=result.metrics.get("agents_not_spawned", 0),
+            end_reason=result.metrics.get("end_reason"),
             total_agents=result.total_agents,
             agents_evacuated=result.agents_evacuated,
             agents_remaining=result.agents_remaining,
