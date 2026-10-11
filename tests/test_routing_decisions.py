@@ -418,6 +418,33 @@ def test_rank_routes_snapshot():
     )
 
 
+def test_fallback_prefix_marks_only_the_promoted_route():
+    """Only the fallback promotion writes a reason starting with "fallback".
+
+    The switch decision and the early return of ``evaluate_and_reroute``
+    tell a fallback route by that prefix, so no other rejection reason may
+    carry it, and the promoted route is ranked first and no longer rejected.
+    """
+    promoted = 0
+    for name, case in sorted(_ALL_RANK_CASES.items()):
+        for variant in sorted(_VARIANTS):
+            variant_case = replace(case, config=_VARIANTS[variant](case.config))
+            ranked = _rank(variant_case, with_cache=False)["ranked"]
+            marked = [
+                i
+                for i, rc in enumerate(ranked)
+                if (rc.rejection_reason or "").startswith("fallback")
+            ]
+            where = f"{name}/{variant}"
+            assert marked in ([], [0]), where
+            if not marked:
+                continue
+            promoted += 1
+            assert not ranked[0].rejected, where
+            assert all(rc.rejected for rc in ranked[1:]), where
+    assert promoted > 0
+
+
 # The ramp cases on _linear have an independent reference. From D0 at 30.3 s
 # and 1 m/s, C0 -> E0 is sampled at x = 10, 12, ..., 20 m, where K = 0.01 t
 # for x >= 11. With anticipation (#650) each sample is read when the agent
