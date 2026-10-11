@@ -20,8 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - An agent that leaves its default route for another exit leaves the
   open exit that route leads to: the route-history row names it as
   `old_exit`, and the reason is the usual exit-change reason instead
-  of `initial`, `exit_unreachable` when the default exit has no route
-  in the agent's map. When the agent knows that exit and has a route
+  of `initial`: `exit_opened` or `learned_exit` when the new exit is
+  news, else `exit_unreachable` when the default exit has no route in
+  the agent's map. When the agent knows that exit and has a route
   to it, the exit anchor and the return lockout apply to the move, so
   discovery runs with default-route agents can give other decisions,
   `route_switches` and evacuation times. Learning the default exit

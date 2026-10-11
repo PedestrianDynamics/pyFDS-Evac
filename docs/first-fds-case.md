@@ -178,7 +178,7 @@ Agents that left by an exit not in their map: 87
 
 `Route history rows` counts the rows of `tj_fire_routes.csv`, not route
 switches: one `default_route` row per agent at spawn (150), and 13 rows of
-the 12 agents that choose an exit once they see its sign: one `initial`, ten
+the 12 agents that choose an exit once they see a sign: one `initial`, ten
 `learned_exit` and two `smoke_reroute`, agents that change exit for smoke
 ([Exit usage](#exit-usage)).
 
