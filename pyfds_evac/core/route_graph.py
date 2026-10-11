@@ -881,6 +881,7 @@ class RouteCostConfig:
     # merely back under threshold. Never makes it harder to LEAVE a bad exit.
     fed_return_margin: float = 0.9
     visibility_extinction_threshold: float = 0.5
+    # Additive only.
     # Above this route-average extinction, a smoke/visibility rejection is
     # treated as an impassable hazard the agent flees regardless of the anchor
     # (like an FED-lethal rejection). At or below it, low visibility is a soft
@@ -889,6 +890,8 @@ class RouteCostConfig:
     # an agent off its committed exit every tick. Physically ~1 m visibility
     # (S ~ C/K); NOT calibrated, but chosen to sit well above the mild haze that
     # caused the demo flip-flop (k_ave <= ~0.9) and below genuine walls of smoke.
+    # Under the gate no route is rejected as non-visible, so this never fires
+    # (#750).
     impassable_extinction_threshold: float = 3.0
     # Spacing of route smoke samples [m] for a field without a grid
     # (constant K, test fields) and where a route leaves the FDS slice. An
@@ -968,7 +971,10 @@ class RouteCostConfig:
     # and fallback_return_lockout_s are then inert. The first choice with
     # every route refused is the lowest tau under both. Experimental and
     # code-level only: from_routing_params does not read it, so no scenario
-    # key sets it; measured on t_junction alone (docs/routing.md).
+    # key sets it; measured on t_junction alone (docs/routing.md). Must be
+    # fled means a FED violation under either model: the fallback never sees
+    # a smoke must-flee, so under "hold" smoke alone never moves the agent
+    # between refused routes (#750, #751).
     fallback_rule: str = "tau"
 
     def __post_init__(self) -> None:
@@ -2592,7 +2598,7 @@ def _fallback_rival_wins(
     A route the agent must flee never displaces one it need not flee, and
     always yields to one (#128); the tau rule decides only between two of a
     kind. Under ``fallback_rule == "hold"`` nothing else displaces the
-    current exit (#696).
+    current exit (#696). Here must-flee is always a FED violation (#750).
     """
     rival_flee = _must_flee_rejection(rival, config)
     current_flee = _must_flee_rejection(current, config)
@@ -2624,7 +2630,8 @@ def _apply_fallback(
     docs/gate-model-review-notes.md -- the ordering follows the field, so the
     current exit is held unless a rival's optical depth is clearly lower
     (``_fallback_rival_wins``), or, under ``fallback_rule == "hold"``,
-    unless the current route must be fled and the rival need not be (#696).
+    unless the current route must be fled (FED only; #750) and the rival
+    need not be (#696).
 
     Ordered by optical depth here too, not by the worst sample: ordering
     refused routes by k_max alone once put a 51 m route ahead of a 22 m one
@@ -2819,23 +2826,24 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
     Only genuine hazards bypass the exit-switch anchor:
 
     * **FED-lethal** — predicted dose incapacitates the agent. Always flee.
-    * **Impassably dense smoke** — the route's average extinction exceeds
+    * **Impassably dense smoke** (additive only; the gate records no
+      ``all_segments_non_visible``) — the route's average extinction exceeds
       ``impassable_extinction_threshold`` (visibility of order a metre). Flee.
 
-    A *mild* visibility rejection (``all segments non-visible`` from light haze,
-    or ``next_node_not_visible`` from an unreadable sign) is NOT a hazard: the
-    smoke is already in the route cost via ``w_smoke * k_ave``, so also letting
-    the rejection bypass the anchor double-counts it and flips the agent off its
-    cheaper committed exit onto a costlier one, then back next tick. Those stay
-    subject to the anchor. The demo's flip-flop was exactly this — mild smoke
-    (k_ave ~0.5-0.9) tripping the binary 0.5 visibility threshold every tick.
+    Under additive, a *mild* visibility rejection (``all segments non-visible``
+    from light haze) is NOT a hazard: the smoke is already in the route cost
+    via ``w_smoke * k_ave``, so also letting the rejection bypass the anchor
+    double-counts it and flips the agent off its cheaper committed exit onto a
+    costlier one, then back next tick. Those stay subject to the anchor. The
+    demo's flip-flop was exactly this — mild smoke (k_ave ~0.5-0.9) tripping
+    the binary 0.5 visibility threshold every tick.
 
     The test reads the limits the route breaks (``violation_kinds``), not
     its public reason, and not ``rejected``: a route over both the FED and the
     tau limit reports ``tau ...`` but is still lethal, and a route the
     all-refused fallback promoted keeps its hazard (#128).
 
-    One hazard this does **not** catch, by construction:
+    Two hazards this does **not** catch, by construction:
 
     * **Heat.** The convective heat dose is tracked per agent and can
       incapacitate on its own
@@ -2843,6 +2851,10 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
       reaches no part of route choice -- ``rank_routes`` is given the gas dose
       and a gas-only rate sampler. An agent can therefore walk into a route
       that will incapacitate it thermally, and nothing here will reject it.
+    * **Smoke under the gate.** The gate has no smoke must-flee: only a FED
+      violation bypasses the exit-switch anchor; smoke moves the agent only
+      through the tau refusal, the anchor and the "tau" fallback. Open in
+      #696 and #751.
     """
     if "fed" in rc.violation_kinds:
         return True

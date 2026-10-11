@@ -275,8 +275,9 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
 
 1. No current route: accept.
 2. **Must flee** (`_must_flee_rejection`): the current route breaks the FED
-   limit, or is refused for visibility with a route-average *K* above
-   `impassable_extinction_threshold`. Accept, whatever the cost. The test reads
+   limit or, under additive only, is refused as `all segments non-visible`
+   with a route-average *K* above `impassable_extinction_threshold`; under
+   the gate only the FED limit qualifies. Accept, whatever the cost. The test reads
    which limits the route breaks (`RouteCost.violation_kinds`), not its
    rejection reason, so a route over both the FED and the `tau` limit is fled
    although its reason names `tau`, and so is a route the fallback re-admitted.
@@ -540,6 +541,12 @@ Exit throughput throttling has no general test yet
   with no empirical source; the field surveys give only self-estimated
   visibility at turn-back
   ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
+- Under the default gate, smoke on the current route never bypasses the
+  exit-switch anchor as a lethal FED does: however dense it is, the agent
+  leaves only for a rival the anchor accepts (clearly lower τ, or clean
+  where the current route is not)
+  ([#750](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750)). A dose-based comparator is researched in
+  [#751](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751); the wider question is [#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696).
 - Anticipation assumes unimpeded speed and, by default, perfect foresight of
   the finished FDS record.
 

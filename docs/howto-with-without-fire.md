@@ -347,8 +347,10 @@ strongest at 60 s, where 97 % of R's agents go past the burner to B; at
 0 and 30 s R sends 100 % and 51 % to exit A.
 
 A code-level alternative, `fallback_rule="hold"`, keeps the exit an agent
-has once every route is refused
-([Route rejection](routing.md#route-rejection)). On the seeds of this
+has once every route is refused, whatever the smoke on it, until the
+current route crosses the FED limit and a rival does not
+([Route rejection](routing.md#route-rejection);
+[#750](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750)). On the seeds of this
 page, R under `"hold"` sends 100 % [100, 100] to exit A at every
 pre-movement, against 100 % [94, 100], 51 % [49, 55] and 3 % [0, 6] under
 the default `"tau"`. The median largest max FED is 0.006, 0.024 and 0.100
