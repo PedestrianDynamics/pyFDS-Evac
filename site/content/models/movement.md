@@ -108,9 +108,10 @@ The familiarity deck completes every run
 
 **`CollisionFreeSpeedModelV2`.** With the repulsion values of
 `CollisionFreeSpeedModel` supplied in the deck, it gives the same numbers on
-every case. A deck that sets no `strength_neighbor_repulsion`, which covers
-every deck imported with `pyfds-evac init` and every jupedsim-web-community
-deck, stops with `AttributeError`
+every case. A deck that omits `strength_neighbor_repulsion` or
+`range_neighbor_repulsion`, which covers every deck imported with
+`pyfds-evac init` and every jupedsim-web-community deck, gets the
+`CollisionFreeSpeedModel` value 2.6 or 0.1 m for each missing key
 ([#757](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/757)).
 
 **`SocialForceModel`.** It clears the 50 % counterflow in all 3 seeds
@@ -177,7 +178,8 @@ value that pyFDS-Evac does not pass, so JuPedSim 1.4.2's default applies.
 
 **`CollisionFreeSpeedModelV2`**: the repulsion values are per agent.
 `strength_neighbor_repulsion` and `range_neighbor_repulsion` are read from
-the deck with no fallback
+the deck. Each missing key takes the `CollisionFreeSpeedModel` value: 2.6
+for the strength (JuPedSim's is 8.0) and 0.1 m for the range
 ([#757](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/757)).
 `time_gap` is fixed at 1.0 s; the wall repulsion keeps JuPedSim's 5.0 and
 0.02 m.
