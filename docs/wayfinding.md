@@ -387,7 +387,9 @@ over a few known nodes may never pass a legible new sign
 ([#122](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/122)).
 
 **Discovery times depend on the grid.** On
-`assets/familiarity_test_discovery`, seeds 1–30, the grid study of the
+`assets/familiarity_test_discovery`, an SFM deck (`SocialForceModel`;
+[Movement models](/models/movement.md#deadlock-behaviour)), seeds 1–30,
+the grid study of the
 [familiarity verification](testing-familiarity.md#pass-criteria) (criterion
 6, at `c619a046`) gives the following last-out times of the discovery tier,
 read from the simulation clock, with a run that does not finish counted as

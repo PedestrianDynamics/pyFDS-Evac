@@ -315,27 +315,45 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   collision-free speed model, a crowd can stop in front of an opening
   several body widths wide and never clear it, so the run reaches
   `max_simulation_time` with agents inside. Imported FDS+Evac decks such
-  as `HUT_Library` and `imo/CompTest9a` show it in some seeds; a smaller
-  radius makes it rarer but does not remove it.
+  as `HUT_Library` and `imo/CompTest9a` show it in some seeds. A smaller
+  radius does not remove it: `HUT_Library` at 0.15 m still jams in 5 of 13
+  seeds, the rate of the issue, and which seeds jam changes between
+  commits. `SocialForceModel` completes 4 of these 13 runs and
+  `WarpDriverModel` all 13, with the closest pair of agents within
+  0.9 × 2r in 3 of them
+  ([Movement models](/models/movement.md#deadlock-behaviour)).
 - **Doorway deadlocks of exploring agents**
   ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359), planned for 0.6.0). Under `no_known_exit: explore`, and
   `return` when it explores, two agents that meet head-on in a door, or
-  four jammed at a checkpoint, can stand there for the rest of the run. On `familiarity_test_no_journey`
+  four jammed at a checkpoint, can stand there for the rest of the run. On `familiarity_test_no_journey`,
+  a deck that uses `SocialForceModel`
   (clear air, 0.05 m grid, the settings of
-  `tests/test_familiarity_no_journey.py`, at `c619a046`) 2 agents are left
+  `tests/test_familiarity_no_journey.py`, at `c619a046`), 2 agents are left
   in 3 of 150 runs of 5 agents (seeds 1–150), and 2 to 6 agents in 7 of
   60 runs of 20 agents (seeds 1–60)
-  ([Wayfinding › Limitations](/models/wayfinding.md#limitations)).
+  ([Wayfinding › Limitations](/models/wayfinding.md#limitations)). Under
+  `CollisionFreeSpeedModel` the same deck does not deadlock: 0 of 150 and
+  0 of 60 runs at `47cfeec5`
+  ([Movement models](/models/movement.md#deadlock-behaviour)).
 - **Dense counterflow can lock**
   ([#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745), planned for 0.6.0). In dense head-on counterflow under the
   default `CollisionFreeSpeedModel`, the two streams can meet and stand
-  for the rest of the run. The four decks Iso-06-counterflow-50 and -100
-  and Nist-2-8-counterflow-50 and -100 of jupedsim-web-community
-  (`82404ee`, radius 0.15 m, clear air, patched with `"journeys": []` and
+  for the rest of the run. jupedsim-web-community (`82404ee`) publishes
+  two such cases, each under two names: Iso-06-counterflow-50 and
+  Nist-2-8-counterflow-50 have identical `config.json` and `geometry.wkt`,
+  and so do Iso-06-counterflow-100 and Nist-2-8-counterflow-100. Both
+  cases (radius 0.15 m, clear air, patched with `"journeys": []` and
   `"transitions": []`) reach their 400 s limit with 0–1 agents out in
   each of seeds 1–3 at `c619a046`; in the last 60 s no agent moves more
-  than 0.02 m. With the same patch, Iso-06-counterflow-0 and -10 finish.
-  The jam is head-on contact in JuPedSim's operational model, not smoke:
+  than 0.02 m. The model study at `47cfeec5`, which calls a run a
+  deadlock when it is incomplete and at least two agents moved less than
+  0.03 m over the last 100 s, finds the same for Iso-06-counterflow-50.
+  With the same patch, Iso-06-counterflow-0 and -10 finish.
+  `SocialForceModel` clears Iso-06-counterflow-50 in all 3 seeds by pushing, at
+  peak speeds about 2.2 times the desired speed; the 100 % case was not
+  run with it
+  ([Movement models](/models/movement.md#deadlock-behaviour)).
+  The jam is head-on contact in JuPedSim's operational model;
   pyFDS-Evac has no dedicated counterflow algorithm
   ([Model comparison](model-comparison.md#1-movement-model)).
 - **Re-evaluation at most once per second** ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
