@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
+import sqlite3
 import sys
 from pathlib import Path
 
@@ -47,14 +49,55 @@ def _provenance(golden, commit=BASE, dirty=None, fingerprints=None) -> dict:
     }
 
 
+_ROWS = [(0, 1, 1.5, 2.0, 1.0, 0.0), (0, 2, 3.0, 4.0, 0.0, 1.0)]
+
+
+_SCALARS = [(0, 1, 0.25, 0.0, 1.2, 1), (0, 2, 0.5, 0.125, 0.9, None)]
+
+
+def _trajectory(
+    path: Path, rows=_ROWS, metadata=(("fps", "10.0"),), scalars=None
+) -> Path:
+    """A trajectory file in the schema run.py writes, with *rows*.
+
+    With *scalars*, the agent_scalars table a FED run adds holds them.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    con = sqlite3.connect(path)
+    con.execute(
+        "CREATE TABLE trajectory_data (frame INTEGER NOT NULL, id INTEGER NOT "
+        "NULL, pos_x REAL NOT NULL, pos_y REAL NOT NULL, ori_x REAL NOT NULL, "
+        "ori_y REAL NOT NULL)"
+    )
+    con.execute("CREATE TABLE metadata(key TEXT, value TEXT)")
+    con.executemany("INSERT INTO trajectory_data VALUES (?,?,?,?,?,?)", rows)
+    con.executemany("INSERT INTO metadata VALUES (?,?)", metadata)
+    if scalars is not None:
+        con.execute(
+            "CREATE TABLE agent_scalars(frame INTEGER NOT NULL, id INTEGER NOT "
+            "NULL, fed REAL, heat_fed REAL, speed REAL, in_fds_domain INTEGER)"
+        )
+        con.executemany("INSERT INTO agent_scalars VALUES (?,?,?,?,?,?)", scalars)
+    con.commit()
+    con.close()
+    return path
+
+
+def _write_fake(path: Path) -> None:
+    if path.suffix == ".sqlite":
+        _trajectory(path)
+        return
+    text = "{}\n" if path.suffix == ".json" else "a,b\n1,2\n"
+    path.write_text(text, encoding="utf-8")
+
+
 def _fake_run(golden, out: Path, provenance=None, **manifest) -> Path:
     """Outputs for every run of DECK, and a manifest saying *manifest*."""
     for deck, mode in golden._inventory([DECK]):
         folder = out / deck / mode
         folder.mkdir(parents=True)
         for name in golden.MODES[mode]:
-            text = "{}\n" if name.endswith(".json") else "a,b\n1,2\n"
-            (folder / name).write_text(text, encoding="utf-8")
+            _write_fake(folder / name)
     runs = [f"{d}/{m}" for d, m in golden._inventory([DECK])]
     record = {
         "provenance": provenance or _provenance(golden),
@@ -224,7 +267,7 @@ def _write_outputs(argv, **kwargs):
     out = Path(argv[argv.index("--out") + 1])
     mode = argv[argv.index("--mode") + 1]
     out.mkdir(parents=True)
-    for name in ("route_history.csv", "egress_summary.json"):
+    for name in ("route_history.csv", "egress_summary.json", "trajectory.sqlite"):
         (out / name).write_text("x\n", encoding="utf-8")
     if mode == "history_on":
         (out / "route_cost_history.csv").write_text("x\n", encoding="utf-8")
@@ -457,3 +500,112 @@ def test_added_metrics_keep_bytes_deciding(golden, tmp_path):
     a.write_text(_summary(golden, t=1.0), encoding="utf-8")
     b.write_text(_summary(golden, t=1, fds_outside={"rows": 0}), encoding="utf-8")
     assert golden._compare_file(a, b)
+
+
+# ── Trajectories, seeds and step folders (#187 R0) ───────────────────
+
+
+def test_trajectory_rows_decide_not_metadata(golden, tmp_path):
+    """Equal rows with other metadata compare as the same trajectory."""
+    a = _trajectory(tmp_path / "a" / "trajectory.sqlite")
+    b = _trajectory(
+        tmp_path / "b" / "trajectory.sqlite", metadata=(("fps", "10.0"), ("x", "y"))
+    )
+    assert golden._compare_file(a, b) == []
+
+
+@pytest.mark.parametrize(
+    ("rows", "expected"),
+    [
+        (
+            [(0, 1, math.nextafter(1.5, 2.0), 2.0, 1.0, 0.0), _ROWS[1]],
+            "pos_x: 1.5 vs 1.5000000000000002",
+        ),
+        (_ROWS[:1], "row count 2 vs 1"),
+        ([*_ROWS, (1, 1, 1.5, 2.0, 1.0, 0.0)], "row count 2 vs 3"),
+    ],
+    ids=["one_ulp", "row_missing", "row_added"],
+)
+def test_trajectory_differences_are_found(golden, tmp_path, rows, expected):
+    a = _trajectory(tmp_path / "a" / "trajectory.sqlite")
+    b = _trajectory(tmp_path / "b" / "trajectory.sqlite", rows=rows)
+    report = golden._compare_file(a, b)
+    assert any(expected in line for line in report), report
+
+
+@pytest.mark.parametrize(
+    ("scalars", "expected"),
+    [
+        (
+            [(0, 1, math.nextafter(0.25, 1.0), 0.0, 1.2, 1), _SCALARS[1]],
+            "agent_scalars: first difference at row 1 (frame 0, id 1), "
+            "fed: 0.25 vs 0.25000000000000006",
+        ),
+        (_SCALARS[:1], "agent_scalars: row count 2 vs 1"),
+        (None, "agent_scalars columns differ"),
+    ],
+    ids=["fed_one_ulp", "row_missing", "table_missing"],
+)
+def test_agent_scalars_are_compared(golden, tmp_path, scalars, expected):
+    """The per-agent FED, heat FED and speed a FED run adds are compared too."""
+    a = _trajectory(tmp_path / "a" / "trajectory.sqlite", scalars=_SCALARS)
+    b = _trajectory(tmp_path / "b" / "trajectory.sqlite", scalars=scalars)
+    assert golden._compare_file(a, a) == []
+    report = golden._compare_file(a, b)
+    assert any(expected in line for line in report), report
+
+
+def test_seed_mismatch_exits(golden):
+    golden._check_seed("t_junction", {"seed": 42})
+    with pytest.raises(SystemExit, match="t_junction: the run used seed 43"):
+        golden._check_seed("t_junction", {"seed": 43})
+    with pytest.raises(SystemExit, match="used seed None"):
+        golden._check_seed("t_junction", {})
+
+
+def test_unreadable_trajectory_is_a_difference(golden, tmp_path):
+    a = _trajectory(tmp_path / "a" / "trajectory.sqlite")
+    b = tmp_path / "b" / "trajectory.sqlite"
+    b.parent.mkdir()
+    b.write_text("not a database", encoding="utf-8")
+    assert golden._compare_file(a, b)
+
+
+def test_every_run_writes_a_trajectory(golden):
+    assert all("trajectory.sqlite" in names for names in golden.MODES.values())
+
+
+# The effective seed of every deck: the l_corridor archive's seed 1, else the
+# config's baseSeed, which config/effective.py takes when --seed is not given.
+_SEEDS = {
+    "l_corridor_gate": 1,
+    "l_corridor_additive": 1,
+    "world100_stream_east": 100,
+    "world100_stream_oval": 100,
+    "world77": 77,
+    "t_junction": 42,
+    "familiarity_test_full": 420,
+    "familiarity_test_discovery": 420,
+    "familiarity_test_discovery_cell0.25": 420,
+    "familiarity_test_discovery_cell0.1": 420,
+    "familiarity_test_discovery_cell0.05": 420,
+    "familiarity_test_discovery_cell0.025": 420,
+}
+
+
+def test_deck_seeds_are_pinned(golden):
+    assert {name: deck.seed for name, deck in golden.DECKS.items()} == _SEEDS
+
+
+@pytest.mark.parametrize("name", sorted(n for n in _SEEDS if "familiarity" in n))
+def test_repository_deck_seed_is_its_base_seed(golden, name):
+    """The in-repo decks' pinned seed is what their config would give."""
+    deck = golden.DECKS[name]
+    config = json.loads((golden.REPO / deck.config).read_text(encoding="utf-8"))
+    assert config["config"]["simulation_settings"]["baseSeed"] == deck.seed
+
+
+def test_step_folder_names_step_and_commit(golden, tmp_path, monkeypatch):
+    monkeypatch.setattr(golden, "_git", lambda *a: "b0b764e9")
+    expected = tmp_path / "golden_187" / "R1_b0b764e9"
+    assert golden._step_folder(tmp_path, "R1") == expected
