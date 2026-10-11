@@ -2186,6 +2186,41 @@ class TestEvaluateAndRerouteWithCongestion:
         assert switch is not None
         assert switch.new_exit == "E0"
 
+    def test_unset_cost_config_uses_the_code_defaults(self, multi_exit_graph):
+        """A RerouteConfig without cost_config, called directly, decides as
+        with RouteCostConfig() (#501)."""
+        assert RerouteConfig().cost_config is None
+        field = ConstantExtinctionField(0.5)
+        wait_info = {
+            "mode": "path",
+            "current_origin": "D0",
+            "current_target_stage": "E0",
+            "path_choices": {"D0": [("E0", 100.0)]},
+            "stage_configs": {},
+            "state": "to_target",
+        }
+
+        def _switch(config: RerouteConfig):
+            return evaluate_and_reroute(
+                agent_id=1,
+                wait_info=dict(wait_info),
+                route_state=AgentRouteState(eval_offset_s=0.0),
+                graph=multi_exit_graph,
+                current_time_s=10.0,
+                current_fed=0.0,
+                extinction_sampler=field,
+                fed_rate_sampler=None,
+                config=config,
+                exit_counts={"E0": 50, "E1": 0},
+            )
+
+        unset = _switch(RerouteConfig(reevaluation_interval_s=1.0))
+        explicit = _switch(
+            RerouteConfig(reevaluation_interval_s=1.0, cost_config=RouteCostConfig())
+        )
+        assert unset is not None
+        assert unset == explicit
+
 
 # ── cognitive map and visibility rejection tests ──────────────────────
 

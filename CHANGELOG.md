@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `RerouteConfig.cost_config` defaults to `None`, which `run_scenario`
+  replaces with the scenario's `routing` block, for the first exit
+  choice, the closure re-choice and rerouting. A `RerouteConfig()`
+  built by hand used the code defaults of `RouteCostConfig` and
+  ignored the block; an explicit `cost_config` still overrides it, and
+  `run.py`, the GUI and its Python export are unchanged. An invalid
+  `routing` block now raises under `RerouteConfig()` too, as it did
+  with `reroute_config=None` (#501).
+
 ## [0.5.0] - 2026-10-11
 
 ### Upgrading

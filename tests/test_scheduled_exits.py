@@ -25,6 +25,7 @@ from pyfds_evac.core.fed import DefaultFedInputs
 from pyfds_evac.core.route_graph import (
     AgentRouteState,
     RerouteConfig,
+    RouteCostConfig,
     StageGraph,
     StageNode,
     adopt_heading_exit,
@@ -835,6 +836,37 @@ def test_closure_rechoice_is_scored_with_the_scenario_routing_block(mode):
     gate = _closure_costs(**RUN_MODES[mode])
     additive = _closure_costs({"cost_model": "additive"}, **RUN_MODES[mode])
     assert additive == pytest.approx([GATE_BASE_SPEED * c for c in gate], abs=1e-3)
+
+
+def test_reroute_config_without_cost_config_reads_the_routing_block():
+    """A RerouteConfig() scores with the scenario's routing block (#501):
+    under additive the clear-air cost is the route length, 1.3 times the
+    gate's travel time."""
+    gate = _closure_costs(reroute_config=RerouteConfig())
+    additive = _closure_costs(
+        {"cost_model": "additive"}, reroute_config=RerouteConfig()
+    )
+    assert additive == pytest.approx([GATE_BASE_SPEED * c for c in gate], abs=1e-3)
+
+
+def test_reroute_config_without_cost_config_records_the_routing_block():
+    """The run settings record the weights the routing block set (#501)."""
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    scenario.raw["routing"] = {"w_queue": 0.024}
+    result = run_scenario(scenario, seed=SEED, reroute_config=RerouteConfig())
+    try:
+        settings = result.run_settings["rerouting"]
+        assert settings["cost_config"]["w_queue"] == 0.024
+    finally:
+        result.cleanup()
+
+
+def test_explicit_cost_config_overrides_the_routing_block():
+    """An explicit cost_config is used as given, not the routing block."""
+    explicit = RerouteConfig(cost_config=RouteCostConfig())
+    gate = _closure_costs(reroute_config=RerouteConfig())
+    kept = _closure_costs({"cost_model": "additive"}, reroute_config=explicit)
+    assert kept == pytest.approx(gate, abs=1e-6)
 
 
 def test_closure_rechoice_carries_the_dose_taken():

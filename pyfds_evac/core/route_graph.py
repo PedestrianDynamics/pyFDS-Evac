@@ -2057,10 +2057,10 @@ class _AnchoredPolicy:
         # route is refused, the fallback keeps the current exit ahead of such
         # a rival unless its tau clears the margin, and the scan stops at the
         # current exit (#128).
-        if _must_flee_rejection(old_rc, config.cost_config):
+        if _must_flee_rejection(old_rc, _cost_config(config)):
             return True
         if not candidate.feasible and not old_rc.feasible:
-            return _fallback_rival_wins(candidate, old_rc, config.cost_config)
+            return _fallback_rival_wins(candidate, old_rc, _cost_config(config))
         return self.improvement(candidate, old_rc, config)
 
 
@@ -2194,7 +2194,7 @@ class GatePolicy(_AnchoredPolicy):
             return True
         if not candidate.feasible:
             return _clears_exit_anchor(candidate, old_rc, config)
-        band = self._tau_band(candidate, old_rc, config.cost_config)
+        band = self._tau_band(candidate, old_rc, _cost_config(config))
         if band > 0:
             return True
         if band < 0:
@@ -2853,16 +2853,31 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
 
 @dataclass(frozen=True)
 class RerouteConfig:
-    """Settings for periodic route reevaluation."""
+    """Settings for periodic route reevaluation.
+
+    ``cost_config`` None means the scenario's ``routing`` block:
+    :func:`~pyfds_evac.core.scenario.run_scenario` replaces it with
+    ``RouteCostConfig.from_routing_params(scenario.raw.get("routing"))``
+    for the first exit choice, the closure re-choice and rerouting. An
+    explicit ``cost_config`` is used as given. The functions here, called
+    directly with None, use the code defaults of :class:`RouteCostConfig`.
+    """
 
     reevaluation_interval_s: float = 10.0
-    cost_config: RouteCostConfig = field(default_factory=RouteCostConfig)
+    cost_config: RouteCostConfig | None = None
     # Anchoring / hysteresis for switching to a *different* exit: a rival exit is
     # only adopted if its cost is below this fraction of the current exit's cost
     # (i.e. it must be clearly better, not marginally). Mirrors FDS+Evac's
     # FAC_DOOR_WAIT patience factor (default 0.9 there). Convention from the
     # reference implementation, NOT calibrated — see docs/rerouting-oscillation-notes.md.
     exit_switch_anchor: float = 0.9
+
+
+def _cost_config(config: RerouteConfig) -> RouteCostConfig:
+    """The cost model of *config*; the code defaults when it has none."""
+    if config.cost_config is None:
+        return RouteCostConfig()
+    return config.cost_config
 
 
 @dataclass
@@ -3187,7 +3202,7 @@ def _anchor_allows(
     comparison is a deadband on optical depth, falling through to time only
     when the two routes are within it.
     """
-    return policy_for(config.cost_config).anchor_allows(candidate, old_rc, config)
+    return policy_for(_cost_config(config)).anchor_allows(candidate, old_rc, config)
 
 
 def _clears_exit_anchor(
@@ -3220,7 +3235,7 @@ def _select_candidate(
     current_exit_now = route_state.current_exit
     if (
         current_exit_now is not None
-        and policy_for(config.cost_config).scan_before_current_exit()
+        and policy_for(_cost_config(config)).scan_before_current_exit()
         and best.exit_id != current_exit_now
     ):
         for candidate in ranked:
@@ -3272,14 +3287,14 @@ def _return_locked(
     hazard the agent must flee and a third exit are never blocked. Without a
     route state or a time nothing is blocked.
     """
-    lockout = config.cost_config.fallback_return_lockout_s
+    lockout = _cost_config(config).fallback_return_lockout_s
     if route_state is None or time_s is None or lockout <= 0.0:
         return False
     if candidate.exit_id != route_state.refused_switch_from:
         return False
     if old_rc is None or not _both_refused(candidate, old_rc):
         return False
-    if _must_flee_rejection(old_rc, config.cost_config):
+    if _must_flee_rejection(old_rc, _cost_config(config)):
         return False
     return time_s - route_state.refused_switch_time_s <= lockout
 
@@ -3337,7 +3352,7 @@ def _decide_same_exit(
             current_fed,
             extinction_sampler,
             fed_rate_sampler,
-            config.cost_config,
+            _cost_config(config),
             cached_segments=cached_segments,
             exit_counts=exit_counts,
             agent_position=agent_position,
@@ -3469,7 +3484,7 @@ def _hazard_reason(
     would decide nothing, yet under the ratio anchor removing it changes the
     comparison.
     """
-    cost_config = config.cost_config
+    cost_config = _cost_config(config)
     if cost_config.cost_model == "gate":
         cleaner = GatePolicy._clean_bypass(best, old_rc) or (
             GatePolicy._tau_band(best, old_rc, cost_config) > 0
@@ -3501,7 +3516,7 @@ def _slowed_by_smoke(best: RouteCost, old_rc: RouteCost, config: RerouteConfig) 
     """
     if best.clear_travel_time_s is None or old_rc.clear_travel_time_s is None:
         return False
-    queue = config.cost_config.w_queue
+    queue = _cost_config(config).w_queue
     new_cost = best.clear_travel_time_s + queue * best.queue_time_s
     old_cost = old_rc.clear_travel_time_s + queue * old_rc.queue_time_s
     return not new_cost < old_cost * config.exit_switch_anchor
@@ -3537,7 +3552,7 @@ def _clears_without(
     term: Callable[[RouteCost, RouteCostConfig], float],
 ) -> bool:
     """Whether *best* would clear the anchor with *term* taken out of both costs."""
-    cost_config = config.cost_config
+    cost_config = _cost_config(config)
     new_cost = best.rank_cost - term(best, cost_config)
     old_cost = old_rc.rank_cost - term(old_rc, cost_config)
     return new_cost < old_cost * config.exit_switch_anchor
@@ -4112,7 +4127,7 @@ def evaluate_and_reroute(
         current_fed,
         extinction_sampler,
         fed_rate_sampler,
-        config.cost_config,
+        _cost_config(config),
         cached_segments=cached_segments,
         exit_counts=exit_counts,
         cognitive_map=cognitive_map,
