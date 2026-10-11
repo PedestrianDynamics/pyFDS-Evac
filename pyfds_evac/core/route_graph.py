@@ -2033,6 +2033,18 @@ class RouteModePolicy(Protocol):
 
     def scan_before_current_exit(self) -> bool: ...
 
+    def switch_hazard_label(
+        self,
+        best: RouteCost,
+        old_rc: RouteCost,
+        config: RerouteConfig,
+        current_fed: float = 0.0,
+    ) -> str | None: ...
+
+    def queue_term(self, rc: RouteCost, config: RouteCostConfig) -> float: ...
+
+    def must_flee_smoke(self, rc: RouteCost, cost_config: RouteCostConfig) -> bool: ...
+
 
 class _AnchoredPolicy:
     """The exit-switch anchor, shared by both cost models."""
@@ -2069,6 +2081,17 @@ class _AnchoredPolicy:
             return _fallback_rival_wins(candidate, old_rc, _cost_config(config))
         return self.improvement(candidate, old_rc, config)
 
+    def must_flee_smoke(self, rc: RouteCost, cost_config: RouteCostConfig) -> bool:
+        """Whether *rc*'s smoke alone is impassable (see _must_flee_rejection).
+
+        Shared by both cost models: only the additive K_vis screen records
+        ``all_segments_non_visible``, so under the gate this holds only for a
+        route that carries the kind from elsewhere.
+        """
+        if "all_segments_non_visible" in rc.violation_kinds:
+            return rc.k_ave_route > cost_config.impassable_extinction_threshold
+        return False
+
 
 class AdditivePolicy(_AnchoredPolicy):
     """The historical w_smoke/w_fed toll: the composite ranks, dose refuses."""
@@ -2080,6 +2103,36 @@ class AdditivePolicy(_AnchoredPolicy):
 
     def scan_before_current_exit(self) -> bool:
         return False
+
+    def switch_hazard_label(
+        self,
+        best: RouteCost,
+        old_rc: RouteCost,
+        config: RerouteConfig,
+        current_fed: float = 0.0,
+    ) -> str | None:
+        """``fed_reroute`` or ``smoke_reroute`` if dose or smoke let *best* win.
+
+        The dose term is credited on the dose each route adds, not on the dose
+        already taken: that part is the same on both routes and would decide
+        nothing, yet under the ratio anchor removing it changes the comparison.
+        """
+        fed_term = _fed_growth_term(current_fed)
+
+        def hazard_terms(rc: RouteCost, cfg: RouteCostConfig) -> float:
+            return fed_term(rc, cfg) + _smoke_term(rc, cfg)
+
+        if _clears_without(best, old_rc, config, hazard_terms):
+            return None
+        if _clears_without(best, old_rc, config, _smoke_term) or not _clears_without(
+            best, old_rc, config, fed_term
+        ):
+            return "fed_reroute"
+        return "smoke_reroute"
+
+    def queue_term(self, rc: RouteCost, config: RouteCostConfig) -> float:
+        """The queue term of the additive ``rank_cost``."""
+        return config.w_queue * config.base_speed_m_per_s * rc.queue_time_s
 
     def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float:
         # Additive decomposition of the composite formula. current_fed
@@ -2209,6 +2262,28 @@ class GatePolicy(_AnchoredPolicy):
 
     def scan_before_current_exit(self) -> bool:
         return True
+
+    def switch_hazard_label(
+        self,
+        best: RouteCost,
+        old_rc: RouteCost,
+        config: RerouteConfig,
+        current_fed: float = 0.0,
+    ) -> str | None:
+        """``smoke_reroute`` if smoke let *best* win, else None."""
+        cost_config = _cost_config(config)
+        cleaner = self._clean_bypass(best, old_rc) or (
+            self._tau_band(best, old_rc, cost_config) > 0
+        )
+        return (
+            "smoke_reroute"
+            if cleaner or _slowed_by_smoke(best, old_rc, config)
+            else None
+        )
+
+    def queue_term(self, rc: RouteCost, config: RouteCostConfig) -> float:
+        """The queue term of the gate ``rank_cost``."""
+        return config.w_queue * rc.queue_time_s
 
     def edge_weight(self, seg: SegmentCost, config: RouteCostConfig) -> float:
         # Per-edge cost. Under "gate" this is the edge's own optical
@@ -2858,9 +2933,7 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
     """
     if "fed" in rc.violation_kinds:
         return True
-    if "all_segments_non_visible" in rc.violation_kinds:
-        return rc.k_ave_route > cost_config.impassable_extinction_threshold
-    return False
+    return policy_for(cost_config).must_flee_smoke(rc, cost_config)
 
 
 @dataclass(frozen=True)
@@ -3487,12 +3560,13 @@ def _exit_change_reason(
         return news or fallback
     if old_rc.rejected:
         return "fed_reroute" if _over_dose(old_rc) else "smoke_reroute"
-    hazard = _hazard_reason(best, old_rc, config, current_fed)
+    policy = policy_for(_cost_config(config))
+    hazard = policy.switch_hazard_label(best, old_rc, config, current_fed)
     if hazard is not None:
         return hazard
     if news is not None:
         return news
-    if not _clears_without(best, old_rc, config, _queue_term):
+    if not _clears_without(best, old_rc, config, policy.queue_term):
         return "congestion"
     return "shorter_path"
 
@@ -3506,43 +3580,6 @@ def _over_dose(rc: RouteCost) -> bool:
     exit, so the label and must-flee agree (#128).
     """
     return "fed" in rc.violation_kinds
-
-
-def _hazard_reason(
-    best: RouteCost,
-    old_rc: RouteCost,
-    config: RerouteConfig,
-    current_fed: float = 0.0,
-) -> str | None:
-    """``fed_reroute`` or ``smoke_reroute`` if dose or smoke let *best* win.
-
-    Under ``additive`` the dose term is credited on the dose each route adds,
-    not on the dose already taken: that part is the same on both routes and
-    would decide nothing, yet under the ratio anchor removing it changes the
-    comparison.
-    """
-    cost_config = _cost_config(config)
-    if cost_config.cost_model == "gate":
-        cleaner = GatePolicy._clean_bypass(best, old_rc) or (
-            GatePolicy._tau_band(best, old_rc, cost_config) > 0
-        )
-        return (
-            "smoke_reroute"
-            if cleaner or _slowed_by_smoke(best, old_rc, config)
-            else None
-        )
-    fed_term = _fed_growth_term(current_fed)
-
-    def hazard_terms(rc: RouteCost, cfg: RouteCostConfig) -> float:
-        return fed_term(rc, cfg) + _smoke_term(rc, cfg)
-
-    if _clears_without(best, old_rc, config, hazard_terms):
-        return None
-    if _clears_without(best, old_rc, config, _smoke_term) or not _clears_without(
-        best, old_rc, config, fed_term
-    ):
-        return "fed_reroute"
-    return "smoke_reroute"
 
 
 def _slowed_by_smoke(best: RouteCost, old_rc: RouteCost, config: RerouteConfig) -> bool:
@@ -3573,13 +3610,6 @@ def _fed_growth_term(
 def _smoke_term(rc: RouteCost, config: RouteCostConfig) -> float:
     """The smoke term of the additive composite, w_smoke * K_ave * L."""
     return config.w_smoke * rc.tau_route
-
-
-def _queue_term(rc: RouteCost, config: RouteCostConfig) -> float:
-    """The queue term of ``rank_cost`` under either cost model."""
-    if config.cost_model == "gate":
-        return config.w_queue * rc.queue_time_s
-    return config.w_queue * config.base_speed_m_per_s * rc.queue_time_s
 
 
 def _clears_without(
