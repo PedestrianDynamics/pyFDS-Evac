@@ -991,17 +991,22 @@ junction that a route must pass (the &lt;code>familiarity_test&lt;/code> decks a
 &lt;h2>Crowds that stop at narrow doors&lt;span class="hx-absolute -hx-mt-20" id="crowds-that-stop-at-narrow-doors">&lt;/span>
 &lt;a href="#crowds-that-stop-at-narrow-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>With the default &lt;code>CollisionFreeSpeedModel&lt;/code>, a crowd can stop in an opening
 several body widths wide
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706" target="_blank" rel="noopener">#706&lt;/a>). Under
-&lt;code>no_known_exit: explore&lt;/code>, two agents can freeze head-on in a doorway
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706" target="_blank" rel="noopener">#706&lt;/a>). With
+&lt;code>SocialForceModel&lt;/code> under &lt;code>no_known_exit: explore&lt;/code>, two agents can freeze
+head-on in a doorway
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>). The
-rates are under &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#known-defects">Known defects&lt;/a>.&lt;/p>
+rates are under &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#known-defects">Known defects&lt;/a>, and how each
+model behaves is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#deadlock-behaviour">Movement models&lt;/a>.&lt;/p>
 &lt;p>Checkpoint size or placement does not remove these defects. In &lt;code>station_fahy&lt;/code>
 #706 occurs with or without the vestibule checkpoint and with a looser arrival
-rule, which is why that scenario uses &lt;code>WarpDriverModel&lt;/code>. What you can do:&lt;/p>
+rule. That scenario uses &lt;code>WarpDriverModel&lt;/code>, which can complete by letting
+agents overlap; its model is under review in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/761" target="_blank" rel="noopener">#761&lt;/a>. What you
+can do:&lt;/p>
 &lt;ul>
 &lt;li>Draw door checkpoints that span both sides of the opening.&lt;/li>
-&lt;li>Use smaller agent radii where the scenario allows; the effect is rarer but
-does not vanish.&lt;/li>
+&lt;li>Run several seeds. A smaller agent radius does not remove the jam:
+&lt;code>HUT_Library&lt;/code> at 0.15 m still jams in 5 of 13 seeds.&lt;/li>
 &lt;li>Before you read the evacuation time, check that every agent left before
 &lt;code>max_simulation_time&lt;/code>. A deadlock shows as agents still inside at the end.&lt;/li>
 &lt;/ul>
@@ -3624,7 +3629,7 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.model_type&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;CollisionFreeSpeedModel&amp;quot;&lt;/code>&lt;/td>
-&lt;td>The JuPedSim movement model.&lt;/td>
+&lt;td>The JuPedSim movement model; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#choosing-a-model">Movement models › Choosing a model&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.number&lt;/code>, &lt;code>.radius&lt;/code>, &lt;code>.v0&lt;/code>&lt;/td>
@@ -7425,7 +7430,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/59fe74d8c71269f72e34f2610e1a2adcc1018137">&lt;code>59fe74d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e3db22b57d4db68c6e4202df70701f47a7e42f13">&lt;code>e3db22b&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7449,7 +7454,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">dbf1f413557a18a0af9f620958916bfa60ecdef4e0e8b68ecd0668658c9f263b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3a0d565e3a6e6ed7f621ba2fa41a4cbe43448c3757cdbe460d2eceb45597b14f&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

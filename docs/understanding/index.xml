@@ -704,27 +704,45 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 collision-free speed model, a crowd can stop in front of an opening
 several body widths wide and never clear it, so the run reaches
 &lt;code>max_simulation_time&lt;/code> with agents inside. Imported FDS+Evac decks such
-as &lt;code>HUT_Library&lt;/code> and &lt;code>imo/CompTest9a&lt;/code> show it in some seeds; a smaller
-radius makes it rarer but does not remove it.&lt;/li>
+as &lt;code>HUT_Library&lt;/code> and &lt;code>imo/CompTest9a&lt;/code> show it in some seeds. A smaller
+radius does not remove it: &lt;code>HUT_Library&lt;/code> at 0.15 m still jams in 5 of 13
+seeds, the rate of the issue, and which seeds jam changes between
+commits. &lt;code>SocialForceModel&lt;/code> completes 4 of these 13 runs and
+&lt;code>WarpDriverModel&lt;/code> all 13, with the closest pair of agents within
+0.9 × 2r in 3 of them
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#deadlock-behaviour">Movement models&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Doorway deadlocks of exploring agents&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>, planned for 0.6.0). Under &lt;code>no_known_exit: explore&lt;/code>, and
 &lt;code>return&lt;/code> when it explores, two agents that meet head-on in a door, or
-four jammed at a checkpoint, can stand there for the rest of the run. On &lt;code>familiarity_test_no_journey&lt;/code>
+four jammed at a checkpoint, can stand there for the rest of the run. On &lt;code>familiarity_test_no_journey&lt;/code>,
+a deck that uses &lt;code>SocialForceModel&lt;/code>
 (clear air, 0.05 m grid, the settings of
-&lt;code>tests/test_familiarity_no_journey.py&lt;/code>, at &lt;code>c619a046&lt;/code>) 2 agents are left
+&lt;code>tests/test_familiarity_no_journey.py&lt;/code>, at &lt;code>c619a046&lt;/code>), 2 agents are left
 in 3 of 150 runs of 5 agents (seeds 1–150), and 2 to 6 agents in 7 of
 60 runs of 20 agents (seeds 1–60)
-(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>).&lt;/li>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>). Under
+&lt;code>CollisionFreeSpeedModel&lt;/code> the same deck does not deadlock: 0 of 150 and
+0 of 60 runs at &lt;code>47cfeec5&lt;/code>
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#deadlock-behaviour">Movement models&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Dense counterflow can lock&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745" target="_blank" rel="noopener">#745&lt;/a>, planned for 0.6.0). In dense head-on counterflow under the
 default &lt;code>CollisionFreeSpeedModel&lt;/code>, the two streams can meet and stand
-for the rest of the run. The four decks Iso-06-counterflow-50 and -100
-and Nist-2-8-counterflow-50 and -100 of jupedsim-web-community
-(&lt;code>82404ee&lt;/code>, radius 0.15 m, clear air, patched with &lt;code>&amp;quot;journeys&amp;quot;: []&lt;/code> and
+for the rest of the run. jupedsim-web-community (&lt;code>82404ee&lt;/code>) publishes
+two such cases, each under two names: Iso-06-counterflow-50 and
+Nist-2-8-counterflow-50 have identical &lt;code>config.json&lt;/code> and &lt;code>geometry.wkt&lt;/code>,
+and so do Iso-06-counterflow-100 and Nist-2-8-counterflow-100. Both
+cases (radius 0.15 m, clear air, patched with &lt;code>&amp;quot;journeys&amp;quot;: []&lt;/code> and
 &lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code>) reach their 400 s limit with 0–1 agents out in
 each of seeds 1–3 at &lt;code>c619a046&lt;/code>; in the last 60 s no agent moves more
-than 0.02 m. With the same patch, Iso-06-counterflow-0 and -10 finish.
-The jam is head-on contact in JuPedSim&amp;rsquo;s operational model, not smoke:
+than 0.02 m. The model study at &lt;code>47cfeec5&lt;/code>, which calls a run a
+deadlock when it is incomplete and at least two agents moved less than
+0.03 m over the last 100 s, finds the same for Iso-06-counterflow-50.
+With the same patch, Iso-06-counterflow-0 and -10 finish.
+&lt;code>SocialForceModel&lt;/code> clears Iso-06-counterflow-50 in all 3 seeds by pushing, at
+peak speeds about 2.2 times the desired speed; the 100 % case was not
+run with it
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#deadlock-behaviour">Movement models&lt;/a>).
+The jam is head-on contact in JuPedSim&amp;rsquo;s operational model;
 pyFDS-Evac has no dedicated counterflow algorithm
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/#1-movement-model">Model comparison&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Re-evaluation at most once per second&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660" target="_blank" rel="noopener">#660&lt;/a>).
@@ -811,7 +829,7 @@ call (:13256), with no behaviour change. The note on Evac 2.6.1 in
 &lt;tr>
 &lt;td>&lt;strong>Counterflow&lt;/strong>&lt;/td>
 &lt;td>Dedicated counterflow collision-avoidance algorithm ([1] §3.3)&lt;/td>
-&lt;td>Handled by JuPedSim&amp;rsquo;s operational model; no separate counterflow algorithm&lt;/td>
+&lt;td>Handled by JuPedSim&amp;rsquo;s operational model; no separate counterflow algorithm. How each model behaves in dense counterflow: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#deadlock-behaviour">Movement models&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Spatial discretisation&lt;/strong>&lt;/td>
@@ -1670,7 +1688,9 @@ the operational model&amp;rsquo;s collision avoidance rather than explicit
 force-based interactions. A deck may select JuPedSim&amp;rsquo;s
 &lt;code>SocialForceModel&lt;/code>, whose body force &lt;em>k&lt;/em> acts on contact; its
 friction is 0 until JuPedSim fixes the wall-friction sign
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635" target="_blank" rel="noopener">#635&lt;/a>).&lt;/p>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635" target="_blank" rel="noopener">#635&lt;/a>).
+Which model to choose, and how each one deadlocks:
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#choosing-a-model">Movement models&lt;/a>.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>Limited validation.&lt;/strong> The routing model is new and has not yet
