@@ -346,8 +346,13 @@ no reachable known exit (`route_graph.py`, `_decide_no_known_exit`):
   These modes act at re-evaluation, so a run without rerouting, and a
   `--smoke-blind` run, refuses them; use a clear-air run as the control.
 
-`current_exit` holds only an exit the agent knows, so its first known exit is
-logged as `reason="initial"`. In the queue tally, a default-route agent counts
+`current_exit` holds only an exit the agent knows. A first known exit that is
+the default exit is logged as `reason="initial"`. Another exit, taken while
+the default exit is open, leaves the default exit: the route history names it
+as `old_exit`, the reason is the usual exit-change reason (`exit_unreachable`
+when the default exit is not in the agent's map), and the exit-switch anchor
+holds the agent on its default exit when it knows a route to it
+(`route_graph.py`, `_anchored_exit`; #743). In the queue tally, a default-route agent counts
 at its default exit, as FDS+Evac counts an agent at the door its flow field
 leads to; under the opt-in modes an agent with no known exit counts nowhere.
 

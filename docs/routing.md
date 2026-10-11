@@ -609,7 +609,8 @@ No switch is recorded when:
 - The agent has not yet reached its offset time.
 - The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).
 - All routes are hard-rejected and none was un-rejected as a fallback.
-- The anchor holds the agent on its current exit.
+- The anchor holds the agent on its current exit, or on its open default
+  exit while it follows its default route.
 - The best route leads to the same exit and the agent is not idle —
   though the path to it may still be rewritten, which is recorded as
   `better_path`.
@@ -620,7 +621,7 @@ Each `RouteSwitch` record includes a `reason` field:
 
 | Reason          | Condition                                                        |
 |-----------------|------------------------------------------------------------------|
-| `initial`       | Agent had no previous exit assignment                            |
+| `initial`       | Agent had no previous exit assignment, or it follows its default route and takes its default exit or the default exit is not open |
 | `default_route` | The agent follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)): at spawn, or when the agent's known exits are all closed or unreachable |
 | `fed_reroute`   | A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (`additive`) the dose term contributes to a switch the hazard terms are needed for |
 | `smoke_reroute` | A different exit: the route to the old exit is refused on smoke alone (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, lower in τ by more than the deadband, or would not clear the anchor with clear-air travel times; under `additive` the switch needs the smoke term and not the dose term |
@@ -629,7 +630,7 @@ Each `RouteSwitch` record includes a `reason` field:
 | `learned_exit`  | A different exit, not in the agent's cognitive map at its previous evaluation |
 | `congestion`    | A different exit; the switch would not clear the anchor without the queue term |
 | `shorter_path`  | A different exit; time (`gate`) or length (`additive`) alone clears the anchor |
-| `exit_unreachable` | A different exit; the old exit has no route from where the agent stands |
+| `exit_unreachable` | A different exit; the old exit has no route from where the agent stands, such as a default exit outside the agent's map |
 | `resume`        | An idle agent is routed to the exit it already holds |
 | `fallback`      | Best route was un-rejected as fallback (all routes rejected)     |
 | `better_path`   | Same exit, but a path more than 10 % cheaper on `rank_cost`, or a feasible path replacing a rejected walked one |
@@ -653,7 +654,10 @@ exit is `initial` with an empty `old_exit`
 old exit that is refused gives `fed_reroute` when its predicted dose is over
 the limit, else `smoke_reroute`. With no route to the old exit, and for an
 idle agent routed to its own exit, `exit_opened` and `learned_exit` still
-come first, then `exit_unreachable` or `resume`.
+come first, then `exit_unreachable` or `resume`. An agent that leaves its
+default route for another exit while the default exit is open leaves that
+exit: `old_exit` is the default exit and the reason is one of the above
+([#743](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/743)).
 
 A cost term is credited when the switch would not clear the anchor without
 it; the anchor is strict, so a cost of exactly the old cost times

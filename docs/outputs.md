@@ -154,7 +154,7 @@ The equations behind each rate are on [Models › FED](/models/fed.md) and
 | Column | Meaning |
 |---|---|
 | `time_s`, `agent_id` | when, and who |
-| `old_exit`, `new_exit` | exit before and after; `new_exit` is a node for `explore`, `wander`, `return` and `stay`. `old_exit` is empty for the first assignment, for `explore`, `wander`, `return` and `stay`, for an `initial` row that gives an agent on its default route its first known exit, and for a second `default_route` row at spawn in the same time step |
+| `old_exit`, `new_exit` | exit before and after; `new_exit` is a node for `explore`, `wander`, `return` and `stay`. `old_exit` is empty for the first assignment, for `explore`, `wander`, `return` and `stay`, for an `initial` row, and for a `default_route` row at spawn. An agent that leaves its default route for another exit while the default exit is open has the default exit as `old_exit` |
 | `old_cost`, `new_cost` | ranking cost of the two routes, rounded to 4 decimals; `old_cost` is empty when there was none |
 | `reason` | `initial`, `default_route`, `fed_reroute`, `smoke_reroute`, `exit_closed`, `exit_opened`, `learned_exit`, `congestion`, `shorter_path`, `exit_unreachable`, `resume`, `fallback`, `better_path`, `explore`, `wander`, `return` or `stay` |
 
@@ -166,10 +166,14 @@ labelled by its cause
 did, `shorter_path` when time or length alone did.
 
 An `initial` row is written only when an agent that has no exit at a
-re-evaluation is given its first one. A `default_route` row is written for
+re-evaluation is given its first one: for an agent on its default route,
+when that exit is its default exit or the default exit is not open. A
+`default_route` row is written for
 an agent that follows its default route, the journey or the nearest exit on
 foot: at spawn when its map holds no exit, or when its known exits are all
-closed or unreachable. Other agents that start with
+closed or unreachable. For a default exit that has not opened yet, the
+spawn row names the open exit the agent is sent to; with no exit open there
+is none. Other agents that start with
 a journey exit get no row until they change target, so a run without any switch (such as the
 example above, `Route history rows: 0`) writes a file with only its header. This
 does not mean rerouting was off.
