@@ -99,9 +99,12 @@ class ResultEvent:
     not finish (failed, cancelled): ``total`` agents that entered,
     ``evacuated`` of them, ``remaining`` still inside at the end (the
     incapacitated included), ``incapacitated`` (ever, by gas or heat),
-    ``not_spawned`` flow agents the time limit kept out. ``end_time_s`` is
-    the simulated time the run stopped at: the evacuation time of a
-    complete run, the time limit of an incomplete one. ``seed`` is the seed
+    ``not_spawned`` flow agents that never entered. ``end_time_s`` is the
+    simulated time the run stopped at: the evacuation time of a complete
+    run, the time limit or, when its flow windows closed, the last exit of
+    an incomplete one. ``end_reason`` is the run's ``end_reason`` metric
+    (``"all_evacuated"``, ``"time_limit"`` or ``"flows_closed"``), None when
+    not reported. ``seed`` is the seed
     the run used. ``exit_counts`` is the agents per exit of the frame
     stream (see :class:`FrameEvent`), None without frames.
     ``incapacitation_modelled`` says whether the run could incapacitate
@@ -125,6 +128,7 @@ class ResultEvent:
     seed: int | None = None
     exit_counts: dict[str, int] | None = None
     incapacitation_modelled: bool | None = None
+    end_reason: str | None = None
 
 
 @dataclass(frozen=True)

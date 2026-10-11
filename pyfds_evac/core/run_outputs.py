@@ -298,8 +298,13 @@ def _ending(result) -> str:
         if result.agents_not_spawned
         else ""
     )
+    reason = (
+        "flow windows closed"
+        if getattr(result, "end_reason", None) == "flows_closed"
+        else "time limit reached"
+    )
     return (
-        "Simulation incomplete: time limit reached after "
+        f"Simulation incomplete: {reason} after "
         f"{result.evacuation_time:.2f} s "
         f"({result.agents_evacuated}/{result.total_agents} evacuated, "
         f"{result.agents_remaining} remaining{not_spawned})."

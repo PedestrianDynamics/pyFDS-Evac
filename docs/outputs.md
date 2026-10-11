@@ -66,7 +66,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
-| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `agents_remaining` and `agents_not_spawned`, as in [Reading the results](#reading-the-results) |
+| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit` or `flows_closed`), `agents_remaining` and `agents_not_spawned`, as in [Reading the results](#reading-the-results) |
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
@@ -221,7 +221,8 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 | `total_agents`, `agents_evacuated`, `agents_remaining` | head counts at the end |
 | `agents_not_spawned` | flow agents that had not entered when the run stopped: cut off by `max_simulation_time`, or still waiting for a free position when their flow window closed |
 | `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
-| `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter |
+| `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter, or when the building emptied after its flow windows closed with flow agents not spawned |
+| `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit. Also in `metrics["end_reason"]` |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
 | `metrics["route_switches"]` | per agent, each time step whose decision changes the agent's target (`new_exit`), or its path to an exit it holds (a row with an `old_exit`). A time step counts at most once, judged by its last row, the decision the agent acts on. The agent's first step counts only if its row names an old exit, the exit seeded at spawn. Reasons are not read (#733, #744). Each new `explore` or `wander` node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0 |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran |

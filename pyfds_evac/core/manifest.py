@@ -309,7 +309,8 @@ def build_manifest(
     ``fds_outside`` is the count of history rows sampled outside the FDS
     slices (``rows``, ``agents``, ``agent_seconds``), recorded with it.
     ``outcome`` is how the run ended: ``status`` (``"completed"`` or
-    ``"incomplete"``), ``agents_remaining`` and ``agents_not_spawned``.
+    ``"incomplete"``), ``end_reason`` (``"all_evacuated"``, ``"time_limit"``
+    or ``"flows_closed"``), ``agents_remaining`` and ``agents_not_spawned``.
     ``sfm`` is what a SocialForceModel run gave JuPedSim: ``body_force``,
     ``friction``, ``friction_requested`` and ``friction_clamped``
     (``scenario.sfm_model_settings``), recorded for that model only.

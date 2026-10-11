@@ -1956,6 +1956,15 @@ class TestRunOutcome:
             "Incomplete: time limit reached, 0 agents inside, 50 not spawned"
         )
 
+    def test_flow_windows_closed(self):
+        """#742: emptied after the flow windows closed, before the limit."""
+        from pyfds_evac.webapp.runner import run_outcome
+
+        o = run_outcome("incomplete", 0, 5, "flows_closed")
+        assert o.complete is False
+        assert o.label == "Incomplete: flow windows closed, 5 not spawned"
+        assert o.time_label == "Simulated time"
+
     def test_not_reported(self):
         from pyfds_evac.webapp.runner import run_outcome
 
@@ -2048,6 +2057,14 @@ class TestRunOutcome:
             "Incomplete: time limit reached, 0 agents inside, 50 not spawned, "
             "simulated time 300.0 s, incapacitation not modelled"
         )
+        # #742: emptied after its flow windows closed, before the limit.
+        closed = dataclasses.replace(
+            cut_off, end_reason="flows_closed", evacuation_time=9.8
+        )
+        assert run_status(closed) == (
+            "Incomplete: flow windows closed, 50 not spawned, "
+            "simulated time 9.8 s, incapacitation not modelled"
+        )
         done = dataclasses.replace(
             spec,
             completion="completed",
@@ -2061,11 +2078,16 @@ class TestRunOutcome:
         )
 
     @pytest.mark.parametrize(
-        ("success", "remaining", "not_spawned"),
-        [(True, 0, 0), (False, 6, 0), (False, 0, 50)],
+        ("success", "remaining", "not_spawned", "end_reason"),
+        [
+            (True, 0, 0, "all_evacuated"),
+            (False, 6, 0, "time_limit"),
+            (False, 0, 50, "time_limit"),
+            (False, 0, 50, "flows_closed"),
+        ],
     )
     def test_exported_summary_matches_run_py(
-        self, success, remaining, not_spawned, capsys
+        self, success, remaining, not_spawned, end_reason, capsys
     ):
         """The script prints run.py's summary line and exits 2 when incomplete."""
         from pyfds_evac.webapp.pyexport import preview_script
@@ -2090,6 +2112,7 @@ class TestRunOutcome:
             total_agents=150,
             agents_remaining=remaining,
             agents_not_spawned=not_spawned,
+            end_reason=end_reason,
         )
         exit_code = 0
         # Test-only execution of the generated text; the GUI never runs it.

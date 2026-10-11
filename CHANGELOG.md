@@ -29,6 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   itself stays `initial`. An agent whose default exit has not opened
   yet gets no spawn-time `default_route` row for it; a run whose
   history is then empty reports no `route_switches` (#743).
+- A run whose flow agents found no free position ends once the
+  building is empty and no flow window with agents still to enter is
+  open, instead of running on to `max_simulation_time`. It stays
+  incomplete (`success` False, `run.py` exit status 2), and its end
+  time, frames, trajectory and histories end with the last agent out.
+  Every other run is unchanged. The metrics and the manifest
+  `outcome` record why a run stopped in `end_reason`:
+  `all_evacuated`, `time_limit` or `flows_closed` (#742).
 
 ## [0.5.0] - 2026-10-11
 

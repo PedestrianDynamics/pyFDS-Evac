@@ -191,9 +191,10 @@ followed by the same reason, then stops with exit status 1 at the capacity
 check. Import again with `--agents 40` before you go on.
 
 {{< details title="The run stopped with exit status 2" closed="true" >}}
-Status 2 means the run reached `max_simulation_time` with agents still
-inside ([Exit status](usage.md#exit-status)).
-`init` copies the deck's `&TIME T_END` into `max_simulation_time`, or 300 s
+Status 2 means the run is incomplete: it reached `max_simulation_time`
+with agents inside or still to enter, or it emptied after its flow windows
+closed with agents not spawned ([Exit status](usage.md#exit-status)). In
+the first case, `init` copies the deck's `&TIME T_END` into `max_simulation_time`, or 300 s
 without one, so a short `T_END` can cut the run off. Raise
 `simulationParams.max_simulation_time` in `config.json`.
 {{< /details >}}

@@ -886,6 +886,40 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _flow_can_spawn(
+    flow_distributions: list, numbers: list, counters: list, time_s: float
+) -> bool:
+    """Whether a flow source can still add an agent at or after *time_s*.
+
+    True while one has agents still to enter and its window has not
+    closed. Only the counts and the window decide: a source waiting for
+    its window to open, or for a free position, keeps the run going.
+    """
+    return any(
+        counters[source_id] < numbers[source_id] and time_s <= flow["end_time"]
+        for source_id, flow in enumerate(flow_distributions)
+    )
+
+
+def _flow_source_due(
+    flow: dict,
+    frequency: float,
+    number: int,
+    counter: int,
+    time_s: float,
+    margin: float = 0.0,
+) -> bool:
+    """Whether a flow source may try to add an agent at *time_s*.
+
+    True while agents of the source are still to enter, its next spawn is
+    due and its window is open; *margin* widens the test on each side.
+    """
+    if counter >= number:
+        return False
+    start = max(flow["start_time"], flow["start_time"] + counter * frequency)
+    return bool(start - margin <= time_s <= flow["end_time"] + margin)
+
+
 def _flow_spawn_due(
     flow_distributions: list,
     spawning: list,
@@ -899,14 +933,18 @@ def _flow_spawn_due(
     The test of the spawn loop, widened by half a step on each side so
     that the rounding of the simulated time cannot miss a due attempt.
     """
-    for source_id, flow in enumerate(flow_distributions):
-        if source_id >= len(spawning) or counters[source_id] >= numbers[source_id]:
-            continue
-        next_spawn = flow["start_time"] + counters[source_id] * spawning[source_id][0]
-        start = max(flow["start_time"], next_spawn)
-        if start - dt / 2 <= time_s <= flow["end_time"] + dt / 2:
-            return True
-    return False
+    return any(
+        _flow_source_due(
+            flow,
+            spawning[source_id][0],
+            numbers[source_id],
+            counters[source_id],
+            time_s,
+            dt / 2,
+        )
+        for source_id, flow in enumerate(flow_distributions)
+        if source_id < len(spawning)
+    )
 
 
 def _defer_flow_spawn(deferred: dict, source_id: int, time_s: float) -> None:
@@ -981,15 +1019,30 @@ class ScenarioResult:
 
     @property
     def status(self) -> str:
-        """``"completed"`` or ``"incomplete"`` (time limit reached first)."""
+        """``"completed"`` or ``"incomplete"``.
+
+        Incomplete when agents were still inside at the time limit, or when
+        flow agents never entered (see :attr:`end_reason`).
+        """
         return str(self.metrics.get("status", "incomplete"))
+
+    @property
+    def end_reason(self) -> str | None:
+        """Why the run stopped: ``"all_evacuated"``, ``"time_limit"`` or
+        ``"flows_closed"``.
+
+        ``"flows_closed"``: the building emptied after the last flow window
+        with agents still to enter had closed, before the time limit.
+        """
+        return self.metrics.get("end_reason")
 
     @property
     def agents_not_spawned(self) -> int:
         """Flow agents that never entered.
 
         Cut off by the time limit, or without a free position in their
-        spawn area when their flow window closed.
+        spawn area when their flow window closed; such a run ends once the
+        building is empty and no window is open.
         """
         return int(self.metrics.get("agents_not_spawned", 0))
 
@@ -2416,14 +2469,20 @@ def run_scenario(
         deferred_spawns: dict[int, tuple[int, float, float]] = {}
         jupedsim_positions = _jupedsim_positions(simulation)
         last_progress_agents = simulation.agent_count()
+        # Set when the building emptied with no flow window left open.
+        stopped_empty = False
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
             current_time = simulation.elapsed_time()
             current_agents = simulation.agent_count()
-            all_spawned = not has_flow_spawning or sum(agent_counter_per_source) >= sum(
-                num_agents_per_source
+            can_spawn = has_flow_spawning and _flow_can_spawn(
+                flow_distributions,
+                num_agents_per_source,
+                agent_counter_per_source,
+                current_time,
             )
-            if current_agents == 0 and all_spawned:
+            if current_agents == 0 and not can_spawn:
+                stopped_empty = True
                 break
             spawned_agents = initial_agent_count + sum(agent_counter_per_source)
             evacuated_agents = max(0, spawned_agents - current_agents)
@@ -2473,22 +2532,13 @@ def run_scenario(
                         continue
 
                     flow_dist = flow_distributions[source_id]
-                    spawn_frequency = spawning_freqs_and_numbers[source_id][0]
-                    next_spawn_time = flow_dist["start_time"] + (
-                        agent_counter_per_source[source_id] * spawn_frequency
-                    )
-
-                    if (
-                        agent_counter_per_source[source_id]
-                        >= num_agents_per_source[source_id]
+                    if not _flow_source_due(
+                        flow_dist,
+                        spawning_freqs_and_numbers[source_id][0],
+                        num_agents_per_source[source_id],
+                        agent_counter_per_source[source_id],
+                        current_time,
                     ):
-                        continue
-                    if (
-                        current_time < flow_dist["start_time"]
-                        or current_time > flow_dist["end_time"]
-                    ):
-                        continue
-                    if current_time < next_spawn_time:
                         continue
 
                     flow_origin = _flow_origin(flow_dist, source_id)
@@ -3569,12 +3619,20 @@ def run_scenario(
             else 0
         )
         # A run is complete only when every agent has entered and left; one
-        # stopped by the time limit with agents inside or still to enter is
-        # incomplete (#139, #434).
+        # stopped by the time limit with agents inside or still to enter, or
+        # emptied after its flow windows closed with agents still to enter,
+        # is incomplete (#139, #434, #742).
         completed = remaining == 0 and not_spawned == 0
+        if completed:
+            end_reason = "all_evacuated"
+        elif stopped_empty:
+            end_reason = "flows_closed"
+        else:
+            end_reason = "time_limit"
         metrics = {
             "success": completed,
             "status": "completed" if completed else "incomplete",
+            "end_reason": end_reason,
             "evacuation_time": round(evacuation_time, 2),
             "total_agents": total_agents,
             "agents_evacuated": total_agents - remaining,
@@ -3662,7 +3720,12 @@ def run_scenario(
                 fds_outside=metrics.get("fds_outside"),
                 outcome={
                     key: metrics[key]
-                    for key in ("status", "agents_remaining", "agents_not_spawned")
+                    for key in (
+                        "status",
+                        "end_reason",
+                        "agents_remaining",
+                        "agents_not_spawned",
+                    )
                 },
                 sfm=(
                     sfm_model_settings(scenario.sim_params)
