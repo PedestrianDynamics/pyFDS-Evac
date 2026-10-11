@@ -1,9 +1,9 @@
-"""How a run reports its end: completed, or incomplete at the time limit.
+"""How a run reports its end: completed, or incomplete.
 
 A run that reaches ``max_simulation_time`` with agents inside, or with flow
 agents still to enter, is incomplete: ``success`` is False, ``status`` is
 ``"incomplete"``, and the metrics, the manifest and the CLI summary give the
-agents left (#139, #434).
+agents left (#139, #434). ``end_reason`` says why the run stopped (#742).
 
 The deck is synthetic: a 10 x 6 m room with one exit in the east wall and a
 spawn area in the west half, about 6 m from the exit.
@@ -108,8 +108,10 @@ def test_run_that_empties_is_completed(run):
     assert result.success is True
     assert result.status == "completed"
     assert result.agents_not_spawned == 0
+    assert result.end_reason == "all_evacuated"
     assert _manifest_outcome(result) == {
         "status": "completed",
+        "end_reason": "all_evacuated",
         "agents_remaining": 0,
         "agents_not_spawned": 0,
     }
@@ -122,8 +124,10 @@ def test_time_limit_with_agents_inside_is_incomplete(run):
     assert result.success is False
     assert result.status == "incomplete"
     assert result.metrics["all_evacuated"] is False
+    assert result.end_reason == "time_limit"
     assert _manifest_outcome(result) == {
         "status": "incomplete",
+        "end_reason": "time_limit",
         "agents_remaining": NUM_AGENTS,
         "agents_not_spawned": 0,
     }
@@ -142,6 +146,9 @@ def test_time_limit_before_every_flow_agent_entered_is_incomplete(run):
     assert result.agents_not_spawned > 0
     assert result.success is False
     assert result.status == "incomplete"
+    # The flow window is still open at the limit.
+    assert result.end_reason == "time_limit"
+    assert _manifest_outcome(result)["end_reason"] == "time_limit"
     assert _manifest_outcome(result)["agents_not_spawned"] == (
         result.agents_not_spawned
     )
@@ -192,6 +199,24 @@ def test_cli_summary_counts_flow_agents_not_spawned():
         )
     )
     assert line.endswith("(1/1 evacuated, 0 remaining, 5 not spawned).")
+
+
+def test_cli_summary_of_a_run_whose_flow_windows_closed():
+    import run as cli
+
+    line = cli._summary_line(
+        _result(
+            success=False,
+            agents_evacuated=1,
+            total_agents=1,
+            agents_not_spawned=5,
+            end_reason="flows_closed",
+        )
+    )
+    assert line == (
+        "Simulation incomplete: flow windows closed after 12.50 s "
+        "(1/1 evacuated, 0 remaining, 5 not spawned)."
+    )
 
 
 @pytest.mark.parametrize(

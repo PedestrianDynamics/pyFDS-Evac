@@ -74,7 +74,8 @@ class RunSpec:
     # result.metrics["status"] ("completed" or "incomplete"); None when the
     # run reported none.
     completion: str | None = None
-    # Flow agents the time limit cut off before they entered.
+    # Flow agents that never entered: cut off by the time limit, or without
+    # a free position when their flow window closed.
     agents_not_spawned: int | None = None
     total_agents: int | None = None
     agents_evacuated: int | None = None

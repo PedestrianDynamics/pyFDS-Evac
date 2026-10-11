@@ -2155,7 +2155,10 @@ def _kpi_tiles(result) -> Div:
     spec = manager.spec
     not_spawned = result.metrics.get("agents_not_spawned", 0)
     outcome = run_outcome(
-        result.metrics.get("status"), result.agents_remaining, not_spawned
+        result.metrics.get("status"),
+        result.agents_remaining,
+        not_spawned,
+        result.metrics.get("end_reason"),
     )
     seed = spec.seed_used if spec is not None else None
     if seed is None:

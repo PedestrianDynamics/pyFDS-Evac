@@ -132,7 +132,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
 
 # Exit status of a run that reached max_simulation_time with agents inside or
-# flow agents still to enter; its outputs are written as for a completed run.
+# flow agents still to enter, or that emptied after its flow windows closed
+# with agents not spawned; its outputs are written as for a completed run.
 EXIT_INCOMPLETE = 2
 
 
