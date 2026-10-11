@@ -1273,6 +1273,160 @@ def test_switch_label_snapshot():
     golden._check_golden(f"{_SNAPSHOTS}/switch_labels.json", labels)
 
 
+# ── The agent's exit: current, default, anchored and closed ───────────
+#
+# Which exit counts as the agent's own differs by step: ranking reads the
+# current exit, the anchor and the gate scan also hold an open default exit
+# (#743), and the switch leaves the exit that closed down (#395). These
+# cases reach each reading, for both models.
+
+
+def _selection_cases() -> dict[str, tuple]:
+    orders = {
+        # west fails the anchor against north, east clears it.
+        "refused_first": (("west", 9.5), ("east", 5.0), ("north", 10.0)),
+        "adoptable_first": (("west", 5.0), ("east", 9.5), ("north", 10.0)),
+    }
+    out = {}
+    grid = itertools.product(
+        ("gate", "additive"),
+        sorted(orders),
+        (None, "west", "east", "north"),  # current exit
+        (None, "west", "north", "gone"),  # default exit
+        ("none", "open", "north_closed", "north_later"),  # graph
+        (None, 5.0),  # time
+    )
+    for model, order, current, default, world, time_s in grid:
+        cc = replace(golden._gate(), cost_model=model)
+        cfg = RerouteConfig(cost_config=cc, exit_switch_anchor=0.9)
+        ranked = [_rc(e, rank_cost=cost) for e, cost in orders[order]]
+        name = f"{model}-{order}-{current}-{default}-{world}-{time_s}"
+        out[name] = (ranked, current, default, world, time_s, cfg)
+    return out
+
+
+def _selection_graph(world: str) -> StageGraph | None:
+    if world == "none":
+        return None
+    graph = golden._star3()
+    if world == "north_closed":
+        graph.nodes["north"] = replace(graph.nodes["north"], closed_after_s=4.0)
+    elif world == "north_later":
+        graph.nodes["north"] = replace(graph.nodes["north"], open_from_s=6.0)
+    return graph
+
+
+def test_reference_exit_selection_snapshot():
+    out = {}
+    for name, case in sorted(_selection_cases().items()):
+        ranked, current, default, world, time_s, cfg = case
+        graph = _selection_graph(world)
+
+        def state() -> AgentRouteState:
+            return AgentRouteState(current_exit=current, default_exit=default)
+
+        out[name] = {
+            "selected": live._select_candidate(
+                ranked, state(), cfg, time_s, graph
+            ).exit_id,
+            "adoptable": [
+                live._adoptable(rc, ranked, state(), cfg, time_s, graph)
+                for rc in ranked
+            ],
+        }
+    golden._check_golden(f"{_SNAPSHOTS}/reference_exit_selection.json", out)
+
+
+def _known_spawn_only():
+    return golden.AgentCognitiveMap(
+        familiarity="discovery",
+        known_nodes={"spawn"},
+        known_edges=set(),
+        visited_nodes={"spawn"},
+    )
+
+
+def _reference_reroute_cases() -> dict[str, tuple]:
+    """Each case: the RerouteCase, its default exit and the exit schedules."""
+    near_tie = lambda: golden._star({"west": 38.0, "east": 40.0})  # noqa: E731
+    specs = {
+        "default_is_best": (golden._star2, "west", None, "west", {}, None),
+        "default_is_rival": (golden._star2, "east", None, "east", {}, None),
+        "default_near_tie": (near_tie, "east", None, "east", {}, None),
+        "default_not_open": (
+            golden._star2,
+            "west",
+            None,
+            "west",
+            {"west": {"open_from_s": 10.0}},
+            None,
+        ),
+        "default_closed": (
+            golden._star2,
+            "west",
+            None,
+            "west",
+            {"west": {"closed_after_s": 4.0}},
+            None,
+        ),
+        "current_closed": (
+            golden._star2,
+            "west",
+            "west",
+            None,
+            {"west": {"closed_after_s": 4.0}},
+            None,
+        ),
+        "current_and_default": (golden._star2, "east", "east", "west", {}, None),
+        "default_open_unknown": (
+            golden._star2,
+            "west",
+            None,
+            "west",
+            {},
+            _known_spawn_only,
+        ),
+        "default_closed_unknown": (
+            golden._star2,
+            "west",
+            None,
+            "west",
+            {"west": {"closed_after_s": 4.0}},
+            _known_spawn_only,
+        ),
+    }
+    out = {}
+    for name, (graph, target, current, default, schedule, cmap) in specs.items():
+        for model, cc in (("gate", golden._gate()), ("additive", golden._additive())):
+            case = golden.RerouteCase(
+                graph, cc, "spawn", target, current, cognitive_map=cmap
+            )
+            out[f"{model}-{name}"] = (case, default, schedule)
+    return out
+
+
+def test_reference_exit_reroute_snapshot():
+    out = {}
+    for name, (case, default, schedule) in sorted(_reference_reroute_cases().items()):
+
+        def on_world(world: dict, default=default, schedule=schedule) -> None:
+            world["route_state"].default_exit = default
+            for exit_id, times in schedule.items():
+                node = world["graph"].nodes[exit_id]
+                world["graph"].nodes[exit_id] = replace(node, **times)
+
+        result = _reroute(case, with_cache=False, on_world=on_world)
+        out[name] = {
+            "switch": golden._switch_snapshot(result["switch"]),
+            "route_state": _plain(result["route_state"]),
+            "wait_info": _wait_info_snapshot(result["wait_info"]),
+            "samples": _samples_snapshot(result["log"]),
+        }
+    reasons = {v["switch"]["reason"] for v in out.values() if v["switch"] is not None}
+    assert {"initial", "shorter_path", "exit_closed", "default_route"} <= reasons
+    golden._check_golden(f"{_SNAPSHOTS}/reference_exit_reroute.json", out)
+
+
 # ── Ties, fallback identity and the K_vis screen ─────────────────────
 
 

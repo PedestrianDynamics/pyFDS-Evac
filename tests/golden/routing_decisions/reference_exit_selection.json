@@ -1,0 +1,4098 @@
+{
+ "additive-adoptable_first-None-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-None-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-east-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-None-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-gone-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-north-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-north-west-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-None-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-gone-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-north-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-adoptable_first-west-west-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-None-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-None-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-gone-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-north-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-east-west-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-None-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-gone-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-north-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-north-west-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "additive-refused_first-west-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-None-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-east-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-None-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-gone-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-north-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-none-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-north-west-open-None": {
+  "adoptable": [
+   true,
+   false,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-None-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-gone-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-north-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-none-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-none-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-north_closed-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-north_later-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-open-5.0": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-adoptable_first-west-west-open-None": {
+  "adoptable": [
+   true,
+   false,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-north-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-None-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-None-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   true
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-None-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-gone-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-north-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-none-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-east-west-open-None": {
+  "adoptable": [
+   false,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-north-None-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-None-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-gone-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-north-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-none-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-none-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-north_closed-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-north_closed-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-north_later-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-north_later-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-open-5.0": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-north-west-open-None": {
+  "adoptable": [
+   false,
+   true,
+   true
+  ],
+  "selected": "east"
+ },
+ "gate-refused_first-west-None-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-None-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-gone-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-north-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-none-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-none-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-north_closed-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-north_closed-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-north_later-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-north_later-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-open-5.0": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ },
+ "gate-refused_first-west-west-open-None": {
+  "adoptable": [
+   true,
+   true,
+   false
+  ],
+  "selected": "west"
+ }
+}

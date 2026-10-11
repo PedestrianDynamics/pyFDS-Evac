@@ -130,6 +130,8 @@ def _run_cases(golden, decisions) -> None:
     decisions.test_threshold_equality_snapshot()
     decisions.test_anchor_and_flee_snapshot()
     decisions.test_switch_label_snapshot()
+    decisions.test_reference_exit_selection_snapshot()
+    decisions.test_reference_exit_reroute_snapshot()
     for name in sorted(golden.RANK_CASES):
         golden.test_rank_routes_matches_golden(name)
     for name in sorted(golden.REROUTE_CASES):
