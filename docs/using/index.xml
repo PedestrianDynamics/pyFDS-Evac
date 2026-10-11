@@ -1586,7 +1586,7 @@ but the same scenario can behave differently:&lt;/p>
 &lt;tr>
 &lt;td>Route costs&lt;/td>
 &lt;td>the scenario&amp;rsquo;s &lt;code>routing&lt;/code> block, for the first exit choice and for rerouting&lt;/td>
-&lt;td>the &lt;code>routing&lt;/code> block for the first exit choice. A &lt;code>RerouteConfig()&lt;/code> built by hand carries the code defaults of &lt;code>RouteCostConfig&lt;/code> and ignores the &lt;code>routing&lt;/code> block, for the first choice as well; pass &lt;code>cost_config=RouteCostConfig.from_routing_params(scenario.raw.get(&amp;quot;routing&amp;quot;))&lt;/code> to keep it&lt;/td>
+&lt;td>the &lt;code>routing&lt;/code> block, for the first choice and for rerouting; an explicit &lt;code>cost_config&lt;/code> overrides it&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Smoke speed&lt;/td>
@@ -7404,7 +7404,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/2f9d6fc42800285751da5b41a3a7f5668167908b">&lt;code>2f9d6fc&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8300f2a1e5cad2b68f6dbe50d8a769bc15900be0">&lt;code>8300f2a&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7428,7 +7428,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0f1c486fafa8e814e32e257c07e83c5b97374073c32b5b464912d61693b246fc&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d6083d0c0b8d0562085f8acdf21bc1245cc66ef61adf9121a69364cf18b29af8&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
