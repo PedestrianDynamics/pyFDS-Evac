@@ -7,176 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-11
+
 ### Upgrading
 
-- A deck with a journey from a distribution to a stage that no entry in
-  `transitions` names now fails to load (#504): `Journey(s) 'J' list
-  stages but no entry in 'transitions' names them, so their agents
-  would never move: ...`. Such a deck used to run to
-  `max_simulation_time` with every agent on that journey standing
-  still. Add the transitions between the
-  journey's stages, or, for an editor export that also carries
-  `journeys_v2`, set `"journeys": []` so the editor's journeys are used.
-  No shipped deck has this shape.
-
-- Results change for agents whose radius is not 0.2 m (#408): the
-  runtime now reaches a stage target within the agent's own radius plus
-  0.5 m, and keeps next-stage and reroute target points 0.8 times the
-  agent's own radius from a stage's edge; both used 0.2 m for every
-  agent. This includes decks imported by `pyfds-evac init` since #699
-  (0.12–0.16 m) and decks with a sampled `radius_distribution`. Of the
-  rerouting goldens (darwin-arm64) only the six `tj_*` decks
-  (`t_junction`, 0.15 m, one checkpoint) move: evacuation times change
-  by -0.36 to +1.11 s, all 30 agents still get out. The
-  `heat_default` verification baseline (0.15 m) moves by up to 12 mm in
-  `x`/`y`, its FED values do not. Clear-air runs of the shipped decks:
-  `station_fahy` (Gaussian radius, seed 420) still gets 331 of 333 out
-  at 600 s together with #709 below, on other trajectories (330 with
-  this change alone); `l_corridor` and `schroeder2015_route` end
-  0.03 s later;
-  `t_junction` and `schroeder2020_room` end with the same counts and
-  times; decks with 0.2 m are unchanged. In the first FDS case
-  (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get out
-  instead of 100, FED max 0.23 instead of 0.24.
-
-- Decks with journeys and an exit `capacity_agents_per_s` now price
-  that exit's queue with it (#394), as decks without journeys did;
-  it was priced at `routing.default_exit_capacity` (1.3 agents/s).
-  Only runs with `routing.w_queue` > 0 change. No shipped deck sets
-  `capacity_agents_per_s`, so no golden or asset result moves.
-
-- Gaussian radii (`radius_distribution: gaussian`) are clipped to the
-  radius placement spaces agents for, b = min(max(`radius` + 3 ×
-  `radius_std`, 0.1), 1.0) m, instead of [0.1, 1.0] m (#709). A draw
-  beyond mean + 3σ (0.135 % of agents) becomes b; the draws, the other
-  radii, every v0 and every position stay the same for a seed. Of the
-  shipped decks only `station_fahy` uses a Gaussian radius: at its
-  default seed 420 one radius goes from 0.2656 to 0.26 m, and the run
-  can diverge from that agent's first contact on. A deck with
-  `radius` + 3 × `radius_std` below 0.1 m is now spaced for 0.1 m.
-
-- Results of every rerouting run on FDS smoke change (#653): route
-  smoke is read once per grid cell of the extinction slice instead of
-  every `sampling_step_m`. `k_ave_route`, `tau_route`, `k_max_route`
-  and `k_leg_max` in the route-cost history move, and with them route
-  choices and switches. On the FDS golden decks (seed 42),
-  `l_corridor_gate` goes from 19 switches (8 straight returns) to 9
-  (none) and 69/31 to 63/37 agents per exit, `l_corridor_additive`
-  from 99/1 to 68/32 and 145.1 s to 170.0 s, `t_junction` from 4
-  switches to 1 and 14/83 to 17/80, `world100_stream_oval` from 8
-  switches to 13 (two of them path refinements to the same exit) and
-  95/25 to 90/30, `world100_stream_east` from 85/4/31 to 86/4/30;
-  evacuated counts do not change. In the first FDS
-  case (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents still
-  get out. `sampling_step_m` keeps its value in every deck, but
-  now applies only to fields without a grid (`ConstantExtinctionField`,
-  test fields) and to stretches of a route outside the FDS slice;
-  those runs and clear-air runs are unchanged. The FED rate of the
-  walk dose (#171) is still sampled every `sampling_step_m`.
-
-- `fed_max_route` in the route-cost history rises for an agent behind
-  its route's origin node in runs with a FED field (#171). Under
-  `additive` the route cost rises by `w_fed` times that change, so
-  near-tied choices can change. Agents on or ahead of the origin, and
-  runs without a FED field, are unchanged.
-
-- Route history (`--output-route-history`, `result.route_history`):
-  `smoke_reroute` now counts only the exit changes smoke caused (#92).
-  Other changes of exit, labelled `smoke_reroute` before, are
-  `fed_reroute`, `exit_opened`, `learned_exit`, `congestion`,
-  `shorter_path`, `exit_unreachable` or `resume`. Scripts that count
-  `smoke_reroute` as "any change of exit" must count these too.
-  Trajectories, exit choices and times are unchanged.
-
-- Results of decks with checkpoints change (#69): checkpoint arrivals
-  come earlier, and crowd interaction then moves individual agents
-  either way. In the first FDS case (`t_junction`, 2 MW PVC fire,
-  seed 42) 100 of 150 agents get out instead of 93; its clear-air run
-  stays at 144/150. Decks without checkpoints (all `init` imports, the
-  ISO decks, exit-only decks) and `station_fahy`, whose checkpoint
-  circles lie inside the 0.7 m reach disc, are unchanged.
-
-- `pyfds-evac init --check` can now fail (✗, exit 3) on a deck it
-  passed: a slice that FDS culls no longer counts, and a `PBZ` slice
-  that also sets `PBX` or `PBY` is a line the run does not read (#705).
-  No tracked deck changes. `import_report.json` gains
-  `recommendations.slices_dropped`.
-
-- Scripts that parse `import_report.json`: `nearest_pbz` under
-  `recommendations.slices` is the z the run ranks the slice on, the grid
-  node FDS writes it at, no longer the deck's z (#687). On a 0.5 m grid
-  a deck `PBZ=1.6` now reads 1.5.
-
-- `pyfds-evac init` now writes a `radius` for FDS+Evac decks: the mean
-  torso radius of each `&PERS` type, 0.12–0.16 m (Adult 0.15, Male
-  0.16, Female 0.14, Child 0.12, Elderly 0.15), instead of leaving the
-  0.2 m default (#699). Results of re-imported decks change; scenarios
-  imported before keep 0.2 m until they are imported again. Some
-  imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
-  deadlock at doors and narrow gaps in some seeds (#706).
-
-- Results change for runs with same-exit `better_path` switches, and
-  for any rerouting run in which an agent switches to a route that
-  reaches its current target by a detour (#445): the agent now walks the
-  detour. On the golden decks only `better_path` switches are affected.
-  On the golden deck `ft_full_gate_detour` (darwin-arm64) the
-  evacuation time goes from 49.43 s to 54.92 s and the `better_path`
-  rows of `route_history.csv` from 24 to 17.
-
-- A scenario with an exit that opens or closes on a schedule
-  (`open_from_s`, `closed_after_s`) now runs with `--smoke-blind` and
-  with `--no-enable-rerouting` (and `run_scenario` without a
-  `RerouteConfig`) instead of stopping with "need rerouting" (#395).
-  Imported FDS+Evac decks with `TIME_OPEN` or `TIME_CLOSE`, such as the
-  `HUT_Library` decks, the `OpenFloorOffice` decks and `DoorAlgo2_A`,
-  run without rerouting. Such runs now return and write a route history
-  (`--output-route-history`) holding the rows of these re-choices:
-  `exit_closed`, `initial` (exit not open yet) and `default_route`.
-  Runs without a schedule are unchanged. Runs with rerouting and a
-  schedule move the same, and an exit that has not opened yet gives the
-  same rows as before, but rows for an exit that has closed
-  (`closed_after_s`) change in two ways: a closure row of an agent that
-  followed its default route has `old_exit` = the closed exit instead
-  of empty, and a closure onto a gate fallback route is labelled
-  `exit_closed` instead of `fallback`.
-
-- A deck with journeys whose flow-spawning area (`use_flow_spawning`)
-  asks for more agents per second than the area holds now stops the run
-  with `ValueError: Distribution '<id>': flow rate of ... exceeds area
-  capacity ...`, as a deck without journeys does (#118). Before, the
-  area was skipped with a warning and its agents never spawned. Any
-  other error while setting up a spawn area also stops the run instead
-  of skipping the area. No shipped asset is affected.
-
-- A scenario with a `flow_schedule` now runs that schedule (#390):
-  `initial_number` agents at the start, then each window's `number`
-  agents over the window, instead of `number` agents over
-  `flow_start_time`–`flow_end_time`. Results of such scenarios change;
-  no shipped asset, example or documented scenario sets
-  `flow_schedule`. A window that starts below 0 or has no agents now
-  stops the run with a `ValueError` naming the distribution, as
-  `set_flow_schedule()` did; the run had clamped the start to 0 and
-  dropped the window. The scheduled agents' candidate positions are
-  drawn from their own streams (`flow_positions`, `flow_shuffle`),
-  apart from the initial agents'. Each window is kept as written, also
-  below the 0.1 s that `flow_start_time`–`flow_end_time` is stretched
-  to; one shorter than `number` × 0.01 s, too short to add one agent
-  per time step, stops the run with a `ValueError`.
-
-- A spawn area with `distribution_mode` `by_percentage`, `fill_area` or
-  `until_full` now places `percentage` of its capacity estimate at the
-  start (#436), not `number`: 71 agents instead of 10 in a 6 × 6 m area
-  at the default 50 % and radius 0.2 m. Results of such scenarios
-  change; no shipped asset, example or documented scenario uses these
-  modes. A `number` beside a percentage mode is no longer read, so
-  `--export-only` no longer reports it as over-full. `fill_area` and
-  `until_full` default to 100 % and treat the count as an upper bound:
-  they place as many agents as fit up to it, without an error, and the
-  run reports how many (`Distribution '<id>': fill_area placed N of at
-  most M agents`, `ScenarioResult.fill_placement`, the closing summary
-  line). With or without journeys, exact counts are placed before the
-  fill modes, whatever the deck order, and a fill mode takes what they
-  leave. `by_percentage` stays exact.
+- Rerouting runs on FDS smoke give different results: route smoke is
+  read once per grid cell (#653). Results also move with checkpoints,
+  now reached inside their polygon (#69), radii other than 0.2 m
+  (#408), detours and same-exit `better_path` switches, now walked as
+  priced (#445), and agents behind their route's origin under FED
+  (#171). A route that must be fled always loses (#128), and journey
+  decks price `capacity_agents_per_s` (#394). The first FDS case gets
+  99 of 150 out instead of 93, and `assets/station_fahy`'s
+  `w_queue = 0.024` now sends 34.8 % through the front door against
+  Fahy's 52.9 %; retune `w_queue` if you calibrate against it.
+- Placement: Gaussian radii are clipped to the spacing bound (#709),
+  flow spawns and overlapping areas keep twice the larger radius from
+  placed agents (#710, #402), and `flow_schedule` and the percentage
+  modes place what they ask for (#390, #436). `pyfds-evac init` writes
+  the `&PERS` torso radius, 0.12–0.16 m; re-import to get it (#699).
+- A journey that no entry in `transitions` names is refused at load;
+  add the transitions, or `"journeys": []` for an export with
+  `journeys_v2` (#504). An over-fast flow, a bad flow window or an area
+  JuPedSim cannot fill stops the run with one line naming the
+  distribution (#118, #390, #508); catch `SpawnCapacityError`, not
+  `AgentNumberError` (#702). `init --check` can fail on a deck it
+  passed (#705).
+- Exit schedules run without rerouting and write a route history (#395).
+- Scripts that parse the output: `smoke_reroute` counts only exit
+  changes smoke caused, the others have their own reasons (#92);
+  `metrics["route_switches"]` counts switches per agent and can be 0
+  (#733); `metrics["flow_spawns_deferred"]` replaces the per-step
+  `Flow spawn attempt failed` lines (#710); `nearest_pbz` is the grid z
+  (#687). With rerouting the GUI shows `N route-history rows (M
+  switches)` (#730).
+- fdsreader is pinned to `>=1.11.7,<1.12`; an existing `<CHID>.pickle`
+  is no longer read (#716).
 
 ### Added
 
@@ -204,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   The run manifest's `cost_config` gains `"fallback_rule": "tau"`.
   #696 stays open as a documented finding: on `t_junction` the default
   still sends agents past the burner.
+- Two GitHub issue forms: a deck import problem (the deck, the
+  `pyfds-evac init` command, its output and exit code) and a validation
+  case (source, setup, measured quantities with uncertainty, data
+  availability) (#700).
 
 ### Changed
 
@@ -212,8 +82,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `ValueError`, with JuPedSim's error as `__cause__`, instead of
   `jupedsim.distributions.AgentNumberError` (#702). Code that caught
   `AgentNumberError` must catch `SpawnCapacityError` or `ValueError`.
-
-- `import_report.json` gives, per `&PERS`, the FDS+Evac three-circle body
+- `pyfds-evac init` writes a `radius` for FDS+Evac decks: the mean
+  torso radius of each `&PERS` type, 0.12–0.16 m (Adult 0.15, Male
+  0.16, Female 0.14, Child 0.12, Elderly 0.15), instead of leaving the
+  0.2 m default (#699). Results of re-imported decks change; scenarios
+  imported before keep 0.2 m until they are imported again. Some
+  imported decks, such as `HUT_Library` and `imo/CompTest9a`, can still
+  deadlock at doors and narrow gaps in some seeds (#706).
+  `import_report.json` gives, per `&PERS`, the FDS+Evac three-circle body
   (R_d, R_t, R_s) and the radius taken from it, instead of "body size not
   mapped". A `&PERS` that sets `DIAMETER_DIST` gets 0.5 · `D_TORSO_MEAN`
   · mean diameter / `DIA_MEAN`; one with only a positive `DIA_MEAN`, a
@@ -221,6 +97,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `D_TORSO_MEAN` / `DIA_MEAN`; any other gets no radius and a warning
   (#699). `DoorFlowExample.fds` now imports as runnable: its 100 agents
   fit the spawn area at 0.15 m, not at 0.2 m.
+- GUI results: the rows of the route-history and route-cost CSVs say
+  why a file is missing from what the run did, read from the result's
+  `run_settings` (rerouting on or off, smoke-blind, an exit schedule),
+  not from the form's rerouting switch (#730). Missing or partial
+  `run_settings` give no reason. A history written with rerouting
+  reads `N route-history rows (M switches)`, with switches counted as
+  `metrics["route_switches"]` (#733); one written by an exit schedule
+  without rerouting reads `rerouting off; N exit-schedule rows`.
+- Tests: `tests/test_routing_decisions.py` replaces the frozen copy of
+  the earlier router (`tests/_legacy_routing.py`) and pins ranked
+  routes, decisions, smoke and FED samples and cache entries of the live
+  code in snapshots under `tests/golden/routing_decisions/`; regenerate
+  with `PYFDS_EVAC_REGEN_GOLDEN=1` (#466). The golden-deck child
+  process puts the checkout under test first on `PYTHONPATH` and stops
+  when `pyfds_evac` comes from elsewhere (#721).
+  `tests/test_exit_throughput.py` checks an exit's capacity at 1 and 2
+  agents/s (#355). `from_routing_params` takes its defaults from
+  `RouteCostConfig` (#151), and the `evac.f90` line citations in
+  `route_graph.py` point at the FDS 6.7.6 copy in `materials/` (#207).
+  Results are unchanged.
 
 ### Fixed
 
@@ -236,7 +132,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `default_route`, 148 `initial`) and reported 298; it now reports 0.
   The GUI run summary and the verification harness use the same
   definition, so the GUI's switch count changes too.
-
 - `load_scenario` and the run refuse a journey that no entry in
   `transitions` names, with an error naming the journey (#504). Agents
   on it had no route and stood still, without a warning; the
@@ -244,22 +139,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   too. Only journeys that place agents are checked: one that lists a
   distribution of the deck and a stage to walk to. A journey of exits
   only, or of a distribution only, places nobody and needs no
-  transitions; decks without distributions use no journeys.
-
+  transitions; decks without distributions use no journeys. The error
+  reads `Journey(s) 'J' list stages but no entry in 'transitions' names
+  them, so their agents would never move: ...`. Add the transitions
+  between the journey's stages, or, for an editor export that also
+  carries `journeys_v2`, set `"journeys": []` so the editor's journeys
+  are used. No shipped deck has this shape; 24 of the 55 scenario ZIPs
+  of jupedsim-web-community (`82404ee`) do, 23 of them with
+  `journeys_v2`.
 - The per-agent steering state stores the agent's radius (#408). It was
   read with a 0.2 m default but never written, so stage reach
-  (radius + 0.5 m of the target point) and target clearance used 0.2 m
-  whatever the agent's radius.
-
+  (radius + 0.5 m of the target point) and target clearance (0.8 times
+  the radius from a stage's edge, for next-stage and reroute target
+  points) used 0.2 m whatever the agent's radius. Results change for
+  agents whose radius is not 0.2 m, including decks imported by
+  `pyfds-evac init` since #699 (0.12–0.16 m) and decks with a sampled
+  `radius_distribution`. Of the rerouting goldens (darwin-arm64) only
+  the six `tj_*` decks (`t_junction`, 0.15 m, one checkpoint) move:
+  evacuation times change by -0.36 to +1.11 s, all 30 agents still get
+  out. The `heat_default` verification baseline (0.15 m) moves by up
+  to 12 mm in `x`/`y`, its FED values do not. Clear-air runs of the
+  shipped decks: `station_fahy` (Gaussian radius, seed 420) still gets
+  331 of 333 out at 600 s together with #709, on other trajectories
+  (330 with this change alone); `l_corridor` and `schroeder2015_route`
+  end 0.03 s later; `t_junction` and `schroeder2020_room` end with the
+  same counts and times; decks with 0.2 m are unchanged. In the first
+  FDS case (`t_junction`, 2 MW PVC fire, seed 42) 99 of 150 agents get
+  out instead of 100, FED max 0.23 instead of 0.24.
 - The set-up with journeys passes each exit's `capacity_agents_per_s`
   to route pricing (#394). It was dropped, so the queue term priced
-  every exit of a journey deck at the 1.3 agents/s default.
-
+  every exit of a journey deck at the 1.3 agents/s default
+  (`routing.default_exit_capacity`). Only runs with `routing.w_queue`
+  > 0 change. No shipped deck sets `capacity_agents_per_s`, so no
+  golden or asset result moves.
 - A Gaussian radius draw no longer exceeds the radius placement spaced
   for (#709): agents could start overlapping. The spacing bound now has
   one definition, `agent_params.max_agent_radius`, read by the run and
-  by `pyfds-evac init`'s capacity check.
-
+  by `pyfds-evac init`'s capacity check. Gaussian radii are clipped to
+  b = min(max(`radius` + 3 × `radius_std`, 0.1), 1.0) m instead of
+  [0.1, 1.0] m. A draw beyond mean + 3σ (0.135 % of agents) becomes b;
+  the draws, the other radii, every v0 and every position stay the same
+  for a seed. Of the shipped decks only `station_fahy` uses a Gaussian
+  radius: at its default seed 420 one radius goes from 0.2656 to 0.26 m,
+  and the run can diverge from that agent's first contact on. A deck
+  with `radius` + 3 × `radius_std` below 0.1 m is now spaced for 0.1 m.
 - Route smoke no longer jumps as an agent walks across a narrow plume
   (#653). It was sampled every `sampling_step_m` (2 m in the shipped
   decks) from the agent's position, so samples slid on and off a plume
@@ -269,8 +192,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the route crosses, at points fixed to the grid, as FDS+Evac
   `See_door` does; the band reads 9.7–9.9 from every position. A
   route crossing meshes of different spacing is read on each mesh's
-  own grid.
-
+  own grid. `k_ave_route`, `tau_route`, `k_max_route` and `k_leg_max`
+  in the route-cost history move, and with them route choices and
+  switches. On the FDS golden decks (seed 42), `l_corridor_gate` goes
+  from 19 switches (8 straight returns) to 9 (none) and 69/31 to 63/37
+  agents per exit, `l_corridor_additive` from 99/1 to 68/32 and 145.1 s
+  to 170.0 s, `t_junction` from 4 switches to 1 and 14/83 to 17/80,
+  `world100_stream_oval` from 8 switches to 13 (two of them path
+  refinements to the same exit) and 95/25 to 90/30,
+  `world100_stream_east` from 85/4/31 to 86/4/30; evacuated counts do
+  not change. In the first FDS case (`t_junction`, 2 MW PVC fire, seed
+  42) 99 of 150 agents still get out. `sampling_step_m` keeps its value
+  in every deck, but now applies only to fields without a grid
+  (`ConstantExtinctionField`, test fields) and to stretches of a route
+  outside the FDS slice; those runs and clear-air runs are unchanged.
+  The FED rate of the walk dose (#171) is still sampled every
+  `sampling_step_m`.
 - Scheduled exits work in runs without rerouting (#395). At each
   one-second check, only an agent whose route ends at a closed exit, or
   at one not open yet, chooses again, once for each closure, scored as
@@ -280,8 +217,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the default route to the nearest open exit on foot; with every exit
   closed it waits. Nobody re-decides when an exit opens, which differs
   from FDS+Evac, whose door choice keeps running. A flow-spawned agent
-  on a JuPedSim journey is refused in these runs too.
-
+  on a JuPedSim journey is refused in these runs too. A scenario with
+  `open_from_s` or `closed_after_s` now runs with `--smoke-blind` and
+  with `--no-enable-rerouting` (and `run_scenario` without a
+  `RerouteConfig`) instead of stopping with "need rerouting". Imported
+  FDS+Evac decks with `TIME_OPEN` or `TIME_CLOSE`, such as the
+  `HUT_Library` decks, the `OpenFloorOffice` decks and `DoorAlgo2_A`,
+  run without rerouting. Such runs return and write a route history
+  (`--output-route-history`) holding the rows of these re-choices:
+  `exit_closed`, `initial` (exit not open yet) and `default_route`.
+  Runs without a schedule are unchanged. Runs with rerouting and a
+  schedule move the same, and an exit that has not opened yet gives the
+  same rows as before, but rows for an exit that has closed
+  (`closed_after_s`) change in two ways: a closure row of an agent that
+  followed its default route has `old_exit` = the closed exit instead
+  of empty, and a closure onto a gate fallback route is labelled
+  `exit_closed` instead of `fallback`.
 - A checkpoint now counts as reached when the agent's centre is inside
   its polygon, as well as within the agent radius plus 0.5 m of its
   random target point (#69). An agent deep inside a large checkpoint,
@@ -293,8 +244,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   first step: in the `fed_incap_*` decks 4 m² of each of the four
   first 4x4 m checkpoints lies in the spawn area. The unused
   `inside_since`, `reach_penetration` and `reach_dwell_seconds`
-  entries of the per-agent steering state are removed.
-
+  entries of the per-agent steering state are removed. Checkpoint
+  arrivals come earlier, and crowd interaction then moves individual
+  agents either way. In the first FDS case (`t_junction`, 2 MW PVC
+  fire, seed 42) 100 of 150 agents get out instead of 93; its clear-air
+  run stays at 144/150. Decks without checkpoints (all `init` imports,
+  the ISO decks, exit-only decks) and `station_fahy`, whose checkpoint
+  circles lie inside the 0.7 m reach disc, are unchanged.
 - Reading FDS output no longer writes to or deletes from the FDS
   directory (#716). fdsreader 1.11.7 writes `<CHID>.pickle` next to the
   `.smv`, deletes a pickle it cannot read, and deletes it when caching is
@@ -306,13 +262,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   slice headers again, 0.1–0.4 s on a 64-mesh case with 768 slice
   files (0.01 s from the pickle). Results are unchanged. fdsreader is
   now pinned to `>=1.11.7,<1.12`, the versions this was checked on.
-
 - A route switch is labelled by what caused it, not `smoke_reroute` for
   every change of exit (#92). An agent that switches in clear air to a
   nearer exit, or to one it has just learned, logged a smoke reroute.
-  Outputs lists the values; Routing in practice lists them with their
-  order of precedence and how a cause is credited.
-
+  In the route history (`--output-route-history`,
+  `result.route_history`) `smoke_reroute` now counts only the exit
+  changes smoke caused; the others are `fed_reroute`, `exit_opened`,
+  `learned_exit`, `congestion`, `shorter_path`, `exit_unreachable` or
+  `resume`. Scripts that count `smoke_reroute` as "any change of exit"
+  must count these too. Trajectories, exit choices and times are
+  unchanged. Outputs lists the values; Routing in practice lists them
+  with their order of precedence and how a cause is credited.
 - An agent now leaves a route whose predicted dose is lethal, as the
   routing docs promise (#128). Under the gate, a route over both the FED
   and the `tau` limit reports `tau ...` and lost the must-flee bypass;
@@ -329,7 +289,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   carried no dose although its smoke and time were counted. It is now
   charged at the mean FED rate sampled along it at the decision time,
   over the walk's pace; the candidate search weighs the walk to each
-  first node the same way.
+  first node the same way. `fed_max_route` in the route-cost history
+  rises for such an agent in runs with a FED field; under `additive`
+  the route cost rises by `w_fed` times that change, so near-tied
+  choices can change. Agents on or ahead of the origin, and runs
+  without a FED field, are unchanged.
 - `pyfds-evac init --check` drops a slice that FDS culls, with the exact
   bounds of FDS `READ_SLCF`: outside every fire `&MESH` (all of `PBX`,
   `PBY` and `PBZ` count), or a `MESH_NUMBER` naming a mesh that does not
@@ -342,6 +306,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   On a deck with evacuation meshes (FDS 6.7.6), a horizontal slice that
   only touches a mesh in x or y is reported as unreadable: FDS keeps it
   there at zero width, and fdsreader then reads no horizontal slice.
+  `--check` can therefore fail (✗, exit 3) on a deck it passed; no
+  tracked deck changes. `import_report.json` gains
+  `recommendations.slices_dropped`.
 - The deck parser computes `MULT` copies as FDS does, `(XB + DX0) +
   I*DX`, so the check compares the doubles FDS uses (#705). The
   walkable area, exits and obstructions use these coordinates rounded to
@@ -361,13 +328,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the cell for `CELL_CENTERED`, only in `MESH_NUMBER` if given), the
   lowest across meshes, as fdsreader reads it. On tracked output at
   z = 2.0 m it named PBZ 1.6 where the run reads PBZ 2.5 (#687). Lines
-  print that z, with the deck's z when it differs.
+  print that z, with the deck's z when it differs. `nearest_pbz` under
+  `recommendations.slices` in `import_report.json` is that z, no longer
+  the deck's: on a 0.5 m grid a deck `PBZ=1.6` now reads 1.5.
 - On a plain deck, `pyfds-evac init` reports an `&EVHO` without `XB` as
   invalid, not as off the floor, and names the `&EVHO` records when they
   cover the whole walkable area, which ended in exit 1 with only
   "walkable area (derived:deck) is empty". The fire-surface advice also
   offers an `&EVHO` over the surface, in a copy of the deck (#688).
-
 - In a scenario with neither journeys nor transitions, a spawn area
   whose count is within the capacity estimate but where JuPedSim cannot
   place every agent, for example a narrow area, stops `pyfds-evac
@@ -375,7 +343,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   traceback (#702): `pyfds-evac: error: Distribution '<id>': could not
   place the N requested agents (...). The capacity estimate ~C is an
   upper bound. ...`. Results do not change.
-
 - In a scenario with journeys, a spawn area whose agents JuPedSim
   cannot all place stops `pyfds-evac --scenario` with the same line and
   exit 1, instead of a traceback ending in `Exception: CRITICAL: Failed
@@ -386,7 +353,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   could not add an agent to the simulation (...).` and exit 1;
   `run_scenario` raises `AgentInsertionError`, a `RuntimeError`.
   Results do not change.
-
 - `pyfds-evac --scenario DIR --export-only`, with or without
   `--print-summary`, reported a spawn area that asks for more agents
   than its capacity estimate as `Agents: ~N` and exited 0. It now prints
@@ -397,7 +363,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for a deck without spawn areas. A count within the estimate that
   JuPedSim cannot place is still found by the run only. It also refuses
   the flow windows the run refuses, too short or too fast (#390).
-
 - Two spawn areas that overlap but are not the same polygon, with or
   without journeys, could place agents of one within a body width of
   the other's, and the run stopped with `AgentInsertionError` (#402).
@@ -410,7 +375,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   among the pieces by their capacity; when the pieces cannot seat them
   all, or nothing is left free, the run stops with `SpawnCapacityError`.
   Flow-spawned agents keep the same spacing, see #710 below.
-
 - A flow-spawned agent (`use_flow_spawning`, `flow_schedule`) now keeps
   twice the larger radius from every agent already in the run, as the
   agents of overlapping spawn areas do (#710). It used to be checked
@@ -449,7 +413,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (τ > `tau_max`), and the same `better_path` switch was logged again at
   every re-evaluation. The agent now heads for the node after the one it
   last left. This holds for every kind of switch, exit changes included.
-
+  Results change for runs with same-exit `better_path` switches, and
+  for any rerouting run in which an agent switches to a route that
+  reaches its current target by a detour: the agent now walks the
+  detour. On the golden decks only `better_path` switches are affected.
+  On the golden deck `ft_full_gate_detour` (darwin-arm64) the
+  evacuation time goes from 49.43 s to 54.92 s and the `better_path`
+  rows of `route_history.csv` from 24 to 17.
 - A spawn area whose key does not start with `jps-distributions_`, such
   as `"room"`, can now head a journey. It was kept as a journey stage
   and the run stopped with `JourneyDescription.__init__(): incompatible
@@ -458,7 +428,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--print-summary` now take every key of `distributions` as a spawn
   area, whatever its name. Results with `jps-distributions_<n>` keys do
   not change.
-
 - In a scenario with journeys, a spawn area with a flow schedule and
   initial agents (`initial_number`) stopped the set-up with
   `KeyError: 'distribution_journeys'` instead of placing those agents
@@ -467,8 +436,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   distribution ...` and skips it: only coordinates that make no valid
   polygon, such as a self-intersecting one, are skipped that way, as
   `--export-only` does. Coordinates that are not numbers, such as
-  `[null, 0]`, count as such a polygon.
-
+  `[null, 0]`, count as such a polygon. A flow-spawning area
+  (`use_flow_spawning`) on a journey that asks for more agents per
+  second than the area holds now stops the run with `ValueError:
+  Distribution '<id>': flow rate of ... exceeds area capacity ...`, as
+  a deck without journeys does; before, the area was skipped with a
+  warning and its agents never spawned. Any other error while setting
+  up a spawn area also stops the run. No shipped asset is affected.
 - A spawn area's `flow_schedule` and `initial_number`, written by
   `Scenario.set_flow_schedule()` or by hand, never reached the run,
   which spawned `number` agents over `flow_start_time`–`flow_end_time`
@@ -486,8 +460,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   line, also for `--print-summary` and `--export-only`, and
   `--show-config` lists it, with an over-full spawn area, under
   `Errors:` and exits 1. `initial_number` without a schedule, and
-  `number` in a percentage mode, are neither read nor checked.
-
+  `number` in a percentage mode, are neither read nor checked. Results
+  of such scenarios change; no shipped asset, example or documented
+  scenario sets `flow_schedule`. A window that starts below 0 or has no
+  agents now stops the run with a `ValueError` naming the distribution,
+  as `set_flow_schedule()` did; the run had clamped the start to 0 and
+  dropped the window. The scheduled agents' candidate positions are
+  drawn from their own streams (`flow_positions`, `flow_shuffle`),
+  apart from the initial agents'. Each window is kept as written, also
+  below the 0.1 s that `flow_start_time`–`flow_end_time` is stretched
+  to; one shorter than `number` × 0.01 s, too short to add one agent
+  per time step, stops the run with a `ValueError`.
 - `distribution_mode: "by_percentage"` ignored `percentage` for agents
   placed at the start and placed `number` agents, as `by_number` does
   (#436). It now fills the spawn area to `percentage` of its capacity
@@ -495,13 +478,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   without journeys, as flow spawning by percentage already did; `number`
   is not read. `--print-summary`, `Scenario.list_distributions()` and
   `--export-only`'s capacity check count the same agents; for flow
-  spawning by percentage the views counted `number` before.
+  spawning by percentage the views counted `number` before. In a 6 × 6 m
+  area at the default 50 % and radius 0.2 m it places 71 agents instead
+  of 10. Results of such scenarios change; no shipped asset, example or
+  documented scenario uses the percentage modes. A `number` beside a
+  percentage mode is no longer read, so `--export-only` no longer
+  reports it as over-full. `fill_area` and `until_full` also place
+  `percentage` of the capacity estimate; they default to 100 % and
+  treat the count as an upper bound: they place as many agents as fit
+  up to it, without an error, and the run reports how many
+  (`Distribution '<id>': fill_area placed N of at most M agents`,
+  `ScenarioResult.fill_placement`, the closing summary line). With or
+  without journeys, exact counts are placed before the fill modes,
+  whatever the deck order, and a fill mode takes what they leave.
+  `by_percentage` stays exact.
 
 ### Documentation
 
 - Model comparison: the FDS+Evac body is a torso circle R_t and two
   shoulder circles R_s inside an enclosing circle R_d; there is no head
   circle (#699).
+- How-to "How do I place checkpoints?": what a checkpoint is to the
+  software (node point, target point, arrival inside the polygon),
+  drawing one at a door, wiring with and without `transitions`,
+  clearance from walls and the visibility grid, crowds at narrow doors
+  (#359, #706) and a checklist (#100). Routing states that crossings
+  pruned automatically are walked: in a deck without journeys every run
+  takes the first route on the pruned graph. Scenario JSON, Models ›
+  Routing and Wayfinding state arrival inside the polygon (#69), and
+  Create a scenario states that journeys without transitions are
+  refused at load (#504).
+- Every page that quotes behaviour or numbers changed in 0.5.0 is
+  updated, and the studies whose numbers moved are rerun at
+  `c619a046`. The first FDS case gets 99 of 150 out instead of 93, FED
+  max 0.23 instead of 0.27; its figures, ASET table, example data and
+  TUI screenshots follow. Routing pages describe per-grid-cell smoke
+  sampling (#653), the dose behind the origin (#171) and `hold` with a
+  measured `tau`/`hold` table (#696); `assets/station_fahy`'s
+  `w_queue = 0.024` now gives a front-door share of 34.8 % against
+  Fahy's 52.9 %.
+- How-to › With and without the fire is rerun (320 runs). With
+  smoke-aware routing (arm R), 100 % of the agents take the far exit A
+  with no pre-movement, 51 % with 30 s and 3 % with 60 s, against 80 %,
+  19 % and 0 % in 0.4.0. With no pre-movement R's RSET is later than
+  U's in 13 of 20 seeds (sign test p = 0.26), against 19 of 20
+  (p < 0.001) in 0.4.0.
+- Studies › Schröder 2015 is rerun (100 runs). Under the gate the exit-E
+  share on the main fire is 0.689 (was 0.642). Clear-air shares are
+  unchanged, while exit times move by up to 22.3 s, since the deck's
+  radius is 0.15 m (#408).
+- Verification › Familiarity is rerun. On the 0.05 m reference grid
+  four agents deadlock in CP1's door (seed 420), so criterion 4 fails
+  there. Over seeds 1–30 a doorway deadlock ends 12 of 120 runs instead
+  of 4; a bisection puts the change at #726 (#359). Criterion 6 fails
+  on both halvings, 0.1 → 0.05 m and 0.05 → 0.025 m, and passes on both
+  without the deadlocked runs. The reference grid is unchanged.
+- Limitations: the stage-reach entry (#661) is removed, fixed by #408;
+  #359 and #706 are planned for 0.6.0 and #454 stays open; a new entry
+  states that dense head-on counterflow can lock under the default
+  `CollisionFreeSpeedModel` (#745); the doorway-deadlock rates without
+  journeys are rerun.
 
 ## [0.4.0] - 2026-10-09
 
