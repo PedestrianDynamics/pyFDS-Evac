@@ -52,8 +52,16 @@ def _provenance(golden, commit=BASE, dirty=None, fingerprints=None) -> dict:
 _ROWS = [(0, 1, 1.5, 2.0, 1.0, 0.0), (0, 2, 3.0, 4.0, 0.0, 1.0)]
 
 
-def _trajectory(path: Path, rows=_ROWS, metadata=(("fps", "10.0"),)) -> Path:
-    """A trajectory file in the schema JuPedSim writes, with *rows*."""
+_SCALARS = [(0, 1, 0.25, 0.0, 1.2, 1), (0, 2, 0.5, 0.125, 0.9, None)]
+
+
+def _trajectory(
+    path: Path, rows=_ROWS, metadata=(("fps", "10.0"),), scalars=None
+) -> Path:
+    """A trajectory file in the schema run.py writes, with *rows*.
+
+    With *scalars*, the agent_scalars table a FED run adds holds them.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     con = sqlite3.connect(path)
     con.execute(
@@ -64,6 +72,12 @@ def _trajectory(path: Path, rows=_ROWS, metadata=(("fps", "10.0"),)) -> Path:
     con.execute("CREATE TABLE metadata(key TEXT, value TEXT)")
     con.executemany("INSERT INTO trajectory_data VALUES (?,?,?,?,?,?)", rows)
     con.executemany("INSERT INTO metadata VALUES (?,?)", metadata)
+    if scalars is not None:
+        con.execute(
+            "CREATE TABLE agent_scalars(frame INTEGER NOT NULL, id INTEGER NOT "
+            "NULL, fed REAL, heat_fed REAL, speed REAL, in_fds_domain INTEGER)"
+        )
+        con.executemany("INSERT INTO agent_scalars VALUES (?,?,?,?,?,?)", scalars)
     con.commit()
     con.close()
     return path
@@ -517,6 +531,36 @@ def test_trajectory_differences_are_found(golden, tmp_path, rows, expected):
     b = _trajectory(tmp_path / "b" / "trajectory.sqlite", rows=rows)
     report = golden._compare_file(a, b)
     assert any(expected in line for line in report), report
+
+
+@pytest.mark.parametrize(
+    ("scalars", "expected"),
+    [
+        (
+            [(0, 1, math.nextafter(0.25, 1.0), 0.0, 1.2, 1), _SCALARS[1]],
+            "agent_scalars: first difference at row 1 (frame 0, id 1), "
+            "fed: 0.25 vs 0.25000000000000006",
+        ),
+        (_SCALARS[:1], "agent_scalars: row count 2 vs 1"),
+        (None, "agent_scalars columns differ"),
+    ],
+    ids=["fed_one_ulp", "row_missing", "table_missing"],
+)
+def test_agent_scalars_are_compared(golden, tmp_path, scalars, expected):
+    """The per-agent FED, heat FED and speed a FED run adds are compared too."""
+    a = _trajectory(tmp_path / "a" / "trajectory.sqlite", scalars=_SCALARS)
+    b = _trajectory(tmp_path / "b" / "trajectory.sqlite", scalars=scalars)
+    assert golden._compare_file(a, a) == []
+    report = golden._compare_file(a, b)
+    assert any(expected in line for line in report), report
+
+
+def test_seed_mismatch_exits(golden):
+    golden._check_seed("t_junction", {"seed": 42})
+    with pytest.raises(SystemExit, match="t_junction: the run used seed 43"):
+        golden._check_seed("t_junction", {"seed": 43})
+    with pytest.raises(SystemExit, match="used seed None"):
+        golden._check_seed("t_junction", {})
 
 
 def test_unreadable_trajectory_is_a_difference(golden, tmp_path):

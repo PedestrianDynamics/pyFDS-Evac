@@ -81,8 +81,13 @@ MODES: dict[str, tuple[str, ...]] = {
     ),
     "history_off": ("route_history.csv", "egress_summary.json", "trajectory.sqlite"),
 }
-# The trajectory table, compared row by row in this order.
-TRAJECTORY_QUERY = "SELECT * FROM trajectory_data ORDER BY frame, id"
+# The tables of a trajectory file that are compared row by row: the order of
+# the rows and whether every run writes the table. agent_scalars (per-agent
+# FED, heat FED and speed) is written only by runs that compute FED.
+TRAJECTORY_TABLES = {
+    "trajectory_data": ("frame, id", True),
+    "agent_scalars": ("frame, id", False),
+}
 # Run metrics a later revision added (#426): the FDS coverage report and the
 # count of samples outside the FDS domain. In an egress summary that holds
 # one of them on one side only, it is listed and left out of the comparison;
@@ -242,11 +247,7 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
         scenario = load_scenario(opts.scenario)
         result = run_scenario(scenario, **build_run_kwargs(scenario, opts, log=print))
         try:
-            if result.metrics.get("seed") != deck.seed:
-                sys.exit(
-                    f"{name}: the run used seed {result.metrics.get('seed')!r}, "
-                    f"the deck pins {deck.seed}"
-                )
+            _check_seed(name, result.metrics)
             cli.apply_outputs(result, scenario, opts, log=print)
             summary = _egress_summary(result, scenario, deck)
             (out / "egress_summary.json").write_text(
@@ -254,6 +255,15 @@ def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
             )
         finally:
             result.cleanup()
+
+
+def _check_seed(name: str, metrics: dict) -> None:
+    """Exit with an error unless the run used the seed deck *name* pins."""
+    pinned = DECKS[name].seed
+    if metrics.get("seed") != pinned:
+        sys.exit(
+            f"{name}: the run used seed {metrics.get('seed')!r}, the deck pins {pinned}"
+        )
 
 
 def _check_imported_from(root: Path) -> None:
@@ -568,51 +578,60 @@ def _compare_json(a: bytes, b: bytes) -> list[str]:
     return report
 
 
-def _trajectory_columns(con: sqlite3.Connection) -> list[str]:
-    return [row[1] for row in con.execute("PRAGMA table_info(trajectory_data)")]
+def _columns(con: sqlite3.Connection, table: str) -> list[str]:
+    return [row[1] for row in con.execute(f"PRAGMA table_info({table})")]
 
 
 def _compare_trajectory(a: Path, b: Path) -> list[str]:
-    """Why the trajectory tables of *a* and *b* differ, or nothing.
+    """Why the trajectory files *a* and *b* differ, or nothing.
 
-    Rows are compared as the values sqlite returns, so floats compare at
-    full precision. The metadata table is not compared: it holds values
-    that differ between runs of the same code.
+    Each table in ``TRAJECTORY_TABLES`` is compared row by row, as the
+    values sqlite returns, so floats compare at full precision. The
+    metadata table is not compared: it holds values that differ between
+    runs of the same code.
     """
     with (
         closing(sqlite3.connect(f"file:{a}?mode=ro", uri=True)) as con_a,
         closing(sqlite3.connect(f"file:{b}?mode=ro", uri=True)) as con_b,
     ):
-        columns = _trajectory_columns(con_a)
-        other = _trajectory_columns(con_b)
-        if not columns or columns != other:
-            return [f"trajectory_data columns differ: {columns} vs {other}"]
-        pairs = itertools.zip_longest(
-            con_a.execute(TRAJECTORY_QUERY), con_b.execute(TRAJECTORY_QUERY)
-        )
-        counts, differing, first = [0, 0], 0, None
-        for index, (row_a, row_b) in enumerate(pairs, start=1):
-            counts[0] += row_a is not None
-            counts[1] += row_b is not None
-            if row_a == row_b:
-                continue
-            differing += 1
-            first = first or (index, row_a, row_b)
+        report: list[str] = []
+        for table, (order, required) in TRAJECTORY_TABLES.items():
+            report += _compare_table(con_a, con_b, table, order, required)
+    return report
+
+
+def _compare_table(con_a, con_b, table: str, order: str, required: bool) -> list[str]:
+    """Why *table* differs between the two files, each line naming it."""
+    columns, other = _columns(con_a, table), _columns(con_b, table)
+    if columns != other or (required and not columns):
+        return [f"{table} columns differ: {columns} vs {other}"]
+    if not columns:
+        return []  # an optional table absent from both
+    query = f"SELECT * FROM {table} ORDER BY {order}"
+    pairs = itertools.zip_longest(con_a.execute(query), con_b.execute(query))
+    counts, differing, first = [0, 0], 0, None
+    for index, (row_a, row_b) in enumerate(pairs, start=1):
+        counts[0] += row_a is not None
+        counts[1] += row_b is not None
+        if row_a == row_b:
+            continue
+        differing += 1
+        first = first or (index, row_a, row_b)
     if first is None:
         return []
-    report = [f"{differing} differing rows of {max(counts)}"]
+    report = [f"{table}: {differing} differing rows of {max(counts)}"]
     if counts[0] != counts[1]:
-        report.append(f"row count {counts[0]} vs {counts[1]}")
+        report.append(f"{table}: row count {counts[0]} vs {counts[1]}")
     index, row_a, row_b = first
     if row_a is None or row_b is None:
-        report.append(f"rows end at row {index}: {row_a!r} vs {row_b!r}")
+        report.append(f"{table}: rows end at row {index}: {row_a!r} vs {row_b!r}")
         return report
     named_a, named_b = dict(zip(columns, row_a)), dict(zip(columns, row_b))
     column = next(c for c in columns if named_a[c] != named_b[c])
     report.append(
-        f"first difference at row {index} (frame {named_a.get('frame')!r}, "
-        f"id {named_a.get('id')!r}), {column}: "
-        f"{named_a[column]!r} vs {named_b[column]!r}"
+        f"{table}: first difference at row {index} "
+        f"(frame {named_a.get('frame')!r}, id {named_a.get('id')!r}), "
+        f"{column}: {named_a[column]!r} vs {named_b[column]!r}"
     )
     return report
 
