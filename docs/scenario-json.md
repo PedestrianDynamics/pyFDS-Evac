@@ -296,6 +296,16 @@ allowed after; 0 turns it off.
 It must be a number ≥ 0, or the run stops with a `ValueError`, also with
 `--no-enable-rerouting`.
 
+Each switching margin must be a number in its range, or the run stops with
+a `ValueError` naming the key, also with `--no-enable-rerouting`:
+`fed_return_margin`, `exit_switch_anchor`, `path_switch_anchor`,
+`tau_return_margin`, `current_exit_discount` and `clean_exit_margin` in
+(0, 1]; `tau_deadband` and `fallback_switch_margin` in [0, 1]. The
+value that switches a margin off is in range: 1, or 0 for `tau_deadband`
+and `fallback_switch_margin`. `fallback_switch_margin` = 1 keeps the
+current exit between two refused routes unless it must be fled, the
+scenario-file way to the hold rule.
+
 The `routing` keys `alpha`, `beta`, `min_speed_factor` and
 `base_speed_m_per_s` only estimate travel time when a route is priced. They
 do not change how fast agents walk.
@@ -308,9 +318,9 @@ Some parameters exist only in Python, as fields of a config object:
   `alpha`, `beta`, `min_speed_factor`, `visibility_factor_c`); a configured run
   always uses the Lund law with the defaults on
   [Models › Smoke speed](/models/smoke-speed.md#parameters);
-- the routing constants `impassable_extinction_threshold` and
-  `fed_return_margin` (`RouteCostConfig`), and `exit_switch_anchor`
-  (`RerouteConfig`).
+- the routing constant `impassable_extinction_threshold`
+  (`RouteCostConfig`); `RerouteConfig.exit_switch_anchor`, which, when set,
+  overrides the `routing` key `exit_switch_anchor` for that run.
 
 Tracking issue for this reference:
 [#119](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/119).

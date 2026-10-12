@@ -5,7 +5,7 @@ from __future__ import annotations
 import heapq
 import logging
 import math
-import sys
+import numbers
 import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
@@ -842,6 +842,43 @@ ROUTE_COST_MODELS = ("gate", "additive")
 FALLBACK_RULES = ("tau", "hold")
 
 
+# The range of each switching margin in [0, 1], as (closed below, closed
+# above). A multiplier or divisor of a limit excludes 0, which would refuse
+# or admit everything; a fraction taken off a limit excludes nothing.
+# fallback_switch_margin = 1 leaves no tau a rival could beat, so the
+# current exit holds between two refused routes unless it must be fled.
+# The off value of each (1, or 0 for the two subtracted ones) is in range.
+_MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
+    "fed_return_margin": (False, True),
+    "exit_switch_anchor": (False, True),
+    "path_switch_anchor": (False, True),
+    "tau_return_margin": (False, True),
+    "current_exit_discount": (False, True),
+    "clean_exit_margin": (False, True),
+    "tau_deadband": (True, True),
+    "fallback_switch_margin": (True, True),
+}
+
+
+def _check_margin(
+    label: str, value: object, closed_low: bool, closed_high: bool
+) -> None:
+    """Raise ValueError unless *value* is a real number in the margin's range."""
+    low = "[" if closed_low else "("
+    high = "]" if closed_high else ")"
+    # The bounds come before isfinite, so a huge int is refused here
+    # rather than overflowing in the float conversion.
+    ok = (
+        not isinstance(value, bool)
+        and isinstance(value, numbers.Real)
+        and (0 <= value if closed_low else 0 < value)
+        and (value <= 1 if closed_high else value < 1)
+        and math.isfinite(value)
+    )
+    if not ok:
+        raise ValueError(f"{label} must be a number in {low}0, 1{high}, got {value!r}")
+
+
 def _unknown_cost_model(cost_model: object) -> ValueError:
     """The error for a cost_model that names no route cost model."""
     return ValueError(
@@ -977,9 +1014,27 @@ class RouteCostConfig:
     # a smoke must-flee, so under "hold" smoke alone never moves the agent
     # between refused routes (#750, #751).
     fallback_rule: str = "tau"
+    # The two fields below come last so that every earlier positional slot
+    # of this public dataclass keeps its place.
+    # Anchoring for switching to a *different* exit: a rival exit is adopted
+    # only if its rank_cost is below this fraction of the current exit's,
+    # i.e. clearly better, not marginally. A veto after ranking. It equals
+    # FDS+Evac's FAC_DOOR_WAIT = 0.9 (evac.f90:1570), a factor inside the
+    # ranking, only when the veto compares the order key, as under additive;
+    # under the gate the order is on tau first and the two can differ with
+    # two doors. Convention from the reference implementation, NOT
+    # calibrated -- see docs/rerouting-oscillation-notes.md. An explicit
+    # RerouteConfig.exit_switch_anchor overrides it.
+    exit_switch_anchor: float = 0.9
+    # Same-exit reroute only fires when the newly ranked path is below this
+    # fraction of the rank_cost of the path the agent walks, so agents do not
+    # thrash onto a "better" path that is only cheaper by floating-point
+    # noise. Ours: FDS+Evac compares no two paths to one exit, so it has no
+    # counterpart, and nothing ties it to exit_switch_anchor. Not calibrated.
+    path_switch_anchor: float = 0.9
 
     def __post_init__(self) -> None:
-        """Reject an unknown cost_model or fallback_rule, and a bad lockout."""
+        """Reject an unknown cost_model or fallback_rule, and a bad margin."""
         if self.cost_model not in ROUTE_COST_MODELS:
             raise _unknown_cost_model(self.cost_model)
         if self.fallback_rule not in FALLBACK_RULES:
@@ -996,6 +1051,10 @@ class RouteCostConfig:
             raise ValueError(
                 "routing.fallback_return_lockout_s must be a number of seconds "
                 f">= 0, got {lockout!r}"
+            )
+        for name, (closed_low, closed_high) in _MARGIN_RANGES.items():
+            _check_margin(
+                f"routing.{name}", getattr(self, name), closed_low, closed_high
             )
 
     @classmethod
@@ -1033,6 +1092,15 @@ class RouteCostConfig:
             ),
             fallback_return_lockout_s=routing.get(
                 "fallback_return_lockout_s", RouteCostConfig.fallback_return_lockout_s
+            ),
+            fed_return_margin=routing.get(
+                "fed_return_margin", RouteCostConfig.fed_return_margin
+            ),
+            exit_switch_anchor=routing.get(
+                "exit_switch_anchor", RouteCostConfig.exit_switch_anchor
+            ),
+            path_switch_anchor=routing.get(
+                "path_switch_anchor", RouteCostConfig.path_switch_anchor
             ),
             w_smoke=routing.get("w_smoke", RouteCostConfig.w_smoke),
             w_fed=routing.get("w_fed", RouteCostConfig.w_fed),
@@ -1990,11 +2058,15 @@ def _clean_limit(
     """The smokiest leg the route to *exit_id* may have and still be clean.
 
     Tier 1. The exit the agent is already heading for keeps its place in the
-    clean set a little past the criterion, so membership does not flicker.
+    clean set up to the criterion divided by clean_exit_margin, ten times the
+    criterion by default (FAC_DOOR_OLD = 0.1), so membership does not
+    flicker. Inert while the tier is off (clean_extinction_threshold 0).
     """
     is_current = current_exit is not None and exit_id == current_exit
     clean_limit = config.clean_extinction_threshold
     if is_current:
+        # The guard is unreachable while clean_exit_margin is checked to be
+        # in (0, 1]; kept so the division stays as it was.
         clean_limit /= max(config.clean_exit_margin, 1e-9)
     return clean_limit
 
@@ -2211,7 +2283,7 @@ class AdditivePolicy(_AnchoredPolicy):
 
 
 class GatePolicy(_AnchoredPolicy):
-    """Smoke decides which exits remain available; time ranks them."""
+    """Smoke refuses routes; optical depth ranks the rest, time breaks ties."""
 
     @staticmethod
     def _clean_bypass(candidate: RouteCost, old_rc: RouteCost) -> bool:
@@ -2391,7 +2463,9 @@ class GatePolicy(_AnchoredPolicy):
         # so it keeps its place unless a rival is clearly cleaner rather than
         # momentarily cleaner. This is FDS+Evac's FAC_DOOR_OLD2 = 0.9
         # (evac.f90:1572), applied at :16803 inside the IF that ranks doors --
-        # the same position, not a separate veto afterwards. Hysteresis belongs
+        # the same position, not a separate veto afterwards. FDS+Evac reaches
+        # :16803 only in its tier 4, when no door is smoke-free; the gate
+        # applies the discount in every ordering. Hysteresis belongs
         # in the ordering: bolted on after it, the ordering and the veto
         # disagree and the agent oscillates between what each of them prefers.
         if current_exit is not None and rc.exit_id == current_exit:
@@ -2401,10 +2475,8 @@ class GatePolicy(_AnchoredPolicy):
     def order_key(
         self, rc: RouteCost, config: RouteCostConfig, current_exit: str | None
     ) -> tuple[int, int, float, float, int]:
-        # Ordering. Under "gate" distance decides among routes that are still
-        # available, and a route a whole visibility band clearer wins first:
-        # smoke says which exits exist, not how much each metre of them is
-        # worth.
+        # Ordering. The key is (rejected, tier, discounted tau, rank_cost,
+        # hops): refused routes last, then the clean tier when it is on.
         # Under "gate" the route's optical depth decides and travel time breaks
         # ties: tau = K_ave * L already contains the distance, so two routes
         # through equally thin haze order by length and in clear air every tau is
@@ -2965,12 +3037,27 @@ class RerouteConfig:
 
     reevaluation_interval_s: float = 10.0
     cost_config: RouteCostConfig | None = None
-    # Anchoring / hysteresis for switching to a *different* exit: a rival exit is
-    # only adopted if its cost is below this fraction of the current exit's cost
-    # (i.e. it must be clearly better, not marginally). Mirrors FDS+Evac's
-    # FAC_DOOR_WAIT patience factor (default 0.9 there). Convention from the
-    # reference implementation, NOT calibrated — see docs/rerouting-oscillation-notes.md.
-    exit_switch_anchor: float = 0.9
+    # Overrides the cost model's RouteCostConfig.exit_switch_anchor when set,
+    # as an explicit cost_config overrides the routing block. None reads it
+    # from the cost model; resolved_exit_switch_anchor is the value applied.
+    exit_switch_anchor: float | None = None
+
+    def __post_init__(self) -> None:
+        """Reject an explicit exit_switch_anchor outside (0, 1]."""
+        if self.exit_switch_anchor is not None:
+            _check_margin(
+                "RerouteConfig.exit_switch_anchor", self.exit_switch_anchor, False, True
+            )
+
+    @property
+    def resolved_exit_switch_anchor(self) -> float:
+        """The exit-switch anchor applied: the override, else the cost model's.
+
+        The single place it is resolved; every reader goes through it.
+        """
+        if self.exit_switch_anchor is not None:
+            return self.exit_switch_anchor
+        return _cost_config(self).exit_switch_anchor
 
 
 def _cost_config(config: RerouteConfig) -> RouteCostConfig:
@@ -3012,7 +3099,10 @@ class AgentRouteState:
 
     @property
     def recorded_path(self) -> list[str]:
-        """The recorded path, held in ``current_path`` (its public name)."""
+        """The recorded path, held in ``current_path`` (its public name).
+
+        The same mutable list, not a copy.
+        """
         return self.current_path
 
     @property
@@ -3261,24 +3351,18 @@ def reroute_agent(
     return True
 
 
-# Same-exit reroute only fires when the newly ranked path is at least this
-# much cheaper than the agent's currently-committed path, so agents don't
-# thrash onto a "better" path that's only cheaper by floating-point noise.
-# Kept at 0.9 to match RerouteConfig.exit_switch_anchor and FDS+Evac's
-# FAC_DOOR_WAIT patience factor (convention, not calibrated).
-_PATH_IMPROVEMENT_THRESHOLD = 0.9
-
-
 @dataclass(frozen=True)
 class _SwitchMargin:
     """One margin that makes an agent keep its exit or path (#187).
 
-    ``owner`` holds the value: ``RouteCostConfig`` or ``RerouteConfig`` (a
-    field of that name) or ``route_graph`` (a module constant); "" when the
-    rule has no parameter of its own. ``routing_key`` is whether a
-    scenario's routing block sets it; otherwise the code default applies.
-    ``counterpart`` is the FDS+Evac rule it corresponds to, None when the
-    margin is ours. ``consumers`` are the functions that apply it.
+    ``owner`` holds the value: ``RouteCostConfig`` (a field of that name),
+    or "" when the rule has no parameter of its own. An explicit
+    ``RerouteConfig.exit_switch_anchor`` overrides the cost model's; both
+    are resolved by ``RerouteConfig.resolved_exit_switch_anchor``.
+    ``routing_key`` is whether a scenario's routing block sets it; otherwise
+    the code default applies. ``counterpart`` is the FDS+Evac rule it
+    corresponds to, None when the margin is ours. ``consumers`` are the
+    functions that apply it.
     """
 
     name: str
@@ -3288,31 +3372,29 @@ class _SwitchMargin:
     consumers: tuple[str, ...]
 
 
-# Every margin that resists a switch, in the order #187 stage 2 audits them:
-# ours first, then the FDS+Evac counterparts. Only the view lives here; each
-# consumer still reads its value where it did. Not margins, so not listed:
-# the limits they scale (tau_max, fed_rejection_threshold,
+# Every margin that resists a switch. Ours come first, in the order #187
+# stage 2 audits them (A1-A7); the FDS+Evac counterparts follow and are
+# kept, not audited (Q6). Only the view lives here; each consumer still
+# reads its value where it did. Not margins, so not listed: the limits
+# they scale (tau_max, fed_rejection_threshold,
 # clean_extinction_threshold), the additive must-flee bound
 # impassable_extinction_threshold, the fallback_rule selector, the 1e-9
 # float guards, the reevaluation cadence reevaluation_interval_s and the
 # gate scan stopping at the current exit (an ordering, not a margin).
 _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
     _SwitchMargin(
-        "tau_return_margin",
+        "fallback_return_lockout_s",
         "RouteCostConfig",
         True,
         None,
-        ("GatePolicy._tau_budget",),
+        ("_return_locked",),
     ),
-    _SwitchMargin(
-        "tau_deadband", "RouteCostConfig", True, None, ("GatePolicy._tau_band",)
-    ),
-    _SwitchMargin("fed_return_margin", "RouteCostConfig", False, None, ("_fed_limit",)),
+    _SwitchMargin("fed_return_margin", "RouteCostConfig", True, None, ("_fed_limit",)),
     # FAC_DOOR_WAIT's value, applied to a different cost: ours.
     _SwitchMargin(
-        "_PATH_IMPROVEMENT_THRESHOLD",
-        "route_graph",
-        False,
+        "path_switch_anchor",
+        "RouteCostConfig",
+        True,
         None,
         ("_path_clearly_cheaper",),
     ),
@@ -3324,14 +3406,19 @@ _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
         ("_fallback_rival_wins",),
     ),
     _SwitchMargin(
-        "fallback_return_lockout_s",
+        "tau_return_margin",
         "RouteCostConfig",
         True,
         None,
-        ("_return_locked",),
+        ("GatePolicy._tau_budget",),
     ),
-    # The open default exit holds the agent as its current exit does (#743),
-    # a departure from FDS+Evac; it has no parameter of its own.
+    _SwitchMargin(
+        "tau_deadband", "RouteCostConfig", True, None, ("GatePolicy._tau_band",)
+    ),
+    # The open default exit is the anchor (#743), a departure from FDS+Evac,
+    # in the anchor veto, the gate scan and the lockout only; ranking does
+    # not favour it (#754). It applies through _ExitReference.anchor, which
+    # also names the exit left() records a move as leaving. No parameter.
     _SwitchMargin("default_exit_anchoring", "", False, None, ("_anchored_exit",)),
     # FDS+Evac applies FAC_DOOR_OLD2 only when no door is smoke-free (its
     # tier 4, evac.f90:16803); the gate applies it in every ordering.
@@ -3350,8 +3437,8 @@ _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
     # switch labels re-apply it to tell the cause.
     _SwitchMargin(
         "exit_switch_anchor",
-        "RerouteConfig",
-        False,
+        "RouteCostConfig",
+        True,
         "FAC_DOOR_WAIT",
         ("_clears_exit_anchor", "_slowed_by_smoke", "_clears_without"),
     ),
@@ -3371,17 +3458,13 @@ def _switch_margin_values(config: RerouteConfig) -> dict[str, object]:
     Read at call time from the objects the consumers read; None for a rule
     without a parameter.
     """
-    owners = {
-        "RouteCostConfig": _cost_config(config),
-        "RerouteConfig": config,
-        "route_graph": sys.modules[__name__],
-    }
-    return {
-        margin.name: (
-            getattr(owners[margin.owner], margin.name) if margin.owner else None
-        )
+    cost_config = _cost_config(config)
+    values: dict[str, object] = {
+        margin.name: getattr(cost_config, margin.name) if margin.owner else None
         for margin in _SWITCH_MARGINS
     }
+    values["exit_switch_anchor"] = config.resolved_exit_switch_anchor
+    return values
 
 
 def _reconstruct_committed_path(wait_info: dict) -> list[str]:
@@ -3414,10 +3497,12 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
 
 
 def _active_path(wait_info: dict) -> list[str]:
-    """The path the agent walks: rebuilt from *wait_info*, never stored.
+    """The deterministic prefix of the agent's scripted plan, from *wait_info*.
 
-    Unlike the recorded path in the route state, it follows the agent's
-    actual plan, so it cannot go stale.
+    Rebuilt at each call, never stored. It stops at the first probabilistic
+    branch, so it can be shorter than the route walked, and it is ``[]``
+    without an origin or target. It may pass nodes outside the cognitive
+    subgraph.
     """
     return _reconstruct_committed_path(wait_info)
 
@@ -3434,10 +3519,12 @@ def _anchor_allows(
     decision -- and the two drifted, so the copy waved through switches the
     anchor then vetoed.
 
-    Anchoring is bypassed when the old exit is a hazard the agent must flee,
-    and when the candidate is clean where the old one is not. Otherwise the
-    comparison is a deadband on optical depth, falling through to time only
-    when the two routes are within it.
+    Anchoring is bypassed when the old exit is a hazard the agent must flee.
+    Between two refused routes only a clearly lower tau allows
+    (:func:`_fallback_rival_wins`). Otherwise, under the gate, a candidate
+    clean where the old one is not is allowed, and the comparison is a
+    deadband on optical depth, falling through to the rank_cost ratio only
+    when the two routes are within it; under additive it is that ratio.
     """
     return policy_for(_cost_config(config)).anchor_allows(candidate, old_rc, config)
 
@@ -3446,7 +3533,7 @@ def _clears_exit_anchor(
     candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
 ) -> bool:
     """Whether *candidate* beats *old_rc* by the exit_switch_anchor ratio."""
-    return candidate.rank_cost < old_rc.rank_cost * config.exit_switch_anchor
+    return candidate.rank_cost < old_rc.rank_cost * config.resolved_exit_switch_anchor
 
 
 def _select_candidate(
@@ -3549,7 +3636,9 @@ def _anchored_exit(
 class _ExitReference:
     """The agent's exit as each step of one evaluation reads it (#187).
 
-    The readings differ on purpose and are taken once, before any step:
+    The readings differ on purpose and are taken once, before any step of
+    :func:`evaluate_and_reroute`; the route-cost-history ranking in
+    ``scenario.py`` reads ``current_exit`` on its own:
 
     * ``ranking``, the current exit: the FED, tau and clean budgets, the gate
       discount, the fallback preference and the walked-path substitution of
@@ -3642,9 +3731,13 @@ def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
     return committed.rejected and best.feasible and not best.rejected
 
 
-def _path_clearly_cheaper(best: RouteCost, committed: RouteCost) -> bool:
-    """Whether *best* beats the walked path by _PATH_IMPROVEMENT_THRESHOLD."""
-    return best.rank_cost < committed.rank_cost * _PATH_IMPROVEMENT_THRESHOLD
+def _path_clearly_cheaper(
+    best: RouteCost, committed: RouteCost, config: RerouteConfig
+) -> bool:
+    """Whether *best* beats the walked path by the path_switch_anchor ratio."""
+    return (
+        best.rank_cost < committed.rank_cost * _cost_config(config).path_switch_anchor
+    )
 
 
 def _decide_same_exit(
@@ -3692,7 +3785,7 @@ def _decide_same_exit(
             current_target=current_target,
         )
         if _leaves_rejected_path(committed, best) or _path_clearly_cheaper(
-            best, committed
+            best, committed, config
         ):
             return RouteDecision(
                 kind="switch",
@@ -3816,7 +3909,7 @@ def _slowed_by_smoke(best: RouteCost, old_rc: RouteCost, config: RerouteConfig) 
     queue = _cost_config(config).w_queue
     new_cost = best.clear_travel_time_s + queue * best.queue_time_s
     old_cost = old_rc.clear_travel_time_s + queue * old_rc.queue_time_s
-    return not new_cost < old_cost * config.exit_switch_anchor
+    return not new_cost < old_cost * config.resolved_exit_switch_anchor
 
 
 def _fed_growth_term(
@@ -3845,7 +3938,7 @@ def _clears_without(
     cost_config = _cost_config(config)
     new_cost = best.rank_cost - term(best, cost_config)
     old_cost = old_rc.rank_cost - term(old_rc, cost_config)
-    return new_cost < old_cost * config.exit_switch_anchor
+    return new_cost < old_cost * config.resolved_exit_switch_anchor
 
 
 def _exit_news(

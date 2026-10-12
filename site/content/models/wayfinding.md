@@ -418,7 +418,7 @@ and the optical-depth deadband (\(\tau_{\max}\cdot\) `tau_deadband` =
 6 × 0.1) is not crossed. The switch falls through to the anchor: a rival is
 adopted only if its ranking cost, here its travel time, is below 0.9 times the
 current route's (`route_graph.py`, `_AnchoredPolicy.anchor_allows`;
-`exit_switch_anchor` = 0.9, `RerouteConfig.exit_switch_anchor`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
+`exit_switch_anchor` = 0.9, `RouteCostConfig.exit_switch_anchor`; `tau_max` = 6.0 and `tau_deadband` = 0.1,
 `RouteCostConfig.tau_max`, `RouteCostConfig.tau_deadband`). An exit learned on the way is therefore adopted only if it is
 more than 10 % faster than the exit the agent is heading for.
 

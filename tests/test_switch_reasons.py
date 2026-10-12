@@ -336,7 +336,7 @@ def test_queue_credit_at_the_anchor_boundary():
     old = _rc(
         "west", 110.0, travel_time_s=100.0, clear_travel_time_s=100.0, queue_time_s=10.0
     )
-    at = 100.0 * config.exit_switch_anchor
+    at = 100.0 * config.resolved_exit_switch_anchor
     below = math.nextafter(at, 0.0)
     assert (
         _exit_change_reason(_rc("east", at), "west", old, config, None) == "congestion"
@@ -351,7 +351,7 @@ def test_smoke_slowdown_credit_at_the_anchor_boundary():
     """Gate: the old route takes 100 s in smoke, 50 s in clear air."""
     config = RerouteConfig(cost_config=golden._gate())
     old = _rc("west", 100.0, clear_travel_time_s=50.0)
-    at = 50.0 * config.exit_switch_anchor
+    at = 50.0 * config.resolved_exit_switch_anchor
     below = math.nextafter(at, 0.0)
     assert (
         _exit_change_reason(_rc("east", at), "west", old, config, None)

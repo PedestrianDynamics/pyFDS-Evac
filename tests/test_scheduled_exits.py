@@ -910,6 +910,61 @@ def test_reroute_pass_adopts_the_exit_walked_to(monkeypatch):
     assert adopted
 
 
+def _anchors_used(monkeypatch, routing: dict, **kwargs) -> set[float]:
+    """The exit-switch anchor of every evaluation in a closing run."""
+    import pyfds_evac.core.scenario as scenario_module
+
+    anchors = set()
+    evaluate = scenario_module.evaluate_and_reroute
+
+    def _spy(*args, **kw):
+        anchors.add(kw["config"].resolved_exit_switch_anchor)
+        return evaluate(*args, **kw)
+
+    monkeypatch.setattr(scenario_module, "evaluate_and_reroute", _spy)
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    scenario.raw["routing"] = routing
+    _run(scenario, **kwargs)
+    return anchors
+
+
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_every_evaluation_uses_the_routing_block_exit_switch_anchor(monkeypatch, mode):
+    """The closure re-choice and the reroute pass both read the key (#187)."""
+    assert _anchors_used(
+        monkeypatch, {"exit_switch_anchor": 0.6}, **RUN_MODES[mode]
+    ) == {0.6}
+
+
+def test_reroute_config_exit_switch_anchor_overrides_the_routing_block(monkeypatch):
+    config = RerouteConfig(reevaluation_interval_s=30.0, exit_switch_anchor=0.8)
+    assert _anchors_used(
+        monkeypatch, {"exit_switch_anchor": 0.6}, reroute_config=config
+    ) == {0.8}
+
+
+def test_run_settings_record_the_resolved_exit_switch_anchor():
+    scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
+    scenario.raw["routing"] = {"exit_switch_anchor": 0.6, "path_switch_anchor": 0.7}
+    result = run_scenario(scenario, seed=SEED, reroute_config=RerouteConfig())
+    try:
+        settings = result.run_settings["rerouting"]
+        assert settings["exit_switch_anchor"] == 0.6
+        assert settings["cost_config"]["exit_switch_anchor"] == 0.6
+        assert settings["cost_config"]["path_switch_anchor"] == 0.7
+    finally:
+        result.cleanup()
+
+
+@pytest.mark.parametrize("mode", list(RUN_MODES))
+def test_an_out_of_range_margin_stops_every_run(mode):
+    """The routing block is checked with rerouting on or off."""
+    scenario = _scenario({})
+    scenario.raw["routing"] = {"path_switch_anchor": 0.0}
+    with pytest.raises(ValueError, match=r"routing\.path_switch_anchor"):
+        run_scenario(scenario, seed=SEED, **RUN_MODES[mode])
+
+
 def _star_with_schedules() -> tuple[StageGraph, dict]:
     graph = StageGraph(
         nodes={

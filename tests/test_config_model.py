@@ -1163,6 +1163,39 @@ def test_predicted_run_settings_match_the_built_models(heat_scenario, argv):
     assert predicted_run_settings(opts, heat_scenario.raw, cfg) == used
 
 
+def test_predicted_rerouting_reports_the_routing_block_margins():
+    """The anchors and margins of the routing block, as the run records them."""
+    from pyfds_evac.config.effective import predicted_run_settings
+    from pyfds_evac.core.manifest import run_settings
+    from pyfds_evac.core.run_config import _build_reroute_config
+
+    scenario = _load(DISCOVERY)
+    scenario.raw["routing"] = {
+        "exit_switch_anchor": 0.6,
+        "path_switch_anchor": 0.7,
+        "fed_return_margin": 0.8,
+    }
+    opts = _parse("--scenario", "x")
+    cfg = effective_configuration(opts, scenario, inspect_fds=False)
+    predicted = predicted_run_settings(opts, scenario.raw, cfg)["rerouting"]
+    reroute_config = _build_reroute_config(scenario, opts, lambda _message: None)
+    used = run_settings(seed=1, reroute_config=reroute_config)
+    assert predicted == used["rerouting"]
+    assert predicted["exit_switch_anchor"] == 0.6
+    cost = predicted["cost_config"]
+    assert (cost["exit_switch_anchor"], cost["path_switch_anchor"]) == (0.6, 0.7)
+    assert cost["fed_return_margin"] == 0.8
+    rows = {row.key: row for row in cfg.routing}
+    assert all(row.default == 0.9 and row.overridden for row in rows.values())
+
+
+def test_routing_margin_at_its_default_is_not_overridden():
+    raw = {"distributions": {}, "routing": {"exit_switch_anchor": 0.9}}
+    cfg = effective_configuration(_parse("--scenario", "x"), raw, inspect_fds=False)
+    [row] = cfg.routing
+    assert (row.key, row.default, row.overridden) == ("exit_switch_anchor", 0.9, False)
+
+
 @pytest.mark.parametrize(
     "argv",
     [
