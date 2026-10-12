@@ -356,7 +356,11 @@ pre-movement, against 100 % [94, 100], 51 % [49, 55] and 3 % [0, 6] under
 the default `"tau"`. The median largest max FED is 0.006, 0.024 and 0.100
 under `"hold"`, against 0.006, 0.070 and 0.178; the median number of
 fallback exit changes per run is 0 under `"hold"`, against 0, 195 and 267
-(at most 6, 201 and 278). `"hold"` is experimental: no scenario key or
+(at most 6, 201 and 278). With the return lockout removed
+([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); seeds 4–13 at `7c366911`) the `"tau"` counts are 0, 196.5
+and 303 (at most 6, 200 and 306), the 30 s share 51 % [48, 55] and FED
+0.073; the rest of this page is still the `c619a046` study.
+`"hold"` is experimental: no scenario key or
 flag sets it, and it is neither recommended nor validated. Whether the
 rule should send everyone to the exit by the fire is open ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
 {{< /callout >}}
