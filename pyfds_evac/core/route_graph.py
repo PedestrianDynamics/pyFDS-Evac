@@ -5,6 +5,7 @@ from __future__ import annotations
 import heapq
 import logging
 import math
+import sys
 import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
@@ -2984,7 +2985,7 @@ class AgentRouteState:
     """Per-agent routing state for reevaluation scheduling."""
 
     current_exit: str | None = None
-    # The candidate path: the path the last decision recorded. A same-exit
+    # The recorded path: the path the last decision recorded. A same-exit
     # evaluation records the ranked best path even when the agent keeps
     # walking its own; other decisions record theirs once applied, and
     # standing clears it. The path the agent walks is not stored; it is
@@ -3010,8 +3011,8 @@ class AgentRouteState:
     known_at_last_eval: frozenset[str] | None = None
 
     @property
-    def candidate_path(self) -> list[str]:
-        """The candidate path, held in ``current_path`` (its public name)."""
+    def recorded_path(self) -> list[str]:
+        """The recorded path, held in ``current_path`` (its public name)."""
         return self.current_path
 
     @property
@@ -3268,6 +3269,121 @@ def reroute_agent(
 _PATH_IMPROVEMENT_THRESHOLD = 0.9
 
 
+@dataclass(frozen=True)
+class _SwitchMargin:
+    """One margin that makes an agent keep its exit or path (#187).
+
+    ``owner`` holds the value: ``RouteCostConfig`` or ``RerouteConfig`` (a
+    field of that name) or ``route_graph`` (a module constant); "" when the
+    rule has no parameter of its own. ``routing_key`` is whether a
+    scenario's routing block sets it; otherwise the code default applies.
+    ``counterpart`` is the FDS+Evac rule it corresponds to, None when the
+    margin is ours. ``consumers`` are the functions that apply it.
+    """
+
+    name: str
+    owner: str
+    routing_key: bool
+    counterpart: str | None
+    consumers: tuple[str, ...]
+
+
+# Every margin that resists a switch, in the order #187 stage 2 audits them:
+# ours first, then the FDS+Evac counterparts. Only the view lives here; each
+# consumer still reads its value where it did. Not margins, so not listed:
+# the limits they scale (tau_max, fed_rejection_threshold,
+# clean_extinction_threshold), the additive must-flee bound
+# impassable_extinction_threshold, the fallback_rule selector, the 1e-9
+# float guards, the reevaluation cadence reevaluation_interval_s and the
+# gate scan stopping at the current exit (an ordering, not a margin).
+_SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
+    _SwitchMargin(
+        "tau_return_margin",
+        "RouteCostConfig",
+        True,
+        None,
+        ("GatePolicy._tau_budget",),
+    ),
+    _SwitchMargin(
+        "tau_deadband", "RouteCostConfig", True, None, ("GatePolicy._tau_band",)
+    ),
+    _SwitchMargin("fed_return_margin", "RouteCostConfig", False, None, ("_fed_limit",)),
+    # FAC_DOOR_WAIT's value, applied to a different cost: ours.
+    _SwitchMargin(
+        "_PATH_IMPROVEMENT_THRESHOLD",
+        "route_graph",
+        False,
+        None,
+        ("_path_clearly_cheaper",),
+    ),
+    _SwitchMargin(
+        "fallback_switch_margin",
+        "RouteCostConfig",
+        True,
+        None,
+        ("_fallback_rival_wins",),
+    ),
+    _SwitchMargin(
+        "fallback_return_lockout_s",
+        "RouteCostConfig",
+        True,
+        None,
+        ("_return_locked",),
+    ),
+    # The open default exit holds the agent as its current exit does (#743),
+    # a departure from FDS+Evac; it has no parameter of its own.
+    _SwitchMargin("default_exit_anchoring", "", False, None, ("_anchored_exit",)),
+    # FDS+Evac applies FAC_DOOR_OLD2 only when no door is smoke-free (its
+    # tier 4, evac.f90:16803); the gate applies it in every ordering.
+    _SwitchMargin(
+        "current_exit_discount",
+        "RouteCostConfig",
+        True,
+        "FAC_DOOR_OLD2",
+        ("GatePolicy._ordering_tau",),
+    ),
+    # FAC_DOOR_WAIT multiplies the current door's time inside the ranking
+    # (evac.f90:16600); here it is a veto after ranking. They coincide when
+    # the veto compares the ordering key, as under additive (rank_cost),
+    # for any number of doors. Under gate they can differ with two doors:
+    # the order is on tau first, the veto on time inside the tau band. The
+    # switch labels re-apply it to tell the cause.
+    _SwitchMargin(
+        "exit_switch_anchor",
+        "RerouteConfig",
+        False,
+        "FAC_DOOR_WAIT",
+        ("_clears_exit_anchor", "_slowed_by_smoke", "_clears_without"),
+    ),
+    _SwitchMargin(
+        "clean_exit_margin",
+        "RouteCostConfig",
+        True,
+        "FAC_DOOR_OLD",
+        ("_clean_limit",),
+    ),
+)
+
+
+def _switch_margin_values(config: RerouteConfig) -> dict[str, object]:
+    """The value each of :data:`_SWITCH_MARGINS` takes under *config*.
+
+    Read at call time from the objects the consumers read; None for a rule
+    without a parameter.
+    """
+    owners = {
+        "RouteCostConfig": _cost_config(config),
+        "RerouteConfig": config,
+        "route_graph": sys.modules[__name__],
+    }
+    return {
+        margin.name: (
+            getattr(owners[margin.owner], margin.name) if margin.owner else None
+        )
+        for margin in _SWITCH_MARGINS
+    }
+
+
 def _reconstruct_committed_path(wait_info: dict) -> list[str]:
     """Return the path the agent is *currently* walking, per its own wait_info.
 
@@ -3300,7 +3416,7 @@ def _reconstruct_committed_path(wait_info: dict) -> list[str]:
 def _active_path(wait_info: dict) -> list[str]:
     """The path the agent walks: rebuilt from *wait_info*, never stored.
 
-    Unlike the candidate path in the route state, it follows the agent's
+    Unlike the recorded path in the route state, it follows the agent's
     actual plan, so it cannot go stale.
     """
     return _reconstruct_committed_path(wait_info)
@@ -3801,7 +3917,7 @@ def _decide_explore(
         # perception runs from the agent's position, so a walked leg can
         # make a sign readable that never was from any node it stood on.
         step = route_state.wander_step
-        if idle and route_state.candidate_path:
+        if idle and route_state.recorded_path:
             # The previous patrol leg was completed; move on to the next
             # stop, or a single-candidate rotation would re-offer the node
             # the agent is standing on the way to.
@@ -3817,18 +3933,18 @@ def _decide_explore(
     if frontier is None:
         return RouteDecision(kind="keep")
     target_node, path = frontier
-    # Already committed to this target: the agent's current target is an
-    # intermediate hop of the committed path, not the destination itself,
+    # Already heading for this target: the agent's current target is an
+    # intermediate hop of the recorded path, not the destination itself,
     # so comparing against current_target_stage alone re-fires the same
     # switch on every reevaluation until arrival. An idle agent is never
     # suppressed -- it is standing with no onward plan and must be routed.
-    candidate = route_state.candidate_path
+    recorded = route_state.recorded_path
     if not idle and (
         wait_info.get("current_target_stage") == target_node
         or (
-            candidate
-            and candidate[-1] == target_node
-            and wait_info.get("current_target_stage") in candidate
+            recorded
+            and recorded[-1] == target_node
+            and wait_info.get("current_target_stage") in recorded
         )
     ):
         return RouteDecision(kind="keep")
@@ -4246,12 +4362,12 @@ def _decide_return(
     if best is None:
         return None
     _length, node_id, path = best
-    candidate = route_state.candidate_path
+    recorded = route_state.recorded_path
     if (
         wait_info.get("state") != "idle"
-        and candidate
-        and candidate[-1] == node_id
-        and wait_info.get("current_target_stage") in candidate
+        and recorded
+        and recorded[-1] == node_id
+        and wait_info.get("current_target_stage") in recorded
     ):
         return RouteDecision(kind="keep")
     return RouteDecision(
