@@ -87,10 +87,15 @@ class Margin:
     primary: str | None
 
 
-# Off values from the stage-2 plan. A margin without a primary metric is not
-# in the audit order A1-A6; ``analyse`` then needs ``--metric``.
+# Off values and primary metrics from the stage-2 plan (§3.2). A1's primary
+# is the returns within the lockout window, what the lockout targets; all
+# returns and the fallback switches are secondaries. A2's "exposure
+# co-primary" is covered by the secondary rule: fed_p95 and fed_ge_1 are in
+# SECONDARY, so a distinct rise in exposure blocks "remove". A margin
+# without a primary metric is not in the audit order; ``analyse`` then
+# needs ``--metric``.
 MARGINS: dict[str, Margin] = {
-    "fallback_return_lockout_s": Margin(0.0, "returns"),
+    "fallback_return_lockout_s": Margin(0.0, "returns_within_window"),
     "fed_return_margin": Margin(1.0, "switches_per_agent:fed_reroute"),
     "path_switch_anchor": Margin(1.0, "switches_per_agent:better_path"),
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),
@@ -248,7 +253,7 @@ def _missing(deck: AuditDeck, root: Path) -> list[Path]:
 
 def override_routing(config: dict, key: str, value: float) -> dict:
     """A copy of scenario *config* with routing *key* set to *value*."""
-    copy = json.loads(json.dumps(config))
+    copy: dict = json.loads(json.dumps(config))
     routing = dict(copy.get("routing") or {})
     routing[key] = value
     copy["routing"] = routing
@@ -354,7 +359,9 @@ def manifest_margin(manifest: dict, key: str) -> float | None:
         raise ValueError("run manifest reports no rerouting configuration")
     cost = rerouting.get("cost_config") or {}
     value = cost.get(key)
-    return value if value is not None else rerouting.get(key)
+    if value is None:
+        value = rerouting.get(key)
+    return None if value is None else float(value)
 
 
 def _jobs(names: list[str], seeds: list[int] | None) -> list[Job]:
@@ -421,7 +428,8 @@ def _run_all(args: argparse.Namespace) -> int:
 
 
 def _read_json(path: Path) -> dict:
-    return json.loads(path.read_text(encoding="utf-8"))
+    data: dict = json.loads(path.read_text(encoding="utf-8"))
+    return data
 
 
 def _write_json(path: Path, data: dict) -> None:
@@ -434,7 +442,12 @@ def _read_csv(path: Path) -> list[dict]:
 
 
 def switch_rows(rows: list[dict]) -> list[dict]:
-    """Rows of a route history that are switches: they name an old exit."""
+    """Rows of a route history that are switches: they name an old exit.
+
+    This agrees with ``route_graph.route_switches`` on every run checked;
+    the two differ by definition only on ``explore``/``wander`` rows, which
+    carry no old exit but can change the target the core counts.
+    """
     return [r for r in rows if r.get("old_exit")]
 
 
@@ -592,7 +605,7 @@ def paired_permutation_p(
 
 def smallest_p(n: int) -> float:
     """The smallest p the exact test can give with *n* seeds."""
-    return 2 / 2**n
+    return float(2 / 2**n)
 
 
 @dataclass(frozen=True)
@@ -605,7 +618,7 @@ class MetricRule:
 
 def _floor_rule(metric: str) -> MetricRule | None:
     """The plan's floor for *metric*, or None when it is reported only."""
-    if metric.startswith("returns"):
+    if metric in ("returns", "returns_within_window"):
         return MetricRule(lambda base, agents: max(0.02 * agents, 0.25 * base), 1)
     if metric.startswith("switches_per_agent"):
         return MetricRule(lambda base, agents: max(0.05, 0.25 * base), 1)

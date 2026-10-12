@@ -106,6 +106,9 @@ def test_floor_follows_the_plan_table(audit, metric, base, agents, floor):
 
 def test_reported_only_metrics_have_no_floor(audit):
     assert audit._floor_rule("fed_median") is None
+    assert audit._floor_rule("returns_agents") is None
+    assert audit._floor_rule("returns_since_s_median") is None
+    assert audit._floor_rule("returns_within_window").worse == 1
     assert audit._floor_rule("n_agents") is None
     assert audit._floor_rule("exit_share:A").worse == 0
 
@@ -343,7 +346,7 @@ def _write_audit(folder: Path, base: list[float], off: list[float]) -> None:
             (run / "metrics.json").write_text(
                 json.dumps(
                     {
-                        "returns": value,
+                        "returns_within_window": value,
                         "n_agents": 100,
                         "rset_last": 120.0,
                         "wall_s": 1.0,
@@ -359,14 +362,14 @@ def test_analyse_writes_the_report_with_the_outcome(audit, tmp_path, capsys):
     code = audit.main(["analyse", str(folder), "--primary-deck", "l_corridor_gate"])
     assert code == 0
     report = json.loads((folder / "report.json").read_text())
-    assert report["primary_metric"] == "returns"
+    assert report["primary_metric"] == "returns_within_window"
     assert report["primary"]["p"] == pytest.approx(2 / 64)
     assert report["primary"]["effect"] == pytest.approx(4.0)
     assert report["primary"]["floor"] == pytest.approx(2.0)
     assert report["outcome"].startswith("keep")
     text = (folder / "report.md").read_text()
     assert "**Outcome: keep" in text
-    assert "| returns | 6 | 2 | 6 | 4 | 0.0312 | 2 | True |" in text
+    assert "| returns_within_window | 6 | 2 | 6 | 4 | 0.0312 | 2 | True |" in text
     assert "Primary deck: l_corridor_gate" in capsys.readouterr().out
 
 
@@ -392,7 +395,7 @@ def test_analyse_needs_a_metric_for_a_margin_without_a_primary(audit, tmp_path):
             "--primary-deck",
             "l_corridor_gate",
             "--metric",
-            "returns",
+            "returns_within_window",
         ]
     )
     assert code == 0
@@ -406,6 +409,7 @@ def test_run_refuses_an_unknown_margin_without_an_off_value(audit, capsys):
 
 def test_every_audited_margin_has_a_plan_off_value(audit):
     assert audit.MARGINS["fallback_return_lockout_s"].off == 0.0
+    assert audit.MARGINS["fallback_return_lockout_s"].primary == "returns_within_window"
     assert audit.MARGINS["tau_deadband"].off == 0.0
     assert audit.MARGINS["fallback_switch_margin"].off == 0.0
     for name in ("fed_return_margin", "path_switch_anchor", "tau_return_margin"):
