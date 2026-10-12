@@ -5,6 +5,7 @@ from __future__ import annotations
 import heapq
 import logging
 import math
+import sys
 import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
@@ -3266,6 +3267,116 @@ def reroute_agent(
 # Kept at 0.9 to match RerouteConfig.exit_switch_anchor and FDS+Evac's
 # FAC_DOOR_WAIT patience factor (convention, not calibrated).
 _PATH_IMPROVEMENT_THRESHOLD = 0.9
+
+
+@dataclass(frozen=True)
+class _SwitchMargin:
+    """One margin that makes an agent keep its exit or path (#187).
+
+    ``owner`` holds the value: ``RouteCostConfig`` or ``RerouteConfig`` (a
+    field of that name) or ``route_graph`` (a module constant); "" when the
+    rule has no parameter of its own. ``routing_key`` is whether a
+    scenario's routing block sets it; otherwise the code default applies.
+    ``counterpart`` is the FDS+Evac factor whose default it takes, None when
+    the margin is ours. ``consumers`` are the functions that apply it.
+    """
+
+    name: str
+    owner: str
+    routing_key: bool
+    counterpart: str | None
+    consumers: tuple[str, ...]
+
+
+# Every margin that resists a switch, in the order #187 stage 2 audits them:
+# ours first, then the FDS+Evac counterparts. Only the view lives here; each
+# consumer still reads its value where it did. Not margins, so not listed:
+# the limits they scale (tau_max, fed_rejection_threshold,
+# clean_extinction_threshold), the additive must-flee bound
+# impassable_extinction_threshold, the fallback_rule selector and the 1e-9
+# float guards.
+_SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
+    _SwitchMargin(
+        "tau_return_margin",
+        "RouteCostConfig",
+        True,
+        None,
+        ("GatePolicy._tau_budget",),
+    ),
+    _SwitchMargin(
+        "tau_deadband", "RouteCostConfig", True, None, ("GatePolicy._tau_band",)
+    ),
+    _SwitchMargin("fed_return_margin", "RouteCostConfig", False, None, ("_fed_limit",)),
+    # FAC_DOOR_WAIT's value, applied to a different cost: ours.
+    _SwitchMargin(
+        "_PATH_IMPROVEMENT_THRESHOLD",
+        "route_graph",
+        False,
+        None,
+        ("_path_clearly_cheaper",),
+    ),
+    _SwitchMargin(
+        "fallback_switch_margin",
+        "RouteCostConfig",
+        True,
+        None,
+        ("_fallback_rival_wins",),
+    ),
+    _SwitchMargin(
+        "fallback_return_lockout_s",
+        "RouteCostConfig",
+        True,
+        None,
+        ("_return_locked",),
+    ),
+    # The open default exit holds the agent as its current exit does (#743),
+    # a departure from FDS+Evac; it has no parameter of its own.
+    _SwitchMargin("default_exit_anchoring", "", False, None, ("_anchored_exit",)),
+    _SwitchMargin(
+        "current_exit_discount",
+        "RouteCostConfig",
+        True,
+        "FAC_DOOR_OLD2",
+        ("GatePolicy._ordering_tau",),
+    ),
+    # FAC_DOOR_WAIT multiplies the current door's time inside the ranking
+    # (evac.f90:16600); here it is a veto after ranking. They match for two
+    # doors and may differ with three or more (#187). The switch labels
+    # re-apply it to tell the cause.
+    _SwitchMargin(
+        "exit_switch_anchor",
+        "RerouteConfig",
+        False,
+        "FAC_DOOR_WAIT",
+        ("_clears_exit_anchor", "_slowed_by_smoke", "_clears_without"),
+    ),
+    _SwitchMargin(
+        "clean_exit_margin",
+        "RouteCostConfig",
+        True,
+        "FAC_DOOR_OLD",
+        ("_clean_limit",),
+    ),
+)
+
+
+def _switch_margin_values(config: RerouteConfig) -> dict[str, object]:
+    """The value each of :data:`_SWITCH_MARGINS` takes under *config*.
+
+    Read at call time from the objects the consumers read; None for a rule
+    without a parameter.
+    """
+    owners = {
+        "RouteCostConfig": _cost_config(config),
+        "RerouteConfig": config,
+        "route_graph": sys.modules[__name__],
+    }
+    return {
+        margin.name: (
+            getattr(owners[margin.owner], margin.name) if margin.owner else None
+        )
+        for margin in _SWITCH_MARGINS
+    }
 
 
 def _reconstruct_committed_path(wait_info: dict) -> list[str]:
