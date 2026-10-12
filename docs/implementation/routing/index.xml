@@ -656,7 +656,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
-&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below 0.9 × the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way&lt;/td>
+&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below 0.9 × the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -683,7 +683,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
-&lt;td>&lt;code>_generate_candidates&lt;/code>, weighting edges with the policy&amp;rsquo;s &lt;code>edge_weight&lt;/code>; the first legs are &lt;code>_first_hops&lt;/code>; the walked path is applied in &lt;code>rank_routes&lt;/code> (&lt;code>current_path&lt;/code>)&lt;/td>
+&lt;td>&lt;code>_generate_candidates&lt;/code>, weighting edges with the policy&amp;rsquo;s &lt;code>edge_weight&lt;/code>; the first legs are &lt;code>_first_hops&lt;/code>; the walked path, rebuilt each evaluation by &lt;code>_active_path&lt;/code>, is applied in &lt;code>rank_routes&lt;/code> (&lt;code>current_path&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
@@ -691,19 +691,19 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Ranking&lt;/strong>&lt;/td>
-&lt;td>the policy&amp;rsquo;s &lt;code>order_key&lt;/code>&lt;/td>
+&lt;td>the policy&amp;rsquo;s &lt;code>order_key&lt;/code> on the policy&amp;rsquo;s &lt;code>rank_cost&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
-&lt;td>&lt;code>_apply_fallback&lt;/code>&lt;/td>
+&lt;td>&lt;code>_apply_fallback&lt;/code>; &lt;code>_is_fallback&lt;/code> tells the route it promoted&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
-&lt;td>&lt;code>_decide_same_exit&lt;/code>&lt;/td>
+&lt;td>&lt;code>_decide_same_exit&lt;/code>, comparing against the walked path from &lt;code>_active_path&lt;/code>; the route state keeps the &lt;code>recorded_path&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
-&lt;td>&lt;code>_select_candidate&lt;/code>, then &lt;code>_decide_exit_change&lt;/code>; the anchor is &lt;code>_anchor_allows&lt;/code>&lt;/td>
+&lt;td>&lt;code>_select_candidate&lt;/code>, then &lt;code>_decide_exit_change&lt;/code>; the anchor is &lt;code>_anchor_allows&lt;/code>; the agent&amp;rsquo;s exit is read once per evaluation into &lt;code>_ExitReference&lt;/code> (the ranking, anchor and counted exits); must-flee is &lt;code>_must_flee_rejection&lt;/code> with the policy&amp;rsquo;s &lt;code>must_flee_smoke&lt;/code>; the switch reason comes from the policy&amp;rsquo;s &lt;code>switch_hazard_label&lt;/code>, and is &lt;code>congestion&lt;/code> when the switch would not clear the anchor with the policy&amp;rsquo;s &lt;code>queue_term&lt;/code> removed (&lt;code>_clears_without&lt;/code>); the margins they apply are listed in &lt;code>_SWITCH_MARGINS&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
@@ -712,8 +712,59 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tbody>
 &lt;/table>
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
-&lt;p>Several of these rules resist switching at different points (return margins,
-discount, anchor, fallback margin, same-exit threshold). Their consolidation is
+&lt;p>Ten rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
+&lt;code>route_graph.py&lt;/code> lists each with its owner, FDS+Evac counterpart and consumers:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Rule&lt;/th>
+&lt;th>FDS+Evac counterpart&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>tau_deadband&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fed_return_margin&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>_PATH_IMPROVEMENT_THRESHOLD&lt;/code>&lt;/td>
+&lt;td>none (the value of &lt;code>FAC_DOOR_WAIT&lt;/code>, applied to a different cost)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>fallback_return_lockout_s&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>default_exit_anchoring&lt;/code> (#743)&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>current_exit_discount&lt;/code>&lt;/td>
+&lt;td>&lt;code>FAC_DOOR_OLD2&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_switch_anchor&lt;/code>&lt;/td>
+&lt;td>&lt;code>FAC_DOOR_WAIT&lt;/code> (the same rule under additive; can differ under the gate, which orders on τ first)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>clean_exit_margin&lt;/code>&lt;/td>
+&lt;td>&lt;code>FAC_DOOR_OLD&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Their consolidation is
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>. The
 anchor&amp;rsquo;s baseline is the better of the best path to the current exit from the
 agent&amp;rsquo;s position and the path the agent walks, by the policy&amp;rsquo;s ordering
@@ -1460,15 +1511,19 @@ this one scales a budget (0.8 &lt;em>down&lt;/em>).&lt;/p>
 current exit&amp;rsquo;s &lt;code>tau&lt;/code> is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.&lt;/p>
 &lt;p>&lt;strong>Its provenance is FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD2 = 0.9&lt;/code>&lt;/strong> (&lt;code>evac.f90:1572&lt;/code>), which
-is applied as &lt;code>L2_tmp = FAC_DOOR_OLD2 * L2_tmp&lt;/code> to the current door at &lt;code>:16626&lt;/code>
-and &lt;code>:16803&lt;/code> — and at &lt;code>:16803&lt;/code> that &lt;code>L2_tmp&lt;/code> is the &lt;code>tau/6&lt;/code> of the tier-4 test,
-i.e. the same quantity, discounted in the same place, inside the loop that
-minimises it to pick a door. The shipped comment on &lt;code>tau_of&lt;/code> in &lt;code>route_graph.py&lt;/code>
-cites that provenance correctly since &lt;code>9508181&lt;/code>; an earlier version cited
-&lt;code>FAC_DOOR_WAIT&lt;/code>, which is at &lt;code>:1570&lt;/code> and discounts the current door&amp;rsquo;s &lt;em>travel
-time&lt;/em> (&lt;code>T_tmp&lt;/code>), not its smoke. &lt;code>FAC_DOOR_WAIT&lt;/code> is still the correct citation for
-&lt;code>exit_switch_anchor&lt;/code> and &lt;code>_PATH_IMPROVEMENT_THRESHOLD&lt;/code>, which are time
-comparisons, and the code cites it only there.&lt;/p>
+is applied as &lt;code>L2_tmp = FAC_DOOR_OLD2 * L2_tmp&lt;/code> to the current door at &lt;code>:16803&lt;/code>,
+where &lt;code>L2_tmp&lt;/code> is the &lt;code>tau/6&lt;/code> of the tier-4 test, i.e. the same quantity,
+discounted inside the loop that minimises it to pick a door. FDS+Evac reaches
+&lt;code>:16803&lt;/code> only when no door is smoke-free (tier 4); the gate applies the
+discount in every ordering. (&lt;code>:16626&lt;/code> multiplies &lt;code>L2_tmp&lt;/code> by &lt;code>FAC_DOOR_OLD2&lt;/code>
+too, but in the known-door memory update at &lt;code>:16613–16643&lt;/code>, outside ranking.)
+The shipped comment on &lt;code>_ordering_tau&lt;/code> in &lt;code>route_graph.py&lt;/code> cites that
+provenance; an earlier version cited &lt;code>FAC_DOOR_WAIT&lt;/code>, which is at &lt;code>:1570&lt;/code> and
+discounts the current door&amp;rsquo;s &lt;em>travel time&lt;/em> (&lt;code>T_tmp&lt;/code>), not its smoke.
+&lt;code>FAC_DOOR_WAIT&lt;/code> is the counterpart of &lt;code>exit_switch_anchor&lt;/code>: the same rule under
+additive, and it can differ under the gate (see the anchoring row of the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a>). &lt;code>_PATH_IMPROVEMENT_THRESHOLD&lt;/code> takes
+its value but has no counterpart.&lt;/p>
 &lt;p>&lt;strong>A reviewer will ask why both.&lt;/strong> They act on different stages — one on the
 feasible set, one on the order within it — but they have not been measured
 independently, and no run isolates the contribution of either.&lt;/p>

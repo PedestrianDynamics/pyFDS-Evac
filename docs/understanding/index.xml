@@ -1222,8 +1222,8 @@ group. Per-exit familiarity is not supported
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Anchoring&lt;/strong>&lt;/td>
-&lt;td>Current door favoured by 10 %: &lt;code>FAC_DOOR_WAIT&lt;/code> = 0.9 on the time criterion (:1570, applied :16600), &lt;code>FAC_DOOR_OLD2&lt;/code> = 0.9 on the smoke criterion (:1572, applied :16626, :16803)&lt;/td>
-&lt;td>&lt;code>exit_switch_anchor&lt;/code> = 0.9 on travel time, mirroring &lt;code>FAC_DOOR_WAIT&lt;/code>; &lt;code>current_exit_discount&lt;/code> = 0.9 on the current exit&amp;rsquo;s optical depth in the sort, mirroring &lt;code>FAC_DOOR_OLD2&lt;/code>; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband &lt;code>tau_deadband * tau_max&lt;/code> (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget&lt;/td>
+&lt;td>Current door favoured by 10 %: &lt;code>FAC_DOOR_WAIT&lt;/code> = 0.9 on the time criterion (:1570, applied :16600), &lt;code>FAC_DOOR_OLD2&lt;/code> = 0.9 on the smoke criterion (:1572, applied :16803, in tier 4 only)&lt;/td>
+&lt;td>&lt;code>exit_switch_anchor&lt;/code> = 0.9 on &lt;code>rank_cost&lt;/code> (travel time plus queue under the gate, the composite under additive), a veto after ranking that mirrors &lt;code>FAC_DOOR_WAIT&lt;/code> under additive for any number of doors and can differ from it under the gate with two doors, since the gate orders on τ first and the veto compares time; &lt;code>current_exit_discount&lt;/code> = 0.9 on the current exit&amp;rsquo;s optical depth in the sort, mirroring &lt;code>FAC_DOOR_OLD2&lt;/code>; bypasses for a lethal current exit and (gate) a feasible rival clearer by more than the symmetric deadband &lt;code>tau_deadband * tau_max&lt;/code> (0.6), which also refuses a rival dirtier by that much; plus deadbands of 0.9 on dose and 0.8 on the optical-depth budget&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rerouting frequency&lt;/strong>&lt;/td>
