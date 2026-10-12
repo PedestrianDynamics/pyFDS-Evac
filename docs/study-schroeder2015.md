@@ -361,8 +361,9 @@ events vary by a few seconds between seeds:
 | **156–164 s** | Exit E re-paths via door B, but B→E is already refused (router τ 22–31, median per pass, at 158–163 s), so almost nobody turns from A to B→E. Same-exit re-paths (`better_path`) number 8.3 per seed, at 136–168 s. |
 
 Per seed, 30–47 exit changes return to an exit the agent had left earlier,
-none within 2 s of leaving it. Between two refused routes the 20 % margin and
-the 10 s return lockout apply. A fallback switch X→Y is followed by a switch
+none within 2 s of leaving it. Between two refused routes the 20 % margin and,
+at that revision, the 10 s return lockout applied (the lockout was removed in
+[#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187)). A fallback switch X→Y is followed by a switch
 Y→X of the same agent 56 times in 10 seeds (median 34 s later). Route smoke
 is read once per grid cell since [#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653) (0.5.0), and the returns
 remain with it.

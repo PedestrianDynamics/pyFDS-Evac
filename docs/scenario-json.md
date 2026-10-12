@@ -288,13 +288,10 @@ the key it is `"gate"`. Any other value stops the run with a `ValueError`
 that lists the two names, also with `--no-enable-rerouting`, since the first
 exit choice uses the cost model too.
 
-`fallback_return_lockout_s` (seconds, default 10) holds an agent after an
-exit switch between two refused routes: a switch straight back to the exit
-it left, again between two refused routes, is blocked while at most that
-many seconds have passed (a return at exactly 10 s is still blocked) and
-allowed after; 0 turns it off.
-It must be a number ≥ 0, or the run stops with a `ValueError`, also with
-`--no-enable-rerouting`.
+`fallback_return_lockout_s`, the 10 s return lockout between two refused
+routes ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)), was removed in [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187). A scenario that still sets
+it stops with a `ValueError` naming the removal, also with
+`--no-enable-rerouting`; delete the key.
 
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:

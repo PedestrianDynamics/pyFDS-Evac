@@ -127,6 +127,7 @@ from .route_graph import (
     _active_path,
     _cost_config,
     adopt_heading_exit,
+    check_removed_routing_keys,
     compute_eval_offset,
     count_route_switches,
     end_look,
@@ -1743,6 +1744,9 @@ def run_scenario(
         initialize_simulation_from_json,
     )
 
+    # An explicit cost config bypasses from_routing_params, so a removed
+    # routing key is checked here whatever the overrides (#187).
+    check_removed_routing_keys(scenario.raw.get("routing"))
     seed = seed if seed is not None else scenario.seed
     if reroute_config is not None and reroute_config.cost_config is None:
         reroute_config = replace(

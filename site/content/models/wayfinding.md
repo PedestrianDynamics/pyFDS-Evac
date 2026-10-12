@@ -363,7 +363,7 @@ favour no exit for it (`FAC_DOOR_OLD` at `evac.f90:16591`, `:16685`, `:16734`;
 current exit
 ([#754](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/754), decided
 no). Only the exit-switch anchor and the gate scan hold the agent on its
-default exit, and the return lockout counts it as the exit left. In the
+default exit. In the
 queue tally, a default-route agent counts at its default exit; under the opt-in
 modes an agent with no known exit counts nowhere.
 

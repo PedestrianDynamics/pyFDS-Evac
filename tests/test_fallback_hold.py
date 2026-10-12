@@ -164,32 +164,15 @@ def _reroute(graph, config, rs, smoke, fed=None, target=None, time_s=5.0):
 
 
 @pytest.mark.parametrize("rule", ["tau", "hold"])
-def test_lethal_current_route_overrides_the_return_lockout(rule):
+def test_lethal_current_route_is_fled_between_refused_routes(rule):
     """The agent left east for west 1 s ago; west turns lethal.
 
-    Both routes stay refused and the return to east is inside the 10 s
-    lockout. Must-flee orders first, so the agent goes back to east under
-    hold too.
+    Both routes stay refused. Must-flee orders first, so the agent goes
+    back to east under hold too.
     """
-    rs = AgentRouteState(
-        current_exit="west",
-        current_path=["spawn", "west"],
-        refused_switch_from="east",
-        refused_switch_time_s=4.0,
-    )
+    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
     decision = _reroute(golden._star2(), _config(rule), rs, SMOKE, LETHAL_WEST)
     assert decision == ("east", "fallback")
-
-
-def test_lockout_holds_without_a_lethal_route():
-    """Control for the test above: no dose, tau rule, the lockout holds."""
-    rs = AgentRouteState(
-        current_exit="west",
-        current_path=["spawn", "west"],
-        refused_switch_from="east",
-        refused_switch_time_s=4.0,
-    )
-    assert _reroute(golden._star2(), _config("tau"), rs, SMOKE) == ("stay", None)
 
 
 @pytest.mark.parametrize("rule", ["tau", "hold"])

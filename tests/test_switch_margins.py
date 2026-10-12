@@ -19,7 +19,6 @@ _COST_MARGINS = {
     "tau_deadband": 0.12,
     "fed_return_margin": 0.87,
     "fallback_switch_margin": 0.23,
-    "fallback_return_lockout_s": 7.5,
     "current_exit_discount": 0.83,
     "clean_exit_margin": 0.14,
     "path_switch_anchor": 0.86,
@@ -36,7 +35,6 @@ def _distinct_config() -> RerouteConfig:
 def test_view_lists_each_margin_once_in_audit_order():
     names = [m.name for m in rg._SWITCH_MARGINS]
     assert names == [
-        "fallback_return_lockout_s",
         "fed_return_margin",
         "path_switch_anchor",
         "fallback_switch_margin",
@@ -56,7 +54,6 @@ def test_code_defaults_are_unchanged():
         "fed_return_margin": 0.9,
         "path_switch_anchor": 0.9,
         "fallback_switch_margin": 0.2,
-        "fallback_return_lockout_s": 10.0,
         "default_exit_anchoring": None,
         "current_exit_discount": 0.9,
         "exit_switch_anchor": 0.9,
@@ -180,7 +177,6 @@ def test_only_the_routing_block_margins_are_scenario_keys():
         "fed_return_margin",
         "path_switch_anchor",
         "fallback_switch_margin",
-        "fallback_return_lockout_s",
         "current_exit_discount",
         "exit_switch_anchor",
         "clean_exit_margin",
@@ -210,10 +206,22 @@ _RANGES = {
 }
 
 
-def test_every_routing_margin_but_the_lockout_has_a_range():
+def test_every_routing_margin_has_a_range():
     keys = {m.name for m in rg._SWITCH_MARGINS if m.routing_key}
-    assert keys - set(_RANGES) == {"fallback_return_lockout_s"}
+    assert keys == set(_RANGES)
     assert rg._MARGIN_RANGES == _RANGES
+
+
+@pytest.mark.parametrize("value", [10.0, 0.0, None])
+def test_the_removed_lockout_key_is_an_error(value):
+    """A scenario that still sets fallback_return_lockout_s stops (#187)."""
+    with pytest.raises(
+        ValueError, match=r"^routing\.fallback_return_lockout_s was removed in #187"
+    ):
+        RouteCostConfig.from_routing_params({"fallback_return_lockout_s": value})
+    issue = routing_issue({"routing": {"fallback_return_lockout_s": value}})
+    assert issue is not None
+    assert "removed in #187" in issue.message
 
 
 @pytest.mark.parametrize(
@@ -302,7 +310,6 @@ _POSITIONAL_FIELDS = (
     "anticipate",
     "foresight_horizon_s",
     "fallback_switch_margin",
-    "fallback_return_lockout_s",
     "fallback_rule",
 )
 

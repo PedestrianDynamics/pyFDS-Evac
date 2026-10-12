@@ -28,8 +28,6 @@ from pyfds_evac.core.route_graph import (
     RouteCost,
     RouteCostConfig,
     _apply_fallback,
-    _return_locked,
-    _select_candidate,
     evaluate_and_reroute,
     policy_for,
 )
@@ -169,12 +167,13 @@ def test_swapped_taus_inside_the_margin_do_not_flicker(model):
         _assert_decision(rival, current, switch=False, model=model)
 
 
-# ── Return lockout (#458) ─────────────────────────────────────────────
+# ── Return between two refused routes (#187 A1) ──────────────────────
 #
 # Agent 22's pattern on the t_junction FDS deck, on the two-arm star: a
 # fallback switch east -> west between two refused routes, then the smoke
-# swings so that east's tau is clearly lower again. The return is blocked
-# for fallback_return_lockout_s after the first switch.
+# swings so that east's tau is clearly lower again. Until #187 a return
+# lockout (fallback_return_lockout_s, #458) held the agent on west for
+# 10 s; now the tau rule alone decides, and the agent goes straight back.
 
 _EAST_SMOKY = golden.ArmField({"west": 0.4, "east": 2.0})
 _WEST_SMOKY = golden.ArmField({"west": 2.0, "east": 0.4})
@@ -184,11 +183,8 @@ _EAST_CLEAR = golden.ArmField({"west": 2.0})
 class _Agent:
     """One agent on the star, heading east, evaluated call by call."""
 
-    def __init__(self, lockout: float | None = None) -> None:
-        cost = golden._gate()
-        if lockout is not None:
-            cost = replace(cost, fallback_return_lockout_s=lockout)
-        self.config = RerouteConfig(cost_config=cost)
+    def __init__(self) -> None:
+        self.config = RerouteConfig(cost_config=golden._gate())
         self.graph = golden._star2()
         self.wait_info = golden._wait_info(
             self.graph, "spawn", CURRENT, path_choices={}, state="to_target"
@@ -210,101 +206,31 @@ class _Agent:
         return self.state.current_exit
 
 
-def _left_east_at(time_s: float, lockout: float | None = None) -> _Agent:
-    agent = _Agent(lockout)
+def _left_east_at(time_s: float) -> _Agent:
+    agent = _Agent()
     assert agent.evaluate(time_s, _EAST_SMOKY) == RIVAL
-    assert agent.state.refused_switch_from == CURRENT
     return agent
 
 
-def test_default_lockout_is_ten_seconds():
-    assert RouteCostConfig().fallback_return_lockout_s == 10.0
-    assert RouteCostConfig.from_routing_params({}).fallback_return_lockout_s == 10.0
-
-
-def test_refused_return_within_the_lockout_is_blocked():
+def test_refused_return_follows_the_tau_rule_at_once():
+    """2 s after leaving east, east's tau is clearly lower: the agent returns."""
     agent = _left_east_at(5.0)
-    assert agent.evaluate(7.0, _WEST_SMOKY) == RIVAL
-    assert agent.evaluate(15.0, _WEST_SMOKY) == RIVAL  # 10 s: still inside
+    assert agent.evaluate(7.0, _WEST_SMOKY) == CURRENT
 
 
-def test_refused_return_after_the_lockout_is_allowed():
-    agent = _left_east_at(5.0)
-    assert agent.evaluate(15.5, _WEST_SMOKY) == CURRENT
-
-
-def test_return_to_a_feasible_route_is_never_blocked():
+def test_return_to_a_feasible_route_is_taken():
     agent = _left_east_at(5.0)
     assert agent.evaluate(7.0, _EAST_CLEAR) == CURRENT
 
 
-def test_zero_lockout_restores_the_plain_rule():
-    agent = _left_east_at(5.0, lockout=0.0)
-    assert agent.evaluate(7.0, _WEST_SMOKY) == CURRENT
-
-
-def test_a_switch_to_a_feasible_route_clears_the_record():
-    """The clean return leaves no lockout behind (reset)."""
-    agent = _left_east_at(5.0)
-    assert agent.evaluate(7.0, _EAST_CLEAR) == CURRENT
-    assert agent.state.refused_switch_from is None
-    assert agent.state.refused_switch_time_s == -math.inf
-
-
-def test_a_departure_to_a_feasible_route_sets_no_lockout():
-    """Only a switch between two refused routes arms the lockout.
-
-    East is refused and west clear at 5 s: the agent leaves east for a
-    feasible west. At 7 s both are refused and east is clearly cleaner, so
-    the agent may go straight back.
-    """
-    agent = _Agent()
-    assert agent.evaluate(5.0, golden.ArmField({"east": 2.0})) == RIVAL
-    assert agent.state.refused_switch_from is None
-    assert agent.evaluate(7.0, _WEST_SMOKY) == CURRENT
-
-
-def _locked_state() -> AgentRouteState:
-    """An agent on west that left east at 5 s, between two refused routes."""
-    return AgentRouteState(
-        current_exit=RIVAL, refused_switch_from=CURRENT, refused_switch_time_s=5.0
-    )
-
-
-@pytest.mark.parametrize("model", MODELS)
-def test_lockout_needs_the_current_route_refused(model):
-    cfg = RerouteConfig(cost_config=_config(model))
-    east = _refused(CURRENT, tau=10.0, rank_cost=1.0)
-    west = _refused(RIVAL, tau=40.0, rank_cost=20.0)
-    assert _return_locked(east, west, _locked_state(), 7.0, cfg)
-    feasible_west = replace(west, feasible=True, rejected=False)
-    assert not _return_locked(east, feasible_west, _locked_state(), 7.0, cfg)
-
-
-@pytest.mark.parametrize("model", MODELS)
-def test_lockout_yields_to_must_flee(model):
-    cfg = RerouteConfig(cost_config=_config(model))
-    east = _refused(CURRENT, tau=10.0, rank_cost=1.0)
-    lethal_west = replace(
-        _refused(RIVAL, tau=40.0, rank_cost=20.0),
-        rejection_reason="FED_max 1.2 > 1.0",
-        violation_kinds=("fed",),
-    )
-    assert not _return_locked(east, lethal_west, _locked_state(), 7.0, cfg)
-
-
-def test_the_scan_skips_a_locked_return_for_a_third_exit():
-    """Gate scan: the locked abandoned exit leads, a third exit is taken."""
-    cfg = RerouteConfig(cost_config=_config("gate"))
-    east = _refused(CURRENT, tau=10.0, rank_cost=1.0)
-    north = _refused("north", tau=12.0, rank_cost=2.0)
-    west = _refused(RIVAL, tau=40.0, rank_cost=20.0)
-    ranked = [east, north, west]
-    assert _select_candidate(ranked, _locked_state(), cfg).exit_id == CURRENT
-    assert _select_candidate(ranked, _locked_state(), cfg, 7.0).exit_id == "north"
-
-
-@pytest.mark.parametrize("value", [-1.0, math.nan, "10", True])
-def test_lockout_must_be_a_non_negative_number(value):
-    with pytest.raises(ValueError, match="fallback_return_lockout_s"):
-        RouteCostConfig.from_routing_params({"fallback_return_lockout_s": value})
+def test_the_lockout_is_gone():
+    """No field, no route-state record, and the scenario key is refused."""
+    assert not hasattr(RouteCostConfig(), "fallback_return_lockout_s")
+    assert not hasattr(AgentRouteState(), "refused_switch_from")
+    assert not hasattr(AgentRouteState(), "refused_switch_time_s")
+    with pytest.raises(
+        ValueError, match=r"^routing\.fallback_return_lockout_s was removed in #187"
+    ):
+        RouteCostConfig.from_routing_params({"fallback_return_lockout_s": 10.0})
+    with pytest.raises(ValueError, match="removed in #187"):
+        RouteCostConfig.from_routing_params({"fallback_return_lockout_s": 0.0})

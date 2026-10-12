@@ -219,7 +219,6 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused |
 | `anticipate` | `true` | Read every smoke sample on the path to each exit at the time the agent would reach it; the path search uses the smoke at decision time. No FDS+Evac counterpart |
 | `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
-| `fallback_return_lockout_s` | `10.0` | After an exit switch between two refused routes, how long a switch straight back to the exit just left, again between two refused routes, is blocked, in s; 0 turns it off ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
 | `fallback_switch_margin` | `0.2` | Between two refused routes, a rival's `tau` must be more than this fraction below the current exit's; differences up to 1e-9 are ties, which hold. Before 0.4.0 it compared worst extinction `k_max_route` ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
 | `fed_return_margin` | `0.9` | A rival exit is refused above this fraction of `fed_rejection_threshold` |
 | `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's; an explicit `RerouteConfig.exit_switch_anchor` overrides it |
@@ -275,7 +274,7 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2`, which FDS+Evac applies only when no door is smoke-free (tier 4, `evac.f90:16803`); the gate applies it in every ordering |
 | `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
 | `exit_switch_anchor` = 0.9, `path_switch_anchor` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
-| `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `fallback_return_lockout_s`, `fed_return_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
+| `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `fed_return_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
 | `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
 | `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
 
@@ -309,10 +308,7 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    one step: a route the agent must flee never displaces one it need not flee,
    and always yields to one, whatever their `tau`
    ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)).
-   A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked while at most `fallback_return_lockout_s` (10 s) have passed since the first switch, and allowed after; a feasible route on either side, must-flee and a third exit are not blocked (`_return_locked`). The lockout was added while route smoke
-   was sampled at steps that could pass over a narrow plume core; 0.5.0 reads
-   it per grid cell ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)),
-   and the lockout stays as a guard against near-ties of `tau`.
+   A 10 s return lockout (`fallback_return_lockout_s`, [#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) that held a switch straight back between two refused routes was removed in [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187): it was added while route smoke was sampled at steps that could pass over a narrow plume core, which 0.5.0 reads per grid cell ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)); audited at `c2c2081f` it bound only on `t_junction` with pre-movement, suppressed about 34 fallback switches per run between the two refused routes and delayed about 100 returns per run from within 10 s to 11–12 s, with exit shares, FED and RSET unchanged in every seed at 60 s pre-movement and shifted within seed noise at 30 s. No behavioural evidence supports a time lockout.
 4. Otherwise the cost model decides (`improvement`):
    - **Gate** (`GatePolicy.improvement`): a clean candidate leaves a dirty
      exit; an infeasible candidate needs `rank_cost` below

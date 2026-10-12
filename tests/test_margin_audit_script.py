@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sqlite3
 import sys
 from pathlib import Path
@@ -332,7 +333,7 @@ def _write_audit(folder: Path, base: list[float], off: list[float]) -> None:
     (folder / "manifest.json").write_text(
         json.dumps(
             {
-                "margin": "fallback_return_lockout_s",
+                "margin": "tau_deadband",
                 "off_value": 0.0,
                 "commit": "c" * 40,
                 "dirty": [],
@@ -346,7 +347,7 @@ def _write_audit(folder: Path, base: list[float], off: list[float]) -> None:
             (run / "metrics.json").write_text(
                 json.dumps(
                     {
-                        "returns_within_window": value,
+                        "returns": value,
                         "n_agents": 100,
                         "rset_last": 120.0,
                         "wall_s": 1.0,
@@ -362,14 +363,14 @@ def test_analyse_writes_the_report_with_the_outcome(audit, tmp_path, capsys):
     code = audit.main(["analyse", str(folder), "--primary-deck", "l_corridor_gate"])
     assert code == 0
     report = json.loads((folder / "report.json").read_text())
-    assert report["primary_metric"] == "returns_within_window"
+    assert report["primary_metric"] == "returns"
     assert report["primary"]["p"] == pytest.approx(2 / 64)
     assert report["primary"]["effect"] == pytest.approx(4.0)
     assert report["primary"]["floor"] == pytest.approx(2.0)
     assert report["outcome"].startswith("keep")
     text = (folder / "report.md").read_text()
     assert "**Outcome: keep" in text
-    assert "| returns_within_window | 6 | 2 | 6 | 4 | 0.0312 | 2 | True |" in text
+    assert "| returns | 6 | 2 | 6 | 4 | 0.0312 | 2 | True |" in text
     assert "Primary deck: l_corridor_gate" in capsys.readouterr().out
 
 
@@ -401,6 +402,87 @@ def test_analyse_needs_a_metric_for_a_margin_without_a_primary(audit, tmp_path):
     assert code == 0
 
 
+def test_runs_fix_the_str_hash_seed(audit):
+    assert audit.run_env()["PYTHONHASHSEED"] == "0"
+    assert set(os.environ) - {"PYTHONHASHSEED"} <= set(audit.run_env())
+
+
+# ── Clear-air identity (C10) ──────────────────────────────────────────
+
+
+def _write_arm(folder: Path, geometry_hash: int, frame_x: float = 1.0) -> None:
+    """A clear-air run whose trajectory carries JuPedSim's geometry hash."""
+    _write_run(folder, fed=False)
+    with sqlite3.connect(folder / "trajectory.sqlite") as con:
+        con.execute("CREATE TABLE geometry(hash INTEGER, wkt TEXT)")
+        con.execute("INSERT INTO geometry VALUES (?, ?)", (geometry_hash, "POLYGON"))
+        con.execute(
+            "CREATE TABLE frame_data(frame INTEGER, geometry_hash INTEGER, x REAL)"
+        )
+        con.execute(
+            "INSERT INTO frame_data VALUES (?, ?, ?)", (0, geometry_hash, frame_x)
+        )
+
+
+def test_clear_air_compare_ignores_the_geometry_hash(audit, tmp_path):
+    _write_arm(tmp_path / "base", geometry_hash=11)
+    _write_arm(tmp_path / "off", geometry_hash=22)
+    assert audit.run_differences(tmp_path / "base", tmp_path / "off") == []
+
+
+def test_clear_air_compare_names_the_table_and_file_that_differ(audit, tmp_path):
+    _write_arm(tmp_path / "base", geometry_hash=11)
+    _write_arm(tmp_path / "off", geometry_hash=11, frame_x=2.0)
+    with (tmp_path / "off" / "exit_history.csv").open("a") as handle:
+        handle.write("3,o,2,A,True\n")
+    assert audit.run_differences(tmp_path / "base", tmp_path / "off") == [
+        "exit_history.csv",
+        "trajectory.sqlite:frame_data",
+    ]
+
+
+def test_analyse_reports_the_clear_air_gate(audit, tmp_path, capsys):
+    folder = tmp_path / "audit"
+    folder.mkdir()
+    (folder / "manifest.json").write_text(
+        json.dumps(
+            {
+                "margin": "tau_deadband",
+                "off_value": 0.0,
+                "commit": "c" * 40,
+                "dirty": [],
+            }
+        )
+    )
+    for seed in range(1, 8):
+        run = folder / "familiarity_test_full" / f"seed{seed}"
+        _write_arm(run / "base", geometry_hash=seed)
+        _write_arm(run / "off", geometry_hash=-seed, frame_x=2.0 if seed == 3 else 1.0)
+        for arm in ("base", "off"):
+            metrics = audit.run_metrics(run / arm)
+            (run / arm / "metrics.json").write_text(json.dumps(metrics))
+    code = audit.main(
+        ["analyse", str(folder), "--primary-deck", "familiarity_test_full"]
+    )
+    assert code == 0
+    report = json.loads((folder / "report.json").read_text())
+    identity = report["decks"]["familiarity_test_full"]["clear_air"]
+    assert identity == {
+        "seeds": 7,
+        "differing": {"3": ["trajectory.sqlite:frame_data"]},
+    }
+    text = (folder / "report.md").read_text()
+    assert (
+        "**Clear air: base and off differ on 1 of 7 seeds** (seed 3: trajectory.sqlite:frame_data)."
+        in text
+    )
+
+
+def test_clear_air_gate_only_for_decks_without_fds(audit, tmp_path):
+    assert audit.clear_air_identity(tmp_path, "l_corridor_gate") is None
+    assert audit.clear_air_identity(tmp_path, "unknown_deck") is None
+
+
 def test_run_refuses_an_unknown_margin_without_an_off_value(audit, capsys):
     code = audit.main(["run", "--margin", "w_smoke", "--decks", "l_corridor_gate"])
     assert code == 2
@@ -408,8 +490,7 @@ def test_run_refuses_an_unknown_margin_without_an_off_value(audit, capsys):
 
 
 def test_every_audited_margin_has_a_plan_off_value(audit):
-    assert audit.MARGINS["fallback_return_lockout_s"].off == 0.0
-    assert audit.MARGINS["fallback_return_lockout_s"].primary == "returns_within_window"
+    assert "fallback_return_lockout_s" not in audit.MARGINS  # removed, #187 A1
     assert audit.MARGINS["tau_deadband"].off == 0.0
     assert audit.MARGINS["fallback_switch_margin"].off == 0.0
     for name in ("fed_return_margin", "path_switch_anchor", "tau_return_margin"):

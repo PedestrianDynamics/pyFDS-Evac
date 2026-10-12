@@ -102,13 +102,6 @@ def test_lethal_and_smoky_current_is_left():
     assert _must_flee_rejection(west, golden._gate())
 
 
-def test_return_lockout_yields_to_a_lethal_route():
-    """P4b: the agent left east for west 5 s ago; west is now lethal."""
-    smoke = golden.ArmField({"west": 0.6, "east": 0.15})
-    locked = {"refused_switch_from": "east", "refused_switch_time_s": 0.0}
-    assert _decide(smoke, LETHAL_WEST, **locked) == ("east", "fallback")
-
-
 def test_promoted_route_keeps_its_hazard():
     """Every route lethal: the promoted one keeps its kinds and must be fled."""
     fed = golden.ArmFed({"west": 6.0, "east": 6.0})
@@ -220,13 +213,13 @@ def test_additive_impassable_smoke_is_fled(k_ave, flee):
 
 
 def test_alternating_lethal_dose_switches_every_tick():
-    """Must-flee overrides the return lockout, so a see-saw dose oscillates.
+    """A see-saw dose makes the agent flee on every tick.
 
     Both routes stay over tau (west 9.09, east 9.52: inside the 20 % margin,
     so tau alone would hold). The predicted dose alternates which exit is
     lethal: the current exit is over its limit 1.0 and the rival under its
     limit 0.9. Each tick the agent flees its current exit, back onto the one
-    it left a second ago, inside the 10 s lockout. This pins the behaviour
+    it left a second ago. This pins the behaviour
     the contract asks for; it is not a damping guarantee.
     """
     smoke = golden.ArmField({"west": 0.5, "east": 0.25})
@@ -257,8 +250,6 @@ def test_alternating_lethal_dose_switches_every_tick():
         )
         assert switch is not None
         moves.append((switch.old_exit, switch.new_exit, switch.reason))
-        assert rs.refused_switch_from == current
-        assert rs.refused_switch_time_s == time_s
     assert moves == [
         ("west", "east", "fallback"),
         ("east", "west", "fallback"),

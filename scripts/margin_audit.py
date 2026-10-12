@@ -26,11 +26,13 @@ predeclared primary deck and primary metric, runs a two-sided paired
 permutation test on the mean of d (sign flips, exact up to 20 seeds, else
 Monte-Carlo with a fixed seed), compares |mean d| with the metric's floor
 and applies the stage-2 outcome rule. The other decks and metrics are
-descriptive.
+descriptive. For a deck run in clear air the report also says whether base
+and off are identical: the histories byte for byte, the trajectory table by
+table without JuPedSim's per-process geometry hash (C10).
 
 Usage::
 
-    uv run python scripts/margin_audit.py run --margin fallback_return_lockout_s \\
+    uv run python scripts/margin_audit.py run --margin fed_return_margin \\
         --decks l_corridor_gate t_junction_pre30 [--seeds 1 2 ...] [--jobs 4]
     uv run python scripts/margin_audit.py analyse DIR --primary-deck l_corridor_gate
     uv run python scripts/margin_audit.py metrics DIR/l_corridor_gate/seed1/off
@@ -48,12 +50,14 @@ import argparse
 import csv
 import hashlib
 import json
+import os
 import shutil
 import sqlite3
 import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import closing
 from dataclasses import dataclass
 from importlib import metadata
 from pathlib import Path
@@ -73,9 +77,15 @@ ALPHA = 0.05
 MIN_SEEDS = 6
 EXACT_MAX_N = 20
 MC_DRAWS = 100_000
+# JuPedSim stores hash(wkt) of the geometry in the trajectory, Python's
+# per-process salted str hash, so two runs of one code differ there and
+# nowhere else. The runs fix the seed so the files can be byte-identical;
+# the clear-air gate skips the columns so it does not depend on that.
+GEOMETRY_HASH_COLUMNS = {"geometry": "hash", "frame_data": "geometry_hash"}
 # Switch reasons always reported, even when a run has none of them.
 REPORTED_REASONS = ("fallback", "better_path", "fed_reroute", "smoke_reroute")
-# The window of returns reported for A1; the lockout's default is 10 s.
+# The window of returns reported (returns_within_window): 10 s, the default
+# of the return lockout removed in #187 A1.
 RETURN_WINDOW_S = 10.0
 
 
@@ -87,15 +97,14 @@ class Margin:
     primary: str | None
 
 
-# Off values and primary metrics from the stage-2 plan (§3.2). A1's primary
-# is the returns within the lockout window, what the lockout targets; all
-# returns and the fallback switches are secondaries. A2's "exposure
+# Off values and primary metrics from the stage-2 plan (§3.2). A1,
+# fallback_return_lockout_s, was audited at c2c2081f and removed (#187).
+# A2's "exposure
 # co-primary" is covered by the secondary rule: fed_p95 and fed_ge_1 are in
 # SECONDARY, so a distinct rise in exposure blocks "remove". A margin
 # without a primary metric is not in the audit order; ``analyse`` then
 # needs ``--metric``.
 MARGINS: dict[str, Margin] = {
-    "fallback_return_lockout_s": Margin(0.0, "returns_within_window"),
     "fed_return_margin": Margin(1.0, "switches_per_agent:fed_reroute"),
     "path_switch_anchor": Margin(1.0, "switches_per_agent:better_path"),
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),
@@ -300,6 +309,11 @@ def run_command(
     return argv + list(deck.extra_args)
 
 
+def run_env() -> dict[str, str]:
+    """The environment of a run: this one with the str hash seed fixed."""
+    return {**os.environ, "PYTHONHASHSEED": "0"}
+
+
 @dataclass(frozen=True)
 class Job:
     deck: str
@@ -325,6 +339,7 @@ def _run_job(
         code = subprocess.call(
             run_command(deck, root, scenario, job.seed, folder, costs),
             cwd=REPO,
+            env=run_env(),
             stdout=log,
             stderr=subprocess.STDOUT,
         )
@@ -571,6 +586,73 @@ def run_metrics(folder: Path) -> dict:
     return metrics
 
 
+# ── Clear-air identity ────────────────────────────────────────────────
+
+
+def _tables(path: Path) -> dict[str, tuple[list[str], list[tuple]]]:
+    """Every table of the trajectory *path*, without the geometry hash."""
+    with closing(sqlite3.connect(f"file:{path}?mode=ro", uri=True)) as con:
+        names = [
+            row[0]
+            for row in con.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+            )
+        ]
+        tables = {}
+        for name in names:
+            skip = GEOMETRY_HASH_COLUMNS.get(name)
+            columns = [r[1] for r in con.execute(f"PRAGMA table_info({name})")]
+            kept = [c for c in columns if c != skip]
+            quoted = ", ".join(f'"{c}"' for c in kept)
+            tables[name] = (
+                kept,
+                con.execute(f"SELECT {quoted} FROM {name}").fetchall(),
+            )
+    return tables
+
+
+def run_differences(a: Path, b: Path) -> list[str]:
+    """What differs between the runs *a* and *b*; empty when nothing does.
+
+    The histories must be byte-identical; the trajectory is compared table
+    by table, every column but the geometry hash (GEOMETRY_HASH_COLUMNS).
+    """
+    report = [
+        name
+        for name in ("route_history.csv", "exit_history.csv")
+        if (a / name).read_bytes() != (b / name).read_bytes()
+    ]
+    tables_a, tables_b = (
+        _tables(a / "trajectory.sqlite"),
+        _tables(b / "trajectory.sqlite"),
+    )
+    report += [
+        f"trajectory.sqlite:{name}"
+        for name in sorted(set(tables_a) | set(tables_b))
+        if tables_a.get(name) != tables_b.get(name)
+    ]
+    return report
+
+
+def clear_air_identity(folder: Path, deck: str) -> dict | None:
+    """Per seed, what differs between the arms of a clear-air *deck* (C10).
+
+    A margin must not change a run without smoke; None for a deck with an
+    FDS run or one the harness does not know.
+    """
+    known = DECKS.get(deck)
+    if known is None or known.fds_dir is not None:
+        return None
+    pairs = _pairs(folder, deck)
+    differing = {}
+    for seed in pairs:
+        arms = [folder / deck / f"seed{seed}" / arm for arm in ARMS]
+        found = run_differences(*arms)
+        if found:
+            differing[seed] = found
+    return {"seeds": len(pairs), "differing": differing}
+
+
 # ── Analysis ──────────────────────────────────────────────────────────
 
 
@@ -742,6 +824,7 @@ def _analyse(args: argparse.Namespace) -> int:
         report["decks"][deck] = {
             "n": len(pairs),
             "results": [judge(m, pairs, args.mc_seed) for m in metrics],
+            "clear_air": clear_air_identity(folder, deck),
         }
     primary = _find(report["decks"][args.primary_deck]["results"], metric)
     secondary = [
@@ -794,6 +877,8 @@ def _report_markdown(report: dict) -> str:
         ]
     for deck, data in report["decks"].items():
         lines += [f"## {deck} (n = {data['n']})", ""]
+        if data.get("clear_air"):
+            lines += [_clear_air_line(data["clear_air"]), ""]
         lines += [
             "| metric | n | base | off | effect | p | floor | distinct |",
             "|---|---|---|---|---|---|---|---|",
@@ -808,6 +893,18 @@ def _report_markdown(report: dict) -> str:
             )
         lines.append("")
     return "\n".join(lines)
+
+
+def _clear_air_line(identity: dict) -> str:
+    """One line on the clear-air gate: identical, or which seeds differ."""
+    differing = identity["differing"]
+    if not differing:
+        return f"Clear air: base and off identical on {identity['seeds']} seeds."
+    where = "; ".join(f"seed {s}: {', '.join(d)}" for s, d in differing.items())
+    return (
+        f"**Clear air: base and off differ on {len(differing)} of "
+        f"{identity['seeds']} seeds** ({where})."
+    )
 
 
 def _fmt(value) -> str:
