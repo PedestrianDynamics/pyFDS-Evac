@@ -860,6 +860,25 @@ _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
 }
 
 
+# Routing keys that no longer exist, each with the error a scenario that
+# still sets it gets. Unknown keys are otherwise ignored, so a stale key
+# would silently do nothing; run_scenario and from_routing_params both
+# check, since an explicit cost config bypasses the factory.
+REMOVED_ROUTING_KEYS: dict[str, str] = {
+    "fallback_return_lockout_s": (
+        "routing.fallback_return_lockout_s was removed in #187: the return "
+        "lockout (#458) no longer exists; delete the key"
+    ),
+}
+
+
+def check_removed_routing_keys(routing: Mapping[str, object] | None) -> None:
+    """Raise ValueError when the scenario's *routing* block sets a removed key."""
+    for key, message in REMOVED_ROUTING_KEYS.items():
+        if routing and key in routing:
+            raise ValueError(message)
+
+
 def _check_margin(
     label: str, value: object, closed_low: bool, closed_high: bool
 ) -> None:
@@ -1050,11 +1069,7 @@ class RouteCostConfig:
         opening choice under different weights than the same run with it on.
         """
         routing = routing or {}
-        if "fallback_return_lockout_s" in routing:
-            raise ValueError(
-                "routing.fallback_return_lockout_s was removed in #187: the "
-                "return lockout (#458) no longer exists; delete the key"
-            )
+        check_removed_routing_keys(routing)
         return cls(
             cost_model=routing.get("cost_model", RouteCostConfig.cost_model),
             clean_extinction_threshold=routing.get(

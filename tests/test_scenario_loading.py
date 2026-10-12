@@ -13,6 +13,7 @@ import zipfile
 import pytest
 
 from pyfds_evac.core import simulation_init
+from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 from pyfds_evac.core.scenario import (
     Scenario,
     _distribution_agent_budget,
@@ -370,6 +371,19 @@ def test_migration_ignores_weights_naming_an_unknown_journey():
     )
     _migrate_journeys_v2(deck)
     assert "journeys" not in deck
+
+
+def test_run_rejects_the_removed_lockout_key_with_an_explicit_cost_config():
+    """The guard in from_routing_params is bypassed by a cost config; run checks."""
+    deck = _deck()
+    deck["routing"] = {"fallback_return_lockout_s": 10.0}
+    config = RerouteConfig(cost_config=RouteCostConfig())
+    with pytest.raises(
+        ValueError, match=r"^routing\.fallback_return_lockout_s was removed in #187"
+    ):
+        run_scenario(_scenario(deck), seed=1, reroute_config=config)
+    with pytest.raises(ValueError, match="removed in #187"):
+        run_scenario(_scenario(deck), seed=1)
 
 
 @pytest.mark.parametrize(
