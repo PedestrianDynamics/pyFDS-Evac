@@ -23,9 +23,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `RerouteConfig.exit_switch_anchor` is `float | None`, default
   `None`: unset, the run uses the cost model's `exit_switch_anchor`,
   so the `routing` key reaches the reroute pass and the closure
-  re-choice; set, it overrides the key.
-  `RerouteConfig.resolved_exit_switch_anchor` is the value applied,
-  and the manifest's `rerouting.exit_switch_anchor` records it (#187).
+  re-choice; set, it overrides the key. Code that read
+  `RerouteConfig().exit_switch_anchor` as 0.9 now gets `None`; the
+  value applied is `RerouteConfig.resolved_exit_switch_anchor`, so read
+  that instead. The manifest's `rerouting.exit_switch_anchor` records
+  it (#187).
 - The switching margins are range-checked: `fed_return_margin`,
   `exit_switch_anchor`, `path_switch_anchor`, `tau_return_margin`,
   `current_exit_discount` and `clean_exit_margin` must be in (0, 1],

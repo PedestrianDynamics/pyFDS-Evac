@@ -5,6 +5,7 @@ from __future__ import annotations
 import heapq
 import logging
 import math
+import numbers
 import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
@@ -864,12 +865,14 @@ def _check_margin(
     """Raise ValueError unless *value* is a real number in the margin's range."""
     low = "[" if closed_low else "("
     high = "]" if closed_high else ")"
+    # The bounds come before isfinite, so a huge int is refused here
+    # rather than overflowing in the float conversion.
     ok = (
         not isinstance(value, bool)
-        and isinstance(value, (int, float))
+        and isinstance(value, numbers.Real)
+        and (0 <= value if closed_low else 0 < value)
+        and (value <= 1 if closed_high else value < 1)
         and math.isfinite(value)
-        and (0.0 <= value if closed_low else 0.0 < value)
-        and (value <= 1.0 if closed_high else value < 1.0)
     )
     if not ok:
         raise ValueError(f"{label} must be a number in {low}0, 1{high}, got {value!r}")
@@ -997,6 +1000,21 @@ class RouteCostConfig:
     # evaluations (#653); this keeps that from reversing the agent. 0 turns
     # it off.
     fallback_return_lockout_s: float = 10.0
+    # Which exit an agent keeps when every route is refused (#696). "tau":
+    # a refused rival displaces the current exit when its optical depth is
+    # clearly lower (fallback_switch_margin). "hold": the agent keeps its
+    # exit between refused routes and leaves only for a feasible route or
+    # when the current route must be fled (#128); fallback_switch_margin
+    # and fallback_return_lockout_s are then inert. The first choice with
+    # every route refused is the lowest tau under both. Experimental and
+    # code-level only: from_routing_params does not read it, so no scenario
+    # key sets it; measured on t_junction alone (docs/routing.md). Must be
+    # fled means a FED violation under either model: the fallback never sees
+    # a smoke must-flee, so under "hold" smoke alone never moves the agent
+    # between refused routes (#750, #751).
+    fallback_rule: str = "tau"
+    # The two fields below come last so that every earlier positional slot
+    # of this public dataclass keeps its place.
     # Anchoring for switching to a *different* exit: a rival exit is adopted
     # only if its rank_cost is below this fraction of the current exit's,
     # i.e. clearly better, not marginally. A veto after ranking. It equals
@@ -1013,19 +1031,6 @@ class RouteCostConfig:
     # noise. Ours: FDS+Evac compares no two paths to one exit, so it has no
     # counterpart, and nothing ties it to exit_switch_anchor. Not calibrated.
     path_switch_anchor: float = 0.9
-    # Which exit an agent keeps when every route is refused (#696). "tau":
-    # a refused rival displaces the current exit when its optical depth is
-    # clearly lower (fallback_switch_margin). "hold": the agent keeps its
-    # exit between refused routes and leaves only for a feasible route or
-    # when the current route must be fled (#128); fallback_switch_margin
-    # and fallback_return_lockout_s are then inert. The first choice with
-    # every route refused is the lowest tau under both. Experimental and
-    # code-level only: from_routing_params does not read it, so no scenario
-    # key sets it; measured on t_junction alone (docs/routing.md). Must be
-    # fled means a FED violation under either model: the fallback never sees
-    # a smoke must-flee, so under "hold" smoke alone never moves the agent
-    # between refused routes (#750, #751).
-    fallback_rule: str = "tau"
 
     def __post_init__(self) -> None:
         """Reject an unknown cost_model or fallback_rule, and a bad margin."""
@@ -2059,6 +2064,8 @@ def _clean_limit(
     is_current = current_exit is not None and exit_id == current_exit
     clean_limit = config.clean_extinction_threshold
     if is_current:
+        # The guard is unreachable while clean_exit_margin is checked to be
+        # in (0, 1]; kept so the division stays as it was.
         clean_limit /= max(config.clean_exit_margin, 1e-9)
     return clean_limit
 

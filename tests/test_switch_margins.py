@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 import ast
+import dataclasses
 import inspect
 import math
 
+import numpy as np
 import pytest
 
+from pyfds_evac.config.rules import routing_issue
 from pyfds_evac.core import route_graph as rg
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 
@@ -260,3 +263,76 @@ def test_out_of_range_override_is_an_error(value):
         ValueError, match=r"^RerouteConfig\.exit_switch_anchor must be a number in "
     ):
         RerouteConfig(exit_switch_anchor=value)
+
+
+# The fields of RouteCostConfig in order before the Q7 keys (fb06761f).
+_POSITIONAL_FIELDS = (
+    "w_smoke",
+    "w_fed",
+    "w_queue",
+    "fed_rejection_threshold",
+    "fed_return_margin",
+    "visibility_extinction_threshold",
+    "impassable_extinction_threshold",
+    "sampling_step_m",
+    "base_speed_m_per_s",
+    "alpha",
+    "beta",
+    "min_speed_factor",
+    "default_exit_capacity",
+    "cost_model",
+    "clean_extinction_threshold",
+    "clean_exit_margin",
+    "tau_max",
+    "tau_deadband",
+    "current_exit_discount",
+    "tau_return_margin",
+    "anticipate",
+    "foresight_horizon_s",
+    "fallback_switch_margin",
+    "fallback_return_lockout_s",
+    "fallback_rule",
+)
+
+
+def test_positional_slots_are_unchanged():
+    """The Q7 fields come last; every earlier positional argument keeps its slot."""
+    names = [f.name for f in dataclasses.fields(RouteCostConfig)]
+    assert tuple(names[: len(_POSITIONAL_FIELDS)]) == _POSITIONAL_FIELDS
+    values = [getattr(RouteCostConfig(), name) for name in _POSITIONAL_FIELDS]
+    values[-1] = "hold"
+    built = RouteCostConfig(*values)
+    assert built.fallback_rule == "hold"
+    assert (built.exit_switch_anchor, built.path_switch_anchor) == (0.9, 0.9)
+    assert [f.name for f in dataclasses.fields(RerouteConfig)] == [
+        "reevaluation_interval_s",
+        "cost_config",
+        "exit_switch_anchor",
+    ]
+
+
+@pytest.mark.parametrize("key", sorted(_RANGES))
+def test_huge_int_is_a_range_error_not_an_overflow(key):
+    with pytest.raises(ValueError, match=rf"^routing\.{key} must be a number in "):
+        RouteCostConfig.from_routing_params({key: 10**400})
+
+
+def test_huge_int_is_a_configuration_issue():
+    issue = routing_issue({"routing": {"fed_return_margin": 10**400}})
+    assert issue is not None
+    assert issue.message.startswith("routing.fed_return_margin must be a number in ")
+
+
+@pytest.mark.parametrize(
+    "value", [np.int64(1), np.float32(0.9), np.float64(0.5), np.int32(1)]
+)
+def test_numpy_scalars_in_range_are_accepted(value):
+    built = RouteCostConfig(exit_switch_anchor=value, path_switch_anchor=value)
+    assert built.exit_switch_anchor == value
+    assert RerouteConfig(exit_switch_anchor=value).resolved_exit_switch_anchor == value
+
+
+@pytest.mark.parametrize("value", [np.float64(1.5), np.int64(0), np.bool_(True)])
+def test_numpy_scalars_out_of_range_are_refused(value):
+    with pytest.raises(ValueError, match=r"routing\.exit_switch_anchor"):
+        RouteCostConfig(exit_switch_anchor=value)
