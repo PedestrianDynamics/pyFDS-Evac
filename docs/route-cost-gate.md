@@ -564,7 +564,7 @@ it harder to *switch onto*, in both directions. Four constants, three of them
 acting on the same quantity at three different stages. A reviewer will
 reasonably ask why, and no run isolates any one of them.
 
-**Monotonicity holds on `world100` and does not on `l_corridor`.** The
+**Monotonicity held on `world100` and did not on `l_corridor`.** The
 requirement is that an agent never returns to an exit it has abandoned. At
 `0d9bf79` and `9f55f6e`:
 
@@ -581,9 +581,15 @@ regressed**, from no returns to 34, and the far-exit share did not move to pay
 for it. The figures come from the commit messages of `0d9bf79`, `9f55f6e` and
 `25a6f8f`; no CSV for them is in the results folder. `25a6f8f` reports only
 `l_corridor`, so the `world100` column for it is unverified rather than
-measured.
+measured. The deck and seed of those runs were not recorded, so the table
+cannot be reproduced one-to-one. Re-measured at `c2c2081f` with the
+`scripts/margin_audit.py` decks: `l_corridor_gate` on `fire_1MW_west`
+(seeds 1–20) gives 1 return in 20 runs (seed 15, 1 s after leaving, to a
+feasible route) and 37–40 of 100 agents (37–40 %) on the far exit; `world100_stream_east`
+sends 28–31 agents to `jps-exits_3` and `world100_stream_oval` 28–35 to
+`jps-exits_1` (seeds 100–109), with no returns on either.
 
-**Most of `l_corridor`'s 34 returns are not oscillation.** Making the anchor's
+**Most of `l_corridor`'s 34 returns at `25a6f8f` were not oscillation.** Making the anchor's
 `tau` deadband symmetric at `25a6f8f` changed nothing measurable, and that is
 the finding: of the 34 returns, **29 have the returned-to route cleaner by more
 than the deadband** — median 0.95 of optical depth against a margin of 0.6 — so
@@ -810,7 +816,7 @@ middle of the vertical leg and the two routes are 26 m and 46 m, a 1.8x ratio;
 before that it sat 3 m from the junction and they were 11 m and 58 m, 5.3x —
 a spread wide enough that no smoke could justify the detour. At `a98f8bb` exit
 shares were unchanged across the move at 84 / 16, with 4 switches and no agent
-returning to an abandoned exit; at `7a3617d` they are 82 / 18, with 55 switches
+returning to an abandoned exit; at `7a3617d` they were 82 / 18, with 55 switches
 and 34 returns across 14 agents. **The numbers below predate the move**, so read
 their route lengths against the old geometry. Results are in
 `<sciebo>/fds-evac-data/l_corridor/evac/RESULTS.md` (100 agents, seed 1,
@@ -851,7 +857,8 @@ the results folder.
 returns to an abandoned exit to 51, then 34 at `9f55f6e`, with the far-exit
 share unchanged at about 18. See
 [Churn protection](#churn-protection) for the full table. No archived result set
-exists for either; both come from the commit messages.
+exists for either; both come from the commit messages, and the deck and seed
+were not recorded. The values re-measured at `c2c2081f` follow that table.
 
 **Read the headline with its caveat.** Counted directly from `f_gate_costs.csv`
 (3498 rows, the `b3babc0` run), the refusals break down as:

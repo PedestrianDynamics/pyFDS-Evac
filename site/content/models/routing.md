@@ -69,12 +69,17 @@ sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`). FDS+Evac applies
 `FAC_DOOR_OLD2` only when no door is smoke-free (its tier 4, `evac.f90:16803`);
 the gate applies the discount in every ordering.
 
-**Measured, with the limitation stated.** Ranking on `tau` sends `world100`'s
-agents to the far clean exit without returns, while on `l_corridor` agents
-return to exits they abandoned, following a field that reverses; what is
+**Measured, with the limitation stated.** When ranking on `tau` landed
+(`0d9bf79`, `9f55f6e`), it sent 39 of `world100`'s agents to the far clean
+exit without returns, while on `l_corridor` agents returned to abandoned
+exits (34 at `9f55f6e`, 29 of them following a field that reversed); what is
 missing is commitment
-([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)). The
-counts are in [docs/route-cost-gate.md](/docs/route-cost-gate.md#churn-protection)
+([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)). Those
+counts come from the commit messages; the deck and seed were not recorded.
+Re-measured at `c2c2081f` on the `scripts/margin_audit.py` decks, `l_corridor`
+gives 1 return in 20 seeds and `world100` none; the history and the
+re-measurement are in
+[docs/route-cost-gate.md](/docs/route-cost-gate.md#churn-protection)
 and [Known limitations](/docs/route-cost-gate.md#known-limitations).
 
 **This is a departure from FDS+Evac, not a reproduction of it.** The threshold
