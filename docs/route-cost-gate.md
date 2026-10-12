@@ -339,10 +339,12 @@ current exit's `tau` is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.
 
 **Its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`** (`evac.f90:1572`), which
-is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16626`
-and `:16803` — and at `:16803` that `L2_tmp` is the `tau/6` of the tier-4 test,
-i.e. the same quantity, discounted in the same place, inside the loop that
-minimises it to pick a door. The shipped comment on `tau_of` in `route_graph.py`
+is applied as `L2_tmp = FAC_DOOR_OLD2 * L2_tmp` to the current door at `:16803`,
+where `L2_tmp` is the `tau/6` of the tier-4 test, i.e. the same quantity,
+discounted inside the loop that minimises it to pick a door. FDS+Evac reaches
+`:16803` only when no door is smoke-free (tier 4); the gate applies the
+discount in every ordering. (`:16626` multiplies `L2_tmp` by `FAC_DOOR_OLD2`
+too, but in the known-door memory update at `:16613–16643`, outside ranking.) The shipped comment on `tau_of` in `route_graph.py`
 cites that provenance correctly since `9508181`; an earlier version cited
 `FAC_DOOR_WAIT`, which is at `:1570` and discounts the current door's *travel
 time* (`T_tmp`), not its smoke. `FAC_DOOR_WAIT` is still the correct citation for

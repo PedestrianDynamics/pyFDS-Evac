@@ -354,9 +354,14 @@ reason is the usual exit-change reason (`exit_opened` or `learned_exit` when
 the new exit is news, else `exit_unreachable` when the default exit is not in
 the agent's map), and the exit-switch anchor holds the agent on its default
 exit when it knows a route to it (`route_graph.py`, `_anchored_exit`;
-[#743](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/743)). In the queue tally, a default-route agent counts
-at its default exit, as FDS+Evac counts an agent at the door its flow field
-leads to; under the opt-in modes an agent with no known exit counts nowhere.
+[#743](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/743)). This
+anchoring is a departure from FDS+Evac: there an agent on the main flow field
+has no current door, so `FAC_DOOR_OLD`, `FAC_DOOR_WAIT` and `FAC_DOOR_OLD2`
+favour no exit for it (`evac.f90:16591`, `:16600`, `:16803`). Ranking does not
+favour the default exit either; only the anchor holds it
+([#754](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/754)). In the
+queue tally, a default-route agent counts at its default exit; under the opt-in
+modes an agent with no known exit counts nowhere.
 
 The contract covers **ranking**, not **adoption**. Ranking orders the known
 routes; adoption is whether a moving agent switches to the first of them. The

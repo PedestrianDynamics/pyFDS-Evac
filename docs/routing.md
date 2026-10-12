@@ -578,8 +578,23 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 
 The explore and wander decisions are made by `_decide_explore`.
 
-Several of these rules resist switching at different points (return margins,
-discount, anchor, fallback margin, same-exit threshold). Their consolidation is
+Ten rules resist switching at different points. `_SWITCH_MARGINS` in
+`route_graph.py` lists each with its owner, FDS+Evac counterpart and consumers:
+
+| Rule | FDS+Evac counterpart |
+|---|---|
+| `tau_return_margin` | none |
+| `tau_deadband` | none |
+| `fed_return_margin` | none |
+| `_PATH_IMPROVEMENT_THRESHOLD` | none (the value of `FAC_DOOR_WAIT`, applied to a different cost) |
+| `fallback_switch_margin` | none |
+| `fallback_return_lockout_s` | none |
+| default-exit anchoring (#743) | none |
+| `current_exit_discount` | `FAC_DOOR_OLD2` |
+| `exit_switch_anchor` | `FAC_DOOR_WAIT` |
+| `clean_exit_margin` | `FAC_DOOR_OLD` |
+
+Their consolidation is
 [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187). The
 anchor's baseline is the better of the best path to the current exit from the
 agent's position and the path the agent walks, by the policy's ordering
