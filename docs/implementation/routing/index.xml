@@ -286,7 +286,7 @@ the one to flee (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/is
 lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
 &lt;code>fallback_switch_margin&lt;/code> hysteresis on &lt;code>tau_route&lt;/code>: the current exit stays
 first unless the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than that fraction lower (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). Under the
-additive model the same order and hysteresis apply. A switch straight back to the exit the agent just left, when both that switch and the return are between two refused routes, is blocked for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after the first switch; a feasible route on either side, must-flee and a third exit are not blocked. Must-flee overrides the lockout: if the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>) (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The lockout was added while route smoke was sampled at steps that could pass over a narrow plume core; 0.5.0 reads it per grid cell (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>), and the lockout stays as a guard against near-ties of τ.&lt;/p>
+additive model the same order and hysteresis apply. If the predicted dose of each exit crosses its limit in turn, the agent switches on every reevaluation (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>). A return lockout (&lt;code>fallback_return_lockout_s&lt;/code>, 10 s, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>) that held a switch straight back between two refused routes was removed in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>. It was added while route smoke was sampled at steps that could pass over a narrow plume core, which 0.5.0 reads per grid cell (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>). Audited at &lt;code>c2c2081f&lt;/code> it bound only on &lt;code>t_junction&lt;/code> with pre-movement, where it suppressed about 34 fallback switches per run between the two refused routes and delayed about 100 returns per run from within 10 s to 11–12 s; exit shares, FED and RSET were unchanged in every seed at 60 s pre-movement and shifted within seed noise at 30 s, and it was inert on &lt;code>l_corridor&lt;/code> and &lt;code>world100&lt;/code>. No behavioural evidence supports a time lockout.&lt;/p>
 &lt;p>An experimental alternative exists at code level only:
 &lt;code>RouteCostConfig(fallback_rule=&amp;quot;hold&amp;quot;)&lt;/code>. No scenario key, CLI flag or
 GUI control sets it, and the default &lt;code>&amp;quot;tau&amp;quot;&lt;/code> is the rule above
@@ -312,7 +312,7 @@ switches.&lt;/li>
 &lt;p>&lt;code>&amp;quot;hold&amp;quot;&lt;/code> keeps the agent on its route between refused routes whatever
 the smoke, until the current route crosses the FED limit and a rival does
 not (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750" target="_blank" rel="noopener">#750&lt;/a>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751" target="_blank" rel="noopener">#751&lt;/a>).&lt;/p>
-&lt;p>&lt;code>fallback_switch_margin&lt;/code> and &lt;code>fallback_return_lockout_s&lt;/code> then have no
+&lt;p>&lt;code>fallback_switch_margin&lt;/code> then has no
 effect. On &lt;code>t_junction&lt;/code> (&lt;code>fire_2MW_PVC&lt;/code>, R arm of
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>, seeds
 4–23 with no pre-movement and 4–13 at 30 and 60 s, at &lt;code>c619a046&lt;/code>) the two
@@ -345,6 +345,11 @@ fallback exit changes per run, median (max).&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;p>With the return lockout removed (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; seeds 4–13 at &lt;code>7c366911&lt;/code>)
+the &lt;code>&amp;quot;tau&amp;quot;&lt;/code> fallback exit changes per run are 196.5 (200) at 30 s and
+303 (306) at 60 s; at 60 s the shares and FED are unchanged in every
+seed, at 30 s they are 51 [48, 55] % and 0.073. The &lt;code>&amp;quot;hold&amp;quot;&lt;/code> column
+does not read the lockout and is unchanged.&lt;/p>
 &lt;p>This is one deck and one fire, and the evidence that people keep going
 once they are in smoke is expert judgement. A user setting waits for
 measurements on &lt;code>l_corridor&lt;/code>, &lt;code>world100&lt;/code> and Schroeder 2015.&lt;/p>
@@ -663,7 +668,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
-&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor; a return to the exit left by such a switch waits &lt;code>fallback_return_lockout_s&lt;/code>. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
+&lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
 &lt;td>only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>), and under the same rule between two refused routes, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -714,7 +719,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tbody>
 &lt;/table>
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
-&lt;p>Ten rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
+&lt;p>Nine rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
 &lt;code>route_graph.py&lt;/code> lists each with its owner, FDS+Evac counterpart and consumers.
 Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>:&lt;/p>
@@ -727,11 +732,6 @@ Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are 
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
-&lt;tr>
-&lt;td>&lt;code>fallback_return_lockout_s&lt;/code>&lt;/td>
-&lt;td>yes&lt;/td>
-&lt;td>none&lt;/td>
-&lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fed_return_margin&lt;/code>&lt;/td>
 &lt;td>yes&lt;/td>
@@ -1695,11 +1695,8 @@ dose rejection reaches this, including a route over both the dose and the
 &lt;li>Both the rival and the current exit are refused (not &lt;code>feasible&lt;/code>) — adopt
 only if the rival&amp;rsquo;s &lt;code>tau&lt;/code> is more than &lt;code>fallback_switch_margin&lt;/code> lower, as in
 the fallback above; the clean bypass below is not consulted (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>).
-If the last exit switch was also between two refused routes, a return to
-the exit it left is refused for &lt;code>fallback_return_lockout_s&lt;/code> (10 s) after
-it, including at exactly 10 s (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>). The lockout was added while
-route smoke was sampled at steps that could pass over a narrow plume; 0.5.0
-reads it per grid cell (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>), and the lockout stays.&lt;/li>
+The 10 s return lockout that once held a switch straight back
+(&lt;code>fallback_return_lockout_s&lt;/code>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458" target="_blank" rel="noopener">#458&lt;/a>) was removed in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>.&lt;/li>
 &lt;li>The rival is clean and the current exit is not — adopt.&lt;/li>
 &lt;li>The rival is not &lt;code>feasible&lt;/code> — fall through to the &lt;code>rank_cost&lt;/code> comparison.&lt;/li>
 &lt;li>Otherwise a &lt;strong>symmetric deadband&lt;/strong> on &lt;code>tau&lt;/code>, with
@@ -1954,13 +1951,6 @@ title="Copy code"
 &lt;td>Cap on how far ahead anticipation reaches, in seconds.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>&lt;strong>active&lt;/strong>&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>fallback_return_lockout_s&lt;/code>&lt;/td>
-&lt;td>&lt;code>10.0&lt;/code>&lt;/td>
-&lt;td>After an exit switch between two refused routes, a switch straight back between two refused routes is blocked this many seconds; 0 turns it off.&lt;/td>
-&lt;td>active&lt;/td>
-&lt;td>active&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
