@@ -221,7 +221,7 @@ ordering is in `tau` while the anchor falls through to `rank_cost`, a travel tim
 Making the deadband symmetric (`25a6f8f`) fixed a real asymmetry and changed nothing
 measurable: 34 returns before and after.
 
-That null result is the finding. Of l_corridor's 34 returns, **29 have the returned-to
+That null result is the finding. Of l_corridor's 34 returns at `25a6f8f`, **29 have the returned-to
 route cleaner by more than the deadband** — median 0.95 of optical depth against a margin
 of 0.6 — so the agent is following a field that genuinely reversed, not flickering across
 a threshold. No further hysteresis constant can damp those. What is open is a modelling
@@ -231,14 +231,18 @@ only for that call, since its flags are reset at the start of the next
 (`:16170-16171`); a lone agent only marks its previous target negative or zero.
 pyFDS-Evac removed its own permanent refusal deliberately at `e441b03`.
 
-**Churn is reduced, not eliminated, and monotonicity now holds on one deck and not the
-other.** At `9f55f6e`, `world100` sends 39 agents to the far clean exit (against 12 before
+**Churn was reduced, not eliminated, and monotonicity held on one deck and not the
+other.** At `9f55f6e`, `world100` sent 39 agents to the far clean exit (against 12 before
 `tau` ordering) with 9 switches and **zero** returns to abandoned exits. `l_corridor`
 **regressed**: from zero returns to 51, then 34 across 14 agents once
 `current_exit_discount` landed, with switches 4 → 74 → 55 and the far-exit share unchanged
 at about 18. The requirement is zero returns everywhere, so an `l_corridor` route history
-will contain returns. Both sets of figures come from the commit messages of `0d9bf79` and
-`9f55f6e`; no archived result set exists.
+contained returns. Both sets of figures come from the commit messages of `0d9bf79` and
+`9f55f6e`; no archived result set exists, and the deck and seed were not recorded.
+Re-measured at `c2c2081f` with the `scripts/margin_audit.py` decks, `l_corridor_gate` on
+`fire_1MW_west` (seeds 1–20) gives 1 return in 20 runs and 37–40 agents on the far exit;
+`world100_stream_east` sends 28–31 agents to `jps-exits_3` and `world100_stream_oval`
+28–35 to `jps-exits_1` (seeds 100–109), with no returns on either.
 
 The costs compared by the anchor are `rank_cost`, which is travel time under the gate and
 the additive composite under `"additive"` — so the numbers in the logs above are not

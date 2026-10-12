@@ -553,8 +553,10 @@ reason string to `tau` at `0d9bf79` did not change the disposition; it made the
 `rank_cost`, a travel time. The two can disagree, and an agent then oscillates
 between what each prefers. Measured on l_corridor: 51 returns to abandoned exits
 at `0d9bf79`, 34 at `9f55f6e` once the current exit's `tau` was discounted.
-world100 is unaffected -- 39 agents to the far clean exit, 9 switches, no
-returns.
+world100 was unaffected -- 39 agents to the far clean exit, 9 switches, no
+returns. The deck and seed of those runs were not recorded; the values
+re-measured at `c2c2081f` are in
+[route-cost-gate.md](route-cost-gate.md#churn-protection).
 
 Two attempts made it worse and should not be repeated:
 
