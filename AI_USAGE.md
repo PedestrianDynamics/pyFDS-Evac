@@ -39,7 +39,7 @@ same sequence, whoever or whatever wrote it:
 
 Scientific statements in the documentation are checked against the
 primary sources they cite. A constant without a source is reported as
-unsourced rather than invented.
+unsourced.
 
 ## What the tools do not do
 
