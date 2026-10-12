@@ -44,7 +44,8 @@ which makes A look cheaper next round, which switches back.
 ## What FDS+Evac does (reference implementation)
 
 - `FAC_DOOR_WAIT = 0.9` — the proportional anchor: the current door's estimated time
-  is multiplied by 0.9 (looks 10% faster), applied to every comparison.
+  is multiplied by 0.9 (looks 10% faster) in the ranking of tiers 1–3
+  (`evac.f90:16600`, `:16607`, `:16689`, `:16736`), not in tier 4.
 - `FAC_DOOR_OLD = 0.1` — current door stays "smoke-free" ~10× longer (extra stickiness).
 - `TAU_CHANGE_DOOR = 1.0 s` — reconsider ~every 1 s, stochastically staggered.
 - Uses round-robin updates + a Nash convergence check (`NASH_CLOSE_ENOUGH = 0.05`).
@@ -194,8 +195,9 @@ trace on a current run:
   `current_exit_discount` (0.9) scales the current exit's `tau` in the sort key, so it
   holds its place unless a rival is clearly cleaner rather than momentarily cleaner. The
   second is the fix at `9f55f6e`, and its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`
-  (`evac.f90:1572`, applied `:16626` and `:16803`), which discounts exactly this quantity
-  in exactly this position.
+  (`evac.f90:1572`, applied `:16803`), which discounts exactly this quantity in the
+  sort. FDS+Evac reaches `:16803` only when no door is smoke-free (its tier 4); the gate
+  applies the discount in every ordering.
 - **The anchor's tau test is a symmetric deadband** (`25a6f8f`). With
   `margin = tau_max * tau_deadband` (0.6), a rival cleaner by more than the margin is
   adopted, a rival dirtier by more than the margin is refused, and only a tie falls

@@ -559,7 +559,7 @@ discovery agent with no known exit explores or wanders instead (see below).
 | **Rejection** | FED over the threshold (× `fed_return_margin` for a rival while a current exit is set), then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason; must-flee reads `violation_kinds`, not the reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
 | **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
 | **Fallback** | when every route is rejected: re-sorted by must-flee (last), then raw τ, then `rank_cost`; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner's τ is below the current exit's × (1 − `fallback_switch_margin`) and differs from it by more than 1e-9; the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
-| **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below 0.9 × the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the cached path is updated either way | same |
+| **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below 0.9 × the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way | same |
 | **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit's × (1 − `fallback_switch_margin`), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor; a return to the exit left by such a switch waits `fallback_return_lockout_s`. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above `impassable_extinction_threshold`), and under the same rule between two refused routes, else needs `rank_cost` < old × `exit_switch_anchor` |
 | **Applied** | `path_choices` rewritten along the new path, the agent retargeted to the stage after the one it last left when the new path passes that stage (the route is walked as it was priced, #445), else to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails no `RouteSwitch` is recorded | same |
 
@@ -568,18 +568,33 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 
 | Step | Function |
 |---|---|
-| **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight`; the first legs are `_first_hops`; the walked path is applied in `rank_routes` (`current_path`) |
+| **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight`; the first legs are `_first_hops`; the walked path, rebuilt each evaluation by `_active_path`, is applied in `rank_routes` (`current_path`) |
 | **Rejection** | `_measure_route`, then `_assess_measurements` with the policy's `feasibility`; the K_vis pass is `apply_candidate_set_rules` |
-| **Ranking** | the policy's `order_key` |
-| **Fallback** | `_apply_fallback` |
-| **Switch, same exit** | `_decide_same_exit` |
-| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows` |
+| **Ranking** | the policy's `order_key` on the policy's `rank_cost` |
+| **Fallback** | `_apply_fallback`; `_is_fallback` tells the route it promoted |
+| **Switch, same exit** | `_decide_same_exit`, comparing against the walked path from `_active_path`; the route state keeps the `recorded_path` |
+| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows`; the agent's exit is read once per evaluation into `_ExitReference` (the ranking, anchor and counted exits); must-flee is `_must_flee_rejection` with the policy's `must_flee_smoke`; the switch reason comes from the policy's `switch_hazard_label`, and is `congestion` when the switch would not clear the anchor with the policy's `queue_term` removed (`_clears_without`); the margins they apply are listed in `_SWITCH_MARGINS` |
 | **Applied** | `_apply_decision` |
 
 The explore and wander decisions are made by `_decide_explore`.
 
-Several of these rules resist switching at different points (return margins,
-discount, anchor, fallback margin, same-exit threshold). Their consolidation is
+Ten rules resist switching at different points. `_SWITCH_MARGINS` in
+`route_graph.py` lists each with its owner, FDS+Evac counterpart and consumers:
+
+| Rule | FDS+Evac counterpart |
+|---|---|
+| `tau_return_margin` | none |
+| `tau_deadband` | none |
+| `fed_return_margin` | none |
+| `_PATH_IMPROVEMENT_THRESHOLD` | none (the value of `FAC_DOOR_WAIT`, applied to a different cost) |
+| `fallback_switch_margin` | none |
+| `fallback_return_lockout_s` | none |
+| `default_exit_anchoring` (#743) | none |
+| `current_exit_discount` | `FAC_DOOR_OLD2` |
+| `exit_switch_anchor` | `FAC_DOOR_WAIT` (the same rule under additive; can differ under the gate, which orders on τ first) |
+| `clean_exit_margin` | `FAC_DOOR_OLD` |
+
+Their consolidation is
 [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187). The
 anchor's baseline is the better of the best path to the current exit from the
 agent's position and the path the agent walks, by the policy's ordering

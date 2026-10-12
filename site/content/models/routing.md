@@ -65,7 +65,9 @@ unless a rival's `tau` is clearly lower (`fallback_switch_margin`)
 ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). Churn is held down by the
 exit-switch anchor, by a stricter budget for a rival exit
 (`tau_return_margin`), and by a discount on the current exit's `tau` in the
-sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`).
+sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`). FDS+Evac applies
+`FAC_DOOR_OLD2` only when no door is smoke-free (its tier 4, `evac.f90:16803`);
+the gate applies the discount in every ordering.
 
 **Measured, with the limitation stated.** Ranking on `tau` sends `world100`'s
 agents to the far clean exit without returns, while on `l_corridor` agents
@@ -255,7 +257,7 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | Value | Source |
 |---|---|
 | `tau_max` = 6 | FDS+Evac tier-4 door rule, \(\bar K d \le 6\) (`evac.f90:16794`, `:16799`), used here as an exposure budget; not calibrated (see [Deviations](#deviations-from-the-literature)) |
-| `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2` |
+| `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2`, which FDS+Evac applies only when no door is smoke-free (tier 4, `evac.f90:16803`); the gate applies it in every ordering |
 | `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
 | `exit_switch_anchor` = 0.9, `_PATH_IMPROVEMENT_THRESHOLD` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
 | `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `fallback_return_lockout_s`, `fed_return_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
