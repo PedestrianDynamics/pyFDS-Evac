@@ -844,9 +844,10 @@ FALLBACK_RULES = ("tau", "hold")
 
 # The range of each switching margin in [0, 1], as (closed below, closed
 # above). A multiplier or divisor of a limit excludes 0, which would refuse
-# or admit everything; a fraction taken off a limit excludes nothing, except
-# fallback_switch_margin = 1, which leaves no tau a rival could beat. The
-# off value of each (1, or 0 for the two subtracted ones) is in range.
+# or admit everything; a fraction taken off a limit excludes nothing.
+# fallback_switch_margin = 1 leaves no tau a rival could beat, so the
+# current exit holds between two refused routes unless it must be fled.
+# The off value of each (1, or 0 for the two subtracted ones) is in range.
 _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
     "fed_return_margin": (False, True),
     "exit_switch_anchor": (False, True),
@@ -855,7 +856,7 @@ _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
     "current_exit_discount": (False, True),
     "clean_exit_margin": (False, True),
     "tau_deadband": (True, True),
-    "fallback_switch_margin": (True, False),
+    "fallback_switch_margin": (True, True),
 }
 
 

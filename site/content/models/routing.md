@@ -234,9 +234,11 @@ Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:
 `fed_return_margin`, `exit_switch_anchor`, `path_switch_anchor`,
 `tau_return_margin`, `current_exit_discount` and `clean_exit_margin` in
-(0, 1]; `tau_deadband` in [0, 1]; `fallback_switch_margin` in [0, 1). The
+(0, 1]; `tau_deadband` and `fallback_switch_margin` in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for `tau_deadband`
-and `fallback_switch_margin`.
+and `fallback_switch_margin`. `fallback_switch_margin` = 1 keeps the
+current exit between two refused routes unless it must be fled, the
+scenario-file way to the hold rule.
 
 Fixed constants, which no `routing` key can set:
 

@@ -1059,6 +1059,18 @@ def test_fallback_boundary_is_hit():
         assert ranked[0].rejection_reason.startswith("fallback: ")
 
 
+def test_fallback_margin_of_one_keeps_the_current_exit():
+    """A fallback_switch_margin of 1 leaves no tau a refused rival can beat."""
+    field = golden.ArmField({"west": 0.8, "east": 0.5})
+    for margin, winner in ((0.0, "west"), (1.0, "east")):
+        config = golden._gate(fallback_switch_margin=margin)
+        ranked = live.rank_routes(
+            _star2(), "spawn", 0.0, 0.0, field, None, config, current_exit="east"
+        )
+        assert all(rc.feasible is False for rc in ranked)
+        assert ranked[0].exit_id == winner
+
+
 def test_fallback_hold_case_now_switches():
     """gate_fallback_hold: the rival's tau is half the current one (#458)."""
     case = _EXTRA_REROUTE_CASES["gate_fallback_hold"]

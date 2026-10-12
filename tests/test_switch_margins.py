@@ -206,7 +206,7 @@ _RANGES = {
     "current_exit_discount": (False, True),
     "clean_exit_margin": (False, True),
     "tau_deadband": (True, True),
-    "fallback_switch_margin": (True, False),
+    "fallback_switch_margin": (True, True),
 }
 
 
@@ -232,7 +232,19 @@ def test_routing_block_sets_the_q7_keys(key, value):
 
 @pytest.mark.parametrize("key", sorted(_RANGES))
 @pytest.mark.parametrize(
-    "value", [-0.1, 1.0001, 2, math.nan, math.inf, True, False, "0.9", None]
+    "value",
+    [
+        -0.1,
+        math.nextafter(1.0, 2.0),
+        1.0001,
+        2,
+        math.nan,
+        math.inf,
+        True,
+        False,
+        "0.9",
+        None,
+    ],
 )
 def test_out_of_range_margin_is_an_error(key, value):
     with pytest.raises(ValueError, match=rf"^routing\.{key} must be a number in "):

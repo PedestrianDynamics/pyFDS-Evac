@@ -31,7 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The switching margins are range-checked: `fed_return_margin`,
   `exit_switch_anchor`, `path_switch_anchor`, `tau_return_margin`,
   `current_exit_discount` and `clean_exit_margin` must be in (0, 1],
-  `tau_deadband` in [0, 1] and `fallback_switch_margin` in [0, 1).
+  `tau_deadband` and `fallback_switch_margin` in [0, 1]; a
+  `fallback_switch_margin` of 1 keeps the current exit between two
+  refused routes unless it must be fled.
   A value outside, a bool or a non-number stops the run with a
   `ValueError` naming the key, also with `--no-enable-rerouting`
   (#187).
