@@ -800,7 +800,9 @@ def _predicted_rerouting(opts: Any, raw: Mapping[str, Any]) -> dict[str, Any]:
     cost = RouteCostConfig.from_routing_params(raw.get("routing", {}))
     return {
         "reevaluation_interval_s": option(opts, "reroute_interval"),
-        "exit_switch_anchor": RerouteConfig.exit_switch_anchor,
+        "exit_switch_anchor": RerouteConfig(
+            cost_config=cost
+        ).resolved_exit_switch_anchor,
         "cost_config": dataclasses.asdict(cost),
     }
 

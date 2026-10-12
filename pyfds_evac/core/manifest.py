@@ -209,7 +209,7 @@ def _reroute_settings(config: Any) -> dict[str, Any] | None:
         return None
     return {
         "reevaluation_interval_s": config.reevaluation_interval_s,
-        "exit_switch_anchor": getattr(config, "exit_switch_anchor", None),
+        "exit_switch_anchor": getattr(config, "resolved_exit_switch_anchor", None),
         "cost_config": _plain(getattr(config, "cost_config", None)),
     }
 

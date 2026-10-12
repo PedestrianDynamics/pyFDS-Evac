@@ -346,9 +346,11 @@ config = RouteCostConfig(
 speed law, used only to estimate travel time; their defaults are on the
 [routing model](/models/routing.md#parameters) page.
 
-Two further fields exist on the dataclass but are **not** readable from
-the `routing` block, so a scenario run always gets their defaults:
-`fed_return_margin` (0.9) and `impassable_extinction_threshold` (3.0).
+One further field exists on the dataclass but is **not** readable from
+the `routing` block, so a scenario run always gets its default:
+`impassable_extinction_threshold` (3.0). `fed_return_margin` (0.9),
+`exit_switch_anchor` (0.9) and `path_switch_anchor` (0.9) are `routing`
+keys.
 
 `w_smoke` and `w_fed` **no longer reach route choice under the gate.**
 Since `0d9bf79` a gate run weights each Dijkstra edge by its own optical
@@ -579,20 +581,22 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 The explore and wander decisions are made by `_decide_explore`.
 
 Ten rules resist switching at different points. `_SWITCH_MARGINS` in
-`route_graph.py` lists each with its owner, FDS+Evac counterpart and consumers:
+`route_graph.py` lists each with its owner, FDS+Evac counterpart and consumers.
+Every rule with a parameter is a `routing` key; the ranges are on
+[Models › Routing › Parameters](/models/routing.md#parameters):
 
-| Rule | FDS+Evac counterpart |
-|---|---|
-| `tau_return_margin` | none |
-| `tau_deadband` | none |
-| `fed_return_margin` | none |
-| `_PATH_IMPROVEMENT_THRESHOLD` | none (the value of `FAC_DOOR_WAIT`, applied to a different cost) |
-| `fallback_switch_margin` | none |
-| `fallback_return_lockout_s` | none |
-| `default_exit_anchoring` (#743) | none |
-| `current_exit_discount` | `FAC_DOOR_OLD2` |
-| `exit_switch_anchor` | `FAC_DOOR_WAIT` (the same rule under additive; can differ under the gate, which orders on τ first) |
-| `clean_exit_margin` | `FAC_DOOR_OLD` |
+| Rule | `routing` key | FDS+Evac counterpart |
+|---|---|---|
+| `fallback_return_lockout_s` | yes | none |
+| `fed_return_margin` | yes | none |
+| `path_switch_anchor` | yes | none (the value of `FAC_DOOR_WAIT`, applied to a different cost) |
+| `fallback_switch_margin` | yes | none |
+| `tau_return_margin` | yes | none |
+| `tau_deadband` | yes | none |
+| `default_exit_anchoring` (#743) | no (no parameter) | none |
+| `current_exit_discount` | yes | `FAC_DOOR_OLD2` |
+| `exit_switch_anchor` | yes (`RerouteConfig.exit_switch_anchor` overrides it) | `FAC_DOOR_WAIT` (the same rule under additive; can differ under the gate, which orders on τ first) |
+| `clean_exit_margin` | yes | `FAC_DOOR_OLD` |
 
 Their consolidation is
 [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187). The

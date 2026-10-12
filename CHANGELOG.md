@@ -7,7 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The `routing` block reads three switching margins that only Python
+  could set: `fed_return_margin`, `exit_switch_anchor` and
+  `path_switch_anchor` (the same-exit path threshold, formerly the
+  module constant `_PATH_IMPROVEMENT_THRESHOLD`), each 0.9 by default.
+  `RouteCostConfig` gains `exit_switch_anchor` and
+  `path_switch_anchor`. Defaults and results are unchanged; the run
+  settings in the manifest list the two new fields in
+  `rerouting.cost_config` (#187).
+
 ### Changed
+
+- `RerouteConfig.exit_switch_anchor` is `float | None`, default
+  `None`: unset, the run uses the cost model's `exit_switch_anchor`,
+  so the `routing` key reaches the reroute pass and the closure
+  re-choice; set, it overrides the key.
+  `RerouteConfig.resolved_exit_switch_anchor` is the value applied,
+  and the manifest's `rerouting.exit_switch_anchor` records it (#187).
+- The switching margins are range-checked: `fed_return_margin`,
+  `exit_switch_anchor`, `path_switch_anchor`, `tau_return_margin`,
+  `current_exit_discount` and `clean_exit_margin` must be in (0, 1],
+  `tau_deadband` in [0, 1] and `fallback_switch_margin` in [0, 1).
+  A value outside, a bool or a non-number stops the run with a
+  `ValueError` naming the key, also with `--no-enable-rerouting`
+  (#187).
 
 - `RerouteConfig.cost_config` defaults to `None`, which `run_scenario`
   replaces with the scenario's `routing` block, for the first exit

@@ -182,6 +182,36 @@ DEFAULTS = [
     (ROUTING, "| `tau_deadband` | `0.1` |", lambda: _routing().tau_deadband),
     (
         ROUTING,
+        "| `fed_return_margin` | `0.9` |",
+        lambda: _routing().fed_return_margin,
+    ),
+    (
+        ROUTING,
+        "| `exit_switch_anchor` | `0.9` |",
+        lambda: RerouteConfig(cost_config=_routing()).resolved_exit_switch_anchor,
+    ),
+    (
+        ROUTING,
+        "| `path_switch_anchor` | `0.9` |",
+        lambda: _routing().path_switch_anchor,
+    ),
+    (
+        GATE,
+        "| `exit_switch_anchor` | `0.9` |",
+        lambda: _routing().exit_switch_anchor,
+    ),
+    (
+        GATE,
+        "| `path_switch_anchor` | `0.9` |",
+        lambda: _routing().path_switch_anchor,
+    ),
+    (
+        GATE,
+        "| `fed_return_margin` | `0.9` |",
+        lambda: _routing().fed_return_margin,
+    ),
+    (
+        ROUTING,
         "| `fed_rejection_threshold` | `1.0` |",
         lambda: _routing().fed_rejection_threshold,
     ),
@@ -218,7 +248,7 @@ DEFAULTS = [
     (
         ROUTING_DOC,
         "`fed_return_margin` (0.9)",
-        lambda: RouteCostConfig().fed_return_margin,
+        lambda: _routing().fed_return_margin,
     ),
     (
         ROUTING_DOC,
