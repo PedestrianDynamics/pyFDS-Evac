@@ -570,10 +570,10 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 |---|---|
 | **Candidates** | `_generate_candidates`, weighting edges with the policy's `edge_weight`; the first legs are `_first_hops`; the walked path, rebuilt each evaluation by `_active_path`, is applied in `rank_routes` (`current_path`) |
 | **Rejection** | `_measure_route`, then `_assess_measurements` with the policy's `feasibility`; the K_vis pass is `apply_candidate_set_rules` |
-| **Ranking** | the policy's `order_key`; the queue part of `rank_cost` is the policy's `queue_term` |
+| **Ranking** | the policy's `order_key` on the policy's `rank_cost` |
 | **Fallback** | `_apply_fallback`; `_is_fallback` tells the route it promoted |
 | **Switch, same exit** | `_decide_same_exit`, comparing against the walked path from `_active_path`; the route state keeps the `recorded_path` |
-| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows`; the agent's exit is read once per evaluation into `_ExitReference` (the ranking, anchor and counted exits); must-flee is `_must_flee_rejection` with the policy's `must_flee_smoke`; the switch reason is the policy's `switch_hazard_label`; the margins they apply are listed in `_SWITCH_MARGINS` |
+| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows`; the agent's exit is read once per evaluation into `_ExitReference` (the ranking, anchor and counted exits); must-flee is `_must_flee_rejection` with the policy's `must_flee_smoke`; the switch reason comes from the policy's `switch_hazard_label`, and is `congestion` when the switch would not clear the anchor with the policy's `queue_term` removed (`_clears_without`); the margins they apply are listed in `_SWITCH_MARGINS` |
 | **Applied** | `_apply_decision` |
 
 The explore and wander decisions are made by `_decide_explore`.
@@ -589,9 +589,9 @@ Ten rules resist switching at different points. `_SWITCH_MARGINS` in
 | `_PATH_IMPROVEMENT_THRESHOLD` | none (the value of `FAC_DOOR_WAIT`, applied to a different cost) |
 | `fallback_switch_margin` | none |
 | `fallback_return_lockout_s` | none |
-| default-exit anchoring (#743) | none |
+| `default_exit_anchoring` (#743) | none |
 | `current_exit_discount` | `FAC_DOOR_OLD2` |
-| `exit_switch_anchor` | `FAC_DOOR_WAIT` |
+| `exit_switch_anchor` | `FAC_DOOR_WAIT` (the same rule under additive; can differ under the gate, which orders on τ first) |
 | `clean_exit_margin` | `FAC_DOOR_OLD` |
 
 Their consolidation is

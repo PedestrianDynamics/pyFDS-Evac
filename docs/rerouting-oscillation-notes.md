@@ -44,7 +44,8 @@ which makes A look cheaper next round, which switches back.
 ## What FDS+Evac does (reference implementation)
 
 - `FAC_DOOR_WAIT = 0.9` — the proportional anchor: the current door's estimated time
-  is multiplied by 0.9 (looks 10% faster), applied to every comparison.
+  is multiplied by 0.9 (looks 10% faster) in the ranking of tiers 1–3
+  (`evac.f90:16600`, `:16607`, `:16689`, `:16736`), not in tier 4.
 - `FAC_DOOR_OLD = 0.1` — current door stays "smoke-free" ~10× longer (extra stickiness).
 - `TAU_CHANGE_DOOR = 1.0 s` — reconsider ~every 1 s, stochastically staggered.
 - Uses round-robin updates + a Nash convergence check (`NASH_CLOSE_ENOUGH = 0.05`).
