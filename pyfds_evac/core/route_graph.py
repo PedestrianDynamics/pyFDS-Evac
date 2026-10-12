@@ -994,20 +994,13 @@ class RouteCostConfig:
     # optical depth tau is more than this fraction lower (#458) -- without it the
     # least-bad choice changes with every flicker of the field.
     fallback_switch_margin: float = 0.2
-    # After an exit switch between two refused routes, a switch straight back
-    # to the exit just left, again between two refused routes, is blocked for
-    # this many seconds (#458). A route smoke sample that steps over a narrow
-    # plume core can swing tau past the margin and back within one or two
-    # evaluations (#653); this keeps that from reversing the agent. 0 turns
-    # it off.
-    fallback_return_lockout_s: float = 10.0
     # Which exit an agent keeps when every route is refused (#696). "tau":
     # a refused rival displaces the current exit when its optical depth is
     # clearly lower (fallback_switch_margin). "hold": the agent keeps its
     # exit between refused routes and leaves only for a feasible route or
     # when the current route must be fled (#128); fallback_switch_margin
-    # and fallback_return_lockout_s are then inert. The first choice with
-    # every route refused is the lowest tau under both. Experimental and
+    # is then inert. The first choice with every route refused is the
+    # lowest tau under both. Experimental and
     # code-level only: from_routing_params does not read it, so no scenario
     # key sets it; measured on t_junction alone (docs/routing.md). Must be
     # fled means a FED violation under either model: the fallback never sees
@@ -1042,16 +1035,6 @@ class RouteCostConfig:
                 f"Unknown RouteCostConfig.fallback_rule {self.fallback_rule!r}; "
                 f"expected one of {FALLBACK_RULES}"
             )
-        lockout = self.fallback_return_lockout_s
-        if (
-            isinstance(lockout, bool)
-            or not isinstance(lockout, (int, float))
-            or not lockout >= 0.0
-        ):
-            raise ValueError(
-                "routing.fallback_return_lockout_s must be a number of seconds "
-                f">= 0, got {lockout!r}"
-            )
         for name, (closed_low, closed_high) in _MARGIN_RANGES.items():
             _check_margin(
                 f"routing.{name}", getattr(self, name), closed_low, closed_high
@@ -1067,6 +1050,11 @@ class RouteCostConfig:
         opening choice under different weights than the same run with it on.
         """
         routing = routing or {}
+        if "fallback_return_lockout_s" in routing:
+            raise ValueError(
+                "routing.fallback_return_lockout_s was removed in #187: the "
+                "return lockout (#458) no longer exists; delete the key"
+            )
         return cls(
             cost_model=routing.get("cost_model", RouteCostConfig.cost_model),
             clean_extinction_threshold=routing.get(
@@ -1089,9 +1077,6 @@ class RouteCostConfig:
             ),
             fallback_switch_margin=routing.get(
                 "fallback_switch_margin", RouteCostConfig.fallback_switch_margin
-            ),
-            fallback_return_lockout_s=routing.get(
-                "fallback_return_lockout_s", RouteCostConfig.fallback_return_lockout_s
             ),
             fed_return_margin=routing.get(
                 "fed_return_margin", RouteCostConfig.fed_return_margin
@@ -3081,10 +3066,6 @@ class AgentRouteState:
     last_eval_time_s: float = -math.inf
     eval_offset_s: float = 0.0  # staggering offset
     wander_step: int = 0  # position in the knowledge-exhausted patrol rotation
-    # The exit left by the last exit switch, if both its routes were refused,
-    # and when; any other exit switch clears it (#458 return lockout).
-    refused_switch_from: str | None = None
-    refused_switch_time_s: float = -math.inf
     # The exit of the default route the agent follows while it knows no exit
     # (no_known_exit "default_route", #610). current_exit holds only exits
     # the agent knows. Its first known exit is an initial choice when it is
@@ -3382,13 +3363,6 @@ class _SwitchMargin:
 # float guards, the reevaluation cadence reevaluation_interval_s and the
 # gate scan stopping at the current exit (an ordering, not a margin).
 _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
-    _SwitchMargin(
-        "fallback_return_lockout_s",
-        "RouteCostConfig",
-        True,
-        None,
-        ("_return_locked",),
-    ),
     _SwitchMargin("fed_return_margin", "RouteCostConfig", True, None, ("_fed_limit",)),
     # FAC_DOOR_WAIT's value, applied to a different cost: ours.
     _SwitchMargin(
@@ -3416,8 +3390,8 @@ _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
         "tau_deadband", "RouteCostConfig", True, None, ("GatePolicy._tau_band",)
     ),
     # The open default exit is the anchor (#743), a departure from FDS+Evac,
-    # in the anchor veto, the gate scan and the lockout only; ranking does
-    # not favour it (#754). It applies through _ExitReference.anchor, which
+    # in the anchor veto and the gate scan only; ranking does not favour
+    # it (#754). It applies through _ExitReference.anchor, which
     # also names the exit left() records a move as leaving. No parameter.
     _SwitchMargin("default_exit_anchoring", "", False, None, ("_anchored_exit",)),
     # FDS+Evac applies FAC_DOOR_OLD2 only when no door is smoke-free (its
@@ -3556,9 +3530,9 @@ def _select_candidate(
     adoptable one wins; if none is, nothing changes, as before.
 
     Gate only. The scan stops at the agent's own exit and does not skip
-    refused routes. With *time_s*, the return lockout applies too. With
-    *graph* and *time_s*, an agent on its default route holds its open
-    default exit as its own (see :func:`_anchored_exit`). *reference* is
+    refused routes. With *graph* and *time_s*, an agent on its default
+    route holds its open default exit as its own (see
+    :func:`_anchored_exit`). *reference* is
     the evaluation's :class:`_ExitReference`; without it one is built.
     """
     best = ranked[0]
@@ -3599,8 +3573,8 @@ def _adoptable(
 ) -> bool:
     """Whether the agent could switch to *candidate* if the ordering offered it.
 
-    With *time_s*, a return the lockout blocks is not adoptable. With *graph*
-    too, the agent's own exit is the one :func:`_anchored_exit` names.
+    With *graph* and *time_s*, the agent's own exit is the one
+    :func:`_anchored_exit` names.
     *reference* is the evaluation's :class:`_ExitReference`; without it one
     is built.
     """
@@ -3610,9 +3584,7 @@ def _adoptable(
     if old_exit is None or candidate.exit_id == old_exit:
         return True
     old_rc = next((rc for rc in ranked if rc.exit_id == old_exit), None)
-    if not _anchor_allows(candidate, old_rc, config):
-        return False
-    return not _return_locked(candidate, old_rc, route_state, time_s, config)
+    return _anchor_allows(candidate, old_rc, config)
 
 
 def _anchored_exit(
@@ -3687,38 +3659,6 @@ def _exit_reference(
             and stage_closed_down(graph, counted, time_s)
         ),
     )
-
-
-def _both_refused(candidate: RouteCost, old_rc: RouteCost | None) -> bool:
-    """Whether a move from *old_rc* to *candidate* is between two refused routes."""
-    return old_rc is not None and not candidate.feasible and not old_rc.feasible
-
-
-def _return_locked(
-    candidate: RouteCost,
-    old_rc: RouteCost | None,
-    route_state: AgentRouteState | None,
-    time_s: float | None,
-    config: RerouteConfig,
-) -> bool:
-    """Whether the return lockout blocks leaving *old_rc* for *candidate*.
-
-    After an exit switch between two refused routes, a switch straight back to
-    the exit just left, again between two refused routes, waits
-    ``fallback_return_lockout_s`` (#458). A feasible route on either side, a
-    hazard the agent must flee and a third exit are never blocked. Without a
-    route state or a time nothing is blocked.
-    """
-    lockout = _cost_config(config).fallback_return_lockout_s
-    if route_state is None or time_s is None or lockout <= 0.0:
-        return False
-    if candidate.exit_id != route_state.refused_switch_from:
-        return False
-    if old_rc is None or not _both_refused(candidate, old_rc):
-        return False
-    if _must_flee_rejection(old_rc, _cost_config(config)):
-        return False
-    return time_s - route_state.refused_switch_time_s <= lockout
 
 
 def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
@@ -3807,8 +3747,6 @@ def _decide_exit_change(
     old_cost: float | None,
     config: RerouteConfig,
     *,
-    route_state: AgentRouteState | None = None,
-    time_s: float | None = None,
     news: str | None = None,
     current_fed: float = 0.0,
 ) -> RouteDecision:
@@ -3820,7 +3758,7 @@ def _decide_exit_change(
     intervals. Anchoring does not apply to the initial choice (old_exit is
     None) or when the old exit is no longer reachable and so was never
     priced. Everything else is _anchor_allows, which is also what chose
-    `best`, and, given *route_state* and *time_s*, the return lockout.
+    `best`.
 
     *news* is ``exit_opened`` or ``learned_exit`` when *best*'s exit became
     available to the agent since its previous evaluation; it only labels the
@@ -3830,10 +3768,7 @@ def _decide_exit_change(
     if (
         old_exit is not None
         and old_cost is not None
-        and (
-            not _anchor_allows(best, old_rc, config)
-            or _return_locked(best, old_rc, route_state, time_s, config)
-        )
+        and not _anchor_allows(best, old_rc, config)
     ):
         return RouteDecision(kind="keep")
 
@@ -4598,29 +4533,14 @@ def evaluate_and_reroute(
             old_rc,
             old_cost,
             config,
-            route_state=route_state,
-            time_s=current_time_s,
             news=news,
             current_fed=current_fed,
         )
-        # A fallback keeps its kind, for the lockout, but the closure is
-        # why the agent moved (#395 R-C).
+        # A fallback keeps its kind, but the closure is why the agent
+        # moved (#395 R-C).
         if decision.kind in ("switch", "fallback") and reference.heading_closed:
             decision = replace(decision, switch_reason="exit_closed")
-    switch = _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
-    if decision.kind in ("switch", "fallback") and switch is not None:
-        _remember_exit_switch(route_state, switch, _both_refused(best, old_rc))
-    return switch
-
-
-def _remember_exit_switch(
-    route_state: AgentRouteState, switch: RouteSwitch, refused: bool
-) -> None:
-    """Record the exit an applied switch left, for the return lockout."""
-    if switch.old_exit is None or switch.old_exit == switch.new_exit:
-        return
-    route_state.refused_switch_from = switch.old_exit if refused else None
-    route_state.refused_switch_time_s = switch.time_s if refused else -math.inf
+    return _apply_decision(decision, agent_id, wait_info, route_state, current_time_s)
 
 
 def adopt_heading_exit(

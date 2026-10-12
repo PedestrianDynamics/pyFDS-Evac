@@ -30,7 +30,7 @@ descriptive.
 
 Usage::
 
-    uv run python scripts/margin_audit.py run --margin fallback_return_lockout_s \\
+    uv run python scripts/margin_audit.py run --margin fed_return_margin \\
         --decks l_corridor_gate t_junction_pre30 [--seeds 1 2 ...] [--jobs 4]
     uv run python scripts/margin_audit.py analyse DIR --primary-deck l_corridor_gate
     uv run python scripts/margin_audit.py metrics DIR/l_corridor_gate/seed1/off
@@ -75,7 +75,8 @@ EXACT_MAX_N = 20
 MC_DRAWS = 100_000
 # Switch reasons always reported, even when a run has none of them.
 REPORTED_REASONS = ("fallback", "better_path", "fed_reroute", "smoke_reroute")
-# The window of returns reported for A1; the lockout's default is 10 s.
+# The window of returns reported (returns_within_window): 10 s, the default
+# of the return lockout removed in #187 A1.
 RETURN_WINDOW_S = 10.0
 
 
@@ -87,15 +88,14 @@ class Margin:
     primary: str | None
 
 
-# Off values and primary metrics from the stage-2 plan (§3.2). A1's primary
-# is the returns within the lockout window, what the lockout targets; all
-# returns and the fallback switches are secondaries. A2's "exposure
+# Off values and primary metrics from the stage-2 plan (§3.2). A1,
+# fallback_return_lockout_s, was audited at c2c2081f and removed (#187).
+# A2's "exposure
 # co-primary" is covered by the secondary rule: fed_p95 and fed_ge_1 are in
 # SECONDARY, so a distinct rise in exposure blocks "remove". A margin
 # without a primary metric is not in the audit order; ``analyse`` then
 # needs ``--metric``.
 MARGINS: dict[str, Margin] = {
-    "fallback_return_lockout_s": Margin(0.0, "returns_within_window"),
     "fed_return_margin": Margin(1.0, "switches_per_agent:fed_reroute"),
     "path_switch_anchor": Margin(1.0, "switches_per_agent:better_path"),
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),

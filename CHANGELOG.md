@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   of `initial`: `exit_opened` or `learned_exit` when the new exit is
   news, else `exit_unreachable` when the default exit has no route in
   the agent's map. When the agent knows that exit and has a route
-  to it, the exit anchor and the return lockout apply to the move, so
+  to it, the exit anchor applies to the move, so
   discovery runs with default-route agents can give other decisions,
   `route_switches` and evacuation times. Learning the default exit
   itself stays `initial`. An agent whose default exit has not opened
@@ -79,6 +79,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deck: each missing key takes the `CollisionFreeSpeedModel` value,
   2.6 and 0.1 m. Decks without them stopped with `AttributeError`
   (#757).
+
+### Removed
+
+- `routing.fallback_return_lockout_s` and
+  `RouteCostConfig.fallback_return_lockout_s`, with the
+  `AgentRouteState` record `refused_switch_from` /
+  `refused_switch_time_s`. The lockout was added for #458 while route
+  smoke was sampled in steps that could cross a narrow plume core;
+  #653 reads smoke per grid cell. Audited at c2c2081f: it bound only on
+  `t_junction` with pre-movement, moved about 34 fallback switches per
+  run between two refused routes (267 (278) → 303 (306) per run at
+  60 s pre-movement, 195 (201) → 196.5 (200) at 30 s) and delayed about
+  100 returns per run from within 10 s to 11–12 s; exit shares, FED and
+  RSET did not change in any seed, and `l_corridor`, `world100` and
+  the clear-air decks were identical. No behavioural evidence supports
+  a time lockout. A scenario that still sets the key stops with a
+  `ValueError` naming the removal; delete the key (#187).
 
 ## [0.5.0] - 2026-10-11
 

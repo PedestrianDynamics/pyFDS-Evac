@@ -490,11 +490,9 @@ def _reroute_world(case: golden.RerouteCase) -> dict:
     }
 
 
-# The return lockout's record (#458) and the known nodes the switch labels
-# read (#92): bookkeeping, not part of a decision branch's writes.
-_RECORD_FIELDS = frozenset(
-    {"refused_switch_from", "refused_switch_time_s", "known_at_last_eval"}
-)
+# The known nodes the switch labels read (#92): bookkeeping, not part of a
+# decision branch's writes.
+_RECORD_FIELDS = frozenset({"known_at_last_eval"})
 
 
 def _state_fields(route_state: AgentRouteState) -> dict:
