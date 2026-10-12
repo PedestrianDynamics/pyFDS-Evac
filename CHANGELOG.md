@@ -92,8 +92,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   run between two refused routes (267 (278) → 303 (306) per run at
   60 s pre-movement, 195 (201) → 196.5 (200) at 30 s) and delayed about
   100 returns per run from within 10 s to 11–12 s; exit shares, FED and
-  RSET did not change in any seed, and `l_corridor`, `world100` and
-  the clear-air decks were identical. No behavioural evidence supports
+  RSET were unchanged in every seed at 60 s pre-movement and shifted
+  within seed noise at 30 s, and `l_corridor`, `world100` and the
+  clear-air decks were identical. No behavioural evidence supports
   a time lockout. A scenario that still sets the key stops with a
   `ValueError` naming the removal; delete the key (#187).
 
