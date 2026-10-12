@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import inspect
 
 import pytest
@@ -86,15 +87,52 @@ def test_without_cost_config_the_code_defaults_apply():
 
 @pytest.mark.parametrize("margin", rg._SWITCH_MARGINS, ids=lambda m: m.name)
 def test_each_consumer_reads_its_margin(margin):
-    for consumer in margin.consumers:
-        obj = rg
-        for part in consumer.split("."):
-            obj = getattr(obj, part)
-        source = inspect.getsource(obj)
-        if margin.owner:
-            assert margin.name in source, consumer
-        else:
-            assert "default_exit" in source, consumer
+    """The listed functions are exactly those whose code reads the margin.
+
+    Read from the syntax tree, so a docstring or comment naming the margin
+    does not count, and a reader missing from the list fails.
+    """
+    name = margin.name if margin.owner else "default_exit"
+    readers = _functions_reading(name)
+    if margin.owner:
+        assert readers == set(margin.consumers)
+    else:
+        assert set(margin.consumers) <= readers
+
+
+# Functions that read a margin without applying it to a switch.
+_NOT_CONSUMERS = {
+    "RouteCostConfig.__post_init__",
+    "RouteCostConfig.from_routing_params",
+}
+
+
+def _reads(node: ast.AST, name: str) -> bool:
+    return any(
+        (isinstance(n, ast.Attribute) and n.attr == name)
+        or (isinstance(n, ast.Name) and n.id == name)
+        for n in ast.walk(node)
+    )
+
+
+def _functions_reading(name: str) -> set[str]:
+    """Module functions and methods whose code reads *name*."""
+    tree = ast.parse(inspect.getsource(rg))
+    functions: list[tuple[str, ast.AST]] = []
+    for node in tree.body:
+        if isinstance(node, ast.FunctionDef):
+            functions.append((node.name, node))
+        elif isinstance(node, ast.ClassDef):
+            functions.extend(
+                (f"{node.name}.{item.name}", item)
+                for item in node.body
+                if isinstance(item, ast.FunctionDef)
+            )
+    return {
+        qualname
+        for qualname, node in functions
+        if qualname not in _NOT_CONSUMERS and _reads(node, name)
+    }
 
 
 def _routing_block_sets(name: str) -> bool:

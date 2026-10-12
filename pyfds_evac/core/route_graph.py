@@ -3277,8 +3277,8 @@ class _SwitchMargin:
     field of that name) or ``route_graph`` (a module constant); "" when the
     rule has no parameter of its own. ``routing_key`` is whether a
     scenario's routing block sets it; otherwise the code default applies.
-    ``counterpart`` is the FDS+Evac factor whose default it takes, None when
-    the margin is ours. ``consumers`` are the functions that apply it.
+    ``counterpart`` is the FDS+Evac rule it corresponds to, None when the
+    margin is ours. ``consumers`` are the functions that apply it.
     """
 
     name: str
@@ -3293,8 +3293,9 @@ class _SwitchMargin:
 # consumer still reads its value where it did. Not margins, so not listed:
 # the limits they scale (tau_max, fed_rejection_threshold,
 # clean_extinction_threshold), the additive must-flee bound
-# impassable_extinction_threshold, the fallback_rule selector and the 1e-9
-# float guards.
+# impassable_extinction_threshold, the fallback_rule selector, the 1e-9
+# float guards, the reevaluation cadence reevaluation_interval_s and the
+# gate scan stopping at the current exit (an ordering, not a margin).
 _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
     _SwitchMargin(
         "tau_return_margin",
@@ -3332,6 +3333,8 @@ _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
     # The open default exit holds the agent as its current exit does (#743),
     # a departure from FDS+Evac; it has no parameter of its own.
     _SwitchMargin("default_exit_anchoring", "", False, None, ("_anchored_exit",)),
+    # FDS+Evac applies FAC_DOOR_OLD2 only when no door is smoke-free (its
+    # tier 4, evac.f90:16803); the gate applies it in every ordering.
     _SwitchMargin(
         "current_exit_discount",
         "RouteCostConfig",
@@ -3340,9 +3343,11 @@ _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
         ("GatePolicy._ordering_tau",),
     ),
     # FAC_DOOR_WAIT multiplies the current door's time inside the ranking
-    # (evac.f90:16600); here it is a veto after ranking. They match for two
-    # doors and may differ with three or more (#187). The switch labels
-    # re-apply it to tell the cause.
+    # (evac.f90:16600); here it is a veto after ranking. They coincide when
+    # the veto compares the ordering key, as under additive (rank_cost),
+    # for any number of doors. Under gate they can differ with two doors:
+    # the order is on tau first, the veto on time inside the tau band. The
+    # switch labels re-apply it to tell the cause.
     _SwitchMargin(
         "exit_switch_anchor",
         "RerouteConfig",
