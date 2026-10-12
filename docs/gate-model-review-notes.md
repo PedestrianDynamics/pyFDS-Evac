@@ -464,9 +464,11 @@ Three consequences.
    not say it implements it, and 6 is still uncalibrated as an exposure budget.
 
    The same re-read supplies provenance for the hysteresis added at `9f55f6e`:
-   `FAC_DOOR_OLD2 = 0.9` (`:1572`) discounts the current door's `L2_tmp` at
-   `:16626` and `:16803`, and at `:16803` that `L2_tmp` **is** `tau/6`. So
-   `current_exit_discount = 0.9` discounts the same quantity in the same place.
+   `FAC_DOOR_OLD2 = 0.9` (`:1572`) discounts the current door's `L2_tmp` in
+   ranking at `:16803`, and there that `L2_tmp` **is** `tau/6`. So
+   `current_exit_discount = 0.9` discounts the same quantity; FDS+Evac reaches
+   `:16803` only when no door is smoke-free (tier 4), the gate in every
+   ordering. (`:16626` is the known-door memory update, outside ranking.)
    The shipped code comment instead cites `FAC_DOOR_WAIT` at `evac.f90:1503` (2016 numbering);
    `FAC_DOOR_WAIT` is at `:1570` and discounts travel time, not smoke.
 3. **A1 is retired rather than open.** Scaling the threshold with route length
