@@ -239,10 +239,9 @@ other.** At `9f55f6e`, `world100` sent 39 agents to the far clean exit (against 
 at about 18. The requirement is zero returns everywhere, so an `l_corridor` route history
 contained returns. Both sets of figures come from the commit messages of `0d9bf79` and
 `9f55f6e`; no archived result set exists, and the deck and seed were not recorded.
-Re-measured at `c2c2081f` with the `scripts/margin_audit.py` decks, `l_corridor_gate` on
-`fire_1MW_west` (seeds 1–20) gives 1 return in 20 runs and 37–40 agents on the far exit;
-`world100_stream_east` sends 28–31 agents to `jps-exits_3` and `world100_stream_oval`
-28–35 to `jps-exits_1` (seeds 100–109), with no returns on either.
+Re-measured at `c2c2081f` on the `scripts/margin_audit.py` decks, `l_corridor` gives 1
+return in 20 seeds and `world100` none; see
+[route-cost-gate.md](route-cost-gate.md#churn-protection).
 
 The costs compared by the anchor are `rank_cost`, which is travel time under the gate and
 the additive composite under `"additive"` — so the numbers in the logs above are not

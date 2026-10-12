@@ -71,15 +71,14 @@ the gate applies the discount in every ordering.
 
 **Measured, with the limitation stated.** When ranking on `tau` landed
 (`0d9bf79`, `9f55f6e`), it sent 39 of `world100`'s agents to the far clean
-exit without returns, while on `l_corridor` 34 returns to abandoned exits
-followed a field that reversed; what is missing is commitment
+exit without returns, while on `l_corridor` agents returned to abandoned
+exits (34 at `9f55f6e`, 29 of them following a field that reversed); what is
+missing is commitment
 ([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124)). Those
 counts come from the commit messages; the deck and seed were not recorded.
-Re-measured at `c2c2081f` with the `scripts/margin_audit.py` decks,
-`l_corridor_gate` on `fire_1MW_west` (seeds 1–20) gives 1 return in 20 runs
-and 37–40 agents on the far exit; `world100_stream_east` sends 28–31 agents
-to `jps-exits_3` and `world100_stream_oval` 28–35 to `jps-exits_1` (seeds
-100–109), with no returns on either. The history is in
+Re-measured at `c2c2081f` on the `scripts/margin_audit.py` decks, `l_corridor`
+gives 1 return in 20 seeds and `world100` none; the history and the
+re-measurement are in
 [docs/route-cost-gate.md](/docs/route-cost-gate.md#churn-protection)
 and [Known limitations](/docs/route-cost-gate.md#known-limitations).
 

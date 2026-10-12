@@ -585,7 +585,7 @@ measured. The deck and seed of those runs were not recorded, so the table
 cannot be reproduced one-to-one. Re-measured at `c2c2081f` with the
 `scripts/margin_audit.py` decks: `l_corridor_gate` on `fire_1MW_west`
 (seeds 1–20) gives 1 return in 20 runs (seed 15, 1 s after leaving, to a
-feasible route) and 37–40 agents on the far exit; `world100_stream_east`
+feasible route) and 37–40 of 100 agents (37–40 %) on the far exit; `world100_stream_east`
 sends 28–31 agents to `jps-exits_3` and `world100_stream_oval` 28–35 to
 `jps-exits_1` (seeds 100–109), with no returns on either.
 
