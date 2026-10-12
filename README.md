@@ -101,6 +101,45 @@ and your deck has to dump specific slices for that to work. That page also
 covers the `&REAC` yields those slices depend on, and two failure modes that
 stay silent otherwise.
 
+## How pyFDS-Evac is built
+
+pyFDS-Evac is a research code written and maintained by researchers in
+pedestrian dynamics and fire safety who use it in their own work. It is
+developed with generative AI coding tools (Claude Code, with Codex as an
+independent reviewer; see [AI_USAGE.md](AI_USAGE.md)). The AI tools are
+development aids, not scientific authors. The named authors are responsible
+for the models, the results and the maintenance; the maintainer decides what
+goes in, every scientific default, what merges and what ships.
+
+**The science comes first.** The
+[Fundamentals](https://pedestriandynamics.org/pyFDS-Evac/fundamentals/)
+pages state the published laws the software rests on, from the egress
+timeline and design fires to smoke obscuration, walking speed in smoke,
+toxic and thermal dose and occupant decisions, with their primary sources.
+The model pages state what the software computes, in which units, under
+which assumptions and in which applicable range. Where FDS+Evac has a
+counterpart, its default is kept and every departure is documented in the
+[model comparison](https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/),
+cross-referenced to the original `evac.f90`. A constant without a source is
+reported as unsourced, not invented.
+
+**Evidence, not plausibility.** A change that can affect what the software
+computes starts with a written model contract, is implemented against it with
+regression tests, and is then checked by an independent, read-only
+verification step before it is merged. A bug fix lands with a test that
+fails before the fix and passes after. A refactor of the routing or FDS
+coupling is merged only when reference FDS runs with fixed seeds are
+byte-identical. The [verification](https://pedestriandynamics.org/pyFDS-Evac/verification/)
+cases (ISO 20414, the FDS+Evac guide cases, the FED equations) run in CI with
+every pull request.
+
+**No AI at runtime.** Nothing in pyFDS-Evac, its GUI or its TUI calls an AI
+service. A simulation is FDS output, JuPedSim and this code.
+
+To cite the software, see [CITATION.cff](CITATION.cff). Contributions are
+written with whatever tools their authors choose and go through the same
+review; see [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Terminal UI
 
 For remote machines and SSH, a terminal UI configures, runs and inspects a
