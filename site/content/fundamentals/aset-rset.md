@@ -130,6 +130,16 @@ ASET varies with position and with the tenability
 criterion chosen, and the criterion itself is set for a fraction of the
 population (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
 
+A smoke limit can stand in for the others. For fires with soot, DIN
+18009-2 (§7.2.2, p. 23) assumes that where the optical density D_L stays
+at or below 0.1 1/m, the limits for toxic products, irritants and gas
+temperature are usually met as well. The waypoint method judges
+visibility along the line of sight to a sign, not at the person
+([Seeing and using exit signs](/fundamentals/exit-signs.md)). *Our
+reading:* a sight-line criterion cannot stand in that way. A cell in
+dense smoke passes if its line of sight to a nearby sign is clear, so
+gases and heat there need their own limit or a dose.
+
 Which part of the pre-movement distribution matters depends on density.
 Where occupant density is high relative to exit width, the pre-movement of
 the first few occupants and the exit flow capacity set the evacuation time;
