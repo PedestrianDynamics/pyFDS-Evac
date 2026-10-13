@@ -196,7 +196,12 @@ ramp with the classes by the time it takes to reach 1055 kW.
   visibility this matters as much as the HRR. Yields also change: the CO
   yield can vary by up to a factor of about 50 between
   well-ventilated flaming (φ < 1) and fuel-rich (φ > 1) burning (Purser 2003, p. 93, citing
-  Tewarson).
+  Tewarson). The smoke yield rises too: downstream of under-ventilated
+  propane fires, Ukleja et al. (2008) found the CO yield increased by a
+  factor of 5 and the smoke yield by a factor of 3. FDS does not make
+  this change itself: the yields of its simple chemistry model are for
+  well-ventilated, post-flame conditions (McGrattan et al. 2025,
+  §13.1.1), so they have to be chosen for the burning regime expected.
 
 ## Known limits
 
@@ -270,6 +275,16 @@ All fires start at t = 0 with no incipient phase.
 - Babrauskas, V., Fleming, J. M., & Russell, B. D. (2010). *RSET/ASET, a
   flawed concept for fire safety assessment*. Fire and Materials, 34(7),
   341–355, p. 353. [doi:10.1002/fam.1025](https://doi.org/10.1002/fam.1025)
+- Ukleja, S., Delichatsios, M. A., Delichatsios, M. M., & Lee, Y. (2008).
+  *Carbon monoxide and smoke production downstream of a compartment for
+  underventilated fires*. Fire Safety Science, 9, 849–860. Cited from the
+  abstract.
+  [doi:10.3801/IAFSS.FSS.9-849](https://doi.org/10.3801/IAFSS.FSS.9-849)
+- McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
+  Mueller, E., & Paul, C. (2025). *Fire Dynamics Simulator User's
+  Guide*. NIST Special Publication 1019, 6th ed., revision
+  FDS-6.10.1-0-g12efa16, §13.1.1.
+  [github.com/firemodels/fds/releases/tag/FDS-6.10.1](https://github.com/firemodels/fds/releases/tag/FDS-6.10.1)
 
 How the fire reaches pyFDS-Evac: the FDS case supplies it, see
 [Your FDS case](/docs/fds-case-requirements.md). How ASET follows from it:
