@@ -81,6 +81,27 @@ _logger = logging.getLogger(__name__)
 
 SPEED_LAWS = ("lund", "fridolf")
 
+# Empirical coefficients of the Lund (Frantzich & Nilsson) linear law as
+# FDS+Evac uses them: speed_factor(K) = 1 + LUND_BETA * K / LUND_ALPHA.
+LUND_ALPHA = 0.706
+LUND_BETA = -0.057
+# Model assumption of FDS+Evac: the factor never drops below this clamp.
+LUND_MIN_SPEED_FACTOR = 0.1
+# Empirical coefficients of Fridolf et al. (2019), Eq. 7: the speed drops
+# FRIDOLF_SLOPE m/s per metre of visibility below FRIDOLF_VISIBILITY_THRESHOLD_M
+# to an absolute floor of FRIDOLF_MIN_SPEED_M_PER_S.
+FRIDOLF_SLOPE = 0.34
+FRIDOLF_VISIBILITY_THRESHOLD_M = 3.0
+FRIDOLF_MIN_SPEED_M_PER_S = 0.2
+# Model assumption: the free speed the fridolf law uses when the caller
+# passes none (the paper's method 1).
+FRIDOLF_DEFAULT_FREE_SPEED_M_PER_S = 1.0
+# Model assumption: Jin's visibility factor C in V = C / K. 3 is the FDS
+# default for a reflecting sign; Fridolf et al. (2019) calibrated with 2.
+VISIBILITY_FACTOR_C = 3.0
+# FDS default soot mass extinction coefficient [m^2/kg] (Mulholland).
+FDS_MASS_EXTINCTION_M2_PER_KG = 8700.0
+
 
 def _unknown_speed_law(speed_law: object) -> ValueError:
     """The error for a speed_law that names no smoke-speed law."""
@@ -117,14 +138,14 @@ class SmokeSpeedConfig:
     slice_height_m: float = 1.6
     speed_law: str = "lund"
     # lund coefficients
-    alpha: float = 0.706
-    beta: float = -0.057
-    min_speed_factor: float = 0.1
+    alpha: float = LUND_ALPHA
+    beta: float = LUND_BETA
+    min_speed_factor: float = LUND_MIN_SPEED_FACTOR
     # fridolf coefficients
-    visibility_factor_c: float = 3.0
-    fridolf_slope: float = 0.34
-    fridolf_visibility_threshold_m: float = 3.0
-    fridolf_min_speed_m_per_s: float = 0.2
+    visibility_factor_c: float = VISIBILITY_FACTOR_C
+    fridolf_slope: float = FRIDOLF_SLOPE
+    fridolf_visibility_threshold_m: float = FRIDOLF_VISIBILITY_THRESHOLD_M
+    fridolf_min_speed_m_per_s: float = FRIDOLF_MIN_SPEED_M_PER_S
 
     def __post_init__(self) -> None:
         """Reject a speed_law that is not exactly one of SPEED_LAWS."""
@@ -262,7 +283,7 @@ class ConstantExtinctionField:
 def extinction_from_soot_density(
     soot_density_mg_per_m3: float,
     *,
-    mass_extinction_coefficient_m2_per_kg: float = 8700.0,
+    mass_extinction_coefficient_m2_per_kg: float = FDS_MASS_EXTINCTION_M2_PER_KG,
 ) -> float:
     """Convert soot density in mg/m^3 to extinction coefficient K in 1/m.
 
@@ -282,10 +303,10 @@ def speed_from_soot_density(
     base_speed_m_per_s: float,
     soot_density_mg_per_m3: float,
     *,
-    alpha: float = 0.706,
-    beta: float = -0.057,
-    mass_extinction_coefficient_m2_per_kg: float = 8700.0,
-    min_speed_factor: float = 0.1,
+    alpha: float = LUND_ALPHA,
+    beta: float = LUND_BETA,
+    mass_extinction_coefficient_m2_per_kg: float = FDS_MASS_EXTINCTION_M2_PER_KG,
+    min_speed_factor: float = LUND_MIN_SPEED_FACTOR,
 ) -> float:
     """Compute walking speed directly from soot density using the FDS+Evac path."""
 
@@ -304,9 +325,9 @@ def speed_from_soot_density(
 def speed_factor_from_extinction(
     extinction_per_m: float,
     *,
-    alpha: float = 0.706,
-    beta: float = -0.057,
-    min_speed_factor: float = 0.1,
+    alpha: float = LUND_ALPHA,
+    beta: float = LUND_BETA,
+    min_speed_factor: float = LUND_MIN_SPEED_FACTOR,
 ) -> float:
     """Convert K [1/m] to a speed factor using the Lund (FDS+Evac) linear law.
 
@@ -328,11 +349,11 @@ def speed_factor_from_extinction(
 def speed_factor_from_extinction_fridolf(
     extinction_per_m: float,
     *,
-    visibility_factor_c: float = 3.0,
-    free_speed_m_per_s: float = 1.0,
-    slope: float = 0.34,
-    visibility_threshold_m: float = 3.0,
-    min_speed_m_per_s: float = 0.2,
+    visibility_factor_c: float = VISIBILITY_FACTOR_C,
+    free_speed_m_per_s: float = FRIDOLF_DEFAULT_FREE_SPEED_M_PER_S,
+    slope: float = FRIDOLF_SLOPE,
+    visibility_threshold_m: float = FRIDOLF_VISIBILITY_THRESHOLD_M,
+    min_speed_m_per_s: float = FRIDOLF_MIN_SPEED_M_PER_S,
 ) -> float:
     """Convert K [1/m] to a speed factor using the Fridolf et al. (2019) law.
 
@@ -419,7 +440,9 @@ class SmokeSpeedModel:
                 extinction,
                 visibility_factor_c=self.config.visibility_factor_c,
                 free_speed_m_per_s=(
-                    1.0 if free_speed_m_per_s is None else free_speed_m_per_s
+                    FRIDOLF_DEFAULT_FREE_SPEED_M_PER_S
+                    if free_speed_m_per_s is None
+                    else free_speed_m_per_s
                 ),
                 slope=self.config.fridolf_slope,
                 visibility_threshold_m=self.config.fridolf_visibility_threshold_m,
