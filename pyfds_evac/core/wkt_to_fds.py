@@ -34,6 +34,8 @@ from shapely.geometry import box
 from shapely.geometry.base import BaseGeometry
 from shapely.prepared import prep
 
+from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
+
 _logger = logging.getLogger(__name__)
 
 # Slices pyFDS-Evac canonicalises (see core/fds_inventory.py).
@@ -316,7 +318,7 @@ def wkt_to_fds(
     chid: str = "from_wkt",
     margin_cells: int = 1,
     include_fire: bool = True,
-    slice_height_m: float = 1.6,
+    slice_height_m: float = HUMAN_SMOKE_HEIGHT_M,
     hrrpua: float = 800.0,
     burner_size_m: float = 0.5,
     fire_xy: tuple[float, float] | None = None,

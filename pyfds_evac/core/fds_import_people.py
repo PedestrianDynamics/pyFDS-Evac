@@ -56,7 +56,9 @@ D_TORSO_MEAN_DEFAULT = 0.30
 _BODY_SOURCE = "FDS+Evac Guide Table_DefaultHumans; evac.f90 PERS presets"
 _EXPLICIT_SOURCE = "evac.f90:1998-2020, 14583-14584, 14669, 14955-14957"
 _CONSTANT_SOURCE = "evac.f90:1998, 14583-14584, 14669, 14955"
-#: FDS+Evac HUMAN_SMOKE_HEIGHT default [m above the floor].
+#: FDS+Evac HUMAN_SMOKE_HEIGHT default [m above the floor]: the breathing-zone
+#: height every slice-height default reads (smoke speed, FED, visibility, the
+#: deck writer). A model assumption, not a constant; change it here.
 HUMAN_SMOKE_HEIGHT_M = 1.6
 _EULER_GAMMA = 0.5772156649015329
 # Distributions whose sum with another one we can express exactly.
