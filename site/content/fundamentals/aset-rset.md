@@ -150,7 +150,12 @@ Purser (2003, pp. 92–93) noted that most travel-time calculations assumed
 no interaction between occupants and the fire effluent, and that
 engineering tenability calculations used only smoke density and/or CO,
 with yields often treated as constants, usually for the well-ventilated
-case.
+case. DIN 18009-2 states the first assumption: it leaves any effect of
+fire and smoke spread on the escape time out of its scope (§5.2.3,
+Note 2, p. 15). For microscopic models it recommends at least ten runs
+and takes RSET as the 95 % quantile (§6.6.2; §8.3.1). A coupled run
+drops that assumption; see
+[Evacuation with and without the fire](/docs/howto-with-without-fire.md).
 
 The concept itself is disputed. Babrauskas, Fleming and Russell (2010,
 pp. 347–348) argue that RSET is a distribution rather than one number, that
@@ -202,7 +207,8 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
   dose (commentary to Paragraph 2.2.1, pp. 47 and 49). Paraphrased.
 - DIN (2022). *DIN 18009-2:2022-08 Brandschutzingenieurwesen – Teil 2:
   Räumungssimulation und Personensicherheit*. Beuth, Berlin.
-  Introduction (p. 6); §7.2.1–7.2.3 and Table 1 (pp. 22–24). Paraphrased.
+  Introduction (p. 6); §5.2.3, Note 2 (p. 15); §6.6.2 (p. 21);
+  §7.2.1–7.2.3 and Table 1 (pp. 22–24); §8.3.1 (p. 27). Paraphrased.
 - Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
   to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102.
   [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
