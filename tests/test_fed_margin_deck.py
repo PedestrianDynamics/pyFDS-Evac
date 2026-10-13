@@ -277,6 +277,25 @@ def test_the_removed_margin_key_stops_a_deck_run():
         run_fed_deck(deck, scenario, seed=11)
 
 
+def test_harness_writes_the_requested_cost_history(tmp_path):
+    """--output-route-cost-history reaches the deck run and writes the CSV."""
+    out = tmp_path / "costs.csv"
+    code = main(
+        [
+            "--scenario",
+            str(ASSETS / FED_DECKS["near1_hold_gate"].config),
+            "--seed",
+            "11",
+            "--fed-deck",
+            "near1_hold_gate",
+            "--output-route-cost-history",
+            str(out),
+        ]
+    )
+    assert code == 0
+    assert len(out.read_text(encoding="utf-8").splitlines()) > 1
+
+
 # ── Harness entry point ───────────────────────────────────────────────
 
 
@@ -290,7 +309,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--fed-deck", required=True, choices=sorted(FED_DECKS))
     args = parser.parse_args(argv)
     scenario = load_scenario(args.scenario)
-    result = run_fed_deck(FED_DECKS[args.fed_deck], scenario, seed=args.seed)
+    result = run_fed_deck(
+        FED_DECKS[args.fed_deck],
+        scenario,
+        seed=args.seed,
+        collect_costs=bool(args.output_route_cost_history),
+    )
     try:
         print(summary_line(result))
         apply_outputs(result, scenario, args, log=print)
