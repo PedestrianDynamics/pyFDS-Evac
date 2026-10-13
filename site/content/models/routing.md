@@ -220,7 +220,6 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `anticipate` | `true` | Read every smoke sample on the path to each exit at the time the agent would reach it; the path search uses the smoke at decision time. No FDS+Evac counterpart |
 | `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
 | `fallback_switch_margin` | `0.2` | Between two refused routes, a rival's `tau` must be more than this fraction below the current exit's; differences up to 1e-9 are ties, which hold. Before 0.4.0 it compared worst extinction `k_max_route` ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
-| `fed_return_margin` | `0.9` | A rival exit is refused above this fraction of `fed_rejection_threshold` |
 | `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's; an explicit `RerouteConfig.exit_switch_anchor` overrides it |
 | `path_switch_anchor` | `0.9` | A new path to the same exit needs `rank_cost` below this fraction of the walked path's |
 | `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
@@ -236,7 +235,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:
-`fed_return_margin`, `exit_switch_anchor`, `path_switch_anchor`,
+`exit_switch_anchor`, `path_switch_anchor`,
 `tau_return_margin`, `current_exit_discount` and `clean_exit_margin` in
 (0, 1]; `tau_deadband` and `fallback_switch_margin` in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for `tau_deadband`
@@ -274,7 +273,7 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2`, which FDS+Evac applies only when no door is smoke-free (tier 4, `evac.f90:16803`); the gate applies it in every ordering |
 | `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
 | `exit_switch_anchor` = 0.9, `path_switch_anchor` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
-| `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `fed_return_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
+| `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
 | `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
 | `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
 

@@ -440,9 +440,9 @@ FED enters route choice as a veto only. Each route's `fed_max_route` is the
 dose already taken plus the dose predicted over the walk
 (`current_fed + sum(fed_growth)`), and a route above `fed_rejection_threshold`
 (default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
-as optical depth: the current exit is held to the bare threshold so an agent
-flees a lethal door at once, while a rival must come in under
-`fed_rejection_threshold * fed_return_margin` (0.9). A dose refusal is a
+as optical depth: the current exit and a rival are held to the same threshold
+(`fed_return_margin`, which held a rival to 0.9 of it, was removed in #187:
+no route dose on any fire deck came near 1). A dose refusal is a
 "must flee" rejection, so it bypasses the exit-switch anchor — hysteresis
 cannot pin an agent to a door that will kill it.
 
@@ -554,10 +554,10 @@ A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
 admit wins, stopping at the agent's own exit.
 
-**The deadbands.** `tau_return_margin` (0.8) and `fed_return_margin` (0.9) make
+**The deadbands.** `tau_return_margin` (0.8) makes
 a rival exit harder to *qualify* than the current one; `current_exit_discount`
 (0.9) makes it harder to *outrank* it; `tau_deadband` (0.1 of `tau_max`) makes
-it harder to *switch onto*, in both directions. Four constants, three of them
+it harder to *switch onto*, in both directions. Three constants, all
 acting on the same quantity at three different stages. A reviewer will
 reasonably ask why, and no run isolates any one of them.
 
@@ -686,7 +686,6 @@ Every key below is read from the scenario's `routing` block by
 | `beta` | `-0.057` | Same, the slope. | active | active |
 | `min_speed_factor` | `0.1` | Same, the floor on the router's speed factor. | active | active |
 | `default_exit_capacity` | `1.3` | Fallback exit capacity, agents/s, when the exit sets none. | active | active |
-| `fed_return_margin` | `0.9` | A rival exit is refused above this fraction of `fed_rejection_threshold`. | active | active |
 | `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's. An explicit `RerouteConfig.exit_switch_anchor` overrides it. | active (an infeasible rival, and a tie inside the `tau` deadband) | active |
 | `path_switch_anchor` | `0.9` | A new path to the same exit needs `rank_cost` below this fraction of the walked path's. | active | active |
 
@@ -789,8 +788,8 @@ prediction from `evac.f90`, not a measured run of it.
   clock therefore runs ahead of the agent systematically, and it runs furthest
   ahead exactly where the smoke is thickest. With `foresight_horizon_s = inf`
   the agent also has perfect foresight of the FDS solution.
-- **Six hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
-  `fallback_switch_margin` (0.2), `fed_return_margin` (0.9),
+- **Five hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
+  `fallback_switch_margin` (0.2),
   `tau_return_margin` (0.8), `tau_deadband` (0.1), and
   `path_switch_anchor` (10 %) are all chosen to stop measured churn,
   not fitted to observed behaviour. Two have FDS+Evac values behind them:
