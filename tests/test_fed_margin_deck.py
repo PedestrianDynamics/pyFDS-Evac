@@ -1,14 +1,14 @@
-"""Targeted decks on which ``fed_return_margin`` decides (#187 A2).
+"""Targeted FED decks for the dose-refusal path of route choice (#187 A2).
 
-The stage-2 audit found the margin inert on every fire deck: no route is
-ever refused for dose there, and the largest predicted route dose is 0.18,
-far below the (0.9, 1.0] band in which the margin acts. The golden
-scenario decks of ``test_rerouting_golden`` carry no FED field at all. So
-the margin's only binding site in CI was the hand-built ``rank_routes``
-case ``gate_fed_return_margin_rival``. These decks close that gap with
-``run_scenario`` runs on the t_junction assets and a synthetic FED rate
-field, built so that the margin is the only thing standing between the
-rival route and the agent.
+The stage-2 audit found ``fed_return_margin`` (0.9, a rival's FED limit as
+a fraction of the threshold) inert on every fire deck: no route is ever
+refused for dose there, and the largest predicted route dose is 0.18, far
+below the (0.9, 1.0] band in which the margin acted. It was removed. These
+decks are what the audit swept the margin over: ``run_scenario`` runs on
+the t_junction assets and a synthetic FED rate field, built so that the
+rival route's dose lies in (0.9, 1.0], where the margin would have refused
+it. They stay as the regression for the FED-refusal path: a rival in that
+band is admitted exactly as the current exit is.
 
 Construction (t_junction: corridor y in [10, 13], exit A at x = 0.5, exit
 B at x = 29.5, checkpoint at x = 18.5, spawn area at x in [18, 22] below
@@ -22,8 +22,7 @@ the agent's own leg pro rata to what is left of it (``evaluate_segment``,
   (9.5, 11.5) lies in the arm, so the predicted dose of the rival route A
   for an agent east of the arm is ``arm_rate * (18 / 1.3) / 60`` plus the
   dose already taken (about 0, the junction is clean). With ``arm_rate``
-  4.0 /min that is 0.923: inside (0.9, 1.0], refused as a rival under the
-  0.9 margin, admitted without it.
+  4.0 /min that is 0.923: inside (0.9, 1.0], admitted as a rival.
 * **Strip B** (23 <= x <= 29, the corridor just before exit B): rate
   ``strip_rate`` 30 /min from ``t_on``. The checkpoint->B segment is 11 m
   with its midpoint (24, 11.5) in the strip, so its full dose is
@@ -31,33 +30,33 @@ the agent's own leg pro rata to what is left of it (``evaluate_segment``,
   share, over 1.0 while it is more than 3.7 m from the exit. B is the
   current exit of every agent spawned before ``t_on`` (clear air chooses
   the nearer exit), and that route is refused for dose: the agent must
-  flee it, and the margin alone decides whether A is open to it.
+  flee it.
 
-With the margin the all-refused fallback holds the current exit (both
-routes are must-flee, both have tau 0), so the agent walks on into the
-strip; without it the agent turns back to A with reason ``fed_reroute``
-and takes a dose near 0.92 (walking at v0 1.2 m/s, slower than the
-1.3 m/s the prediction assumes, so the dose taken runs a little over the
-one predicted, and congestion adds to it).
+The agent turns back to A with reason ``fed_reroute`` and takes a dose
+near 0.92 (walking at v0 1.2 m/s, slower than the 1.3 m/s the prediction
+assumes, so the dose taken runs a little over the one predicted, and
+congestion adds to it). With the margin it was held on B instead, walking
+on into the strip: audited over 10 seeds on these decks, removing it
+lowered the FED p95 from 2.83 to 2.11 and the agents at FED >= 1 from
+20.5 to 7.3 per run, at the cost of more ``fed_reroute`` switches.
 
-Agents already inside the strip at ``t_on`` are not a case for the margin:
+Agents already inside the strip at ``t_on`` are not a case for the band:
 the excess stretch of their rival leg samples the strip and pushes A's
 predicted dose over 1.0, and they take dose at 0.5/s as they walk on.
 
 * ``near1_hold``: the field stays as it is; with constant rates and a
   self-consistent prediction the route A dose never crosses 1.0 after the
-  switch, so this is the clean "margin decides" case.
+  switch.
 * ``near1_rise``: at ``t_rise`` the arm rate rises to ``arm_rate_after``
   (8 /min) and the strip clears. An agent that switched onto A and is
-  still in the arm then sees its current route over 1.0 (held to the full
-  threshold) while B is clean again, and flees back: the return the plan
-  calls the risk of removing the margin. With ``t_rise`` 6 s after
-  ``t_on``, agents that switched at the junction are 1-5 m into the arm.
+  still in the arm then sees its current route over 1.0 while B is clean
+  again, and flees back. With ``t_rise`` 6 s after ``t_on``, agents that
+  switched at the junction are 1-5 m into the arm.
 
 Run as a script with the ``run.py`` options (``--scenario``, ``--seed``,
 ``--output-*``) and ``--fed-deck NAME`` it runs one deck on the staged
 scenario and writes the same outputs as ``run.py``, so
-``scripts/margin_audit.py`` can sweep the margin over it. The script must
+``scripts/margin_audit.py`` can sweep a margin over it. The script must
 be run with this checkout first on ``PYTHONPATH``, as the harness does.
 """
 
@@ -166,20 +165,13 @@ def run_fed_deck(
     scenario,
     *,
     seed: int,
-    fed_return_margin: float | None = None,
     collect_costs: bool = False,
 ):
-    """Run *deck* on *scenario*; the caller owns the result's cleanup.
-
-    *fed_return_margin* overrides the scenario's routing block when set;
-    the harness sets the key in the staged scenario instead.
-    """
+    """Run *deck* on *scenario*; the caller owns the result's cleanup."""
     scenario = _configure_scenario(scenario, deck)
     routing = {**scenario.raw.get("routing", {}), "cost_model": deck.cost_model}
     if deck.anticipate is not None:
         routing["anticipate"] = deck.anticipate
-    if fed_return_margin is not None:
-        routing["fed_return_margin"] = fed_return_margin
     cost_config = RouteCostConfig.from_routing_params(routing)
     smoke = SmokeSpeedModel(
         BlobField(()), SmokeSpeedConfig(fds_dir=".", update_interval_s=1.0)
@@ -237,7 +229,7 @@ def _flee_backs(result) -> set[int]:
 
 
 @pytest.mark.parametrize("name", sorted(FED_DECKS))
-def test_rival_dose_is_in_the_margin_band(name):
+def test_rival_dose_is_in_the_former_margin_band(name):
     """The construction: the rival route's predicted dose sits in (0.9, 1.0]."""
     fed = FED_DECKS[name].fed
     assert fed is not None
@@ -245,47 +237,44 @@ def test_rival_dose_is_in_the_margin_band(name):
     assert fed.strip_rate * (11.0 / BASE_SPEED) / 60.0 > 1.0
 
 
-def _run_both(name: str, seed: int):
+def _run(name: str, seed: int):
     deck = FED_DECKS[name]
-    results = {}
-    for margin in (0.9, 1.0):
-        scenario = load_scenario(str(ASSETS / deck.config))
-        results[margin] = run_fed_deck(
-            deck, scenario, seed=seed, fed_return_margin=margin, collect_costs=True
-        )
-    return results
+    scenario = load_scenario(str(ASSETS / deck.config))
+    return run_fed_deck(deck, scenario, seed=seed, collect_costs=True)
 
 
 @pytest.mark.parametrize("name", ["near1_hold_gate", "near1_rise_gate"])
-def test_margin_decides_on_the_deck(name):
-    """Between 0.9 and 1.0 at least one agent's exit choice differs (B > 0).
+def test_rival_in_the_band_is_admitted(name):
+    """A rival with dose in (0.9, 1.0] is not refused; agents flee B for A.
 
-    With the margin the rival A is refused with its dose in the band and
-    nobody leaves the refused B (the fallback holds it); without it the
-    same agents flee B for A with reason ``fed_reroute``.
+    The refused exit B is fled with reason ``fed_reroute`` (#187 A2: the
+    0.9 margin used to refuse A and hold the agents on B).
     """
-    results = _run_both(name, seed=11)
+    result = _run(name, seed=11)
     try:
-        base, off = results[0.9], results[1.0]
-        assert base.success and off.success
-        assert _rival_refusals_in_band(base), "no rival refusal in (0.9, 1.0]"
-        assert not _rival_refusals_in_band(off)
-        assert not _left_b(base)
-        assert len(_left_b(off)) >= 5
+        assert result.success
+        assert not _rival_refusals_in_band(result)
+        assert len(_left_b(result)) >= 5
     finally:
-        for result in results.values():
-            result.cleanup()
+        result.cleanup()
 
 
 def test_rise_deck_makes_agents_flee_back():
     """On the rise deck agents that took route A for dose turn back for dose."""
-    results = _run_both("near1_rise_gate", seed=11)
+    result = _run("near1_rise_gate", seed=11)
     try:
-        assert not _flee_backs(results[0.9])
-        assert _flee_backs(results[1.0])
+        assert _flee_backs(result)
     finally:
-        for result in results.values():
-            result.cleanup()
+        result.cleanup()
+
+
+def test_the_removed_margin_key_stops_a_deck_run():
+    """A scenario that still sets fed_return_margin is refused (#187 A2)."""
+    deck = FED_DECKS["near1_hold_gate"]
+    scenario = load_scenario(str(ASSETS / deck.config))
+    scenario.raw.setdefault("routing", {})["fed_return_margin"] = 0.9
+    with pytest.raises(ValueError, match=r"fed_return_margin was removed in #187"):
+        run_fed_deck(deck, scenario, seed=11)
 
 
 # ── Harness entry point ───────────────────────────────────────────────

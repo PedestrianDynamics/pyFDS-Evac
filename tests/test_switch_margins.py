@@ -17,7 +17,6 @@ from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 _COST_MARGINS = {
     "tau_return_margin": 0.81,
     "tau_deadband": 0.12,
-    "fed_return_margin": 0.87,
     "fallback_switch_margin": 0.23,
     "current_exit_discount": 0.83,
     "clean_exit_margin": 0.14,
@@ -35,7 +34,6 @@ def _distinct_config() -> RerouteConfig:
 def test_view_lists_each_margin_once_in_audit_order():
     names = [m.name for m in rg._SWITCH_MARGINS]
     assert names == [
-        "fed_return_margin",
         "path_switch_anchor",
         "fallback_switch_margin",
         "tau_return_margin",
@@ -51,7 +49,6 @@ def test_code_defaults_are_unchanged():
     assert rg._switch_margin_values(RerouteConfig()) == {
         "tau_return_margin": 0.8,
         "tau_deadband": 0.1,
-        "fed_return_margin": 0.9,
         "path_switch_anchor": 0.9,
         "fallback_switch_margin": 0.2,
         "default_exit_anchoring": None,
@@ -174,7 +171,6 @@ def test_only_the_routing_block_margins_are_scenario_keys():
     assert settable == {
         "tau_return_margin",
         "tau_deadband",
-        "fed_return_margin",
         "path_switch_anchor",
         "fallback_switch_margin",
         "current_exit_discount",
@@ -195,7 +191,6 @@ def test_fds_evac_counterparts():
 
 # Whether 0 and 1 are valid values of each key.
 _RANGES = {
-    "fed_return_margin": (False, True),
     "exit_switch_anchor": (False, True),
     "path_switch_anchor": (False, True),
     "tau_return_margin": (False, True),
@@ -212,14 +207,13 @@ def test_every_routing_margin_has_a_range():
     assert rg._MARGIN_RANGES == _RANGES
 
 
-@pytest.mark.parametrize("value", [10.0, 0.0, None])
-def test_the_removed_lockout_key_is_an_error(value):
-    """A scenario that still sets fallback_return_lockout_s stops (#187)."""
-    with pytest.raises(
-        ValueError, match=r"^routing\.fallback_return_lockout_s was removed in #187"
-    ):
-        RouteCostConfig.from_routing_params({"fallback_return_lockout_s": value})
-    issue = routing_issue({"routing": {"fallback_return_lockout_s": value}})
+@pytest.mark.parametrize("key", ["fallback_return_lockout_s", "fed_return_margin"])
+@pytest.mark.parametrize("value", [10.0, 0.9, 0.0, None])
+def test_a_removed_key_is_an_error(key, value):
+    """A scenario that still sets a removed key stops (#187)."""
+    with pytest.raises(ValueError, match=rf"^routing\.{key} was removed in #187"):
+        RouteCostConfig.from_routing_params({key: value})
+    issue = routing_issue({"routing": {key: value}})
     assert issue is not None
     assert "removed in #187" in issue.message
 
@@ -227,7 +221,6 @@ def test_the_removed_lockout_key_is_an_error(value):
 @pytest.mark.parametrize(
     "key, value",
     [
-        ("fed_return_margin", 0.6),
         ("exit_switch_anchor", 0.7),
         ("path_switch_anchor", 0.8),
     ],
@@ -291,7 +284,6 @@ _POSITIONAL_FIELDS = (
     "w_fed",
     "w_queue",
     "fed_rejection_threshold",
-    "fed_return_margin",
     "visibility_extinction_threshold",
     "impassable_extinction_threshold",
     "sampling_step_m",
@@ -337,9 +329,9 @@ def test_huge_int_is_a_range_error_not_an_overflow(key):
 
 
 def test_huge_int_is_a_configuration_issue():
-    issue = routing_issue({"routing": {"fed_return_margin": 10**400}})
+    issue = routing_issue({"routing": {"path_switch_anchor": 10**400}})
     assert issue is not None
-    assert issue.message.startswith("routing.fed_return_margin must be a number in ")
+    assert issue.message.startswith("routing.path_switch_anchor must be a number in ")
 
 
 @pytest.mark.parametrize(

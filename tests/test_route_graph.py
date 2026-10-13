@@ -426,17 +426,12 @@ class TestRouteCost:
         assert rc.rejected is True
         assert "FED_max" in rc.rejection_reason
 
-    def test_fed_deadband_asymmetric(self, simple_route_graph):
-        """A route whose dose sits in the (margin, threshold) band is accepted
-        as the current exit but rejected as a switch target — the anti-flicker
-        Schmitt trigger. Threshold 1.0, margin 0.9 → band is 0.9–1.0."""
+    def test_fed_limit_is_the_same_for_a_rival(self, simple_route_graph):
+        """A route with dose in (0.9, 1.0] is accepted as the current exit and
+        as a switch target: the FED limit is the plain threshold (#187 A2)."""
         field = ConstantExtinctionField(0.0)
-        config = RouteCostConfig(
-            base_speed_m_per_s=1.0,
-            fed_rejection_threshold=1.0,
-            fed_return_margin=0.9,
-        )
-        # current_fed = 0.95 → fed_max ≈ 0.95, sits inside the 0.9–1.0 band.
+        config = RouteCostConfig(base_speed_m_per_s=1.0, fed_rejection_threshold=1.0)
+        # current_fed = 0.95 → fed_max ≈ 0.95, inside (0.9, 1.0].
         as_current = evaluate_route(
             simple_route_graph,
             ["D0", "E0"],
@@ -457,16 +452,14 @@ class TestRouteCost:
             config,
             current_exit="E1",  # some *other* exit is current → E0 is a target
         )
-        assert as_current.rejected is False  # keep your current exit
-        assert as_target.rejected is True  # don't switch onto a marginal one
+        assert as_current.rejected is False
+        assert as_target.rejected is False
 
-    def test_fed_deadband_still_flees_over_threshold(self, simple_route_graph):
+    def test_fed_over_threshold_is_rejected_as_current(self, simple_route_graph):
         """Even the current exit is rejected once dose crosses the full
         threshold — safety (fleeing) is never weakened."""
         field = ConstantExtinctionField(0.0)
-        config = RouteCostConfig(
-            base_speed_m_per_s=1.0, fed_rejection_threshold=1.0, fed_return_margin=0.9
-        )
+        config = RouteCostConfig(base_speed_m_per_s=1.0, fed_rejection_threshold=1.0)
         rc = evaluate_route(
             simple_route_graph,
             ["D0", "E0"],

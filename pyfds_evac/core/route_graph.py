@@ -849,7 +849,6 @@ FALLBACK_RULES = ("tau", "hold")
 # current exit holds between two refused routes unless it must be fled.
 # The off value of each (1, or 0 for the two subtracted ones) is in range.
 _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
-    "fed_return_margin": (False, True),
     "exit_switch_anchor": (False, True),
     "path_switch_anchor": (False, True),
     "tau_return_margin": (False, True),
@@ -865,6 +864,11 @@ _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
 # would silently do nothing; run_scenario and from_routing_params both
 # check, since an explicit cost config bypasses the factory.
 REMOVED_ROUTING_KEYS: dict[str, str] = {
+    "fed_return_margin": (
+        "routing.fed_return_margin was removed in #187: a rival exit is "
+        "refused for dose above fed_rejection_threshold, as the current "
+        "exit is; delete the key"
+    ),
     "fallback_return_lockout_s": (
         "routing.fallback_return_lockout_s was removed in #187: the return "
         "lockout (#458) no longer exists; delete the key"
@@ -929,14 +933,6 @@ class RouteCostConfig:
     # dependence.
     w_queue: float = 0.0
     fed_rejection_threshold: float = 1.0
-    # Asymmetric FED hysteresis (Schmitt trigger) to stop agents flip-flopping
-    # when a route's predicted dose wobbles across the rejection threshold. The
-    # agent's *current* exit is rejected only above fed_rejection_threshold (it
-    # still flees the instant dose crosses incapacitation — safety unchanged),
-    # but a *different* exit is only accepted as a switch target if its dose is
-    # below fed_rejection_threshold * fed_return_margin, i.e. clearly safe, not
-    # merely back under threshold. Never makes it harder to LEAVE a bad exit.
-    fed_return_margin: float = 0.9
     visibility_extinction_threshold: float = 0.5
     # Additive only.
     # Above this route-average extinction, a smoke/visibility rejection is
@@ -1092,9 +1088,6 @@ class RouteCostConfig:
             ),
             fallback_switch_margin=routing.get(
                 "fallback_switch_margin", RouteCostConfig.fallback_switch_margin
-            ),
-            fed_return_margin=routing.get(
-                "fed_return_margin", RouteCostConfig.fed_return_margin
             ),
             exit_switch_anchor=routing.get(
                 "exit_switch_anchor", RouteCostConfig.exit_switch_anchor
@@ -2014,32 +2007,12 @@ def _measure_route(
 # ── Cost-model policies ──────────────────────────────────────────────
 
 
-def _fed_limit(
-    config: RouteCostConfig, exit_id: str, current_exit: str | None
-) -> float:
-    """The predicted dose above which the route to *exit_id* is refused.
-
-    Asymmetric FED rejection (deadband). The agent's current exit keeps the
-    full threshold so it always flees the instant dose crosses incapacitation.
-    A different exit is held to the stricter fed_return_margin fraction, so the
-    agent only switches onto it once its dose is clearly safe — this stops the
-    flip-flop when a marginal route's predicted dose wobbles around 1.0.
-    current_exit=None (e.g. initial choice, or a direct evaluate_route call)
-    falls back to the plain threshold for every route.
-    """
-    is_current = current_exit is not None and exit_id == current_exit
-    fed_threshold = config.fed_rejection_threshold
-    if not is_current and current_exit is not None:
-        fed_threshold *= config.fed_return_margin
-    return fed_threshold
-
-
 def _fed_violations(
-    m: RouteMeasurements, config: RouteCostConfig, current_exit: str | None
+    m: RouteMeasurements, config: RouteCostConfig
 ) -> list[RouteViolation]:
     """The FED violation of a measured route, if it has one."""
     fed_max = m.fed_max_route
-    fed_threshold = _fed_limit(config, m.exit_id, current_exit)
+    fed_threshold = config.fed_rejection_threshold
     if fed_max > fed_threshold:
         return [
             RouteViolation(
@@ -2222,7 +2195,7 @@ class AdditivePolicy(_AnchoredPolicy):
         config: RouteCostConfig,
         current_exit: str | None,
     ) -> RouteFeasibility:
-        violations = _fed_violations(m, config, current_exit)
+        violations = _fed_violations(m, config)
         rejected = bool(violations)
         return RouteFeasibility(
             feasible=not rejected,
@@ -2394,7 +2367,7 @@ class GatePolicy(_AnchoredPolicy):
         config: RouteCostConfig,
         current_exit: str | None,
     ) -> RouteFeasibility:
-        violations = _fed_violations(m, config, current_exit)
+        violations = _fed_violations(m, config)
         feasible = not violations
         # Sight gate: FDS+Evac's rule that a door is only a candidate while the
         # agent can see a useful fraction of the way to it (evac.f90,
@@ -3378,7 +3351,6 @@ class _SwitchMargin:
 # float guards, the reevaluation cadence reevaluation_interval_s and the
 # gate scan stopping at the current exit (an ordering, not a margin).
 _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
-    _SwitchMargin("fed_return_margin", "RouteCostConfig", True, None, ("_fed_limit",)),
     # FAC_DOOR_WAIT's value, applied to a different cost: ours.
     _SwitchMargin(
         "path_switch_anchor",

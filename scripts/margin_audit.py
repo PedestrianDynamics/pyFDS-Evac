@@ -32,7 +32,7 @@ table without JuPedSim's per-process geometry hash (C10).
 
 Usage::
 
-    uv run python scripts/margin_audit.py run --margin fed_return_margin \\
+    uv run python scripts/margin_audit.py run --margin path_switch_anchor \\
         --decks l_corridor_gate t_junction_pre30 [--seeds 1 2 ...] [--jobs 4]
     uv run python scripts/margin_audit.py analyse DIR --primary-deck l_corridor_gate
     uv run python scripts/margin_audit.py metrics DIR/l_corridor_gate/seed1/off
@@ -98,14 +98,11 @@ class Margin:
 
 
 # Off values and primary metrics from the stage-2 plan (§3.2). A1,
-# fallback_return_lockout_s, was audited at c2c2081f and removed (#187).
-# A2's "exposure
-# co-primary" is covered by the secondary rule: fed_p95 and fed_ge_1 are in
-# SECONDARY, so a distinct rise in exposure blocks "remove". A margin
+# fallback_return_lockout_s (A1, audited at c2c2081f) and fed_return_margin
+# (A2, audited on the targeted FED decks) were removed (#187). A margin
 # without a primary metric is not in the audit order; ``analyse`` then
 # needs ``--metric``.
 MARGINS: dict[str, Margin] = {
-    "fed_return_margin": Margin(1.0, "switches_per_agent:fed_reroute"),
     "path_switch_anchor": Margin(1.0, "switches_per_agent:better_path"),
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),
     "tau_return_margin": Margin(1.0, "returns"),
