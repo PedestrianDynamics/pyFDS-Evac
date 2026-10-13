@@ -1170,10 +1170,7 @@ def test_predicted_rerouting_reports_the_routing_block_margins():
     from pyfds_evac.core.run_config import _build_reroute_config
 
     scenario = _load(DISCOVERY)
-    scenario.raw["routing"] = {
-        "exit_switch_anchor": 0.6,
-        "path_switch_anchor": 0.7,
-    }
+    scenario.raw["routing"] = {"exit_switch_anchor": 0.6}
     opts = _parse("--scenario", "x")
     cfg = effective_configuration(opts, scenario, inspect_fds=False)
     predicted = predicted_run_settings(opts, scenario.raw, cfg)["rerouting"]
@@ -1182,7 +1179,8 @@ def test_predicted_rerouting_reports_the_routing_block_margins():
     assert predicted == used["rerouting"]
     assert predicted["exit_switch_anchor"] == 0.6
     cost = predicted["cost_config"]
-    assert (cost["exit_switch_anchor"], cost["path_switch_anchor"]) == (0.6, 0.7)
+    assert cost["exit_switch_anchor"] == 0.6
+    assert "path_switch_anchor" not in cost
     assert "fed_return_margin" not in cost
     rows = {row.key: row for row in cfg.routing}
     assert all(row.default == 0.9 and row.overridden for row in rows.values())

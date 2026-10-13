@@ -186,19 +186,9 @@ DEFAULTS = [
         lambda: RerouteConfig(cost_config=_routing()).resolved_exit_switch_anchor,
     ),
     (
-        ROUTING,
-        "| `path_switch_anchor` | `0.9` |",
-        lambda: _routing().path_switch_anchor,
-    ),
-    (
         GATE,
         "| `exit_switch_anchor` | `0.9` |",
         lambda: _routing().exit_switch_anchor,
-    ),
-    (
-        GATE,
-        "| `path_switch_anchor` | `0.9` |",
-        lambda: _routing().path_switch_anchor,
     ),
     (
         ROUTING,

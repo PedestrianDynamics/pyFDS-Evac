@@ -17,6 +17,11 @@ The exit-switch decision had **no hysteresis**. We already had an anti-thrash ma
 `_PATH_IMPROVEMENT_THRESHOLD = 0.95`, but it only guarded *same-exit* path swaps
 (`route_graph.py`). The branch that switches to a *different* exit adopted any exit
 that ranked cheapest, however marginally — so two near-tied exits swapped every tick.
+
+Removed in #187 (see the CHANGELOG): the same-exit margin (later
+`path_switch_anchor`, 0.9) held back path swaps that were cheaper by
+less than 10 %; removing it let agents take any strictly cheaper path to
+the same exit, with no change of outcome on the oval deck.
 A congestion feedback loop made it worse: switching to exit B raises B's queue cost,
 which makes A look cheaper next round, which switches back.
 

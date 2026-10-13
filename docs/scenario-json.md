@@ -291,7 +291,11 @@ exit choice uses the cost model too.
 `fallback_return_lockout_s`, the 10 s return lockout between two refused
 routes ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)), was removed in [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187). A scenario that still sets
 it stops with a `ValueError` naming the removal, also with
-`--no-enable-rerouting`; delete the key. `fed_return_margin`, the
+`--no-enable-rerouting`; delete the key. `path_switch_anchor`, the
+fraction of the walked path's `rank_cost` a new path to the same exit
+had to come in under, was removed in the same issue and is refused the
+same way: the path is now taken whenever it is strictly cheaper.
+`fed_return_margin`, the
 fraction of `fed_rejection_threshold` above which a rival exit was
 refused for dose, was removed in the same issue and is refused the same
 way: a rival is now held to `fed_rejection_threshold`, as the current
@@ -299,7 +303,7 @@ exit is.
 
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:
-`exit_switch_anchor`, `path_switch_anchor`,
+`exit_switch_anchor`,
 `tau_return_margin`, `current_exit_discount` and `clean_exit_margin` in
 (0, 1]; `tau_deadband` and `fallback_switch_margin` in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for `tau_deadband`

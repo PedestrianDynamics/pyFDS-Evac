@@ -850,7 +850,6 @@ FALLBACK_RULES = ("tau", "hold")
 # The off value of each (1, or 0 for the two subtracted ones) is in range.
 _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
     "exit_switch_anchor": (False, True),
-    "path_switch_anchor": (False, True),
     "tau_return_margin": (False, True),
     "current_exit_discount": (False, True),
     "clean_exit_margin": (False, True),
@@ -864,6 +863,11 @@ _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
 # would silently do nothing; run_scenario and from_routing_params both
 # check, since an explicit cost config bypasses the factory.
 REMOVED_ROUTING_KEYS: dict[str, str] = {
+    "path_switch_anchor": (
+        "routing.path_switch_anchor was removed in #187: a new path to the "
+        "same exit is taken whenever it is strictly cheaper than the walked "
+        "one; delete the key"
+    ),
     "fed_return_margin": (
         "routing.fed_return_margin was removed in #187: a rival exit is "
         "refused for dose above fed_rejection_threshold, as the current "
@@ -1034,12 +1038,6 @@ class RouteCostConfig:
     # calibrated -- see docs/rerouting-oscillation-notes.md. An explicit
     # RerouteConfig.exit_switch_anchor overrides it.
     exit_switch_anchor: float = 0.9
-    # Same-exit reroute only fires when the newly ranked path is below this
-    # fraction of the rank_cost of the path the agent walks, so agents do not
-    # thrash onto a "better" path that is only cheaper by floating-point
-    # noise. Ours: FDS+Evac compares no two paths to one exit, so it has no
-    # counterpart, and nothing ties it to exit_switch_anchor. Not calibrated.
-    path_switch_anchor: float = 0.9
 
     def __post_init__(self) -> None:
         """Reject an unknown cost_model or fallback_rule, and a bad margin."""
@@ -1091,9 +1089,6 @@ class RouteCostConfig:
             ),
             exit_switch_anchor=routing.get(
                 "exit_switch_anchor", RouteCostConfig.exit_switch_anchor
-            ),
-            path_switch_anchor=routing.get(
-                "path_switch_anchor", RouteCostConfig.path_switch_anchor
             ),
             w_smoke=routing.get("w_smoke", RouteCostConfig.w_smoke),
             w_fed=routing.get("w_fed", RouteCostConfig.w_fed),
@@ -3351,14 +3346,6 @@ class _SwitchMargin:
 # float guards, the reevaluation cadence reevaluation_interval_s and the
 # gate scan stopping at the current exit (an ordering, not a margin).
 _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
-    # FAC_DOOR_WAIT's value, applied to a different cost: ours.
-    _SwitchMargin(
-        "path_switch_anchor",
-        "RouteCostConfig",
-        True,
-        None,
-        ("_path_clearly_cheaper",),
-    ),
     _SwitchMargin(
         "fallback_switch_margin",
         "RouteCostConfig",
@@ -3652,19 +3639,15 @@ def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
     """Whether the walked path failed a limit and *best* passes them all.
 
     A rejected walked path is left for a feasible one whatever the time
-    saving: the 10 % rule damps churn between acceptable paths, it must not
-    hold an agent on one that failed a limit (#184).
+    saving: a cost comparison between acceptable paths must not hold an
+    agent on one that failed a limit (#184).
     """
     return committed.rejected and best.feasible and not best.rejected
 
 
-def _path_clearly_cheaper(
-    best: RouteCost, committed: RouteCost, config: RerouteConfig
-) -> bool:
-    """Whether *best* beats the walked path by the path_switch_anchor ratio."""
-    return (
-        best.rank_cost < committed.rank_cost * _cost_config(config).path_switch_anchor
-    )
+def _path_clearly_cheaper(best: RouteCost, committed: RouteCost) -> bool:
+    """Whether *best* is strictly cheaper than the walked path."""
+    return best.rank_cost < committed.rank_cost
 
 
 def _decide_same_exit(
@@ -3712,7 +3695,7 @@ def _decide_same_exit(
             current_target=current_target,
         )
         if _leaves_rejected_path(committed, best) or _path_clearly_cheaper(
-            best, committed, config
+            best, committed
         ):
             return RouteDecision(
                 kind="switch",
