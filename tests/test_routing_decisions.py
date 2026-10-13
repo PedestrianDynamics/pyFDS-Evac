@@ -932,10 +932,9 @@ def _scaled_limit(target: float, factor: float, divide: bool = False) -> float |
     return None
 
 
-# The limits a rival exit is held to, and the clean limit of the current exit.
+# The tau limit a rival exit is held to, and the clean limit of the current exit.
 # Each case names (config field, margin field, margin, current exit, measure).
 _MARGIN_LIMITS = (
-    ("fed_rejection_threshold", "fed_return_margin", "east", "fed_max_route"),
     ("tau_max", "tau_return_margin", "east", "tau_route"),
     ("clean_extinction_threshold", "clean_exit_margin", "west", "k_leg_max"),
 )
@@ -946,7 +945,7 @@ def _margin_config(model, field_name: str, margin_name: str, margin, limit):
 
 
 def _margin_limit_cases() -> list[tuple[str, golden.RankCase]]:
-    """Rival-adjusted FED and tau limits, and the current exit's clean limit.
+    """Rival-adjusted tau limit, and the current exit's clean limit.
 
     ``current_exit`` is set, so the margin applies to the measured route; the
     threshold is chosen so the adjusted limit lands exactly on the measured
@@ -1018,9 +1017,8 @@ def test_margin_limits_are_hit_exactly():
         if field_name == "clean_extinction_threshold":
             assert not ranked[below].clean and ranked[exact].clean
         else:
-            prefix = "FED" if field_name.startswith("fed") else "tau"
             reasons = [ranked[limit].rejection_reason or "" for limit in (below, exact)]
-            assert prefix in reasons[0] and prefix not in reasons[1], reasons
+            assert "tau" in reasons[0] and "tau" not in reasons[1], reasons
 
 
 def test_threshold_equality_snapshot():

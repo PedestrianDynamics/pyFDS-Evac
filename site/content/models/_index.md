@@ -63,8 +63,7 @@ on one slice, not a 3-D ray up to the sign.
   exits they learn ([Wayfinding](/models/wayfinding.md)). Smoke is not the
   only routing input: when the gas FED model is loaded, a route whose
   projected gas FED exceeds `fed_rejection_threshold` (1.0) is refused
-  under both cost models for the agent's current exit, and a route to
-  another exit above 0.9 of it (`fed_return_margin`).
+  under both cost models, for the agent's current exit and for any other.
 - **Toxic and irritant gases** (on by default when the case has CO, CO₂
   and O₂ slices). Each agent accumulates a gas FED, irritants included,
   and by default stops once it reaches 1. The threshold is

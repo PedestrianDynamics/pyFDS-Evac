@@ -411,7 +411,11 @@ DECKS: dict[str, Deck] = {
 
 
 def _prepare_scenario(deck: Deck):
-    scenario = load_scenario(str(ASSETS / deck.config))
+    return _configure_scenario(load_scenario(str(ASSETS / deck.config)), deck)
+
+
+def _configure_scenario(scenario, deck: Deck):
+    """*scenario* with the deck's agents, spawning and run length applied."""
     for dist in scenario.raw["distributions"].values():
         params = dist.setdefault("parameters", {})
         params["number"] = deck.agents
@@ -845,15 +849,15 @@ RANK_CASES: dict[str, RankCase] = {
     "gate_fed_refuses": RankCase(
         _star2, _gate(), fed=ArmFed({"west": 4.0}), current_fed=0.2
     ),
-    # Gate: a rival FED between margin and threshold is refused only as a rival.
-    "gate_fed_return_margin_rival": RankCase(
+    # Gate: a rival is held to the plain FED threshold, as the current exit is.
+    "gate_fed_rival": RankCase(
         _star2,
         _gate(),
         fed=ArmFed({"west": 2.5}),
         current_fed=0.1,
         current_exit="east",
     ),
-    "gate_fed_return_margin_current": RankCase(
+    "gate_fed_current": RankCase(
         _star2,
         _gate(),
         fed=ArmFed({"west": 2.5}),

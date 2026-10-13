@@ -32,7 +32,7 @@ table without JuPedSim's per-process geometry hash (C10).
 
 Usage::
 
-    uv run python scripts/margin_audit.py run --margin fed_return_margin \\
+    uv run python scripts/margin_audit.py run --margin path_switch_anchor \\
         --decks l_corridor_gate t_junction_pre30 [--seeds 1 2 ...] [--jobs 4]
     uv run python scripts/margin_audit.py analyse DIR --primary-deck l_corridor_gate
     uv run python scripts/margin_audit.py metrics DIR/l_corridor_gate/seed1/off
@@ -72,7 +72,7 @@ DEFAULT_DATA_ROOT = Path(
 )
 AUDIT_DIR = "audit_187"
 ARMS = ("base", "off")
-CODE_PATHS = ("pyfds_evac", "run.py", "assets")
+CODE_PATHS = ("pyfds_evac", "run.py", "assets", "tests")
 ALPHA = 0.05
 MIN_SEEDS = 6
 EXACT_MAX_N = 20
@@ -98,14 +98,11 @@ class Margin:
 
 
 # Off values and primary metrics from the stage-2 plan (§3.2). A1,
-# fallback_return_lockout_s, was audited at c2c2081f and removed (#187).
-# A2's "exposure
-# co-primary" is covered by the secondary rule: fed_p95 and fed_ge_1 are in
-# SECONDARY, so a distinct rise in exposure blocks "remove". A margin
+# fallback_return_lockout_s (A1, audited at c2c2081f) and fed_return_margin
+# (A2, audited on the targeted FED decks) were removed (#187). A margin
 # without a primary metric is not in the audit order; ``analyse`` then
 # needs ``--metric``.
 MARGINS: dict[str, Margin] = {
-    "fed_return_margin": Margin(1.0, "switches_per_agent:fed_reroute"),
     "path_switch_anchor": Margin(1.0, "switches_per_agent:better_path"),
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),
     "tau_return_margin": Margin(1.0, "returns"),
@@ -121,7 +118,10 @@ class AuditDeck:
     """A deck and the seeds the plan assigns to it.
 
     Paths are relative to the data root, or to the repository when
-    *in_repo* is set. A deck without *fds_dir* runs in clear air.
+    *in_repo* is set. A deck without *fds_dir* runs in clear air, unless a
+    *runner* stands in for ``run.py``: a script under the repository that
+    takes run.py's options and writes its outputs, with its own synthetic
+    fire (``tests/test_fed_margin_deck.py``).
     """
 
     config: str
@@ -130,6 +130,7 @@ class AuditDeck:
     seeds: tuple[int, ...]
     in_repo: bool = False
     extra_args: tuple[str, ...] = ()
+    runner: tuple[str, ...] = ()
 
 
 # The golden decks hold the last FDS frame past the FDS end, as
@@ -138,6 +139,21 @@ class AuditDeck:
 # and R-det (tenability on).
 _HOLD = ("--allow-fds-horizon-hold",)
 _FAMILIARITY = ("--enable-rerouting", "--reroute-interval", "1")
+_FED_DECK = "tests/test_fed_margin_deck.py"
+
+
+def _fed_deck(name: str) -> AuditDeck:
+    """A targeted FED deck of tests/test_fed_margin_deck.py (#187 A2)."""
+    return AuditDeck(
+        "assets/t_junction/config_full.json",
+        "assets/t_junction/geometry.wkt",
+        None,
+        tuple(range(11, 21)),
+        in_repo=True,
+        runner=(_FED_DECK, "--fed-deck", name),
+    )
+
+
 DECKS: dict[str, AuditDeck] = {
     "l_corridor_gate": AuditDeck(
         "l_corridor/evac/deck_gate/config.json",
@@ -205,6 +221,10 @@ DECKS: dict[str, AuditDeck] = {
         tuple(range(4, 14)),
         in_repo=True,
     ),
+    "fed_near1_hold_gate": _fed_deck("near1_hold_gate"),
+    "fed_near1_hold_additive": _fed_deck("near1_hold_additive"),
+    "fed_near1_rise_gate": _fed_deck("near1_rise_gate"),
+    "fed_near1_rise_additive": _fed_deck("near1_rise_additive"),
     "familiarity_test_full": AuditDeck(
         "assets/familiarity_test_full/config.json",
         "assets/familiarity_test_full/geometry.wkt",
@@ -288,9 +308,11 @@ def _stage_scenario(
 def run_command(
     deck: AuditDeck, root: Path, scenario: Path, seed: int, out: Path, costs: bool
 ) -> list[str]:
+    runner = deck.runner or ("run.py",)
     argv = [
         sys.executable,
-        str(REPO / "run.py"),
+        str(REPO / runner[0]),
+        *runner[1:],
         "--scenario",
         str(scenario),
         "--seed",
@@ -310,8 +332,15 @@ def run_command(
 
 
 def run_env() -> dict[str, str]:
-    """The environment of a run: this one with the str hash seed fixed."""
-    return {**os.environ, "PYTHONHASHSEED": "0"}
+    """The environment of a run: the str hash seed fixed, this checkout first.
+
+    A runner under tests/ would otherwise import the installed pyfds_evac,
+    which can be another checkout's (#721).
+    """
+    python_path = os.pathsep.join(
+        p for p in (str(REPO), os.environ.get("PYTHONPATH", "")) if p
+    )
+    return {**os.environ, "PYTHONHASHSEED": "0", "PYTHONPATH": python_path}
 
 
 @dataclass(frozen=True)
@@ -638,10 +667,10 @@ def clear_air_identity(folder: Path, deck: str) -> dict | None:
     """Per seed, what differs between the arms of a clear-air *deck* (C10).
 
     A margin must not change a run without smoke; None for a deck with an
-    FDS run or one the harness does not know.
+    FDS run, a deck with its own runner, or one the harness does not know.
     """
     known = DECKS.get(deck)
-    if known is None or known.fds_dir is not None:
+    if known is None or known.fds_dir is not None or known.runner:
         return None
     pairs = _pairs(folder, deck)
     differing = {}

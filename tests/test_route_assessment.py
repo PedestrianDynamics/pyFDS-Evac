@@ -23,7 +23,6 @@ from pyfds_evac.core.route_graph import (
     RouteViolation,
     SegmentCost,
     _assess_measurements,
-    _fed_limit,
     _measure_route,
     _must_flee_rejection,
     _project_route_cost,
@@ -199,20 +198,16 @@ def test_additive_records_the_dose_only():
 
 
 def test_rival_limits_carry_their_margins():
-    """A rival exit is held to the margin-adjusted limits, the current one not."""
+    """A rival exit's tau limit is margin-adjusted, its FED limit is not (#187 A2)."""
     config = golden._gate()
-    for current_exit, fed_limit, tau_limit in (
-        (None, 1.0, config.tau_max),
-        ("west", 1.0, config.tau_max),
-        (
-            "east",
-            config.fed_rejection_threshold * config.fed_return_margin,
-            config.tau_max * config.tau_return_margin,
-        ),
+    for current_exit, tau_limit in (
+        (None, config.tau_max),
+        ("west", config.tau_max),
+        ("east", config.tau_max * config.tau_return_margin),
     ):
         _, assessment, rc = _assess_west(config, current_exit)
         fed, tau = assessment.feasibility.violations
-        assert fed.limit == fed_limit == _fed_limit(config, "west", current_exit)
+        assert fed.limit == config.fed_rejection_threshold
         assert tau.limit == tau_limit
         assert tau_limit == GatePolicy._tau_budget(config, "west", current_exit)
         assert _project_route_cost(assessment) == rc
