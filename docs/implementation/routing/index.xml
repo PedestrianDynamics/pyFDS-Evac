@@ -256,11 +256,10 @@ what it does and why it ships off.&lt;/p>
 &lt;a href="#route-rejection" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A route is rejected under any of these conditions:&lt;/p>
 &lt;ul>
 &lt;li>&lt;code>FED_max&lt;/code> exceeds &lt;code>fed_rejection_threshold&lt;/code> (default 1.0) —
-evaluated per route inside &lt;code>evaluate_route&lt;/code>. The threshold is
-asymmetric: a route to an exit that is &lt;em>not&lt;/em> the agent&amp;rsquo;s current one
-must come in under &lt;code>fed_rejection_threshold * fed_return_margin&lt;/code>
-(0.9), so an agent flees a deadly exit at once but only switches onto
-a rival that is clearly safe.&lt;/li>
+evaluated per route inside &lt;code>evaluate_route&lt;/code>. The threshold is the same
+for the current exit and for a rival. (Until the removal of
+&lt;code>fed_return_margin&lt;/code> in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>
+a rival was held to 0.9 of it.)&lt;/li>
 &lt;li>&lt;strong>Gate model only:&lt;/strong> the route&amp;rsquo;s optical depth &lt;code>tau = K_ave * L_eff&lt;/code> exceeds
 &lt;code>tau_max&lt;/code> (default 6). This test is asymmetric too: for an exit that is not
 the agent&amp;rsquo;s current one the budget is &lt;code>tau_max * tau_return_margin&lt;/code> (0.8), so
@@ -384,9 +383,8 @@ speed law, used only to estimate travel time; their defaults are on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a> page.&lt;/p>
 &lt;p>One further field exists on the dataclass but is &lt;strong>not&lt;/strong> readable from
 the &lt;code>routing&lt;/code> block, so a scenario run always gets its default:
-&lt;code>impassable_extinction_threshold&lt;/code> (3.0). &lt;code>fed_return_margin&lt;/code> (0.9),
-&lt;code>exit_switch_anchor&lt;/code> (0.9) and &lt;code>path_switch_anchor&lt;/code> (0.9) are &lt;code>routing&lt;/code>
-keys.&lt;/p>
+&lt;code>impassable_extinction_threshold&lt;/code> (3.0). &lt;code>exit_switch_anchor&lt;/code> (0.9)
+and &lt;code>path_switch_anchor&lt;/code> (0.9) are &lt;code>routing&lt;/code> keys.&lt;/p>
 &lt;p>&lt;code>w_smoke&lt;/code> and &lt;code>w_fed&lt;/code> &lt;strong>no longer reach route choice under the gate.&lt;/strong>
 Since &lt;code>0d9bf79&lt;/code> a gate run weights each Dijkstra edge by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor that keeps a
@@ -648,7 +646,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
-&lt;td>FED over the threshold (× &lt;code>fed_return_margin&lt;/code> for a rival while a current exit is set), then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
+&lt;td>FED over the threshold then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
 &lt;td>FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as &lt;code>all segments non-visible&lt;/code> while staying feasible&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -719,7 +717,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tbody>
 &lt;/table>
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
-&lt;p>Nine rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
+&lt;p>Eight rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
 &lt;code>route_graph.py&lt;/code> lists each with its owner, FDS+Evac counterpart and consumers.
 Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>:&lt;/p>
@@ -732,11 +730,6 @@ Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are 
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
-&lt;tr>
-&lt;td>&lt;code>fed_return_margin&lt;/code>&lt;/td>
-&lt;td>yes&lt;/td>
-&lt;td>none&lt;/td>
-&lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>path_switch_anchor&lt;/code>&lt;/td>
 &lt;td>yes&lt;/td>
@@ -1615,9 +1608,9 @@ read the &lt;code>clean&lt;/code> and &lt;code>k_leg_max&lt;/code> columns of th
 dose already taken plus the dose predicted over the walk
 (&lt;code>current_fed + sum(fed_growth)&lt;/code>), and a route above &lt;code>fed_rejection_threshold&lt;/code>
 (default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
-as optical depth: the current exit is held to the bare threshold so an agent
-flees a lethal door at once, while a rival must come in under
-&lt;code>fed_rejection_threshold * fed_return_margin&lt;/code> (0.9). A dose refusal is a
+as optical depth: the current exit and a rival are held to the same threshold
+(&lt;code>fed_return_margin&lt;/code>, which held a rival to 0.9 of it, was removed in #187:
+no route dose on any fire deck came near 1). A dose refusal is a
 &amp;ldquo;must flee&amp;rdquo; rejection, so it bypasses the exit-switch anchor — hysteresis
 cannot pin an agent to a door that will kill it.&lt;/p>
 &lt;p>Surviving routes are then ordered by optical depth and time. Dose never makes
@@ -1729,10 +1722,10 @@ returns to abandoned exits on &lt;code>l_corridor&lt;/code>.&lt;/p>
 &lt;p>A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
 admit wins, stopping at the agent&amp;rsquo;s own exit.&lt;/p>
-&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>tau_return_margin&lt;/code> (0.8) and &lt;code>fed_return_margin&lt;/code> (0.9) make
+&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>tau_return_margin&lt;/code> (0.8) makes
 a rival exit harder to &lt;em>qualify&lt;/em> than the current one; &lt;code>current_exit_discount&lt;/code>
 (0.9) makes it harder to &lt;em>outrank&lt;/em> it; &lt;code>tau_deadband&lt;/code> (0.1 of &lt;code>tau_max&lt;/code>) makes
-it harder to &lt;em>switch onto&lt;/em>, in both directions. Four constants, three of them
+it harder to &lt;em>switch onto&lt;/em>, in both directions. Three constants, all
 acting on the same quantity at three different stages. A reviewer will
 reasonably ask why, and no run isolates any one of them.&lt;/p>
 &lt;p>&lt;strong>Monotonicity held on &lt;code>world100&lt;/code> and did not on &lt;code>l_corridor&lt;/code>.&lt;/strong> The
@@ -2037,13 +2030,6 @@ title="Copy code"
 &lt;td>active&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>fed_return_margin&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.9&lt;/code>&lt;/td>
-&lt;td>A rival exit is refused above this fraction of &lt;code>fed_rejection_threshold&lt;/code>.&lt;/td>
-&lt;td>active&lt;/td>
-&lt;td>active&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>&lt;code>exit_switch_anchor&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.9&lt;/code>&lt;/td>
 &lt;td>A rival exit needs &lt;code>rank_cost&lt;/code> below this fraction of the current exit&amp;rsquo;s. An explicit &lt;code>RerouteConfig.exit_switch_anchor&lt;/code> overrides it.&lt;/td>
@@ -2153,8 +2139,8 @@ agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 o
 clock therefore runs ahead of the agent systematically, and it runs furthest
 ahead exactly where the smoke is thickest. With &lt;code>foresight_horizon_s = inf&lt;/code>
 the agent also has perfect foresight of the FDS solution.&lt;/li>
-&lt;li>&lt;strong>Six hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
-&lt;code>fallback_switch_margin&lt;/code> (0.2), &lt;code>fed_return_margin&lt;/code> (0.9),
+&lt;li>&lt;strong>Five hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
+&lt;code>fallback_switch_margin&lt;/code> (0.2),
 &lt;code>tau_return_margin&lt;/code> (0.8), &lt;code>tau_deadband&lt;/code> (0.1), and
 &lt;code>path_switch_anchor&lt;/code> (10 %) are all chosen to stop measured churn,
 not fitted to observed behaviour. Two have FDS+Evac values behind them:
