@@ -95,6 +95,16 @@ the escape route of the last occupant to leave the room of fire origin,
 following that occupant's location through the evacuation (MBIE 2012,
 pp. 47 and 49).
 
+Germany grades its fixed limits by the time spent in an area. DIN
+18009-2:2022-08 takes them from the vfdb guide (Table 1, Note 2): for a
+stay of more than 30 min, about 15 min or less than 5 min, CO 100, 200
+or 500 ppm, against the 2,700 ppm above. Every assessment rests on these
+location-based limits; they bound conditions under which escape may be
+impaired but not prevented (Introduction, p. 6). A person-based dose may
+be added for particular questions, such as occupants in the room of fire
+origin (§7.2.1–7.2.3). All of these sets are compared in
+[ASET-RSET maps after Schröder et al. (2020) › Tenability criteria in the literature](/docs/study-schroeder2020.md#tenability-criteria-in-the-literature).
+
 RSET comes from people. ISO/TR 16738 (§5.4) reports that the pre-travel
 activity phase can often be the longest part of the total escape time. Each
 occupant has their own \(t_{\mathrm{pre}}\) and \(t_{\mathrm{trav}}\), so
@@ -180,6 +190,9 @@ the margin ASET − RSET to compare designs (pp. 350–351). Their evidence come
   ISBN 978-0-478-39942-4.
   Written for the first edition of C/VM2; cited for the summation of the
   dose (commentary to Paragraph 2.2.1, pp. 47 and 49). Paraphrased.
+- DIN (2022). *DIN 18009-2:2022-08 Brandschutzingenieurwesen – Teil 2:
+  Räumungssimulation und Personensicherheit*. Beuth, Berlin.
+  Introduction (p. 6); §7.2.1–7.2.3 and Table 1 (pp. 22–24). Paraphrased.
 - Purser, D. A. (2003). *ASET and RSET: addressing some issues in relation
   to occupant behaviour and tenability*. Fire Safety Science, 7, 91–102.
   [doi:10.3801/IAFSS.FSS.7-91](https://doi.org/10.3801/IAFSS.FSS.7-91)
