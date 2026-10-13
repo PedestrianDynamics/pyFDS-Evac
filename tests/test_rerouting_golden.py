@@ -411,7 +411,11 @@ DECKS: dict[str, Deck] = {
 
 
 def _prepare_scenario(deck: Deck):
-    scenario = load_scenario(str(ASSETS / deck.config))
+    return _configure_scenario(load_scenario(str(ASSETS / deck.config)), deck)
+
+
+def _configure_scenario(scenario, deck: Deck):
+    """*scenario* with the deck's agents, spawning and run length applied."""
     for dist in scenario.raw["distributions"].values():
         params = dist.setdefault("parameters", {})
         params["number"] = deck.agents
