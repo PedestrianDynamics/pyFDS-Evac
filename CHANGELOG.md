@@ -102,10 +102,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dose above `fed_rejection_threshold`, as the current exit is. The
   margin was inert on every fire deck, where no route dose came near 1
   (largest 0.18). On the targeted decks that put a rival's dose in
-  (0.9, 1.0], removing it lowered exposure (FED p95 2.83 → 2.11, agents
-  at FED >= 1 from 20.5 to 7.3 per run) at the cost of more
-  `fed_reroute` switches: it kept agents on a lethal route rather than
-  a near-threshold one. This is a finding about the margin on those
+  (0.9, 1.0], removing it lowered exposure (FED p95 2.83 → 2.11 and
+  2.53 → 2.11, agents at FED >= 1 from 20.5 to 7.3 and 14.2 to 6.7 per
+  run on the hold and rise decks) at the cost of more `fed_reroute`
+  switches (0.01 → 0.51 per agent), 3 to 5 s of RSET and, on the rise
+  deck, about 15 returns per run: it kept agents on a lethal route
+  rather than a near-threshold one. This is a finding about the margin on those
   decks, not a safety assumption. `RouteCostConfig` positional
   arguments after `fed_rejection_threshold` shift by one. A scenario
   that still sets the key stops with a `ValueError` naming the removal;
