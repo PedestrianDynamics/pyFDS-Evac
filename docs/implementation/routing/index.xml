@@ -384,7 +384,7 @@ speed law, used only to estimate travel time; their defaults are on the
 &lt;p>One further field exists on the dataclass but is &lt;strong>not&lt;/strong> readable from
 the &lt;code>routing&lt;/code> block, so a scenario run always gets its default:
 &lt;code>impassable_extinction_threshold&lt;/code> (3.0). &lt;code>exit_switch_anchor&lt;/code> (0.9)
-and &lt;code>path_switch_anchor&lt;/code> (0.9) are &lt;code>routing&lt;/code> keys.&lt;/p>
+is a &lt;code>routing&lt;/code> key.&lt;/p>
 &lt;p>&lt;code>w_smoke&lt;/code> and &lt;code>w_fed&lt;/code> &lt;strong>no longer reach route choice under the gate.&lt;/strong>
 Since &lt;code>0d9bf79&lt;/code> a gate run weights each Dijkstra edge by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor that keeps a
@@ -661,7 +661,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
-&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below 0.9 × the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way&lt;/td>
+&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -717,7 +717,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tbody>
 &lt;/table>
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
-&lt;p>Eight rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
+&lt;p>Seven rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
 &lt;code>route_graph.py&lt;/code> lists each with its owner, FDS+Evac counterpart and consumers.
 Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>:&lt;/p>
@@ -730,11 +730,6 @@ Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are 
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
-&lt;tr>
-&lt;td>&lt;code>path_switch_anchor&lt;/code>&lt;/td>
-&lt;td>yes&lt;/td>
-&lt;td>none (the value of &lt;code>FAC_DOOR_WAIT&lt;/code>, applied to a different cost)&lt;/td>
-&lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
 &lt;td>yes&lt;/td>
@@ -865,7 +860,7 @@ though the path to it may still be rewritten, which is recorded as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>better_path&lt;/code>&lt;/td>
-&lt;td>Same exit, but a path more than 10 % cheaper on &lt;code>rank_cost&lt;/code>, or a feasible path replacing a rejected walked one&lt;/td>
+&lt;td>Same exit, but a path strictly cheaper on &lt;code>rank_cost&lt;/code>, or a feasible path replacing a rejected walked one&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>explore&lt;/code>&lt;/td>
@@ -1530,8 +1525,9 @@ provenance; an earlier version cited &lt;code>FAC_DOOR_WAIT&lt;/code>, which is 
 discounts the current door&amp;rsquo;s &lt;em>travel time&lt;/em> (&lt;code>T_tmp&lt;/code>), not its smoke.
 &lt;code>FAC_DOOR_WAIT&lt;/code> is the counterpart of &lt;code>exit_switch_anchor&lt;/code>: the same rule under
 additive, and it can differ under the gate (see the anchoring row of the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a>). &lt;code>path_switch_anchor&lt;/code> takes
-its value but has no counterpart.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a>). A new path to the same exit
+has no counterpart in FDS+Evac, and since #187 it is taken whenever it is
+strictly cheaper.&lt;/p>
 &lt;p>&lt;strong>A reviewer will ask why both.&lt;/strong> They act on different stages — one on the
 feasible set, one on the order within it — but they have not been measured
 independently, and no run isolates the contribution of either.&lt;/p>
@@ -2036,13 +2032,6 @@ title="Copy code"
 &lt;td>active (an infeasible rival, and a tie inside the &lt;code>tau&lt;/code> deadband)&lt;/td>
 &lt;td>active&lt;/td>
 &lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>path_switch_anchor&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.9&lt;/code>&lt;/td>
-&lt;td>A new path to the same exit needs &lt;code>rank_cost&lt;/code> below this fraction of the walked path&amp;rsquo;s.&lt;/td>
-&lt;td>active&lt;/td>
-&lt;td>active&lt;/td>
-&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>&lt;code>clean_exit_margin&lt;/code> had two disagreeing defaults — 0.1 in the dataclass, 0.8
@@ -2139,10 +2128,10 @@ agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 o
 clock therefore runs ahead of the agent systematically, and it runs furthest
 ahead exactly where the smoke is thickest. With &lt;code>foresight_horizon_s = inf&lt;/code>
 the agent also has perfect foresight of the FDS solution.&lt;/li>
-&lt;li>&lt;strong>Five hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
+&lt;li>&lt;strong>Four hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
 &lt;code>fallback_switch_margin&lt;/code> (0.2),
-&lt;code>tau_return_margin&lt;/code> (0.8), &lt;code>tau_deadband&lt;/code> (0.1), and
-&lt;code>path_switch_anchor&lt;/code> (10 %) are all chosen to stop measured churn,
+&lt;code>tau_return_margin&lt;/code> (0.8) and &lt;code>tau_deadband&lt;/code> (0.1)
+are all chosen to stop measured churn,
 not fitted to observed behaviour. Two have FDS+Evac values behind them:
 &lt;code>clean_exit_margin&lt;/code> = &lt;code>FAC_DOOR_OLD&lt;/code>, and &lt;code>current_exit_discount&lt;/code> =
 &lt;code>FAC_DOOR_OLD2&lt;/code>. Neither was fitted here either.&lt;/li>
