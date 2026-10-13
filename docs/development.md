@@ -109,6 +109,14 @@ the zips are committed. See
   small verification fixtures already committed (e.g.
   `assets/iso_table21_coupled`) stay.
 
+## Design principles
+
+Changes to a model follow the
+[scientific software design principles](DESIGN_PRINCIPLES.md): classify
+every number, keep empirical parameters apart from the equations, document
+sources and validity ranges, and answer the design-review questions before
+implementing.
+
 ## Commits and pull requests
 
 - **Tests first for fixes.** Add a test that fails on `main`, then fix the
