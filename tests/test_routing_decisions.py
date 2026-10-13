@@ -2253,27 +2253,15 @@ def test_wander_step_is_kept_after_a_patrol_leg():
 
 
 def test_same_exit_improvement_is_strict():
-    """A path exactly 10 % cheaper than the walked one is not enough."""
+    """A strictly cheaper path to the same exit wins; an equal one does not."""
     walked = _rc("E0", rank_cost=10.0)
-    config = RerouteConfig()
-    assert 10.0 * RouteCostConfig().path_switch_anchor == 9.0
-    for cost, cheaper in ((9.0, False), (math.nextafter(9.0, 0.0), True)):
-        assert (
-            live._path_clearly_cheaper(_rc("E0", rank_cost=cost), walked, config)
-            is cheaper
-        )
-
-
-def test_same_exit_improvement_reads_path_switch_anchor():
-    """The routing block's path_switch_anchor sets the same-exit ratio."""
-    walked = _rc("E0", rank_cost=10.0)
-    cost_config = RouteCostConfig.from_routing_params({"path_switch_anchor": 0.5})
-    config = RerouteConfig(cost_config=cost_config)
-    for cost, cheaper in ((5.0, False), (math.nextafter(5.0, 0.0), True)):
-        assert (
-            live._path_clearly_cheaper(_rc("E0", rank_cost=cost), walked, config)
-            is cheaper
-        )
+    for cost, cheaper in (
+        (10.0, False),
+        (11.0, False),
+        (math.nextafter(10.0, 0.0), True),
+        (9.5, True),
+    ):
+        assert live._path_clearly_cheaper(_rc("E0", rank_cost=cost), walked) is cheaper
 
 
 def test_leaves_rejected_path_needs_a_feasible_unrejected_best():

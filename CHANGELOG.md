@@ -11,8 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The `routing` block reads three switching margins that only Python
   could set: `fed_return_margin` (since removed, see Removed),
-  `exit_switch_anchor` and `path_switch_anchor` (the same-exit path threshold, formerly the
-  module constant `_PATH_IMPROVEMENT_THRESHOLD`), each 0.9 by default.
+  `exit_switch_anchor` and `path_switch_anchor` (since removed, see
+  Removed; the same-exit path threshold, formerly the module constant
+  `_PATH_IMPROVEMENT_THRESHOLD`), each 0.9 by default.
   `RouteCostConfig` gains `exit_switch_anchor` and
   `path_switch_anchor`. Defaults and results are unchanged; the run
   settings in the manifest list the two new fields in
@@ -29,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that instead. The manifest's `rerouting.exit_switch_anchor` records
   it (#187).
 - The switching margins are range-checked: `exit_switch_anchor`,
-  `path_switch_anchor`, `tau_return_margin`,
+  `tau_return_margin`,
   `current_exit_discount` and `clean_exit_margin` must be in (0, 1],
   `tau_deadband` and `fallback_switch_margin` in [0, 1]; a
   `fallback_switch_margin` of 1 keeps the current exit between two
@@ -112,6 +113,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   arguments after `fed_rejection_threshold` shift by one. A scenario
   that still sets the key stops with a `ValueError` naming the removal;
   delete the key (#187).
+- `routing.path_switch_anchor` and `RouteCostConfig.path_switch_anchor`
+  (0.9): an agent now moves to a new path to the same exit whenever its
+  `rank_cost` is strictly below the walked path's, where it had to be
+  below 0.9 of it. On the oval deck, `better_path` switches per agent
+  rose from 0.098 to 0.289, with no change of outcome and 0.09 m less
+  walked per agent. The `ft_full_additive_detour` and
+  `ft_full_gate_detour` golden decks switch more (0 to 13 and 18 to 21
+  switches) and evacuate sooner (48.33 to 44.5 s and 58.18 to 53.6 s).
+  It was the last `RouteCostConfig` field, so no positional argument
+  shifts. A scenario that still sets the key stops
+  with a `ValueError` naming the removal; delete the key (#187).
 
 ## [0.5.0] - 2026-10-11
 

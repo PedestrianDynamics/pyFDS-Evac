@@ -350,8 +350,9 @@ provenance; an earlier version cited `FAC_DOOR_WAIT`, which is at `:1570` and
 discounts the current door's *travel time* (`T_tmp`), not its smoke.
 `FAC_DOOR_WAIT` is the counterpart of `exit_switch_anchor`: the same rule under
 additive, and it can differ under the gate (see the anchoring row of the
-[model comparison](model-comparison.md)). `path_switch_anchor` takes
-its value but has no counterpart.
+[model comparison](model-comparison.md)). A new path to the same exit
+has no counterpart in FDS+Evac, and since #187 it is taken whenever it is
+strictly cheaper.
 
 **A reviewer will ask why both.** They act on different stages — one on the
 feasible set, one on the order within it — but they have not been measured
@@ -687,7 +688,6 @@ Every key below is read from the scenario's `routing` block by
 | `min_speed_factor` | `0.1` | Same, the floor on the router's speed factor. | active | active |
 | `default_exit_capacity` | `1.3` | Fallback exit capacity, agents/s, when the exit sets none. | active | active |
 | `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's. An explicit `RerouteConfig.exit_switch_anchor` overrides it. | active (an infeasible rival, and a tie inside the `tau` deadband) | active |
-| `path_switch_anchor` | `0.9` | A new path to the same exit needs `rank_cost` below this fraction of the walked path's. | active | active |
 
 `clean_exit_margin` had two disagreeing defaults — 0.1 in the dataclass, 0.8
 from `from_routing_params` — until `9508181` made both 0.1, the value
@@ -788,10 +788,10 @@ prediction from `evac.f90`, not a measured run of it.
   clock therefore runs ahead of the agent systematically, and it runs furthest
   ahead exactly where the smoke is thickest. With `foresight_horizon_s = inf`
   the agent also has perfect foresight of the FDS solution.
-- **Five hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
+- **Four hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
   `fallback_switch_margin` (0.2),
-  `tau_return_margin` (0.8), `tau_deadband` (0.1), and
-  `path_switch_anchor` (10 %) are all chosen to stop measured churn,
+  `tau_return_margin` (0.8) and `tau_deadband` (0.1)
+  are all chosen to stop measured churn,
   not fitted to observed behaviour. Two have FDS+Evac values behind them:
   `clean_exit_margin` = `FAC_DOOR_OLD`, and `current_exit_discount` =
   `FAC_DOOR_OLD2`. Neither was fitted here either.

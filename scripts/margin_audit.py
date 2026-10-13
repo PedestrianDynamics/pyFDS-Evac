@@ -32,7 +32,7 @@ table without JuPedSim's per-process geometry hash (C10).
 
 Usage::
 
-    uv run python scripts/margin_audit.py run --margin path_switch_anchor \\
+    uv run python scripts/margin_audit.py run --margin fallback_switch_margin \\
         --decks l_corridor_gate t_junction_pre30 [--seeds 1 2 ...] [--jobs 4]
     uv run python scripts/margin_audit.py analyse DIR --primary-deck l_corridor_gate
     uv run python scripts/margin_audit.py metrics DIR/l_corridor_gate/seed1/off
@@ -103,7 +103,6 @@ class Margin:
 # without a primary metric is not in the audit order; ``analyse`` then
 # needs ``--metric``.
 MARGINS: dict[str, Margin] = {
-    "path_switch_anchor": Margin(1.0, "switches_per_agent:better_path"),
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),
     "tau_return_margin": Margin(1.0, "returns"),
     "tau_deadband": Margin(0.0, "returns"),

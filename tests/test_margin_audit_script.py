@@ -494,5 +494,5 @@ def test_every_audited_margin_has_a_plan_off_value(audit):
     assert audit.MARGINS["tau_deadband"].off == 0.0
     assert audit.MARGINS["fallback_switch_margin"].off == 0.0
     assert "fed_return_margin" not in audit.MARGINS  # removed, #187 A2
-    for name in ("path_switch_anchor", "tau_return_margin"):
-        assert audit.MARGINS[name].off == 1.0
+    assert "path_switch_anchor" not in audit.MARGINS  # removed, #187 A3
+    assert audit.MARGINS["tau_return_margin"].off == 1.0

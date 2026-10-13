@@ -20,7 +20,6 @@ _COST_MARGINS = {
     "fallback_switch_margin": 0.23,
     "current_exit_discount": 0.83,
     "clean_exit_margin": 0.14,
-    "path_switch_anchor": 0.86,
 }
 
 
@@ -34,7 +33,6 @@ def _distinct_config() -> RerouteConfig:
 def test_view_lists_each_margin_once_in_audit_order():
     names = [m.name for m in rg._SWITCH_MARGINS]
     assert names == [
-        "path_switch_anchor",
         "fallback_switch_margin",
         "tau_return_margin",
         "tau_deadband",
@@ -49,7 +47,6 @@ def test_code_defaults_are_unchanged():
     assert rg._switch_margin_values(RerouteConfig()) == {
         "tau_return_margin": 0.8,
         "tau_deadband": 0.1,
-        "path_switch_anchor": 0.9,
         "fallback_switch_margin": 0.2,
         "default_exit_anchoring": None,
         "current_exit_discount": 0.9,
@@ -171,7 +168,6 @@ def test_only_the_routing_block_margins_are_scenario_keys():
     assert settable == {
         "tau_return_margin",
         "tau_deadband",
-        "path_switch_anchor",
         "fallback_switch_margin",
         "current_exit_discount",
         "exit_switch_anchor",
@@ -192,7 +188,6 @@ def test_fds_evac_counterparts():
 # Whether 0 and 1 are valid values of each key.
 _RANGES = {
     "exit_switch_anchor": (False, True),
-    "path_switch_anchor": (False, True),
     "tau_return_margin": (False, True),
     "current_exit_discount": (False, True),
     "clean_exit_margin": (False, True),
@@ -207,7 +202,14 @@ def test_every_routing_margin_has_a_range():
     assert rg._MARGIN_RANGES == _RANGES
 
 
-@pytest.mark.parametrize("key", ["fallback_return_lockout_s", "fed_return_margin"])
+@pytest.mark.parametrize(
+    "key",
+    [
+        "fallback_return_lockout_s",
+        "fed_return_margin",
+        "path_switch_anchor",
+    ],
+)
 @pytest.mark.parametrize("value", [10.0, 0.9, 0.0, None])
 def test_a_removed_key_is_an_error(key, value):
     """A scenario that still sets a removed key stops (#187)."""
@@ -220,10 +222,7 @@ def test_a_removed_key_is_an_error(key, value):
 
 @pytest.mark.parametrize(
     "key, value",
-    [
-        ("exit_switch_anchor", 0.7),
-        ("path_switch_anchor", 0.8),
-    ],
+    [("exit_switch_anchor", 0.7)],
 )
 def test_routing_block_sets_the_q7_keys(key, value):
     built = RouteCostConfig.from_routing_params({key: value})
@@ -314,7 +313,7 @@ def test_positional_slots_are_unchanged():
     values[-1] = "hold"
     built = RouteCostConfig(*values)
     assert built.fallback_rule == "hold"
-    assert (built.exit_switch_anchor, built.path_switch_anchor) == (0.9, 0.9)
+    assert built.exit_switch_anchor == 0.9
     assert [f.name for f in dataclasses.fields(RerouteConfig)] == [
         "reevaluation_interval_s",
         "cost_config",
@@ -329,16 +328,16 @@ def test_huge_int_is_a_range_error_not_an_overflow(key):
 
 
 def test_huge_int_is_a_configuration_issue():
-    issue = routing_issue({"routing": {"path_switch_anchor": 10**400}})
+    issue = routing_issue({"routing": {"exit_switch_anchor": 10**400}})
     assert issue is not None
-    assert issue.message.startswith("routing.path_switch_anchor must be a number in ")
+    assert issue.message.startswith("routing.exit_switch_anchor must be a number in ")
 
 
 @pytest.mark.parametrize(
     "value", [np.int64(1), np.float32(0.9), np.float64(0.5), np.int32(1)]
 )
 def test_numpy_scalars_in_range_are_accepted(value):
-    built = RouteCostConfig(exit_switch_anchor=value, path_switch_anchor=value)
+    built = RouteCostConfig(exit_switch_anchor=value)
     assert built.exit_switch_anchor == value
     assert RerouteConfig(exit_switch_anchor=value).resolved_exit_switch_anchor == value
 

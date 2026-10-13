@@ -945,13 +945,12 @@ def test_reroute_config_exit_switch_anchor_overrides_the_routing_block(monkeypat
 
 def test_run_settings_record_the_resolved_exit_switch_anchor():
     scenario = _scenario({"west": {"closed_after_s": T_CLOSE_S}})
-    scenario.raw["routing"] = {"exit_switch_anchor": 0.6, "path_switch_anchor": 0.7}
+    scenario.raw["routing"] = {"exit_switch_anchor": 0.6}
     result = run_scenario(scenario, seed=SEED, reroute_config=RerouteConfig())
     try:
         settings = result.run_settings["rerouting"]
         assert settings["exit_switch_anchor"] == 0.6
         assert settings["cost_config"]["exit_switch_anchor"] == 0.6
-        assert settings["cost_config"]["path_switch_anchor"] == 0.7
     finally:
         result.cleanup()
 
@@ -960,8 +959,8 @@ def test_run_settings_record_the_resolved_exit_switch_anchor():
 def test_an_out_of_range_margin_stops_every_run(mode):
     """The routing block is checked with rerouting on or off."""
     scenario = _scenario({})
-    scenario.raw["routing"] = {"path_switch_anchor": 0.0}
-    with pytest.raises(ValueError, match=r"routing\.path_switch_anchor"):
+    scenario.raw["routing"] = {"exit_switch_anchor": 0.0}
+    with pytest.raises(ValueError, match=r"routing\.exit_switch_anchor"):
         run_scenario(scenario, seed=SEED, **RUN_MODES[mode])
 
 
