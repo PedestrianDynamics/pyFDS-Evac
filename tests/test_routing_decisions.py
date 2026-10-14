@@ -2256,7 +2256,7 @@ def test_same_exit_improvement_is_strict():
         (math.nextafter(10.0, 0.0), True),
         (9.5, True),
     ):
-        assert live._path_clearly_cheaper(_rc("E0", rank_cost=cost), walked) is cheaper
+        assert live._path_strictly_cheaper(_rc("E0", rank_cost=cost), walked) is cheaper
 
 
 def test_leaves_rejected_path_needs_a_feasible_unrejected_best():

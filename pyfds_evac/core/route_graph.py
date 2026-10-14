@@ -2051,7 +2051,6 @@ class RouteModePolicy(Protocol):
         self,
         m: RouteMeasurements,
         config: RouteCostConfig,
-        current_exit: str | None,
     ) -> RouteFeasibility: ...
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float: ...
@@ -2191,7 +2190,6 @@ class AdditivePolicy(_AnchoredPolicy):
         self,
         m: RouteMeasurements,
         config: RouteCostConfig,
-        current_exit: str | None,
     ) -> RouteFeasibility:
         violations = _fed_violations(m, config)
         rejected = bool(violations)
@@ -2347,7 +2345,6 @@ class GatePolicy(_AnchoredPolicy):
         self,
         m: RouteMeasurements,
         config: RouteCostConfig,
-        current_exit: str | None,
     ) -> RouteFeasibility:
         violations = _fed_violations(m, config)
         feasible = not violations
@@ -2468,7 +2465,7 @@ def _assess_measurements(
 ) -> RouteAssessment:
     """Judge a measured route under the configured cost model."""
     policy = policy_for(config)
-    feasibility = policy.feasibility(m, config, current_exit)
+    feasibility = policy.feasibility(m, config)
     rank_cost = policy.rank_cost(m, config)
     clean_limit = _clean_limit(config, m.exit_id, current_exit)
     # A zero threshold turns the tier off rather than declaring clear air
@@ -3628,7 +3625,7 @@ def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
     )
 
 
-def _path_clearly_cheaper(best: RouteCost, committed: RouteCost) -> bool:
+def _path_strictly_cheaper(best: RouteCost, committed: RouteCost) -> bool:
     """Whether *best* is strictly cheaper than the walked path."""
     return best.rank_cost < committed.rank_cost
 
@@ -3677,7 +3674,7 @@ def _decide_same_exit(
             agent_position=agent_position,
             current_target=current_target,
         )
-        if _leaves_rejected_path(committed, best) or _path_clearly_cheaper(
+        if _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
             best, committed
         ):
             return RouteDecision(
