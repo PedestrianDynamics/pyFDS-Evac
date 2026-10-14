@@ -2798,7 +2798,7 @@
       "clean": false,
       "composite_cost": 35.0,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.4996,
       "k_leg_max": 0.3,
       "k_max_route": 0.33,
@@ -2809,14 +2809,12 @@
       ],
       "queue_time_s": 0.0,
       "rank_cost": 35.4268,
-      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.1727,
       "travel_time_s": 35.4268,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -2985,7 +2983,7 @@
       "clean": false,
       "composite_cost": 22.0,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.398,
       "k_leg_max": 0.248,
       "k_max_route": 0.278,
@@ -2996,14 +2994,12 @@
       ],
       "queue_time_s": 0.0,
       "rank_cost": 22.4237,
-      "rejection_reason": "tau 5.15 > 4.80 (K_ave 0.234 x 22.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.148,
       "travel_time_s": 22.4237,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -3104,7 +3100,7 @@
       "clean": false,
       "composite_cost": 35.0,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.7996,
       "k_leg_max": 0.3,
       "k_max_route": 0.33,
@@ -3115,14 +3111,12 @@
       ],
       "queue_time_s": 0.0,
       "rank_cost": 35.4268,
-      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.1727,
       "travel_time_s": 35.4268,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -4432,7 +4426,7 @@
       "clean": false,
       "composite_cost": 35.0,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.4996,
       "k_leg_max": 0.3,
       "k_max_route": 0.33,
@@ -4443,14 +4437,12 @@
       ],
       "queue_time_s": 0.0,
       "rank_cost": 35.4268,
-      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.1727,
       "travel_time_s": 35.4268,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -4736,7 +4728,7 @@
       "clean": false,
       "composite_cost": 35.0,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.7996,
       "k_leg_max": 0.3,
       "k_max_route": 0.33,
@@ -4747,14 +4739,12 @@
       ],
       "queue_time_s": 0.0,
       "rank_cost": 35.4268,
-      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.1727,
       "travel_time_s": 35.4268,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -7688,7 +7678,7 @@
       "clean": false,
       "composite_cost": 34.6154,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.4996,
       "k_leg_max": 0.3,
       "k_max_route": 0.33,
@@ -7699,14 +7689,12 @@
       ],
       "queue_time_s": -0.7692,
       "rank_cost": 35.0422,
-      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.1727,
       "travel_time_s": 35.4268,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -7875,7 +7863,7 @@
       "clean": false,
       "composite_cost": 21.6154,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.398,
       "k_leg_max": 0.248,
       "k_max_route": 0.278,
@@ -7886,14 +7874,12 @@
       ],
       "queue_time_s": -0.7692,
       "rank_cost": 22.0391,
-      "rejection_reason": "tau 5.15 > 4.80 (K_ave 0.234 x 22.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.148,
       "travel_time_s": 22.4237,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },
@@ -7994,7 +7980,7 @@
       "clean": false,
       "composite_cost": 34.6154,
       "exit_id": "E1",
-      "feasible": false,
+      "feasible": true,
       "fed_max_route": 0.7996,
       "k_leg_max": 0.3,
       "k_max_route": 0.33,
@@ -8005,14 +7991,12 @@
       ],
       "queue_time_s": -0.7692,
       "rank_cost": 35.0422,
-      "rejection_reason": "tau 5.17 > 4.80 (K_ave 0.148 x 35.0 m)",
+      "rejection_reason": null,
       "segments": 2,
-      "status": "tau",
+      "status": "ok",
       "tau_route": 5.1727,
       "travel_time_s": 35.4268,
-      "violation_kinds": [
-       "tau"
-      ]
+      "violation_kinds": []
      }
     ]
    },

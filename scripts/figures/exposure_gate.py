@@ -4,9 +4,8 @@ Top: plan view with three candidate routes from one agent to three exits,
 sampled along the walked polylines and coloured by extinction K. The field is
 a prescribed toy plume, not a simulation. Bottom: the gate. Each route's
 optical depth tau = K_bar * L is drawn as a bar against the budgets from
-``RouteCostConfig`` (``tau_max`` for the current exit, ``tau_return_margin *
-tau_max`` for any other exit); the refused route is hatched, and the survivors
-are ranked by tau first and travel time second, so the long clean route wins.
+``RouteCostConfig`` (``tau_max``, the same for every exit); the refused route
+is hatched, and the survivors are ranked by tau first and travel time second, so the long clean route wins.
 Travel time is priced as the code prices it: ``base_speed_m_per_s`` times the
 Frantzich-Nilsson factor at the route-mean K, with the ``routing`` coefficients.
 
@@ -51,7 +50,6 @@ FLOOR = "#f7f7f7"
 TEXT = "dimgrey"
 LABEL_BOX = dict(fc="white", ec="none", alpha=0.85, pad=1.5)
 TAU_MAX = ROUTING.tau_max
-MU = ROUTING.tau_return_margin
 
 ROUTES = {
     "A": dict(verts=[[1.5, 3.5], [4.5, 5.2], [8.0, 5.2], [8.0, 6.8]], style="-"),
@@ -119,9 +117,9 @@ def route_metrics():
 
 
 def gate_ranks(metrics):
-    """Rank of each route that passes the rival-exit budget, by tau then time."""
+    """Rank of each route that passes the budget, by tau then time."""
     survivors = sorted(
-        (n for n in metrics if metrics[n]["tau"] <= TAU_MAX * MU),
+        (n for n in metrics if metrics[n]["tau"] <= TAU_MAX),
         key=lambda n: (metrics[n]["tau"], metrics[n]["time"]),
     )
     return {n: i + 1 for i, n in enumerate(survivors)}
@@ -219,29 +217,17 @@ def draw_gate(ax, metrics):
     """Right panel: tau bars against the budget, refused route hatched, survivors ranked."""
     names = list(metrics)
     ypos = np.arange(len(names))[::-1]
-    budget_other = MU * TAU_MAX
 
-    ax.axvspan(budget_other, TAU_MAX, color=OPTION, alpha=0.12, zorder=0)
     ax.axvline(TAU_MAX, color=TEXT, lw=1.4, zorder=1)
-    ax.axvline(budget_other, color=TEXT, lw=1.2, ls="--", zorder=1)
     ax.axvline(0, color="lightgrey", lw=0.8, zorder=1)
     # threshold captions sit above the bars, so no bar label can run into them
     ax.text(
         TAU_MAX + 0.12,
         2.95,
-        rf"$\tau_{{\max}} = {TAU_MAX:g}$" + "\ncurrent exit",
+        rf"$\tau_{{\max}} = {TAU_MAX:g}$" + "\nany exit",
         color=TEXT,
         fontsize=8,
         ha="left",
-        va="bottom",
-    )
-    ax.text(
-        budget_other - 0.12,
-        2.95,
-        rf"${MU:g}\,\tau_{{\max}} = {budget_other:g}$" + "\nany other exit",
-        color=TEXT,
-        fontsize=8,
-        ha="right",
         va="bottom",
     )
 

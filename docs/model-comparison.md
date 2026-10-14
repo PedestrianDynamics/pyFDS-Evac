@@ -322,8 +322,7 @@ The routes it returns are then judged by one of two models
   (dimensionless; `L` is the distance still to walk) decides
   availability *and* the ordering.  Here `tau` is always optical
   depth, not the relaxation time τ of FDS+Evac's movement model.  A route is refused when `tau`
-  exceeds `tau_max` (6), or `tau_max * tau_return_margin` (4.8) for an
-  exit the agent is not already walking to; survivors are ordered by
+  exceeds `tau_max` (6), for every exit; survivors are ordered by
   `tau`, with travel time (plus `w_queue` x queue time) breaking ties.
   `K_ave` is the length-weighted mean over the route's own polyline, so
   `tau` is the soot column the agent walks through — an exposure

@@ -197,20 +197,31 @@ def test_additive_records_the_dose_only():
     assert _project_route_cost(assessment) == rc
 
 
-def test_rival_limits_carry_their_margins():
-    """A rival exit's tau limit is margin-adjusted, its FED limit is not (#187 A2)."""
+def test_rival_limits_equal_the_current_exits():
+    """A rival exit's tau and FED limits are the current exit's (#187 A2, A5)."""
     config = golden._gate()
-    for current_exit, tau_limit in (
-        (None, config.tau_max),
-        ("west", config.tau_max),
-        ("east", config.tau_max * config.tau_return_margin),
-    ):
+    tau_limit = config.tau_max
+    for current_exit in (None, "west", "east"):
         _, assessment, rc = _assess_west(config, current_exit)
         fed, tau = assessment.feasibility.violations
         assert fed.limit == config.fed_rejection_threshold
         assert tau.limit == tau_limit
-        assert tau_limit == GatePolicy._tau_budget(config, "west", current_exit)
         assert _project_route_cost(assessment) == rc
+
+
+@pytest.mark.parametrize("current_exit", [None, "west", "east"])
+def test_a_route_is_refused_above_tau_max_and_accepted_below_it(current_exit):
+    """The tau budget is tau_max for the current exit and a rival alike (#187 A5)."""
+    config = golden._gate()
+    measured, _, _ = _assess_west(config, current_exit)
+    tau = measured.tau_route
+    assert tau > 0
+    for tau_max, feasible in ((tau * 0.999, False), (tau * 1.001, True)):
+        probe = replace(config, tau_max=tau_max, fed_rejection_threshold=1e9)
+        _, assessment, _ = _assess_west(probe, current_exit)
+        assert assessment.feasibility.feasible is feasible
+        kinds = [v.kind for v in assessment.feasibility.violations]
+        assert ("tau" in kinds) is (not feasible)
 
 
 def test_policy_for_picks_the_named_policy():

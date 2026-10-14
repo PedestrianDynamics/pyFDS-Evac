@@ -850,7 +850,6 @@ FALLBACK_RULES = ("tau", "hold")
 # The off value of each (1, or 0 for the two subtracted ones) is in range.
 _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
     "exit_switch_anchor": (False, True),
-    "tau_return_margin": (False, True),
     "current_exit_discount": (False, True),
     "clean_exit_margin": (False, True),
     "tau_deadband": (True, True),
@@ -863,6 +862,11 @@ _MARGIN_RANGES: dict[str, tuple[bool, bool]] = {
 # would silently do nothing; run_scenario and from_routing_params both
 # check, since an explicit cost config bypasses the factory.
 REMOVED_ROUTING_KEYS: dict[str, str] = {
+    "tau_return_margin": (
+        "routing.tau_return_margin was removed in #187: every exit is "
+        "refused above tau_max, and current_exit_discount and tau_deadband "
+        "carry the hysteresis; delete the key"
+    ),
     "path_switch_anchor": (
         "routing.path_switch_anchor was removed in #187: a new path to the "
         "same exit is taken whenever it is strictly cheaper than the walked "
@@ -998,11 +1002,6 @@ class RouteCostConfig:
     # no hysteresis to this veto (evac.f90:16799 tests the raw value).
     tau_deadband: float = 0.1
     current_exit_discount: float = 0.9
-    # A rival exit must come in under tau_max * this before an agent switches
-    # onto it, so a route sitting near the budget does not toggle. Ours: the
-    # reference applies no hysteresis to this veto (evac.f90:16799 tests the
-    # raw value); its 0.1 hysteresis is on the tier-1 test at :16591.
-    tau_return_margin: float = 0.8
     # Charge each leg the smoke present when the agent would arrive there,
     # rather than the smoke standing there while it decides.
     anticipate: bool = True
@@ -1076,9 +1075,6 @@ class RouteCostConfig:
             tau_deadband=routing.get("tau_deadband", RouteCostConfig.tau_deadband),
             current_exit_discount=routing.get(
                 "current_exit_discount", RouteCostConfig.current_exit_discount
-            ),
-            tau_return_margin=routing.get(
-                "tau_return_margin", RouteCostConfig.tau_return_margin
             ),
             anticipate=routing.get("anticipate", RouteCostConfig.anticipate),
             foresight_horizon_s=routing.get(
@@ -2340,22 +2336,6 @@ class GatePolicy(_AnchoredPolicy):
         # arbitrary one.
         return seg.k_avg * seg.length_m + 1e-6 * (seg.length_m)
 
-    @staticmethod
-    def _tau_budget(
-        config: RouteCostConfig, exit_id: str, current_exit: str | None
-    ) -> float:
-        """The optical depth above which the route to *exit_id* is refused.
-
-        A rival exit is held to a stricter budget than the one the agent
-        already walks to, so a route sitting near tau_max does not toggle in
-        and out of the feasible set and take the crowd with it.
-        """
-        is_current = current_exit is not None and exit_id == current_exit
-        budget = config.tau_max
-        if not is_current and current_exit is not None:
-            budget *= config.tau_return_margin
-        return budget
-
     def feasibility(
         self,
         m: RouteMeasurements,
@@ -2371,7 +2351,7 @@ class GatePolicy(_AnchoredPolicy):
         #
         # The gate: refuse a route whose optical depth exceeds the budget.
         # Appended after the dose, so a route over both limits reports tau.
-        budget = self._tau_budget(config, m.exit_id, current_exit)
+        budget = config.tau_max
         tau_route = m.tau_route
         if tau_route > budget:
             feasible = False
@@ -3352,13 +3332,6 @@ _SWITCH_MARGINS: tuple[_SwitchMargin, ...] = (
         True,
         None,
         ("_fallback_rival_wins",),
-    ),
-    _SwitchMargin(
-        "tau_return_margin",
-        "RouteCostConfig",
-        True,
-        None,
-        ("GatePolicy._tau_budget",),
     ),
     _SwitchMargin(
         "tau_deadband", "RouteCostConfig", True, None, ("GatePolicy._tau_band",)

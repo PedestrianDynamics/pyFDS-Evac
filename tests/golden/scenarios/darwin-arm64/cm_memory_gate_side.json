@@ -135,6 +135,13 @@
    "E_end:ok > E_side:tau"
   ],
   [
+   16.0,
+   4,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:ok"
+  ],
+  [
    17.0,
    3,
    "jps-distributions_0",
@@ -149,14 +156,35 @@
    "E_end:ok > E_side:tau"
   ],
   [
-   19.0,
+   18.0,
+   4,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:tau"
+  ],
+  [
+   18.0,
    5,
    "jps-distributions_0",
    "E_end",
    "E_end:ok > E_side:ok"
   ],
   [
+   19.0,
+   6,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:ok"
+  ],
+  [
    21.0,
+   6,
+   "jps-distributions_0",
+   "E_end",
+   "E_end:ok > E_side:tau"
+  ],
+  [
+   22.0,
    5,
    "jps-distributions_0",
    "E_end",

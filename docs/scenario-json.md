@@ -295,7 +295,10 @@ it stops with a `ValueError` naming the removal, also with
 fraction of the walked path's `rank_cost` a new path to the same exit
 had to come in under, was removed in the same issue and is refused the
 same way: the path is now taken whenever it is strictly cheaper.
-`fed_return_margin`, the
+`tau_return_margin`, the
+factor (0.8) on `tau_max` that a rival exit's optical depth had to come in
+under, was removed in the same issue and is refused the same way: every
+exit is now refused above `tau_max`. `fed_return_margin`, the
 fraction of `fed_rejection_threshold` above which a rival exit was
 refused for dose, was removed in the same issue and is refused the same
 way: a rival is now held to `fed_rejection_threshold`, as the current
@@ -304,7 +307,7 @@ exit is.
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:
 `exit_switch_anchor`,
-`tau_return_margin`, `current_exit_discount` and `clean_exit_margin` in
+`current_exit_discount` and `clean_exit_margin` in
 (0, 1]; `tau_deadband` and `fallback_switch_margin` in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for `tau_deadband`
 and `fallback_switch_margin`. `fallback_switch_margin` = 1 keeps the

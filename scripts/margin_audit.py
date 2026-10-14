@@ -97,14 +97,14 @@ class Margin:
     primary: str | None
 
 
-# Off values and primary metrics from the stage-2 plan (§3.2). A1,
-# fallback_return_lockout_s (A1, audited at c2c2081f) and fed_return_margin
-# (A2, audited on the targeted FED decks) were removed (#187). A margin
+# Off values and primary metrics from the stage-2 plan (§3.2).
+# fallback_return_lockout_s (A1, audited at c2c2081f), fed_return_margin
+# (A2, audited on the targeted FED decks), path_switch_anchor (A3) and
+# tau_return_margin (A5) were removed (#187). A margin
 # without a primary metric is not in the audit order; ``analyse`` then
 # needs ``--metric``.
 MARGINS: dict[str, Margin] = {
     "fallback_switch_margin": Margin(0.0, "switches_per_agent:fallback"),
-    "tau_return_margin": Margin(1.0, "returns"),
     "tau_deadband": Margin(0.0, "returns"),
     "exit_switch_anchor": Margin(1.0, None),
     "current_exit_discount": Margin(1.0, None),

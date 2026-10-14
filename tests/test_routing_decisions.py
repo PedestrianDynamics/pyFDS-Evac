@@ -932,10 +932,9 @@ def _scaled_limit(target: float, factor: float, divide: bool = False) -> float |
     return None
 
 
-# The tau limit a rival exit is held to, and the clean limit of the current exit.
+# The clean limit of the current exit.
 # Each case names (config field, margin field, margin, current exit, measure).
 _MARGIN_LIMITS = (
-    ("tau_max", "tau_return_margin", "east", "tau_route"),
     ("clean_extinction_threshold", "clean_exit_margin", "west", "k_leg_max"),
 )
 
@@ -955,10 +954,7 @@ def _margin_limit_cases() -> list[tuple[str, golden.RankCase]]:
     for field_name, margin_name, current, measure in _MARGIN_LIMITS:
         default = getattr(RouteCostConfig(), margin_name)
         divide = margin_name == "clean_exit_margin"
-        models = (golden._gate, golden._additive)
-        if field_name == "tau_max":
-            models = (golden._gate,)
-        for model in models:
+        for model in (golden._gate, golden._additive):
             for margin in (0.5, default):
                 probe = _margin_config(model, field_name, margin_name, margin, 1.0)
                 measured = getattr(_west(probe, _SMOKE, _DOSE, 0.1), measure)
@@ -2027,7 +2023,7 @@ _SCAN_STOPS = golden.RerouteCase(
     "spawn",
     "west",
     "west",
-    extinction=golden.ArmField({"west": 0.1, "east": 0.0375, "north": 3.0}),
+    extinction=golden.ArmField({"west": 0.1, "east": 0.0375, "north": 3.1}),
 )
 
 
@@ -2060,7 +2056,7 @@ _SCAN_REFUSED = golden.RerouteCase(
     "spawn",
     "east",
     "east",
-    extinction=golden.ArmField({"west": 0.625, "east": 0.25, "north": 0.09}),
+    extinction=golden.ArmField({"west": 0.75, "east": 0.3, "north": 0.12}),
 )
 
 
