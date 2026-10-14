@@ -276,8 +276,8 @@ second, hysteresis-free smoke criterion on top of the optical-depth test.&lt;/li
 &lt;p>The last condition means a smoky-but-short route is only rejected
 when a cleaner alternative exists. If every route is fully obscured,
 none are visibility-rejected.&lt;/p>
-&lt;p>If all routes end up rejected, the least-bad one is un-rejected as a
-fallback so the agent always has a path, and its reason is prefixed
+&lt;p>If all routes end up rejected, the least-bad one is promoted as a
+fallback so the agent always has a path. It stays rejected, and its reason is prefixed
 &lt;code>fallback: &lt;/code>. A route the agent must flee (FED-lethal; the additive smoke
 must-flee needs a visible rival, so it never reaches the fallback) orders behind every route it need not
 flee, and the current exit never holds against such a rival when it is
@@ -656,7 +656,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Fallback&lt;/strong>&lt;/td>
-&lt;td>when every route is rejected: re-sorted by must-flee (last), then raw τ, then &lt;code>rank_cost&lt;/code>; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner&amp;rsquo;s τ is below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>) and differs from it by more than 1e-9; the first route is un-rejected with a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
+&lt;td>when every route is rejected: re-sorted by must-flee (last), then raw τ, then &lt;code>rank_cost&lt;/code>; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner&amp;rsquo;s τ is below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>) and differs from it by more than 1e-9; the first route is promoted, stays rejected and gets a &lt;code>fallback: &lt;/code> reason, its &lt;code>feasible&lt;/code> unchanged&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -788,7 +788,7 @@ lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>
 &lt;ul>
 &lt;li>The agent has not yet reached its offset time.&lt;/li>
 &lt;li>The source node is missing from the graph (e.g., agent is in a stage not included in the routing graph).&lt;/li>
-&lt;li>All routes are hard-rejected and none was un-rejected as a fallback.&lt;/li>
+&lt;li>All routes are hard-rejected and none was promoted as a fallback.&lt;/li>
 &lt;li>The anchor holds the agent on its current exit, or on its open default
 exit while it follows its default route.&lt;/li>
 &lt;li>The best route leads to the same exit and the agent is not idle —
@@ -851,7 +851,7 @@ though the path to it may still be rewritten, which is recorded as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fallback&lt;/code>&lt;/td>
-&lt;td>Best route was un-rejected as fallback (all routes rejected)&lt;/td>
+&lt;td>Best route was promoted as fallback (all routes rejected)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>better_path&lt;/code>&lt;/td>
@@ -1104,12 +1104,12 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>rejection_reason&lt;/code>&lt;/td>
 &lt;td>&lt;code>str | None&lt;/code>&lt;/td>
-&lt;td>Reason for rejection; &lt;code>fallback: &lt;/code> prefix when un-rejected&lt;/td>
+&lt;td>Reason for rejection; &lt;code>fallback: &lt;/code> prefix on the fallback-promoted route, which stays rejected&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>violation_kinds&lt;/code>&lt;/td>
 &lt;td>&lt;code>tuple[str, ...]&lt;/code>&lt;/td>
-&lt;td>Limits the route breaks, in recorded order: &lt;code>&amp;quot;fed&amp;quot;&lt;/code>, &lt;code>&amp;quot;tau&amp;quot;&lt;/code>, &lt;code>&amp;quot;all_segments_non_visible&amp;quot;&lt;/code>; kept when the fallback un-rejects it. Must-flee reads these (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
+&lt;td>Limits the route breaks, in recorded order: &lt;code>&amp;quot;fed&amp;quot;&lt;/code>, &lt;code>&amp;quot;tau&amp;quot;&lt;/code>, &lt;code>&amp;quot;all_segments_non_visible&amp;quot;&lt;/code>; kept on the fallback-promoted route. Must-flee reads these (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1616,7 +1616,7 @@ Every tick re-decides from the current field; there is no permanent exit death.&
 &lt;a href="#when-every-route-is-refused" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The agent still has to move. &lt;code>rank_routes&lt;/code> re-sorts the refused routes by
 &lt;code>(must_flee, tau_route, rank_cost)&lt;/code> — a dose-lethal route last, then least
 smoke to walk through, then quickest — and
-un-rejects the head with a &lt;code>fallback:&lt;/code> prefix on its reason. The agent keeps its
+promotes the head, which stays rejected and gets a &lt;code>fallback:&lt;/code> prefix on its reason. The agent keeps its
 current target unless the rival&amp;rsquo;s optical depth is more than
 &lt;code>fallback_switch_margin&lt;/code> (default 0.2) lower, i.e. unless&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">

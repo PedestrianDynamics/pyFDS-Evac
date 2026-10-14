@@ -1136,7 +1136,7 @@ reproduces FDS+Evac&amp;rsquo;s absolute criterion
 &lt;code>path_length * (1 + w_smoke * K_ave) + w_fed * FED_max&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;p>Under both, routes are rejected if FED exceeds a threshold, and a
-fallback un-rejection ensures agents always have a path. The
+fallback promotion ensures agents always have a path. The
 all-segments-non-visible rejection runs under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> only.&lt;/p>
 &lt;p>&lt;strong>The borrowing is partial and should be read as such.&lt;/strong> pyFDS-Evac
 takes FDS+Evac&amp;rsquo;s &lt;em>last-resort&lt;/em> criterion as the primary criterion of
