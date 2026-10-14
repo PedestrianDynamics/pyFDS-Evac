@@ -1051,7 +1051,11 @@ the winner among those left. The criterion vetoes &lt;em>and&lt;/em> ranks, with
 &lt;code>fed_rejection_threshold&lt;/code> is removed and dose never makes one exit outrank
 another. Optical depth does both, as in tier 4 — it refuses a route above
 &lt;code>tau_max&lt;/code> &lt;em>and&lt;/em> orders the survivors, with travel time breaking ties. It also
-applies dose and smoke at once rather than choosing one by a sign.&lt;/p>
+applies dose and smoke at once rather than choosing one by a sign.
+This tau-first order is kept on purpose
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>, Q5,
+2026-10-14): the time-first order with smoke alone in tier 4 is the
+counterpart, documented here, not the model.&lt;/p>
 &lt;h4>Where the quantity is used: the decisive difference&lt;span class="hx-absolute -hx-mt-20" id="where-the-quantity-is-used-the-decisive-difference">&lt;/span>
 &lt;a href="#where-the-quantity-is-used-the-decisive-difference" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The threshold &lt;code>tau &amp;gt; 6&lt;/code> is borrowed from tier 4 with a citation. &lt;strong>The place
 the quantity is used is not&lt;/strong>, and that is what changes the behaviour.&lt;/p>

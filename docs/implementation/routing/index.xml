@@ -1489,6 +1489,16 @@ which held a rival to &lt;code>tau_max * 0.8&lt;/code> = 4.8, was removed in #18
 inert on every audit deck (236 paired runs identical), and where it did
 bind, &lt;code>current_exit_discount&lt;/code> and &lt;code>tau_deadband&lt;/code> already decided the
 outcome.&lt;/p>
+&lt;p>&lt;strong>The tau-first order is a deliberate departure, decided in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a> (Q5).&lt;/strong>
+Surviving routes are ordered by tier, then optical depth with the current
+exit discounted, then travel and queue time. FDS+Evac ranks admitted doors
+by time and falls back to smoke alone only when no door is smoke-free
+(tier 4); that order is recorded in the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a> as the counterpart, not adopted.
+The stage-2 audits of the tau margins (&lt;code>tau_return_margin&lt;/code> removed,
+&lt;code>tau_deadband&lt;/code> kept) were measured under this order, so it stands with
+them.&lt;/p>
 &lt;p>&lt;code>current_exit_discount&lt;/code> (default 0.9) is a deadband on &lt;strong>ordering&lt;/strong>. Only the
 current exit&amp;rsquo;s &lt;code>tau&lt;/code> is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.&lt;/p>
