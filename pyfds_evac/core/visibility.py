@@ -13,6 +13,7 @@ import numpy as np
 from shapely.geometry import Polygon
 
 from . import fds_sampling
+from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
 from .geometry import node_position
 
 
@@ -804,7 +805,7 @@ class VisibilityModel:
         *,
         cache_path: str | Path | None = None,
         time_step_s: float = 10.0,
-        slice_height_m: float = 1.6,
+        slice_height_m: float = HUMAN_SMOKE_HEIGHT_M,
         force_recompute: bool = False,
         max_sign_distance_m: float = DEFAULT_MAX_SIGN_DISTANCE_M,
         allow_horizon_hold: bool = False,

@@ -66,6 +66,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
 from .fds_sampling import (
     FdsDomainError,
     FdsHorizonError,
@@ -135,7 +136,7 @@ class SmokeSpeedConfig:
 
     fds_dir: str | None = None
     update_interval_s: float = 1.0
-    slice_height_m: float = 1.6
+    slice_height_m: float = HUMAN_SMOKE_HEIGHT_M
     speed_law: str = "lund"
     # lund coefficients
     alpha: float = LUND_ALPHA
@@ -179,7 +180,7 @@ class ExtinctionField:
         cls,
         fds_dir: str,
         *,
-        slice_height_m: float = 1.6,
+        slice_height_m: float = HUMAN_SMOKE_HEIGHT_M,
         simulation=None,
         allow_horizon_hold: bool = False,
         require_fds_coverage: bool = False,

@@ -5,6 +5,8 @@ import math
 from dataclasses import dataclass, replace
 from typing import TYPE_CHECKING
 
+from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
+
 # fds_sampling loads numpy; it is imported where a sampler is used, so the
 # heat constants of this module reach the CLI parser without numpy (#503).
 if TYPE_CHECKING:
@@ -60,7 +62,7 @@ class DefaultFedConfig:
 
     fds_dir: str | None = None
     update_interval_s: float = 1.0
-    slice_height_m: float = 1.6
+    slice_height_m: float = HUMAN_SMOKE_HEIGHT_M
     # O2 [vol %] at or above which the hypoxia term is zero. 20.0 is FDS's
     # guard (func.f90: the O2 term applies only when X_O2 < 0.20); 19.5 is
     # the OSHA / Pathfinder value pyFDS-Evac used before.
@@ -912,7 +914,7 @@ class FdsFedField:
         fds_dir: str,
         *,
         simulation=None,
-        slice_height_m: float | None = 1.6,
+        slice_height_m: float | None = HUMAN_SMOKE_HEIGHT_M,
         allow_horizon_hold: bool = False,
         require_fds_coverage: bool = False,
     ) -> "FdsFedField":
@@ -1189,7 +1191,7 @@ class FdsHeatField:
         cls,
         fds_dir: str,
         *,
-        slice_height_m: float = 1.6,
+        slice_height_m: float = HUMAN_SMOKE_HEIGHT_M,
         simulation=None,
         integrated_intensity: bool = False,
         allow_horizon_hold: bool = False,
