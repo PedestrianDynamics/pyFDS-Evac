@@ -39,6 +39,21 @@ class DefaultFedInputs:
     formaldehyde_ppm: float = 0.0
 
 
+_O2_HYPOXIA_THRESHOLD_PERCENT: float = 20.0
+"""Default O2 concentration at or above which hypoxia does not contribute to FED.
+
+At ambient O2 (20.9 %) the SFPE Eq. 18 denominator is non-zero, so the
+rate is tiny but finite — accumulating over a long simulation (or when
+the agent is outside the FDS domain and O2 defaults to 20.9 %) it
+produces spurious FED drift.  FDS, and so FDS+Evac, applies the O2 term
+only when X_O2 < 0.20 (``FED()`` in ``func.f90``), which is the default
+here.  OSHA defines the safe lower limit for working conditions as
+19.5 %, and Pathfinder uses that value; pass 19.5 through
+``DefaultFedConfig.o2_threshold_percent`` or ``--o2-threshold-percent``
+to use it.
+"""
+
+
 @dataclass(frozen=True)
 class DefaultFedConfig:
     """Store FDS path and sampling settings for FED evaluation."""
@@ -49,7 +64,7 @@ class DefaultFedConfig:
     # O2 [vol %] at or above which the hypoxia term is zero. 20.0 is FDS's
     # guard (func.f90: the O2 term applies only when X_O2 < 0.20); 19.5 is
     # the OSHA / Pathfinder value pyFDS-Evac used before.
-    o2_threshold_percent: float = 20.0
+    o2_threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT
 
 
 def _co_percent_to_ppm(co_volume_fraction_percent: float) -> float:
@@ -80,19 +95,9 @@ def _hyperventilation_factor(co2_percent: float) -> float:
     return math.exp(0.1903 * float(co2_percent) + 2.0004) / 7.1
 
 
-_O2_HYPOXIA_THRESHOLD_PERCENT: float = 20.0
-"""Default O2 concentration at or above which hypoxia does not contribute to FED.
-
-At ambient O2 (20.9 %) the SFPE Eq. 18 denominator is non-zero, so the
-rate is tiny but finite — accumulating over a long simulation (or when
-the agent is outside the FDS domain and O2 defaults to 20.9 %) it
-produces spurious FED drift.  FDS, and so FDS+Evac, applies the O2 term
-only when X_O2 < 0.20 (``FED()`` in ``func.f90``), which is the default
-here.  OSHA defines the safe lower limit for working conditions as
-19.5 %, and Pathfinder uses that value; pass 19.5 through
-``DefaultFedConfig.o2_threshold_percent`` or ``--o2-threshold-percent``
-to use it.
-"""
+# Ambient O2 [vol %]: the reference level of guide Eq. 18 and the value a
+# missing reading falls back to.
+_AMBIENT_O2_PERCENT = 20.9
 
 
 def _o2_hypoxia_rate_per_minute(
@@ -109,10 +114,10 @@ def _o2_hypoxia_rate_per_minute(
     """
 
     if not math.isfinite(o2_percent):
-        o2_percent = 20.9
+        o2_percent = _AMBIENT_O2_PERCENT
     if float(o2_percent) >= float(threshold_percent):
         return 0.0
-    t_incap_min = math.exp(8.13 - 0.54 * (20.9 - float(o2_percent)))
+    t_incap_min = math.exp(8.13 - 0.54 * (_AMBIENT_O2_PERCENT - float(o2_percent)))
     if t_incap_min <= 0.0:
         return 0.0
     return 1.0 / t_incap_min
@@ -149,24 +154,28 @@ def _nox_fed_rate_per_minute(no_ppm: float, no2_ppm: float) -> float:
     return c_nox / 1500.0
 
 
+# Purser's lethal exposure doses Ct (ppm·min) per irritant species from the
+# FDS+Evac guide, Table 2; each species contributes concentration / Ct.
+_LETHAL_CT_PPM_MIN: tuple[tuple[str, float], ...] = (
+    ("hcl_ppm", 114000.0),
+    ("hbr_ppm", 114000.0),
+    ("hf_ppm", 87000.0),
+    ("so2_ppm", 12000.0),
+    ("no2_ppm", 1900.0),
+    ("acrolein_ppm", 4500.0),
+    ("formaldehyde_ppm", 22500.0),
+)
+
+
 def _irritant_fld_rate_per_minute(inputs: DefaultFedInputs) -> float:
     """Return the irritant FLD contribution in 1/min (Purser).
 
     Each irritant gas contributes concentration / Ct, where Ct (ppm·min) is
     the lethal exposure dose for that species.
     """
-    # Ct products for lethality (ppm·min) from guide Table 2
-    terms = (
-        (inputs.hcl_ppm, 114000.0),
-        (inputs.hbr_ppm, 114000.0),
-        (inputs.hf_ppm, 87000.0),
-        (inputs.so2_ppm, 12000.0),
-        (inputs.no2_ppm, 1900.0),
-        (inputs.acrolein_ppm, 4500.0),
-        (inputs.formaldehyde_ppm, 22500.0),
-    )
     total = 0.0
-    for conc, ct in terms:
+    for field, ct in _LETHAL_CT_PPM_MIN:
+        conc = getattr(inputs, field)
         if math.isfinite(conc) and conc > 0.0:
             total += conc / ct
     return total
