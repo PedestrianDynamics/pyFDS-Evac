@@ -222,6 +222,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
 | `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
 | `visibility_extinction_threshold` | `0.5` | Extinction [1/m] above which a segment counts as not visible; additive model only |
+| `impassable_extinction_threshold` | `3.0` | Route-average *K* [1/m] above which a visibility rejection must be fled, bypassing the anchor; additive model only, never reached under the gate |
 | `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples where the field has no grid (a constant or test field) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose [m]. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)) |
 | `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
 | `alpha` | `0.706` | Router's copy of \(\alpha\) [m/s], for travel time only |
@@ -238,12 +239,6 @@ value that switches a margin off is in range: 1, or 0 for `tau_deadband`
 and `fallback_switch_margin`. `fallback_switch_margin` = 1 keeps the
 current exit between two refused routes unless it must be fled, the
 scenario-file way to the hold rule.
-
-Fixed constants, which no `routing` key can set:
-
-| Constant | Value | Meaning |
-|---|---|---|
-| `RouteCostConfig.impassable_extinction_threshold` | `3.0` | Route-average *K* [1/m] above which a visibility rejection must be fled; never reached under the gate |
 
 The router always uses the linear speed law, whatever `SmokeSpeedConfig`
 the agents walk with. Each agent re-decides every

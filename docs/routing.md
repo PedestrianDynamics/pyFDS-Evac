@@ -351,10 +351,8 @@ config = RouteCostConfig(
 speed law, used only to estimate travel time; their defaults are on the
 [routing model](/models/routing.md#parameters) page.
 
-One further field exists on the dataclass but is **not** readable from
-the `routing` block, so a scenario run always gets its default:
-`impassable_extinction_threshold` (3.0). `exit_switch_anchor` (0.9)
-is a `routing` key.
+`impassable_extinction_threshold` (3.0), the additive model's must-flee
+line, and `exit_switch_anchor` (0.9) are `routing` keys too.
 
 `w_smoke` and `w_fed` **no longer reach route choice under the gate.**
 Since `0d9bf79` a gate run weights each Dijkstra edge by its own optical

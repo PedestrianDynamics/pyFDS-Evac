@@ -326,8 +326,7 @@ Some parameters exist only in Python, as fields of a config object:
   `alpha`, `beta`, `min_speed_factor`, `visibility_factor_c`); a configured run
   always uses the Lund law with the defaults on
   [Models › Smoke speed](/models/smoke-speed.md#parameters);
-- the routing constant `impassable_extinction_threshold`
-  (`RouteCostConfig`); `RerouteConfig.exit_switch_anchor`, which, when set,
+- `RerouteConfig.exit_switch_anchor`, which, when set,
   overrides the `routing` key `exit_switch_anchor` for that run.
 
 Tracking issue for this reference:
