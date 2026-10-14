@@ -16,7 +16,12 @@ from shapely.geometry import Polygon
 
 from .fds_sampling import LinePart
 from .geometry import node_position as _node_position
-from .smoke_speed import speed_factor_from_extinction
+from .smoke_speed import (
+    LUND_ALPHA,
+    LUND_BETA,
+    LUND_MIN_SPEED_FACTOR,
+    speed_factor_from_extinction,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -960,9 +965,11 @@ class RouteCostConfig:
     # of the walk dose (#171) every sampling_step_m.
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
-    alpha: float = 0.706
-    beta: float = -0.057
-    min_speed_factor: float = 0.1
+    # The router's copy of the Lund speed law, used only to estimate travel
+    # time; the coefficients are the smoke-speed model's, read from one place.
+    alpha: float = LUND_ALPHA
+    beta: float = LUND_BETA
+    min_speed_factor: float = LUND_MIN_SPEED_FACTOR
     default_exit_capacity: float = 1.3
 
     # ── Gate model ────────────────────────────────────────────────────────
