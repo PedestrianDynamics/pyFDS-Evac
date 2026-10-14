@@ -223,7 +223,7 @@ def main():
         Y_DIAMOND,
         W_FALL,
         0.08,
-        "Fallback:\nUn-reject\nleast-cost route",
+        "Fallback:\nPromote the\nleast-bad route",
         C_FALLBACK,
         C_REJECT_BORDER,
     )
