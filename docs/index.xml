@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7eec0ab79158b5b2083c185d033ea587fc3c59804daa302077e5f67bc8a933f1&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8a92dff6d56f752300c1676aa1e655b7fa35e2d278bc62b054e1414e55975005&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2022,7 +2022,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2041,7 +2041,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">524fbf547d492e8fd0dfb2038bf19521f10a057fbbdac60748a9bbe98954faa2&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4369def508b6d7253a80af87faad6a90fc44440b6920a772f0766dbb413203dd&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -2869,11 +2869,10 @@ not sight. It is cited, not calibrated, and FDS+Evac ranks on smoke only as a
 last resort, so the gate departs from FDS+Evac rather than reproducing it. The
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing page&lt;/a> gives the defaults, the derivation of the
 budget, the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> alternative and a measured case of oscillation.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budget 6" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 4. Schematic with a toy plume, not a simulation. Top: three candidate
 routes, their samples shaded by K [1/m]. Bottom: their optical depth \(\tau\) against the
-budget for the current exit (solid) and the stricter one for a rival
-(dashed). Route C is refused; route B ranks first although it is the longest
+budget (the same for every exit). Route C is refused; route B ranks first although it is the longest
 walk. Script: &lt;code>scripts/figures/exposure_gate.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Wayfinding&lt;span class="hx-absolute -hx-mt-20" id="wayfinding">&lt;/span>
 &lt;a href="#wayfinding" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Route choice picks among the exits an agent knows. Wayfinding decides which
@@ -3908,7 +3907,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.170&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -3933,7 +3932,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8e1d157796fdb0181e0dde13b33bb5e938944e495c93657b9329e8aa2f06408f&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c6d0e0a200b252ecd56551e901cb97eea4c19d72a83a7e4b142b5e497da671bf&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5059,7 +5058,8 @@ agent stands (&lt;code>_measure_route&lt;/code>,
 &lt;li>Routes are ranked by τ first (&lt;code>GatePolicy.order_key&lt;/code>). An exit switch
 needs the rival&amp;rsquo;s τ to be lower by more than 6 × 0.1 = 0.6 (&lt;code>_tau_band&lt;/code>).
 A route is refused above τ = 6 for the current exit and 4.8 for a rival
-exit (&lt;code>RouteCostConfig&lt;/code>). τ = 6 comes from the original
+exit (&lt;code>RouteCostConfig&lt;/code>; the rival budget of 4.8 held when this study was
+run; the margin was removed in 0.6.0, #187). τ = 6 comes from the original
 &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>.&lt;/li>
 &lt;li>&lt;strong>Two refused routes:&lt;/strong> the lower τ decides, with a 20 % margin; a switch
 straight back is blocked for 10 s
@@ -5341,7 +5341,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5372,7 +5372,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6fd5bdf2731925ff9d2370dafebfce0840fd507d6551839a8d9e5db2841759d8&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">57ad7baeaf20bc142c12e36647a2e656ee181734580604be620a5164dec9bb1e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6764,7 +6764,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6785,7 +6785,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4993ca95a8db8de6f56fb94495c3984bb548e789f2c05efcd13e98da9f625e6c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">653180d93c73b40cb6093d263cdea9843b5a66070671ecce99216f0bc53d66a7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -8670,11 +8670,10 @@ Path choice and exit choice are therefore one objective. In clear air every
 Dijkstra tie-break is 1e-6 × length), which is nearest-exit; this equivalence
 has not been re-measured since routes were first ordered on &lt;code>tau&lt;/code>
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#known-limitations">Known limitations&lt;/a>).&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budget 6" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Schematic with a prescribed toy plume, not a simulation. Top: three candidate
 routes, sampled along each walk, the samples shaded by extinction K [1/m]. Bottom:
-optical depth &lt;code>tau&lt;/code> [-] per route against &lt;code>tau_max&lt;/code> = 6 (current exit and
-initial choice) and 0.8 &lt;code>tau_max&lt;/code> = 4.8 (any other exit). Route C is refused;
+optical depth &lt;code>tau&lt;/code> [-] per route against &lt;code>tau_max&lt;/code> = 6 (any exit). Route C is refused;
 route B ranks first although it is the longest walk.
 Script: &lt;code>scripts/figures/exposure_gate.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;p>&lt;code>tau&lt;/code> is an &lt;strong>exposure&lt;/strong> statement, not a sighting distance; where its budget
@@ -8686,8 +8685,7 @@ takes a route whose predicted dose is lethal while one that is not remains;
 among the rest it takes the one with least smoke to walk through and holds it
 unless a rival&amp;rsquo;s &lt;code>tau&lt;/code> is clearly lower (&lt;code>fallback_switch_margin&lt;/code>)
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>). Churn is held down by the
-exit-switch anchor, by a stricter budget for a rival exit
-(&lt;code>tau_return_margin&lt;/code>), and by a discount on the current exit&amp;rsquo;s &lt;code>tau&lt;/code> in the
+exit-switch anchor, by a discount on the current exit&amp;rsquo;s &lt;code>tau&lt;/code> in the
 sort (&lt;code>current_exit_discount&lt;/code>, FDS+Evac&amp;rsquo;s &lt;code>FAC_DOOR_OLD2&lt;/code>). FDS+Evac applies
 &lt;code>FAC_DOOR_OLD2&lt;/code> only when no door is smoke-free (its tier 4, &lt;code>evac.f90:16803&lt;/code>);
 the gate applies the discount in every ordering.&lt;/p>
@@ -8836,11 +8834,6 @@ tabulated in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implemen
 &lt;td>Budget \(\tau_{\max}\) on the optical depth of a route&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.8&lt;/code>&lt;/td>
-&lt;td>A rival exit must come in under &lt;code>tau_max&lt;/code> times this&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>&lt;code>current_exit_discount&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.9&lt;/code>&lt;/td>
 &lt;td>Factor on the current exit&amp;rsquo;s &lt;code>tau&lt;/code> in the sort&lt;/td>
@@ -8940,7 +8933,7 @@ tabulated in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implemen
 &lt;p>Each switching margin must be a number in its range, or the run stops with
 a &lt;code>ValueError&lt;/code> naming the key, also with &lt;code>--no-enable-rerouting&lt;/code>:
 &lt;code>exit_switch_anchor&lt;/code>,
-&lt;code>tau_return_margin&lt;/code>, &lt;code>current_exit_discount&lt;/code> and &lt;code>clean_exit_margin&lt;/code> in
+&lt;code>current_exit_discount&lt;/code> and &lt;code>clean_exit_margin&lt;/code> in
 (0, 1]; &lt;code>tau_deadband&lt;/code> and &lt;code>fallback_switch_margin&lt;/code> in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for &lt;code>tau_deadband&lt;/code>
 and &lt;code>fallback_switch_margin&lt;/code>. &lt;code>fallback_switch_margin&lt;/code> = 1 keeps the
@@ -9015,7 +9008,7 @@ listed in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage
 &lt;td>value of FDS+Evac &lt;code>FAC_DOOR_WAIT&lt;/code>, applied to a different cost; not calibrated&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>tau_return_margin&lt;/code>, &lt;code>tau_deadband&lt;/code>, &lt;code>fallback_switch_margin&lt;/code>, &lt;code>impassable_extinction_threshold&lt;/code>, &lt;code>visibility_extinction_threshold&lt;/code>, &lt;code>w_smoke&lt;/code>, &lt;code>w_fed&lt;/code>&lt;/td>
+&lt;td>&lt;code>tau_deadband&lt;/code>, &lt;code>fallback_switch_margin&lt;/code>, &lt;code>impassable_extinction_threshold&lt;/code>, &lt;code>visibility_extinction_threshold&lt;/code>, &lt;code>w_smoke&lt;/code>, &lt;code>w_fed&lt;/code>&lt;/td>
 &lt;td>pyFDS-Evac assumptions, not calibrated&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -9417,7 +9410,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -9433,7 +9426,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">1317364fa178cf429a18d85aa6bf062286b775a72ee26ae9fcb177b13e0f113d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d09f1bf0b831aebdc6222ae2b1c41c7b62fb1705f02b6c6d3e38c7b4f992acd5&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -19140,7 +19133,10 @@ it stops with a &lt;code>ValueError&lt;/code> naming the removal, also with
 fraction of the walked path&amp;rsquo;s &lt;code>rank_cost&lt;/code> a new path to the same exit
 had to come in under, was removed in the same issue and is refused the
 same way: the path is now taken whenever it is strictly cheaper.
-&lt;code>fed_return_margin&lt;/code>, the
+&lt;code>tau_return_margin&lt;/code>, the
+factor (0.8) on &lt;code>tau_max&lt;/code> that a rival exit&amp;rsquo;s optical depth had to come in
+under, was removed in the same issue and is refused the same way: every
+exit is now refused above &lt;code>tau_max&lt;/code>. &lt;code>fed_return_margin&lt;/code>, the
 fraction of &lt;code>fed_rejection_threshold&lt;/code> above which a rival exit was
 refused for dose, was removed in the same issue and is refused the same
 way: a rival is now held to &lt;code>fed_rejection_threshold&lt;/code>, as the current
@@ -19148,7 +19144,7 @@ exit is.&lt;/p>
 &lt;p>Each switching margin must be a number in its range, or the run stops with
 a &lt;code>ValueError&lt;/code> naming the key, also with &lt;code>--no-enable-rerouting&lt;/code>:
 &lt;code>exit_switch_anchor&lt;/code>,
-&lt;code>tau_return_margin&lt;/code>, &lt;code>current_exit_discount&lt;/code> and &lt;code>clean_exit_margin&lt;/code> in
+&lt;code>current_exit_discount&lt;/code> and &lt;code>clean_exit_margin&lt;/code> in
 (0, 1]; &lt;code>tau_deadband&lt;/code> and &lt;code>fallback_switch_margin&lt;/code> in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for &lt;code>tau_deadband&lt;/code>
 and &lt;code>fallback_switch_margin&lt;/code>. &lt;code>fallback_switch_margin&lt;/code> = 1 keeps the
@@ -20643,9 +20639,9 @@ for the current exit and for a rival. (Until the removal of
 &lt;code>fed_return_margin&lt;/code> in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>
 a rival was held to 0.9 of it.)&lt;/li>
 &lt;li>&lt;strong>Gate model only:&lt;/strong> the route&amp;rsquo;s optical depth &lt;code>tau = K_ave * L_eff&lt;/code> exceeds
-&lt;code>tau_max&lt;/code> (default 6). This test is asymmetric too: for an exit that is not
-the agent&amp;rsquo;s current one the budget is &lt;code>tau_max * tau_return_margin&lt;/code> (0.8), so
-switching needs a cleaner route than staying. &lt;code>K_ave&lt;/code> is the length-weighted
+&lt;code>tau_max&lt;/code> (default 6), for the current exit and a rival alike (a rival used to be
+held to &lt;code>tau_max * tau_return_margin&lt;/code>, 0.8, removed in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>). &lt;code>K_ave&lt;/code> is the length-weighted
 mean over the route&amp;rsquo;s own polyline, and every exit is judged on it — see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#optical-depth-what-it-measures-and-what-it-does-not">route-cost-gate.md&lt;/a>.
 The rejection reason reads &lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)&lt;/code>.&lt;/li>
@@ -21028,7 +21024,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
-&lt;td>FED over the threshold then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
+&lt;td>FED over the threshold then τ over &lt;code>tau_max&lt;/code>; both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
 &lt;td>FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as &lt;code>all segments non-visible&lt;/code> while staying feasible&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -21099,7 +21095,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tbody>
 &lt;/table>
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
-&lt;p>Seven rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
+&lt;p>Six rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
 &lt;code>route_graph.py&lt;/code> lists each with its owner, FDS+Evac counterpart and consumers.
 Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>:&lt;/p>
@@ -21114,11 +21110,6 @@ Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are 
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
-&lt;td>yes&lt;/td>
-&lt;td>none&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
 &lt;td>yes&lt;/td>
 &lt;td>none&lt;/td>
 &lt;/tr>
@@ -23804,7 +23795,6 @@ route may carry before it is refused:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;routing&amp;#34;&lt;/span>: {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;cost_model&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;gate&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_max&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">6.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_return_margin&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.8&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;current_exit_discount&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.9&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_deadband&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.1&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
@@ -23832,9 +23822,8 @@ graph.&lt;/p>
 &lt;li>&lt;strong>Path per exit.&lt;/strong> Dijkstra runs with each edge weighted by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor, below).&lt;/li>
 &lt;li>&lt;strong>Availability.&lt;/strong> Each candidate route is tested twice. &lt;strong>Optical depth:&lt;/strong>
-it is refused when &lt;code>tau = K_ave * L_eff&lt;/code> exceeds &lt;code>tau_max&lt;/code> (default 6), or
-&lt;code>tau_max * tau_return_margin&lt;/code> if it is not the exit the agent already walks
-to. &lt;strong>Dose:&lt;/strong> it is refused when its projected FED exceeds
+it is refused when &lt;code>tau = K_ave * L_eff&lt;/code> exceeds &lt;code>tau_max&lt;/code> (default 6),
+whichever exit it leads to. &lt;strong>Dose:&lt;/strong> it is refused when its projected FED exceeds
 &lt;code>fed_rejection_threshold&lt;/code>. Either refusal alone removes the route.&lt;/li>
 &lt;li>&lt;strong>Ordering among survivors.&lt;/strong> Optical depth first, travel time second. The
 sort key is &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code> with
@@ -23848,7 +23837,7 @@ the sort is not necessarily the exit the agent walks to. See
 &lt;a href="#churn-protection">Churn protection&lt;/a> for the rule.&lt;/li>
 &lt;/ol>
 &lt;p>&lt;strong>Three separate &lt;code>tau&lt;/code> comparisons happen per tick&lt;/strong>, and it is worth keeping
-them apart: &lt;code>tau_return_margin&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
+them apart: &lt;code>tau_max&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
 &lt;code>current_exit_discount&lt;/code> decides their &lt;em>order&lt;/em>, and &lt;code>tau_deadband&lt;/code> decides
 whether the agent &lt;em>acts&lt;/em> on that order. Only the third can change an exit.&lt;/p>
 &lt;p>&lt;strong>One quantity refuses a route, orders it, and weights its edges.&lt;/strong> Before
@@ -23922,7 +23911,7 @@ cognitive map (&lt;code>cognitive_map.expand_from_visibility&lt;/code>), not in 
 &lt;p>The rejection reason names the quantity and both factors of it:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)
-tau 5.20 &amp;gt; 4.80 (K_ave 0.388 x 13.4 m)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+tau 6.20 &amp;gt; 6.00 (K_ave 0.463 x 13.4 m)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -23932,7 +23921,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The second is a rival exit, held to &lt;code>tau_max * tau_return_margin&lt;/code> = 4.8.&lt;/p>
+&lt;p>The second is a route just over the budget; every exit is held to the same &lt;code>tau_max&lt;/code>.&lt;/p>
 &lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>&amp;rsquo;s tier-4 door test computes
 &lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> and strikes the door out when
 &lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16794, :16799&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
@@ -24086,26 +24075,12 @@ claims and only one of them is about smoke.&lt;/p>
 &lt;p>Nothing is fixed here. &lt;code>foresight_horizon_s&lt;/code> is the one lever already shipped
 that bounds half of it (the temporal half); it defaults to &lt;code>inf&lt;/code>. #125 records
 the three options and evaluates none.&lt;/p>
-&lt;h3>Two asymmetries favour the exit the agent already walks to&lt;span class="hx-absolute -hx-mt-20" id="two-asymmetries-favour-the-exit-the-agent-already-walks-to">&lt;/span>
-&lt;a href="#two-asymmetries-favour-the-exit-the-agent-already-walks-to" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>tau_return_margin&lt;/code> (default 0.8) is a deadband on &lt;strong>feasibility&lt;/strong>. The current
-route is judged against the bare &lt;code>tau_max&lt;/code>; a rival must come in under
-&lt;code>tau_max * 0.8&lt;/code> before it is even a candidate:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>budget = tau_max (current exit)
-budget = tau_max * tau_return_margin (any other exit)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Without it a route whose &lt;code>tau&lt;/code> sits near the budget toggles in and out of the
-feasible set every tick and the agent follows it. It replaces the old
-&lt;code>sight_return_margin&lt;/code>, which multiplied a sight requirement (1.25 &lt;em>up&lt;/em>) where
-this one scales a budget (0.8 &lt;em>down&lt;/em>).&lt;/p>
+&lt;h3>One asymmetry favours the exit the agent already walks to&lt;span class="hx-absolute -hx-mt-20" id="one-asymmetry-favours-the-exit-the-agent-already-walks-to">&lt;/span>
+&lt;a href="#one-asymmetry-favours-the-exit-the-agent-already-walks-to" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Every exit is refused above the same &lt;code>tau_max&lt;/code>. &lt;code>tau_return_margin&lt;/code> (0.8),
+which held a rival to &lt;code>tau_max * 0.8&lt;/code> = 4.8, was removed in #187: it was
+inert on every audit deck (236 paired runs identical), and where it did
+bind, &lt;code>current_exit_discount&lt;/code> and &lt;code>tau_deadband&lt;/code> already decided the
+outcome.&lt;/p>
 &lt;p>&lt;code>current_exit_discount&lt;/code> (default 0.9) is a deadband on &lt;strong>ordering&lt;/strong>. Only the
 current exit&amp;rsquo;s &lt;code>tau&lt;/code> is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.&lt;/p>
@@ -24124,9 +24099,6 @@ additive, and it can differ under the gate (see the anchoring row of the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a>). A new path to the same exit
 has no counterpart in FDS+Evac, and since #187 it is taken whenever it is
 strictly cheaper.&lt;/p>
-&lt;p>&lt;strong>A reviewer will ask why both.&lt;/strong> They act on different stages — one on the
-feasible set, one on the order within it — but they have not been measured
-independently, and no run isolates the contribution of either.&lt;/p>
 &lt;h3>The clean-exit tier (off by default)&lt;span class="hx-absolute -hx-mt-20" id="the-clean-exit-tier-off-by-default">&lt;/span>
 &lt;a href="#the-clean-exit-tier-off-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>clean_extinction_threshold&lt;/code> adds one rank above optical depth. A route whose
 smokiest &lt;em>leg&lt;/em> stays at or below the threshold is &lt;code>clean&lt;/code>, and clean routes
@@ -24199,8 +24171,7 @@ read the &lt;code>clean&lt;/code> and &lt;code>k_leg_max&lt;/code> columns of th
 &lt;a href="#dose-vetoes-an-exit-it-does-not-rank" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>FED enters route choice as a veto only. Each route&amp;rsquo;s &lt;code>fed_max_route&lt;/code> is the
 dose already taken plus the dose predicted over the walk
 (&lt;code>current_fed + sum(fed_growth)&lt;/code>), and a route above &lt;code>fed_rejection_threshold&lt;/code>
-(default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
-as optical depth: the current exit and a rival are held to the same threshold
+(default 1.0, incapacitation) is refused. The current exit and a rival are held to the same threshold
 (&lt;code>fed_return_margin&lt;/code>, which held a rival to 0.9 of it, was removed in #187:
 no route dose on any fire deck came near 1). A dose refusal is a
 &amp;ldquo;must flee&amp;rdquo; rejection, so it bypasses the exit-switch anchor — hysteresis
@@ -24314,12 +24285,11 @@ returns to abandoned exits on &lt;code>l_corridor&lt;/code>.&lt;/p>
 &lt;p>A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
 admit wins, stopping at the agent&amp;rsquo;s own exit.&lt;/p>
-&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>tau_return_margin&lt;/code> (0.8) makes
-a rival exit harder to &lt;em>qualify&lt;/em> than the current one; &lt;code>current_exit_discount&lt;/code>
-(0.9) makes it harder to &lt;em>outrank&lt;/em> it; &lt;code>tau_deadband&lt;/code> (0.1 of &lt;code>tau_max&lt;/code>) makes
-it harder to &lt;em>switch onto&lt;/em>, in both directions. Three constants, all
-acting on the same quantity at three different stages. A reviewer will
-reasonably ask why, and no run isolates any one of them.&lt;/p>
+&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>current_exit_discount&lt;/code>
+(0.9) makes a rival exit harder to &lt;em>outrank&lt;/em> the current one;
+&lt;code>tau_deadband&lt;/code> (0.1 of &lt;code>tau_max&lt;/code>) makes it harder to &lt;em>switch onto&lt;/em>, in both
+directions. Two constants acting on the same quantity at two different
+stages. A reviewer will reasonably ask why, and no run isolates either.&lt;/p>
 &lt;p>&lt;strong>Monotonicity held on &lt;code>world100&lt;/code> and did not on &lt;code>l_corridor&lt;/code>.&lt;/strong> The
 requirement is that an agent never returns to an exit it has abandoned. At
 &lt;code>0d9bf79&lt;/code> and &lt;code>9f55f6e&lt;/code>:&lt;/p>
@@ -24485,13 +24455,6 @@ title="Copy code"
 &lt;td>&lt;code>tau_max&lt;/code>&lt;/td>
 &lt;td>&lt;code>6.0&lt;/code>&lt;/td>
 &lt;td>Optical depth &lt;code>K_ave * L&lt;/code> a route may carry before it is refused. Also orders the feasible routes.&lt;/td>
-&lt;td>active&lt;/td>
-&lt;td>inert&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.8&lt;/code>&lt;/td>
-&lt;td>Factor a &lt;em>rival&lt;/em> exit&amp;rsquo;s budget is multiplied by, so switching needs a cleaner route than staying.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>inert&lt;/td>
 &lt;/tr>
@@ -24697,11 +24660,11 @@ reading: 29 of the 34 have the returned-to route cleaner by more than the
 deadband, so they are the ordering correctly following a field that reversed.
 What remains open is the modelling question — whether a memoryless model
 should follow a reversing field at all — not a missing constant.&lt;/li>
-&lt;li>&lt;strong>Four hysteresis mechanisms act on &lt;code>tau&lt;/code> or on the exit choice.&lt;/strong>
-&lt;code>tau_return_margin&lt;/code> on feasibility, &lt;code>current_exit_discount&lt;/code> on the sort,
-&lt;code>tau_deadband&lt;/code> on the anchor, &lt;code>exit_switch_anchor&lt;/code> on the time fallthrough.
-None has been measured in isolation, and the last two are both keyed to 0.9
-and 0.1 x 6 without a joint sweep.&lt;/li>
+&lt;li>&lt;strong>Three hysteresis mechanisms act on &lt;code>tau&lt;/code> or on the exit choice.&lt;/strong>
+&lt;code>current_exit_discount&lt;/code> on the sort, &lt;code>tau_deadband&lt;/code> on the anchor,
+&lt;code>exit_switch_anchor&lt;/code> on the time fallthrough. None has been measured in
+isolation, and the last two are both keyed to 0.9 and 0.1 x 6 without a
+joint sweep.&lt;/li>
 &lt;li>&lt;strong>The &lt;code>1e-6 * length&lt;/code> edge-weight floor is a hard-coded tiebreaker.&lt;/strong> It
 decides path choice in clear air, where every &lt;code>k_avg * length&lt;/code> is zero. Its
 effect at small nonzero &lt;code>K&lt;/code> has not been measured.&lt;/li>
@@ -24724,9 +24687,8 @@ agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 o
 clock therefore runs ahead of the agent systematically, and it runs furthest
 ahead exactly where the smoke is thickest. With &lt;code>foresight_horizon_s = inf&lt;/code>
 the agent also has perfect foresight of the FDS solution.&lt;/li>
-&lt;li>&lt;strong>Four hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
-&lt;code>fallback_switch_margin&lt;/code> (0.2),
-&lt;code>tau_return_margin&lt;/code> (0.8) and &lt;code>tau_deadband&lt;/code> (0.1)
+&lt;li>&lt;strong>Three hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
+&lt;code>fallback_switch_margin&lt;/code> (0.2) and &lt;code>tau_deadband&lt;/code> (0.1)
 are all chosen to stop measured churn,
 not fitted to observed behaviour. Two have FDS+Evac values behind them:
 &lt;code>clean_exit_margin&lt;/code> = &lt;code>FAC_DOOR_OLD&lt;/code>, and &lt;code>current_exit_discount&lt;/code> =
@@ -25692,8 +25654,7 @@ dynamic weights.&lt;/p>
 (dimensionless; &lt;code>L&lt;/code> is the distance still to walk) decides
 availability &lt;em>and&lt;/em> the ordering. Here &lt;code>tau&lt;/code> is always optical
 depth, not the relaxation time τ of FDS+Evac&amp;rsquo;s movement model. A route is refused when &lt;code>tau&lt;/code>
-exceeds &lt;code>tau_max&lt;/code> (6), or &lt;code>tau_max * tau_return_margin&lt;/code> (4.8) for an
-exit the agent is not already walking to; survivors are ordered by
+exceeds &lt;code>tau_max&lt;/code> (6), for every exit; survivors are ordered by
 &lt;code>tau&lt;/code>, with travel time (plus &lt;code>w_queue&lt;/code> x queue time) breaking ties.
 &lt;code>K_ave&lt;/code> is the length-weighted mean over the route&amp;rsquo;s own polyline, so
 &lt;code>tau&lt;/code> is the soot column the agent walks through — an exposure
@@ -26667,7 +26628,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -26691,7 +26652,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">82e166d0b5572163096df807fddc6db63737ca15c2a2930a14876ba5888d2320&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d5c0991592b78e1ded297f5d57713c50c51955c2abb1b4ce28293403c1aa15fb&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -27881,7 +27842,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -27899,7 +27860,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a72010b7f0ec8f3c0cc81cc5fc5d69df3537042adabd9bf2460f5e2b29d90870&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b665cfe9a18cadf6ea78a1f9a6cfed769a35f66504b8ba495a0ac99b89bbbe4d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -29289,7 +29250,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;/div>
 &lt;p class="docs-files__summary">The two scenarios, the FDS decks, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 45 s for the 16 runs and the figures&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29313,7 +29274,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;li>&lt;code>assets/iso_table21_coupled/build_geometry.py&lt;/code>: writes the coupled deck, scenario and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table21_coupled/README.md&lt;/code>: what the coupled case is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5b63646494f063e8a48691d7cd1a373922d07391ce598a4d2d95c81d704b6c97&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">cdf6d22dd5635b8f04c653991bbdf6ff92c5f2f48307079416f3398ef5e75fde&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The tests run both cases in about 20 s. They are weaker than this page: the
@@ -29741,7 +29702,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The four FDS decks and scenarios, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed8c593933230b32a10a1b4438ce952b5a6a82a2">&lt;code>ed8c593&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ed7f4f7108ba602e61b5c2a7c08e24832d397476">&lt;code>ed7f4f7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 1 min for the four cases&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29770,7 +29731,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/geometry.wkt&lt;/code>: the second version of this test, walkable area&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/README.md&lt;/code>: the second version of this test&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e89f638ae759ec626bef9b740535a1934f495b18f04487fefda4a83b0ff98a13&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">28bb52700d5a6a41069196071b1410003349ac78977dd72a07630d506d4353e5&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output (slices only, 256 kB) is committed in

@@ -177,11 +177,10 @@ not sight. It is cited, not calibrated, and FDS+Evac ranks on smoke only as a
 last resort, so the gate departs from FDS+Evac rather than reproducing it. The
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">routing page&lt;/a> gives the defaults, the derivation of the
 budget, the &lt;code>&amp;quot;additive&amp;quot;&lt;/code> alternative and a measured case of oscillation.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/exposure_gate.png" alt="Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budget 6" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 4. Schematic with a toy plume, not a simulation. Top: three candidate
 routes, their samples shaded by K [1/m]. Bottom: their optical depth \(\tau\) against the
-budget for the current exit (solid) and the stricter one for a rival
-(dashed). Route C is refused; route B ranks first although it is the longest
+budget (the same for every exit). Route C is refused; route B ranks first although it is the longest
 walk. Script: &lt;code>scripts/figures/exposure_gate.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h2>Wayfinding&lt;span class="hx-absolute -hx-mt-20" id="wayfinding">&lt;/span>
 &lt;a href="#wayfinding" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Route choice picks among the exits an agent knows. Wayfinding decides which
@@ -1123,8 +1122,7 @@ dynamic weights.&lt;/p>
 (dimensionless; &lt;code>L&lt;/code> is the distance still to walk) decides
 availability &lt;em>and&lt;/em> the ordering. Here &lt;code>tau&lt;/code> is always optical
 depth, not the relaxation time τ of FDS+Evac&amp;rsquo;s movement model. A route is refused when &lt;code>tau&lt;/code>
-exceeds &lt;code>tau_max&lt;/code> (6), or &lt;code>tau_max * tau_return_margin&lt;/code> (4.8) for an
-exit the agent is not already walking to; survivors are ordered by
+exceeds &lt;code>tau_max&lt;/code> (6), for every exit; survivors are ordered by
 &lt;code>tau&lt;/code>, with travel time (plus &lt;code>w_queue&lt;/code> x queue time) breaking ties.
 &lt;code>K_ave&lt;/code> is the length-weighted mean over the route&amp;rsquo;s own polyline, so
 &lt;code>tau&lt;/code> is the soot column the agent walks through — an exposure

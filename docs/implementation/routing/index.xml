@@ -261,9 +261,9 @@ for the current exit and for a rival. (Until the removal of
 &lt;code>fed_return_margin&lt;/code> in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>
 a rival was held to 0.9 of it.)&lt;/li>
 &lt;li>&lt;strong>Gate model only:&lt;/strong> the route&amp;rsquo;s optical depth &lt;code>tau = K_ave * L_eff&lt;/code> exceeds
-&lt;code>tau_max&lt;/code> (default 6). This test is asymmetric too: for an exit that is not
-the agent&amp;rsquo;s current one the budget is &lt;code>tau_max * tau_return_margin&lt;/code> (0.8), so
-switching needs a cleaner route than staying. &lt;code>K_ave&lt;/code> is the length-weighted
+&lt;code>tau_max&lt;/code> (default 6), for the current exit and a rival alike (a rival used to be
+held to &lt;code>tau_max * tau_return_margin&lt;/code>, 0.8, removed in
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>). &lt;code>K_ave&lt;/code> is the length-weighted
 mean over the route&amp;rsquo;s own polyline, and every exit is judged on it — see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#optical-depth-what-it-measures-and-what-it-does-not">route-cost-gate.md&lt;/a>.
 The rejection reason reads &lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)&lt;/code>.&lt;/li>
@@ -646,7 +646,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
-&lt;td>FED over the threshold then τ over &lt;code>tau_max&lt;/code> (× &lt;code>tau_return_margin&lt;/code> for a rival); both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
+&lt;td>FED over the threshold then τ over &lt;code>tau_max&lt;/code>; both are tested, and a route over both reports the τ reason; must-flee reads &lt;code>violation_kinds&lt;/code>, not the reason (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>)&lt;/td>
 &lt;td>FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as &lt;code>all segments non-visible&lt;/code> while staying feasible&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -717,7 +717,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tbody>
 &lt;/table>
 &lt;p>The explore and wander decisions are made by &lt;code>_decide_explore&lt;/code>.&lt;/p>
-&lt;p>Seven rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
+&lt;p>Six rules resist switching at different points. &lt;code>_SWITCH_MARGINS&lt;/code> in
 &lt;code>route_graph.py&lt;/code> lists each with its owner, FDS+Evac counterpart and consumers.
 Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>:&lt;/p>
@@ -732,11 +732,6 @@ Every rule with a parameter is a &lt;code>routing&lt;/code> key; the ranges are 
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>fallback_switch_margin&lt;/code>&lt;/td>
-&lt;td>yes&lt;/td>
-&lt;td>none&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
 &lt;td>yes&lt;/td>
 &lt;td>none&lt;/td>
 &lt;/tr>
@@ -1208,7 +1203,6 @@ route may carry before it is refused:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;routing&amp;#34;&lt;/span>: {
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;cost_model&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;gate&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_max&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">6.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_return_margin&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.8&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;current_exit_discount&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.9&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;tau_deadband&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">0.1&lt;/span>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
@@ -1236,9 +1230,8 @@ graph.&lt;/p>
 &lt;li>&lt;strong>Path per exit.&lt;/strong> Dijkstra runs with each edge weighted by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor, below).&lt;/li>
 &lt;li>&lt;strong>Availability.&lt;/strong> Each candidate route is tested twice. &lt;strong>Optical depth:&lt;/strong>
-it is refused when &lt;code>tau = K_ave * L_eff&lt;/code> exceeds &lt;code>tau_max&lt;/code> (default 6), or
-&lt;code>tau_max * tau_return_margin&lt;/code> if it is not the exit the agent already walks
-to. &lt;strong>Dose:&lt;/strong> it is refused when its projected FED exceeds
+it is refused when &lt;code>tau = K_ave * L_eff&lt;/code> exceeds &lt;code>tau_max&lt;/code> (default 6),
+whichever exit it leads to. &lt;strong>Dose:&lt;/strong> it is refused when its projected FED exceeds
 &lt;code>fed_rejection_threshold&lt;/code>. Either refusal alone removes the route.&lt;/li>
 &lt;li>&lt;strong>Ordering among survivors.&lt;/strong> Optical depth first, travel time second. The
 sort key is &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code> with
@@ -1252,7 +1245,7 @@ the sort is not necessarily the exit the agent walks to. See
 &lt;a href="#churn-protection">Churn protection&lt;/a> for the rule.&lt;/li>
 &lt;/ol>
 &lt;p>&lt;strong>Three separate &lt;code>tau&lt;/code> comparisons happen per tick&lt;/strong>, and it is worth keeping
-them apart: &lt;code>tau_return_margin&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
+them apart: &lt;code>tau_max&lt;/code> decides which routes are &lt;em>candidates&lt;/em>,
 &lt;code>current_exit_discount&lt;/code> decides their &lt;em>order&lt;/em>, and &lt;code>tau_deadband&lt;/code> decides
 whether the agent &lt;em>acts&lt;/em> on that order. Only the third can change an exit.&lt;/p>
 &lt;p>&lt;strong>One quantity refuses a route, orders it, and weights its edges.&lt;/strong> Before
@@ -1326,7 +1319,7 @@ cognitive map (&lt;code>cognitive_map.expand_from_visibility&lt;/code>), not in 
 &lt;p>The rejection reason names the quantity and both factors of it:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>tau 8.41 &amp;gt; 6.00 (K_ave 0.145 x 58.0 m)
-tau 5.20 &amp;gt; 4.80 (K_ave 0.388 x 13.4 m)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+tau 6.20 &amp;gt; 6.00 (K_ave 0.463 x 13.4 m)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -1336,7 +1329,7 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The second is a rival exit, held to &lt;code>tau_max * tau_return_margin&lt;/code> = 4.8.&lt;/p>
+&lt;p>The second is a route just over the budget; every exit is held to the same &lt;code>tau_max&lt;/code>.&lt;/p>
 &lt;p>&lt;a id="where-the-6-comes-from">&lt;/a>&lt;strong>Where the 6 comes from.&lt;/strong> &lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a>&amp;rsquo;s tier-4 door test computes
 &lt;code>L2_tmp = d * 0.5 / (3.0 / K_ave_Door)&lt;/code> and strikes the door out when
 &lt;code>L2_tmp &amp;gt;= 1.0&lt;/code> (&lt;code>evac.f90:16794, :16799&lt;/code>). That expression is &lt;code>K_ave * d / 6&lt;/code>, so
@@ -1490,26 +1483,12 @@ claims and only one of them is about smoke.&lt;/p>
 &lt;p>Nothing is fixed here. &lt;code>foresight_horizon_s&lt;/code> is the one lever already shipped
 that bounds half of it (the temporal half); it defaults to &lt;code>inf&lt;/code>. #125 records
 the three options and evaluates none.&lt;/p>
-&lt;h3>Two asymmetries favour the exit the agent already walks to&lt;span class="hx-absolute -hx-mt-20" id="two-asymmetries-favour-the-exit-the-agent-already-walks-to">&lt;/span>
-&lt;a href="#two-asymmetries-favour-the-exit-the-agent-already-walks-to" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>tau_return_margin&lt;/code> (default 0.8) is a deadband on &lt;strong>feasibility&lt;/strong>. The current
-route is judged against the bare &lt;code>tau_max&lt;/code>; a rival must come in under
-&lt;code>tau_max * 0.8&lt;/code> before it is even a candidate:&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>budget = tau_max (current exit)
-budget = tau_max * tau_return_margin (any other exit)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>Without it a route whose &lt;code>tau&lt;/code> sits near the budget toggles in and out of the
-feasible set every tick and the agent follows it. It replaces the old
-&lt;code>sight_return_margin&lt;/code>, which multiplied a sight requirement (1.25 &lt;em>up&lt;/em>) where
-this one scales a budget (0.8 &lt;em>down&lt;/em>).&lt;/p>
+&lt;h3>One asymmetry favours the exit the agent already walks to&lt;span class="hx-absolute -hx-mt-20" id="one-asymmetry-favours-the-exit-the-agent-already-walks-to">&lt;/span>
+&lt;a href="#one-asymmetry-favours-the-exit-the-agent-already-walks-to" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Every exit is refused above the same &lt;code>tau_max&lt;/code>. &lt;code>tau_return_margin&lt;/code> (0.8),
+which held a rival to &lt;code>tau_max * 0.8&lt;/code> = 4.8, was removed in #187: it was
+inert on every audit deck (236 paired runs identical), and where it did
+bind, &lt;code>current_exit_discount&lt;/code> and &lt;code>tau_deadband&lt;/code> already decided the
+outcome.&lt;/p>
 &lt;p>&lt;code>current_exit_discount&lt;/code> (default 0.9) is a deadband on &lt;strong>ordering&lt;/strong>. Only the
 current exit&amp;rsquo;s &lt;code>tau&lt;/code> is discounted, and only in the sort key, so it holds its
 place unless a rival is clearly cleaner rather than momentarily cleaner.&lt;/p>
@@ -1528,9 +1507,6 @@ additive, and it can differ under the gate (see the anchoring row of the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/model-comparison/">model comparison&lt;/a>). A new path to the same exit
 has no counterpart in FDS+Evac, and since #187 it is taken whenever it is
 strictly cheaper.&lt;/p>
-&lt;p>&lt;strong>A reviewer will ask why both.&lt;/strong> They act on different stages — one on the
-feasible set, one on the order within it — but they have not been measured
-independently, and no run isolates the contribution of either.&lt;/p>
 &lt;h3>The clean-exit tier (off by default)&lt;span class="hx-absolute -hx-mt-20" id="the-clean-exit-tier-off-by-default">&lt;/span>
 &lt;a href="#the-clean-exit-tier-off-by-default" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>clean_extinction_threshold&lt;/code> adds one rank above optical depth. A route whose
 smokiest &lt;em>leg&lt;/em> stays at or below the threshold is &lt;code>clean&lt;/code>, and clean routes
@@ -1603,8 +1579,7 @@ read the &lt;code>clean&lt;/code> and &lt;code>k_leg_max&lt;/code> columns of th
 &lt;a href="#dose-vetoes-an-exit-it-does-not-rank" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>FED enters route choice as a veto only. Each route&amp;rsquo;s &lt;code>fed_max_route&lt;/code> is the
 dose already taken plus the dose predicted over the walk
 (&lt;code>current_fed + sum(fed_growth)&lt;/code>), and a route above &lt;code>fed_rejection_threshold&lt;/code>
-(default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
-as optical depth: the current exit and a rival are held to the same threshold
+(default 1.0, incapacitation) is refused. The current exit and a rival are held to the same threshold
 (&lt;code>fed_return_margin&lt;/code>, which held a rival to 0.9 of it, was removed in #187:
 no route dose on any fire deck came near 1). A dose refusal is a
 &amp;ldquo;must flee&amp;rdquo; rejection, so it bypasses the exit-switch anchor — hysteresis
@@ -1718,12 +1693,11 @@ returns to abandoned exits on &lt;code>l_corridor&lt;/code>.&lt;/p>
 &lt;p>A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
 admit wins, stopping at the agent&amp;rsquo;s own exit.&lt;/p>
-&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>tau_return_margin&lt;/code> (0.8) makes
-a rival exit harder to &lt;em>qualify&lt;/em> than the current one; &lt;code>current_exit_discount&lt;/code>
-(0.9) makes it harder to &lt;em>outrank&lt;/em> it; &lt;code>tau_deadband&lt;/code> (0.1 of &lt;code>tau_max&lt;/code>) makes
-it harder to &lt;em>switch onto&lt;/em>, in both directions. Three constants, all
-acting on the same quantity at three different stages. A reviewer will
-reasonably ask why, and no run isolates any one of them.&lt;/p>
+&lt;p>&lt;strong>The deadbands.&lt;/strong> &lt;code>current_exit_discount&lt;/code>
+(0.9) makes a rival exit harder to &lt;em>outrank&lt;/em> the current one;
+&lt;code>tau_deadband&lt;/code> (0.1 of &lt;code>tau_max&lt;/code>) makes it harder to &lt;em>switch onto&lt;/em>, in both
+directions. Two constants acting on the same quantity at two different
+stages. A reviewer will reasonably ask why, and no run isolates either.&lt;/p>
 &lt;p>&lt;strong>Monotonicity held on &lt;code>world100&lt;/code> and did not on &lt;code>l_corridor&lt;/code>.&lt;/strong> The
 requirement is that an agent never returns to an exit it has abandoned. At
 &lt;code>0d9bf79&lt;/code> and &lt;code>9f55f6e&lt;/code>:&lt;/p>
@@ -1889,13 +1863,6 @@ title="Copy code"
 &lt;td>&lt;code>tau_max&lt;/code>&lt;/td>
 &lt;td>&lt;code>6.0&lt;/code>&lt;/td>
 &lt;td>Optical depth &lt;code>K_ave * L&lt;/code> a route may carry before it is refused. Also orders the feasible routes.&lt;/td>
-&lt;td>active&lt;/td>
-&lt;td>inert&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>tau_return_margin&lt;/code>&lt;/td>
-&lt;td>&lt;code>0.8&lt;/code>&lt;/td>
-&lt;td>Factor a &lt;em>rival&lt;/em> exit&amp;rsquo;s budget is multiplied by, so switching needs a cleaner route than staying.&lt;/td>
 &lt;td>active&lt;/td>
 &lt;td>inert&lt;/td>
 &lt;/tr>
@@ -2101,11 +2068,11 @@ reading: 29 of the 34 have the returned-to route cleaner by more than the
 deadband, so they are the ordering correctly following a field that reversed.
 What remains open is the modelling question — whether a memoryless model
 should follow a reversing field at all — not a missing constant.&lt;/li>
-&lt;li>&lt;strong>Four hysteresis mechanisms act on &lt;code>tau&lt;/code> or on the exit choice.&lt;/strong>
-&lt;code>tau_return_margin&lt;/code> on feasibility, &lt;code>current_exit_discount&lt;/code> on the sort,
-&lt;code>tau_deadband&lt;/code> on the anchor, &lt;code>exit_switch_anchor&lt;/code> on the time fallthrough.
-None has been measured in isolation, and the last two are both keyed to 0.9
-and 0.1 x 6 without a joint sweep.&lt;/li>
+&lt;li>&lt;strong>Three hysteresis mechanisms act on &lt;code>tau&lt;/code> or on the exit choice.&lt;/strong>
+&lt;code>current_exit_discount&lt;/code> on the sort, &lt;code>tau_deadband&lt;/code> on the anchor,
+&lt;code>exit_switch_anchor&lt;/code> on the time fallthrough. None has been measured in
+isolation, and the last two are both keyed to 0.9 and 0.1 x 6 without a
+joint sweep.&lt;/li>
 &lt;li>&lt;strong>The &lt;code>1e-6 * length&lt;/code> edge-weight floor is a hard-coded tiebreaker.&lt;/strong> It
 decides path choice in clear air, where every &lt;code>k_avg * length&lt;/code> is zero. Its
 effect at small nonzero &lt;code>K&lt;/code> has not been measured.&lt;/li>
@@ -2128,9 +2095,8 @@ agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 o
 clock therefore runs ahead of the agent systematically, and it runs furthest
 ahead exactly where the smoke is thickest. With &lt;code>foresight_horizon_s = inf&lt;/code>
 the agent also has perfect foresight of the FDS solution.&lt;/li>
-&lt;li>&lt;strong>Four hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
-&lt;code>fallback_switch_margin&lt;/code> (0.2),
-&lt;code>tau_return_margin&lt;/code> (0.8) and &lt;code>tau_deadband&lt;/code> (0.1)
+&lt;li>&lt;strong>Three hysteresis constants, none calibrated.&lt;/strong> &lt;code>exit_switch_anchor&lt;/code> (0.9),
+&lt;code>fallback_switch_margin&lt;/code> (0.2) and &lt;code>tau_deadband&lt;/code> (0.1)
 are all chosen to stop measured churn,
 not fitted to observed behaviour. Two have FDS+Evac values behind them:
 &lt;code>clean_exit_margin&lt;/code> = &lt;code>FAC_DOOR_OLD&lt;/code>, and &lt;code>current_exit_discount&lt;/code> =
