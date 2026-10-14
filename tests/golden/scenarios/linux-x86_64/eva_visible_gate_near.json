@@ -62,7 +62,7 @@
    6,
    "jps-distributions_0",
    "E_far",
-   "E_far:ok > E_near:tau"
+   "E_far:ok > E_near:ok"
   ],
   [
    1.0,
@@ -94,13 +94,6 @@
   ],
   [
    2.0,
-   1,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:tau"
-  ],
-  [
-   2.0,
    2,
    "jps-distributions_0",
    "E_far",
@@ -108,21 +101,7 @@
   ],
   [
    2.0,
-   3,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:tau"
-  ],
-  [
-   2.0,
-   4,
-   "jps-distributions_0",
-   "E_far",
-   "E_far:ok > E_near:tau"
-  ],
-  [
-   2.0,
-   5,
+   6,
    "jps-distributions_0",
    "E_far",
    "E_far:ok > E_near:tau"
@@ -135,7 +114,35 @@
    "E_far:ok > E_near:tau"
   ],
   [
-   2.0,
+   3.0,
+   1,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   3.0,
+   3,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   3.0,
+   4,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   3.0,
+   5,
+   "jps-distributions_0",
+   "E_far",
+   "E_far:ok > E_near:tau"
+  ],
+  [
+   3.0,
    9,
    "jps-distributions_0",
    "E_far",

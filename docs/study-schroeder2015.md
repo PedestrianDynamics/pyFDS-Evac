@@ -343,7 +343,8 @@ Five facts of the `gate` code explain the pattern
 - Routes are ranked by τ first (`GatePolicy.order_key`). An exit switch
   needs the rival's τ to be lower by more than 6 × 0.1 = 0.6 (`_tau_band`).
   A route is refused above τ = 6 for the current exit and 4.8 for a rival
-  exit (`RouteCostConfig`). τ = 6 comes from the original
+  exit (`RouteCostConfig`; the rival budget of 4.8 held when this study was
+  run; the margin was removed in 0.6.0, #187). τ = 6 comes from the original
   [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source).
 - **Two refused routes:** the lower τ decides, with a 20 % margin; a switch
   straight back is blocked for 10 s

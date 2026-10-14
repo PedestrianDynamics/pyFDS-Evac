@@ -211,12 +211,11 @@ last resort, so the gate departs from FDS+Evac rather than reproducing it. The
 [routing page](/models/routing.md) gives the defaults, the derivation of the
 budget, the `"additive"` alternative and a measured case of oscillation.
 
-![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6](/images/concepts/exposure_gate.png)
+![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budget 6](/images/concepts/exposure_gate.png)
 
 *Figure 4. Schematic with a toy plume, not a simulation. Top: three candidate
 routes, their samples shaded by K [1/m]. Bottom: their optical depth \(\tau\) against the
-budget for the current exit (solid) and the stricter one for a rival
-(dashed). Route C is refused; route B ranks first although it is the longest
+budget (the same for every exit). Route C is refused; route B ranks first although it is the longest
 walk. Script: `scripts/figures/exposure_gate.py`.*
 
 ## Wayfinding

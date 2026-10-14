@@ -173,7 +173,6 @@ DEFAULTS = [
     ),
     # routing: the scenario `routing` block, and the reevaluation interval
     (ROUTING, "| `tau_max` | `6.0` |", lambda: _routing().tau_max),
-    (ROUTING, "| `tau_return_margin` | `0.8` |", lambda: _routing().tau_return_margin),
     (
         ROUTING,
         "| `current_exit_discount` | `0.9` |",
@@ -262,7 +261,6 @@ DEFAULTS = [
     (HEAT, "(T^3.4 / 5e7", _heat_divisor),
     # route-cost-gate: the full `routing` key table
     (GATE, "| `tau_max` | `6.0` |", lambda: _routing().tau_max),
-    (GATE, "| `tau_return_margin` | `0.8` |", lambda: _routing().tau_return_margin),
     (
         GATE,
         "| `current_exit_discount` | `0.9` |",

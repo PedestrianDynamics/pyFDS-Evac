@@ -9,8 +9,8 @@ or when the current route must be fled and the rival need not be (#128).
 Star of ``test_rerouting_golden``: west arm 20 m, east arm 40 m, gate,
 1 m/s. The hub sample is clear air, so K_ave is 10/11 of the arm value on
 the west arm and 20/21 on the east arm. West at K 0.6: tau = 20 x 0.6 x
-10/11 = 10.91 > 6, refused. East at K 0.15: tau = 40 x 0.15 x 20/21 =
-5.71 > 4.8 (rival budget 6 x 0.8), refused. 5.71 < 0.8 x 10.91 = 8.73, so
+10/11 = 10.91 > 6, refused. East at K 0.2: tau = 40 x 0.2 x 20/21 =
+7.62 > 6, refused. 7.62 < 0.8 x 10.91 = 8.73, so
 the tau rule switches a west-bound agent east.
 """
 
@@ -32,7 +32,7 @@ from pyfds_evac.core.route_graph import (
     rank_routes,
 )
 
-SMOKE = golden.ArmField({"west": 0.6, "east": 0.15})
+SMOKE = golden.ArmField({"west": 0.6, "east": 0.2})
 LETHAL_WEST = golden.ArmFed({"west": 6.0})
 
 
@@ -81,7 +81,7 @@ def _ranked(rule: str, current_exit: str | None, fed=None, smoke=SMOKE):
 def test_both_routes_refused_by_hand():
     routes = {rc.exit_id: rc for rc in _ranked("tau", "west")}
     assert routes["west"].tau_route == pytest.approx(20 * 0.6 * 10 / 11)
-    assert routes["east"].tau_route == pytest.approx(40 * 0.15 * 20 / 21)
+    assert routes["east"].tau_route == pytest.approx(40 * 0.2 * 20 / 21)
     assert routes["west"].violation_kinds == ("tau",)
     assert routes["east"].violation_kinds == ("tau",)
 
@@ -187,7 +187,7 @@ def test_feasible_rival_is_taken_under_both_rules(rule):
 
 
 # Star3: west 10 m, east 30 m, north 50 m. East at K 0.6 (tau about 17)
-# and north at K 0.15 (tau about 7.4) are both over the rival budget 4.8.
+# and north at K 0.15 (tau about 7.4) are both over the budget 6.
 # The lowest tau is north, the nearest is east.
 STAR3_SMOKE = golden.ArmField({"west": 1.0, "east": 0.6, "north": 0.15})
 
@@ -223,7 +223,7 @@ def test_unavailable_current_exit_takes_the_lowest_tau(rule, case):
 def test_additive_both_lethal_follow_the_rule(rule, expected):
     """Additive: both arms dose 6 FED/min, so both routes must be fled.
 
-    Must-flee does not separate them; tau switches east (5.71 < 0.8 x
+    Must-flee does not separate them; tau switches east (7.62 < 0.8 x
     10.91), hold keeps west.
     """
     config = golden._additive(fallback_rule=rule)

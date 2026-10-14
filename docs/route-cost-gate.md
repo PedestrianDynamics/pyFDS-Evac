@@ -54,7 +54,6 @@ route may carry before it is refused:
   "routing": {
     "cost_model": "gate",
     "tau_max": 6.0,
-    "tau_return_margin": 0.8,
     "current_exit_discount": 0.9,
     "tau_deadband": 0.1
   }
@@ -77,9 +76,8 @@ Per agent, per reevaluation tick:
 1. **Path per exit.** Dijkstra runs with each edge weighted by its own optical
    depth, `k_avg * length` (plus a `1e-6 * length` floor, below).
 2. **Availability.** Each candidate route is tested twice. **Optical depth:**
-   it is refused when `tau = K_ave * L_eff` exceeds `tau_max` (default 6), or
-   `tau_max * tau_return_margin` if it is not the exit the agent already walks
-   to. **Dose:** it is refused when its projected FED exceeds
+   it is refused when `tau = K_ave * L_eff` exceeds `tau_max` (default 6),
+   whichever exit it leads to. **Dose:** it is refused when its projected FED exceeds
    `fed_rejection_threshold`. Either refusal alone removes the route.
 3. **Ordering among survivors.** Optical depth first, travel time second. The
    sort key is `(rejected, tier, tau, rank_cost, hops)` with
@@ -93,7 +91,7 @@ Per agent, per reevaluation tick:
    [Churn protection](#churn-protection) for the rule.
 
 **Three separate `tau` comparisons happen per tick**, and it is worth keeping
-them apart: `tau_return_margin` decides which routes are *candidates*,
+them apart: `tau_max` decides which routes are *candidates*,
 `current_exit_discount` decides their *order*, and `tau_deadband` decides
 whether the agent *acts* on that order. Only the third can change an exit.
 
@@ -171,10 +169,10 @@ The rejection reason names the quantity and both factors of it:
 
 ```
 tau 8.41 > 6.00 (K_ave 0.145 x 58.0 m)
-tau 5.20 > 4.80 (K_ave 0.388 x 13.4 m)
+tau 6.20 > 6.00 (K_ave 0.463 x 13.4 m)
 ```
 
-The second is a rival exit, held to `tau_max * tau_return_margin` = 4.8.
+The second is a route just over the budget; every exit is held to the same `tau_max`.
 
 <a id="where-the-6-comes-from"></a>**Where the 6 comes from.** [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source)'s tier-4 door test computes
 `L2_tmp = d * 0.5 / (3.0 / K_ave_Door)` and strikes the door out when
@@ -318,21 +316,13 @@ Nothing is fixed here. `foresight_horizon_s` is the one lever already shipped
 that bounds half of it (the temporal half); it defaults to `inf`. #125 records
 the three options and evaluates none.
 
-### Two asymmetries favour the exit the agent already walks to
+### One asymmetry favours the exit the agent already walks to
 
-`tau_return_margin` (default 0.8) is a deadband on **feasibility**. The current
-route is judged against the bare `tau_max`; a rival must come in under
-`tau_max * 0.8` before it is even a candidate:
-
-```
-budget = tau_max                        (current exit)
-budget = tau_max * tau_return_margin    (any other exit)
-```
-
-Without it a route whose `tau` sits near the budget toggles in and out of the
-feasible set every tick and the agent follows it. It replaces the old
-`sight_return_margin`, which multiplied a sight requirement (1.25 *up*) where
-this one scales a budget (0.8 *down*).
+Every exit is refused above the same `tau_max`. `tau_return_margin` (0.8),
+which held a rival to `tau_max * 0.8` = 4.8, was removed in #187: it was
+inert on every audit deck (236 paired runs identical), and where it did
+bind, `current_exit_discount` and `tau_deadband` already decided the
+outcome.
 
 `current_exit_discount` (default 0.9) is a deadband on **ordering**. Only the
 current exit's `tau` is discounted, and only in the sort key, so it holds its
@@ -353,10 +343,6 @@ additive, and it can differ under the gate (see the anchoring row of the
 [model comparison](model-comparison.md)). A new path to the same exit
 has no counterpart in FDS+Evac, and since #187 it is taken whenever it is
 strictly cheaper.
-
-**A reviewer will ask why both.** They act on different stages — one on the
-feasible set, one on the order within it — but they have not been measured
-independently, and no run isolates the contribution of either.
 
 ### The clean-exit tier (off by default)
 
@@ -440,8 +426,7 @@ read the `clean` and `k_leg_max` columns of the route-cost CSV when you do.
 FED enters route choice as a veto only. Each route's `fed_max_route` is the
 dose already taken plus the dose predicted over the walk
 (`current_fed + sum(fed_growth)`), and a route above `fed_rejection_threshold`
-(default 1.0, incapacitation) is refused. Refusal is asymmetric in the same way
-as optical depth: the current exit and a rival are held to the same threshold
+(default 1.0, incapacitation) is refused. The current exit and a rival are held to the same threshold
 (`fed_return_margin`, which held a rival to 0.9 of it, was removed in #187:
 no route dose on any fire deck came near 1). A dose refusal is a
 "must flee" rejection, so it bypasses the exit-switch anchor — hysteresis
@@ -555,12 +540,11 @@ A route the ordering promotes but the anchor refuses no longer hides the rest of
 the list: candidates are tried in rank order and the first the anchor would
 admit wins, stopping at the agent's own exit.
 
-**The deadbands.** `tau_return_margin` (0.8) makes
-a rival exit harder to *qualify* than the current one; `current_exit_discount`
-(0.9) makes it harder to *outrank* it; `tau_deadband` (0.1 of `tau_max`) makes
-it harder to *switch onto*, in both directions. Three constants, all
-acting on the same quantity at three different stages. A reviewer will
-reasonably ask why, and no run isolates any one of them.
+**The deadbands.** `current_exit_discount`
+(0.9) makes a rival exit harder to *outrank* the current one;
+`tau_deadband` (0.1 of `tau_max`) makes it harder to *switch onto*, in both
+directions. Two constants acting on the same quantity at two different
+stages. A reviewer will reasonably ask why, and no run isolates either.
 
 **Monotonicity held on `world100` and did not on `l_corridor`.** The
 requirement is that an agent never returns to an exit it has abandoned. At
@@ -668,7 +652,6 @@ Every key below is read from the scenario's `routing` block by
 |---|---|---|---|---|
 | `cost_model` | `"gate"` | Selects the model. `"gate"` or `"additive"`, matched exactly; any other value raises `ValueError`. | — | — |
 | `tau_max` | `6.0` | Optical depth `K_ave * L` a route may carry before it is refused. Also orders the feasible routes. | active | inert |
-| `tau_return_margin` | `0.8` | Factor a *rival* exit's budget is multiplied by, so switching needs a cleaner route than staying. | active | inert |
 | `current_exit_discount` | `0.9` | Factor the current exit's `tau` is scaled by in the sort key. FDS+Evac's `FAC_DOOR_OLD2` is 0.9. | active | inert |
 | `tau_deadband` | `0.1` | Half-width of the exit-switch anchor's symmetric `tau` deadband, as a fraction of `tau_max` (so 0.6 by default). FDS+Evac applies no hysteresis to this veto — `evac.f90:16799` tests the raw value. | active | inert |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction at or below which a route's smokiest leg makes the exit `clean`; clean exits outrank smoky ones. FDS+Evac 2.6.0's value is `0.03`. | active | inert |
@@ -761,11 +744,11 @@ prediction from `evac.f90`, not a measured run of it.
   deadband, so they are the ordering correctly following a field that reversed.
   What remains open is the modelling question — whether a memoryless model
   should follow a reversing field at all — not a missing constant.
-- **Four hysteresis mechanisms act on `tau` or on the exit choice.**
-  `tau_return_margin` on feasibility, `current_exit_discount` on the sort,
-  `tau_deadband` on the anchor, `exit_switch_anchor` on the time fallthrough.
-  None has been measured in isolation, and the last two are both keyed to 0.9
-  and 0.1 x 6 without a joint sweep.
+- **Three hysteresis mechanisms act on `tau` or on the exit choice.**
+  `current_exit_discount` on the sort, `tau_deadband` on the anchor,
+  `exit_switch_anchor` on the time fallthrough. None has been measured in
+  isolation, and the last two are both keyed to 0.9 and 0.1 x 6 without a
+  joint sweep.
 - **The `1e-6 * length` edge-weight floor is a hard-coded tiebreaker.** It
   decides path choice in clear air, where every `k_avg * length` is zero. Its
   effect at small nonzero `K` has not been measured.
@@ -788,9 +771,8 @@ prediction from `evac.f90`, not a measured run of it.
   clock therefore runs ahead of the agent systematically, and it runs furthest
   ahead exactly where the smoke is thickest. With `foresight_horizon_s = inf`
   the agent also has perfect foresight of the FDS solution.
-- **Four hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
-  `fallback_switch_margin` (0.2),
-  `tau_return_margin` (0.8) and `tau_deadband` (0.1)
+- **Three hysteresis constants, none calibrated.** `exit_switch_anchor` (0.9),
+  `fallback_switch_margin` (0.2) and `tau_deadband` (0.1)
   are all chosen to stop measured churn,
   not fitted to observed behaviour. Two have FDS+Evac values behind them:
   `clean_exit_margin` = `FAC_DOOR_OLD`, and `current_exit_discount` =

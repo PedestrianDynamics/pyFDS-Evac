@@ -44,12 +44,11 @@ Dijkstra tie-break is 1e-6 × length), which is nearest-exit; this equivalence
 has not been re-measured since routes were first ordered on `tau`
 ([Known limitations](/docs/route-cost-gate.md#known-limitations)).
 
-![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budgets 4.8 and 6](/images/concepts/exposure_gate.png)
+![Top: plan view with three routes from one agent to exits A, B and C around a smoke plume. Bottom: bar chart of optical depth per route against the budget 6](/images/concepts/exposure_gate.png)
 
 *Schematic with a prescribed toy plume, not a simulation. Top: three candidate
 routes, sampled along each walk, the samples shaded by extinction K [1/m]. Bottom:
-optical depth `tau` [-] per route against `tau_max` = 6 (current exit and
-initial choice) and 0.8 `tau_max` = 4.8 (any other exit). Route C is refused;
+optical depth `tau` [-] per route against `tau_max` = 6 (any exit). Route C is refused;
 route B ranks first although it is the longest walk.
 Script: `scripts/figures/exposure_gate.py`.*
 
@@ -63,8 +62,7 @@ takes a route whose predicted dose is lethal while one that is not remains;
 among the rest it takes the one with least smoke to walk through and holds it
 unless a rival's `tau` is clearly lower (`fallback_switch_margin`)
 ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). Churn is held down by the
-exit-switch anchor, by a stricter budget for a rival exit
-(`tau_return_margin`), and by a discount on the current exit's `tau` in the
+exit-switch anchor, by a discount on the current exit's `tau` in the
 sort (`current_exit_discount`, FDS+Evac's `FAC_DOOR_OLD2`). FDS+Evac applies
 `FAC_DOOR_OLD2` only when no door is smoke-free (its tier 4, `evac.f90:16803`);
 the gate applies the discount in every ordering.
@@ -211,7 +209,6 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 |---|---|---|
 | `cost_model` | `"gate"` | `"gate"` or `"additive"`, matched exactly; any other value raises `ValueError` |
 | `tau_max` | `6.0` | Budget \(\tau_{\max}\) on the optical depth of a route |
-| `tau_return_margin` | `0.8` | A rival exit must come in under `tau_max` times this |
 | `current_exit_discount` | `0.9` | Factor on the current exit's `tau` in the sort |
 | `tau_deadband` | `0.1` | Anchor deadband, as a fraction of `tau_max` |
 | `clean_extinction_threshold` | `0.0` (off) | Extinction [1/m] of the smokiest leg at or below which an exit is in the clean tier |
@@ -235,7 +232,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:
 `exit_switch_anchor`,
-`tau_return_margin`, `current_exit_discount` and `clean_exit_margin` in
+`current_exit_discount` and `clean_exit_margin` in
 (0, 1]; `tau_deadband` and `fallback_switch_margin` in [0, 1]. The
 value that switches a margin off is in range: 1, or 0 for `tau_deadband`
 and `fallback_switch_margin`. `fallback_switch_margin` = 1 keeps the
@@ -272,7 +269,7 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2`, which FDS+Evac applies only when no door is smoke-free (tier 4, `evac.f90:16803`); the gate applies it in every ordering |
 | `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
 | `exit_switch_anchor` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
-| `tau_return_margin`, `tau_deadband`, `fallback_switch_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
+| `tau_deadband`, `fallback_switch_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
 | `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
 | `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
 

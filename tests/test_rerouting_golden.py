@@ -827,8 +827,8 @@ RANK_CASES: dict[str, RankCase] = {
     "gate_no_current_exit_same_field": RankCase(
         _star2, _gate(), ArmField({"west": 0.2, "east": 0.105})
     ),
-    # Gate: a rival is held to tau_max * tau_return_margin.
-    "gate_rival_return_margin": RankCase(
+    # Gate: a rival is held to tau_max, as the current exit is.
+    "gate_rival_same_budget": RankCase(
         _star2, _gate(), ArmField({"west": 0.28}), current_exit="east"
     ),
     "gate_rival_without_current": RankCase(_star2, _gate(), ArmField({"west": 0.28})),

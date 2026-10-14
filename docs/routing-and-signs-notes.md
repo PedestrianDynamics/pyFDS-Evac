@@ -112,8 +112,7 @@ Symbols used below:
 
 8a. **Under the default gate model, one quantity gates and orders.**
    A route is refused when its optical depth `tau = K_ave × L` exceeds `tau_max`
-   (6), or `tau_max × tau_return_margin` (4.8) for an exit the agent is not
-   already walking to, and the survivors sort as
+   (6), for every exit, and the survivors sort as
    ```
    ( rejected? , tau , travel_time + w_queue·queue_time , hops )
    ```

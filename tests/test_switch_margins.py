@@ -15,7 +15,6 @@ from pyfds_evac.core import route_graph as rg
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 
 _COST_MARGINS = {
-    "tau_return_margin": 0.81,
     "tau_deadband": 0.12,
     "fallback_switch_margin": 0.23,
     "current_exit_discount": 0.83,
@@ -34,7 +33,6 @@ def test_view_lists_each_margin_once_in_audit_order():
     names = [m.name for m in rg._SWITCH_MARGINS]
     assert names == [
         "fallback_switch_margin",
-        "tau_return_margin",
         "tau_deadband",
         "default_exit_anchoring",
         "current_exit_discount",
@@ -45,7 +43,6 @@ def test_view_lists_each_margin_once_in_audit_order():
 
 def test_code_defaults_are_unchanged():
     assert rg._switch_margin_values(RerouteConfig()) == {
-        "tau_return_margin": 0.8,
         "tau_deadband": 0.1,
         "fallback_switch_margin": 0.2,
         "default_exit_anchoring": None,
@@ -166,7 +163,6 @@ def test_routing_key_matches_the_routing_block(margin):
 def test_only_the_routing_block_margins_are_scenario_keys():
     settable = {m.name for m in rg._SWITCH_MARGINS if m.routing_key}
     assert settable == {
-        "tau_return_margin",
         "tau_deadband",
         "fallback_switch_margin",
         "current_exit_discount",
@@ -188,7 +184,6 @@ def test_fds_evac_counterparts():
 # Whether 0 and 1 are valid values of each key.
 _RANGES = {
     "exit_switch_anchor": (False, True),
-    "tau_return_margin": (False, True),
     "current_exit_discount": (False, True),
     "clean_exit_margin": (False, True),
     "tau_deadband": (True, True),
@@ -208,6 +203,7 @@ def test_every_routing_margin_has_a_range():
         "fallback_return_lockout_s",
         "fed_return_margin",
         "path_switch_anchor",
+        "tau_return_margin",
     ],
 )
 @pytest.mark.parametrize("value", [10.0, 0.9, 0.0, None])
@@ -297,7 +293,6 @@ _POSITIONAL_FIELDS = (
     "tau_max",
     "tau_deadband",
     "current_exit_discount",
-    "tau_return_margin",
     "anticipate",
     "foresight_horizon_s",
     "fallback_switch_margin",

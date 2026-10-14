@@ -30,7 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   that instead. The manifest's `rerouting.exit_switch_anchor` records
   it (#187).
 - The switching margins are range-checked: `exit_switch_anchor`,
-  `tau_return_margin`,
+  `tau_return_margin` (since removed, see Removed),
   `current_exit_discount` and `clean_exit_margin` must be in (0, 1],
   `tau_deadband` and `fallback_switch_margin` in [0, 1]; a
   `fallback_switch_margin` of 1 keeps the current exit between two
@@ -124,6 +124,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   It was the last `RouteCostConfig` field, so no positional argument
   shifts. A scenario that still sets the key stops
   with a `ValueError` naming the removal; delete the key (#187).
+- `routing.tau_return_margin` and `RouteCostConfig.tau_return_margin`
+  (0.8): a rival exit is now refused above `tau_max`, as the current exit
+  is, where it was refused above `tau_max * 0.8` = 4.8. The margin was
+  inert on every audit deck (236 paired runs identical in every metric).
+  It bound 10 to 160 times per run, on rival routes with `tau` in
+  [4.8, 6), but never changed a decision: `current_exit_discount` and
+  `tau_deadband` decide before it can. The exposure-gate figure now
+  shows one budget. `RouteCostConfig` positional arguments after
+  `current_exit_discount` shift by one. A scenario that still sets the
+  key stops with a `ValueError` naming the removal; delete the key
+  (#187).
 
 ## [0.5.0] - 2026-10-11
 

@@ -248,9 +248,9 @@ A route is rejected under any of these conditions:
   `fed_return_margin` in [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187)
   a rival was held to 0.9 of it.)
 - **Gate model only:** the route's optical depth `tau = K_ave * L_eff` exceeds
-  `tau_max` (default 6). This test is asymmetric too: for an exit that is not
-  the agent's current one the budget is `tau_max * tau_return_margin` (0.8), so
-  switching needs a cleaner route than staying. `K_ave` is the length-weighted
+  `tau_max` (default 6), for the current exit and a rival alike (a rival used to be
+  held to `tau_max * tau_return_margin`, 0.8, removed in
+  [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187)). `K_ave` is the length-weighted
   mean over the route's own polyline, and every exit is judged on it — see
   [route-cost-gate.md](route-cost-gate.md#optical-depth-what-it-measures-and-what-it-does-not).
   The rejection reason reads `tau 8.41 > 6.00 (K_ave 0.145 x 58.0 m)`.
@@ -562,7 +562,7 @@ discovery agent with no known exit explores or wanders instead (see below).
 |---|---|---|
 | **Source** | `current_origin`, else `current_target_stage`; a source outside the graph skips the tick | same |
 | **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth at decision time (`k_avg` × length + 1e-6 × length), started at the agent's position: the first legs are the walks to the source's successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)); the current exit's entry is replaced by the walked path when that path orders ahead | Dijkstra on each edge's share of the composite at decision time (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth), started at the agent's position as for the gate; one path per exit; the walked path as for the gate |
-| **Rejection** | FED over the threshold then τ over `tau_max` (× `tau_return_margin` for a rival); both are tested, and a route over both reports the τ reason; must-flee reads `violation_kinds`, not the reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
+| **Rejection** | FED over the threshold then τ over `tau_max`; both are tested, and a route over both reports the τ reason; must-flee reads `violation_kinds`, not the reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
 | **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
 | **Fallback** | when every route is rejected: re-sorted by must-flee (last), then raw τ, then `rank_cost`; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner's τ is below the current exit's × (1 − `fallback_switch_margin`) and differs from it by more than 1e-9; the first route is un-rejected with a `fallback: ` reason, its `feasible` unchanged | same |
 | **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below the walked path's, or if the walked path is rejected and the new one is feasible and not rejected (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way | same |
@@ -584,7 +584,7 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 
 The explore and wander decisions are made by `_decide_explore`.
 
-Seven rules resist switching at different points. `_SWITCH_MARGINS` in
+Six rules resist switching at different points. `_SWITCH_MARGINS` in
 `route_graph.py` lists each with its owner, FDS+Evac counterpart and consumers.
 Every rule with a parameter is a `routing` key; the ranges are on
 [Models › Routing › Parameters](/models/routing.md#parameters):
@@ -592,7 +592,6 @@ Every rule with a parameter is a `routing` key; the ranges are on
 | Rule | `routing` key | FDS+Evac counterpart |
 |---|---|---|
 | `fallback_switch_margin` | yes | none |
-| `tau_return_margin` | yes | none |
 | `tau_deadband` | yes | none |
 | `default_exit_anchoring` (#743) | no (no parameter) | none |
 | `current_exit_discount` | yes | `FAC_DOOR_OLD2` |

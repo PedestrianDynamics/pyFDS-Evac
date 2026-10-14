@@ -199,9 +199,9 @@ trace on a current run:
   `tau = K_ave * L` is measured against the distance *still to walk*, so the same haze
   refuses a door at 40 m and accepts it at 2 m. Ordering therefore follows the field tick
   by tick, and the anchor plus the deadbands are all that hold an agent to an exit.
-- **The gate has two deadbands of its own.** `tau_return_margin` (0.8) shrinks the budget
-  a *rival* exit must come in under, the way `fed_return_margin` does for dose;
-  `current_exit_discount` (0.9) scales the current exit's `tau` in the sort key, so it
+- **The gate has a deadband of its own.** `tau_return_margin` (0.8), which shrank the
+  budget a *rival* exit must come in under, was removed in #187 (inert on every audit
+  deck); `current_exit_discount` (0.9) scales the current exit's `tau` in the sort key, so it
   holds its place unless a rival is clearly cleaner rather than momentarily cleaner. The
   second is the fix at `9f55f6e`, and its provenance is FDS+Evac's `FAC_DOOR_OLD2 = 0.9`
   (`evac.f90:1572`, applied `:16803`), which discounts exactly this quantity in the
