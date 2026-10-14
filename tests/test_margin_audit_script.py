@@ -305,6 +305,7 @@ def test_run_metrics_from_a_synthetic_run(audit, tmp_path):
     assert metrics["n_agents"] == 2
     assert metrics["rset_last"] == pytest.approx(30.0)
     assert metrics["rset_p95"] == pytest.approx(29.0)
+    assert metrics["walk_mean"] == pytest.approx(20.0)
     assert metrics["censored"] == 0
     assert metrics["fed_max"] == pytest.approx(1.2)
     assert metrics["fed_median"] == pytest.approx(0.8)

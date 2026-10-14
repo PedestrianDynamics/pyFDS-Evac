@@ -19,7 +19,8 @@ Per run the metrics are those of the stage-2 plan: route switches by reason
 (a row of the route history with an old exit), exit switches (old and new
 exit differ), returns in the #124 sense (an exit switch back to an exit the
 agent switched away from earlier), exit shares, FED at egress from
-``agent_scalars`` and egress times from the trajectory.
+``agent_scalars``, egress times and the mean walking time per agent from
+the trajectory.
 
 ``analyse`` takes the paired per-seed differences d = off - base on the
 predeclared primary deck and primary metric, runs a two-sided paired
@@ -565,6 +566,9 @@ def _egress_metrics(sqlite_file: Path, agents_remaining: int | None) -> dict:
         last = con.execute(
             "SELECT id, MAX(frame) FROM trajectory_data GROUP BY id"
         ).fetchall()
+        spans = con.execute(
+            "SELECT MAX(frame) - MIN(frame) FROM trajectory_data GROUP BY id"
+        ).fetchall()
         has_fed = con.execute(
             "SELECT name FROM sqlite_master WHERE type='table' AND name='agent_scalars'"
         ).fetchone()
@@ -577,12 +581,16 @@ def _egress_metrics(sqlite_file: Path, agents_remaining: int | None) -> dict:
             else []
         )
     times = np.array([frame / fps for _, frame in last], dtype=float)
+    # Walking time per agent, spawn to egress: the mean sees a detour taken
+    # by a minority of agents that rset_p95 and rset_last do not (#187 A6).
+    walks = np.array([span / fps for (span,) in spans], dtype=float)
     if agents_remaining is None:
         agents_remaining = int(sum(frame >= last_frame for _, frame in last))
     metrics = {
         "n_agents": len(last),
         "rset_last": float(times.max()) if len(times) else None,
         "rset_p95": float(np.percentile(times, 95)) if len(times) else None,
+        "walk_mean": float(walks.mean()) if len(walks) else None,
         "censored": agents_remaining,
     }
     doses = np.array([d for d in fed if d is not None], dtype=float)
@@ -741,6 +749,8 @@ def _floor_rule(metric: str) -> MetricRule | None:
         return MetricRule(lambda base, agents: 2.0, 1)
     if metric in ("rset_last", "rset_p95"):
         return MetricRule(lambda base, agents: max(0.02 * base, 3.0), 1)
+    if metric == "walk_mean":
+        return MetricRule(lambda base, agents: max(0.02 * base, 1.0), 1)
     return None
 
 
@@ -751,6 +761,7 @@ SECONDARY = (
     "fed_ge_1",
     "rset_last",
     "rset_p95",
+    "walk_mean",
 )
 
 
