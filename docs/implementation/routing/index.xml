@@ -661,7 +661,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, same exit&lt;/strong>&lt;/td>
-&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way&lt;/td>
+&lt;td>for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path&amp;rsquo;s &lt;code>rank_cost&lt;/code> is below the walked path&amp;rsquo;s, or if the walked path is rejected and the new one is feasible and not rejected, or is the fallback&amp;rsquo;s promoted route (&lt;code>better_path&lt;/code>); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way&lt;/td>
 &lt;td>same&lt;/td>
 &lt;/tr>
 &lt;tr>
