@@ -258,6 +258,31 @@ def test_first_choice_and_fallback_keep_their_labels():
     assert _reason(fallback) == ("west", "east", "fallback")
 
 
+def test_fallback_route_reports_rejected_and_is_still_walked():
+    """The promoted route stays rejected, marked "fallback: ", and is taken."""
+    ranked = rank_routes(
+        golden._star2(),
+        "spawn",
+        0.0,
+        0.0,
+        golden.ArmField({"west": 0.4, "east": 2.0}),
+        None,
+        golden._gate(),
+    )
+    assert all(rc.rejected for rc in ranked)
+    assert [(rc.rejection_reason or "").startswith("fallback: ") for rc in ranked] == [
+        True,
+        False,
+    ]
+    fallback = _reroute(
+        golden._star2(),
+        golden._gate(),
+        AgentRouteState("east"),
+        extinction=golden.ArmField({"west": 0.4, "east": 2.0}),
+    )
+    assert _reason(fallback) == ("west", "east", "fallback")
+
+
 def test_every_label_is_listed():
     from pyfds_evac.core.route_graph import SWITCH_REASONS
 

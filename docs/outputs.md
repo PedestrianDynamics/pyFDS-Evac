@@ -192,7 +192,7 @@ evaluation:
 | `route_rank`, `exit_id`, `path` | rank of this route (1 is best), its exit, and its node sequence |
 | `path_length_m`, `k_ave_route`, `travel_time_s`, `fed_max_route` | route measures |
 | `composite_cost`, `rank_cost`, `k_max_route`, `tau_route`, `k_leg_max`, `clean` | cost terms; which one orders the routes depends on the cost model |
-| `feasible`, `rejected`, `rejection_reason` | whether the route was available, and why not |
+| `feasible`, `rejected`, `rejection_reason` | whether the route was available, and why not. When every route is refused, the route the agent is sent along stays `rejected` and its reason starts with `fallback: `; read that prefix to tell it from a refusal that ended the tick |
 | `queue_time_s`, `exit_count`, `exit_capacity` | queue estimate at the exit |
 
 Under the default `"gate"` model, routes are ordered on `tau_route`, not on

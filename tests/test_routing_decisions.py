@@ -423,7 +423,7 @@ def test_fallback_prefix_marks_only_the_promoted_route():
 
     The switch decision and the early return of ``evaluate_and_reroute``
     tell a fallback route by that prefix, so no other rejection reason may
-    carry it, and the promoted route is ranked first and no longer rejected.
+    carry it, and the promoted route is ranked first and still reported as rejected.
     """
     promoted = 0
     for name, case in sorted(_ALL_RANK_CASES.items()):
@@ -440,8 +440,7 @@ def test_fallback_prefix_marks_only_the_promoted_route():
             if not marked:
                 continue
             promoted += 1
-            assert not ranked[0].rejected, where
-            assert all(rc.rejected for rc in ranked[1:]), where
+            assert all(rc.rejected for rc in ranked), where
     assert promoted > 0
 
 
@@ -1960,7 +1959,7 @@ def test_fallback_promotes_the_current_record_by_identity():
     ]
     assert result[2] is twin
     assert result[0].feasible == current.feasible
-    assert not result[0].rejected
+    assert result[0].rejected
 
 
 # ── Mutation points of evaluate_and_reroute ──────────────────────────

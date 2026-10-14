@@ -173,10 +173,10 @@ class TestFallbackStability:
             current_exit=current_exit,
         )
 
-    def test_something_is_always_returned_unrejected(self):
+    def test_something_is_always_returned_marked_fallback(self):
         ranked = self._all_refused(None)
         assert ranked
-        assert not ranked[0].rejected
+        assert ranked[0].rejected
         assert (ranked[0].rejection_reason or "").startswith("fallback")
 
     def test_a_hair_of_cleanliness_does_not_buy_a_long_detour(self):

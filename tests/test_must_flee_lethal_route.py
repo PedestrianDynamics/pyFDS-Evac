@@ -108,7 +108,7 @@ def test_promoted_route_keeps_its_hazard():
     routes = _ranked(golden.ArmField({"east": 0.2}), fed, current_exit=None)
     west = routes["west"]
     assert list(routes) == ["west", "east"]
-    assert not west.rejected
+    assert west.rejected
     assert west.rejection_reason == "fallback: FED_max 2.000 > 1.000"
     assert west.violation_kinds == ("fed",)
     assert _must_flee_rejection(west, golden._gate())

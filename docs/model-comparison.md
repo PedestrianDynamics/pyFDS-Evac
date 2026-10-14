@@ -336,7 +336,7 @@ The routes it returns are then judged by one of two models
   `path_length * (1 + w_smoke * K_ave) + w_fed * FED_max`.
 
 Under both, routes are rejected if FED exceeds a threshold, and a
-fallback un-rejection ensures agents always have a path.  The
+fallback promotion ensures agents always have a path.  The
 all-segments-non-visible rejection runs under `"additive"` only.
 
 **The borrowing is partial and should be read as such.** pyFDS-Evac
