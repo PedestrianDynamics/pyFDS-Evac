@@ -469,7 +469,7 @@ Every tick re-decides from the current field; there is no permanent exit death.
 The agent still has to move. `rank_routes` re-sorts the refused routes by
 `(must_flee, tau_route, rank_cost)` — a dose-lethal route last, then least
 smoke to walk through, then quickest — and
-un-rejects the head with a `fallback:` prefix on its reason. The agent keeps its
+promotes the head, which stays rejected and gets a `fallback:` prefix on its reason. The agent keeps its
 current target unless the rival's optical depth is more than
 `fallback_switch_margin` (default 0.2) lower, i.e. unless
 

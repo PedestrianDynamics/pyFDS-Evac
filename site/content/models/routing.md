@@ -291,9 +291,9 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
    the gate only the FED limit qualifies. Accept, whatever the cost. The test reads
    which limits the route breaks (`RouteCost.violation_kinds`), not its
    rejection reason, so a route over both the FED and the `tau` limit is fled
-   although its reason names `tau`, and so is a route the fallback re-admitted.
+   although its reason names `tau`, and so is a route the fallback promoted.
 3. **Two refused routes** (both `feasible` false, which includes a route the
-   fallback re-admitted): the candidate is accepted only if its `tau` is
+   fallback promoted): the candidate is accepted only if its `tau` is
    strictly below the current route's × (1 − `fallback_switch_margin`) and the
    two differ by more than `EPS_TAU` (`_fallback_rival_wins`). Neither travel
    time, `k_max_route` nor the clean bypass of step 4 decides, so the agent is not held on a route with three times
@@ -322,7 +322,7 @@ refused and the new one is not (reason `better_path`). Every route is priced
 from the node the agent last left, so an applied route sends the agent to the
 node after that one, even when its current target lies further along the route
 ([#445](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/445)). When
-every route is refused, the least-smoky one is un-refused as a fallback. The
+every route is refused, the least-smoky one is promoted as a fallback; it stays rejected, marked `fallback:`. The
 full decision table is in [Routing in practice](/docs/routing.md#rerouting-decision-flow).
 
 ### Code structure

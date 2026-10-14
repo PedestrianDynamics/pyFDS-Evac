@@ -2715,8 +2715,8 @@ _FALLBACK = "fallback"
 def _is_fallback(rc: RouteCost) -> bool:
     """Whether *rc* is the route _apply_fallback promoted.
 
-    The public ``RouteCost`` keeps ``rejected=False`` on that route, so its
-    rejection reason is the only mark of it.
+    The route keeps ``rejected=True`` publicly; the ``fallback: `` prefix of
+    its rejection reason tells it from a refusal that ended the tick.
     """
     return (rc.rejection_reason or "").startswith(_FALLBACK)
 
@@ -2724,7 +2724,7 @@ def _is_fallback(rc: RouteCost) -> bool:
 def _apply_fallback(
     costs: list[RouteCost], config: RouteCostConfig, current_exit: str | None
 ) -> list[RouteCost]:
-    """Un-reject the least bad route when every route is refused.
+    """Promote the least bad route when every route is refused.
 
     Fallback: with every route refused the agent still has to go somewhere,
     and the least bad one is one it need not flee (#128), then the one with
@@ -2749,7 +2749,7 @@ def _apply_fallback(
     so the least-bad walk is the one with least smoke to walk through.
 
     Applies under both cost models. Only the promoted route changes:
-    ``rejected`` is cleared, the reason gains a "fallback: " prefix, and
+    the reason gains a "fallback: " prefix, ``rejected`` stays True and
     ``feasible`` is left as it was.
     """
     if costs and all(rc.rejected for rc in costs):
@@ -2767,7 +2767,6 @@ def _apply_fallback(
         best = costs[0]
         costs[0] = replace(
             best,
-            rejected=False,
             rejection_reason=f"{_FALLBACK}: {best.rejection_reason}",
         )
     return costs
@@ -2808,8 +2807,8 @@ def rank_routes(
 
     Returns routes sorted by composite cost (lowest first).
     Rejected routes are sorted to the end.
-    If all routes are rejected, the least-bad route is un-rejected
-    as a fallback.
+    If all routes are rejected, the least-bad route is promoted to the
+    front as a fallback and stays rejected, marked ``fallback:``.
 
     An exit closed at *time_s* is not ranked.
     """
@@ -3615,7 +3614,11 @@ def _leaves_rejected_path(committed: RouteCost, best: RouteCost) -> bool:
     saving: a cost comparison between acceptable paths must not hold an
     agent on one that failed a limit (#184).
     """
-    return committed.rejected and best.feasible and not best.rejected
+    return (
+        committed.rejected
+        and best.feasible
+        and (not best.rejected or _is_fallback(best))
+    )
 
 
 def _path_clearly_cheaper(best: RouteCost, committed: RouteCost) -> bool:
@@ -3752,7 +3755,7 @@ def _exit_change_reason(
     if old_rc is None:
         fallback = "resume" if best.exit_id == old_exit else "exit_unreachable"
         return news or fallback
-    if old_rc.rejected:
+    if old_rc.rejected and not _is_fallback(old_rc):
         return "fed_reroute" if _over_dose(old_rc) else "smoke_reroute"
     policy = policy_for(_cost_config(config))
     hazard = policy.switch_hazard_label(best, old_rc, config, current_fed)

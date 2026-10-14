@@ -21,6 +21,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The route the all-refused fallback promotes now stays `rejected=True`
+  in `RouteCost` and in the route-cost history; its reason keeps the
+  `fallback: ` prefix and `feasible` is unchanged. It was reported as
+  not rejected. Readers of the `rejected` column should use the
+  `fallback:` prefix to tell the promoted route from a refusal that
+  ended the tick. No agent decision changes (#187).
 - `RerouteConfig.exit_switch_anchor` is `float | None`, default
   `None`: unset, the run uses the cost model's `exit_switch_anchor`,
   so the `routing` key reaches the reroute pass and the closure

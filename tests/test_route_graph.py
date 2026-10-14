@@ -553,17 +553,17 @@ class TestRankRoutes:
         assert ranked[0].exit_id == "E1"
 
     def test_fed_rejection_with_fallback(self, two_exit_graph):
-        """All routes rejected → least-bad is un-rejected as fallback."""
+        """All routes rejected → least-bad is promoted, marked as fallback."""
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0, fed_rejection_threshold=0.01)
         # current_fed = 0.5 will exceed threshold 0.01
         ranked = rank_routes(two_exit_graph, "D0", 0.0, 0.5, field, None, config)
         assert len(ranked) == 2
-        # First should be un-rejected (fallback)
-        assert ranked[0].rejected is False
-        assert "fallback" in ranked[0].rejection_reason
-        # Second stays rejected
+        # First is promoted (fallback) and stays rejected
+        assert ranked[0].rejected is True
+        assert ranked[0].rejection_reason.startswith("fallback: ")
         assert ranked[1].rejected is True
+        assert not ranked[1].rejection_reason.startswith("fallback")
 
     def test_visibility_rejection(self):
         """Non-visible route rejected when a visible route exists."""

@@ -385,7 +385,7 @@ two differ:
   an optical-depth margin, then an anchor on the ranking cost. The
   optional queue term (`w_queue`, 0 by default) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
-  is re-admitted, but the current route is kept first unless the rival's
+  is promoted (it stays rejected, marked `fallback:`), but the current route is kept first unless the rival's
   optical depth \(\tau\) is more than `fallback_switch_margin` lower
   (`route_graph.py`, `_apply_fallback`, `_fallback_rival_wins`).
 
@@ -741,7 +741,7 @@ that file. The detailed account of FDS+Evac door choice is on
 | **Visible counts as known** | for the current target in `imode == 1` calls (`:16533–16535`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
 | **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹. Evac 2.6.1 (FDS 6.7.7) tests \(\bar K d\) < 0.003 instead ([Evac 2.6.1 door test](/docs/model-comparison.md#evac-261-door-criterion)) | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |
-| **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback re-admits the least smoky known route |
+| **Last resort** | tier 4 ranks by \(0.5\,d/(3/\bar K)\); a door with value ≥ 1 is struck out for that call | the all-refused fallback promotes the least smoky known route |
 | **Smoke memory** | lone agents mark the previous target negative or zero | none |
 | **Default** | agent type 2, `KNOWN_DOOR = .FALSE.` | `familiarity = "full"` |
 | **No known or visible door** | the agent herds with visible neighbours that have a target (`:8046`, `:8066–8211`), else follows the main evacuation mesh flow field, which leads to every exit of the mesh (`:16826–16842`, `:16868–16900`); with `I_HERDING_TYPE` > 1 it stands | `no_known_exit = "default_route"`: the journey, or the nearest exit on foot; no herding (#78). `stay` corresponds to standing |
