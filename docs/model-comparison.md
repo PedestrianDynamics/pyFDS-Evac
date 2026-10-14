@@ -256,6 +256,10 @@ pyFDS-Evac splits those jobs differently.  Dose vetoes only: a route above
 another.  Optical depth does both, as in tier 4 — it refuses a route above
 `tau_max` *and* orders the survivors, with travel time breaking ties.  It also
 applies dose and smoke at once rather than choosing one by a sign.
+This tau-first order is kept on purpose
+([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187), Q5,
+2026-10-14): the time-first order with smoke alone in tier 4 is the
+counterpart, documented here, not the model.
 
 #### Where the quantity is used: the decisive difference
 
