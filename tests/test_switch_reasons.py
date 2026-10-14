@@ -372,6 +372,17 @@ def test_queue_credit_at_the_anchor_boundary():
     )
 
 
+def test_a_promoted_old_route_is_not_read_as_a_refusal():
+    """A fallback-promoted old exit keeps rejected=True (#187 Q3), but the
+    label of leaving it comes from the ordinary rules, not the refusal."""
+    config = RerouteConfig(cost_config=golden._gate())
+    refused = _rc("west", 100.0, rejected=True, rejection_reason="tau")
+    promoted = _rc("west", 100.0, rejected=True, rejection_reason="fallback: tau")
+    new = _rc("east", 50.0)
+    assert _exit_change_reason(new, "west", refused, config, None) == "smoke_reroute"
+    assert _exit_change_reason(new, "west", promoted, config, None) == "shorter_path"
+
+
 def test_smoke_slowdown_credit_at_the_anchor_boundary():
     """Gate: the old route takes 100 s in smoke, 50 s in clear air."""
     config = RerouteConfig(cost_config=golden._gate())

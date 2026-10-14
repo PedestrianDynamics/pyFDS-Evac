@@ -2266,6 +2266,9 @@ def test_leaves_rejected_path_needs_a_feasible_unrejected_best():
     assert not live._leaves_rejected_path(_rc("E0"), ok)
     assert not live._leaves_rejected_path(walked, replace(ok, feasible=False))
     assert not live._leaves_rejected_path(walked, replace(ok, rejected=True))
+    # A fallback-promoted best stays rejected (#187 Q3) and is still left for.
+    promoted = replace(ok, rejected=True, rejection_reason="fallback: tau")
+    assert live._leaves_rejected_path(walked, promoted)
 
 
 class _AssignmentLog(AgentRouteState):
