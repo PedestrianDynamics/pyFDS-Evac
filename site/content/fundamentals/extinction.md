@@ -59,6 +59,8 @@ Mulholland and Croarkin (2000).
 
 *K* depends on wavelength, and the 8700 m²/kg figure is for red light at
 633 nm. It is a property of flame-generated soot; other fire effluents can differ.
+Mulholland and Croarkin (2000) measured it on post-flame smoke from
+overventilated burning.
 In a fire model *K* also inherits every uncertainty of the predicted soot
 yield and soot transport. FDS writes the local *K* as the `EXTINCTION
 COEFFICIENT` output quantity (§22.10.5); the unrelated quantity
@@ -85,7 +87,8 @@ COEFFICIENT` output quantity (§22.10.5); the unrelated quantity
   coefficient of flame generated smoke*. Fire and Materials, 24(5),
   227–230.
   [doi:10.1002/1099-1018(200009/10)24:5<227::AID-FAM742>3.0.CO;2-9](https://doi.org/10.1002/1099-1018%28200009/10%2924:5%3C227::AID-FAM742%3E3.0.CO;2-9)
-  (value quoted from the FDS User Guide).
+  (value quoted from the FDS User Guide; the burning condition from the
+  abstract).
 - Purser, D. A., & McAllister, J. L. (2026). *Assessment of hazards to
   occupants from smoke, toxic gases, and heat*. SFPE Handbook of Fire
   Protection Engineering, 6th ed., Ch. 70, 2271–2352.
