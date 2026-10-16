@@ -198,7 +198,9 @@ min-max = 41.5-46.0 s
 the percentiles need many more runs to settle. The 95th percentile uses NumPy's
 default linear interpolation; with five values it lies between the two largest.
 Increase `SEEDS`, and check that the summary no longer changes much when you
-add runs.
+add runs. DIN 18009-2:2022-08 recommends at least ten runs of a microscopic
+model and takes RSET as the 95 % quantile; mean values alone are not
+suitable (§6.6.2, p. 21; §8.3.1 and Note 2, p. 27).
 
 ### Plot the exit curves
 
