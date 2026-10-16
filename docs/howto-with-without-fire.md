@@ -400,7 +400,19 @@ constant, everyone starts together, and nothing reacts to the fire. S adds
 adds 10.1 s and 47.8 s (medians over seeds). Every seed adds at least
 13.3 s in S and 7.6 s in R at 30 s. The fire grows while people wait, so a later
 start meets thicker smoke. An uncoupled run cannot show that: waiting
-longer only shifts its curve.
+longer only shifts its curve. The same test on a passenger rail car, FDS
+data imported into railEXODUS and Pathfinder with delays of 0, 60, 180 and
+300 s, found the movement time (total minus delay) rising with the delay in
+railEXODUS, with occupants incapacitated at 300 s, but almost constant in
+Pathfinder, for reasons the report leaves open (Ingram et al. 2022, pp. 1
+and 42–43).
+
+To let the fire develop before the alarm, where Pathfinder offsets the
+FDS results in time, set `premovement_offset_s` on each distribution
+([scenario reference](scenario-json.md#spawn-areas-distributionsidparameters)). The FDS clock is
+not shifted: agents are in the building from ignition, and while they
+wait the smoke update skips them, so they accrue no dose
+([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
 
 ## 3. Is the uncoupled run conservative here?
 
@@ -749,6 +761,11 @@ page.
 - Frantzich, H., & Nilsson, D. (2003). *Utrymning genom tät rök: beteende
   och förflyttning*, Fig. 14. Full reference on
   [walking speed in smoke](/fundamentals/walking-speed.md).
+- Ingram, B., Datta, M., Lattimer, B. Y., & Kapahi, A. (2022). *Evaluation
+  of egress models for passenger rail cars for emergency and non-emergency
+  scenarios*. Report DOT/FRA/ORD-22/11, Federal Railroad Administration,
+  Washington, DC, pp. 1, 19, 42–43.
+  [rosap.ntl.bts.gov/view/dot/60734](https://rosap.ntl.bts.gov/view/dot/60734)
 - ISO 13571:2012, §4.5 (note) and §5.2; ISO/TR 16738:2009, Eq. 1, Eq. 2
   and §5.6: paraphrased; see [ASET and RSET](/fundamentals/aset-rset.md).
 - Nilsson, D., & Fahy, R. (2016). Selecting scenarios for deterministic fire
