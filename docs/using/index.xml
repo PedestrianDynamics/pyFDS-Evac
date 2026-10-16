@@ -4173,8 +4173,7 @@ do not change how fast agents walk.&lt;/p>
 &lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code>, &lt;code>min_speed_factor&lt;/code>, &lt;code>visibility_factor_c&lt;/code>); a configured run
 always uses the Lund law with the defaults on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/#parameters">Models › Smoke speed&lt;/a>;&lt;/li>
-&lt;li>the routing constant &lt;code>impassable_extinction_threshold&lt;/code>
-(&lt;code>RouteCostConfig&lt;/code>); &lt;code>RerouteConfig.exit_switch_anchor&lt;/code>, which, when set,
+&lt;li>&lt;code>RerouteConfig.exit_switch_anchor&lt;/code>, which, when set,
 overrides the &lt;code>routing&lt;/code> key &lt;code>exit_switch_anchor&lt;/code> for that run.&lt;/li>
 &lt;/ul>
 &lt;p>Tracking issue for this reference:
@@ -7462,7 +7461,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a5bf7efa937e455a5b52c192da61f6bcaef3e5e2">&lt;code>a5bf7ef&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0d4415e6cffd4b220fa8c58f406702eb0c510d36">&lt;code>0d4415e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7486,7 +7485,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c2ecd6d9f01f1ec4a4e52d8ee98e860c4d260632533cfec106bd7d5781999d99&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">42dc2339e44830201c9788b3377366ffa36ce4fffe6f32a55cb2a04daa579e60&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

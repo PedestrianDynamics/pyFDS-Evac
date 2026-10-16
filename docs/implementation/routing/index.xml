@@ -381,10 +381,8 @@ title="Copy code"
 &lt;p>&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and &lt;code>min_speed_factor&lt;/code> are the router&amp;rsquo;s copy of the linear
 speed law, used only to estimate travel time; their defaults are on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a> page.&lt;/p>
-&lt;p>One further field exists on the dataclass but is &lt;strong>not&lt;/strong> readable from
-the &lt;code>routing&lt;/code> block, so a scenario run always gets its default:
-&lt;code>impassable_extinction_threshold&lt;/code> (3.0). &lt;code>exit_switch_anchor&lt;/code> (0.9)
-is a &lt;code>routing&lt;/code> key.&lt;/p>
+&lt;p>&lt;code>impassable_extinction_threshold&lt;/code> (3.0), the additive model&amp;rsquo;s must-flee
+line, and &lt;code>exit_switch_anchor&lt;/code> (0.9) are &lt;code>routing&lt;/code> keys too.&lt;/p>
 &lt;p>&lt;code>w_smoke&lt;/code> and &lt;code>w_fed&lt;/code> &lt;strong>no longer reach route choice under the gate.&lt;/strong>
 Since &lt;code>0d9bf79&lt;/code> a gate run weights each Dijkstra edge by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor that keeps a
@@ -1961,6 +1959,13 @@ title="Copy code"
 &lt;td>active&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>impassable_extinction_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>3.0&lt;/code>&lt;/td>
+&lt;td>Route-average &lt;code>K&lt;/code> above which a smoke rejection must be fled, bypassing the exit-switch anchor. Uncalibrated: about 1 m of visibility.&lt;/td>
+&lt;td>&lt;strong>inert&lt;/strong>&lt;/td>
+&lt;td>active&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>sampling_step_m&lt;/code>&lt;/td>
 &lt;td>&lt;code>2.0&lt;/code>&lt;/td>
 &lt;td>Spacing of extinction samples where the field has no grid (constant or test fields) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose. An FDS field is read once per grid cell the line crosses (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/td>
@@ -2015,11 +2020,9 @@ title="Copy code"
 from &lt;code>from_routing_params&lt;/code> — until &lt;code>9508181&lt;/code> made both 0.1, the value
 &lt;code>FAC_DOOR_OLD&lt;/code> supplies. The clean-tier measurements below were made at 0.8 and
 have not been repeated at 0.1.&lt;/p>
-&lt;p>One &lt;code>RouteCostConfig&lt;/code> field is &lt;strong>not&lt;/strong> readable from the &lt;code>routing&lt;/code> block and
-keeps its dataclass default in any scenario run:
-&lt;code>impassable_extinction_threshold&lt;/code> (3.0, the route-average extinction above
-which a smoke rejection bypasses the anchor). Setting it requires
-constructing &lt;code>RouteCostConfig&lt;/code> in Python.&lt;/p>
+&lt;p>Every &lt;code>RouteCostConfig&lt;/code> field in the table above is readable from the
+&lt;code>routing&lt;/code> block; &lt;code>impassable_extinction_threshold&lt;/code> was the last one to
+become so (#187).&lt;/p>
 &lt;p>The margin keys are range-checked; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>.&lt;/p>
 &lt;h2>Known limitations&lt;span class="hx-absolute -hx-mt-20" id="known-limitations">&lt;/span>
