@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0d4415e6cffd4b220fa8c58f406702eb0c510d36">&lt;code>0d4415e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9334209727bc381ce1e8624b5c458807a867e7f3">&lt;code>9334209&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9a5fcfd4fa499863a6b536bac0827cf0b3e2a2a3f6772164f04e871c4b458fc9&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6386f691febae89c204e521a01cd5486f9f358b698512ba89364d525c60f89c0&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2699,7 +2699,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0d4415e6cffd4b220fa8c58f406702eb0c510d36">&lt;code>0d4415e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9334209727bc381ce1e8624b5c458807a867e7f3">&lt;code>9334209&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2730,7 +2730,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b25e5af0f86424ea26f3df6612ccddb90725f8e99eadfcde65d7676c40baa39f&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0bc73f512c7f2607c2b768cb1936664d0a8a2f66ab1b5e1e0f56d2bd6029676c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -3491,7 +3491,18 @@ constant, everyone starts together, and nothing reacts to the fire. S adds
 adds 10.1 s and 47.8 s (medians over seeds). Every seed adds at least
 13.3 s in S and 7.6 s in R at 30 s. The fire grows while people wait, so a later
 start meets thicker smoke. An uncoupled run cannot show that: waiting
-longer only shifts its curve.&lt;/p>
+longer only shifts its curve. The same test on a passenger rail car, FDS
+data imported into railEXODUS and Pathfinder with delays of 0, 60, 180 and
+300 s, found the movement time (total minus delay) rising with the delay in
+railEXODUS, with occupants incapacitated at 300 s, but almost constant in
+Pathfinder, for reasons the report leaves open (Ingram et al. 2022, pp. 1
+and 42–43).&lt;/p>
+&lt;p>To let the fire develop before the alarm, where Pathfinder offsets the
+FDS results in time, set &lt;code>premovement_offset_s&lt;/code> on each distribution
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#spawn-areas-distributionsidparameters">scenario reference&lt;/a>). The FDS clock is
+not shifted: agents are in the building from ignition, and while they
+wait the smoke update skips them, so they accrue no dose
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/p>
 &lt;h2>3. Is the uncoupled run conservative here?&lt;span class="hx-absolute -hx-mt-20" id="3-is-the-uncoupled-run-conservative-here">&lt;/span>
 &lt;a href="#3-is-the-uncoupled-run-conservative-here" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>What &amp;ldquo;conservative&amp;rdquo; means.&lt;/strong> The decision rests on whether ASET exceeds
 RSET by an adequate margin (ISO/TR 16738:2009, Eq. 1 and §5.6, as quoted
@@ -4077,6 +4088,11 @@ tenability criteria in building fires&lt;/em>, version 2.0, §5.2 and Fig. 8,
 &lt;li>Frantzich, H., &amp;amp; Nilsson, D. (2003). &lt;em>Utrymning genom tät rök: beteende
 och förflyttning&lt;/em>, Fig. 14. Full reference on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">walking speed in smoke&lt;/a>.&lt;/li>
+&lt;li>Ingram, B., Datta, M., Lattimer, B. Y., &amp;amp; Kapahi, A. (2022). &lt;em>Evaluation
+of egress models for passenger rail cars for emergency and non-emergency
+scenarios&lt;/em>. Report DOT/FRA/ORD-22/11, Federal Railroad Administration,
+Washington, DC, pp. 1, 19, 42–43.
+&lt;a href="https://rosap.ntl.bts.gov/view/dot/60734" target="_blank" rel="noopener">rosap.ntl.bts.gov/view/dot/60734&lt;/a>&lt;/li>
 &lt;li>ISO 13571:2012, §4.5 (note) and §5.2; ISO/TR 16738:2009, Eq. 1, Eq. 2
 and §5.6: paraphrased; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>.&lt;/li>
 &lt;li>Nilsson, D., &amp;amp; Fahy, R. (2016). Selecting scenarios for deterministic fire

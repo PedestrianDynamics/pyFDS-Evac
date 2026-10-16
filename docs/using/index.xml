@@ -3844,7 +3844,7 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>&lt;code>premovement_offset_s&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>≥ 0 s&lt;/td>
-&lt;td>A fixed delay added to every agent&amp;rsquo;s drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac&amp;rsquo;s detection time; &lt;code>pyfds-evac init&lt;/code> writes it. It needs &lt;code>use_premovement: true&lt;/code>, and without it the run stops with a &lt;code>ValueError&lt;/code>. Applies with and without &lt;code>journeys&lt;/code>; ignored with flow spawning.&lt;/td>
+&lt;td>A fixed delay added to every agent&amp;rsquo;s drawn pre-movement time, so nobody starts earlier. It stands for FDS+Evac&amp;rsquo;s detection time, and it is also the way to let the fire develop before the alarm (Pathfinder&amp;rsquo;s time offset for FDS results): the FDS clock is not shifted, agents are in the building from ignition, and while they wait the smoke update skips them, so they accrue no dose (see &lt;a href="#spawn-areas-distributionsidparameters">Spawn areas&lt;/a>). &lt;code>pyfds-evac init&lt;/code> writes it. It needs &lt;code>use_premovement: true&lt;/code>, and without it the run stops with a &lt;code>ValueError&lt;/code>. Applies with and without &lt;code>journeys&lt;/code>; ignored with flow spawning.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>use_flow_spawning&lt;/code>&lt;/td>
@@ -7461,7 +7461,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0d4415e6cffd4b220fa8c58f406702eb0c510d36">&lt;code>0d4415e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9334209727bc381ce1e8624b5c458807a867e7f3">&lt;code>9334209&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7485,7 +7485,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">42dc2339e44830201c9788b3377366ffa36ce4fffe6f32a55cb2a04daa579e60&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">60b0de874481e24af432027644ff341f36c3a8b7f787fb04332d18999dc15a8a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
