@@ -1054,8 +1054,8 @@ skipped, the slice whose z is nearest &lt;code>slice_height_m&lt;/code> wins, an
 warning is logged when it is more than 0.5 m away. The visibility model
 applies the same function to the extinction slice it hands to fdsvismap.&lt;/p>
 &lt;p>The height is an absolute z in the FDS domain, so it equals the height
-above the floor where the floor is at z = 0. C/VM2 and the Engineers
-Australia note evaluate tenability at 2.0 m
+above the floor where the floor is at z = 0. C/VM2, the Engineers
+Australia note and DIN 18009-2 (§7.2.1) evaluate tenability at 2.0 m
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>). For a check against them,
 run with &lt;code>--smoke-slice-height 2.0&lt;/code> and write the slices at that
 height in the FDS deck (&lt;code>&amp;amp;SLCF PBZ=2.0&lt;/code>); otherwise the run reads the
