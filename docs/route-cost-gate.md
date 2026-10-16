@@ -675,6 +675,7 @@ Every key below is read from the scenario's `routing` block by
 | `w_queue` | `0.0` | Congestion weight, off by default. | active (as `w_queue * queue_time_s` on the rank cost) | active (as distance-equivalent in the composite) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused. Veto only: dose never ranks. | active | active |
 | `visibility_extinction_threshold` | `0.5` | `K` above which a segment is flagged non-visible; a route whose segments are *all* non-visible is refused when some other route has a visible segment. | **inert** | active |
+| `impassable_extinction_threshold` | `3.0` | Route-average `K` above which a smoke rejection must be fled, bypassing the exit-switch anchor. Uncalibrated: about 1 m of visibility. | **inert** | active |
 | `sampling_step_m` | `2.0` | Spacing of extinction samples where the field has no grid (constant or test fields) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)). | active | active |
 | `base_speed_m_per_s` | `1.3` | Clear-air walking speed. Sets travel time, anticipation, and the queue conversion. It is not a speed floor; `min_speed_factor` is. | active | active |
 | `alpha` | `0.706` | Router's copy of the linear speed-law coefficient, for travel time only; agents walk with `SmokeSpeedConfig` ([smoke-speed model](/models/smoke-speed.md)). | active | active |
@@ -688,11 +689,9 @@ from `from_routing_params` — until `9508181` made both 0.1, the value
 `FAC_DOOR_OLD` supplies. The clean-tier measurements below were made at 0.8 and
 have not been repeated at 0.1.
 
-One `RouteCostConfig` field is **not** readable from the `routing` block and
-keeps its dataclass default in any scenario run:
-`impassable_extinction_threshold` (3.0, the route-average extinction above
-which a smoke rejection bypasses the anchor). Setting it requires
-constructing `RouteCostConfig` in Python.
+Every `RouteCostConfig` field in the table above is readable from the
+`routing` block; `impassable_extinction_threshold` was the last one to
+become so (#187).
 
 The margin keys are range-checked; the ranges are on
 [Models › Routing › Parameters](/models/routing.md#parameters).

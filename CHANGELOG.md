@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `impassable_extinction_threshold`, the additive model's must-flee
+  line (route-average extinction 3.0 1/m above which a smoke rejection
+  bypasses the exit-switch anchor), is a `routing` key. It was the last
+  `RouteCostConfig` threshold a scenario could not set; `fallback_rule`
+  stays code-level (#696). It stays inert under the gate (#187).
 - The `routing` block reads three switching margins that only Python
   could set: `fed_return_margin` (since removed, see Removed),
   `exit_switch_anchor` and `path_switch_anchor` (since removed, see

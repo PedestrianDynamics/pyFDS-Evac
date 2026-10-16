@@ -1103,6 +1103,10 @@ class RouteCostConfig:
                 "visibility_extinction_threshold",
                 RouteCostConfig.visibility_extinction_threshold,
             ),
+            impassable_extinction_threshold=routing.get(
+                "impassable_extinction_threshold",
+                RouteCostConfig.impassable_extinction_threshold,
+            ),
             sampling_step_m=routing.get(
                 "sampling_step_m", RouteCostConfig.sampling_step_m
             ),
