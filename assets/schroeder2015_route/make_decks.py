@@ -67,6 +67,8 @@ def pvc_reaction(soot: float, co: float) -> str:
     return f"""! PVC as in the FDS User's Guide example (Schroeder 2017 Table 4.5):
 ! monomer C2H3Cl, lumped, heat of combustion 16400 kJ/kg. Atom balance per mole of fuel: C 2, H 3,
 ! Cl 1, O {2 * nu_o2:.4f}. Soot yield {soot}, CO yield {co} kg/kg [N]; all Cl to HCl.
+! 16400 kJ/kg is the heat of complete combustion in SFPE Table A.39; the
+! chemical value that goes with these yields is 5700 kJ/kg. Kept; see #796.
 &SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
 &SPEC ID='OXYGEN', MASS_FRACTION_0=0.232 /
 &SPEC ID='WATER VAPOR', MASS_FRACTION_0=0.006 /

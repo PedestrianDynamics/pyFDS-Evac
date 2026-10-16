@@ -236,6 +236,22 @@ none is a pyFDS-Evac default. Each new study adds a row here and one to the
 
 All fires start at t = 0 with no incipient phase.
 
+The two PVC fires set `HEAT_OF_COMBUSTION=16400`, following the PVC
+example of the FDS User's Guide (§13.2.2), with the soot yield 0.172 and
+CO yield 0.063 of SFPE Handbook Table A.39. In that table 16.4 MJ/kg is
+the net heat of complete combustion of PVC; the chemical heat of
+combustion that goes with the tabulated yields is 5.7 MJ/kg. FDS takes
+the fuel mass flux as the HRR divided by the heat of combustion, so the
+decks release about a third of the soot per MJ that the Table A.39 data
+set implies, and the heat released per kg of oxygen is about 1.7 times
+the FDS default of 13.1 MJ/kg. The `t_junction` deck also pairs an
+under-ventilated CO yield (0.150) with the well-ventilated soot yield.
+The decks are kept as they are for this release; a consistent set
+(Osburg et al. 2025, Table 2: 10.3 MJ/kg balanced to 13.1 MJ/kg of
+oxygen, same yields) and a rerun of the studies are planned in
+[#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796).
+Rows above state what the decks do, not the Table A.39 values.
+
 ## Sources
 
 - vfdb (2020). *Leitfaden Ingenieurmethoden des Brandschutzes*, TB 04-01,
@@ -283,8 +299,19 @@ All fires start at t = 0 with no incipient phase.
 - McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
   Mueller, E., & Paul, C. (2025). *Fire Dynamics Simulator User's
   Guide*. NIST Special Publication 1019, 6th ed., revision
-  FDS-6.10.1-0-g12efa16, §13.1.1.
+  FDS-6.10.1-0-g12efa16, §9.1 (fuel mass flux from `HRRPUA`),
+  §13.1.1, §13.1.2 (`HEAT_OF_COMBUSTION` and `EPUMO2`), §13.2.2 (PVC
+  example).
   [github.com/firemodels/fds/releases/tag/FDS-6.10.1](https://github.com/firemodels/fds/releases/tag/FDS-6.10.1)
+- SFPE Handbook of Fire Protection Engineering, 5th ed. (2016), Appendix 3,
+  Table A.39 (PVC: net heat of complete combustion 16.4 MJ/kg, chemical
+  heat of combustion 5.7 MJ/kg, soot yield 0.172, CO yield 0.063).
+  [doi:10.1007/978-1-4939-2565-0](https://doi.org/10.1007/978-1-4939-2565-0)
+- Osburg, M., Jäger, G., Schröder, B., & Börger, K. (2025).
+  *Quantifizierung der Ruß- und Schadstofffreisetzung bei
+  Brandsimulationen*. 71. vfdb-Jahresfachtagung. Table 2 (PVC set
+  balanced to 13.1 MJ/kg of oxygen).
+  [doi:10.5281/zenodo.15522181](https://doi.org/10.5281/zenodo.15522181)
 
 How the fire reaches pyFDS-Evac: the FDS case supplies it, see
 [Your FDS case](/docs/fds-case-requirements.md). How ASET follows from it:
