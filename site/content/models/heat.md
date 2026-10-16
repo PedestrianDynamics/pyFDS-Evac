@@ -35,6 +35,17 @@ incident nor net: it takes the gas temperature only. The dose is updated on the 
 the gas FED (`--smoke-update-interval`) and is a running total of its own,
 never added to the gas FED.
 
+**Why the default is convective.** ISO 13571:2012 Eq. (9) is ISO's
+recommended convective law, with a stated ±25 % uncertainty
+(§8.3.1–8.3.2), and needs only the gas temperature. The total-flux form is
+opt-in because Eq. 70.47 is "proposed" with ε, h_c and the surface
+temperature given only as ranges or not at all (Ch. 70, p. 2319), so every
+value it needs beyond *T* is an assumption; used alone it also gives no dose
+below the 2.5 kW/m² cut, up to about 200 °C in smoke, where the hot-air data
+give minutes ([#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)).
+The convective default omits the radiant term that ISO §8.4 and Eq. 70.46
+require above 2.5 kW/m²; under a hot layer it under-predicts the dose.
+
 If the case has no `TEMPERATURE` slice, the run continues without a heat dose
 and logs a warning. In the FED history `heat_fed_cumulative` then reads 0 and
 `temperature_celsius` 20.0 °C, and `metrics` has no `heat_fed_max` (see
