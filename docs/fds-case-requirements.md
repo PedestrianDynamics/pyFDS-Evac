@@ -84,8 +84,23 @@ matter what `&SLCF` lines you add. Fix it at the source:
       HEAT_OF_COMBUSTION=16400 /
 ```
 
-That is the `t_junction` reaction. Yields are fuel properties: take them from
-your material's data rather than copying these.
+Yields are fuel properties: take them from your material's data rather than
+copying these, together with a heat of combustion that fits them. FDS takes
+the fuel mass flux as `HRRPUA` divided by `HEAT_OF_COMBUSTION` (FDS User
+Guide §9.1) and, with the default `IDEAL=F`, treats that value as an
+effective heat of combustion (§13.1.2). The soot released per unit of heat
+is therefore `SOOT_YIELD` divided by it. The PVC example of the User Guide
+(§13.2.2) uses the same 16,400 kJ/kg with these soot and CO yields, taken
+from the SFPE Handbook. In SFPE Handbook Table A.39 (5th ed., 2016,
+Appendix 3, [doi:10.1007/978-1-4939-2565-0](https://doi.org/10.1007/978-1-4939-2565-0)),
+16,400 kJ/kg is the net heat of complete combustion of PVC; the chemical
+heat of combustion listed there is 5,700 kJ/kg. With 16,400 kJ/kg the fire
+releases about 10 g of soot per MJ, with 5,700 kJ/kg about 30 g (our
+arithmetic). FDS also takes the oxygen consumed from the reaction and
+ignores `EPUMO2` once `HEAT_OF_COMBUSTION` is given (§13.1.1–13.1.2), so a
+value that does not fit the reaction changes the energy released per unit
+mass of oxygen from the default 13,100 kJ/kg: for the reaction above,
+16,400 kJ/kg means about 8,300 kJ/kg (our arithmetic).
 
 `TEMPERATURE` is the one exception: it is a core solved gas-phase variable in
 every FDS run, not a species yield, so it needs no `&REAC` setup at all — the
