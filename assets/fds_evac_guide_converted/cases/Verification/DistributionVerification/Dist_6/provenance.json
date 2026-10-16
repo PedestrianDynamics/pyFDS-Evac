@@ -1,0 +1,14 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Verification/DistributionVerification/Dist_6.fds",
+  "source_sha256": "7939089bccb028665a2a3e577043c025c48fb4babbc32b22b1010d498bed70c4",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); DENS_INIT has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance); no known doors -> familiarity 'discovery'; agents find exits by signs read within 30 m, FDS+Evac by unlimited sight; delay: detection + reaction = beta + beta -> constant at the mean 1 s",
+  "sampling_height_adjustment": null,
+  "fire_changes": [],
+  "files_sha256": {
+    "config.json": "754642775fdd84214534284303caa8cfee9d4065e9c7feef88e32a4488638485",
+    "geometry.wkt": "0d93f9b2085d93991430cef0b25fc31ef532d5a893feac26ecdac6ed1cd7ba55"
+  }
+}

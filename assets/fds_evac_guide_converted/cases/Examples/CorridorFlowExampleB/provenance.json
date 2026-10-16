@@ -1,0 +1,14 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Examples/CorridorFlowExampleB.fds",
+  "source_sha256": "17a6a1cac28841d7fecf020ec6e242546899a31f303b595d3784abdb5edbb89b",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "COUNT_ONLY counter: no counterpart; COUNT_ONLY counter: no counterpart; COUNT_ONLY counter: no counterpart; COUNT_ONLY counter: no counterpart; TAU_CHANGE_DOOR has no counterpart; DENS_INIT has no counterpart; FAC_DOOR_QUEUE has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance); AGENT_TYPE has no counterpart; AGENT_TYPE has no counterpart; AGENT_TYPE has no counterpart; AGENT_TYPE has no counterpart",
+  "sampling_height_adjustment": null,
+  "fire_changes": [],
+  "files_sha256": {
+    "config.json": "512f349d2426045d2891a97c7a425293a9c5707169ef4b63fd190adb09184372",
+    "geometry.wkt": "d203bfaa7cdfeb3c60f7f973096abc1d08d2dcb4f719d5a7cfb1f6876b32277c"
+  }
+}

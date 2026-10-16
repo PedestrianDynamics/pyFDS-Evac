@@ -1,0 +1,2171 @@
+{
+  "date": "2026-10-08",
+  "pyfds_base_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "originals_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "python": "3.12.13",
+  "jupedsim": "1.4.2",
+  "fds": "6.10.1-0-g12efa16-release",
+  "seed": 42,
+  "scope": "One-second cap for all 94 shipped cases: 42 use generated FDS fields, 52 run in clear air. The original shorter 0.1 s horizons are preserved. Three representative cases additionally ran their full configured horizons with FDS coupling. Remaining full coupled runs are not verified.",
+  "short_run_command": "python scripts/run_fds_evac_guide.py --duration 1 --jobs 4 --timeout 300 --fds-exe <fds.exe> --output <new-output>",
+  "retry_note": "evac_example1aB and DoorAlgo_Cc initially hit the 300 s subprocess wall timeout without producing evacuation logs; a fresh locked environment outside OneDrive completed coupled retries in 28.016 s and 32.0 s. No input changes between attempts.",
+  "short_run": {
+    "seed": 42,
+    "phase": "auto",
+    "duration_cap_s": 1.0,
+    "timeout_s": 300.0,
+    "results": [
+      {
+        "id": "Examples/CorridorFlowExample",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 37.313
+      },
+      {
+        "id": "Examples/CorridorFlowExampleB",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 37.391
+      },
+      {
+        "id": "Examples/DoorFlowExample",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 35.797
+      },
+      {
+        "id": "Examples/evac_example1aA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 37.453
+      },
+      {
+        "id": "Examples/evac_example1aB",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "status": "timeout",
+        "timeout_s": 300.0,
+        "wall_seconds": 333.234
+      },
+      {
+        "id": "Examples/evac_example1aC",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 81.718
+      },
+      {
+        "id": "Examples/evac_example1cA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 82.015
+      },
+      {
+        "id": "Examples/evac_example1cC",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 79.938
+      },
+      {
+        "id": "Validation/AssemblySpace/bended_corridor",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 34.468
+      },
+      {
+        "id": "Validation/AssemblySpace/bended_corridor2",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 32.485
+      },
+      {
+        "id": "Validation/AssemblySpace/bended_corridor2_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 32.563
+      },
+      {
+        "id": "Validation/AssemblySpace/bended_corridor_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 23.406
+      },
+      {
+        "id": "Validation/AssemblySpace/door_only",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 22.532
+      },
+      {
+        "id": "Validation/AssemblySpace/door_only2",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 22.406
+      },
+      {
+        "id": "Validation/AssemblySpace/door_only2_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 18.594
+      },
+      {
+        "id": "Validation/AssemblySpace/door_only_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 18.547
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 18.406
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d1",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 14.734
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d12",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 14.875
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d123",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 11.031
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d13",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 24.204
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d2",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 20.922
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d23",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 20.703
+      },
+      {
+        "id": "Validation/OpenFloorOffice/office_d3",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 14.641
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 45.015
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_logN",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 44.969
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_logN2",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 44.265
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_n180s15",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 46.968
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_n180s152",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 46.844
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_n60s15",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 44.719
+      },
+      {
+        "id": "Validation/SportsHall/sportshall_n60s152",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 44.125
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_0-1",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 9.297
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_2and4",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 12.36
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_3",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 13.672
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_5",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 13.812
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_6",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 13.812
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_7and9",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 11.188
+      },
+      {
+        "id": "Verification/DistributionVerification/Dist_8",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 9.157
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo2_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 13.672
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_A",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 34.078
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_B",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 33.156
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Ca",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 32.922
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Cb",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 23.734
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Cc",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "status": "timeout",
+        "timeout_s": 300.0,
+        "wall_seconds": 306.359
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Da",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 25.922
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Db",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 24.406
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Dc",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 25.078
+      },
+      {
+        "id": "Verification/FED_Test/fed_CO2_verificationA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 31.532
+      },
+      {
+        "id": "Verification/FED_Test/fed_CO2_verificationB",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 32.562
+      },
+      {
+        "id": "Verification/FED_Test/fed_CO2_verificationC",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 31.313
+      },
+      {
+        "id": "Verification/FED_Test/fed_CO_verificationA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 16.703
+      },
+      {
+        "id": "Verification/FED_Test/fed_CO_verificationB",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 15.421
+      },
+      {
+        "id": "Verification/FED_Test/fed_CO_verificationC",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 14.954
+      },
+      {
+        "id": "Verification/FED_Test/fed_O2_verificationA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 26.656
+      },
+      {
+        "id": "Verification/FED_Test/fed_O2_verificationB",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 25.75
+      },
+      {
+        "id": "Verification/FED_Test/fed_O2_verificationC",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 26.282
+      },
+      {
+        "id": "Verification/FED_Test/fed_verificationA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 25.469
+      },
+      {
+        "id": "Verification/FED_Test/fed_verificationB",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 18.547
+      },
+      {
+        "id": "Verification/FED_Test/fed_verificationC",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 18.219
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_0",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 9.531
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_0C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 9.578
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1000",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 11.641
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1000C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 8.672
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1500",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 8.625
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1500C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 10.015
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_500",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 9.765
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_500C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_only",
+        "wall_seconds": 9.968
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_0",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 12.094
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_0C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 11.922
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1000",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 12.485
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1000C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 11.75
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1500",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 11.344
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1500C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 12.609
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_500",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 11.094
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_500C",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 11.407
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_A",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 11.11
+      },
+      {
+        "id": "Verification/imo/CompTest1",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 7.531
+      },
+      {
+        "id": "Verification/imo/CompTest10",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 7.234
+      },
+      {
+        "id": "Verification/imo/CompTest10B",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 6.75
+      },
+      {
+        "id": "Verification/imo/CompTest4",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 8.078
+      },
+      {
+        "id": "Verification/imo/CompTest4b",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 8.234
+      },
+      {
+        "id": "Verification/imo/CompTest5",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 7.281
+      },
+      {
+        "id": "Verification/imo/CompTest6",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 8.859
+      },
+      {
+        "id": "Verification/imo/CompTest7",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 8.672
+      },
+      {
+        "id": "Verification/imo/CompTest7_A",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 8.453
+      },
+      {
+        "id": "Verification/imo/CompTest8a",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 9.641
+      },
+      {
+        "id": "Verification/imo/CompTest8b",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 9.516
+      },
+      {
+        "id": "Verification/imo/CompTest8c",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 10.203
+      },
+      {
+        "id": "Verification/imo/CompTest8d",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 9.844
+      },
+      {
+        "id": "Verification/imo/CompTest9RespTimes",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 14.094
+      },
+      {
+        "id": "Verification/imo/CompTest9a",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 18.422
+      },
+      {
+        "id": "Verification/imo/CompTest9b",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 17.484
+      },
+      {
+        "id": "Verification/imo/CompTest9c",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 15.906
+      },
+      {
+        "id": "Verification/imo/CompTest9d",
+        "phase": "auto",
+        "seed": 42,
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "clear_air",
+        "wall_seconds": 12.953
+      }
+    ]
+  },
+  "short_run_retry": {
+    "seed": 42,
+    "phase": "coupled",
+    "duration_cap_s": 1.0,
+    "timeout_s": 300.0,
+    "results": [
+      {
+        "id": "Examples/evac_example1aB",
+        "phase": "coupled",
+        "seed": 42,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 28.016
+      },
+      {
+        "id": "Verification/DoorAlgorithm/DoorAlgo_Cc",
+        "phase": "coupled",
+        "seed": 42,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 32.0
+      }
+    ]
+  },
+  "representative_full_runs": {
+    "seed": 42,
+    "phase": "auto",
+    "duration_cap_s": null,
+    "timeout_s": 300.0,
+    "results": [
+      {
+        "id": "Verification/FED_Test/fed_CO_verificationA",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 2,
+        "status": "incomplete",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 86.594
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1000",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 0,
+        "status": "completed",
+        "coupling": "smoke_only",
+        "wall_seconds": 26.907
+      },
+      {
+        "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1000",
+        "phase": "auto",
+        "seed": 42,
+        "fds_returncode": 0,
+        "fds_quantities": {
+          "co2": "CARBON DIOXIDE VOLUME FRACTION",
+          "co": "CARBON MONOXIDE VOLUME FRACTION",
+          "o2": "OXYGEN VOLUME FRACTION",
+          "extinction": "SOOT EXTINCTION COEFFICIENT",
+          "temperature": "TEMPERATURE"
+        },
+        "evac_returncode": 0,
+        "status": "completed",
+        "coupling": "smoke_and_gas",
+        "wall_seconds": 46.078
+      }
+    ]
+  },
+  "repository_checks": {
+    "new_and_original_asset_tests": "8 passed",
+    "expanded_targeted_tests": "112 passed, 2 failed; both failures reproduced on unchanged upstream commit in Windows path-format assertions in test_fds_import.py",
+    "baseline_failing_tests": [
+      "test_cli_init_runnable_and_error",
+      "test_default_output_folder_is_next_to_the_deck"
+    ],
+    "ruff": "Whole-repository check and format check passed",
+    "distribution_build": "Wheel and sdist built; neither contains guide assets",
+    "full_pytest_suite": "Attempted but interrupted after prolonged subprocess startup delays on Windows; not verified"
+  },
+  "fire_input_checks": [
+    {
+      "id": "Examples/evac_example1aA",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 13.67,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Examples/evac_example1aB",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 13.78,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Examples/evac_example1aC",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 13.66,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Examples/evac_example1cA",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 13.47,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Examples/evac_example1cC",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 13.12,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_A",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 6.09,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_B",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 6.19,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_Ca",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 6.74,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_Cb",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 8.47,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_Cc",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 8.5,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_Da",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 8.2,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_Db",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 8.75,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/DoorAlgorithm/DoorAlgo_Dc",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.36,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_CO2_verificationA",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.78,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_CO2_verificationB",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.78,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_CO2_verificationC",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.69,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_CO_verificationA",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.25,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_CO_verificationB",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.38,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_CO_verificationC",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.2,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_O2_verificationA",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 8.03,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_O2_verificationB",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 8.0,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_O2_verificationC",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.47,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_verificationA",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 9.33,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_verificationB",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 16.0,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/FED_Test/fed_verificationC",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 14.28,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_0",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 12.12,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_0C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 12.03,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1000",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 1.83,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1000C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 1.86,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1500",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 1.81,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_1500C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 1.81,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_500",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.23,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed2_500C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.22,
+      "quantities": {
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "extinction",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_0",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.27,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_0C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.2,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1000",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 3.49,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1000C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 3.49,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1500",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 3.36,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_1500C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 3.55,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_500",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.69,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_500C",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.56,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    },
+    {
+      "id": "Verification/SmokeSpeed_Test/soot_vs_speed_A",
+      "validation_horizon_s": 1.0,
+      "returncode": 0,
+      "fds_completed": true,
+      "wall_seconds": 2.73,
+      "quantities": {
+        "co2": "CARBON DIOXIDE VOLUME FRACTION",
+        "co": "CARBON MONOXIDE VOLUME FRACTION",
+        "o2": "OXYGEN VOLUME FRACTION",
+        "extinction": "SOOT EXTINCTION COEFFICIENT",
+        "temperature": "TEMPERATURE"
+      },
+      "required_quantities": [
+        "co",
+        "co2",
+        "extinction",
+        "o2",
+        "temperature"
+      ],
+      "all_required_quantities": true
+    }
+  ],
+  "earlier_clear_air_audit": {
+    "source_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+    "seed": 42,
+    "wall_limit_s": 300,
+    "completed": 45,
+    "horizon_stops": 21,
+    "wall_timeouts": 28,
+    "case_results": "manifest.json: cases[].clear_air_validation",
+    "doorflow": "Adjusted two-region case completed at 51.28 s on commits 3435dc440fe89740690aed62ba9e6e144ec3475f and a6702e0af6c85fabd81f609547657b7efb516771; 100/100 evacuated."
+  }
+}

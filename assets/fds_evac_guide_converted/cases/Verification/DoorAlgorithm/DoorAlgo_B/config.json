@@ -1,0 +1,205 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 100.0,
+        "smoke_slice_height": 1.5
+      }
+    }
+  },
+  "distributions": {
+    "EVAC1st": {
+      "coordinates": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          39.0
+        ],
+        [
+          49.0,
+          39.0
+        ],
+        [
+          49.0,
+          1.0
+        ],
+        [
+          33.0,
+          1.0
+        ],
+        [
+          33.0,
+          4.0
+        ],
+        [
+          30.0,
+          4.0
+        ],
+        [
+          30.0,
+          1.0
+        ],
+        [
+          1.0,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "BottomExit",
+        "familiarity": "discovery",
+        "number": 100,
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 0.5,
+        "premovement_param_b": 1.5,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "BottomExit": {
+      "coordinates": [
+        [
+          44.75,
+          0.0
+        ],
+        [
+          43.25,
+          0.0
+        ],
+        [
+          43.25,
+          0.25
+        ],
+        [
+          43.25,
+          0.5
+        ],
+        [
+          44.75,
+          0.5
+        ],
+        [
+          44.75,
+          0.25
+        ],
+        [
+          44.75,
+          0.0
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 44.0,
+        "y": 1.0
+      },
+      "type": "polygon"
+    },
+    "LeftExit": {
+      "coordinates": [
+        [
+          0.5,
+          6.45
+        ],
+        [
+          0.5,
+          5.25
+        ],
+        [
+          0.25,
+          5.25
+        ],
+        [
+          0.0,
+          5.25
+        ],
+        [
+          0.0,
+          6.45
+        ],
+        [
+          0.25,
+          6.45
+        ],
+        [
+          0.5,
+          6.45
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 1.0,
+        "y": 5.85
+      },
+      "type": "polygon"
+    },
+    "RightExit": {
+      "coordinates": [
+        [
+          50.0,
+          25.25
+        ],
+        [
+          49.5,
+          25.25
+        ],
+        [
+          49.5,
+          26.45
+        ],
+        [
+          50.0,
+          26.45
+        ],
+        [
+          50.0,
+          25.25
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 49.0,
+        "y": 25.85
+      },
+      "type": "polygon"
+    },
+    "TopExit": {
+      "coordinates": [
+        [
+          4.45,
+          39.5
+        ],
+        [
+          3.25,
+          39.5
+        ],
+        [
+          3.25,
+          40.0
+        ],
+        [
+          4.45,
+          40.0
+        ],
+        [
+          4.45,
+          39.5
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 3.85,
+        "y": 39.0
+      },
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}

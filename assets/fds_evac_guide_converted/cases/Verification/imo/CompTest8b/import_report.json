@@ -1,0 +1,298 @@
+{
+  "chid": "CompTest8b",
+  "counts": {
+    "EVAC": {
+      "A": 0,
+      "C": 4,
+      "D": 2,
+      "S": 6
+    },
+    "EXIT": {
+      "A": 0,
+      "C": 3,
+      "D": 1,
+      "S": 2
+    },
+    "MISC": {
+      "A": 0,
+      "C": 2,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 2,
+      "C": 3,
+      "D": 3,
+      "S": 0
+    }
+  },
+  "deck": "CompTest8b.fds",
+  "distributions": [
+    {
+      "area_m2": 52.92,
+      "density_per_m2": 1.889645,
+      "id": "EVAC_left",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 100,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 47.0,
+      "density_per_m2": 0.212766,
+      "id": "EVAC_right",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 10,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "ExitLeft",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        0.0,
+        0.0,
+        0.0,
+        10.0
+      ],
+      "sign": null,
+      "source": "&EXIT",
+      "strip_area_m2": 5.0
+    },
+    {
+      "closed_after_s": null,
+      "id": "ExitRight",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        30.0,
+        0.0,
+        30.0,
+        10.0
+      ],
+      "sign": null,
+      "source": "&EXIT",
+      "strip_area_m2": 5.0
+    }
+  ],
+  "floor": {
+    "id": "FFMain",
+    "meshes": [
+      "FFMain"
+    ],
+    "z_band": [
+      0.95,
+      1.05
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "Exit_CountRight",
+      "level": "warning",
+      "line": 68,
+      "message": "COUNT_ONLY counter: no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EXIT",
+      "id": "ExitLeft",
+      "level": "info",
+      "line": 73,
+      "message": "exit strip 5 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "ExitRight",
+      "level": "info",
+      "line": 76,
+      "message": "exit strip 5 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1",
+      "level": "warning",
+      "line": 94,
+      "message": "TDET_SMOKE_DENS has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1",
+      "level": "warning",
+      "line": 94,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1",
+      "level": "warning",
+      "line": 94,
+      "message": "I_HERDING_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1",
+      "level": "warning",
+      "line": 94,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1",
+      "level": "warning",
+      "line": 94,
+      "message": "speed uniform -> Gaussian with the same mean and variance: v0=1.295, v0_std=0.187639",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_left",
+      "level": "warning",
+      "line": 105,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_left",
+      "level": "info",
+      "line": 105,
+      "message": "one known exit -> 'discovery', entrance 'ExitRight'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_left",
+      "level": "info",
+      "line": 105,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_left",
+      "level": "info",
+      "line": 105,
+      "message": "100 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_right",
+      "level": "warning",
+      "line": 113,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_right",
+      "level": "info",
+      "line": 113,
+      "message": "one known exit -> 'discovery', entrance 'ExitLeft'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_right",
+      "level": "info",
+      "line": 113,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVAC_right",
+      "level": "info",
+      "line": 113,
+      "message": "10 agents in 1 area(s)",
+      "status": "S"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "fire_meshes": 0
+    },
+    "fds_dir": null,
+    "fds_meshes": 0,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Verification/imo/CompTest8b",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.6
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 220.0,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.25 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 0,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}

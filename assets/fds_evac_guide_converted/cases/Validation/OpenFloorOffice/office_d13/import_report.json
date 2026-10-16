@@ -1,0 +1,7265 @@
+{
+  "chid": "office_d13",
+  "counts": {
+    "EVAC": {
+      "A": 367,
+      "C": 136,
+      "D": 0,
+      "S": 136
+    },
+    "EXIT": {
+      "A": 4,
+      "C": 3,
+      "D": 0,
+      "S": 3
+    },
+    "MISC": {
+      "A": 0,
+      "C": 2,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 2,
+      "C": 2,
+      "D": 3,
+      "S": 0
+    }
+  },
+  "deck": "office_d13.fds",
+  "distributions": [
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr11",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr12",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr13",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr14",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr15",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr16",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr17",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr21",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr22",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr23",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr24",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr25",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr26",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr27",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr31",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr32",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr33",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr34",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr35",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr36",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr37",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr41",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr42",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr43",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr44",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr45",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr46",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr51",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr52",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr53",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr54",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr55",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr56",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr57",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr58",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr61",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr62",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr63",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr64",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr65",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr66",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr67",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr68",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr71",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr72",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr73",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr81",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr82",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr83",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr84",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACr85",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr86",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACr87",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr91",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr92",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr93",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr94",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr95",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr96",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACr97",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr101",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr102",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr103",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr104",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr105",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr106",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACr107",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 0.96,
+      "density_per_m2": 1.041667,
+      "id": "EVACd11",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACd12",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACd13",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACd14",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd21",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd22",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd23",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd24",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd31",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd32",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACd41",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACd42",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd51",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd52",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd61",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd62",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd63",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd64",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd65",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd71",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd72",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd73",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd74",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACd75",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd81",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd82",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd83",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd84",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACd85",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc11",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc12",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc13",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc14",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc15",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc21",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc22",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc23",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc24",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc25",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc31",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc32",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc33",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc34",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc35",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc41",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc42",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc43",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc44",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc45",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACc51",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.78125,
+      "id": "EVACc52",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACc53",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACc54",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2.56,
+      "density_per_m2": 0.390625,
+      "id": "EVACc55",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc61",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc62",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc63",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc64",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc65",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc71",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc72",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc73",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc74",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 1.041667,
+      "id": "EVACc75",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc81",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc82",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc83",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc84",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 1.92,
+      "density_per_m2": 0.520833,
+      "id": "EVACc85",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "Exit1",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        18.6,
+        10.6,
+        18.6,
+        11.8
+      ],
+      "sign": {
+        "c": 3,
+        "x": 17.4,
+        "y": 11.0
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.6
+    },
+    {
+      "closed_after_s": null,
+      "id": "Exit2",
+      "open_from_s": 10000.0,
+      "role": null,
+      "segment": [
+        18.6,
+        27.6,
+        18.6,
+        28.8
+      ],
+      "sign": {
+        "c": 3,
+        "x": 17.4,
+        "y": 28.0
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.6
+    },
+    {
+      "closed_after_s": null,
+      "id": "Exit3",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        28.0,
+        27.6,
+        28.0,
+        28.8
+      ],
+      "sign": {
+        "c": 3,
+        "x": 26.8,
+        "y": 28.0
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.6
+    }
+  ],
+  "floor": {
+    "id": "FF1stFloor",
+    "meshes": [
+      "FF1stFloor"
+    ],
+    "z_band": [
+      0.95,
+      1.05
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "Exit1",
+      "level": "info",
+      "line": 125,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit1",
+      "level": "info",
+      "line": 125,
+      "message": "exit strip 0.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit2",
+      "level": "info",
+      "line": 131,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit2",
+      "level": "warning",
+      "line": 131,
+      "message": "schedule open_from_s=10000.0, closed_after_s=None. FDS+Evac lets agents pass a closed exit unless LOCKED_WHEN_CLOSED; here nobody leaves while it is closed",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit2",
+      "level": "info",
+      "line": 131,
+      "message": "exit strip 0.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit3",
+      "level": "info",
+      "line": 137,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit3",
+      "level": "info",
+      "line": 137,
+      "message": "exit strip 0.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 144,
+      "message": "TDET_SMOKE_DENS has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 144,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 144,
+      "message": "I_HERDING_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 144,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 144,
+      "message": "DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr11",
+      "level": "warning",
+      "line": 155,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr11",
+      "level": "warning",
+      "line": 155,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr11",
+      "level": "info",
+      "line": 155,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr12",
+      "level": "warning",
+      "line": 160,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr12",
+      "level": "warning",
+      "line": 160,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr12",
+      "level": "info",
+      "line": 160,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr13",
+      "level": "warning",
+      "line": 165,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr13",
+      "level": "warning",
+      "line": 165,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr13",
+      "level": "info",
+      "line": 165,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr14",
+      "level": "warning",
+      "line": 170,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr14",
+      "level": "warning",
+      "line": 170,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr14",
+      "level": "info",
+      "line": 170,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr15",
+      "level": "warning",
+      "line": 175,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr15",
+      "level": "warning",
+      "line": 175,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr15",
+      "level": "info",
+      "line": 175,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr16",
+      "level": "warning",
+      "line": 180,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr16",
+      "level": "warning",
+      "line": 180,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr16",
+      "level": "info",
+      "line": 180,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr17",
+      "level": "warning",
+      "line": 185,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr17",
+      "level": "warning",
+      "line": 185,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr17",
+      "level": "info",
+      "line": 185,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr21",
+      "level": "warning",
+      "line": 191,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr21",
+      "level": "warning",
+      "line": 191,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr21",
+      "level": "info",
+      "line": 191,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr22",
+      "level": "warning",
+      "line": 196,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr22",
+      "level": "warning",
+      "line": 196,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr22",
+      "level": "info",
+      "line": 196,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr23",
+      "level": "warning",
+      "line": 201,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr23",
+      "level": "warning",
+      "line": 201,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr23",
+      "level": "info",
+      "line": 201,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr24",
+      "level": "warning",
+      "line": 206,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr24",
+      "level": "warning",
+      "line": 206,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr24",
+      "level": "info",
+      "line": 206,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr25",
+      "level": "warning",
+      "line": 211,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr25",
+      "level": "warning",
+      "line": 211,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr25",
+      "level": "info",
+      "line": 211,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr26",
+      "level": "warning",
+      "line": 216,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr26",
+      "level": "warning",
+      "line": 216,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr26",
+      "level": "info",
+      "line": 216,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr27",
+      "level": "warning",
+      "line": 221,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr27",
+      "level": "warning",
+      "line": 221,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr27",
+      "level": "info",
+      "line": 221,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr31",
+      "level": "warning",
+      "line": 227,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr31",
+      "level": "warning",
+      "line": 227,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr31",
+      "level": "info",
+      "line": 227,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr32",
+      "level": "warning",
+      "line": 232,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr32",
+      "level": "warning",
+      "line": 232,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr32",
+      "level": "info",
+      "line": 232,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr33",
+      "level": "warning",
+      "line": 237,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr33",
+      "level": "warning",
+      "line": 237,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr33",
+      "level": "info",
+      "line": 237,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr34",
+      "level": "warning",
+      "line": 242,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr34",
+      "level": "warning",
+      "line": 242,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr34",
+      "level": "info",
+      "line": 242,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr35",
+      "level": "warning",
+      "line": 247,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr35",
+      "level": "warning",
+      "line": 247,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr35",
+      "level": "info",
+      "line": 247,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr36",
+      "level": "warning",
+      "line": 252,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr36",
+      "level": "warning",
+      "line": 252,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr36",
+      "level": "info",
+      "line": 252,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr37",
+      "level": "warning",
+      "line": 257,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr37",
+      "level": "warning",
+      "line": 257,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr37",
+      "level": "info",
+      "line": 257,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr41",
+      "level": "warning",
+      "line": 263,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr41",
+      "level": "warning",
+      "line": 263,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr41",
+      "level": "info",
+      "line": 263,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr42",
+      "level": "warning",
+      "line": 268,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr42",
+      "level": "warning",
+      "line": 268,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr42",
+      "level": "info",
+      "line": 268,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr43",
+      "level": "warning",
+      "line": 273,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr43",
+      "level": "warning",
+      "line": 273,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr43",
+      "level": "info",
+      "line": 273,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr44",
+      "level": "warning",
+      "line": 278,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr44",
+      "level": "warning",
+      "line": 278,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr44",
+      "level": "info",
+      "line": 278,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr45",
+      "level": "warning",
+      "line": 283,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr45",
+      "level": "warning",
+      "line": 283,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr45",
+      "level": "info",
+      "line": 283,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr46",
+      "level": "warning",
+      "line": 288,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr46",
+      "level": "warning",
+      "line": 288,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr46",
+      "level": "info",
+      "line": 288,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr51",
+      "level": "warning",
+      "line": 294,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr51",
+      "level": "warning",
+      "line": 294,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr51",
+      "level": "info",
+      "line": 294,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr52",
+      "level": "warning",
+      "line": 299,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr52",
+      "level": "warning",
+      "line": 299,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr52",
+      "level": "info",
+      "line": 299,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr53",
+      "level": "warning",
+      "line": 304,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr53",
+      "level": "warning",
+      "line": 304,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr53",
+      "level": "info",
+      "line": 304,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr54",
+      "level": "warning",
+      "line": 309,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr54",
+      "level": "warning",
+      "line": 309,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr54",
+      "level": "info",
+      "line": 309,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr55",
+      "level": "warning",
+      "line": 314,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr55",
+      "level": "warning",
+      "line": 314,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr55",
+      "level": "info",
+      "line": 314,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr56",
+      "level": "warning",
+      "line": 319,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr56",
+      "level": "warning",
+      "line": 319,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr56",
+      "level": "info",
+      "line": 319,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr57",
+      "level": "warning",
+      "line": 324,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr57",
+      "level": "warning",
+      "line": 324,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr57",
+      "level": "info",
+      "line": 324,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr58",
+      "level": "warning",
+      "line": 329,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr58",
+      "level": "warning",
+      "line": 329,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr58",
+      "level": "info",
+      "line": 329,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr61",
+      "level": "warning",
+      "line": 335,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr61",
+      "level": "warning",
+      "line": 335,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr61",
+      "level": "info",
+      "line": 335,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr62",
+      "level": "warning",
+      "line": 340,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr62",
+      "level": "warning",
+      "line": 340,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr62",
+      "level": "info",
+      "line": 340,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr63",
+      "level": "warning",
+      "line": 345,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr63",
+      "level": "warning",
+      "line": 345,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr63",
+      "level": "info",
+      "line": 345,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr64",
+      "level": "warning",
+      "line": 350,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr64",
+      "level": "warning",
+      "line": 350,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr64",
+      "level": "info",
+      "line": 350,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr65",
+      "level": "warning",
+      "line": 355,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr65",
+      "level": "warning",
+      "line": 355,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr65",
+      "level": "info",
+      "line": 355,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr66",
+      "level": "warning",
+      "line": 360,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr66",
+      "level": "warning",
+      "line": 360,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr66",
+      "level": "info",
+      "line": 360,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr67",
+      "level": "warning",
+      "line": 365,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr67",
+      "level": "warning",
+      "line": 365,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr67",
+      "level": "info",
+      "line": 365,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr68",
+      "level": "warning",
+      "line": 370,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr68",
+      "level": "warning",
+      "line": 370,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr68",
+      "level": "info",
+      "line": 370,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr71",
+      "level": "warning",
+      "line": 376,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr71",
+      "level": "warning",
+      "line": 376,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr71",
+      "level": "info",
+      "line": 376,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr72",
+      "level": "warning",
+      "line": 381,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr72",
+      "level": "warning",
+      "line": 381,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr72",
+      "level": "info",
+      "line": 381,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr73",
+      "level": "warning",
+      "line": 386,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr73",
+      "level": "warning",
+      "line": 386,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr73",
+      "level": "info",
+      "line": 386,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr81",
+      "level": "warning",
+      "line": 392,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr81",
+      "level": "warning",
+      "line": 392,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr81",
+      "level": "info",
+      "line": 392,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr82",
+      "level": "warning",
+      "line": 397,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr82",
+      "level": "warning",
+      "line": 397,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr82",
+      "level": "info",
+      "line": 397,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr83",
+      "level": "warning",
+      "line": 402,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr83",
+      "level": "warning",
+      "line": 402,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr83",
+      "level": "info",
+      "line": 402,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr84",
+      "level": "warning",
+      "line": 407,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr84",
+      "level": "warning",
+      "line": 407,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr84",
+      "level": "info",
+      "line": 407,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr85",
+      "level": "warning",
+      "line": 412,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr85",
+      "level": "warning",
+      "line": 412,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr85",
+      "level": "info",
+      "line": 412,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr86",
+      "level": "warning",
+      "line": 417,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr86",
+      "level": "warning",
+      "line": 417,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr86",
+      "level": "info",
+      "line": 417,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr87",
+      "level": "warning",
+      "line": 422,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr87",
+      "level": "warning",
+      "line": 422,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr87",
+      "level": "info",
+      "line": 422,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr91",
+      "level": "warning",
+      "line": 428,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr91",
+      "level": "warning",
+      "line": 428,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr91",
+      "level": "info",
+      "line": 428,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr92",
+      "level": "warning",
+      "line": 433,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr92",
+      "level": "warning",
+      "line": 433,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr92",
+      "level": "info",
+      "line": 433,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr93",
+      "level": "warning",
+      "line": 438,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr93",
+      "level": "warning",
+      "line": 438,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr93",
+      "level": "info",
+      "line": 438,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr94",
+      "level": "warning",
+      "line": 443,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr94",
+      "level": "warning",
+      "line": 443,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr94",
+      "level": "info",
+      "line": 443,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr95",
+      "level": "warning",
+      "line": 448,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr95",
+      "level": "warning",
+      "line": 448,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr95",
+      "level": "info",
+      "line": 448,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr96",
+      "level": "warning",
+      "line": 453,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr96",
+      "level": "warning",
+      "line": 453,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr96",
+      "level": "info",
+      "line": 453,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr97",
+      "level": "warning",
+      "line": 458,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr97",
+      "level": "warning",
+      "line": 458,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr97",
+      "level": "info",
+      "line": 458,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr101",
+      "level": "warning",
+      "line": 464,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr101",
+      "level": "warning",
+      "line": 464,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr101",
+      "level": "info",
+      "line": 464,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr102",
+      "level": "warning",
+      "line": 469,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr102",
+      "level": "warning",
+      "line": 469,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr102",
+      "level": "info",
+      "line": 469,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr103",
+      "level": "warning",
+      "line": 474,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr103",
+      "level": "warning",
+      "line": 474,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr103",
+      "level": "info",
+      "line": 474,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr104",
+      "level": "warning",
+      "line": 479,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr104",
+      "level": "warning",
+      "line": 479,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr104",
+      "level": "info",
+      "line": 479,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr105",
+      "level": "warning",
+      "line": 484,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr105",
+      "level": "warning",
+      "line": 484,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr105",
+      "level": "info",
+      "line": 484,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr106",
+      "level": "warning",
+      "line": 489,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr106",
+      "level": "warning",
+      "line": 489,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr106",
+      "level": "info",
+      "line": 489,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr107",
+      "level": "warning",
+      "line": 494,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr107",
+      "level": "warning",
+      "line": 494,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr107",
+      "level": "info",
+      "line": 494,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd11",
+      "level": "warning",
+      "line": 500,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd11",
+      "level": "warning",
+      "line": 500,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd11",
+      "level": "info",
+      "line": 500,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd12",
+      "level": "warning",
+      "line": 505,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd12",
+      "level": "warning",
+      "line": 505,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd12",
+      "level": "info",
+      "line": 505,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd13",
+      "level": "warning",
+      "line": 510,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd13",
+      "level": "warning",
+      "line": 510,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd13",
+      "level": "info",
+      "line": 510,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd14",
+      "level": "warning",
+      "line": 515,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd14",
+      "level": "warning",
+      "line": 515,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd14",
+      "level": "info",
+      "line": 515,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd21",
+      "level": "warning",
+      "line": 521,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd21",
+      "level": "warning",
+      "line": 521,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd21",
+      "level": "info",
+      "line": 521,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd22",
+      "level": "warning",
+      "line": 526,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd22",
+      "level": "warning",
+      "line": 526,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd22",
+      "level": "info",
+      "line": 526,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd23",
+      "level": "warning",
+      "line": 531,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd23",
+      "level": "warning",
+      "line": 531,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd23",
+      "level": "info",
+      "line": 531,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd24",
+      "level": "warning",
+      "line": 536,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd24",
+      "level": "warning",
+      "line": 536,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd24",
+      "level": "info",
+      "line": 536,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd31",
+      "level": "warning",
+      "line": 542,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd31",
+      "level": "warning",
+      "line": 542,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd31",
+      "level": "info",
+      "line": 542,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd32",
+      "level": "warning",
+      "line": 547,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd32",
+      "level": "warning",
+      "line": 547,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd32",
+      "level": "info",
+      "line": 547,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd41",
+      "level": "warning",
+      "line": 553,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd41",
+      "level": "warning",
+      "line": 553,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd41",
+      "level": "info",
+      "line": 553,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd42",
+      "level": "warning",
+      "line": 558,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd42",
+      "level": "warning",
+      "line": 558,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd42",
+      "level": "info",
+      "line": 558,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd51",
+      "level": "warning",
+      "line": 564,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd51",
+      "level": "warning",
+      "line": 564,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd51",
+      "level": "info",
+      "line": 564,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd52",
+      "level": "warning",
+      "line": 569,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd52",
+      "level": "warning",
+      "line": 569,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd52",
+      "level": "info",
+      "line": 569,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd61",
+      "level": "warning",
+      "line": 575,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd61",
+      "level": "warning",
+      "line": 575,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd61",
+      "level": "info",
+      "line": 575,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd62",
+      "level": "warning",
+      "line": 580,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd62",
+      "level": "warning",
+      "line": 580,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd62",
+      "level": "info",
+      "line": 580,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd63",
+      "level": "warning",
+      "line": 585,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd63",
+      "level": "warning",
+      "line": 585,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd63",
+      "level": "info",
+      "line": 585,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd64",
+      "level": "warning",
+      "line": 590,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd64",
+      "level": "warning",
+      "line": 590,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd64",
+      "level": "info",
+      "line": 590,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd65",
+      "level": "warning",
+      "line": 595,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd65",
+      "level": "warning",
+      "line": 595,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd65",
+      "level": "info",
+      "line": 595,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd71",
+      "level": "warning",
+      "line": 601,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd71",
+      "level": "warning",
+      "line": 601,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd71",
+      "level": "info",
+      "line": 601,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd72",
+      "level": "warning",
+      "line": 606,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd72",
+      "level": "warning",
+      "line": 606,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd72",
+      "level": "info",
+      "line": 606,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd73",
+      "level": "warning",
+      "line": 611,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd73",
+      "level": "warning",
+      "line": 611,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd73",
+      "level": "info",
+      "line": 611,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd74",
+      "level": "warning",
+      "line": 616,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd74",
+      "level": "warning",
+      "line": 616,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd74",
+      "level": "info",
+      "line": 616,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd75",
+      "level": "warning",
+      "line": 621,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd75",
+      "level": "warning",
+      "line": 621,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd75",
+      "level": "info",
+      "line": 621,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd81",
+      "level": "warning",
+      "line": 627,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd81",
+      "level": "warning",
+      "line": 627,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd81",
+      "level": "info",
+      "line": 627,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd82",
+      "level": "warning",
+      "line": 632,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd82",
+      "level": "warning",
+      "line": 632,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd82",
+      "level": "info",
+      "line": 632,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd83",
+      "level": "warning",
+      "line": 637,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd83",
+      "level": "warning",
+      "line": 637,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd83",
+      "level": "info",
+      "line": 637,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd84",
+      "level": "warning",
+      "line": 642,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd84",
+      "level": "warning",
+      "line": 642,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd84",
+      "level": "info",
+      "line": 642,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd85",
+      "level": "warning",
+      "line": 647,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd85",
+      "level": "warning",
+      "line": 647,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd85",
+      "level": "info",
+      "line": 647,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc11",
+      "level": "warning",
+      "line": 653,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc11",
+      "level": "warning",
+      "line": 653,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc11",
+      "level": "info",
+      "line": 653,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc12",
+      "level": "warning",
+      "line": 658,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc12",
+      "level": "warning",
+      "line": 658,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc12",
+      "level": "info",
+      "line": 658,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc13",
+      "level": "warning",
+      "line": 663,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc13",
+      "level": "warning",
+      "line": 663,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc13",
+      "level": "info",
+      "line": 663,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc14",
+      "level": "warning",
+      "line": 668,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc14",
+      "level": "warning",
+      "line": 668,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc14",
+      "level": "info",
+      "line": 668,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc15",
+      "level": "warning",
+      "line": 673,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc15",
+      "level": "warning",
+      "line": 673,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc15",
+      "level": "info",
+      "line": 673,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc21",
+      "level": "warning",
+      "line": 679,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc21",
+      "level": "warning",
+      "line": 679,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc21",
+      "level": "info",
+      "line": 679,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc22",
+      "level": "warning",
+      "line": 684,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc22",
+      "level": "warning",
+      "line": 684,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc22",
+      "level": "info",
+      "line": 684,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc23",
+      "level": "warning",
+      "line": 689,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc23",
+      "level": "warning",
+      "line": 689,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc23",
+      "level": "info",
+      "line": 689,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc24",
+      "level": "warning",
+      "line": 694,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc24",
+      "level": "warning",
+      "line": 694,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc24",
+      "level": "info",
+      "line": 694,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc25",
+      "level": "warning",
+      "line": 699,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc25",
+      "level": "warning",
+      "line": 699,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc25",
+      "level": "info",
+      "line": 699,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc31",
+      "level": "warning",
+      "line": 705,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc31",
+      "level": "warning",
+      "line": 705,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc31",
+      "level": "info",
+      "line": 705,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc32",
+      "level": "warning",
+      "line": 710,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc32",
+      "level": "warning",
+      "line": 710,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc32",
+      "level": "info",
+      "line": 710,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc33",
+      "level": "warning",
+      "line": 715,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc33",
+      "level": "warning",
+      "line": 715,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc33",
+      "level": "info",
+      "line": 715,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc34",
+      "level": "warning",
+      "line": 720,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc34",
+      "level": "warning",
+      "line": 720,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc34",
+      "level": "info",
+      "line": 720,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc35",
+      "level": "warning",
+      "line": 725,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc35",
+      "level": "warning",
+      "line": 725,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc35",
+      "level": "info",
+      "line": 725,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc41",
+      "level": "warning",
+      "line": 731,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc41",
+      "level": "warning",
+      "line": 731,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc41",
+      "level": "info",
+      "line": 731,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc42",
+      "level": "warning",
+      "line": 736,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc42",
+      "level": "warning",
+      "line": 736,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc42",
+      "level": "info",
+      "line": 736,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc43",
+      "level": "warning",
+      "line": 741,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc43",
+      "level": "warning",
+      "line": 741,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc43",
+      "level": "info",
+      "line": 741,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc44",
+      "level": "warning",
+      "line": 746,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc44",
+      "level": "warning",
+      "line": 746,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc44",
+      "level": "info",
+      "line": 746,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc45",
+      "level": "warning",
+      "line": 751,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc45",
+      "level": "warning",
+      "line": 751,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc45",
+      "level": "info",
+      "line": 751,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc51",
+      "level": "warning",
+      "line": 757,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc51",
+      "level": "warning",
+      "line": 757,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc51",
+      "level": "info",
+      "line": 757,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc52",
+      "level": "warning",
+      "line": 762,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc52",
+      "level": "warning",
+      "line": 762,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc52",
+      "level": "info",
+      "line": 762,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc53",
+      "level": "warning",
+      "line": 767,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc53",
+      "level": "warning",
+      "line": 767,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc53",
+      "level": "info",
+      "line": 767,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc54",
+      "level": "warning",
+      "line": 772,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc54",
+      "level": "warning",
+      "line": 772,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc54",
+      "level": "info",
+      "line": 772,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc55",
+      "level": "warning",
+      "line": 777,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc55",
+      "level": "warning",
+      "line": 777,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc55",
+      "level": "info",
+      "line": 777,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc61",
+      "level": "warning",
+      "line": 783,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc61",
+      "level": "warning",
+      "line": 783,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc61",
+      "level": "info",
+      "line": 783,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc62",
+      "level": "warning",
+      "line": 788,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc62",
+      "level": "warning",
+      "line": 788,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc62",
+      "level": "info",
+      "line": 788,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc63",
+      "level": "warning",
+      "line": 793,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc63",
+      "level": "warning",
+      "line": 793,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc63",
+      "level": "info",
+      "line": 793,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc64",
+      "level": "warning",
+      "line": 798,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc64",
+      "level": "warning",
+      "line": 798,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc64",
+      "level": "info",
+      "line": 798,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc65",
+      "level": "warning",
+      "line": 803,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc65",
+      "level": "warning",
+      "line": 803,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc65",
+      "level": "info",
+      "line": 803,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc71",
+      "level": "warning",
+      "line": 809,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc71",
+      "level": "warning",
+      "line": 809,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc71",
+      "level": "info",
+      "line": 809,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc72",
+      "level": "warning",
+      "line": 814,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc72",
+      "level": "warning",
+      "line": 814,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc72",
+      "level": "info",
+      "line": 814,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc73",
+      "level": "warning",
+      "line": 819,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc73",
+      "level": "warning",
+      "line": 819,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc73",
+      "level": "info",
+      "line": 819,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc74",
+      "level": "warning",
+      "line": 824,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc74",
+      "level": "warning",
+      "line": 824,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc74",
+      "level": "info",
+      "line": 824,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc75",
+      "level": "warning",
+      "line": 829,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc75",
+      "level": "warning",
+      "line": 829,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc75",
+      "level": "info",
+      "line": 829,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc81",
+      "level": "warning",
+      "line": 835,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc81",
+      "level": "warning",
+      "line": 835,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc81",
+      "level": "info",
+      "line": 835,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc82",
+      "level": "warning",
+      "line": 840,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc82",
+      "level": "warning",
+      "line": 840,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc82",
+      "level": "info",
+      "line": 840,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc83",
+      "level": "warning",
+      "line": 845,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc83",
+      "level": "warning",
+      "line": 845,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc83",
+      "level": "info",
+      "line": 845,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc84",
+      "level": "warning",
+      "line": 850,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc84",
+      "level": "warning",
+      "line": 850,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc84",
+      "level": "info",
+      "line": 850,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc85",
+      "level": "warning",
+      "line": 855,
+      "message": "known doors {'Exit1': 1.0, 'Exit3': 1.0} cannot be expressed; closest: 'discovery' with entrance 'Exit1'",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc85",
+      "level": "warning",
+      "line": 855,
+      "message": "delay: detection + reaction = truncated_normal -> constant at the mean 90 s",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc85",
+      "level": "info",
+      "line": 855,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr11",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.8, 4.0, 0.4, 0.4, 1.0, 1.0] -> [0.8, 4.0, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr12",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.8, 8.0, 0.4, 0.4, 1.0, 1.0] -> [4.8, 8.0, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr13",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.8, 12.0, 0.4, 0.4, 1.0, 1.0] -> [8.8, 12.0, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr14",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.8, 16.0, 0.4, 0.4, 1.0, 1.0] -> [12.8, 16.0, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr15",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [17.6, 20.8, 0.4, 0.4, 1.0, 1.0] -> [17.6, 20.8, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr16",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.6, 24.8, 0.4, 0.4, 1.0, 1.0] -> [21.6, 24.8, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr17",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.6, 28.8, 0.4, 0.4, 1.0, 1.0] -> [25.6, 28.8, 0.10000000000000003, 0.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr21",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.8, 4.0, 4.4, 4.4, 1.0, 1.0] -> [0.8, 4.0, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr22",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.8, 8.0, 4.4, 4.4, 1.0, 1.0] -> [4.8, 8.0, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr23",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.8, 12.0, 4.4, 4.4, 1.0, 1.0] -> [8.8, 12.0, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr24",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.8, 16.0, 4.4, 4.4, 1.0, 1.0] -> [12.8, 16.0, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr25",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [17.6, 20.8, 4.4, 4.4, 1.0, 1.0] -> [17.6, 20.8, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr26",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.6, 24.8, 4.4, 4.4, 1.0, 1.0] -> [21.6, 24.8, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr27",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.6, 28.8, 4.4, 4.4, 1.0, 1.0] -> [25.6, 28.8, 4.1000000000000005, 4.7, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr41",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.8, 4.0, 13.2, 13.2, 1.0, 1.0] -> [0.8, 4.0, 12.899999999999999, 13.5, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr42",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.8, 8.0, 13.2, 13.2, 1.0, 1.0] -> [4.8, 8.0, 12.899999999999999, 13.5, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr43",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.8, 12.0, 13.2, 13.2, 1.0, 1.0] -> [8.8, 12.0, 12.899999999999999, 13.5, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr44",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.8, 16.0, 13.2, 13.2, 1.0, 1.0] -> [12.8, 16.0, 12.899999999999999, 13.5, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr45",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.6, 24.8, 13.2, 13.2, 1.0, 1.0] -> [21.6, 24.8, 12.899999999999999, 13.5, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr46",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.6, 28.8, 13.2, 13.2, 1.0, 1.0] -> [25.6, 28.8, 12.899999999999999, 13.5, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr71",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [10.0, 13.2, 26.8, 26.8, 1.0, 1.0] -> [10.0, 13.2, 26.5, 27.1, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr72",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.8, 34.0, 26.8, 26.8, 1.0, 1.0] -> [30.8, 34.0, 26.5, 27.1, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr73",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.8, 38.0, 26.8, 26.8, 1.0, 1.0] -> [34.8, 38.0, 26.5, 27.1, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr91",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [10.0, 13.2, 35.6, 35.6, 1.0, 1.0] -> [10.0, 13.2, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr92",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [14.0, 17.2, 35.6, 35.6, 1.0, 1.0] -> [14.0, 17.2, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr93",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [18.0, 21.2, 35.6, 35.6, 1.0, 1.0] -> [18.0, 21.2, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr94",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [22.8, 26.0, 35.6, 35.6, 1.0, 1.0] -> [22.8, 26.0, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr95",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [26.8, 30.0, 35.6, 35.6, 1.0, 1.0] -> [26.8, 30.0, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr96",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.8, 34.0, 35.6, 35.6, 1.0, 1.0] -> [30.8, 34.0, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr97",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.8, 38.0, 35.6, 35.6, 1.0, 1.0] -> [34.8, 38.0, 35.300000000000004, 35.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr101",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [10.0, 13.2, 39.6, 39.6, 1.0, 1.0] -> [10.0, 13.2, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr102",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [14.0, 17.2, 39.6, 39.6, 1.0, 1.0] -> [14.0, 17.2, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr103",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [18.0, 21.2, 39.6, 39.6, 1.0, 1.0] -> [18.0, 21.2, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr104",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [22.8, 26.0, 39.6, 39.6, 1.0, 1.0] -> [22.8, 26.0, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr105",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [26.8, 30.0, 39.6, 39.6, 1.0, 1.0] -> [26.8, 30.0, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr106",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.8, 34.0, 39.6, 39.6, 1.0, 1.0] -> [30.8, 34.0, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACr107",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.8, 38.0, 39.6, 39.6, 1.0, 1.0] -> [34.8, 38.0, 39.300000000000004, 39.9, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd21",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [13.6, 13.6, 36.0, 39.2, 1.0, 1.0] -> [13.299999999999999, 13.9, 36.0, 39.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd22",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [13.6, 13.6, 32.0, 35.2, 1.0, 1.0] -> [13.299999999999999, 13.9, 32.0, 35.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd23",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [13.6, 13.6, 27.2, 30.4, 1.0, 1.0] -> [13.299999999999999, 13.9, 27.2, 30.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd24",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [13.6, 13.6, 23.2, 26.4, 1.0, 1.0] -> [13.299999999999999, 13.9, 23.2, 26.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd31",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [17.6, 17.6, 36.0, 39.2, 1.0, 1.0] -> [17.3, 17.900000000000002, 36.0, 39.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd32",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [17.6, 17.6, 32.0, 35.2, 1.0, 1.0] -> [17.3, 17.900000000000002, 32.0, 35.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd51",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [26.4, 26.4, 36.0, 39.2, 1.0, 1.0] -> [26.099999999999998, 26.7, 36.0, 39.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd52",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [26.4, 26.4, 32.0, 35.2, 1.0, 1.0] -> [26.099999999999998, 26.7, 32.0, 35.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd61",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.4, 30.4, 36.0, 39.2, 1.0, 1.0] -> [30.099999999999998, 30.7, 36.0, 39.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd62",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.4, 30.4, 32.0, 35.2, 1.0, 1.0] -> [30.099999999999998, 30.7, 32.0, 35.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd63",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.4, 30.4, 27.2, 30.4, 1.0, 1.0] -> [30.099999999999998, 30.7, 27.2, 30.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd64",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.4, 30.4, 23.2, 26.4, 1.0, 1.0] -> [30.099999999999998, 30.7, 23.2, 26.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd65",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [30.4, 30.4, 18.4, 21.6, 1.0, 1.0] -> [30.099999999999998, 30.7, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd71",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.4, 34.4, 36.0, 39.2, 1.0, 1.0] -> [34.1, 34.699999999999996, 36.0, 39.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd72",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.4, 34.4, 32.0, 35.2, 1.0, 1.0] -> [34.1, 34.699999999999996, 32.0, 35.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd73",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.4, 34.4, 27.2, 30.4, 1.0, 1.0] -> [34.1, 34.699999999999996, 27.2, 30.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd74",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.4, 34.4, 23.2, 26.4, 1.0, 1.0] -> [34.1, 34.699999999999996, 23.2, 26.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd75",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [34.4, 34.4, 18.4, 21.6, 1.0, 1.0] -> [34.1, 34.699999999999996, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd81",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [38.4, 38.4, 36.0, 39.2, 1.0, 1.0] -> [38.1, 38.699999999999996, 36.0, 39.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd82",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [38.4, 38.4, 32.0, 35.2, 1.0, 1.0] -> [38.1, 38.699999999999996, 32.0, 35.2, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd83",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [38.4, 38.4, 27.2, 30.4, 1.0, 1.0] -> [38.1, 38.699999999999996, 27.2, 30.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd84",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [38.4, 38.4, 23.2, 26.4, 1.0, 1.0] -> [38.1, 38.699999999999996, 23.2, 26.4, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACd85",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [38.4, 38.4, 18.4, 21.6, 1.0, 1.0] -> [38.1, 38.699999999999996, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc11",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.4, 0.4, 0.8, 4.0, 1.0, 1.0] -> [0.10000000000000003, 0.7, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc12",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.4, 0.4, 4.8, 8.0, 1.0, 1.0] -> [0.10000000000000003, 0.7, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc13",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.4, 0.4, 9.6, 12.8, 1.0, 1.0] -> [0.10000000000000003, 0.7, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc14",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.4, 0.4, 13.6, 16.8, 1.0, 1.0] -> [0.10000000000000003, 0.7, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc15",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [0.4, 0.4, 18.4, 21.6, 1.0, 1.0] -> [0.10000000000000003, 0.7, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc21",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.4, 4.4, 0.8, 4.0, 1.0, 1.0] -> [4.1000000000000005, 4.7, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc22",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.4, 4.4, 4.8, 8.0, 1.0, 1.0] -> [4.1000000000000005, 4.7, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc23",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.4, 4.4, 9.6, 12.8, 1.0, 1.0] -> [4.1000000000000005, 4.7, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc24",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.4, 4.4, 13.6, 16.8, 1.0, 1.0] -> [4.1000000000000005, 4.7, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc25",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [4.4, 4.4, 18.4, 21.6, 1.0, 1.0] -> [4.1000000000000005, 4.7, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc31",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.4, 8.4, 0.8, 4.0, 1.0, 1.0] -> [8.1, 8.700000000000001, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc32",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.4, 8.4, 4.8, 8.0, 1.0, 1.0] -> [8.1, 8.700000000000001, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc33",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.4, 8.4, 9.6, 12.8, 1.0, 1.0] -> [8.1, 8.700000000000001, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc34",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.4, 8.4, 13.6, 16.8, 1.0, 1.0] -> [8.1, 8.700000000000001, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc35",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [8.4, 8.4, 18.4, 21.6, 1.0, 1.0] -> [8.1, 8.700000000000001, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc41",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.4, 12.4, 0.8, 4.0, 1.0, 1.0] -> [12.1, 12.700000000000001, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc42",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.4, 12.4, 4.8, 8.0, 1.0, 1.0] -> [12.1, 12.700000000000001, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc43",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.4, 12.4, 9.6, 12.8, 1.0, 1.0] -> [12.1, 12.700000000000001, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc44",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.4, 12.4, 13.6, 16.8, 1.0, 1.0] -> [12.1, 12.700000000000001, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc45",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [12.4, 12.4, 18.4, 21.6, 1.0, 1.0] -> [12.1, 12.700000000000001, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc61",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.2, 21.2, 0.8, 4.0, 1.0, 1.0] -> [20.9, 21.5, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc62",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.2, 21.2, 4.8, 8.0, 1.0, 1.0] -> [20.9, 21.5, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc63",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.2, 21.2, 9.6, 12.8, 1.0, 1.0] -> [20.9, 21.5, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc64",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.2, 21.2, 13.6, 16.8, 1.0, 1.0] -> [20.9, 21.5, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc65",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [21.2, 21.2, 18.4, 21.6, 1.0, 1.0] -> [20.9, 21.5, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc71",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.2, 25.2, 0.8, 4.0, 1.0, 1.0] -> [24.9, 25.5, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc72",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.2, 25.2, 4.8, 8.0, 1.0, 1.0] -> [24.9, 25.5, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc73",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.2, 25.2, 9.6, 12.8, 1.0, 1.0] -> [24.9, 25.5, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc74",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.2, 25.2, 13.6, 16.8, 1.0, 1.0] -> [24.9, 25.5, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc75",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [25.2, 25.2, 18.4, 21.6, 1.0, 1.0] -> [24.9, 25.5, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc81",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [29.2, 29.2, 0.8, 4.0, 1.0, 1.0] -> [28.9, 29.5, 0.8, 4.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc82",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [29.2, 29.2, 4.8, 8.0, 1.0, 1.0] -> [28.9, 29.5, 4.8, 8.0, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc83",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [29.2, 29.2, 9.6, 12.8, 1.0, 1.0] -> [28.9, 29.5, 9.6, 12.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc84",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [29.2, 29.2, 13.6, 16.8, 1.0, 1.0] -> [28.9, 29.5, 13.6, 16.8, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EVACc85",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [29.2, 29.2, 18.4, 21.6, 1.0, 1.0] -> [28.9, 29.5, 18.4, 21.6, 1.0, 1.0]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "fire_meshes": 0
+    },
+    "fds_dir": null,
+    "fds_meshes": 0,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Validation/OpenFloorOffice/office_d13",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.6
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 719.92,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.2 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 57,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}

@@ -1,0 +1,491 @@
+{
+  "chid": "door_only2",
+  "counts": {
+    "EVAC": {
+      "A": 0,
+      "C": 8,
+      "D": 4,
+      "S": 12
+    },
+    "EXIT": {
+      "A": 1,
+      "C": 1,
+      "D": 0,
+      "S": 1
+    },
+    "MISC": {
+      "A": 0,
+      "C": 2,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 10,
+      "C": 6,
+      "D": 8,
+      "S": 0
+    }
+  },
+  "deck": "door_only2.fds",
+  "distributions": [
+    {
+      "area_m2": 2934.36,
+      "density_per_m2": 0.102237,
+      "id": "EvacAve",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 300,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2934.36,
+      "density_per_m2": 0.102237,
+      "id": "EvacMale",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 300,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2934.36,
+      "density_per_m2": 0.102237,
+      "id": "EvacFemale",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 300,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 2934.36,
+      "density_per_m2": 0.034079,
+      "id": "EvacChild",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 100,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "Exit1",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        61.0,
+        21.6,
+        61.0,
+        28.8
+      ],
+      "sign": {
+        "c": 3,
+        "x": 59.7,
+        "y": 25.0
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 3.6
+    }
+  ],
+  "floor": {
+    "id": "MainGrid",
+    "meshes": [
+      "MainGrid"
+    ],
+    "z_band": [
+      0.9,
+      1.1
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "Exit1",
+      "level": "info",
+      "line": 83,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "Exit1",
+      "level": "info",
+      "line": 83,
+      "message": "exit strip 3.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 44,
+      "message": "TDET_SMOKE_DENS has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 44,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 44,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 44,
+      "message": "I_HERDING_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 44,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 44,
+      "message": "DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 55,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 55,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 55,
+      "message": "DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 62,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 62,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 62,
+      "message": "DEFAULT_PROPERTIES='Female': speed uniform 0.95..1.35 m/s -> Gaussian v0=1.15, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Elderly",
+      "level": "warning",
+      "line": 69,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Elderly",
+      "level": "warning",
+      "line": 69,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Elderly",
+      "level": "warning",
+      "line": 69,
+      "message": "DEFAULT_PROPERTIES='Elderly': speed uniform 0.5..1.1 m/s -> Gaussian v0=0.8, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 76,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 76,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 76,
+      "message": "DEFAULT_PROPERTIES='Child': speed uniform 0.6..1.2 m/s -> Gaussian v0=0.9, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacAve",
+      "level": "warning",
+      "line": 89,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacAve",
+      "level": "info",
+      "line": 89,
+      "message": "every exit known -> familiarity 'full'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacAve",
+      "level": "info",
+      "line": 89,
+      "message": "delay: detection + reaction = uniform 0.5..1.5 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacAve",
+      "level": "info",
+      "line": 89,
+      "message": "300 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacMale",
+      "level": "warning",
+      "line": 98,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacMale",
+      "level": "info",
+      "line": 98,
+      "message": "every exit known -> familiarity 'full'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacMale",
+      "level": "info",
+      "line": 98,
+      "message": "delay: detection + reaction = uniform 0.5..1.5 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacMale",
+      "level": "info",
+      "line": 98,
+      "message": "300 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacFemale",
+      "level": "warning",
+      "line": 107,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacFemale",
+      "level": "info",
+      "line": 107,
+      "message": "every exit known -> familiarity 'full'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacFemale",
+      "level": "info",
+      "line": 107,
+      "message": "delay: detection + reaction = uniform 0.5..1.5 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacFemale",
+      "level": "info",
+      "line": 107,
+      "message": "300 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacChild",
+      "level": "warning",
+      "line": 116,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacChild",
+      "level": "info",
+      "line": 116,
+      "message": "every exit known -> familiarity 'full'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacChild",
+      "level": "info",
+      "line": 116,
+      "message": "delay: detection + reaction = uniform 0.5..1.5 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "EvacChild",
+      "level": "info",
+      "line": 116,
+      "message": "100 agents in 1 area(s)",
+      "status": "S"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "fire_meshes": 0
+    },
+    "fds_dir": null,
+    "fds_meshes": 0,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Validation/AssemblySpace/door_only2",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.6
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 3007.2,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.4 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 0,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}

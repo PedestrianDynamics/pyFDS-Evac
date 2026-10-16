@@ -1,0 +1,75 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 100.0,
+        "smoke_slice_height": 1.7
+      }
+    }
+  },
+  "distributions": {
+    "FedAgent": {
+      "coordinates": [
+        [
+          1.8,
+          1.2
+        ],
+        [
+          1.8,
+          1.8
+        ],
+        [
+          1.2,
+          1.8
+        ],
+        [
+          1.2,
+          1.2
+        ],
+        [
+          1.8,
+          1.2
+        ]
+      ],
+      "parameters": {
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 200.0,
+        "use_premovement": true,
+        "v0": 1.0,
+        "v0_distribution": "constant"
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "DummyExit": {
+      "coordinates": [
+        [
+          2.5,
+          2.5
+        ],
+        [
+          2.0,
+          2.5
+        ],
+        [
+          2.0,
+          3.0
+        ],
+        [
+          2.5,
+          3.0
+        ],
+        [
+          2.5,
+          2.5
+        ]
+      ],
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}

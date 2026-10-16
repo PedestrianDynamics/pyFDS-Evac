@@ -1,0 +1,1920 @@
+{
+  "chid": "sportshall_logN",
+  "counts": {
+    "EVAC": {
+      "A": 0,
+      "C": 64,
+      "D": 0,
+      "S": 96
+    },
+    "EXIT": {
+      "A": 1,
+      "C": 4,
+      "D": 0,
+      "S": 4
+    },
+    "MISC": {
+      "A": 0,
+      "C": 2,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 16,
+      "C": 9,
+      "D": 11,
+      "S": 0
+    }
+  },
+  "deck": "sportshall_logN.fds",
+  "distributions": [
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.062,
+      "id": "AveDoor1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 31,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.03,
+      "id": "AveDoor2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 15,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.036,
+      "id": "AveDoor4",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.112,
+      "id": "AveDoor5",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 56,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.062,
+      "id": "MaleDoor1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 31,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.03,
+      "id": "MaleDoor2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 15,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.036,
+      "id": "MaleDoor4",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.112,
+      "id": "MaleDoor5",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 56,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.062,
+      "id": "FemaleDoor1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 31,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.03,
+      "id": "FemaleDoor2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 15,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.036,
+      "id": "FemaleDoor4",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.112,
+      "id": "FemaleDoor5",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 56,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.02,
+      "id": "ChildDoor1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 10,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.01,
+      "id": "ChildDoor2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 5,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.012,
+      "id": "ChildDoor4",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 6,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.038,
+      "id": "ChildDoor5",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 19,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.014,
+      "id": "AveDoor1b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 7,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.006,
+      "id": "AveDoor2b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 3,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.01,
+      "id": "AveDoor4b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 5,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.028,
+      "id": "AveDoor5b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 14,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.016,
+      "id": "MaleDoor1b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 8,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.008,
+      "id": "MaleDoor2b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 4,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.008,
+      "id": "MaleDoor4b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 4,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.028,
+      "id": "MaleDoor5b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 14,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.016,
+      "id": "FemaleDoor1b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 8,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.008,
+      "id": "FemaleDoor2b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 4,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.008,
+      "id": "FemaleDoor4b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 4,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.028,
+      "id": "FemaleDoor5b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 14,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.006,
+      "id": "ChildDoor1b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 3,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.002,
+      "id": "ChildDoor2b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.004,
+      "id": "ChildDoor4b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 500.0,
+      "density_per_m2": 0.01,
+      "id": "ChildDoor5b",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 5,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "Door1",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        43.0,
+        -5.5,
+        46.0,
+        -5.5
+      ],
+      "sign": {
+        "c": 3,
+        "x": 44.5,
+        "y": 0.1
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 1.5
+    },
+    {
+      "closed_after_s": null,
+      "id": "Door2",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        -1.0,
+        1.0,
+        -1.0,
+        5.0
+      ],
+      "sign": null,
+      "source": "&EXIT",
+      "strip_area_m2": 2.0
+    },
+    {
+      "closed_after_s": null,
+      "id": "Door4",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        17.5,
+        73.0,
+        18.5,
+        73.0
+      ],
+      "sign": null,
+      "source": "&EXIT",
+      "strip_area_m2": 0.5
+    },
+    {
+      "closed_after_s": null,
+      "id": "Door5",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        92.5,
+        73.0,
+        93.5,
+        73.0
+      ],
+      "sign": null,
+      "source": "&EXIT",
+      "strip_area_m2": 0.5
+    }
+  ],
+  "floor": {
+    "id": "MainEvacGrid",
+    "meshes": [
+      "MainEvacGrid"
+    ],
+    "z_band": [
+      0.9,
+      1.1
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "Door1",
+      "level": "info",
+      "line": 77,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "Door1",
+      "level": "info",
+      "line": 77,
+      "message": "exit strip 1.5 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "Door2",
+      "level": "info",
+      "line": 83,
+      "message": "exit strip 2 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "Door4",
+      "level": "info",
+      "line": 88,
+      "message": "exit strip 0.5 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "Door5",
+      "level": "info",
+      "line": 93,
+      "message": "exit strip 0.5 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 102,
+      "message": "TDET_SMOKE_DENS has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 102,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 102,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 102,
+      "message": "I_HERDING_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 102,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 102,
+      "message": "DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 114,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 114,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 114,
+      "message": "DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 121,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 121,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 121,
+      "message": "DEFAULT_PROPERTIES='Female': speed uniform 0.95..1.35 m/s -> Gaussian v0=1.15, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 128,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 128,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 128,
+      "message": "DEFAULT_PROPERTIES='Child': speed uniform 0.6..1.2 m/s -> Gaussian v0=0.9, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult2",
+      "level": "warning",
+      "line": 135,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult2",
+      "level": "warning",
+      "line": 135,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult2",
+      "level": "warning",
+      "line": 135,
+      "message": "DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male2",
+      "level": "warning",
+      "line": 142,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Male2",
+      "level": "warning",
+      "line": 142,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male2",
+      "level": "warning",
+      "line": 142,
+      "message": "DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female2",
+      "level": "warning",
+      "line": 149,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Female2",
+      "level": "warning",
+      "line": 149,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female2",
+      "level": "warning",
+      "line": 149,
+      "message": "DEFAULT_PROPERTIES='Female': speed uniform 0.95..1.35 m/s -> Gaussian v0=1.15, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child2",
+      "level": "warning",
+      "line": 156,
+      "message": "L_NON_SP has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Child2",
+      "level": "warning",
+      "line": 156,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child2",
+      "level": "warning",
+      "line": 156,
+      "message": "DEFAULT_PROPERTIES='Child': speed uniform 0.6..1.2 m/s -> Gaussian v0=0.9, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor1",
+      "level": "info",
+      "line": 163,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor1",
+      "level": "info",
+      "line": 163,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor1",
+      "level": "info",
+      "line": 163,
+      "message": "31 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor2",
+      "level": "info",
+      "line": 172,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor2",
+      "level": "info",
+      "line": 172,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor2",
+      "level": "info",
+      "line": 172,
+      "message": "15 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor4",
+      "level": "info",
+      "line": 181,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor4",
+      "level": "info",
+      "line": 181,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor4",
+      "level": "info",
+      "line": 181,
+      "message": "18 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor5",
+      "level": "info",
+      "line": 190,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor5",
+      "level": "info",
+      "line": 190,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor5",
+      "level": "info",
+      "line": 190,
+      "message": "56 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor1",
+      "level": "info",
+      "line": 199,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor1",
+      "level": "info",
+      "line": 199,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor1",
+      "level": "info",
+      "line": 199,
+      "message": "31 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor2",
+      "level": "info",
+      "line": 208,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor2",
+      "level": "info",
+      "line": 208,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor2",
+      "level": "info",
+      "line": 208,
+      "message": "15 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor4",
+      "level": "info",
+      "line": 217,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor4",
+      "level": "info",
+      "line": 217,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor4",
+      "level": "info",
+      "line": 217,
+      "message": "18 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor5",
+      "level": "info",
+      "line": 226,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor5",
+      "level": "info",
+      "line": 226,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor5",
+      "level": "info",
+      "line": 226,
+      "message": "56 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor1",
+      "level": "info",
+      "line": 235,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor1",
+      "level": "info",
+      "line": 235,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor1",
+      "level": "info",
+      "line": 235,
+      "message": "31 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor2",
+      "level": "info",
+      "line": 244,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor2",
+      "level": "info",
+      "line": 244,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor2",
+      "level": "info",
+      "line": 244,
+      "message": "15 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor4",
+      "level": "info",
+      "line": 253,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor4",
+      "level": "info",
+      "line": 253,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor4",
+      "level": "info",
+      "line": 253,
+      "message": "18 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor5",
+      "level": "info",
+      "line": 262,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor5",
+      "level": "info",
+      "line": 262,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor5",
+      "level": "info",
+      "line": 262,
+      "message": "56 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor1",
+      "level": "info",
+      "line": 271,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor1",
+      "level": "info",
+      "line": 271,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor1",
+      "level": "info",
+      "line": 271,
+      "message": "10 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor2",
+      "level": "info",
+      "line": 280,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor2",
+      "level": "info",
+      "line": 280,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor2",
+      "level": "info",
+      "line": 280,
+      "message": "5 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor4",
+      "level": "info",
+      "line": 289,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor4",
+      "level": "info",
+      "line": 289,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor4",
+      "level": "info",
+      "line": 289,
+      "message": "6 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor5",
+      "level": "info",
+      "line": 298,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor5",
+      "level": "info",
+      "line": 298,
+      "message": "delay: detection + reaction = uniform 20..130 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor5",
+      "level": "info",
+      "line": 298,
+      "message": "19 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor1b",
+      "level": "info",
+      "line": 308,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor1b",
+      "level": "info",
+      "line": 308,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor1b",
+      "level": "info",
+      "line": 308,
+      "message": "7 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor2b",
+      "level": "info",
+      "line": 317,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor2b",
+      "level": "info",
+      "line": 317,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor2b",
+      "level": "info",
+      "line": 317,
+      "message": "3 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor4b",
+      "level": "info",
+      "line": 326,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor4b",
+      "level": "info",
+      "line": 326,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor4b",
+      "level": "info",
+      "line": 326,
+      "message": "5 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor5b",
+      "level": "info",
+      "line": 335,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor5b",
+      "level": "info",
+      "line": 335,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "AveDoor5b",
+      "level": "info",
+      "line": 335,
+      "message": "14 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor1b",
+      "level": "info",
+      "line": 344,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor1b",
+      "level": "info",
+      "line": 344,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor1b",
+      "level": "info",
+      "line": 344,
+      "message": "8 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor2b",
+      "level": "info",
+      "line": 353,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor2b",
+      "level": "info",
+      "line": 353,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor2b",
+      "level": "info",
+      "line": 353,
+      "message": "4 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor4b",
+      "level": "info",
+      "line": 362,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor4b",
+      "level": "info",
+      "line": 362,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor4b",
+      "level": "info",
+      "line": 362,
+      "message": "4 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor5b",
+      "level": "info",
+      "line": 371,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor5b",
+      "level": "info",
+      "line": 371,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "MaleDoor5b",
+      "level": "info",
+      "line": 371,
+      "message": "14 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor1b",
+      "level": "info",
+      "line": 380,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor1b",
+      "level": "info",
+      "line": 380,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor1b",
+      "level": "info",
+      "line": 380,
+      "message": "8 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor2b",
+      "level": "info",
+      "line": 389,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor2b",
+      "level": "info",
+      "line": 389,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor2b",
+      "level": "info",
+      "line": 389,
+      "message": "4 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor4b",
+      "level": "info",
+      "line": 398,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor4b",
+      "level": "info",
+      "line": 398,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor4b",
+      "level": "info",
+      "line": 398,
+      "message": "4 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor5b",
+      "level": "info",
+      "line": 407,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor5b",
+      "level": "info",
+      "line": 407,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FemaleDoor5b",
+      "level": "info",
+      "line": 407,
+      "message": "14 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor1b",
+      "level": "info",
+      "line": 416,
+      "message": "one known exit -> 'discovery', entrance 'Door1'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor1b",
+      "level": "info",
+      "line": 416,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor1b",
+      "level": "info",
+      "line": 416,
+      "message": "3 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor2b",
+      "level": "info",
+      "line": 425,
+      "message": "one known exit -> 'discovery', entrance 'Door2'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor2b",
+      "level": "info",
+      "line": 425,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor2b",
+      "level": "info",
+      "line": 425,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor4b",
+      "level": "info",
+      "line": 434,
+      "message": "one known exit -> 'discovery', entrance 'Door4'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor4b",
+      "level": "info",
+      "line": 434,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor4b",
+      "level": "info",
+      "line": 434,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor5b",
+      "level": "info",
+      "line": 443,
+      "message": "one known exit -> 'discovery', entrance 'Door5'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor5b",
+      "level": "info",
+      "line": 443,
+      "message": "delay: detection + reaction = uniform 130..300 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "ChildDoor5b",
+      "level": "info",
+      "line": 443,
+      "message": "5 agents in 1 area(s)",
+      "status": "S"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "fire_meshes": 0
+    },
+    "fds_dir": null,
+    "fds_meshes": 0,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Validation/SportsHall/sportshall_logN",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.6
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 8848.0,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.5 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 7,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}
