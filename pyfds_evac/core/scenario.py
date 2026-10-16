@@ -225,19 +225,24 @@ def _build_social_force_model(params: Mapping[str, Any]):
     )
 
 
+# Model parameters a scenario can set, with the value used when it does not.
+# Each default is either JuPedSim 1.4.2's own, repeated here so a run is
+# pinned against an upstream change, or a pyFDS-Evac choice, marked as such
+# with its source. Values a scenario cannot set keep JuPedSim's defaults.
 _MODEL_BUILDERS = {
     "CollisionFreeSpeedModel": lambda p: jps.CollisionFreeSpeedModel(
+        # pyFDS-Evac choice: JuPedSim's default is 8.0; 2.6 is the value the
+        # clear-air movement study ran with (models/movement, #757).
         strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
+        # JuPedSim default.
         range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
     ),
     # V2 carries the repulsion parameters per agent, not on the model, so its
     # constructor takes nothing; create_agent_parameters supplies them.
     "CollisionFreeSpeedModelV2": lambda p: jps.CollisionFreeSpeedModelV2(),
-    "AnticipationVelocityModel": lambda p: jps.AnticipationVelocityModel(
-        # strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
-        # range_neighbor_repulsion=p.get("range_neighbor_repulsion", 0.1),
-        # anticipation_time=p.get("anticipation_time", 1.0)
-    ),
+    # Takes no model-level parameters a scenario sets.
+    "AnticipationVelocityModel": lambda p: jps.AnticipationVelocityModel(),
+    # All JuPedSim defaults.
     "GeneralizedCentrifugalForceModel": lambda p: jps.GeneralizedCentrifugalForceModel(
         strength_neighbor_repulsion=p.get("gcfm_strength_neighbor_repulsion", 0.3),
         strength_geometry_repulsion=p.get("gcfm_strength_geometry_repulsion", 0.2),
@@ -251,6 +256,7 @@ _MODEL_BUILDERS = {
         max_geometry_repulsion_force=p.get("gcfm_max_geometry_repulsion_force", 3.0),
     ),
     "SocialForceModel": _build_social_force_model,
+    # All JuPedSim defaults.
     "WarpDriverModel": lambda p: jps.WarpDriverModel(
         time_horizon=p.get("time_horizon", 2.0),
         step_size=p.get("step_size", 0.5),
@@ -294,17 +300,6 @@ def _remove_run_files(output_file: str) -> None:
     for path in (pathlib.Path(output_file), manifest_path_for(output_file)):
         with contextlib.suppress(OSError):
             path.unlink(missing_ok=True)
-
-
-def _estimate_max_capacity(polygon: Polygon, max_radius: float) -> int:
-    """Estimate a packing limit for one spawn polygon.
-
-    As ``simulation_init._estimate_max_capacity``, which documents where
-    the estimate is high and where it is low.
-    """
-    effective_radius = max(max_radius, 0.1)
-    theoretical = polygon.area / (math.pi * effective_radius * effective_radius)
-    return max(1, math.floor(theoretical * 0.5))
 
 
 def _distribution_agent_budget(dist: dict, default_number: int = 0) -> int:
