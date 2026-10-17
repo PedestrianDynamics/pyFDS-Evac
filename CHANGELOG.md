@@ -23,6 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `path_switch_anchor`. Defaults and results are unchanged; the run
   settings in the manifest list the two new fields in
   `rerouting.cost_config` (#187).
+- `metrics["last_exit_time"]`, the simulated time the last agent left
+  (`None` when nobody did), and the `end_reason` value
+  `"all_mobile_left"` for a run that ends with only incapacitated
+  agents inside. The results views, the command-line summary and the
+  generated script word it as "Incomplete: all mobile agents left, N
+  incapacitated inside" (#141).
 
 ### Changed
 
@@ -91,6 +97,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deck: each missing key takes the `CollisionFreeSpeedModel` value,
   2.6 and 0.1 m. Decks without them stopped with `AttributeError`
   (#757).
+- A run now ends when every agent able to move has left and only
+  incapacitated agents remain inside, with no flow window open, instead
+  of running to `max_simulation_time`. `evacuation_time` is then the
+  time of that step, `status` stays `"incomplete"`, and
+  `agents_remaining` counts the incapacitated agents. Runs without
+  incapacitation are unchanged (#141).
+- `run_outcome` takes the incapacitated count as the keyword
+  `incapacitated`; existing calls keep working.
 
 ### Removed
 
@@ -146,6 +160,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `current_exit_discount` shift by one. A scenario that still sets the
   key stops with a `ValueError` naming the removal; delete the key
   (#187).
+
+### Fixed
+
+- Incapacitation is absorbing. An incapacitated agent no longer takes
+  its desired speed when its pre-movement delay ends (#145), is no
+  longer steered, rerouted or removed at an exit, and so is not counted
+  as evacuated (#593), and is not sampled again: `fed_history` ends at
+  its `incapacitated=True` row, and `fed_history_samples`, `fed_max`,
+  `heat_fed_max`, `route_switches` and `fds_outside` no longer count
+  rows after the collapse. At its collapse the agent moves to the
+  direct-steering journey, so JuPedSim cannot remove it at an exit; a
+  removal of an incapacitated agent stops the run with a
+  `RuntimeError`. An agent JuPedSim has already listed as removed in a
+  step has left and is not incapacitated in that step (#141, #145,
+  #593).
 
 ## [0.5.0] - 2026-10-11
 
