@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8ac0dfb9113411fb8c1f9186abe84e0ac268f48231b4ff2dc594e4004ad81131&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">938eb2609caf1b12bb7e1eb15f0298d5ec46a2d2155d786650376c708abcb7bf&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2049,7 +2049,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2068,7 +2068,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">217fc3f750dde721662958415cca326eb22f3c262cc19e20bb63ea579c5fdb0b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">1a967a4e02785e7faa636c37d06528558c109521cd8445d82b3fcd0b63f13283&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -2824,7 +2824,12 @@ none. The two doses are never added. By default every agent stops at FED = 1,
 as FDS+Evac does; with &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws
 its own threshold, so a population does not stop all at once. When either dose
 crosses its threshold, the agent&amp;rsquo;s speed is set to zero and it stays in place
-as an obstacle. &lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops,
+as an obstacle for the rest of the run. It is never counted as evacuated, and
+its dose record stops at the collapse. Dead agents stay because agents that
+collapse just short of an exit block it for others; removing them would be
+wrong. When no mobile agent is left and no flow window is open, the run ends
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>).
+&lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops,
 while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
@@ -3628,9 +3633,11 @@ When FIC is exactly 0 the last factor stays in force
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Incapacitation.&lt;/strong> Once the cumulative gas FED or heat FED reaches the
 agent&amp;rsquo;s threshold for that dose, its desired speed is set to zero and it
-remains as a static obstacle. An agent incapacitated during pre-movement is
-released again when its pre-movement time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>). In
+remains as a static obstacle. The speed is never restored (pre-movement,
+smoke, FIC, steering zones and checkpoints do not undo it), and the agent is
+not steered, rerouted or removed. Its exposure record ends with the collapse
+row. The run ends when only incapacitated agents remain
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>). In
 &lt;code>probabilistic&lt;/code> mode each agent draws each threshold once, from a stream
 seeded by the run&amp;rsquo;s seed and the agent&amp;rsquo;s spawn order, as
 &lt;code>_sample_threshold&lt;/code> does:
@@ -3759,12 +3766,11 @@ incapacitates.&lt;/li>
 &lt;li>FED activity level: the CO term is fixed at light work; rest and heavy
 work are not supported
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">#135&lt;/a>).&lt;/li>
-&lt;li>Removing incapacitated agents: they stay in the simulation, so a run with
-any incapacitated agent reports &lt;code>evacuation_time&lt;/code> = &lt;code>max_simulation_time&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>), and
-an agent incapacitated during its pre-movement time walks off when it ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>); see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/">Limitations&lt;/a>.&lt;/li>
+&lt;li>Removing incapacitated agents: they stay where they collapsed until
+the run ends. The run ends when only incapacitated agents remain and no flow
+window is open (&lt;code>end_reason&lt;/code> &lt;code>all_mobile_left&lt;/code>), and &lt;code>evacuation_time&lt;/code> is
+then the end of the loop, not an egress time; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#evacuation-time-when-anyone-is-incapacitated">Limitations&lt;/a>.&lt;/li>
 &lt;li>&lt;strong>Height-relative FED and smoke sampling&lt;/strong>: extinction, temperature and
 each gas are sampled from the horizontal FDS slice closest to
 &lt;code>--smoke-slice-height&lt;/code> (default 1.6 m, FDS+Evac &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>). All agents share these slices regardless of
@@ -3975,7 +3981,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -4000,7 +4006,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6f62cdd22ff4e7e1e94d98572f76c372c454be0ecc0cb8cbe2427fcd151ccd26&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">29c34d1fe181beb246fee3764d8efc201e9587a16407aef3e730d274005cdf32&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5409,7 +5415,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5440,7 +5446,7 @@ its sign count and the door share by start.&lt;/li>
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">127b2f3b4b7de8bd32e25c068d8026c63d47fa4cf7d0827622d90697ed485eb6&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ae45ad1b2eb3ed0c16e0be223a433c8d770eedbfee028899b0995d5ce168935d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6848,7 +6854,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6869,7 +6875,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a69c27b535f966fa06e19b5999c25b9d9aabf292ed8968e3c53ebb18a41fde10&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">7efba043fb452ded646595fefe54caf83593313f34db5c89d9e93e177b01ebdd&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -8317,7 +8323,8 @@ while exposure is steady or rising.&lt;/li>
 &lt;/ul>
 &lt;h2>Incapacitation&lt;span class="hx-absolute -hx-mt-20" id="incapacitation">&lt;/span>
 &lt;a href="#incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>When the cumulative heat dose reaches the agent&amp;rsquo;s heat threshold, the agent
-stops and stays in place as an obstacle, as for the gas dose.&lt;/p>
+stops and stays in place as an obstacle for the rest of the run, as for the gas
+dose (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">Models › FED&lt;/a>).&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>One threshold for gas and heat.&lt;/strong> The heat threshold is &lt;code>fed_threshold&lt;/code>
 (&lt;code>--fed-threshold&lt;/code>, 1.0 by default), as ISO 13571:2012 asks for one
@@ -9495,7 +9502,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -9511,7 +9518,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ca75594118ce1e850dcae4396ee898f8179ea880871e45596f2e12e5fe7d14f9&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c2084dee0894449cd425a9be1352d9f0948ff41289ca515d9c921e120fd8c40f&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -11527,9 +11534,6 @@ FDS+Evac uses sight of the door. FDS+Evac counts a door as visible at any distan
 sight. pyFDS-Evac reads a sign only within its reading distance, 30 m by
 default even in clear air, and less off-axis or in smoke. See
 &lt;a href="#seeing-a-door-vs-reading-a-sign">Seeing a door vs reading a sign&lt;/a>.&lt;/li>
-&lt;li>Known issues: an agent incapacitated during its pre-movement time is
-released when that time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/li>
 &lt;/ul>
 &lt;h2>Where each FDS+Evac input goes&lt;span class="hx-absolute -hx-mt-20" id="where-each-fdsevac-input-goes">&lt;/span>
 &lt;a href="#where-each-fdsevac-input-goes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Section numbers refer to the FDS+Evac Technical Reference and User&amp;rsquo;s Guide
@@ -11630,7 +11634,7 @@ or &lt;code>app.py&lt;/code> in a source checkout) runs uploaded scenarios. It d
 &lt;tr>
 &lt;td>FED, fractional effective dose (§3.4)&lt;/td>
 &lt;td>Purser FED from CO, CO2, O2 (and optional gases), incapacitation at FED ≥ 1. The O2 term is applied only below 20 % O2 (function &lt;code>FED&lt;/code> in FDS 6.7.6 &lt;code>func.f90&lt;/code>, which FDS+Evac calls). The HCN term in the code (the same &lt;code>FED&lt;/code> function) is exp(&lt;em>C&lt;/em>CN/43)/220 − 0.00454545 (about 1/220) with &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2); Guide Eq. 14–15 write the offset as 0.0045 and &lt;em>C&lt;/em>CN = &lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2. The code form has been in FDS since firemodels/fds 694e033 (2011); earlier versions had no HCN term. FDS&amp;rsquo;s &lt;code>FED_FIC&lt;/code> verification case reproduces only with it (0.97402 against the expected 0.97403 at 100 s; 6.17 with NO2 alone). The FDS User Guide was corrected to NO + NO2 in 2016 (903df07); the FDS+Evac Guide and the FDS Verification Guide were not. An agent that reaches FED ≥ 1 stays down for the rest of the run&lt;/td>
-&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default every agent stops at FED = 1, as in FDS+Evac. With &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws its own threshold instead (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page), so about half stop below FED = 1. The heat dose, which FDS+Evac does not have, is deterministic by default and uses the same threshold, as ISO 13571:2012 asks (§5.4). Thresholds are set with &lt;code>--fed-threshold&lt;/code>; &lt;code>--heat-fed-threshold&lt;/code> sets a separate heat threshold, a departure from ISO. An agent incapacitated while it is still waiting is released when its pre-movement time ends, a known bug (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/td>
+&lt;td>Computed when the output has CO, CO2 and O2 slices; HCN, NOx and irritant slices are added when present. The O2 term is applied below 20 %, as in FDS+Evac; &lt;code>--o2-threshold-percent 19.5&lt;/code> (&lt;code>opts.o2_threshold_percent&lt;/code>) gives the previous 19.5 %. The HCN term is the one in the code FDS+Evac ran (&lt;em>C&lt;/em>HCN − (&lt;em>C&lt;/em>NO + &lt;em>C&lt;/em>NO2), offset 1/220), and &lt;code>FED_FIC&lt;/code> is reproduced in the test suite (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159" target="_blank" rel="noopener">#159&lt;/a>). Earlier pyFDS-Evac versions followed Guide Eq. 14–15 (&lt;em>C&lt;/em>HCN − &lt;em>C&lt;/em>NO2, offset 0.0045); the two differ materially only when NO is present: at 100 ppm HCN, 50 ppm NO and 10 ppm NO2 the CN rate is 0.007 /min now against 0.032 /min before; with no NO the difference is the offset alone, 4.5 × 10⁻⁵ /min. By default every agent stops at FED = 1, as in FDS+Evac. With &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws its own threshold instead (log-normal, median 1; spread on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#tenability-irritant-slowdown-and-incapacitation">FED model&lt;/a> page), so about half stop below FED = 1. The heat dose, which FDS+Evac does not have, is deterministic by default and uses the same threshold, as ISO 13571:2012 asks (§5.4). Thresholds are set with &lt;code>--fed-threshold&lt;/code>; &lt;code>--heat-fed-threshold&lt;/code> sets a separate heat threshold, a departure from ISO. An incapacitated agent stays down for the rest of the run, as in FDS+Evac.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Convective heat&lt;/td>
@@ -12262,7 +12266,8 @@ and the run can still stop with &lt;code>could not place the N requested agents&
 with &lt;code>Simulation finished in … s (N/N evacuated).&lt;/code> and exit status 0.
 A run in which not every agent left ends with
 &lt;code>Simulation incomplete: time limit reached …&lt;/code> or
-&lt;code>Simulation incomplete: flow windows closed …&lt;/code> and exit status 2
+&lt;code>Simulation incomplete: flow windows closed …&lt;/code> or
+&lt;code>Simulation incomplete: all mobile agents left …&lt;/code> and exit status 2
 (&lt;code>EXIT_INCOMPLETE&lt;/code> in &lt;code>pyfds_evac/cli.py&lt;/code>). With &lt;code>max_simulation_time&lt;/code>
 set to 30 in the copy above:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -15144,9 +15149,9 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring rerouting.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation incomplete: time limit reached after 1150.00 s (0/1 evacuated, 1 remaining).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation incomplete: all mobile agents left after 982.01 s (0/1 evacuated, 1 remaining).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route history rows: 0
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route cost samples: 1149&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route cost samples: 981&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -15157,7 +15162,8 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;p>The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
-at 982 s. Rerouting is on by default, so &lt;code>--enable-rerouting&lt;/code> is not needed.
+at 982 s, and the run ends there. Rerouting is on by default, so
+&lt;code>--enable-rerouting&lt;/code> is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 &lt;code>assets/t_junction/t_junction.fds&lt;/code> with FDS, or see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>.&lt;/p>
@@ -15176,7 +15182,7 @@ The tracked FDS output of the T-junction fire is not in the repository; run
 &lt;/tr>
 &lt;tr>
 &lt;td>2&lt;/td>
-&lt;td>the run is incomplete: it reached &lt;code>max_simulation_time&lt;/code> with agents inside or flow agents still to enter, or the building emptied after its flow windows closed with flow agents not spawned; all requested outputs are written&lt;/td>
+&lt;td>the run is incomplete: it reached &lt;code>max_simulation_time&lt;/code> with agents inside or flow agents still to enter, the building emptied after its flow windows closed with flow agents not spawned, or it ended with only incapacitated agents inside; all requested outputs are written&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>1&lt;/td>
@@ -17540,7 +17546,7 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>outcome&lt;/code>&lt;/td>
-&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code> or &lt;code>flows_closed&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
+&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code>, &lt;code>flows_closed&lt;/code> or &lt;code>all_mobile_left&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_clothing&lt;/code>&lt;/td>
@@ -17722,7 +17728,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tr>
 &lt;td>&lt;code>incapacitation_cause&lt;/code>&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>empty, &lt;code>gas&lt;/code>, &lt;code>heat&lt;/code> or &lt;code>gas+heat&lt;/code> once incapacitated&lt;/td>
+&lt;td>empty, &lt;code>gas&lt;/code>, &lt;code>heat&lt;/code> or &lt;code>gas+heat&lt;/code> on the agent&amp;rsquo;s last row, the update at which the threshold was crossed&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>fic&lt;/code>&lt;/td>
@@ -17737,7 +17743,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tr>
 &lt;td>&lt;code>incapacitated&lt;/code>&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>&lt;code>True&lt;/code> from the update at which a threshold is crossed&lt;/td>
+&lt;td>&lt;code>True&lt;/code> on the agent&amp;rsquo;s last row, the update at which a threshold is crossed; the record ends there&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>base_speed&lt;/code>, &lt;code>desired_speed&lt;/code>, &lt;code>speed_factor&lt;/code>&lt;/td>
@@ -17911,7 +17917,11 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>evacuation_time&lt;/code>&lt;/td>
-&lt;td>simulated time when the run stopped&lt;/td>
+&lt;td>simulated time when the loop stopped: all agents left, only incapacitated agents left inside, the flows closed, or the time limit&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>metrics[&amp;quot;last_exit_time&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>simulated time the last agent left, by direct-steering removal or through a JuPedSim exit, rounded to 0.01 s; &lt;code>None&lt;/code> when nobody left. Never later than &lt;code>evacuation_time&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>total_agents&lt;/code>, &lt;code>agents_evacuated&lt;/code>, &lt;code>agents_remaining&lt;/code>&lt;/td>
@@ -17927,11 +17937,11 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>status&lt;/code>&lt;/td>
-&lt;td>&lt;code>&amp;quot;completed&amp;quot;&lt;/code> when every agent entered and left; &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> when the run reached &lt;code>max_simulation_time&lt;/code> with agents inside or still to enter, or when the building emptied after its flow windows closed with flow agents not spawned&lt;/td>
+&lt;td>&lt;code>&amp;quot;completed&amp;quot;&lt;/code> when every agent entered and left; &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> when the run reached &lt;code>max_simulation_time&lt;/code> with agents inside or still to enter, when the building emptied after its flow windows closed with flow agents not spawned, or when only incapacitated agents remain inside and no flow window is open&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>end_reason&lt;/code>&lt;/td>
-&lt;td>why the run stopped: &lt;code>&amp;quot;all_evacuated&amp;quot;&lt;/code> for a completed run; &lt;code>&amp;quot;time_limit&amp;quot;&lt;/code> when &lt;code>max_simulation_time&lt;/code> stopped it; &lt;code>&amp;quot;flows_closed&amp;quot;&lt;/code> when the building emptied after the last flow window with agents still to enter had closed, before the time limit. Also in &lt;code>metrics[&amp;quot;end_reason&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>why the run stopped: &lt;code>&amp;quot;all_evacuated&amp;quot;&lt;/code> for a completed run; &lt;code>&amp;quot;time_limit&amp;quot;&lt;/code> when &lt;code>max_simulation_time&lt;/code> stopped it; &lt;code>&amp;quot;flows_closed&amp;quot;&lt;/code> when the building emptied after the last flow window with agents still to enter had closed, before the time limit; &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code> when every mobile agent has left, only incapacitated agents remain inside and no flow window is open. Also in &lt;code>metrics[&amp;quot;end_reason&amp;quot;]&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>success&lt;/code>&lt;/td>
@@ -17943,22 +17953,25 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>metrics[&amp;quot;fed_max&amp;quot;]&lt;/code>&lt;/td>
-&lt;td>highest gas FED of any agent; present only when the gas FED ran&lt;/td>
+&lt;td>highest gas FED of any agent; present only when the gas FED ran. It stops at the collapse row of an incapacitated agent&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>metrics[&amp;quot;heat_fed_max&amp;quot;]&lt;/code>&lt;/td>
-&lt;td>highest heat FED; present only when the heat FED ran&lt;/td>
+&lt;td>highest heat FED; present only when the heat FED ran. It stops at the collapse row of an incapacitated agent&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Three things to keep in mind:&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>An incapacitated agent stays in the simulation.&lt;/strong> The run then continues
-to &lt;code>max_simulation_time&lt;/code>, and &lt;code>evacuation_time&lt;/code> reports that time, not an
-exit time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).
-The run is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> and &lt;code>success&lt;/code> is &lt;code>False&lt;/code>.
-Take exit times from the trajectory, as the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET how-to&lt;/a> does.&lt;/li>
+&lt;li>&lt;strong>An incapacitated agent stays in the simulation.&lt;/strong> It stays where it
+collapsed until the run ends, is never counted in &lt;code>agents_evacuated&lt;/code> and
+is not sampled after its collapse row. The run ends when every mobile
+agent has left and no flow window is open: &lt;code>end_reason&lt;/code> is
+&lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code>, the run is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> and &lt;code>success&lt;/code> is &lt;code>False&lt;/code>.
+&lt;code>evacuation_time&lt;/code> is then the end of the loop, not an exit time. Read
+&lt;code>metrics[&amp;quot;last_exit_time&amp;quot;]&lt;/code> or the trajectory for exit times, as the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET how-to&lt;/a> does
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>No FED is not zero FED.&lt;/strong> If neither FED track ran, &lt;code>fed_history&lt;/code> is
 &lt;code>None&lt;/code>, &lt;code>metrics&lt;/code> has no &lt;code>fed_max&lt;/code>, and &lt;code>--output-fed-history&lt;/code> writes no
 file. If only the heat FED ran, the FED history exists and its
@@ -18408,26 +18421,20 @@ speed to 0.3 of its smoke-reduced value
 Irritants reach incapacitation only through their lung dose
 \(FLD_{irr}\), which is summed into the gas FED.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
-&lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
-run ends early only when no agent is left, so a run in which any agent is
-incapacitated continues until &lt;code>max_simulation_time&lt;/code> (300 s by default). Its
-reported &lt;code>evacuation_time&lt;/code> is then that time limit, not the time the last
-mobile agent left. Such a run is incomplete: &lt;code>success&lt;/code> is &lt;code>False&lt;/code>,
-&lt;code>status&lt;/code> is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> and &lt;code>run.py&lt;/code> exits with status 2
+&lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays where it collapsed until the run ends, and the
+run ends with &lt;code>end_reason&lt;/code> &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code> once only incapacitated agents
+remain (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>). The reported
+&lt;code>evacuation_time&lt;/code> is then the end of the loop, not an egress time. Such a run
+is incomplete and &lt;code>run.py&lt;/code> exits with status 2
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>).
-Read &lt;code>agents_remaining&lt;/code>, and take the time each agent left from the
-trajectory file, instead of relying on &lt;code>evacuation_time&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>).&lt;/p>
-&lt;h2>Incapacitation during pre-movement is undone&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-during-pre-movement-is-undone">&lt;/span>
-&lt;a href="#incapacitation-during-pre-movement-is-undone" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An agent that is incapacitated while it is still waiting out its
-pre-movement time starts walking when that time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">issue #145&lt;/a>).
-Scenarios that combine pre-movement with FED therefore under-report
-incapacitations and over-report evacuees. A scenario that sets no pre-movement
-gets the FDS+Evac default of 10 s, so this applies to it too, for its first
-10 s. Until this is fixed, check the
-per-agent FED history for agents that crossed their threshold and still
-reached an exit.&lt;/p>
+Read &lt;code>metrics[&amp;quot;last_exit_time&amp;quot;]&lt;/code> for the time the last agent left, or take
+the time each agent left from the trajectory file
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>,
+fixed).&lt;/p>
+&lt;p>Dead agents stay because an agent that collapses just short of an exit blocks
+it for the others; removing it would be wrong. JuPedSim&amp;rsquo;s operational model
+can still displace a dead agent, for example when neighbours push it. That is
+JuPedSim behaviour and is not modelled.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is opt-in (&lt;code>--enable-heat-fed&lt;/code>) and, by
 default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
@@ -18726,7 +18733,7 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.max_simulation_time&lt;/code>&lt;/td>
 &lt;td>300 s&lt;/td>
-&lt;td>The run stops here. An incapacitated agent keeps a run going until this time (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>). With &lt;code>--fds-dir&lt;/code> it must not exceed the last FDS slice time by more than one output interval, unless &lt;code>--allow-fds-horizon-hold&lt;/code> is given (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>).&lt;/td>
+&lt;td>The run stops here. The run also ends earlier, with &lt;code>end_reason&lt;/code> &lt;code>all_mobile_left&lt;/code>, when only incapacitated agents remain; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>. With &lt;code>--fds-dir&lt;/code> it must not exceed the last FDS slice time by more than one output interval, unless &lt;code>--allow-fds-horizon-hold&lt;/code> is given (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.model_type&lt;/code>&lt;/td>
@@ -19001,9 +19008,7 @@ scenario JSON; &lt;code>Scenario.set_agent_params()&lt;/code> in Python lets &lt
 win instead
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/586" target="_blank" rel="noopener">#586&lt;/a>).&lt;/p>
 &lt;p>While an agent waits out its pre-movement time, the smoke update skips it, so
-it starts at its full clear-air speed. An agent that reaches its FED threshold
-while still waiting walks off when its pre-movement ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">#145&lt;/a>).&lt;/p>
+it starts at its full clear-air speed.&lt;/p>
 &lt;h2>Exits: &lt;code>exits.&amp;lt;id&amp;gt;&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="exits-exitsid">&lt;/span>
 &lt;a href="#exits-exitsid" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;table>
 &lt;thead>
@@ -19941,6 +19946,11 @@ not spawned, ends then and reads &amp;ldquo;Incomplete: flow windows closed, &lt
 spawned&amp;rdquo;, with its end time under &amp;ldquo;Simulated time&amp;rdquo;; the Not spawned tile
 and the &amp;ldquo;&lt;em>e&lt;/em> of &lt;em>n&lt;/em> that entered&amp;rdquo; Evacuated tile appear as above
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/742" target="_blank" rel="noopener">#742&lt;/a>).
+A run that ended with only incapacitated agents inside and no flow window
+open reads &amp;ldquo;Incomplete: all mobile agents left, &lt;em>j&lt;/em> incapacitated inside[, &lt;em>m&lt;/em>
+not spawned]&amp;rdquo;, with its end time under &amp;ldquo;Simulated time&amp;rdquo;; the Incapacitated
+tile gives &lt;em>j&lt;/em>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).
 The Incapacitated tile is shown on every finished run; see
 &lt;a href="#results">Results&lt;/a>.&lt;/p>
 &lt;h3>Settings changed&lt;span class="hx-absolute -hx-mt-20" id="settings-changed">&lt;/span>
@@ -20119,9 +20129,11 @@ times to one decimal:&lt;/p>
 &lt;li>&amp;ldquo;Incomplete: time limit reached, &lt;em>k&lt;/em> agents inside[, &lt;em>m&lt;/em> not spawned],
 simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
 &lt;li>&amp;ldquo;Incomplete: flow windows closed, &lt;em>m&lt;/em> not spawned, simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
+&lt;li>&amp;ldquo;Incomplete: all mobile agents left, &lt;em>j&lt;/em> incapacitated inside[, &lt;em>m&lt;/em> not
+spawned], simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
 &lt;li>failed, cancelled, or not recorded.&lt;/li>
 &lt;/ul>
-&lt;p>In the first three, &amp;ldquo;…&amp;rdquo; is &amp;ldquo;&lt;em>j&lt;/em> incapacitated&amp;rdquo; when the run modelled
+&lt;p>In the first four, &amp;ldquo;…&amp;rdquo; is &amp;ldquo;&lt;em>j&lt;/em> incapacitated&amp;rdquo; when the run modelled
 incapacitation and &amp;ldquo;incapacitation not modelled&amp;rdquo; otherwise. The file is named
 &lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_run&amp;lt;N&amp;gt;_&amp;lt;start time&amp;gt;.py&lt;/code>, with the run&amp;rsquo;s UTC start
 time such as &lt;code>20260929T182009Z&lt;/code>.&lt;/p>
@@ -23174,6 +23186,10 @@ font-family: arial;
 &lt;/tr>
 &lt;tr>
 &lt;td>&amp;ldquo;Incomplete: flow windows closed, &lt;em>m&lt;/em> not spawned&amp;rdquo;&lt;/td>
+&lt;td>2&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&amp;ldquo;Incomplete: all mobile agents left, &lt;em>j&lt;/em> incapacitated inside[, &lt;em>m&lt;/em> not spawned]&amp;rdquo;&lt;/td>
 &lt;td>2&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -26730,10 +26746,12 @@ remain mobile, the time of the last collapse
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).
 It is still not an egress time: read &lt;code>last_exit_time&lt;/code> or the trajectory.&lt;/li>
 &lt;li>&lt;code>result.success&lt;/code> is &lt;code>False&lt;/code> and &lt;code>result.status&lt;/code> is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> when the
-run reaches &lt;code>max_simulation_time&lt;/code> with agents still inside, or when the
-building empties after its flow windows closed with flow agents not spawned
+run reaches &lt;code>max_simulation_time&lt;/code> with agents still inside, when the
+building empties after its flow windows closed with flow agents not spawned,
+or when only incapacitated agents remain inside and no flow window is open
+(&lt;code>end_reason&lt;/code> &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code>)
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">#139&lt;/a>).
-Neither says when the last mobile agent left.&lt;/li>
+None of these says when the last mobile agent left.&lt;/li>
 &lt;/ul>
 &lt;p>Part 2 below shows both.&lt;/p>
 &lt;h2>Runnable example&lt;span class="hx-absolute -hx-mt-20" id="runnable-example">&lt;/span>
@@ -26746,7 +26764,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -26770,7 +26788,7 @@ Neither says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a18b2b0b9cc8746283dd29b6a34f6413388086e324616f96125f36ef35c05ae7&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">51df6bcd538abf31ce8d6f30eda1403fe7fa014d5a1ba02d02f24fca2a6a9d29&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -27962,7 +27980,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -27980,7 +27998,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">62527fce600f487dc2a456281c735ef58397d658270f980109e8d8f899f1a997&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ed783cc55c7a09fa5ca0aaaa117934d9225b5fdd5f55bebc4adc32ca8ae01ab5&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -29370,7 +29388,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;/div>
 &lt;p class="docs-files__summary">The two scenarios, the FDS decks, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 45 s for the 16 runs and the figures&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29394,7 +29412,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;li>&lt;code>assets/iso_table21_coupled/build_geometry.py&lt;/code>: writes the coupled deck, scenario and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table21_coupled/README.md&lt;/code>: what the coupled case is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">60f848846a0b49144a340e538482dfc4089e3a24474c767f9f9739ea70030526&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f8ae64a5183e74cbcbd00a647864beeaf0301b13130cfd28902ee8d28d40949e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The tests run both cases in about 20 s. They are weaker than this page: the
@@ -29822,7 +29840,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The four FDS decks and scenarios, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7fcaa85361dafa31b756aef47a2a92262e8deed2">&lt;code>7fcaa85&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0b98e679169c4c64abfc4e81628af120907623fe">&lt;code>0b98e67&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 1 min for the four cases&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29851,7 +29869,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/geometry.wkt&lt;/code>: the second version of this test, walkable area&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/README.md&lt;/code>: the second version of this test&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">75901d7c158a4673315943005820c08809d4bcf10d12b89b7fc1da0265435420&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bba66992907b96b2a676d21cee7b613f30e642536c3d423ce611fb1eb0fbb0f2&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output (slices only, 256 kB) is committed in

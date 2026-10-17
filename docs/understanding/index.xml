@@ -105,7 +105,12 @@ none. The two doses are never added. By default every agent stops at FED = 1,
 as FDS+Evac does; with &lt;code>--incapacitation-mode probabilistic&lt;/code> each agent draws
 its own threshold, so a population does not stop all at once. When either dose
 crosses its threshold, the agent&amp;rsquo;s speed is set to zero and it stays in place
-as an obstacle. &lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops,
+as an obstacle for the rest of the run. It is never counted as evacuated, and
+its dose record stops at the collapse. Dead agents stay because agents that
+collapse just short of an exit block it for others; removing them would be
+wrong. When no mobile agent is left and no flow window is open, the run ends
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>).
+&lt;code>--disable-tenability&lt;/code> turns off the slowdown and both stops,
 while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
@@ -530,26 +535,20 @@ speed to 0.3 of its smoke-reduced value
 Irritants reach incapacitation only through their lung dose
 \(FLD_{irr}\), which is summed into the gas FED.&lt;/p>
 &lt;h2>Evacuation time when anyone is incapacitated&lt;span class="hx-absolute -hx-mt-20" id="evacuation-time-when-anyone-is-incapacitated">&lt;/span>
-&lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays in the simulation as a stationary obstacle. The
-run ends early only when no agent is left, so a run in which any agent is
-incapacitated continues until &lt;code>max_simulation_time&lt;/code> (300 s by default). Its
-reported &lt;code>evacuation_time&lt;/code> is then that time limit, not the time the last
-mobile agent left. Such a run is incomplete: &lt;code>success&lt;/code> is &lt;code>False&lt;/code>,
-&lt;code>status&lt;/code> is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> and &lt;code>run.py&lt;/code> exits with status 2
+&lt;a href="#evacuation-time-when-anyone-is-incapacitated" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An incapacitated agent stays where it collapsed until the run ends, and the
+run ends with &lt;code>end_reason&lt;/code> &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code> once only incapacitated agents
+remain (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>). The reported
+&lt;code>evacuation_time&lt;/code> is then the end of the loop, not an egress time. Such a run
+is incomplete and &lt;code>run.py&lt;/code> exits with status 2
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139" target="_blank" rel="noopener">issue #139&lt;/a>).
-Read &lt;code>agents_remaining&lt;/code>, and take the time each agent left from the
-trajectory file, instead of relying on &lt;code>evacuation_time&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>).&lt;/p>
-&lt;h2>Incapacitation during pre-movement is undone&lt;span class="hx-absolute -hx-mt-20" id="incapacitation-during-pre-movement-is-undone">&lt;/span>
-&lt;a href="#incapacitation-during-pre-movement-is-undone" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>An agent that is incapacitated while it is still waiting out its
-pre-movement time starts walking when that time ends
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145" target="_blank" rel="noopener">issue #145&lt;/a>).
-Scenarios that combine pre-movement with FED therefore under-report
-incapacitations and over-report evacuees. A scenario that sets no pre-movement
-gets the FDS+Evac default of 10 s, so this applies to it too, for its first
-10 s. Until this is fixed, check the
-per-agent FED history for agents that crossed their threshold and still
-reached an exit.&lt;/p>
+Read &lt;code>metrics[&amp;quot;last_exit_time&amp;quot;]&lt;/code> for the time the last agent left, or take
+the time each agent left from the trajectory file
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">issue #141&lt;/a>,
+fixed).&lt;/p>
+&lt;p>Dead agents stay because an agent that collapses just short of an exit blocks
+it for the others; removing it would be wrong. JuPedSim&amp;rsquo;s operational model
+can still displace a dead agent, for example when neighbours push it. That is
+JuPedSim behaviour and is not modelled.&lt;/p>
 &lt;h2>What is not modelled&lt;span class="hx-absolute -hx-mt-20" id="what-is-not-modelled">&lt;/span>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;strong>Radiant heat.&lt;/strong> The heat dose is opt-in (&lt;code>--enable-heat-fed&lt;/code>) and, by
 default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
