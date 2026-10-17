@@ -40,10 +40,10 @@ incapacitation. Line numbers are from `main` today and will drift.
 | `frame_recorder.after_step` / `finish` | Already receive the incapacitated set. | Unchanged. |
 
 JuPedSim exit stages: agents headed for a non-throttled exit ride a JuPedSim
-journey `[exit_stage]` (`simulation_init.py:2518` `add_exit_stage`,
-`exit_to_journey` at ~3113; flow agents at `scenario.py:~2674`, nearest-exit
-initial agents at `simulation_init.py:~3556`). JuPedSim removes those agents
-itself when they enter the exit polygon (`plan_view.py:246-252`,
+journey `[exit_stage]` (`add_exit_stage` in `_add_stages`,
+`exit_to_journey` in `_add_agents`; flow agents in the flow-spawning block of
+`run_scenario`, nearest-exit initial agents in `_add_agents`). JuPedSim removes those agents
+itself when they enter the exit polygon (`FrameRecorder` in `plan_view.py`,
 `removed_agents()`); `mark_agent_for_removal` is only the direct-steering
 path (throttled exits, direct-steering decks). A dead agent with desired
 speed 0 can still be displaced by the operational model into an exit
@@ -64,8 +64,8 @@ prevented by Decision 3b.
 3b. **No removal by JuPedSim either.** At incapacitation, an agent on a
    JuPedSim exit-stage journey is switched (`switch_agent_journey`) to the
    global direct-steering journey, which JuPedSim never removes at. That
-   journey is therefore created in every run (today `simulation_init.py:1766`
-   creates it only with direct steering) and its id is passed to
+   journey is therefore created in every run (before this change the
+   complete-configuration setup in `simulation_init.py` created it only with direct steering) and its id is passed to
    `run_scenario`. Maintainer, 2026-10-17: in the station example agents died
    just short of the exit and blocked the way for others; removing them
    would be wrong. `simulation.removed_agents()` is still read each step for
@@ -97,7 +97,7 @@ prevented by Decision 3b.
    `simulation.removed_agents()`. Maintainer, 2026-10-17: stop early; there
    is no point simulating when everyone left alive has left. Consequences
    accepted: every other agent's history ends at that step;
-   `tests/test_fds_horizon.py:~470` (asserts `evacuation_time == 300.0` on
+   `tests/test_fds_horizon.py` (`test_t_junction_runs_to_t_end_without_the_hold_flag`, asserts `evacuation_time == 300.0` on
    a run with incapacitation) is rewritten to exercise the horizon another
    way or to assert the new value; the front ends (`config/frontend.py`
    `run_outcome`, `config/events.py`, `config/script.py`, TUI snapshots)
