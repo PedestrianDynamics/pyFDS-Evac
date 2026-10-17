@@ -1836,6 +1836,12 @@ def run_scenario(
         heat_endpoint = getattr(heat_fed_model, "endpoint", None)
         fed_history: list[dict[str, Any]] = []
         incapacitated_agents: set[int] = set()
+        # Agents JuPedSim listed as removed in the last step: they have
+        # left and cannot be incapacitated any more.
+        leaving_agents: set[int] = set()
+        last_exit_time: float | None = None
+        # Set when only incapacitated agents are left inside.
+        stopped_all_mobile_left = False
         # Which track (gas / heat / both) tripped incapacitation for each
         # agent -- the two doses are independent (see fed.py's
         # TenabilityConfig docstring), so "why" isn't recoverable from
@@ -2518,6 +2524,9 @@ def run_scenario(
             if current_agents == 0 and not can_spawn:
                 stopped_empty = True
                 break
+            if current_agents == len(incapacitated_agents) > 0 and not can_spawn:
+                stopped_all_mobile_left = True
+                break
             spawned_agents = initial_agent_count + sum(agent_counter_per_source)
             evacuated_agents = max(0, spawned_agents - current_agents)
             if (
@@ -3134,7 +3143,11 @@ def run_scenario(
                         fic_value = default_fic(inputs)
                         incapacitated_now = agent_id in incapacitated_agents
                         fic_speed_factor = 1.0
-                        if tenability_config is not None and not incapacitated_now:
+                        if (
+                            tenability_config is not None
+                            and not incapacitated_now
+                            and agent_id not in leaving_agents
+                        ):
                             gas_crossed = (
                                 fed_model is not None
                                 and tenability_config.enable_incapacitation
@@ -3539,6 +3552,7 @@ def run_scenario(
                                         "Failed to remove agent %s: %s", agent_id, e
                                     )
                                 else:
+                                    last_exit_time = current_time
                                     if frame_recorder is not None:
                                         frame_recorder.leaves(
                                             agent_id, current_target_stage
@@ -3616,6 +3630,16 @@ def run_scenario(
             ):
                 jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
+            leaving_agents = {int(a) for a in simulation.removed_agents()}
+            if leaving_agents:
+                last_exit_time = simulation.elapsed_time()
+            removed_dead = leaving_agents & incapacitated_agents
+            if removed_dead:
+                raise RuntimeError(
+                    f"Incapacitated agent(s) {sorted(removed_dead)} were removed "
+                    f"by JuPedSim at t={simulation.elapsed_time():.2f} s; an "
+                    "incapacitated agent must stay in the building."
+                )
             if frame_recorder is not None:
                 frame_recorder.after_step(
                     simulation,
@@ -3679,10 +3703,18 @@ def run_scenario(
         # emptied after its flow windows closed with agents still to enter,
         # is incomplete (#139, #434, #742).
         completed = remaining == 0 and not_spawned == 0
+        if len(incapacitated_agents) > remaining:
+            raise RuntimeError(
+                f"{len(incapacitated_agents)} agents incapacitated but only "
+                f"{remaining} left in the building at the end of the run; an "
+                "incapacitated agent was removed."
+            )
         if completed:
             end_reason = "all_evacuated"
         elif stopped_empty:
             end_reason = "flows_closed"
+        elif stopped_all_mobile_left:
+            end_reason = "all_mobile_left"
         else:
             end_reason = "time_limit"
         metrics = {
@@ -3690,6 +3722,9 @@ def run_scenario(
             "status": "completed" if completed else "incomplete",
             "end_reason": end_reason,
             "evacuation_time": round(evacuation_time, 2),
+            "last_exit_time": (
+                None if last_exit_time is None else round(last_exit_time, 2)
+            ),
             "total_agents": total_agents,
             "agents_evacuated": total_agents - remaining,
             "agents_remaining": remaining,

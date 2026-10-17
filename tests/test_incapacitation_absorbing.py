@@ -305,6 +305,63 @@ def test_dead_agents_are_not_rerouted():
         result.cleanup()
 
 
+def test_run_ends_when_every_mobile_agent_has_left():
+    """#141: dead agents inside do not keep the run going to the time limit."""
+    spec = CorridorSpec(num_agents=5, max_simulation_time=120.0)
+    result = _run(spec, _early_low(2.5), **QUICK)
+    try:
+        metrics = result.metrics
+        assert 0 < result.agents_incapacitated < metrics["total_agents"]
+        assert metrics["end_reason"] == "all_mobile_left"
+        assert metrics["status"] == "incomplete"
+        assert metrics["success"] is False
+        assert result.agents_incapacitated == metrics["agents_remaining"]
+        assert metrics["agents_evacuated"] + metrics["agents_remaining"] == (
+            metrics["total_agents"]
+        )
+        assert metrics["evacuation_time"] < spec.max_simulation_time - 1.0
+
+        tracks = _trajectory(result)
+        end = max(t for track in tracks.values() for t, _, _ in track)
+        assert metrics["evacuation_time"] == pytest.approx(end, abs=0.1)
+
+        dead = first_incapacitation_times(result)
+        evacuated = [track for a, track in tracks.items() if a not in dead]
+        assert len(evacuated) == metrics["agents_evacuated"]
+        last_frame = max(track[-1][0] for track in evacuated)
+        assert metrics["last_exit_time"] is not None
+        assert metrics["last_exit_time"] <= metrics["evacuation_time"]
+        # The trajectory has 10 frames per second.
+        assert metrics["last_exit_time"] == pytest.approx(last_frame, abs=0.1)
+    finally:
+        result.cleanup()
+
+
+def test_nobody_leaving_gives_no_last_exit_time():
+    spec = CorridorSpec(num_agents=2, max_simulation_time=60.0)
+    result = _run(spec, uniform(CO_LETHAL), **QUICK)
+    try:
+        assert result.metrics["end_reason"] == "all_mobile_left"
+        assert result.metrics["last_exit_time"] is None
+        assert result.metrics["agents_evacuated"] == 0
+        assert result.metrics["evacuation_time"] < 5.0
+    finally:
+        result.cleanup()
+
+
+def test_completed_run_keeps_its_end_reason():
+    """Without incapacitation the run still ends all_evacuated, with a last exit."""
+    spec = CorridorSpec(num_agents=2, max_simulation_time=80.0)
+    result = _run(spec, uniform(0.0), **QUICK)
+    try:
+        assert result.metrics["end_reason"] == "all_evacuated"
+        assert result.metrics["last_exit_time"] == pytest.approx(
+            result.metrics["evacuation_time"], abs=0.02
+        )
+    finally:
+        result.cleanup()
+
+
 def test_incapacitated_agents_are_switched_to_the_direct_steering_stage(monkeypatch):
     """An incapacitated agent leaves its exit journey, so JuPedSim cannot remove it."""
     import jupedsim as jps
@@ -332,3 +389,44 @@ def test_incapacitated_agents_are_switched_to_the_direct_steering_stage(monkeypa
         )
     finally:
         result.cleanup()
+
+
+def _list_everyone_once_at(monkeypatch, t_s: float):
+    """Make ``removed_agents`` name every agent once, at the first step from t_s."""
+    import jupedsim as jps
+
+    real_removed = jps.Simulation.removed_agents
+    done = {"listed": False}
+
+    def removed(self):
+        if done["listed"] or self.elapsed_time() < t_s - 1e-9:
+            return real_removed(self)
+        done["listed"] = True
+        return [a.id for a in self.agents()]
+
+    monkeypatch.setattr(jps.Simulation, "removed_agents", removed)
+
+
+def test_agent_listed_as_removed_is_not_incapacitated_in_the_same_step(monkeypatch):
+    """An agent JuPedSim has already listed as removed has left (tie-break)."""
+    spec = CorridorSpec(num_agents=1, max_simulation_time=20.0)
+    t_list = 5.0
+    _list_everyone_once_at(monkeypatch, t_list)
+    result = _run(
+        spec, _lethal_from(t_list - 1e-6), update_interval_s=0.005, threshold=1e-6
+    )
+    try:
+        t_inc = next(iter(first_incapacitation_times(result).values()))
+        # Listed at the step starting at 5.0 s: the sample of that step is
+        # skipped, the next one (one time step later) is the first collapse.
+        assert t_inc == pytest.approx(t_list + 0.01, abs=0.006)
+    finally:
+        result.cleanup()
+
+
+def test_removal_of_an_incapacitated_agent_is_an_error(monkeypatch):
+    """JuPedSim removing a dead agent breaks the model; the run says so."""
+    spec = CorridorSpec(num_agents=2, max_simulation_time=20.0)
+    _list_everyone_once_at(monkeypatch, 5.0)
+    with pytest.raises(RuntimeError, match=r"Incapacitated agent\(s\) \[\d+\]"):
+        _run(spec, _early_low(2.5), **QUICK)
