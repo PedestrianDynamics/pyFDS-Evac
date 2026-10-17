@@ -123,7 +123,12 @@ none. The two doses are never added. By default every agent stops at FED = 1,
 as FDS+Evac does; with `--incapacitation-mode probabilistic` each agent draws
 its own threshold, so a population does not stop all at once. When either dose
 crosses its threshold, the agent's speed is set to zero and it stays in place
-as an obstacle. `--disable-tenability` turns off the slowdown and both stops,
+as an obstacle for the rest of the run. It is never counted as evacuated, and
+its dose record stops at the collapse. Dead agents stay because agents that
+collapse just short of an exit block it for others; removing them would be
+wrong. When no mobile agent is left, the run ends
+([Reading the results](outputs.md#reading-the-results)).
+`--disable-tenability` turns off the slowdown and both stops,
 while the doses are still logged.
 
 Two consequences matter when you read a result. An FED below the threshold

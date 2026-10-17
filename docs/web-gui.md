@@ -285,6 +285,11 @@ not spawned, ends then and reads "Incomplete: flow windows closed, *m* not
 spawned", with its end time under "Simulated time"; the Not spawned tile
 and the "*e* of *n* that entered" Evacuated tile appear as above
 ([#742](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/742)).
+A run that ended with only incapacitated agents inside and no flow window
+open reads "Incomplete: all mobile agents left, *j* incapacitated inside[, *m*
+not spawned]", with its end time under "Simulated time"; the Incapacitated
+tile gives *j*
+([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
 The Incapacitated tile is shown on every finished run; see
 [Results](#results).
 
@@ -450,9 +455,11 @@ times to one decimal:
 - "Incomplete: time limit reached, *k* agents inside[, *m* not spawned],
   simulated time *t* s, …";
 - "Incomplete: flow windows closed, *m* not spawned, simulated time *t* s, …";
+- "Incomplete: all mobile agents left, *j* incapacitated inside[, *m* not
+  spawned], simulated time *t* s, …";
 - failed, cancelled, or not recorded.
 
-In the first three, "…" is "*j* incapacitated" when the run modelled
+In the first four, "…" is "*j* incapacitated" when the run modelled
 incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.

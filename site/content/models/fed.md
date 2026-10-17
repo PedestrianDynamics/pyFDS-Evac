@@ -91,9 +91,11 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
   agent's threshold for that dose, its desired speed is set to zero and it
-  remains as a static obstacle. An agent incapacitated during pre-movement is
-  released again when its pre-movement time ends
-  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)). In
+  remains as a static obstacle. The speed is never restored (pre-movement,
+  smoke, FIC, steering zones and checkpoints do not undo it), and the agent is
+  not steered, rerouted or removed. Its exposure record ends with the collapse
+  row. The run ends when only incapacitated agents remain
+  ([Reading the results](/docs/outputs.md#reading-the-results)). In
   `probabilistic` mode each agent draws each threshold once, from a stream
   seeded by the run's seed and the agent's spawn order, as
   `_sample_threshold` does:

@@ -421,7 +421,8 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
 ## Incapacitation
 
 When the cumulative heat dose reaches the agent's heat threshold, the agent
-stops and stays in place as an obstacle, as for the gas dose.
+stops and stays in place as an obstacle for the rest of the run, as for the gas
+dose ([Models › FED](/models/fed.md#tenability-irritant-slowdown-and-incapacitation)).
 
 - **One threshold for gas and heat.** The heat threshold is `fed_threshold`
   (`--fed-threshold`, 1.0 by default), as ISO 13571:2012 asks for one

@@ -347,13 +347,13 @@ Heat FED is off; pass --enable-heat-fed to accumulate it.
 Configuring rerouting.
 Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 …
-Simulation incomplete: time limit reached after 1150.00 s (0/1 evacuated, 1 remaining).
+Simulation incomplete: all mobile agents left after 982.01 s (0/1 evacuated, 1 remaining).
 Route history rows: 0
-Route cost samples: 1149
+Route cost samples: 981
 ```
 
 The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
-at 982 s. Rerouting is on by default, so `--enable-rerouting` is not needed.
+at 982 s, and the run ends there. Rerouting is on by default, so `--enable-rerouting` is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 `assets/t_junction/t_junction.fds` with FDS, or see
 [A crowd in a fire](first-fds-case.md).
@@ -363,7 +363,7 @@ The tracked FDS output of the T-junction fire is not in the repository; run
 | Status | Meaning |
 |---|---|
 | 0 | the run completed: every agent entered and left |
-| 2 | the run is incomplete: it reached `max_simulation_time` with agents inside or flow agents still to enter, or the building emptied after its flow windows closed with flow agents not spawned; all requested outputs are written |
+| 2 | the run is incomplete: it reached `max_simulation_time` with agents inside or flow agents still to enter, the building emptied after its flow windows closed with flow agents not spawned, or it ended with only incapacitated agents inside; all requested outputs are written |
 | 1 | an error; the run did not finish |
 
 Both runs above exit with status 2. A script that runs `run.py` under
