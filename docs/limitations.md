@@ -121,13 +121,11 @@ Irritants reach incapacitation only through their lung dose
 
 ## Evacuation time when anyone is incapacitated
 
-An incapacitated agent stays where it collapsed until the run ends. The run
-ends when every mobile agent has left and no flow window is open, with
-`end_reason` `"all_mobile_left"`. Its reported `evacuation_time` is then the
-end of the loop: the step after the last mobile agent left or, when nobody
-mobile is left, the step after the last collapse. It is not an egress time.
-Such a run is incomplete: `success` is `False`, `status` is `"incomplete"`
-and `run.py` exits with status 2
+An incapacitated agent stays where it collapsed until the run ends, and the
+run ends with `end_reason` `"all_mobile_left"` once only incapacitated agents
+remain ([Reading the results](outputs.md#reading-the-results)). The reported
+`evacuation_time` is then the end of the loop, not an egress time. Such a run
+is incomplete and `run.py` exits with status 2
 ([issue #139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
 Read `metrics["last_exit_time"]` for the time the last agent left, or take
 the time each agent left from the trajectory file

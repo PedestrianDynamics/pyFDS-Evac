@@ -52,7 +52,7 @@ more seeds do not supply one, since every seed stops at the same limit;
   or when only incapacitated agents remain inside and no flow window is open
   (`end_reason` `"all_mobile_left"`)
   ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
-  Neither says when the last mobile agent left.
+  None of these says when the last mobile agent left.
 
 Part 2 below shows both.
 

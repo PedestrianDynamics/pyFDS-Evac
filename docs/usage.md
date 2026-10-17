@@ -353,7 +353,8 @@ Route cost samples: 981
 ```
 
 The occupant of this ISO 20414 Test 19 case never leaves; it is incapacitated
-at 982 s, and the run ends there. Rerouting is on by default, so `--enable-rerouting` is not needed.
+at 982 s, and the run ends there. Rerouting is on by default, so
+`--enable-rerouting` is not needed.
 The tracked FDS output of the T-junction fire is not in the repository; run
 `assets/t_junction/t_junction.fds` with FDS, or see
 [A crowd in a fire](first-fds-case.md).
