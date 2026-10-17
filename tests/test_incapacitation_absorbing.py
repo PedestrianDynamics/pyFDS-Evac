@@ -32,7 +32,6 @@ from harness import (  # noqa: E402
     t_junction_scenario,
     uniform,
 )
-
 from test_s4_tjunction_reroute import SMOKE_K, _reroute_config  # noqa: E402
 
 from pyfds_evac.core.scenario import run_scenario  # noqa: E402
@@ -226,8 +225,9 @@ def test_agent_dead_at_the_exit_is_not_marked_for_removal(monkeypatch):
 
 def test_dead_agent_in_a_checkpoint_deck_is_not_steered(monkeypatch):
     """No arrival test, wait or speed restoration reaches a dead agent."""
-    import pyfds_evac.core.scenario as scenario_module
     from test_checkpoint_arrival import _scenario as checkpoint_scenario
+
+    import pyfds_evac.core.scenario as scenario_module
 
     seed = 1
     scenario = checkpoint_scenario(seed)
@@ -316,8 +316,9 @@ def test_run_ends_when_every_mobile_agent_has_left():
         assert metrics["status"] == "incomplete"
         assert metrics["success"] is False
         assert result.agents_incapacitated == metrics["agents_remaining"]
-        assert metrics["agents_evacuated"] + metrics["agents_remaining"] == (
-            metrics["total_agents"]
+        assert (
+            metrics["agents_evacuated"] + metrics["agents_remaining"]
+            == (metrics["total_agents"])
         )
         assert metrics["evacuation_time"] < spec.max_simulation_time - 1.0
 
