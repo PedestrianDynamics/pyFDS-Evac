@@ -91,9 +91,11 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
   agent's threshold for that dose, its desired speed is set to zero and it
-  remains as a static obstacle. An agent incapacitated during pre-movement is
-  released again when its pre-movement time ends
-  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)). In
+  remains as a static obstacle. The speed is never restored (pre-movement,
+  smoke, FIC, steering zones and checkpoints do not undo it), and the agent is
+  not steered, rerouted or removed. Its exposure record ends with the collapse
+  row. The run ends when only incapacitated agents remain
+  ([Reading the results](/docs/outputs.md#reading-the-results)). In
   `probabilistic` mode each agent draws each threshold once, from a stream
   seeded by the run's seed and the agent's spawn order, as
   `_sample_threshold` does:
@@ -177,12 +179,11 @@ zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
 - FED activity level: the CO term is fixed at light work; rest and heavy
   work are not supported
   ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
-- Removing incapacitated agents: they stay in the simulation, so a run with
-  any incapacitated agent reports `evacuation_time` = `max_simulation_time`
-  ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)), and
-  an agent incapacitated during its pre-movement time walks off when it ends
-  ([#145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)); see
-  [Limitations](/docs/limitations.md).
+- Removing incapacitated agents: they stay where they collapsed until
+  the run ends. The run ends when only incapacitated agents remain and no flow
+  window is open (`end_reason` `all_mobile_left`), and `evacuation_time` is
+  then the end of the loop, not an egress time; see
+  [Limitations](/docs/limitations.md#evacuation-time-when-anyone-is-incapacitated).
 - **Height-relative FED and smoke sampling**: extinction, temperature and
   each gas are sampled from the horizontal FDS slice closest to
   `--smoke-slice-height` (default 1.6 m, FDS+Evac `HUMAN_SMOKE_HEIGHT`). All agents share these slices regardless of

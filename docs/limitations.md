@@ -121,28 +121,21 @@ Irritants reach incapacitation only through their lung dose
 
 ## Evacuation time when anyone is incapacitated
 
-An incapacitated agent stays in the simulation as a stationary obstacle. The
-run ends early only when no agent is left, so a run in which any agent is
-incapacitated continues until `max_simulation_time` (300 s by default). Its
-reported `evacuation_time` is then that time limit, not the time the last
-mobile agent left. Such a run is incomplete: `success` is `False`,
-`status` is `"incomplete"` and `run.py` exits with status 2
+An incapacitated agent stays where it collapsed until the run ends, and the
+run ends with `end_reason` `"all_mobile_left"` once only incapacitated agents
+remain ([Reading the results](outputs.md#reading-the-results)). The reported
+`evacuation_time` is then the end of the loop, not an egress time. Such a run
+is incomplete and `run.py` exits with status 2
 ([issue #139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
-Read `agents_remaining`, and take the time each agent left from the
-trajectory file, instead of relying on `evacuation_time`
-([issue #141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
+Read `metrics["last_exit_time"]` for the time the last agent left, or take
+the time each agent left from the trajectory file
+([issue #141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141),
+fixed).
 
-## Incapacitation during pre-movement is undone
-
-An agent that is incapacitated while it is still waiting out its
-pre-movement time starts walking when that time ends
-([issue #145](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/145)).
-Scenarios that combine pre-movement with FED therefore under-report
-incapacitations and over-report evacuees. A scenario that sets no pre-movement
-gets the FDS+Evac default of 10 s, so this applies to it too, for its first
-10 s. Until this is fixed, check the
-per-agent FED history for agents that crossed their threshold and still
-reached an exit.
+Dead agents stay because an agent that collapses just short of an exit blocks
+it for the others; removing it would be wrong. JuPedSim's operational model
+can still displace a dead agent, for example when neighbours push it. That is
+JuPedSim behaviour and is not modelled.
 
 ## What is not modelled
 

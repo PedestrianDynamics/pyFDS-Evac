@@ -47,10 +47,12 @@ more seeds do not supply one, since every seed stops at the same limit;
   ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
   It is still not an egress time: read `last_exit_time` or the trajectory.
 - `result.success` is `False` and `result.status` is `"incomplete"` when the
-  run reaches `max_simulation_time` with agents still inside, or when the
-  building empties after its flow windows closed with flow agents not spawned
+  run reaches `max_simulation_time` with agents still inside, when the
+  building empties after its flow windows closed with flow agents not spawned,
+  or when only incapacitated agents remain inside and no flow window is open
+  (`end_reason` `"all_mobile_left"`)
   ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
-  Neither says when the last mobile agent left.
+  None of these says when the last mobile agent left.
 
 Part 2 below shows both.
 
