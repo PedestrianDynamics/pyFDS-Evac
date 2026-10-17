@@ -3032,6 +3032,8 @@ def run_scenario(
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
                             continue
+                        if agent_id in incapacitated_agents:
+                            continue
 
                         cumulative = None
                         if fed_model is not None:

@@ -97,3 +97,18 @@ def test_premovement_does_not_wake_an_incapacitated_agent():
     finally:
         result.cleanup()
 
+
+
+def test_exposure_stops_at_the_collapse_row():
+    """An incapacitated agent is not sampled again: its last row is the collapse."""
+    spec = CorridorSpec(num_agents=5, max_simulation_time=60.0)
+    result = _run(spec, uniform(CO_LETHAL))
+    try:
+        incap = first_incapacitation_times(result)
+        assert len(incap) == spec.num_agents
+        for agent_id, t_inc in incap.items():
+            rows = [r for r in result.fed_history if r["agent_id"] == agent_id]
+            assert [r for r in rows if r["time_s"] > t_inc] == []
+            assert sum(1 for r in rows if r["incapacitated"]) == 1
+    finally:
+        result.cleanup()
