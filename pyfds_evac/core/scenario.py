@@ -2526,14 +2526,15 @@ def run_scenario(
             if current_agents == 0 and not can_spawn:
                 stopped_empty = True
                 break
-            if current_agents == len(incapacitated_agents) > 0 and not can_spawn:
-                stopped_all_mobile_left = True
-                break
+            all_mobile_left = (
+                current_agents == len(incapacitated_agents) > 0 and not can_spawn
+            )
             spawned_agents = initial_agent_count + sum(agent_counter_per_source)
             evacuated_agents = max(0, spawned_agents - current_agents)
             if (
                 current_time - last_progress_time >= 0.5
                 or current_agents != last_progress_agents
+                or all_mobile_left
             ):
                 wall_elapsed = _time.monotonic() - _wall_start
                 wall_m, wall_s = divmod(int(wall_elapsed), 60)
@@ -2569,6 +2570,9 @@ def run_scenario(
                     )
                 last_progress_time = current_time
                 last_progress_agents = current_agents
+            if all_mobile_left:
+                stopped_all_mobile_left = True
+                break
             if has_flow_spawning:
                 current_time = simulation.elapsed_time()
 
