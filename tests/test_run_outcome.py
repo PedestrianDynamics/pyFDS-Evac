@@ -219,6 +219,43 @@ def test_cli_summary_of_a_run_whose_flow_windows_closed():
     )
 
 
+def test_cli_summary_of_a_run_whose_mobile_agents_all_left():
+    import run as cli
+
+    line = cli._summary_line(
+        _result(
+            success=False,
+            agents_evacuated=4,
+            agents_remaining=2,
+            end_reason="all_mobile_left",
+        )
+    )
+    assert line == (
+        "Simulation incomplete: all mobile agents left after 12.50 s "
+        "(4/6 evacuated, 2 remaining)."
+    )
+
+
+def test_run_outcome_words_a_run_that_ended_with_only_dead_agents_inside():
+    from pyfds_evac.config.frontend import run_outcome
+
+    outcome = run_outcome("incomplete", 2, 0, "all_mobile_left", incapacitated=2)
+    assert outcome.complete is False
+    assert outcome.label == "Incomplete: all mobile agents left, 2 incapacitated inside"
+    assert outcome.time_label == "Simulated time"
+    with_flow = run_outcome("incomplete", 2, 3, "all_mobile_left", incapacitated=2)
+    assert with_flow.label.endswith("2 incapacitated inside, 3 not spawned")
+    # Without the count, the agents inside are the incapacitated ones.
+    assert run_outcome("incomplete", 2, 0, "all_mobile_left").label == outcome.label
+
+
+def test_generated_script_words_a_run_that_ended_with_only_dead_agents_inside():
+    from pyfds_evac.config.script import python_script
+
+    code = python_script({"scenario": "x.json"})
+    assert '"all_mobile_left": "all mobile agents left"' in code
+
+
 @pytest.mark.parametrize(
     ("max_time_s", "expected"),
     [(ENOUGH_S, 0), (TOO_SHORT_S, 2)],

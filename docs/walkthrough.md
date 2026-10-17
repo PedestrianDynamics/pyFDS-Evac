@@ -45,7 +45,7 @@ It uses two tracked cases, because neither has everything this page needs:
 | FDS case | Slices | Scenario | Used for |
 |---|---|---|---|
 | `assets/iso_table21_coupled/fds` | extinction coefficient | 1 agent walks a 100 m corridor through *K* ≈ 1 1/m | smoke speed, exit time |
-| `assets/iso_table22_coupled/fds/a` | CO, CO2, O2, extinction coefficient | 1 occupant held still for 1150 s in a 10 m × 10 m room | FED history |
+| `assets/iso_table22_coupled/fds/a` | CO, CO2, O2, extinction coefficient | 1 occupant held still for up to 1150 s in a 10 m × 10 m room | FED history |
 
 The occupant in the second case never leaves: its pre-movement time is drawn
 above 1.2 × 10⁷ s, as ISO 20414 Test 19 asks. So that case gives a FED history
@@ -195,15 +195,14 @@ print(f"FED max: {exposed.metrics['fed_max']:.3f}")
 Expected output:
 
 ```text
-Evacuated 0/1  sim=1150.0s  wall=0m05s  done
+Evacuated 0/1  sim=982.0s  wall=0m03s  done
 t=     0 s  CO=0.100 %  FED=0.000
 t=   200 s  CO=0.100 %  FED=0.204
 t=   400 s  CO=0.100 %  FED=0.407
 t=   600 s  CO=0.100 %  FED=0.611
 t=   800 s  CO=0.100 %  FED=0.815
-t=  1000 s  CO=0.100 %  FED=1.019
 FED >= 1 at t = 982 s; incapacitated: True
-FED max: 1.170
+FED max: 1.000
 ```
 
 The deck fills the room with 0.10 % CO, 2.0 % CO2 and 15.0 % O2. The hand
@@ -220,9 +219,10 @@ passes it explicitly. Pass a `tenability_config` whenever you pass a
 threshold applies, so nobody is incapacitated. `"probabilistic"` (`--incapacitation-mode probabilistic`)
 draws a log-normal threshold for each agent with median `fed_threshold`.
 
-The incapacitated occupant stays in the simulation, so the run continues to
-`max_simulation_time`, and `exposed.evacuation_time` reports 1150 s, although
-the occupant never left ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
+The incapacitated occupant stays in the simulation, where it is no longer
+sampled: its dose stops at the collapse row. With nobody left who can move, the
+run ends there, at 982 s, with `end_reason` `"all_mobile_left"`, and
+`exposed.agents_remaining` is 1 ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
 
 `FdsFedField.from_fds` reads each gas from the slice nearest its
 `slice_height_m` (default 1.6 m), as `ExtinctionField.from_fds` and
@@ -300,8 +300,8 @@ Evacuated 0/1  sim=1150.0s  wall=0m05s  done
 finished at 1150 s, 1 agent still in the room
 ```
 
-The run finishes at the same time as in step 3, with no error. But no dose was
-computed. In step 3, the same occupant in the same gas was incapacitated at
+The run finishes with no error, at the time limit because nobody is
+incapacitated. But no dose was computed. In step 3, the same occupant in the same gas was incapacitated at
 982 s.
 
 ### 5. Detect it

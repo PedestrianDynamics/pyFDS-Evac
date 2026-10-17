@@ -122,11 +122,11 @@ class Outcome:
     ``incomplete``), the same field ``success`` and run.py's exit status
     follow. A run is incomplete when the time limit stops it with agents
     inside or flow agents not yet spawned (#139, #444), or when it empties
-    after its flow windows closed with agents not spawned (#742). The
-    outcome does not
-    say why agents remain: the incapacitated count is shown on its own
-    (:func:`incapacitated_text`), because the engine does not guarantee that
-    incapacitated agents are among those inside (#593).
+    after its flow windows closed with agents not spawned (#742), or when
+    every agent able to move has left and only incapacitated ones remain
+    (#141). Incapacitated agents stay inside, so they are among the agents
+    that remain; the incapacitated count is shown on its own
+    (:func:`incapacitated_text`).
     """
 
     complete: bool | None
@@ -144,11 +144,15 @@ def run_outcome(
     remaining: int | None,
     not_spawned: int | None,
     end_reason: str | None = None,
+    *,
+    incapacitated: int | None = None,
 ) -> Outcome:
     """The :class:`Outcome` of a run from the values it reported.
 
     *end_reason* is the run's ``end_reason`` metric; without it an
-    incomplete run is worded as stopped by the time limit.
+    incomplete run is worded as stopped by the time limit. *incapacitated*
+    is the number of agents incapacitated; an ``all_mobile_left`` run
+    words it, and *remaining* when it is not given.
     """
     if status is None:
         return Outcome(None, "Outcome not reported", "Simulated time")
@@ -156,6 +160,12 @@ def run_outcome(
         return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
     if end_reason == "flows_closed":
         label = f"Incomplete: flow windows closed, {not_spawned} not spawned"
+        return Outcome(False, label, "Simulated time")
+    if end_reason == "all_mobile_left":
+        dead = remaining if incapacitated is None else incapacitated
+        label = f"Incomplete: all mobile agents left, {dead} incapacitated inside"
+        if not_spawned:
+            label += f", {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
     label = f"Incomplete: time limit reached, {agents_label(remaining)} inside"
     if not_spawned:

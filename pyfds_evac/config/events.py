@@ -101,10 +101,11 @@ class ResultEvent:
     incapacitated included), ``incapacitated`` (ever, by gas or heat),
     ``not_spawned`` flow agents that never entered. ``end_time_s`` is the
     simulated time the run stopped at: the evacuation time of a complete
-    run, the time limit or, when its flow windows closed, the last exit of
-    an incomplete one. ``end_reason`` is the run's ``end_reason`` metric
-    (``"all_evacuated"``, ``"time_limit"`` or ``"flows_closed"``), None when
-    not reported. ``seed`` is the seed
+    run, the time limit, the last exit when its flow windows closed, or the
+    time the last mobile agent left when only incapacitated agents remain.
+    ``end_reason`` is the run's ``end_reason`` metric (``"all_evacuated"``,
+    ``"time_limit"``, ``"flows_closed"`` or ``"all_mobile_left"``), None
+    when not reported. ``seed`` is the seed
     the run used. ``exit_counts`` is the agents per exit of the frame
     stream (see :class:`FrameEvent`), None without frames.
     ``incapacitation_modelled`` says whether the run could incapacitate

@@ -129,25 +129,12 @@ def test_incapacitation_cause_records_the_first_crossing(
                 f"agent {agent_id} stopped after {elapsed} s, expected "
                 f"{math.ceil(t_first)} s"
             )
-            # Once recorded, the cause never changes.
-            causes = {r["incapacitation_cause"] for r in stopped}
-            assert causes == {expected_cause}, (agent_id, causes)
+            # Sampling stops at the collapse: one stopped row, the last, with
+            # the cause of the first crossing (no later row, no later change).
+            assert len(stopped) == 1, (agent_id, len(stopped))
+            assert rows[-1] is stopped[0]
+            assert stopped[0]["incapacitation_cause"] == expected_cause
             # Rows before the stop carry no cause.
-            before = rows[: rows.index(stopped[0])]
-            assert all(r["incapacitation_cause"] == "" for r in before)
-            # A later crossing by the other dose is reached but not recorded.
-            if max(t_gas_s, t_heat_s) < RUN_S and expected_cause != "gas+heat":
-                other = (
-                    "heat_fed_cumulative"
-                    if expected_cause == "gas"
-                    else ("fed_cumulative")
-                )
-                threshold = (
-                    heat_threshold if expected_cause == "gas" else (fed_threshold)
-                )
-                assert stopped[-1][other] >= threshold, (
-                    f"agent {agent_id}: {other} never reached {threshold}; "
-                    "the later crossing is not exercised"
-                )
+            assert all(r["incapacitation_cause"] == "" for r in rows[:-1])
     finally:
         result.cleanup()

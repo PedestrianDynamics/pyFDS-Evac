@@ -882,6 +882,30 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _hold_incapacitated_agent(
+    simulation: Any,
+    agent: Any,
+    spawning_info: dict[str, Any],
+    x: float,
+    y: float,
+) -> None:
+    """Put an incapacitated agent on the direct-steering stage, targeting itself.
+
+    Off a JuPedSim exit journey the agent cannot be removed at an exit, and
+    its target is where it stands (#145, #593). Both ids come from the run
+    setup, which always creates the stage and journey.
+    """
+    journey_id = spawning_info.get("global_ds_journey_id")
+    stage_id = spawning_info.get("global_ds_stage_id")
+    if journey_id is None or stage_id is None:
+        raise RuntimeError(
+            f"Cannot hold incapacitated agent {agent.id}: the run has no "
+            "direct-steering journey to switch it to."
+        )
+    simulation.switch_agent_journey(int(agent.id), journey_id, stage_id)
+    assign_agent_target(agent, (x, y))
+
+
 def _flow_can_spawn(
     flow_distributions: list, numbers: list, counters: list, time_s: float
 ) -> bool:
@@ -1034,11 +1058,13 @@ class ScenarioResult:
 
     @property
     def end_reason(self) -> str | None:
-        """Why the run stopped: ``"all_evacuated"``, ``"time_limit"`` or
-        ``"flows_closed"``.
+        """Why the run stopped: ``"all_evacuated"``, ``"time_limit"``,
+        ``"flows_closed"`` or ``"all_mobile_left"``.
 
         ``"flows_closed"``: the building emptied after the last flow window
         with agents still to enter had closed, before the time limit.
+        ``"all_mobile_left"``: only incapacitated agents remain inside and
+        no flow window is open; the run ends then, before the time limit.
         """
         return self.metrics.get("end_reason")
 
@@ -1812,6 +1838,12 @@ def run_scenario(
         heat_endpoint = getattr(heat_fed_model, "endpoint", None)
         fed_history: list[dict[str, Any]] = []
         incapacitated_agents: set[int] = set()
+        # Agents JuPedSim listed as removed in the last step: they have
+        # left and cannot be incapacitated any more.
+        leaving_agents: set[int] = set()
+        last_exit_time: float | None = None
+        # Set when only incapacitated agents are left inside.
+        stopped_all_mobile_left = False
         # Which track (gas / heat / both) tripped incapacitation for each
         # agent -- the two doses are independent (see fed.py's
         # TenabilityConfig docstring), so "why" isn't recoverable from
@@ -2494,11 +2526,15 @@ def run_scenario(
             if current_agents == 0 and not can_spawn:
                 stopped_empty = True
                 break
+            all_mobile_left = (
+                current_agents == len(incapacitated_agents) > 0 and not can_spawn
+            )
             spawned_agents = initial_agent_count + sum(agent_counter_per_source)
             evacuated_agents = max(0, spawned_agents - current_agents)
             if (
                 current_time - last_progress_time >= 0.5
                 or current_agents != last_progress_agents
+                or all_mobile_left
             ):
                 wall_elapsed = _time.monotonic() - _wall_start
                 wall_m, wall_s = divmod(int(wall_elapsed), 60)
@@ -2534,6 +2570,9 @@ def run_scenario(
                     )
                 last_progress_time = current_time
                 last_progress_agents = current_agents
+            if all_mobile_left:
+                stopped_all_mobile_left = True
+                break
             if has_flow_spawning:
                 current_time = simulation.elapsed_time()
 
@@ -2909,6 +2948,8 @@ def run_scenario(
                 current_time = simulation.elapsed_time()
                 for agent in simulation.agents():
                     agent_id = agent.id
+                    if agent_id in incapacitated_agents:
+                        continue
                     if (
                         agent_id in premovement_times
                         and not premovement_times[agent_id]["activated"]
@@ -3030,6 +3071,8 @@ def run_scenario(
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
                             continue
+                        if agent_id in incapacitated_agents:
+                            continue
 
                         cumulative = None
                         if fed_model is not None:
@@ -3106,7 +3149,11 @@ def run_scenario(
                         fic_value = default_fic(inputs)
                         incapacitated_now = agent_id in incapacitated_agents
                         fic_speed_factor = 1.0
-                        if tenability_config is not None and not incapacitated_now:
+                        if (
+                            tenability_config is not None
+                            and not incapacitated_now
+                            and agent_id not in leaving_agents
+                        ):
                             gas_crossed = (
                                 fed_model is not None
                                 and tenability_config.enable_incapacitation
@@ -3140,6 +3187,9 @@ def run_scenario(
                                     speed_state["fic_factor"] = 1.0
                                     speed_state["active_checkpoint"] = None
                                 smoke_speed_state[agent_id] = 0.0
+                                _hold_incapacitated_agent(
+                                    simulation, agent, spawning_info, x, y
+                                )
                             elif (
                                 fed_model is not None
                                 and tenability_config.enable_fic_speed
@@ -3260,6 +3310,8 @@ def run_scenario(
                 reroute_loop_agents = 0
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
+                    if agent_id in incapacitated_agents:
+                        continue
                     wait_info = agent_wait_info.get(agent_id)
                     # Agents placed at t=0 are checked at setup; this catches
                     # flow-spawned ones at the first check after they enter.
@@ -3347,6 +3399,8 @@ def run_scenario(
                 last_reroute_check_time = current_time
                 closure_cache: dict = {}
                 for agent in simulation.agents():
+                    if int(agent.id) in incapacitated_agents:
+                        continue
                     _redirect_from_closed_exit(agent, current_time, closure_cache)
 
             if direct_steering_info:
@@ -3364,6 +3418,8 @@ def run_scenario(
                     if _need_speed_update:
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
+                            continue
+                        if agent_id in incapacitated_agents:
                             continue
                         update_checkpoint_speed(
                             agent_speed_state,
@@ -3410,6 +3466,8 @@ def run_scenario(
                     if x is None or y is None:
                         continue
                     wait_info["current_position"] = (x, y)
+                    if agent_id in incapacitated_agents:
+                        continue
 
                     if state == "done":
                         update_checkpoint_speed(
@@ -3500,6 +3558,7 @@ def run_scenario(
                                         "Failed to remove agent %s: %s", agent_id, e
                                     )
                                 else:
+                                    last_exit_time = current_time
                                     if frame_recorder is not None:
                                         frame_recorder.leaves(
                                             agent_id, current_target_stage
@@ -3577,6 +3636,16 @@ def run_scenario(
             ):
                 jupedsim_positions = _jupedsim_positions(simulation)
             simulation.iterate()
+            leaving_agents = {int(a) for a in simulation.removed_agents()}
+            if leaving_agents:
+                last_exit_time = simulation.elapsed_time()
+            removed_dead = leaving_agents & incapacitated_agents
+            if removed_dead:
+                raise RuntimeError(
+                    f"Incapacitated agent(s) {sorted(removed_dead)} were removed "
+                    f"by JuPedSim at t={simulation.elapsed_time():.2f} s; an "
+                    "incapacitated agent must stay in the building."
+                )
             if frame_recorder is not None:
                 frame_recorder.after_step(
                     simulation,
@@ -3640,10 +3709,18 @@ def run_scenario(
         # emptied after its flow windows closed with agents still to enter,
         # is incomplete (#139, #434, #742).
         completed = remaining == 0 and not_spawned == 0
+        if len(incapacitated_agents) > remaining:
+            raise RuntimeError(
+                f"{len(incapacitated_agents)} agents incapacitated but only "
+                f"{remaining} left in the building at the end of the run; an "
+                "incapacitated agent was removed."
+            )
         if completed:
             end_reason = "all_evacuated"
         elif stopped_empty:
             end_reason = "flows_closed"
+        elif stopped_all_mobile_left:
+            end_reason = "all_mobile_left"
         else:
             end_reason = "time_limit"
         metrics = {
@@ -3651,6 +3728,9 @@ def run_scenario(
             "status": "completed" if completed else "incomplete",
             "end_reason": end_reason,
             "evacuation_time": round(evacuation_time, 2),
+            "last_exit_time": (
+                None if last_exit_time is None else round(last_exit_time, 2)
+            ),
             "total_agents": total_agents,
             "agents_evacuated": total_agents - remaining,
             "agents_remaining": remaining,

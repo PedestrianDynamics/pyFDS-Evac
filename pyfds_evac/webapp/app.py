@@ -2159,6 +2159,7 @@ def _kpi_tiles(result) -> Div:
         result.agents_remaining,
         not_spawned,
         result.metrics.get("end_reason"),
+        incapacitated=getattr(result, "agents_incapacitated", None),
     )
     seed = spec.seed_used if spec is not None else None
     if seed is None:
