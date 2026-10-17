@@ -623,6 +623,12 @@ def test_a12_run_states(workdir, status, words, never):
             "◐ Incomplete: time limit reached, 0 agents inside, 5 not spawned",
             "Simulated time (limit reached) 9.8 s",
         ),
+        (
+            "all_mobile_left",
+            "◐ Incomplete: all mobile agents left, 1 incapacitated inside, "
+            "5 not spawned",
+            "Simulated time 9.8 s",
+        ),
     ],
 )
 def test_a12_outcome_follows_the_end_reason(workdir, end_reason, words, time_words):

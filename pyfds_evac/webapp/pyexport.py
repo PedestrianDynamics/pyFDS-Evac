@@ -179,6 +179,7 @@ def run_status(spec: RunSpec) -> str:
         spec.agents_remaining,
         spec.agents_not_spawned,
         spec.end_reason,
+        incapacitated=spec.agents_incapacitated,
     )
     if spec.incapacitation_modelled and spec.agents_incapacitated is not None:
         incap = f", {spec.agents_incapacitated} incapacitated"

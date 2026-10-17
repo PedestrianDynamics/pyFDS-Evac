@@ -2065,6 +2065,20 @@ class TestRunOutcome:
             "Incomplete: flow windows closed, 50 not spawned, "
             "simulated time 9.8 s, incapacitation not modelled"
         )
+        # #141: only incapacitated agents were left inside.
+        dead = dataclasses.replace(
+            spec,
+            end_reason="all_mobile_left",
+            agents_remaining=2,
+            agents_evacuated=148,
+            evacuation_time=41.5,
+            agents_incapacitated=2,
+            incapacitation_modelled=True,
+        )
+        assert run_status(dead) == (
+            "Incomplete: all mobile agents left, 2 incapacitated inside, "
+            "simulated time 41.5 s, 2 incapacitated"
+        )
         done = dataclasses.replace(
             spec,
             completion="completed",

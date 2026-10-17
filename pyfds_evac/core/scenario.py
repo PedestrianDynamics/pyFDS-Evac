@@ -1058,11 +1058,13 @@ class ScenarioResult:
 
     @property
     def end_reason(self) -> str | None:
-        """Why the run stopped: ``"all_evacuated"``, ``"time_limit"`` or
-        ``"flows_closed"``.
+        """Why the run stopped: ``"all_evacuated"``, ``"time_limit"``,
+        ``"flows_closed"`` or ``"all_mobile_left"``.
 
         ``"flows_closed"``: the building emptied after the last flow window
         with agents still to enter had closed, before the time limit.
+        ``"all_mobile_left"``: only incapacitated agents remain inside and
+        no flow window is open; the run ends then, before the time limit.
         """
         return self.metrics.get("end_reason")
 
