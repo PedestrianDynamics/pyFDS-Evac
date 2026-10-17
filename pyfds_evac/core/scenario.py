@@ -3369,6 +3369,8 @@ def run_scenario(
                         x, y = extract_agent_xy(agent)
                         if x is None or y is None:
                             continue
+                        if agent_id in incapacitated_agents:
+                            continue
                         update_checkpoint_speed(
                             agent_speed_state,
                             direct_steering_info,
@@ -3414,6 +3416,8 @@ def run_scenario(
                     if x is None or y is None:
                         continue
                     wait_info["current_position"] = (x, y)
+                    if agent_id in incapacitated_agents:
+                        continue
 
                     if state == "done":
                         update_checkpoint_speed(
