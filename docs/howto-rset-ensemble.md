@@ -40,10 +40,12 @@ more seeds do not supply one, since every seed stops at the same limit;
 
 - `result.evacuation_time` is the time at which the simulation loop stopped.
   The loop stops when no agent is left and no flow source can still spawn,
-  or at `max_simulation_time`. An
-  incapacitated agent stays in the simulation, so one incapacitation makes
-  `evacuation_time` equal to `max_simulation_time`
+  when only incapacitated agents are left, or at `max_simulation_time`. An
+  incapacitated agent stays in the simulation, so with one incapacitation
+  `evacuation_time` is the time the last mobile agent left or, if none
+  remain mobile, the time of the last collapse
   ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
+  It is still not an egress time: read `last_exit_time` or the trajectory.
 - `result.success` is `False` and `result.status` is `"incomplete"` when the
   run reaches `max_simulation_time` with agents still inside, or when the
   building empties after its flow windows closed with flow agents not spawned
@@ -278,12 +280,12 @@ fire.cleanup()
 ```
 
 ```text
-evacuation_time 1150 s (max_simulation_time 1150 s), success False
+evacuation_time 982 s (max_simulation_time 1150 s), success False
 exit times [], incapacitated 1, remaining 1
 ```
 
-The occupant is incapacitated at 982 s and never leaves. `evacuation_time`
-reports the time limit, and `success` is `False` because the run is
+The occupant is incapacitated at 982 s and never leaves. The run ends then,
+so `evacuation_time` reports 982 s, and `success` is `False` because the run is
 incomplete. The exit times, the incapacitated count and the remaining count
 tell you what happened. From the command line, `run.py` exits with status 2
 for such a run ([Exit status](usage.md#exit-status)).

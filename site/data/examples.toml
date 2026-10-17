@@ -260,7 +260,7 @@ evac_runtime = "about 15 s"
 expected = [
   "exit time:    78.44 s clear, 85.30 s in smoke",
   "FED >= 1 at t = 982 s; incapacitated: True",
-  "FED max: 1.170",
+  "FED max: 1.000",
 ]
 expected_note = """\
 python examples/walkthrough.py prints these lines among the others the \
