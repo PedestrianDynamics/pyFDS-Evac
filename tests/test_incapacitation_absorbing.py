@@ -431,3 +431,35 @@ def test_removal_of_an_incapacitated_agent_is_an_error(monkeypatch):
     _list_everyone_once_at(monkeypatch, 5.0)
     with pytest.raises(RuntimeError, match=r"Incapacitated agent\(s\) \[\d+\]"):
         _run(spec, _early_low(2.5), **QUICK)
+
+
+def _west_half_early(t, x, y):
+    return CO_LETHAL if (t < 2.0 and x < 15.0) else 0.0
+
+
+def test_dead_agents_are_not_redirected_from_a_closed_exit():
+    """The closed-exit check of a run without rerouting skips a dead agent."""
+    from test_scheduled_exits import SEED, T_CLOSE_S
+    from test_scheduled_exits import _scenario as scheduled_scenario
+
+    result = run_scenario(
+        scheduled_scenario({"west": {"closed_after_s": T_CLOSE_S}}),
+        seed=SEED,
+        reroute_config=None,
+        fed_model=_co_model(_west_half_early, QUICK["update_interval_s"]),
+        tenability_config=deterministic_tenability(QUICK["threshold"]),
+    )
+    try:
+        incap = first_incapacitation_times(result)
+        assert len(incap) >= 5
+        assert max(incap.values()) < T_CLOSE_S
+        late = [
+            row
+            for row in result.route_history or []
+            if row["agent_id"] in incap and row["time_s"] > incap[row["agent_id"]]
+        ]
+        assert late == []
+        # The agents east of the cut still re-decide when the door closes.
+        assert result.metrics["agents_evacuated"] == 40 - len(incap)
+    finally:
+        result.cleanup()
