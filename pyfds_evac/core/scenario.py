@@ -3264,6 +3264,8 @@ def run_scenario(
                 reroute_loop_agents = 0
                 for agent in simulation.agents():
                     agent_id = int(agent.id)
+                    if agent_id in incapacitated_agents:
+                        continue
                     wait_info = agent_wait_info.get(agent_id)
                     # Agents placed at t=0 are checked at setup; this catches
                     # flow-spawned ones at the first check after they enter.
@@ -3351,6 +3353,8 @@ def run_scenario(
                 last_reroute_check_time = current_time
                 closure_cache: dict = {}
                 for agent in simulation.agents():
+                    if int(agent.id) in incapacitated_agents:
+                        continue
                     _redirect_from_closed_exit(agent, current_time, closure_cache)
 
             if direct_steering_info:

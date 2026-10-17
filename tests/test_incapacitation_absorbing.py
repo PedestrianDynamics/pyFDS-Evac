@@ -21,14 +21,19 @@ sys.path.insert(0, str(Path(__file__).parent / "verification"))
 
 from harness import (  # noqa: E402
     CorridorSpec,
+    TJunctionSpec,
     after,
     corridor_scenario,
     deterministic_tenability,
     first_incapacitation_times,
     make_fed_model,
+    make_smoke_model,
     region_x,
+    t_junction_scenario,
     uniform,
 )
+
+from test_s4_tjunction_reroute import SMOKE_K, _reroute_config  # noqa: E402
 
 from pyfds_evac.core.scenario import run_scenario  # noqa: E402
 
@@ -240,5 +245,39 @@ def test_dead_agent_in_a_checkpoint_deck_is_not_steered(monkeypatch):
         for (xa, ya), (xb, yb) in zip(after_collapse, after_collapse[1:]):
             assert math.hypot(xb - xa, yb - ya) < 1e-6
         assert result.metrics["agents_evacuated"] == 0
+    finally:
+        result.cleanup()
+
+
+def test_dead_agents_are_not_rerouted():
+    """The reroute pass skips a dead agent: no route switch after the collapse."""
+    spec = TJunctionSpec(seed=42)
+    stem = region_x(
+        CO_LETHAL,
+        x_min=spec.stem_center_x - spec.stem_half_width_m,
+        x_max=spec.right_arm_x_min,
+    )
+    smoke = make_smoke_model(
+        after(spec.smoke_onset_s, region_x(SMOKE_K, x_min=spec.right_arm_x_min))
+    )
+    result = run_scenario(
+        t_junction_scenario(spec),
+        seed=spec.seed,
+        smoke_speed_model=smoke,
+        fed_model=_co_model(after(spec.smoke_onset_s, stem), 0.1),
+        tenability_config=deterministic_tenability(0.02),
+        reroute_config=_reroute_config(),
+    )
+    try:
+        incap = first_incapacitation_times(result)
+        assert len(incap) >= 3
+        late = [
+            row
+            for row in result.route_history or []
+            if row["agent_id"] in incap and row["time_s"] > incap[row["agent_id"]]
+        ]
+        assert late == []
+        # The agents that were not caught in the stem still reroute.
+        assert len(result.route_history or []) > 0
     finally:
         result.cleanup()
