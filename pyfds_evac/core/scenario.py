@@ -2909,6 +2909,8 @@ def run_scenario(
                 current_time = simulation.elapsed_time()
                 for agent in simulation.agents():
                     agent_id = agent.id
+                    if agent_id in incapacitated_agents:
+                        continue
                     if (
                         agent_id in premovement_times
                         and not premovement_times[agent_id]["activated"]
