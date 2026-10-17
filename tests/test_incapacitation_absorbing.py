@@ -49,6 +49,20 @@ def _co_model(field, update_interval_s: float = 1.0):
     )
 
 
+def _early_low(y_cut: float, until_s: float = 3.0):
+    """Lethal CO for agents below ``y_cut`` m during the first ``until_s`` s.
+
+    Splits a spawn group by position: the agents below the cut collapse within
+    a second at the low threshold used with it, the others never see the gas
+    and stay mobile, so the run goes on with the dead agents inside.
+    """
+    return lambda t, x, y: CO_LETHAL if (t < until_s and y < y_cut) else 0.0
+
+
+# Threshold and update interval that collapse an exposed agent within a second.
+QUICK = {"threshold": 0.02, "update_interval_s": 0.1}
+
+
 def _trajectory(result) -> dict[int, list[tuple[float, float, float]]]:
     """Per agent, the (time_s, x, y) rows of the trajectory in time order."""
     with contextlib.closing(sqlite3.connect(result.sqlite_file)) as con:
@@ -81,37 +95,36 @@ def _run(spec, field, *, premovement_s=None, update_interval_s=1.0, threshold=1.
 
 def test_premovement_does_not_wake_an_incapacitated_agent():
     """#145: the activation at the end of the delay must skip a dead agent."""
-    spec = CorridorSpec(num_agents=1, max_simulation_time=60.0)
-    result = _run(spec, uniform(CO_LETHAL), premovement_s=30.0)
+    spec = CorridorSpec(num_agents=2, max_simulation_time=80.0)
+    result = _run(spec, _early_low(2.5), premovement_s=10.0, **QUICK)
     try:
         incap = first_incapacitation_times(result)
         assert len(incap) == 1
-        t_inc = next(iter(incap.values()))
-        assert t_inc < 30.0
+        (dead_id, t_inc) = next(iter(incap.items()))
+        assert t_inc < 10.0
 
-        (track,) = _trajectory(result).values()
+        track = _trajectory(result)[dead_id]
         at_collapse = next((x, y) for t, x, y in track if t >= t_inc)
-        for t, x, y in track:
-            if t < t_inc:
-                continue
+        after_collapse = [(x, y) for t, x, y in track if t >= t_inc]
+        assert len(after_collapse) > 100
+        for x, y in after_collapse:
             assert x == pytest.approx(at_collapse[0], abs=1e-6)
             assert y == pytest.approx(at_collapse[1], abs=1e-6)
 
         metrics = result.metrics
-        assert metrics["agents_evacuated"] == 0
+        assert metrics["agents_evacuated"] == 1
         assert metrics["agents_remaining"] == 1
     finally:
         result.cleanup()
 
 
-
 def test_exposure_stops_at_the_collapse_row():
     """An incapacitated agent is not sampled again: its last row is the collapse."""
     spec = CorridorSpec(num_agents=5, max_simulation_time=60.0)
-    result = _run(spec, uniform(CO_LETHAL))
+    result = _run(spec, _early_low(2.5), **QUICK)
     try:
         incap = first_incapacitation_times(result)
-        assert len(incap) == spec.num_agents
+        assert 0 < len(incap) < spec.num_agents
         for agent_id, t_inc in incap.items():
             rows = [r for r in result.fed_history if r["agent_id"] == agent_id]
             assert [r for r in rows if r["time_s"] > t_inc] == []
@@ -217,34 +230,43 @@ def test_dead_agent_in_a_checkpoint_deck_is_not_steered(monkeypatch):
     from test_checkpoint_arrival import _scenario as checkpoint_scenario
 
     seed = 1
+    scenario = checkpoint_scenario(seed)
+    scenario.raw["distributions"]["jps-distributions_0"]["parameters"]["number"] = 2
     observer = _StepObserver()
-    tested_at: list[float] = []
+    tested: list[tuple[float, float, float]] = []
     real_reached = scenario_module.reached_stage
 
-    def reached(*args, **kwargs):
-        tested_at.append(observer.t)
-        return real_reached(*args, **kwargs)
+    def reached(x, y, *args, **kwargs):
+        tested.append((observer.t, x, y))
+        return real_reached(x, y, *args, **kwargs)
 
     monkeypatch.setattr(scenario_module, "reached_stage", reached)
     result = run_scenario(
-        checkpoint_scenario(seed),
+        scenario,
         seed=seed,
-        fed_model=_co_model(region_x(CO_LETHAL, x_min=7.0, x_max=8.0), 0.1),
-        tenability_config=deterministic_tenability(0.02),
+        fed_model=_co_model(_early_low(2.0, until_s=2.0), QUICK["update_interval_s"]),
+        tenability_config=deterministic_tenability(QUICK["threshold"]),
         frame_recorder=observer,
     )
     try:
         incap = first_incapacitation_times(result)
         assert len(incap) == 1
-        t_inc = next(iter(incap.values()))
-        assert [t for t in tested_at if t > t_inc] == []
+        (dead_id, t_inc) = next(iter(incap.items()))
 
-        (track,) = _trajectory(result).values()
+        track = _trajectory(result)[dead_id]
         after_collapse = [(x, y) for t, x, y in track if t >= t_inc]
-        assert len(after_collapse) > 10
+        assert len(after_collapse) > 100
         for (xa, ya), (xb, yb) in zip(after_collapse, after_collapse[1:]):
             assert math.hypot(xb - xa, yb - ya) < 1e-6
-        assert result.metrics["agents_evacuated"] == 0
+        # The arrival test is never run on the dead agent's position.
+        x_dead, y_dead = after_collapse[0]
+        assert [
+            t
+            for t, x, y in tested
+            if t > t_inc and math.hypot(x - x_dead, y - y_dead) < 1e-3
+        ] == []
+        assert result.metrics["agents_evacuated"] == 1
+        assert result.metrics["agents_remaining"] == 1
     finally:
         result.cleanup()
 
@@ -279,5 +301,34 @@ def test_dead_agents_are_not_rerouted():
         assert late == []
         # The agents that were not caught in the stem still reroute.
         assert len(result.route_history or []) > 0
+    finally:
+        result.cleanup()
+
+
+def test_incapacitated_agents_are_switched_to_the_direct_steering_stage(monkeypatch):
+    """An incapacitated agent leaves its exit journey, so JuPedSim cannot remove it."""
+    import jupedsim as jps
+    from test_run_outcome import _scenario as room_scenario
+
+    calls: list[tuple[int, int, int]] = []
+    real_switch = jps.Simulation.switch_agent_journey
+
+    def switch(self, agent_id, journey_id, stage_id):
+        calls.append((agent_id, journey_id, stage_id))
+        return real_switch(self, agent_id, journey_id, stage_id)
+
+    monkeypatch.setattr(jps.Simulation, "switch_agent_journey", switch)
+    result = run_scenario(
+        room_scenario(30.0, number=3),
+        seed=3,
+        fed_model=_co_model(uniform(CO_LETHAL), QUICK["update_interval_s"]),
+        tenability_config=deterministic_tenability(QUICK["threshold"]),
+    )
+    try:
+        assert result.agents_incapacitated == 3
+        assert len({(journey, stage) for _, journey, stage in calls}) == 1
+        assert sorted(agent for agent, _, _ in calls) == sorted(
+            {r["agent_id"] for r in result.fed_history}
+        )
     finally:
         result.cleanup()

@@ -882,6 +882,30 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _hold_incapacitated_agent(
+    simulation: Any,
+    agent: Any,
+    spawning_info: dict[str, Any],
+    x: float,
+    y: float,
+) -> None:
+    """Put an incapacitated agent on the direct-steering stage, targeting itself.
+
+    Off a JuPedSim exit journey the agent cannot be removed at an exit, and
+    its target is where it stands (#145, #593). Both ids come from the run
+    setup, which always creates the stage and journey.
+    """
+    journey_id = spawning_info.get("global_ds_journey_id")
+    stage_id = spawning_info.get("global_ds_stage_id")
+    if journey_id is None or stage_id is None:
+        raise RuntimeError(
+            f"Cannot hold incapacitated agent {agent.id}: the run has no "
+            "direct-steering journey to switch it to."
+        )
+    simulation.switch_agent_journey(int(agent.id), journey_id, stage_id)
+    assign_agent_target(agent, (x, y))
+
+
 def _flow_can_spawn(
     flow_distributions: list, numbers: list, counters: list, time_s: float
 ) -> bool:
@@ -3144,6 +3168,9 @@ def run_scenario(
                                     speed_state["fic_factor"] = 1.0
                                     speed_state["active_checkpoint"] = None
                                 smoke_speed_state[agent_id] = 0.0
+                                _hold_incapacitated_agent(
+                                    simulation, agent, spawning_info, x, y
+                                )
                             elif (
                                 fed_model is not None
                                 and tenability_config.enable_fic_speed

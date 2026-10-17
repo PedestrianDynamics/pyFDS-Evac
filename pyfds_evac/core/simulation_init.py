@@ -1762,12 +1762,10 @@ def _initialize_complete_config(
     dist_geom, dist_params = _process_distributions(data, global_parameters)
     direct_steering_keys = set(direct_steering_info.keys())
     journey_data = _create_journeys(simulation, data, stage_map, direct_steering_keys)
-    global_ds_stage_id = None
-    global_ds_journey_id = None
-    if direct_steering_info:
-        global_ds_stage_id = simulation.add_direct_steering_stage()
-        global_ds_journey = jps.JourneyDescription([global_ds_stage_id])
-        global_ds_journey_id = simulation.add_journey(global_ds_journey)
+    # Always present: an incapacitated agent is switched onto it (#145).
+    global_ds_stage_id = simulation.add_direct_steering_stage()
+    global_ds_journey = jps.JourneyDescription([global_ds_stage_id])
+    global_ds_journey_id = simulation.add_journey(global_ds_journey)
 
     positions, agent_radii, spawning_info = _add_agents(
         simulation=simulation,
