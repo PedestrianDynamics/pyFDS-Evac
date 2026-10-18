@@ -229,6 +229,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `beta` | `-0.057` | Router's copy of \(\beta\) [m²/s], for travel time only |
 | `min_speed_factor` | `0.1` | Router's copy of \(f_{\min}\), for travel time only |
 | `default_exit_capacity` | `1.3` | Exit capacity [agents/s] for queue time, when an exit sets no `capacity_agents_per_s` |
+| `fed_rate_memo` | `true` | Remember route-side FED-rate reads per frame and point; run time only, results unchanged ([#243](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/243)) |
 
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:

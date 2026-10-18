@@ -146,20 +146,61 @@ _logger = logging.getLogger(__name__)
 _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
 
 
-class _FedRateAdapter:
-    """Adapt DefaultFedModel to the FedRateSampler protocol."""
+# Route-side FED-rate reads a run remembers (#243). Keyed on the nearest
+# frame of every gas slice the model reads and the exact point, so an
+# entry is what a fresh read would give once a point's value depends on
+# frame and point alone (#239). The bound only limits memory: when full
+# the memo is cleared and refilled.
+_FED_RATE_MEMO_SIZE = 262144
 
-    def __init__(self, model):
+
+class _FedRateAdapter:
+    """Adapt DefaultFedModel to the FedRateSampler protocol.
+
+    With *memo* the rate read at a point is stored under the frame index
+    of every slice the model reads at that time; a later read at the same
+    point and frames returns it without sampling. The horizon check of
+    each slice runs on every read, hit or miss, through ``_time_index``.
+    A model that reads no FDS slice is never memoised.
+    """
+
+    def __init__(self, model, *, memo: bool = True):
         self._model = model
+        self._samplers = model_samplers(model)
         # The last frame of the FDS slices the model reads; route foresight
         # reads no later (#666). A model on no FDS slice has no end.
-        self.end_time_s = min(
-            (s.end_time_s for s in model_samplers(model)), default=math.inf
-        )
+        self.end_time_s = min((s.end_time_s for s in self._samplers), default=math.inf)
+        self.memo = bool(memo) and bool(self._samplers)
+        self._memo: dict[tuple[tuple[int, ...], float, float], float] = {}
+        self.hits = 0
+        self.misses = 0
+        self.clears = 0
 
     def sample_fed_rate(self, time_s: float, x: float, y: float) -> float:
+        if not self.memo:
+            _, rate = self._model.sample_rate(time_s, x, y)
+            return rate
+        frames = tuple(s._time_index(float(time_s)) for s in self._samplers)
+        key = (frames, x, y)
+        rate = self._memo.get(key)
+        if rate is not None:
+            self.hits += 1
+            return rate
+        self.misses += 1
         _, rate = self._model.sample_rate(time_s, x, y)
+        if len(self._memo) >= _FED_RATE_MEMO_SIZE:
+            self._memo.clear()
+            self.clears += 1
+        self._memo[key] = rate
         return rate
+
+
+def _fed_rate_memo_flag(routing: Mapping[str, Any] | None) -> bool:
+    """``routing.fed_rate_memo``: true unless the scenario says false."""
+    value = (routing or {}).get("fed_rate_memo", True)
+    if not isinstance(value, bool):
+        raise ValueError(f"routing.fed_rate_memo must be true or false, got {value!r}")
+    return value
 
 
 # ---------------------------------------------------------------------------
@@ -1909,6 +1950,7 @@ def run_scenario(
         reroute_debug_printed = False
         reroute_debug_samples = 0
         _fed_rate_adapter = None
+        _fed_rate_memo = _fed_rate_memo_flag(scenario.raw.get("routing"))
         # The graph is built whenever there are stages to walk between, not only
         # when rerouting is on: the initial exit choice is ranked on it too, and
         # that choice is made in every run.
@@ -1942,7 +1984,7 @@ def run_scenario(
             # constant-input ones only know the dose here and now -- and route
             # costs are the one caller that needs the spatial rate.
             _fed_rate_adapter = (
-                _FedRateAdapter(fed_model)
+                _FedRateAdapter(fed_model, memo=_fed_rate_memo)
                 if hasattr(fed_model, "sample_rate")
                 else None
             )
@@ -3670,6 +3712,13 @@ def run_scenario(
                 "Looks from a node point before a patrol: %d, given up: %d",
                 look_counts["looks"],
                 look_counts["timeouts"],
+            )
+        if _fed_rate_adapter is not None:
+            _logger.debug(
+                "FED-rate memo: %d hits, %d misses, %d clears",
+                _fed_rate_adapter.hits,
+                _fed_rate_adapter.misses,
+                _fed_rate_adapter.clears,
             )
         final_total_agents = initial_agent_count
         if has_flow_spawning:
