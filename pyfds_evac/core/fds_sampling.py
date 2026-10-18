@@ -119,6 +119,23 @@ def horizon_error_message(
     )
 
 
+def _covers(subslice, x: float, y: float) -> bool:
+    """Return whether the closed extent of a subslice holds the x/y point."""
+    ext = subslice.extent
+    return ext.x_start <= x <= ext.x_end and ext.y_start <= y <= ext.y_end
+
+
+def _overlaps(a, b) -> bool:
+    """Return whether two subslice extents share area (not only a border)."""
+    ea, eb = a.extent, b.extent
+    return (
+        ea.x_start < eb.x_end
+        and eb.x_start < ea.x_end
+        and ea.y_start < eb.y_end
+        and eb.y_start < ea.y_end
+    )
+
+
 class SliceFieldSampler:
     """Sample one ``fdsreader`` slice quantity with nearest-neighbor lookup.
 
@@ -134,6 +151,12 @@ class SliceFieldSampler:
         self._warned_horizon = False
         self._subslices = list(slice_obj.subslices)
         self._last_subslice = None
+        self._earlier_overlaps = {
+            id(sub): tuple(
+                other for other in self._subslices[:i] if _overlaps(other, sub)
+            )
+            for i, sub in enumerate(self._subslices)
+        }
         self._cached_time_s: float | None = None
         self._cached_t_index: int = 0
         self._t_index_cache: dict[float, int] = {}
@@ -141,11 +164,26 @@ class SliceFieldSampler:
         self._line_cache: dict[tuple[float, float, float, float], tuple] = {}
 
     def _find_subslice(self, x: float, y: float):
-        """Return the subslice covering the requested x/y point."""
+        """Return the subslice covering the requested x/y point.
+
+        The first subslice in order whose closed extent holds the point,
+        the same one ``line_parts`` gives an overlap to (#653). The
+        remembered subslice is a shortcut for points strictly inside it
+        and outside every earlier subslice that overlaps it: a point on a
+        shared border or in an overlap band goes through the ordered scan,
+        so its value never depends on what was read before (#239).
+        """
         last = self._last_subslice
         if last is not None:
             ext = last.extent
-            if ext.x_start <= x <= ext.x_end and ext.y_start <= y <= ext.y_end:
+            if (
+                ext.x_start < x < ext.x_end
+                and ext.y_start < y < ext.y_end
+                and not any(
+                    _covers(other, x, y)
+                    for other in self._earlier_overlaps.get(id(last), ())
+                )
+            ):
                 return last
         for subslice in self._subslices:
             extent = subslice.extent
