@@ -35,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The exit-reach test rejects an agent clearly farther than the
+  tolerance from the exit polygon's bounds without a shapely call
+  (#429); decisions are unchanged.
 - The route the all-refused fallback promotes now stays `rejected=True`
   in `RouteCost` and in the route-cost history; its reason keeps the
   `fallback: ` prefix and `feasible` is unchanged. It was reported as

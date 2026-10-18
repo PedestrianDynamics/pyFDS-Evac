@@ -89,10 +89,11 @@ def assign_agent_target(agent, target):
         _logger.warning("Failed to assign target to agent: %s", e)
 
 
-# Bounds of each polygon is_inside_polygon has tested, by id, dropped with
-# the polygon. The polygon is prepared when it enters, so a stage is
-# prepared once, and a point outside the bounds is rejected without a
-# shapely call: most agents tested against a stage are far from it.
+# Bounds of each polygon is_inside_polygon or _within_exit_reach has
+# tested, by id, dropped with the polygon. The polygon is prepared when
+# it enters, so a stage is prepared once, and a point outside the bounds
+# is rejected without a shapely call: most agents tested against a stage
+# are far from it.
 _POLYGON_BOUNDS: dict[int, tuple[float, float, float, float]] = {}
 
 
@@ -161,6 +162,31 @@ EXIT_REACH_TOLERANCE_M = 0.03
 LOOK_CROWD_ALLOWANCE_S = 10.0
 
 
+# Slack, beyond EXIT_REACH_TOLERANCE_M, that a point must be from the bounds of an
+# exit polygon before the exact distance is skipped: it keeps floating-point
+# rounding of the bounds gap from deciding a point at the tolerance (#429).
+_EXIT_PRUNE_SLACK_M = 1e-9
+
+
+def _within_exit_reach(x, y, polygon):
+    """Return whether (x, y) is within EXIT_REACH_TOLERANCE_M of an exit polygon.
+
+    The distance to the polygon is at least the distance to its bounds, so a
+    point clearly farther than the tolerance from the bounds is not within reach
+    and needs no shapely Point: most agents heading for an exit are far from it.
+    Any other point, and a polygon without usable bounds, takes the exact distance.
+    """
+    try:
+        fx, fy = float(x), float(y)
+        minx, miny, maxx, maxy = _prepared_bounds(polygon)
+        gap = math.hypot(max(minx - fx, 0.0, fx - maxx), max(miny - fy, 0.0, fy - maxy))
+        if gap > EXIT_REACH_TOLERANCE_M + _EXIT_PRUNE_SLACK_M:
+            return False
+    except Exception as e:
+        _logger.debug("Exit bounds check failed: %s", e)
+    return distance_to_polygon(x, y, polygon) <= EXIT_REACH_TOLERANCE_M
+
+
 def reached_stage(x, y, target, stage_cfg, agent_radius):
     """Return whether an agent at (x, y) has reached its current stage.
 
@@ -178,7 +204,7 @@ def reached_stage(x, y, target, stage_cfg, agent_radius):
     polygon = stage_cfg.get("polygon")
     stage_type = stage_cfg.get("stage_type", "checkpoint")
     if stage_type == "exit" and polygon is not None:
-        return distance_to_polygon(x, y, polygon) <= EXIT_REACH_TOLERANCE_M
+        return _within_exit_reach(x, y, polygon)
     if target is not None:
         reach_dist = float(agent_radius) + TARGET_REACH_MARGIN_M
         if math.hypot(x - float(target[0]), y - float(target[1])) <= reach_dist:
