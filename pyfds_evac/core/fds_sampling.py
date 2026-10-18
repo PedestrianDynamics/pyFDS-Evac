@@ -8,6 +8,7 @@ FED model (gas concentrations).
 from __future__ import annotations
 
 import logging
+from bisect import bisect_left
 from functools import cached_property
 from typing import Any, NamedTuple
 
@@ -161,6 +162,7 @@ class SliceFieldSampler:
         self._cached_t_index: int = 0
         self._t_index_cache: dict[float, int] = {}
         self._axes_cache: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+        self._grids: dict[int, _GridIndex] = {}
         self._line_cache: dict[tuple[float, float, float, float], tuple] = {}
 
     def _find_subslice(self, x: float, y: float):
@@ -194,6 +196,14 @@ class SliceFieldSampler:
                 self._last_subslice = subslice
                 return subslice
         return None
+
+    def _grid(self, subslice) -> _GridIndex:
+        """Return the lookup of a subslice's axes, shared with equal grids."""
+        key = id(subslice)
+        grid = self._grids.get(key)
+        if grid is None:
+            grid = self._grids[key] = _grid_index(*self._axes(subslice))
+        return grid
 
     def covers(self, x: float, y: float) -> bool:
         """Return whether a subslice covers the x/y point (closed intervals).
@@ -425,10 +435,75 @@ class SliceFieldSampler:
             raise ValueError(
                 f"Point ({x}, {y}) is outside the sampled FDS slice domain"
             )
-        xs, ys = self._axes(subslice)
-        i_index = self._nearest_index(xs, float(x))
-        j_index = self._nearest_index(ys, float(y))
+        i_index, j_index = self._grid(subslice).index(float(x), float(y))
         return float(subslice.data[t_index, i_index, j_index])
+
+
+# Grids the samplers of a process share (#242). The key is the bytes of both
+# axes, so only bit-equal axes share; a grid is a few hundred floats. The
+# bound only limits memory: when full the pool is cleared and refilled.
+_GRID_POOL_SIZE = 256
+
+
+class _GridIndex:
+    """The nearest-index lookup of one pair of axes, shared by equal grids.
+
+    Keeps the indices of the last point asked: the gas species of one FDS
+    case are read at the same point one after the other, and the entry is a
+    function of the point and the axes alone. The entry is one tuple that is
+    read once and replaced whole, so a reader never sees a mixed pair.
+    """
+
+    __slots__ = ("xs", "ys", "_last")
+
+    def __init__(self, xs: list[float], ys: list[float]):
+        self.xs = xs
+        self.ys = ys
+        self._last: tuple[float, float, int, int] | None = None
+
+    def index(self, x: float, y: float) -> tuple[int, int]:
+        """Return the nearest value positions ``(i, j)`` of an x/y point."""
+        last = self._last
+        if last is not None and last[0] == x and last[1] == y:
+            return last[2], last[3]
+        i = _nearest_index_scalar(self.xs, x)
+        j = _nearest_index_scalar(self.ys, y)
+        self._last = (x, y, i, j)
+        return i, j
+
+
+_GRID_POOL: dict[tuple[int, int, bytes, bytes], _GridIndex] = {}
+
+
+def _grid_index(xs: np.ndarray, ys: np.ndarray) -> _GridIndex:
+    """Return the shared lookup of a pair of axes, creating it on first sight."""
+    key = (len(xs), len(ys), xs.tobytes(), ys.tobytes())
+    grid = _GRID_POOL.get(key)
+    if grid is None:
+        if len(_GRID_POOL) >= _GRID_POOL_SIZE:
+            _GRID_POOL.clear()
+        grid = _GRID_POOL[key] = _GridIndex(xs.tolist(), ys.tolist())
+    return grid
+
+
+def _nearest_index_scalar(coords: list[float], value: float) -> int:
+    """``SliceFieldSampler._nearest_index`` of one value on a list of floats.
+
+    ``bisect_left`` is ``searchsorted`` side left, and the comparison is the
+    same IEEE arithmetic on Python floats, so both pick the same index, ties
+    to the lower. Pinned against the numpy version in
+    ``tests/test_fds_sampling_lookup.py``.
+    """
+    count = len(coords)
+    if count <= 1:
+        return 0
+    right = bisect_left(coords, value)
+    if right <= 0:
+        return 0
+    if right >= count:
+        return count - 1
+    left = right - 1
+    return left if value - coords[left] <= coords[right] - value else right
 
 
 def _clip_to_extent(
