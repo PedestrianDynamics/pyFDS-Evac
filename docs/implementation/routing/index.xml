@@ -943,6 +943,19 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
+&lt;p>The rate a route reads from the FED model is remembered for the run
+(&lt;code>routing.fed_rate_memo&lt;/code>, default &lt;code>true&lt;/code>): a read at a point is stored under
+the nearest frame of every gas slice the model samples, and a later read at
+the same point whose arrival time falls in the same frames returns the
+stored rate. The value is what a fresh read gives, since a point&amp;rsquo;s value
+depends on frame and point alone (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/239" target="_blank" rel="noopener">#239&lt;/a>),
+so the switch changes run time, not results; the per-step dose does not
+use it. Past the FDS output a memoised read raises or holds the last frame
+as an unmemoised one does when the gas slices end together; a slice
+that ends earlier than CO, CO2 and O2 is checked on every read, so a
+point outside the slices can raise sooner. The memo holds at most 262,144 entries and
+starts over when full; the run logs &lt;code>FED-rate memo: &amp;lt;hits&amp;gt; hits, &amp;lt;misses&amp;gt; misses, &amp;lt;clears&amp;gt; clears&lt;/code> at debug level. &lt;code>false&lt;/code> reads the model on every
+route evaluation, for timing comparisons (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/243" target="_blank" rel="noopener">#243&lt;/a>).&lt;/p>
 &lt;h2>Data structures&lt;span class="hx-absolute -hx-mt-20" id="data-structures">&lt;/span>
 &lt;a href="#data-structures" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The routing module uses two main data structures for cost reporting.&lt;/p>
 &lt;h3>&lt;code>SegmentCost&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="segmentcost">&lt;/span>
