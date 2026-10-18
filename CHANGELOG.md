@@ -29,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   agents inside. The results views, the command-line summary and the
   generated script word it as "Incomplete: all mobile agents left, N
   incapacitated inside" (#141).
+- Route evaluation remembers FED-rate reads per frame and point
+  (`routing.fed_rate_memo`, default on; #243), after the mesh-border fix
+  #239.
 
 ### Changed
 

@@ -723,6 +723,21 @@ ranked = rank_routes(
 )
 ```
 
+The rate a route reads from the FED model is remembered for the run
+(`routing.fed_rate_memo`, default `true`): a read at a point is stored under
+the nearest frame of every gas slice the model samples, and a later read at
+the same point whose arrival time falls in the same frames returns the
+stored rate. The value is what a fresh read gives, since a point's value
+depends on frame and point alone ([#239](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/239)),
+so the switch changes run time, not results; the per-step dose does not
+use it. Past the FDS output a memoised read raises or holds the last frame
+as an unmemoised one does when the gas slices end together; a slice
+that ends earlier than CO, CO2 and O2 is checked on every read, so a
+point outside the slices can raise sooner. The memo holds at most 262,144 entries and
+starts over when full; the run logs `FED-rate memo: <hits> hits, <misses>
+misses, <clears> clears` at debug level. `false` reads the model on every
+route evaluation, for timing comparisons ([#243](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/243)).
+
 ## Data structures
 
 The routing module uses two main data structures for cost reporting.

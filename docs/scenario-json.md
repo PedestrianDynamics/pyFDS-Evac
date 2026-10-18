@@ -316,6 +316,11 @@ The `routing` keys `alpha`, `beta`, `min_speed_factor` and
 `base_speed_m_per_s` only estimate travel time when a route is priced. They
 do not change how fast agents walk.
 
+`fed_rate_memo` (default `true`) remembers the FED rate a route reads at a
+point for the run; `false` reads the model every time. It changes run time
+only; see [Segment caching](routing.md#segment-caching). A value that is
+not `true` or `false` stops the run with a `ValueError` naming the key.
+
 ## Not in the JSON
 
 Some parameters exist only in Python, as fields of a config object:
