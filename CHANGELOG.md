@@ -108,6 +108,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   incapacitation are unchanged (#141).
 - `run_outcome` takes the incapacitated count as the keyword
   `incapacitated`; existing calls keep working.
+- FDS slice point reads find the nearest cell with `bisect` and share one
+  lookup between the gas species of a case (#242); values are unchanged.
 
 ### Removed
 
