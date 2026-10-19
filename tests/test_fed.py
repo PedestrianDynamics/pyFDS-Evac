@@ -423,13 +423,14 @@ def test_no_ppm_contributes_to_fed_rate():
 
 
 def test_no2_ppm_contributes_to_fed_rate():
-    """Test that NO2 contributes to FED rate via both CN and NOx terms."""
-    base = DefaultFedInputs()
+    """NO2 contributes via the NOx term (Eq. 16) and as an irritant (Ct 1900).
+
+    In the FDS form of the CN term NO2 only subtracts from HCN, so without
+    HCN the CN term is 0. Expected: 20 / 1500 + 20 / 1900 1/min.
+    """
     with_no2 = DefaultFedInputs(no2_ppm=20.0)
-    rate_base = default_fed_rate_per_minute(base)
     rate_no2 = default_fed_rate_per_minute(with_no2)
-    assert rate_no2 > rate_base
-    assert rate_no2 > 0.0
+    assert rate_no2 == pytest.approx(20.0 / 1500.0 + 20.0 / 1900.0, rel=1e-12)
 
 
 def test_hcl_ppm_contributes_to_fed_rate():
@@ -686,7 +687,7 @@ def test_run_scenario_throttles_fed_history_to_update_interval():
         times = [row["time_s"] for row in result.fed_history]
         assert times[0] == pytest.approx(0.0)
         assert all((curr - prev) >= 0.5 - 1e-9 for prev, curr in zip(times, times[1:]))
-        assert len(times) <= 6
+        assert times == pytest.approx([0.0, 0.5, 1.0, 1.5, 2.0])
     finally:
         result.cleanup()
 
@@ -823,3 +824,48 @@ class TestZeroCo2Warning:
         with caplog.at_level(logging.WARNING, logger="pyfds_evac.core.fed"):
             model.sample_inputs(0.0, 0.0, 0.0)
         assert not caplog.records
+
+
+class TestModelStepUnits:
+    """One model step converts dt from seconds to minutes.
+
+    Kind: independent verification.
+
+    Oracle: guide Eq. 16, NOx rate = C_NOx / 1500 ppm·min. With 150 ppm NO
+    and nothing else the rate is 150 / 1500 = 0.1 1/min (HV_CO2 = 1 without
+    CO2, O2 at 20.9 % is above the 20 % threshold), so a 30 s step adds
+    0.1 * 30 / 60 = 0.05.
+    """
+
+    _INPUTS = DefaultFedInputs(no_ppm=150.0)
+    _EXPECTED_STEP = 0.1 * 30.0 / 60.0  # 1/min * s / (s/min)
+
+    def _model(self):
+        return DefaultFedModel(
+            _FixedField(self._INPUTS), DefaultFedConfig(fds_dir="unused")
+        )
+
+    def test_advance(self):
+        _, rate, fed = self._model().advance(0.0, 0.0, 0.0, dt_s=30.0, current_fed=0.2)
+        assert rate == pytest.approx(0.1, rel=1e-12)
+        assert fed == pytest.approx(0.2 + self._EXPECTED_STEP, rel=1e-12)
+
+    def test_advance_with_components(self):
+        _, components, fed = self._model().advance_with_components(
+            0.0, 0.0, 0.0, dt_s=30.0, current_fed=0.2
+        )
+        assert components.nox_rate_per_min == pytest.approx(0.1, rel=1e-12)
+        assert fed == pytest.approx(0.2 + self._EXPECTED_STEP, rel=1e-12)
+
+
+def test_time_to_threshold_is_zero_when_already_reached_without_exposure():
+    """Remaining dose exactly 0 means the threshold is reached now.
+
+    Kind: reliability (boundary). Oracle: the contract of
+    ``time_to_fed_threshold_s``, seconds still needed to reach the
+    threshold. With clean air the rate is 0; the answer is 0 s, not inf.
+    """
+    assert (
+        time_to_fed_threshold_s(DefaultFedInputs(), threshold=1.0, initial_fed=1.0)
+        == 0.0
+    )
