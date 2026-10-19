@@ -142,8 +142,8 @@ exists, state the verification gap in the `Golden re-record:` section and
 get the maintainer's approval. A snapshot diff or the words "intentional
 change" do not establish correctness.
 
-The golden inventory with these tags is tracked in
-[#810](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/810).
+The golden inventory with these tags is
+[tests/golden/README.md](../tests/golden/README.md).
 
 ## 6. Limits
 
