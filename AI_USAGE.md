@@ -34,7 +34,8 @@ same sequence, whoever or whatever wrote it:
 3. Independent, read-only verification: the tests are re-run from a clean
    environment, intermediate quantities are checked, and a refactor of the
    routing or FDS coupling must give byte-identical results on reference
-   FDS runs with fixed seeds.
+   FDS runs with fixed seeds. Tests are written and reviewed to the
+   [testing guidelines](docs/TESTING_GUIDELINES.md).
 4. The maintainer decides whether it merges and whether it ships.
 
 Scientific statements in the documentation are checked against the

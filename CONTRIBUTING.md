@@ -28,6 +28,8 @@ uv run ruff check . && uv run ruff format --check .
 uv run pytest -q
 ```
 
+Write and review tests to the [testing guidelines](docs/TESTING_GUIDELINES.md).
+
 For changes to the website, build it as described in
 [Development](docs/development.md#build-the-documentation).
 

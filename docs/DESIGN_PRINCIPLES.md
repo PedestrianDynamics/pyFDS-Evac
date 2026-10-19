@@ -73,7 +73,7 @@ Include appropriate:
 - Regression tests.
 - Sensitivity tests where relevant.
 
-Distinguish verification of the implementation from validation of the scientific model.
+Distinguish verification of the implementation from validation of the scientific model. The [testing guidelines](TESTING_GUIDELINES.md) say what each kind of test can prove.
 
 ## 8. Avoid speculative abstractions
 
@@ -126,6 +126,7 @@ Before considering the work complete, verify that:
 - Scientific assumptions and validity limits are documented.
 - Tests cover meaningful numerical and physical edge cases.
 - Default behavior remains unchanged unless a change was intentional.
+- Every re-recorded golden or snapshot carries the `Golden re-record:` evidence that the [testing guidelines](TESTING_GUIDELINES.md#5-goldens-and-snapshots) require.
 - The implementation introduces no unnecessary complexity.
 
 **Guiding principle:** Scientific software should make its assumptions as transparent and testable as its algorithms.
