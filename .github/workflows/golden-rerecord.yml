@@ -1,0 +1,29 @@
+name: golden re-record
+
+# A pull request that changes golden or snapshot data must say why in a
+# "Golden re-record:" section (docs/TESTING_GUIDELINES.md §5). "edited"
+# re-runs the check when the body is fixed.
+on:
+  pull_request:
+    branches: ["main"]
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  evidence:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.14'
+      - name: Check the re-record section
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: python scripts/check_golden_rerecord.py --base "$BASE" --head "$HEAD"
