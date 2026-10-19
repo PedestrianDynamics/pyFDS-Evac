@@ -123,3 +123,8 @@ skip_covered = false
 # it, so a misplaced import passed `ruff check` while being wrong -- which is
 # exactly what happened in #74 and was caught by a reviewer rather than by CI.
 extend-select = ["I"]
+
+[tool.ruff.format]
+# tools/profiling keeps its files byte-identical to the measured ones; its
+# README records the sha256 of benchmark.py.
+exclude = ["tools/profiling/**"]

@@ -1,0 +1,51 @@
+2026-10-18T05:51:10Z	START	g5_all	pid=2211	cap_s=7200
+{"slot_before_block": {"time_utc": "2026-10-18T05:51:10.450+00:00", "load_avg": [1.92822265625, 1.70556640625, 1.58056640625], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.1, "rss_kb": 43968, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.8, "rss_kb": 123104, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 451, "ppid": 1, "pcpu": 10.0, "rss_kb": 17920, "comm":
+G5_memo_W1_W1_O_norc_s1_warmup1_20261018T055110: exit 2 wall 32.47s cpu 32.4 rss 430686208.0 contaminated=True
+G5_memo_W1_W1_nomemo_s1_warmup1_20261018T055143: exit 2 wall 35.17s cpu 35.150000000000006 rss 396591104.0 contaminated=True
+G5_memo_W1_W1_O_norc_s1_rep1_20261018T055220: exit 2 wall 32.52s cpu 32.5 rss 430800896.0 contaminated=False
+G5_memo_W1_W1_nomemo_s1_rep1_20261018T055253: exit 2 wall 35.23s cpu 35.21 rss 396656640.0 contaminated=False
+G5_memo_W1_W1_O_norc_s2_warmup1_20261018T055329: exit 2 wall 34.57s cpu 34.55 rss 429899776.0 contaminated=False
+G5_memo_W1_W1_nomemo_s2_warmup1_20261018T055405: exit 2 wall 35.63s cpu 35.61 rss 395476992.0 contaminated=False
+G5_memo_W1_W1_nomemo_s2_rep1_20261018T055441: exit 2 wall 37.50s cpu 37.480000000000004 rss 395444224.0 contaminated=False
+G5_memo_W1_W1_O_norc_s2_rep1_20261018T055520: exit 2 wall 34.56s cpu 34.54 rss 430030848.0 contaminated=True
+G5_memo_W1_W1_O_norc_s3_warmup1_20261018T055555: exit 0 wall 33.14s cpu 33.129999999999995 rss 434241536.0 contaminated=False
+G5_memo_W1_W1_nomemo_s3_warmup1_20261018T055630: exit 0 wall 36.10s cpu 36.080000000000005 rss 399654912.0 contaminated=False
+G5_memo_W1_W1_O_norc_s3_rep1_20261018T055707: exit 0 wall 33.79s cpu 33.769999999999996 rss 434094080.0 contaminated=True
+G5_memo_W1_W1_nomemo_s3_rep1_20261018T055741: exit 0 wall 36.98s cpu 36.96 rss 399572992.0 contaminated=True
+G5_memo_W1_W1_O_norc_s4_warmup1_20261018T055819: exit 2 wall 33.48s cpu 33.46 rss 425639936.0 contaminated=True
+G5_memo_W1_W1_nomemo_s4_warmup1_20261018T055854: exit 2 wall 35.50s cpu 35.480000000000004 rss 393445376.0 contaminated=True
+G5_memo_W1_W1_nomemo_s4_rep1_20261018T055930: exit 2 wall 35.52s cpu 35.5 rss 393265152.0 contaminated=True
+G5_memo_W1_W1_O_norc_s4_rep1_20261018T060007: exit 2 wall 32.83s cpu 32.800000000000004 rss 425443328.0 contaminated=False
+G5_memo_W1_W1_O_norc_s5_warmup1_20261018T060041: exit 2 wall 31.99s cpu 31.97 rss 402997248.0 contaminated=False
+G5_memo_W1_W1_nomemo_s5_warmup1_20261018T060114: exit 2 wall 35.63s cpu 35.61 rss 371998720.0 contaminated=False
+G5_memo_W1_W1_O_norc_s5_rep1_20261018T060150: exit 2 wall 32.89s cpu 32.87 rss 403030016.0 contaminated=True
+G5_memo_W1_W1_nomemo_s5_rep1_20261018T060224: exit 2 wall 34.55s cpu 34.53 rss 371900416.0 contaminated=True
+G5_memo_W1_W1_O_norc_s6_warmup1_20261018T060259: exit 2 wall 32.62s cpu 32.6 rss 424165376.0 contaminated=False
+G5_memo_W1_W1_nomemo_s6_warmup1_20261018T060333: exit 2 wall 35.29s cpu 35.27 rss 392134656.0 contaminated=False
+G5_memo_W1_W1_nomemo_s6_rep1_20261018T060409: exit 2 wall 35.24s cpu 35.22 rss 392216576.0 contaminated=False
+G5_memo_W1_W1_O_norc_s6_rep1_20261018T060446: exit 2 wall 32.54s cpu 32.519999999999996 rss 424280064.0 contaminated=False
+G5_memo_W1_W1_O_norc_s7_warmup1_20261018T060519: exit 2 wall 35.61s cpu 35.59 rss 424280064.0 contaminated=False
+G5_memo_W1_W1_nomemo_s7_warmup1_20261018T060556: exit 2 wall 38.61s cpu 38.589999999999996 rss 390496256.0 contaminated=False
+G5_memo_W1_W1_O_norc_s7_rep1_20261018T060635: exit 2 wall 35.74s cpu 35.72 rss 424394752.0 contaminated=False
+G5_memo_W1_W1_nomemo_s7_rep1_20261018T060712: exit 2 wall 37.99s cpu 37.970000000000006 rss 390545408.0 contaminated=True
+G5_memo_W1_W1_O_norc_s8_warmup1_20261018T060751: exit 2 wall 34.99s cpu 34.97 rss 433848320.0 contaminated=True
+G5_memo_W1_W1_nomemo_s8_warmup1_20261018T060827: exit 2 wall 37.52s cpu 37.5 rss 398966784.0 contaminated=True
+G5_memo_W1_W1_nomemo_s8_rep1_20261018T060905: exit 2 wall 37.40s cpu 37.37 rss 398983168.0 contaminated=True
+G5_memo_W1_W1_O_norc_s8_rep1_20261018T060944: exit 2 wall 34.54s cpu 34.53 rss 433963008.0 contaminated=False
+G5_memo_W1_W1_O_norc_s9_warmup1_20261018T061019: exit 2 wall 35.22s cpu 35.2 rss 433405952.0 contaminated=False
+G5_memo_W1_W1_nomemo_s9_warmup1_20261018T061056: exit 2 wall 38.65s cpu 38.63 rss 399261696.0 contaminated=False
+G5_memo_W1_W1_O_norc_s9_rep1_20261018T061135: exit 2 wall 34.63s cpu 34.61 rss 433356800.0 contaminated=False
+G5_memo_W1_W1_nomemo_s9_rep1_20261018T061211: exit 2 wall 37.99s cpu 37.97 rss 399065088.0 contaminated=True
+G5_memo_W1_W1_O_norc_s10_warmup1_20261018T061250: exit 2 wall 32.64s cpu 32.620000000000005 rss 408043520.0 contaminated=True
+G5_memo_W1_W1_nomemo_s10_warmup1_20261018T061323: exit 2 wall 36.65s cpu 36.63 rss 375472128.0 contaminated=True
+G5_memo_W1_W1_nomemo_s10_rep1_20261018T061401: exit 2 wall 35.74s cpu 35.720000000000006 rss 375193600.0 contaminated=False
+G5_memo_W1_W1_O_norc_s10_rep1_20261018T061438: exit 2 wall 32.76s cpu 32.74 rss 408043520.0 contaminated=False
+2026-10-18T06:15:12Z	G5_memo_W1	W1	rc=0	1442
+results/g5/equality_G5_memo_W1.csv
+{"slot_before_block": {"time_utc": "2026-10-18T06:15:16.224+00:00", "load_avg": [1.0166015625, 1.10546875, 1.2001953125], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 43776, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 123248, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 39744, "comm": "/usr
+G5_ctr_W1_W1_O_norc_ctr_s1_rep1_20261018T061516: exit 2 wall 34.20s cpu 34.18 rss 432357376.0 contaminated=False
+G5_ctr_W1_W1_nomemo_ctr_s1_rep1_20261018T061551: exit 2 wall 37.90s cpu 37.89 rss 397918208.0 contaminated=False
+G5_ctr_W1_W1_O_norc_ctr_s1_rep2_20261018T061630: exit 2 wall 34.91s cpu 34.89 rss 432357376.0 contaminated=False
+G5_ctr_W1_W1_nomemo_ctr_s1_rep2_20261018T061706: exit 2 wall 36.96s cpu 36.93 rss 398163968.0 contaminated=True
+2026-10-18T06:17:44Z	G5_ctr_W1	W1	rc=0	148
+2026-10-18T06:17:44Z	END	g5_all	elapsed_s=1594

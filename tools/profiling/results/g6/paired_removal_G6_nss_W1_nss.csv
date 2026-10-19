@@ -1,0 +1,12 @@
+seed,base_run_id,arm_run_id,wall_base_s,wall_arm_s,d_s,flagged_base,flagged_arm,sim_time_base_s,sim_time_arm_s,evacuated_base,evacuated_arm,n_seeds,n_seeds_dropped,median_d_s,iqr_d_s,diff_per_study_s,sum_d_s,agent_steps_median,d_us_per_agent_step,verdict
+1,G6_nss_W1_W1_O_norc_s1_rep1_20261018T082421,G6_nss_W1_W1_nss_s1_rep1_20261018T082456,33.668433,29.909296,3.759137,True,True,400.0,313.53,199,200,,,,,,,,,
+2,G6_nss_W1_W1_O_norc_s2_rep1_20261018T082705,G6_nss_W1_W1_nss_s2_rep1_20261018T082633,34.082826,31.443147,2.639679,False,True,400.0,351.67,197,200,,,,,,,,,
+3,G6_nss_W1_W1_O_norc_s3_rep1_20261018T082849,G6_nss_W1_W1_nss_s3_rep1_20261018T082924,33.886194,32.138251,1.747943,True,True,362.98,303.42,200,200,,,,,,,,,
+4,G6_nss_W1_W1_O_norc_s4_rep1_20261018T083133,G6_nss_W1_W1_nss_s4_rep1_20261018T083102,33.725737,30.546277,3.17946,True,False,400.0,321.59,198,200,,,,,,,,,
+5,G6_nss_W1_W1_O_norc_s5_rep1_20261018T083313,G6_nss_W1_W1_nss_s5_rep1_20261018T083346,32.285983,29.86954,2.416443,True,False,400.0,381.81,198,200,,,,,,,,,
+6,G6_nss_W1_W1_O_norc_s6_rep1_20261018T083554,G6_nss_W1_W1_nss_s6_rep1_20261018T083522,33.670766,30.142406,3.52836,False,False,400.0,369.87,197,200,,,,,,,,,
+7,G6_nss_W1_W1_O_norc_s7_rep1_20261018T083738,G6_nss_W1_W1_nss_s7_rep1_20261018T083814,35.316362,32.929778,2.386584,False,False,400.0,321.94,197,200,,,,,,,,,
+8,G6_nss_W1_W1_O_norc_s8_rep1_20261018T084029,G6_nss_W1_W1_nss_s8_rep1_20261018T083957,34.996748,31.249994,3.746754,False,True,400.0,321.61,197,200,,,,,,,,,
+9,G6_nss_W1_W1_O_norc_s9_rep1_20261018T084215,G6_nss_W1_W1_nss_s9_rep1_20261018T084251,35.584632,31.663082,3.92155,True,True,400.0,317.43,199,200,,,,,,,,,
+10,G6_nss_W1_W1_O_norc_s10_rep1_20261018T084501,G6_nss_W1_W1_nss_s10_rep1_20261018T084430,33.347882,30.381353,2.966529,False,False,400.0,334.01,197,200,,,,,,,,,
+ALL,,,,,,,,,,,,10,0,3.072995,1.340871,30.729946,30.292438,3259925.0,0.942658,fix_first

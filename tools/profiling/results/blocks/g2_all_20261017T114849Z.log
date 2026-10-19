@@ -1,0 +1,57 @@
+2026-10-17T11:48:49Z	START	g2_all	pid=7741	cap_s=7200
+{"slot_before_block": {"time_utc": "2026-10-17T11:48:49.557+00:00", "load_avg": [2.0517578125, 2.04150390625, 1.80615234375], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160768, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 451, "ppid": 1, "pcpu": 8.8, "rss_kb": 18288, "comm": 
+G2_prof_W3_W3_O_study_s42_rep1_20261017T114849: exit 2 wall 9.11s cpu 8.06 rss 284901376.0 contaminated=False
+G2_prof_W3_W3_O_study_pyi_s42_rep1_20261017T114859: exit 2 wall 19.24s cpu 18.240000000000002 rss 377487360.0 contaminated=False
+G2_prof_W3_W3_O_study_pyi_s42_rep2_20261017T114919: exit 2 wall 19.05s cpu 19.04 rss 376733696.0 contaminated=True
+G2_prof_W3_W3_O_study_s42_rep2_20261017T114938: exit 2 wall 7.85s cpu 7.84 rss 284573696.0 contaminated=False
+2026-10-17T11:49:46Z	G2_prof_W3	W3	rc=0	57
+{"slot_before_block": {"time_utc": "2026-10-17T11:49:47.418+00:00", "load_avg": [1.45947265625, 1.87841796875, 1.75830078125], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.2, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160896, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 48128, "comm":
+G2_prof_W1r_W1r_O_study_s1_warmup1_20261017T114947: exit 2 wall 15.19s cpu 15.14 rss 315588608.0 contaminated=False
+G2_prof_W1r_W1r_O_study_pyi_s1_warmup1_20261017T115003: exit 2 wall 31.57s cpu 31.549999999999997 rss 586203136.0 contaminated=False
+G2_prof_W1r_W1r_O_study_s1_rep1_20261017T115035: exit 2 wall 14.97s cpu 14.94 rss 315654144.0 contaminated=False
+G2_prof_W1r_W1r_O_study_pyi_s1_rep1_20261017T115050: exit 2 wall 30.88s cpu 30.86 rss 579534848.0 contaminated=False
+G2_prof_W1r_W1r_O_study_pyi_s1_rep2_20261017T115121: exit 2 wall 32.48s cpu 32.449999999999996 rss 593182720.0 contaminated=False
+G2_prof_W1r_W1r_O_study_s1_rep2_20261017T115154: exit 2 wall 15.32s cpu 15.280000000000001 rss 315736064.0 contaminated=False
+2026-10-17T11:52:10Z	G2_prof_W1r	W1r	rc=0	143
+{"slot_before_block": {"time_utc": "2026-10-17T11:52:11.042+00:00", "load_avg": [1.07666015625, 1.56005859375, 1.64404296875], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.1, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160880, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 47664, "comm":
+G2_prof_W4flow_W4_flow_saturated_fixture_s42_rep1_20261017T115211: exit 2 wall 66.52s cpu 66.5 rss 144326656.0 contaminated=True
+G2_prof_W4flow_W4_flow_saturated_fixture_pyi_s42_rep1_20261017T115318: exit 2 wall 100.65s cpu 100.63000000000001 rss 574717952.0 contaminated=True
+2026-10-17T11:54:59Z	G2_prof_W4flow	W4_flow_saturated	rc=0	169
+{"slot_before_block": {"time_utc": "2026-10-17T11:55:00.182+00:00", "load_avg": [1.3037109375, 1.44873046875, 1.57470703125], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 1.1, "rss_kb": 160880, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 409, "ppid": 1, "pcpu": 11.4, "rss_kb": 199600, "comm"
+G2_prof_W1_W1_O_study_s1_warmup1_20261017T115500: exit 2 wall 46.50s cpu 46.44 rss 480280576.0 contaminated=True
+G2_prof_W1_W1_O_study_pyi_s1_warmup1_20261017T115547: exit 2 wall 106.31s cpu 106.28 rss 1348304896.0 contaminated=True
+G2_prof_W1_W1_O_study_s1_rep1_20261017T115735: exit 2 wall 47.45s cpu 47.41 rss 480280576.0 contaminated=False
+G2_prof_W1_W1_O_study_pyi_s1_rep1_20261017T115823: exit 2 wall 106.37s cpu 106.35000000000001 rss 1350221824.0 contaminated=True
+G2_prof_W1_W1_O_study_pyi_s1_rep2_20261017T120010: exit 2 wall 105.60s cpu 105.57 rss 1339457536.0 contaminated=True
+G2_prof_W1_W1_O_study_s1_rep2_20261017T120157: exit 2 wall 46.42s cpu 46.4 rss 480411648.0 contaminated=False
+2026-10-17T12:02:44Z	G2_prof_W1	W1	rc=0	464
+{"slot_before_block": {"time_utc": "2026-10-17T12:02:46.831+00:00", "load_avg": [1.05029296875, 1.17578125, 1.37255859375], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160864, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 1.5, "rss_kb": 47808, "comm": "/
+G2_rc_cprof_W1_O_study_cpr_s1_rep1_20261017T120246: exit 0 wall 111.33s cpu 111.3 rss 489799680.0 contaminated=True
+2026-10-17T12:04:39Z	G2_rc_cprof	W1	rc=0	113
+{"slot_before_block": {"time_utc": "2026-10-17T12:04:39.744+00:00", "load_avg": [1.05419921875, 1.13330078125, 1.326171875], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160880, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 47744, "comm": "
+G2_rc_cprof_W1_O_norc_cpr_s1_rep1_20261017T120439: exit 0 wall 90.10s cpu 90.08 rss 406585344.0 contaminated=True
+2026-10-17T12:06:10Z	G2_rc_cprof	W1	rc=0	91
+slot busy: load1 1.07 ac True lpm 0 heavy [spindump 94%]
+{"slot_before_block": {"time_utc": "2026-10-17T12:07:11.357+00:00", "load_avg": [1.4716796875, 1.21142578125, 1.3203125], "foreign_heavy": [{"pid": 7010, "ppid": 7004, "pcpu": 33.5, "rss_kb": 430352, "comm": "claude"}], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160880, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exemp
+exclusive slot check failed; block not started (use --shared for non-measurement development runs)
+2026-10-17T12:07:11Z	G2_ctr_scale	W1_n100	SLOT_RACE_RETRY	1
+slot busy: load1 1.47 ac True lpm 0 heavy [claude 22%]
+{"slot_before_block": {"time_utc": "2026-10-17T12:08:11.658+00:00", "load_avg": [1.697265625, 1.322265625, 1.35302734375], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160880, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 47696, "comm": "/u
+G2_ctr_scale_W1_n100_O_study_ctr_s1_warmup1_20261017T120811: exit 2 wall 21.62s cpu 21.6 rss 367230976.0 contaminated=True
+G2_ctr_scale_W1_n100_O_study_ctr_s1_rep1_20261017T120834: exit 2 wall 21.69s cpu 21.68 rss 367067136.0 contaminated=True
+G2_ctr_scale_W1_n100_O_study_ctr_s1_rep2_20261017T120856: exit 2 wall 22.51s cpu 22.49 rss 367427584.0 contaminated=False
+G2_ctr_scale_W1_n100_O_study_ctr_s1_rep3_20261017T120919: exit 2 wall 22.23s cpu 22.21 rss 367443968.0 contaminated=True
+2026-10-17T12:09:42Z	G2_ctr_scale	W1_n100	rc=0	151
+{"slot_before_block": {"time_utc": "2026-10-17T12:09:43.201+00:00", "load_avg": [1.32568359375, 1.3037109375, 1.33837890625], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160880, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.8, "rss_kb": 47936, "comm": 
+G2_ctr_scale_W1_O_study_ctr_s1_warmup1_20261017T120943: exit 2 wall 46.50s cpu 46.48 rss 481476608.0 contaminated=False
+G2_ctr_scale_W1_O_study_ctr_s1_rep1_20261017T121030: exit 2 wall 46.54s cpu 46.51 rss 481492992.0 contaminated=False
+G2_ctr_scale_W1_O_study_ctr_s1_rep2_20261017T121118: exit 2 wall 47.81s cpu 47.79 rss 481787904.0 contaminated=True
+G2_ctr_scale_W1_O_study_ctr_s1_rep3_20261017T121207: exit 2 wall 47.75s cpu 47.73 rss 481755136.0 contaminated=False
+2026-10-17T12:12:55Z	G2_ctr_scale	W1	rc=0	192
+{"slot_before_block": {"time_utc": "2026-10-17T12:12:57.253+00:00", "load_avg": [1.07080078125, 1.197265625, 1.2841796875], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203072, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 160864, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 48128, "comm": "/
+G2_ctr_scale_W1_n400_O_study_ctr_s1_warmup1_20261017T121257: exit 2 wall 119.21s cpu 119.18 rss 833683456.0 contaminated=True
+G2_ctr_scale_W1_n400_O_study_ctr_s1_rep1_20261017T121458: exit 2 wall 119.19s cpu 119.16 rss 833372160.0 contaminated=True
+G2_ctr_scale_W1_n400_O_study_ctr_s1_rep2_20261017T121659: exit 2 wall 118.79s cpu 118.75999999999999 rss 833585152.0 contaminated=True
+G2_ctr_scale_W1_n400_O_study_ctr_s1_rep3_20261017T121900: exit 2 wall 118.53s cpu 118.49000000000001 rss 833568768.0 contaminated=True
+2026-10-17T12:21:00Z	G2_ctr_scale	W1_n400	rc=0	483
+2026-10-17T12:21:03Z	END	g2_all	elapsed_s=1934

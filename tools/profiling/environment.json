@@ -1,0 +1,160 @@
+{
+ "collected_utc": "2026-10-14T12:28:36+00:00",
+ "os": {
+  "product": "macOS",
+  "version": "27.0.1",
+  "build": "26A434",
+  "kernel": "27.0.0",
+  "arch": "arm64"
+ },
+ "hardware": {
+  "model": "Mac15,6",
+  "cpu": "Apple M3 Pro",
+  "logical_cpus": 12,
+  "performance_cores": 6,
+  "efficiency_cores": 6,
+  "ram_bytes": 19327352832,
+  "power_source": [
+   "Now drawing from 'AC Power'"
+  ],
+  "low_power_mode": "0"
+ },
+ "application": {
+  "repo": "PedestrianDynamics/pyFDS-Evac",
+  "worktree": "/Users/chraibi/profiling-stage/wt_8f7d29a2",
+  "commit": "8f7d29a2e056db46183e8cccabce338c398606a1",
+  "git_dirty": false,
+  "uv_lock_sha256": "7f64a58db6d321441e320ad47ba960dc51d25c4a8dbaff8e8d95ba09fac25fc8",
+  "uv_version": "uv 0.10.4 (Homebrew 2026-02-17)",
+  "venv_created_with": "UV_CACHE_DIR=/Users/chraibi/profiling-stage/uvcache uv sync --frozen --python 3.12 (CPython 3.12 chosen by the coordinator; the lock at 8f7d29a2 resolves scikit-image 0.26.0)"
+ },
+ "interpreters": {
+  "baseline": {
+   "python": "3.12.13 (main, Mar  3 2026, 12:39:30) [Clang 21.0.0 (clang-2100.0.123.102)]",
+   "executable": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/bin/python",
+   "packages": {
+    "pyfds_evac": {
+     "version": "0.5.0",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/pyfds_evac/__init__.py"
+    },
+    "jupedsim": {
+     "version": "1.4.2",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/jupedsim/__init__.py"
+    },
+    "fdsreader": {
+     "version": "1.11.7",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/fdsreader/__init__.py"
+    },
+    "fdsvismap": {
+     "version": "0.3.2",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/fdsvismap/__init__.py"
+    },
+    "numpy": {
+     "version": "2.4.4",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/numpy/__init__.py"
+    },
+    "scipy": {
+     "version": "1.17.1",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/scipy/__init__.py"
+    },
+    "shapely": {
+     "version": "2.1.2",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/shapely/__init__.py"
+    },
+    "pandas": {
+     "version": "2.3.3",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/pandas/__init__.py"
+    },
+    "matplotlib": {
+     "version": "3.10.8",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/matplotlib/__init__.py"
+    },
+    "skimage": {
+     "version": "0.26.0",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/.venv/lib/python3.12/site-packages/skimage/__init__.py"
+    }
+   },
+   "numpy_blas": "accelerate",
+   "numpy_lapack": "accelerate"
+  },
+  "profiling": {
+   "python": "3.12.13 (main, Mar  3 2026, 12:39:30) [Clang 21.0.0 (clang-2100.0.123.102)]",
+   "executable": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/bin/python",
+   "packages": {
+    "pyfds_evac": {
+     "version": "0.5.0",
+     "location": "/Users/chraibi/profiling-stage/wt_8f7d29a2/pyfds_evac/__init__.py"
+    },
+    "jupedsim": {
+     "version": "1.4.2",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/jupedsim/__init__.py"
+    },
+    "fdsreader": {
+     "version": "1.11.7",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/fdsreader/__init__.py"
+    },
+    "fdsvismap": {
+     "version": "0.3.2",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/fdsvismap/__init__.py"
+    },
+    "numpy": {
+     "version": "2.4.4",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/numpy/__init__.py"
+    },
+    "scipy": {
+     "version": "1.17.1",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/scipy/__init__.py"
+    },
+    "shapely": {
+     "version": "2.1.2",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/shapely/__init__.py"
+    },
+    "pandas": {
+     "version": "2.3.3",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/pandas/__init__.py"
+    },
+    "matplotlib": {
+     "version": "3.10.8",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/matplotlib/__init__.py"
+    },
+    "skimage": {
+     "version": "0.26.0",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/skimage/__init__.py"
+    },
+    "memray": {
+     "version": "1.20.0",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/memray/__init__.py"
+    },
+    "scalene": {
+     "version": "2.3.0",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/scalene/__init__.py"
+    },
+    "pyinstrument": {
+     "version": "5.1.3",
+     "location": "/Users/chraibi/profiling-stage/venv_prof_8f7d29a2/lib/python3.12/site-packages/pyinstrument/__init__.py"
+    }
+   },
+   "numpy_blas": "accelerate",
+   "numpy_lapack": "accelerate"
+  }
+ },
+ "thread_env": {
+  "OMP_NUM_THREADS": "4",
+  "OPENBLAS_NUM_THREADS": null,
+  "MKL_NUM_THREADS": null,
+  "VECLIB_MAXIMUM_THREADS": null,
+  "NUMEXPR_NUM_THREADS": null,
+  "PYTHONHASHSEED": null,
+  "PYTHONOPTIMIZE": null,
+  "PYTHONDONTWRITEBYTECODE": null
+ },
+ "profilers": {
+  "py-spy": "0.4.2 installed in profiling venv; 'record' refuses without root on macOS ('This program requires root on OSX'); --native unsupported on this platform. Not usable unless the maintainer grants sudo.",
+  "cProfile": "works (stdlib)",
+  "memray": "1.20.0 works (Python and --native capture; native frames symbolised, e.g. PyArray_*, checked on a toy script)",
+  "scalene": "2.3.0 works ('scalene run -o out.json'); CPU+memory, writes JSON",
+  "pyinstrument": "5.1.3 works; non-root statistical sampler (Python frames only)",
+  "macos_sample": "/usr/bin/sample works without root on own processes; native C frames (e.g. libBLAS, jupedsim) but no Python frames",
+  "usr_bin_time_l": "works; wall/user/sys, max RSS, peak memory footprint, instructions"
+ }
+}

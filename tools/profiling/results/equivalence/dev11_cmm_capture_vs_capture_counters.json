@@ -1,0 +1,37 @@
+[
+ {
+  "a": "dev11cmm_W3b_cmm_O_study_s5150_rep1_20261002T154555",
+  "b": "dev11cmm_W3b_cmm_O_study_ctr_s5150_rep1_20261002T154557",
+  "a_combo": [
+   "W3b_cmm",
+   "O_study",
+   false,
+   5150
+  ],
+  "b_combo": [
+   "W3b_cmm",
+   "O_study",
+   true,
+   5150
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "absent",
+   "6_fed.csv": "absent",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "equal",
+   "12_cognitive_map_history": "equal",
+   "12b_result_metrics": "equal"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ }
+]

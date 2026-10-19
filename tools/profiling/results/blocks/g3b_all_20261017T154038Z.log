@@ -1,0 +1,28 @@
+2026-10-17T15:40:38Z	START	g3_all	pid=86554	cap_s=7200
+{"slot_before_block": {"time_utc": "2026-10-17T15:40:38.669+00:00", "load_avg": [2.2578125, 2.09033203125, 1.94287109375], "foreign_heavy": [{"pid": 4516, "ppid": 1, "pcpu": 30.6, "rss_kb": 15520, "comm": "/System/Library/PrivateFrameworks/Ecosystem.framework/Support/ecosystemd"}], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203088, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 162352, "comm": "/System/Library/PrivateFrame
+exclusive slot check failed; block not started (use --shared for non-measurement development runs)
+2026-10-17T15:40:38Z	G3b_rm_W1	W1	SLOT_RACE_RETRY	1
+slot busy: load1 2.26 ac True lpm 0 heavy [ecosystemd 31%]
+{"slot_before_block": {"time_utc": "2026-10-17T15:41:38.975+00:00", "load_avg": [1.94384765625, 2.03857421875, 1.93115234375], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203088, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 162352, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 48544, "comm":
+G3b_rm_W1_W1_O_norc_s1_warmup1_20261017T154139: exit 2 wall 35.00s cpu 34.9 rss 396640256.0 contaminated=False
+G3b_rm_W1_W1_nss_s1_warmup1_20261017T154215: exit 0 wall 29.56s cpu 29.53 rss 300253184.0 contaminated=False
+G3b_rm_W1_W1_O_norc_s1_rep1_20261017T154245: exit 2 wall 35.18s cpu 35.129999999999995 rss 396705792.0 contaminated=True
+G3b_rm_W1_W1_nss_s1_rep1_20261017T154321: exit 0 wall 29.85s cpu 29.7 rss 299728896.0 contaminated=True
+G3b_rm_W1_W1_nss_s1_rep2_20261017T154352: exit 0 wall 29.86s cpu 29.84 rss 300056576.0 contaminated=True
+G3b_rm_W1_W1_O_norc_s1_rep2_20261017T154423: exit 2 wall 35.34s cpu 35.31 rss 396525568.0 contaminated=True
+G3b_rm_W1_W1_O_norc_s1_rep3_20261017T154459: exit 2 wall 35.45s cpu 35.42 rss 396673024.0 contaminated=True
+G3b_rm_W1_W1_nss_s1_rep3_20261017T154536: exit 0 wall 30.81s cpu 30.79 rss 300105728.0 contaminated=True
+G3b_rm_W1_W1_nss_s1_rep4_20261017T154608: exit 0 wall 30.73s cpu 30.700000000000003 rss 299843584.0 contaminated=True
+G3b_rm_W1_W1_O_norc_s1_rep4_20261017T154639: exit 2 wall 36.45s cpu 36.42 rss 396836864.0 contaminated=True
+G3b_rm_W1_W1_O_norc_s1_rep5_20261017T154717: exit 2 wall 36.62s cpu 36.599999999999994 rss 396754944.0 contaminated=True
+G3b_rm_W1_W1_nss_s1_rep5_20261017T154754: exit 0 wall 31.92s cpu 31.900000000000002 rss 300122112.0 contaminated=True
+2026-10-17T15:48:27Z	G3b_rm_W1	W1	rc=0	469
+slot busy: load1 2.21 ac True lpm 0 heavy [spotlightknowledged.updater 28%, spotlightknowledged 98%]
+slot busy: load1 1.89 ac True lpm 0 heavy [spotlightknowledged 100%]
+{"slot_before_block": {"time_utc": "2026-10-17T15:50:29.360+00:00", "load_avg": [1.89599609375, 2.00390625, 1.9423828125], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 203136, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.0, "rss_kb": 162496, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 48464, "comm": "/u
+G3b_ctr_W1_W1_O_norc_ctr_s1_rep1_20261017T155029: exit 2 wall 35.32s cpu 35.25 rss 398098432.0 contaminated=False
+G3b_ctr_W1_W1_nss_ctr_s1_rep1_20261017T155105: exit 0 wall 31.30s cpu 31.28 rss 301318144.0 contaminated=True
+G3b_ctr_W1_W1_O_norc_ctr_s1_rep2_20261017T155138: exit 2 wall 36.16s cpu 36.15 rss 397885440.0 contaminated=False
+G3b_ctr_W1_W1_nss_ctr_s1_rep2_20261017T155215: exit 0 wall 30.59s cpu 30.57 rss 301481984.0 contaminated=False
+2026-10-17T15:52:46Z	G3b_ctr_W1	W1	rc=0	137
+2026-10-17T15:52:47Z	END	g3_all	elapsed_s=729

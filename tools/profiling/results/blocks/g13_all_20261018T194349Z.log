@@ -1,0 +1,13 @@
+2026-10-18T19:43:49Z	START	g13_all	pid=15832	cap_s=7200
+{"slot_before_block": {"time_utc": "2026-10-18T19:43:49.959+00:00", "load_avg": [1.55419921875, 1.73974609375, 1.8271484375], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 30464, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 2.0, "rss_kb": 141936, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 451, "ppid": 1, "pcpu": 10.8, "rss_kb": 17408, "comm": 
+G13_prof_W1_W1_O_norc_s1_warmup1_20261018T194350: exit 2 wall 30.00s cpu 29.470000000000002 rss 430374912.0 contaminated=False
+G13_prof_W1_W1_O_norc_pyi_s1_warmup1_20261018T194421: exit 2 wall 79.87s cpu 71.58 rss 827768832.0 contaminated=True
+G13_prof_W1_W1_O_norc_s1_rep1_20261018T194541: exit 2 wall 30.98s cpu 30.97 rss 430456832.0 contaminated=True
+G13_prof_W1_W1_O_norc_pyi_s1_rep1_20261018T194613: exit 2 wall 71.16s cpu 71.14999999999999 rss 805158912.0 contaminated=True
+G13_prof_W1_W1_O_norc_pyi_s1_rep2_20261018T194726: exit 2 wall 72.65s cpu 72.63 rss 814792704.0 contaminated=True
+G13_prof_W1_W1_O_norc_s1_rep2_20261018T194839: exit 2 wall 30.61s cpu 30.59 rss 430800896.0 contaminated=False
+2026-10-18T19:49:11Z	G13_prof_W1	W1	rc=0	322
+{"slot_before_block": {"time_utc": "2026-10-18T19:49:12.043+00:00", "load_avg": [1.203125, 1.4130859375, 1.638671875], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.1, "rss_kb": 30560, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.1, "rss_kb": 142064, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 463, "ppid": 1, "pcpu": 0.0, "rss_kb": 35152, "comm": "/usr/li
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912: exit 2 wall 46.38s cpu 46.36000000000001 rss 601686016.0 contaminated=True
+2026-10-18T19:49:59Z	G13_det_W1	W1	rc=0	48
+2026-10-18T19:49:59Z	END	g13_all	elapsed_s=370

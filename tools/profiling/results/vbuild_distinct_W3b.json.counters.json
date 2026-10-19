@@ -1,0 +1,77 @@
+{
+ "schema": "pyfds-evac perf counters v1",
+ "dt_s": null,
+ "timers_s": {
+  "method": "perf_counter in-process; diagnostic (counters run)",
+  "run_scenario_total": null,
+  "run_scenario_setup_before_first_iterate": null,
+  "loop_first_iterate_to_last_iterate_end": null,
+  "run_scenario_after_last_iterate": null
+ },
+ "counters": {
+  "fdsreader_full_parse": 2,
+  "fdsreader_new_calls": 2,
+  "get_extco_array_calls": 605,
+  "get_mean_extco_array_calls": 484,
+  "get_visibility_array_calls": 484,
+  "get_visibility_array_calls_s": 0.05449626606423408
+ },
+ "bins_s": 10.0,
+ "binned": {},
+ "reroute_pass_sizes": {},
+ "events": {
+  "fdsreader_new": [
+   {
+    "seconds": 0.0003290420863777399
+   },
+   {
+    "seconds": 0.00033529195934534073
+   }
+  ],
+  "fdsreader_init": [
+   {
+    "kind": "full_parse",
+    "pickle_present_at_open": true,
+    "opener": "visibility._extinction_slice_index",
+    "seconds_init": 0.011177583015523851
+   },
+   {
+    "kind": "full_parse",
+    "pickle_present_at_open": true,
+    "opener": "FDSVisMap.read_fds_data",
+    "seconds_init": 0.004418666008859873
+   }
+  ],
+  "vismap_build": [
+   {
+    "stage": "extinction_slice_index_open",
+    "seconds": 0.012445917003788054
+   },
+   {
+    "stage": "read_fds_data",
+    "seconds": 0.005133167025633156
+   },
+   {
+    "stage": "slice_read_lazy",
+    "seconds": 0.001444249995984137
+   },
+   {
+    "stage": "compute_all_incl_slice_read",
+    "seconds": 0.0612579999724403
+   },
+   {
+    "stage": "vis_bool_array",
+    "seconds": 9.695906192064285e-05
+   },
+   {
+    "stage": "vis_metre_array",
+    "seconds": 0.028606291976757348
+   }
+  ]
+ },
+ "exit_nodes": [],
+ "detail": {
+  "enabled": false,
+  "sampler_distinct_xy": {}
+ }
+}

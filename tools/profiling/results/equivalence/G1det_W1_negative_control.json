@@ -1,0 +1,24 @@
+[
+ {
+  "run": "G1det_W1_O_study_s1_rep1_20261015T202857",
+  "controls": {
+   "identity": {
+    "verdict": "equivalent",
+    "different": []
+   },
+   "exit_csv_one_byte": {
+    "verdict": "NOT equivalent",
+    "different": [
+     "3_exit.csv"
+    ]
+   },
+   "trajectory_one_ulp": {
+    "verdict": "NOT equivalent",
+    "different": [
+     "1_trajectory_repr_v1"
+    ]
+   }
+  },
+  "negative_control": "PASS"
+ }
+]

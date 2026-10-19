@@ -1,0 +1,100 @@
+{
+ "fds_dir": "/Users/chraibi/sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de/fds-evac-data/cognitive_map_memory/clear_air",
+ "smv": "cognitive_map_memory.smv",
+ "n_meshes": 1,
+ "meshes": [
+  {
+   "ijk": [
+    22,
+    130,
+    12
+   ],
+   "xb": [
+    -0.25,
+    5.25,
+    -0.25,
+    32.25,
+    0.0,
+    3.0
+   ]
+  }
+ ],
+ "slices": [
+  {
+   "quantity": "CARBON DIOXIDE VOLUME FRACTION",
+   "z_m": 2.0,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    61
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 120.0,
+   "dt": 2.074108123779297,
+   "min": 0.0,
+   "max": 0.0003864118189085275,
+   "max_at_probe": {
+    "0.0": 0.0003864118189085275,
+    "30.0": 0.0003864118189085275
+   }
+  },
+  {
+   "quantity": "CARBON MONOXIDE VOLUME FRACTION",
+   "z_m": 2.0,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    61
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 120.0,
+   "dt": 2.074108123779297,
+   "min": 0.0,
+   "max": 0.0,
+   "max_at_probe": {
+    "0.0": 0.0,
+    "30.0": 0.0
+   }
+  },
+  {
+   "quantity": "OXYGEN VOLUME FRACTION",
+   "z_m": 2.0,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    61
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 120.0,
+   "dt": 2.074108123779297,
+   "min": 0.0,
+   "max": 0.20755882561206818,
+   "max_at_probe": {
+    "0.0": 0.20755882561206818,
+    "30.0": 0.20755882561206818
+   }
+  },
+  {
+   "quantity": "SOOT EXTINCTION COEFFICIENT",
+   "z_m": 2.0,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    61
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 120.0,
+   "dt": 2.074108123779297,
+   "min": 0.0,
+   "max": 0.0,
+   "max_at_probe": {
+    "0.0": 0.0,
+    "30.0": 0.0
+   }
+  }
+ ]
+}

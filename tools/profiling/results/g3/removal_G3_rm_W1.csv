@@ -1,0 +1,5 @@
+arm,issue,n_reps,n_flagged,n_used,wall_s_median,wall_s_q1,wall_s_q3,agent_steps_median,us_per_agent_step,diff_s,diff_per_study_s,diff_us_per_agent_step,bar_s,verdict,source_block
+O_norc,baseline,5,2,5,36.210634,35.36553,36.920553,3259925.0,11.107812,,,,23.0,baseline,G3_rm_W1
+nrr,#243,5,1,5,18.753229,18.57514,18.845323,3097608.0,6.0541,17.457404,174.574043,5.053712,23.0,fix_first,G3_rm_W1
+nss,#242,5,5,5,30.72987,29.857356,31.364522,3165697.0,9.707142,4.717977,47.179774,1.166681,23.0,fix_first,G3b_rm_W1
+nst,#429,5,4,5,33.341708,33.220289,33.50842,3259325.0,10.229636,2.868926,28.689259,0.878176,23.0,fix_first,G3_rm_W1

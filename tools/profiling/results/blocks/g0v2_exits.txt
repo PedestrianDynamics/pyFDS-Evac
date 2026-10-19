@@ -1,0 +1,4 @@
+W2 exit 0
+W1 exit 0
+W3 exit 1
+W3 first exit 0

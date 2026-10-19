@@ -1,0 +1,49 @@
+# perf-model note, G1 equivalence acceptance (2026-10-16)
+
+Inputs: `results/summary.csv` (179 runs), `results/summary_groups.csv`, `results/equivalence/*.json`, `results/blocks/g1v2_status.tsv`, `results/raw/G1*/manifest.json` (`host_during`), `results/raw/G1vbuild_*`, `results/vbuild_trial_n10.json`, `engineer_handoff_g0_v2.md` §G0 v2b/v2d, `plan.md` D27–D30 and "G1 run record". Read-only; no run started. Files produced: this note and two derived verdict files, `results/equivalence/G1out_vs_G1base_restricted.json`, `results/equivalence/G1outchk_vs_G1base_restricted.json` (re-evaluation of the existing `compare.py` output under the rule in §1; the rule and source are written into each file).
+
+## Verdict: accept with conditions
+
+Behavioural equivalence (spec §8) holds for every comparison G1 makes: determinism gates W1 and W3 PASS with negative controls; `G1ovh_W1`, `G1ovh_W3`, `G1ovhD_W1` equivalent; the output variants are equivalent on every output both sides write (§1); W1r's horizon failure is the declared confounder, not a defect. Conditions, before any G1 timing is quoted as a measurement:
+
+1. The output-variant verdicts are read from the `*_restricted.json` files, with the gap list carried (O_min's trajectories are vouched for by `O_min_check`, not by `O_min` itself).
+2. The contamination decision D31 or the rerun (§2) is taken by the maintainer; until then every W1, W1_n100, W1_n400 and W1r timing is labelled "background: Spotlight indexing active, flagged by the predeclared rule".
+3. `summary_groups.csv` keys groups by instrument level: `counters` and `detail` are different instrumentation (G1ovhD: `ctr` median 47.77 s, spread 1.1 %; `det` 60.08 s, spread 0.8 %; pooled "spread 24–27 %" is an artefact). Detail counters cost +26 % wall on W1 and stay diagnostic-only (D9); `counters` cost +1 % and pass the ≤ 5 % rule.
+4. The "~50 s" V-build figure is withdrawn (§3).
+
+## 1. O_norc / O_min vs O_study: restriction, not a finding
+
+Every NOT-equivalent pair differs in exactly one item, `10_exit_summary_counts`, and inside it only in `route_cost_samples` (64 994 vs `null`): the CLI prints "Route cost samples: N" only when `--output-route-cost-history` is given (`run_outputs.py:348`). Exit code and summary line are identical in all 19 pairs. Everything both variants write is equal:
+
+| Pair | Equal items | Not written by one side |
+|---|---|---|
+| O_study vs O_norc (6 pairs) | 1 trajectories, 2 frames, 3 exit, 4 rh, 6 fed, 8 agent_scalars, 9 manifest, 10 exit code + summary | 5 rc |
+| O_study vs O_min_check (1 pair) | 1, 2, 3, 8, 9, 10 | 4, 5, 6 |
+| O_study vs O_min (6 pairs) | 10 (exit code + summary only) | 1–6, 8, 9 (O_min writes no file) |
+
+So the output variant does not change the computation as far as any written output shows; the v1 §9.1 worry (route-cost ranking altering the shared segment cache) is answered: O_norc is byte-identical on trajectories, exits, route history and FED. **Rule (applied in the `_restricted.json` files):** item 10 compares exit code, summary line and the looks line always, and `route_cost_samples` only when both runs wrote the route-cost history (new sub-item 10c, `not_in_both` otherwise); items 1–9, 11, 12 keep `compare.py`'s `equal` / `not_in_both` / `absent`; a pair is "equivalent on the items both write" and its `not_in_both` list is reported as the gap, never folded into "equal". Under this rule all 19 pairs are equivalent. Consequence for labels: `O_norc` and `O_min` are **controlled cost experiments** (v1 §4, §9.1), `O_min` conditional on `O_min_check` (same flags plus the two check outputs; 37.07 s vs the `O_min` median 37.05 s, so the check outputs themselves cost nothing measurable). `compare.py` should adopt rule 10c; until then the derived files stand as the verdict and perf-qa re-derives them from the originals.
+
+## 2. Contamination: proposed D31 and the rerun cost
+
+Facts from the manifests and `summary.csv` (reps only):
+
+- Offenders at > 20 % in the W1 runs are macOS daemons (`ppid 1`, under `/System` or `/usr/libexec`): `mds_stores` (66 samples, max 250 %), `ecosystemd`, `PerfPowerServices*`, `launchd`, `duetexpertd`, `mobileassetd`, `hybridsearchd`, `mediaanalysisd`, `photolibraryd`, Podcasts' index extension, `IntelligencePlatformComputeService`. 26 runs also show a user-space process above 20 % at a sample: `top`/`(top)` (21–46 %, a sampler, most likely the monitor's or the user's), `tmux` (48–72 %), `claude` (21–49 %), `iTerm2`, two `python` (20–32 %) in `G1scale400` rep 3–4, `XProtectPluginService`, `DropboxFileProvider`.
+- Own-tree `cpu_s / wall_s` is 0.998–1.000 in every W1, W1r and scaling group: the benchmark process was never descheduled. (Memory-bandwidth and thermal interference are not excluded by this; D10 says thermal state is unobservable.)
+- Within-group min–max spread 0.4–3.6 % (5 reps). Across blocks run 1.5 h apart under changing daemon load, W1 `O_study` seed 1 medians agree: G1base 46.51, G1det 47.38, G1out 47.51, G1ovh 47.26, G1ovhD 47.31 s (2.1 % band). Unflagged W3 groups (`G1w3first`, `G1w3seeds`) and flagged ones (`G1w3rep`, `G1ovhW3`) overlap (7.70–8.34 s).
+
+**Proposed D31 (a), defensible as stated:** a run flagged only by system daemons is reclassified `measured, background: system daemons (Spotlight indexing)` when all of: (i) every offender has `ppid 1` and a path under `/System`, `/usr/libexec`, `/usr/sbin`; (ii) own-tree `cpu_s/wall_s ≥ 0.98`; (iii) its group's min–max spread ≤ 5 % and IQR/median ≤ 5 % (the plan's own repetition rule); (iv) a second group of the same case/variant/seed/instrumentation measured in another block agrees within 3 % of median, or, where no second group exists (W1_n100, W1_n400, W1r, seeds 2–3), the rerun in (b)-minimal supplies it; (v) load1 ≤ 2.5 (D30). A run with any user-space process above 20 % (`tmux`, `claude`, `iTerm2`, `python`, browsers) stays contaminated; `top` counts as user-space unless the engineer shows it is the harness's own sampler. The label is printed in every table and the report's limitations name it. This is a classification of risk, not proof of absence: the defence is (iv), independent agreement under different background.
+
+**(b) Rerun cost, measured block durations (`g1v2_status.tsv`, incl. warm-ups, excl. slot polls):** all 100 %-flagged W1 blocks: G1det W1 97 + G1base 283 + G1seeds 378 + G1w1r 97 + G1ovh 582 + G1ovhD 948 + G1outchk 39 + G1out 745 + G1scale100 258 + G1scale400 727 = **4 154 s ≈ 69 min**. Minimal set that re-establishes the W1 statistics and the overhead rule and supplies (iv) for the groups lacking a second block: G1det W1 + G1base + G1seeds + G1w1r + G1ovh + G1scale100 + G1scale400 = **2 422 s ≈ 40 min**, allow 50–60 min with slot polls, with `sudo mdutil -a -i off` and the session's terminal idle. **Recommendation to the maintainer:** adopt (a) and run (b)-minimal as its verification: if the clean medians agree within 3 % with the flagged groups, both sets are reported with their labels and the flagged ones keep the D31 label; if not, the clean set replaces them and D31 is withdrawn for the affected case.
+
+## 3. V-build: 10.7 s stands, the ~50 s is withdrawn
+
+`G1vbuild` plain, n = 1001, 5 reps: median 10.68 s wall (spread 0.2 %, cpu/wall 0.974, 2 of 5 flagged by daemons), `build_total` 10.08 s = `_build_vismap` 5.32 s (opens, `read_fds_data`, ray casting per sign, lazy slice read, `compute_all`) + `_vis_metre_array` 4.74 s (47 % of the build) + `_vis_bool_array` 0.014 s; instrumented run 11.18 s (+4.6 %, stages 5.12 / 4.83); peak RSS 1.38 GB. The "~50 s" came from the G0 n = 10 trial (`vbuild_trial_n10.json`: 0.587 s total, instrumented, host load 4–5 with foreign jobs at 100 %), extrapolated linearly as 0.045 s per time point. That extrapolation charged one-off work to the per-point rate: the per-sign ray casting inside `compute_all` (the "build_help_arrays" one-off of #241, ≈ 0.8 s on this deck) and the opens dominate a 0.4 s window at n = 10, and the host was contended. From G1, the per-point cost is about (10.08 − fixed) / 1001 ≈ 9 ms for both passes. The G1 figure is the measurement; the G0 note was a sizing estimate and is retired. Two items for G2: the second pass is 47 % of the build (the remaining #241 mechanism); 1.38 GB peak RSS against 279 MB of stored arrays points at `all_time_all_sign_vismap_list` (nested Python lists) or fdsvismap's per-sign arrays (memory attribution, not a claim yet).
+
+## 4. Other observations
+
+- `G1seeds` HORIZON_CHECK_FAILED at 04:37:31 was the harness fault (empty glob) fixed in `g1_resume3.sh`; the rerun passed (430.6 s bound on all seeds? to be read per seed by perf-qa from `max_bound`). W1/W3 horizons pass; W1r `passes: false` on all 6 runs is the declared confounder (guard 252 s, 8.2 % held, 1 warning each): consistent across repetitions, so the stop rule "share or warning count changes" did not fire.
+- W3 vismap states: first-use 8.34 s, repeated 7.92 s, noflag 8.19 s (medians): the build is 0.4–0.5 s of an 8 s run; W3b 1.23 / 1.11 s. Controlled cost experiment labels hold (equivalence of the states is in the W3/W3b verdict files).
+
+## Handoff
+
+**For perf-engineer:** adopt rule 10c in `compare.py`; key `analyse.py` groups by instrument level (`none` / `counters` / `detail`); state whether `top` in `host_during` is the harness's sampler; prepare the (b)-minimal block list with Spotlight off, to run only on the maintainer's decision. **For perf-qa:** re-derive the two `_restricted.json` files from the originals; check the D31 conditions (i)–(v) per group from `summary.csv` and the manifests; confirm the G1vbuild numbers and that no document still carries "~50 s". **Uncertainties:** D31 cannot exclude memory-bandwidth or thermal effects of `mds_stores` at 250 %; the `python` offenders in `G1scale400` are unidentified; peak-RSS attribution of V-build is a G2 question.

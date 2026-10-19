@@ -1,0 +1,39 @@
+[
+ {
+  "a": "G1b_det_W1_O_study_s1_rep1_20261016T114732",
+  "b": "G1b_det_W1_O_study_s1_rep2_20261016T114821",
+  "a_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ }
+]

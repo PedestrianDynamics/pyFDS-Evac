@@ -1,0 +1,12 @@
+{"start_time": 0.0, "duration": 10.0, "sample_count": 10000, "target_description": "fixture",
+ "cpu_time": 10.0,
+ "root_frame": {"function": "<module>", "file_path_short": "run.py", "file_path": "/wt/run.py", "line_no": 1, "time": 10.0, "await_time": 0.0, "is_application_code": true, "children": [
+   {"function": "run_scenario", "file_path_short": "pyfds_evac/core/scenario.py", "file_path": "/wt/pyfds_evac/core/scenario.py", "line_no": 1687, "time": 9.0, "await_time": 0.0, "is_application_code": true, "children": [
+     {"function": "rank_routes", "file_path_short": "pyfds_evac/core/route_graph.py", "file_path": "/wt/pyfds_evac/core/route_graph.py", "line_no": 2782, "time": 3.0, "await_time": 0.0, "is_application_code": true, "children": [
+       {"function": "evaluate_segment", "file_path_short": "pyfds_evac/core/route_graph.py", "file_path": "/wt/pyfds_evac/core/route_graph.py", "line_no": 1462, "time": 2.0, "await_time": 0.0, "is_application_code": true, "children": [
+         {"function": "sample", "file_path_short": "pyfds_evac/core/fds_sampling.py", "file_path": "/wt/pyfds_evac/core/fds_sampling.py", "line_no": 374, "time": 1.5, "await_time": 0.0, "is_application_code": true, "children": [
+           {"function": "_nearest_index", "file_path_short": "pyfds_evac/core/fds_sampling.py", "file_path": "/wt/pyfds_evac/core/fds_sampling.py", "line_no": 190, "time": 0.5, "await_time": 0.0, "is_application_code": true, "children": []}]}]}]},
+     {"function": "reached_stage", "file_path_short": "pyfds_evac/core/direct_steering_runtime.py", "file_path": "/wt/pyfds_evac/core/direct_steering_runtime.py", "line_no": 164, "time": 2.0, "await_time": 0.0, "is_application_code": true, "children": [
+       {"function": "distance_to_polygon", "file_path_short": "pyfds_evac/core/direct_steering_runtime.py", "file_path": "/wt/pyfds_evac/core/direct_steering_runtime.py", "line_no": 133, "time": 1.5, "await_time": 0.0, "is_application_code": true, "children": [
+         {"function": "distance", "file_path_short": "shapely/geometry/base.py", "file_path": "/venv/site-packages/shapely/geometry/base.py", "line_no": 1, "time": 1.0, "await_time": 0.0, "is_application_code": false, "children": []}]}]},
+     {"function": "iterate", "file_path_short": "jupedsim/simulation.py", "file_path": "/venv/site-packages/jupedsim/simulation.py", "line_no": 1, "time": 2.5, "await_time": 0.0, "is_application_code": false, "children": []}]}]}}

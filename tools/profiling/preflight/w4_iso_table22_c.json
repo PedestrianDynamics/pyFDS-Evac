@@ -1,0 +1,104 @@
+{
+ "fds_dir": "/private/tmp/claude-503/-Users-chraibi-workspace-PedestrianDynamics-Fire-fds-visibility-visibility-workshop/912eedf9-4145-46cc-bb81-967d1c8ae7ac/scratchpad/main_f5c6/assets/iso_table22_coupled/fds/c",
+ "smv": "iso_table22_c.smv",
+ "n_meshes": 1,
+ "meshes": [
+  {
+   "ijk": [
+    20,
+    20,
+    6
+   ],
+   "xb": [
+    0.0,
+    10.0,
+    0.0,
+    10.0,
+    0.0,
+    3.0
+   ]
+  }
+ ],
+ "slices": [
+  {
+   "quantity": "CARBON DIOXIDE VOLUME FRACTION",
+   "z_m": 1.5,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    5
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 1950.0,
+   "dt": 500.0906982421875,
+   "min": 0.0,
+   "max": 0.0,
+   "max_at_probe": {
+    "0.0": 0.0,
+    "1000.0": 0.0,
+    "2000.0": 0.0
+   }
+  },
+  {
+   "quantity": "CARBON MONOXIDE VOLUME FRACTION",
+   "z_m": 1.5,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    5
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 1950.0,
+   "dt": 500.0906982421875,
+   "min": 0.0010000064503401518,
+   "max": 0.0010000064503401518,
+   "max_at_probe": {
+    "0.0": 0.0010000064503401518,
+    "1000.0": 0.0010000064503401518,
+    "2000.0": 0.0010000064503401518
+   }
+  },
+  {
+   "quantity": "OXYGEN VOLUME FRACTION",
+   "z_m": 1.5,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    5
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 1950.0,
+   "dt": 500.0906982421875,
+   "min": 0.21000321209430695,
+   "max": 0.21000321209430695,
+   "max_at_probe": {
+    "0.0": 0.21000321209430695,
+    "1000.0": 0.21000321209430695,
+    "2000.0": 0.21000321209430695
+   }
+  },
+  {
+   "quantity": "SOOT EXTINCTION COEFFICIENT",
+   "z_m": 1.5,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    5
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 1950.0,
+   "dt": 500.0906982421875,
+   "min": 0.0,
+   "max": 0.0,
+   "max_at_probe": {
+    "0.0": 0.0,
+    "1000.0": 0.0,
+    "2000.0": 0.0
+   }
+  }
+ ]
+}

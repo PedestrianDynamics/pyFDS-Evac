@@ -1,0 +1,12 @@
+seed,memo_run_id,nomemo_run_id,wall_memo_s,wall_nomemo_s,d_s,flagged_memo,flagged_nomemo,outputs_equal,n_seeds,n_seeds_dropped,median_d_s,iqr_d_s,diff_per_study_s,sum_d_s,agent_steps_median,d_us_per_agent_step,verdict
+1,G5_memo_W1_W1_O_norc_s1_rep1_20261018T055220,G5_memo_W1_W1_nomemo_s1_rep1_20261018T055253,32.5199,35.228651,2.708751,False,False,True,,,,,,,,,
+2,G5_memo_W1_W1_O_norc_s2_rep1_20261018T055520,G5_memo_W1_W1_nomemo_s2_rep1_20261018T055441,34.558803,37.501246,2.942443,True,False,True,,,,,,,,,
+3,G5_memo_W1_W1_O_norc_s3_rep1_20261018T055707,G5_memo_W1_W1_nomemo_s3_rep1_20261018T055741,33.785829,36.983187,3.197357,True,True,True,,,,,,,,,
+4,G5_memo_W1_W1_O_norc_s4_rep1_20261018T060007,G5_memo_W1_W1_nomemo_s4_rep1_20261018T055930,32.827458,35.524971,2.697513,False,True,True,,,,,,,,,
+5,G5_memo_W1_W1_O_norc_s5_rep1_20261018T060150,G5_memo_W1_W1_nomemo_s5_rep1_20261018T060224,32.890666,34.552263,1.661597,True,True,True,,,,,,,,,
+6,G5_memo_W1_W1_O_norc_s6_rep1_20261018T060446,G5_memo_W1_W1_nomemo_s6_rep1_20261018T060409,32.536508,35.239851,2.703343,False,False,True,,,,,,,,,
+7,G5_memo_W1_W1_O_norc_s7_rep1_20261018T060635,G5_memo_W1_W1_nomemo_s7_rep1_20261018T060712,35.744454,37.988886,2.244432,False,True,True,,,,,,,,,
+8,G5_memo_W1_W1_O_norc_s8_rep1_20261018T060944,G5_memo_W1_W1_nomemo_s8_rep1_20261018T060905,34.543877,37.396253,2.852376,False,True,True,,,,,,,,,
+9,G5_memo_W1_W1_O_norc_s9_rep1_20261018T061135,G5_memo_W1_W1_nomemo_s9_rep1_20261018T061211,34.627629,37.988594,3.360965,False,True,True,,,,,,,,,
+10,G5_memo_W1_W1_O_norc_s10_rep1_20261018T061438,G5_memo_W1_W1_nomemo_s10_rep1_20261018T061401,32.755393,35.737206,2.981813,False,False,True,,,,,,,,,
+ALL,,,,,,,,,10,0,2.780563,0.451456,27.805635,27.35059,3259925.0,0.852953,fix_first

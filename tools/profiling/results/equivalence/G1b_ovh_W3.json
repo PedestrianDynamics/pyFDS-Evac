@@ -1,0 +1,431 @@
+[
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_ctr_s42_rep2_20261016T122720",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_ctr_s42_rep3_20261016T122737",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_ctr_s42_rep4_20261016T122754",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_ctr_s42_rep5_20261016T122811",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_ctr_s42_warmup1_20261016T122646",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_s42_rep1_20261016T122654",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   false,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_s42_rep2_20261016T122712",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   false,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_s42_rep3_20261016T122729",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   false,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_s42_rep4_20261016T122746",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   false,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_s42_rep5_20261016T122803",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   false,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1b_ovhW3_W3_O_study_ctr_s42_rep1_20261016T122703",
+  "b": "G1b_ovhW3_W3_O_study_s42_warmup1_20261016T122637",
+  "a_combo": [
+   "W3",
+   "O_study",
+   true,
+   42
+  ],
+  "b_combo": [
+   "W3",
+   "O_study",
+   false,
+   42
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "10c_route_cost_samples": "equal",
+   "11_vismap_arrays": "equal",
+   "11b_vismap_format_is_6": "equal",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [
+   "cognitive-map state not compared"
+  ],
+  "detail": {},
+  "verdict": "equivalent"
+ }
+]

@@ -1,0 +1,811 @@
+{
+ "schema": "perf-model restricted re-evaluation of compare.py output (read-only derivation, 2026-10-16)",
+ "rule": "item 10 = exit_code + summary_line + looks line always; route_cost_samples compared only when both runs wrote the route-cost history (10c). Items 1-9, 11, 12 unchanged: equal / not_in_both / absent as compare.py reported. A pair is equivalent on the items both write; not_in_both items are listed as gaps, never as equal.",
+ "source": "results/equivalence/G1out_vs_G1base.json",
+ "pairs": [
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_min_s1_rep1_20261016T053737",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_min",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "not_in_both",
+    "2_spawn_removal_frames": "not_in_both",
+    "3_exit.csv": "not_in_both",
+    "4_rh.csv": "not_in_both",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "not_in_both",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "not_in_both",
+    "9_app_manifest_fields": "not_in_both",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "10_exit_summary_counts"
+   ],
+   "gaps": [
+    "trajectories not compared (no SQLite copy in one run)"
+   ],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_min_s1_rep2_20261016T053941",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_min",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "not_in_both",
+    "2_spawn_removal_frames": "not_in_both",
+    "3_exit.csv": "not_in_both",
+    "4_rh.csv": "not_in_both",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "not_in_both",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "not_in_both",
+    "9_app_manifest_fields": "not_in_both",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "10_exit_summary_counts"
+   ],
+   "gaps": [
+    "trajectories not compared (no SQLite copy in one run)"
+   ],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_min_s1_rep3_20261016T054145",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_min",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "not_in_both",
+    "2_spawn_removal_frames": "not_in_both",
+    "3_exit.csv": "not_in_both",
+    "4_rh.csv": "not_in_both",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "not_in_both",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "not_in_both",
+    "9_app_manifest_fields": "not_in_both",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "10_exit_summary_counts"
+   ],
+   "gaps": [
+    "trajectories not compared (no SQLite copy in one run)"
+   ],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_min_s1_rep4_20261016T054349",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_min",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "not_in_both",
+    "2_spawn_removal_frames": "not_in_both",
+    "3_exit.csv": "not_in_both",
+    "4_rh.csv": "not_in_both",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "not_in_both",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "not_in_both",
+    "9_app_manifest_fields": "not_in_both",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "10_exit_summary_counts"
+   ],
+   "gaps": [
+    "trajectories not compared (no SQLite copy in one run)"
+   ],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_min_s1_rep5_20261016T054554",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_min",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "not_in_both",
+    "2_spawn_removal_frames": "not_in_both",
+    "3_exit.csv": "not_in_both",
+    "4_rh.csv": "not_in_both",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "not_in_both",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "not_in_both",
+    "9_app_manifest_fields": "not_in_both",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "10_exit_summary_counts"
+   ],
+   "gaps": [
+    "trajectories not compared (no SQLite copy in one run)"
+   ],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_min_s1_warmup1_20261016T053533",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_min",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "not_in_both",
+    "2_spawn_removal_frames": "not_in_both",
+    "3_exit.csv": "not_in_both",
+    "4_rh.csv": "not_in_both",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "not_in_both",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "not_in_both",
+    "9_app_manifest_fields": "not_in_both",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "10_exit_summary_counts"
+   ],
+   "gaps": [
+    "trajectories not compared (no SQLite copy in one run)"
+   ],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_norc_s1_rep1_20261016T053659",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_norc",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_norc_s1_rep2_20261016T053903",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_norc",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_norc_s1_rep3_20261016T054107",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_norc",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_norc_s1_rep4_20261016T054311",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_norc",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_norc_s1_rep5_20261016T054515",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_norc",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_norc_s1_warmup1_20261016T053455",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_norc",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "not_in_both",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_study_s1_rep1_20261016T053610",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "equal",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "5_rc.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_study_s1_rep2_20261016T053814",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "equal",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "5_rc.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_study_s1_rep3_20261016T054019",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "equal",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "5_rc.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_study_s1_rep4_20261016T054223",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "equal",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "5_rc.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_study_s1_rep5_20261016T054427",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "equal",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "5_rc.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  },
+  {
+   "a": "G1base_W1_O_study_s1_rep1_20261016T043233",
+   "b": "G1out_W1_O_study_s1_warmup1_20261016T053406",
+   "a_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "b_combo": [
+    "W1",
+    "O_study",
+    false,
+    1
+   ],
+   "items": {
+    "1_trajectory_repr_v1": "equal",
+    "2_spawn_removal_frames": "equal",
+    "3_exit.csv": "equal",
+    "4_rh.csv": "equal",
+    "5_rc.csv": "equal",
+    "6_fed.csv": "equal",
+    "7_smoke.csv": "absent",
+    "8_agent_scalars": "equal",
+    "9_app_manifest_fields": "equal",
+    "10_exit_summary_counts": "equal",
+    "11_vismap_arrays": "absent",
+    "11b_vismap_format_is_6": "absent",
+    "12_cognitive_map_history": "absent",
+    "12b_result_metrics": "absent",
+    "10c_route_cost_samples": "not_in_both"
+   },
+   "different": [],
+   "compared": [
+    "1_trajectory_repr_v1",
+    "2_spawn_removal_frames",
+    "3_exit.csv",
+    "4_rh.csv",
+    "5_rc.csv",
+    "6_fed.csv",
+    "8_agent_scalars",
+    "9_app_manifest_fields",
+    "10_exit_summary_counts"
+   ],
+   "gaps": [],
+   "verdict": "equivalent on items both write"
+  }
+ ]
+}

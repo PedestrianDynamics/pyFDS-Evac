@@ -1,0 +1,5 @@
+results/raw/
+__pycache__/
+*.pyc
+*.prof
+*.bin

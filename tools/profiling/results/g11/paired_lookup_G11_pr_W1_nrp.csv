@@ -1,0 +1,12 @@
+seed,base_run_id,arm_run_id,wall_base_s,wall_arm_s,d_s,flagged_base,flagged_arm,outputs_equal,n_seeds,n_seeds_dropped,median_d_s,iqr_d_s,diff_per_study_s,sum_d_s,agent_steps_median,d_us_per_agent_step,verdict
+1,G11_pr_W1_W1_O_norc_s1_rep1_20261018T162949,G11_pr_W1_W1_nrp_s1_rep1_20261018T163019,29.383565,32.361473,2.977908,False,False,True,,,,,,,,,
+2,G11_pr_W1_W1_O_norc_s2_rep1_20261018T163229,G11_pr_W1_W1_nrp_s2_rep1_20261018T163156,30.847331,31.785921,0.93859,False,False,True,,,,,,,,,
+3,G11_pr_W1_W1_O_norc_s3_rep1_20261018T163406,G11_pr_W1_W1_nrp_s3_rep1_20261018T163437,30.302803,31.900396,1.597593,True,True,True,,,,,,,,,
+4,G11_pr_W1_W1_O_norc_s4_rep1_20261018T163646,G11_pr_W1_W1_nrp_s4_rep1_20261018T163613,29.336454,31.397454,2.061,False,False,True,,,,,,,,,
+5,G11_pr_W1_W1_O_norc_s5_rep1_20261018T163818,G11_pr_W1_W1_nrp_s5_rep1_20261018T163848,28.744563,31.333982,2.589419,True,True,True,,,,,,,,,
+6,G11_pr_W1_W1_O_norc_s6_rep1_20261018T164055,G11_pr_W1_W1_nrp_s6_rep1_20261018T164023,30.148668,31.444159,1.295491,False,False,True,,,,,,,,,
+7,G11_pr_W1_W1_O_norc_s7_rep1_20261018T164233,G11_pr_W1_W1_nrp_s7_rep1_20261018T164306,32.008679,33.256845,1.248166,False,False,True,,,,,,,,,
+8,G11_pr_W1_W1_O_norc_s8_rep1_20261018T164521,G11_pr_W1_W1_nrp_s8_rep1_20261018T164447,31.339254,33.230118,1.890864,True,False,True,,,,,,,,,
+9,G11_pr_W1_W1_O_norc_s9_rep1_20261018T164702,G11_pr_W1_W1_nrp_s9_rep1_20261018T164734,31.188254,33.426036,2.237782,False,False,True,,,,,,,,,
+10,G11_pr_W1_W1_O_norc_s10_rep1_20261018T164945,G11_pr_W1_W1_nrp_s10_rep1_20261018T164912,30.053664,32.125997,2.072333,False,True,True,,,,,,,,,
+ALL,,,,,,,,,10,0,1.975932,1.042032,19.759321,18.909148,3259925.0,0.606128,below_bar

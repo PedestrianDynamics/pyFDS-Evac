@@ -1,0 +1,6 @@
+2026-10-18T21:26:36Z	START	g14_all	pid=65227	cap_s=7200
+{"slot_before_block": {"time_utc": "2026-10-18T21:26:36.737+00:00", "load_avg": [2.044921875, 2.10302734375, 2.046875], "foreign_heavy": [], "foreign_recorded": [{"pid": 363, "ppid": 1, "pcpu": 0.0, "rss_kb": 30736, "comm": "/System/Library/Frameworks/CoreServices.framework/Versions/A/Frameworks/Metadata.framework/Versions/A/Support/mds", "system_exempt": true}, {"pid": 405, "ppid": 1, "pcpu": 0.7, "rss_kb": 143440, "comm": "/System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer", "system_exempt": true}, {"pid": 451, "ppid": 1, "pcpu": 11.1, "rss_kb": 18960, "comm": "/usr/
+G14_cnt_W1_W1_O_norc_det_s1_rep1_20261018T212636: exit 2 wall 46.25s cpu 46.18 rss 748552192.0 contaminated=True
+G14_cnt_W1_W1_O_norc_det_s2_rep1_20261018T212724: exit 2 wall 46.49s cpu 46.47 rss 756432896.0 contaminated=False
+2026-10-18T21:28:11Z	G14_cnt_W1	W1	rc=0	95
+2026-10-18T21:28:11Z	END	g14_all	elapsed_s=95

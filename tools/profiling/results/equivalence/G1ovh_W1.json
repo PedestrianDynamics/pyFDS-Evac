@@ -1,0 +1,398 @@
+[
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_ctr_s1_rep2_20261016T050710",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_ctr_s1_rep3_20261016T050847",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_ctr_s1_rep4_20261016T051024",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_ctr_s1_rep5_20261016T051201",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_ctr_s1_warmup1_20261016T050357",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_s1_rep1_20261016T050445",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_s1_rep2_20261016T050621",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_s1_rep3_20261016T050758",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_s1_rep4_20261016T050935",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_s1_rep5_20261016T051112",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ },
+ {
+  "a": "G1ovh_W1_O_study_ctr_s1_rep1_20261016T050533",
+  "b": "G1ovh_W1_O_study_s1_warmup1_20261016T050308",
+  "a_combo": [
+   "W1",
+   "O_study",
+   true,
+   1
+  ],
+  "b_combo": [
+   "W1",
+   "O_study",
+   false,
+   1
+  ],
+  "items": {
+   "1_trajectory_repr_v1": "equal",
+   "2_spawn_removal_frames": "equal",
+   "3_exit.csv": "equal",
+   "4_rh.csv": "equal",
+   "5_rc.csv": "equal",
+   "6_fed.csv": "equal",
+   "7_smoke.csv": "absent",
+   "8_agent_scalars": "equal",
+   "9_app_manifest_fields": "equal",
+   "10_exit_summary_counts": "equal",
+   "11_vismap_arrays": "absent",
+   "11b_vismap_format_is_6": "absent",
+   "12_cognitive_map_history": "absent",
+   "12b_result_metrics": "absent"
+  },
+  "different": [],
+  "gaps": [],
+  "detail": {},
+  "verdict": "equivalent"
+ }
+]

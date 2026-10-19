@@ -1,0 +1,11 @@
+run_id,path,calls,seconds,overhead_s,net_seconds,total,distinct,hit_share,avoidable_s,avoidable_per_study_s,capped
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,evaluate_segment,62499,3.757449,0.004644,3.752805,,,,,,
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,first_leg,193879,5.858086,0.014405,5.843681,,,,,,
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,cell_los_stats,265829,6.381811,0.019751,6.36206,,,,,,
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,step_los_stats,85576,2.025292,0.006358,2.018933,,,,,,
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,read_cells,475368,3.746515,0.03532,3.711195,475368,247342,0.479683,1.780198,17.801977,False
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,line_parts,265829,0.739036,0.019751,0.719285,,,,,,
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,sample_fed_rate,410667,2.049327,0.030513,2.018814,410667,144644,0.647783,1.307753,13.077532,False
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,sample_route,90478,0.276213,0.006723,0.269491,90478,1531,0.983079,0.264931,2.649308,False
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,remainder,,,,0.728198,,,,,,
+G13_det_W1_W1_O_norc_det_s1_rep1_20261018T194912,TOTAL,,,,9.596486,,,,3.352882,33.528818,False

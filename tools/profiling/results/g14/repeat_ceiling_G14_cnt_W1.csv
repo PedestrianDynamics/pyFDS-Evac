@@ -1,0 +1,9 @@
+run_id,seed,path,total,distinct,hit_share,capped,cost_per_study_s,ceiling_per_study_s,verdict
+G14_cnt_W1_W1_O_norc_det_s1_rep1_20261018T212636,1,first_leg,145580,114986,0.210152,False,33.328813,7.004133,below_bar
+G14_cnt_W1_W1_O_norc_det_s1_rep1_20261018T212636,1,first_leg_dose,193879,84807,0.562578,False,14.466246,8.138387,below_bar
+G14_cnt_W1_W1_O_norc_det_s1_rep1_20261018T212636,1,segment,62499,62499,0.0,False,20.470545,0.0,below_bar
+G14_cnt_W1_W1_O_norc_det_s1_rep1_20261018T212636,1,first_leg_r01,145580,114986,0.210152,False,33.328813,7.004133,info
+G14_cnt_W1_W1_O_norc_det_s2_rep1_20261018T212724,2,first_leg,146265,115637,0.209401,False,33.328813,6.979078,below_bar
+G14_cnt_W1_W1_O_norc_det_s2_rep1_20261018T212724,2,first_leg_dose,194838,85132,0.563063,False,14.466246,8.145403,below_bar
+G14_cnt_W1_W1_O_norc_det_s2_rep1_20261018T212724,2,segment,63564,63564,0.0,False,20.470545,0.0,below_bar
+G14_cnt_W1_W1_O_norc_det_s2_rep1_20261018T212724,2,first_leg_r01,146265,115637,0.209401,False,33.328813,6.979078,info

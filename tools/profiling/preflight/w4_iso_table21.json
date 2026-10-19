@@ -1,0 +1,62 @@
+{
+ "fds_dir": "/private/tmp/claude-503/-Users-chraibi-workspace-PedestrianDynamics-Fire-fds-visibility-visibility-workshop/912eedf9-4145-46cc-bb81-967d1c8ae7ac/scratchpad/main_f5c6/assets/iso_table21_coupled/fds",
+ "smv": "iso_table21_coupled.smv",
+ "n_meshes": 1,
+ "meshes": [
+  {
+   "ijk": [
+    200,
+    4,
+    6
+   ],
+   "xb": [
+    -50.0,
+    50.0,
+    -1.0,
+    1.0,
+    0.0,
+    3.0
+   ]
+  }
+ ],
+ "slices": [
+  {
+   "quantity": "SOOT EXTINCTION COEFFICIENT",
+   "z_m": 1.5,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    3
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 150.0,
+   "dt": 75.0,
+   "min": 0.9954973459243774,
+   "max": 0.9955111145973206,
+   "max_at_probe": {
+    "0.0": 0.9955044388771057,
+    "100.0": 0.9955111145973206
+   }
+  },
+  {
+   "quantity": "SOOT EXTINCTION COEFFICIENT",
+   "z_m": 2.0,
+   "meshes": [
+    1
+   ],
+   "frames": [
+    3
+   ],
+   "t_first": 0.0,
+   "t_last_min_over_meshes": 150.0,
+   "dt": 75.0,
+   "min": 0.9954427480697632,
+   "max": 0.9954541325569153,
+   "max_at_probe": {
+    "0.0": 0.9954483509063721,
+    "100.0": 0.9954541325569153
+   }
+  }
+ ]
+}

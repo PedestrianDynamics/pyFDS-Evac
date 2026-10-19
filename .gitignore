@@ -203,6 +203,8 @@ assets/**/vismap_cache.npz
 # Local working artifacts
 .worktrees/
 results/
+!/tools/profiling/results/
+!/tools/profiling/results/**/*.log
 *.zip
 *.s3d.sz
 *.~undo-tree~
@@ -220,6 +222,7 @@ results/
 # Reference materials and PDFs (kept locally, not tracked)
 *.pdf
 materials/
+!/tools/profiling/results/figures/*.pdf
 
 # Retired scenarios. Kept on disk for local reference, no longer tracked.
 # assets/demo2 was a near-duplicate of the T-junction case (now assets/t_junction);

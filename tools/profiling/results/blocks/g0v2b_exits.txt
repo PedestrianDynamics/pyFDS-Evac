@@ -1,0 +1,5 @@
+W1 exit 0
+W2 exit 0
+W3 exit 0
+W3b_cmm exit 0
+ALLDONE

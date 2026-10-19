@@ -1,0 +1,581 @@
+{
+ "schema": "pyFDS-Evac profiling scenario manifest, gate G0 v2 (re-freeze at 8f7d29a2)",
+ "owner": "perf-model",
+ "created": "2026-10-02",
+ "target": {
+  "repo": "PedestrianDynamics/pyFDS-Evac (local clone /Users/chraibi/workspace/PedestrianDynamics/Fire/fds_visibility/pyFDS-EVAC, read-only; runs use the detached worktree $WT)",
+  "commit": "8f7d29a2e056db46183e8cccabce338c398606a1",
+  "describe": "v0.5.0-98-g8f7d29a2 (main after PR #790); pyproject version 0.5.0; no tag",
+  "uv_lock_sha256": "7f64a58db6d321441e320ad47ba960dc51d25c4a8dbaff8e8d95ba09fac25fc8",
+  "pyproject_sha256": "b323bc2a2a46f5288145d111b4b16fc8360c928e89c6efeff958cc1f742ece9c",
+  "run_py_sha256": "ccb6d4a3a613 (17-line shim; the CLI is pyfds_evac/cli.py, options in pyfds_evac/config/parameters.py)",
+  "versions_at_commit": {
+   "python": "3.12.13 (pyproject >=3.12,<3.15)",
+   "pyfds-evac": "0.5.0",
+   "jupedsim": "1.4.2",
+   "fdsreader": "1.11.7",
+   "fdsvismap": "0.3.2",
+   "shapely": "2.1.2",
+   "numpy": "2.4.4",
+   "scikit-image": "0.26.0 (lock pin; the v1 '3.12 keeps 0.23.2' risk is obsolete)"
+  },
+  "freeze_risks": [
+   "Frozen at 8f7d29a2 and uv.lock 7f64a58d...; later main commits are out of scope. Require git_dirty=false, git_commit=8f7d29a2 and uv_lock_sha256=7f64a58d... in every run manifest.",
+   "One interpreter (CPython 3.12) and one scikit-image (0.26.0) for every run; the fresh worktree venv is built with `uv sync --frozen --python 3.12`.",
+   "All v1 (v0.2.0) run outputs are activation expectations only: #736/#653, #678, #187, #658/#610, #663, #726, #738, #728, #642 and #720 change the executed workload with identical inputs (model_handoff_g0_v2.md section 1.2)."
+  ],
+  "commit_note": "Scenario inputs byte-identical to v1 (config_gate, config_discovery, cmm, iso21/22 configs, geometries, a047 .fds). Removed routing keys of #187 raise ValueError; none of the decks sets them. simulationParams.dt is not read (dt stays 0.01)."
+ },
+ "placeholders": {
+  "WT": "clean detached worktree of pyFDS-Evac at 8f7d29a2 (/Users/chraibi/profiling-stage/wt_8f7d29a2; cwd of every run.py command)",
+  "PY": "$WT/.venv/bin/python (uv sync --frozen --python 3.12)",
+  "STUDY": "/Users/chraibi/workspace/PedestrianDynamics/Fire/fds_visibility/visibility_workshop/studies/profiling",
+  "STAGE": "/Users/chraibi/profiling-stage (plan.md D4): fds/<name>/ copies, decks/, cache/ for the repeated-use vismap npz; vismap cache metadata stores the resolved fds_dir, so the path never moves",
+  "OUT": "per-run output directory results/raw/<run_id>/"
+ },
+ "global_rules": {
+  "environment": "PYTHONHASHSEED=0 for every run (timed, equivalence and QA).",
+  "execution": "Serial, one run per fresh process for latency. run_p1.sh is reused for its arm/flag definitions only, never for its 6-job xargs schedule or its sb-s1 cache warm-up.",
+  "fds_staging": "Copy each FDS output dir from sciebo to $STAGE/fds/<name>/ (rsync -a --exclude '*.pickle') and the committed W4 dirs out of the worktree; verify every file against preflight/input_hashes.json (verify_stage.py, results/stage_verification_v2.json 10/10). All runs read the staged copies; sciebo is never read during a run. Staged for v2: a047_pvc_h40, t_junction_fire_2MW_PVC, cmm_clear_air, fed_incap_co_2000ppm (V-build only), world100_fire_4p5MW (W1r), iso_table21_coupled, iso_table22_{a,b,c,d}; decks/world100_evac_4exits/.",
+  "exit_codes": "0 = completed, 2 = incomplete (time limit with agents inside or flow agents still to enter, or emptied after the flow windows closed with agents not spawned; end_reason time_limit | flows_closed), anything else = failed run (record, never discard).",
+  "dt_s": "0.01: jps.Simulation is built without dt (jupedsim 1.4.2 default); confirmed from simulation.delta_time() in the G0 v2b runs of W1, W2, W3, W3b. simulationParams.dt in a deck is not read (simulation_init.py RUN_TIME_STEP_S).",
+  "trajectory_output": "SqliteTrajectoryWriter every_nth_frame=10 (10 fps) is always written to a temp file; --output-sqlite copies it, --cleanup deletes the temp file.",
+  "always_on_in_cli": "collect_cognitive_map_history=True (run_config.build_run_kwargs) and the progress line. The CLI prints 'Route cost samples: N' only with --output-route-cost-history; it no longer prints 'Route switches: N' (#733). W3 prints 'Looks from a node point before a patrol: n, given up: m' (logger) when looks occur.",
+  "user_checkout": "Do not run from or modify /Users/chraibi/workspace/PedestrianDynamics/Fire/fds_visibility/fds-evac (it has untracked files and an older venv).",
+  "fds_opens": "D13 / model_handoff_g0_v2.md 1.4a: pyfds_evac/core/fdsreader_adapter.py (#716/#720) runs every fdsreader open with ENABLE_CACHING=False and the pickle path in a temporary folder, so every open parses the .smv and no on-disk reader cache exists in any run. There is no fdsreader first-use/repeated-use state. Record per run: fds_opens_per_process, seconds per open and the opener (G0 v2b: W1 7 opens 0.203 s, W2 0, W3 10 opens 0.125 s, W3b 10 opens 0.036 s). Label 'FDS parsing' as a setup sub-phase, outside the loop and outside the #241 kernel. Repeated parses are a candidate finding, never patched here.",
+  "cache_states": "The only application cache state is the vismap npz on W3 and W3b (first_use = --vis-cache at a fresh path, build + save; repeated_use = --vis-cache $STAGE/cache/<case>.npz from an untimed warm-up with equal metadata, load; noflag = built in memory every run, never saved). W1, W2 and W4-ISO: 'no application cache'. OS page cache: uncontrolled, labelled 'process-fresh, page cache uncontrolled'.",
+  "horizon_criterion": "IV6/IV7, computable from the route-cost CSV of a run: for every row, bound = time_s + path_length_m / base_speed_m_per_s, where base_speed_m_per_s is the deck's routing value (W1 1.0; W3, W3b, W1r 1.3 = RouteCostConfig default). The run passes when max(bound) < guard = last FDS frame + output interval (largest frame spacing) AND stderr has no 'Route foresight reaches beyond' (#666) warning. bound is an upper bound of the latest sample time a route decision could read (the first leg is read at the decision time; later legs at their arrival time, each capped at the FDS end). Rows with bound > last FDS frame are 'held-foresight rows': their later legs were priced at the last frame. G0 v2 values: W1 430.6 s vs guard 481.1 s, 0 rows past 480 s, no warning; W3 56.8 s vs 301.2 s; W1r 288.4 s vs 252 s, 812 of 9856 rows (8.2 %) from t = 208 s past 250 s, one warning (logged once per run by design). Margin under 5 s is flagged to the coordinator; the criterion is never relaxed to make a case run."
+ },
+ "cli_vs_python_defaults": [
+  {
+   "setting": "route reevaluation interval",
+   "cli": "1.0 s (--reroute-interval)",
+   "python": "10.0 s (RerouteConfig.reevaluation_interval_s)",
+   "used_here": "1.0 s"
+  },
+  {
+   "setting": "rerouting",
+   "cli": "on (--enable-rerouting default True)",
+   "python": "off unless reroute_config is passed",
+   "used_here": "on, except --smoke-blind which turns it off"
+  },
+  {
+   "setting": "VisibilityModel time step",
+   "cli": "= --reroute-interval (1.0 s) -> vismap time points 0..T_END step 1 s",
+   "python": "10.0 s",
+   "used_here": "1.0 s (sets vismap time-point count, hence cache build cost)"
+  },
+  {
+   "setting": "cognitive map history",
+   "cli": "collected (True)",
+   "python": "False (run_scenario default)",
+   "used_here": "True"
+  },
+  {
+   "setting": "route cost history",
+   "cli": "collected only with --output-route-cost-history",
+   "python": "collect_route_cost_history=False",
+   "used_here": "per workload below; removing the flag removes work"
+  },
+  {
+   "setting": "smoke/FED/heat update interval",
+   "cli": "1.0 s (--smoke-update-interval)",
+   "python": "1.0 s (SmokeSpeedConfig, DefaultFedConfig)",
+   "used_here": "1.0 s, except W4 iso21 0.1 s (its README)"
+  },
+  {
+   "setting": "sampling height",
+   "cli": "1.6 m (--smoke-slice-height)",
+   "python": "1.6 m",
+   "used_here": "CLI default 1.6 m everywhere. W1/W2: 1.6 m slices exist. W3 and W4-cmm: only 2.0 m slices exist; fdsreader samplers and the vismap slice index select the 2.0 m slice with a height-mismatch warning, but fdsvismap 0.3.2 also stores fds_slc_height=1.6 and uses it to decide which obstructions block sight (FDSVisMap.py:792), and the vismap cache metadata records 1.6. So 1.6 vs 2.0 is a behavioural choice for the vismap; the CLI default is kept, as in the asset READMEs and the cmm reference run. W4 iso: 1.6 m request selects the 1.5 m slice."
+  },
+  {
+   "setting": "seed",
+   "cli": "--seed overrides; else config baseSeed",
+   "python": "seed arg; else baseSeed; else 42",
+   "used_here": "explicit --seed in every command"
+  },
+  {
+   "setting": "heat FED / FIC slowdown",
+   "cli": "off / off",
+   "python": "off unless models/tenability passed",
+   "used_here": "off / off"
+  },
+  {
+   "setting": "incapacitation",
+   "cli": "deterministic, FED threshold 1.0, O2 threshold 20 %",
+   "python": "TenabilityConfig from build_run_kwargs",
+   "used_here": "CLI defaults"
+  },
+  {
+   "setting": "FDS coverage / horizon",
+   "cli": "ambient outside slices with warning; horizon overrun is an error",
+   "python": "same",
+   "used_here": "defaults; --allow-fds-horizon-hold is never used in a timed or baseline run. Single exception: the untimed W4-cmm equivalence arm A, which reproduces the reference command and must show the hold never triggered."
+  },
+  {
+   "setting": "no_known_exit (distribution key, #610/#658)",
+   "cli": "not a CLI option",
+   "python": "default_route (cognitive_map.DEFAULT_NO_KNOWN_EXIT): an agent with no reachable known exit keeps its scripted journey or the nearest open exit on foot; explore/return/stay are opt-in",
+   "used_here": "default_route in every deck; W3 therefore has explore = wander = 0 by design (D14)"
+  },
+  {
+   "setting": "smoke_slice_height from the deck",
+   "cli": "--smoke-slice-height overrides; else simulationParams.smoke_slice_height; else 1.6 m",
+   "python": "1.6 m",
+   "used_here": "no deck sets the key: 1.6 m everywhere"
+  }
+ ],
+ "harness_rule": "Any in-process or W2 steering harness must build its run kwargs with pyfds_evac.core.run_config.build_run_kwargs on a run.py-parsed Namespace (run._build_parser().parse_args([...])), not hand-built run_scenario kwargs as the #430 harness did, so CLI and in-process runs execute the same configuration.",
+ "workloads": {
+  "W1": {
+   "role": "primary research workload (headline)",
+   "id": "w1_gate",
+   "case": "Schroeder 2015 route case, arm 'gate', main fire a047_pvc_h40",
+   "why_this_arm": "Fully coupled: smoke-speed, gas FED with tenability, and anticipated gate rerouting at 1 s all read the FDS field. gate is the code default cost_model and the study's main router (E share 0.678, 235-267 switches per seed in earlier runs). sb turns rerouting and tenability off; nf has no FDS; add is a secondary router.",
+   "command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario assets/schroeder2015_route/evac/config_gate.json --seed 1 --fds-dir $STAGE/fds/a047_pvc_h40 --output-route-cost-history $OUT/gate_s1_rc.csv --output-fed-history $OUT/gate_s1_fed.csv --output-sqlite $OUT/gate_s1.sqlite --cleanup --output-route-history $OUT/gate_s1_rh.csv --output-exit-history $OUT/gate_s1_exit.csv > $OUT/gate_s1_log.txt 2>&1",
+   "command_source": "run_p1.sh, arm gate (same flags; no gzip inside timing)",
+   "seeds": {
+    "headline": 1,
+    "confirmation": [
+     2,
+     3
+    ]
+   },
+   "effective_settings": {
+    "movement_model": "CollisionFreeSpeedModel; strength_neighbor_repulsion 2.6, range_neighbor_repulsion 0.1, a_v 1, a_min 0.2, b_min 0.2, b_max 0.4, T 1",
+    "dt_s": 0.01,
+    "max_simulation_time_s": 400,
+    "spawning": "200 agents at t=0 (by_number, no flow spawning) in hall polygon x 0.5-10.3, y 0.3-23.7 (229.3 m2, 0.87 /m2); radius 0.15 constant; v0 gaussian mean 1.0 sd 0.2; premovement weibull scale a=135.49 s, shape b=2.101 (mean 120 s, sd 60 s); per-agent draws keyed by spawn key (agent_seeding spawn-key-blake2b-v2)",
+    "stage_graph": "5 nodes, 6 edges: distribution -> doorA|doorB -> exit_E|exit_F; 4 direct-steering stages (2 door checkpoints, 2 exits); waypoint_routing 50/50 placeholders overridden by cost-based choice",
+    "familiarity": "full (all agents know the graph from t=0)",
+    "routing": "cost_model gate, anticipate true, foresight_horizon_s inf, base_speed_m_per_s 1.0, w_smoke 1.0; other RouteCostConfig defaults at 8f7d29a2 (tau_max 6, sampling_step_m 2.0 (off-grid only; FDS fields are read once per grid cell, #736), exit_switch_anchor 0.9, current_exit_discount, clean_exit_margin 0.1, tau_deadband, fallback_switch_margin, fallback rule tau); rerouting on, interval 1.0 s, staggered per agent; route samples read at arrival time, capped at the FDS end (#678/#666)",
+    "smoke_speed": "on, SOOT EXTINCTION COEFFICIENT at 1.6 m, update 1.0 s",
+    "gas_fed": "on (CO, CO2, O2 at 1.6 m), O2 threshold 20 %, update 1.0 s",
+    "fic": "no HCl/HCN slices: FIC term has no input; FIC slowdown off",
+    "heat_fed": "off (CLI default) although a TEMPERATURE slice at 1.6 m exists",
+    "tenability": "on: deterministic incapacitation at gas FED 1.0",
+    "visibility": "NONE: familiarity full and no --vis-cache, so _build_vis_model returns None. Sign gating is not exercised in W1.",
+    "coverage": "require_fds_coverage false; earlier manifest reports 0.0 m2 of 470.6 m2 walkable outside the slices",
+    "horizon": "FDS slices 0-480 s (481 frames, 6 meshes); output interval reported 1.1 s (largest spacing), guard 481.1 s; no hold. Criterion: global_rules.horizon_criterion. G0 v2b seed 1: max(time_s + path_length_m / 1.0) over rc.csv = 430.6 s, 0 of 64994 rows past 480 s, no foresight warning in stderr: pass.",
+    "outputs": "trajectory SQLite copy, route history, exit history, route-cost history, FED history; smoke history not written; temp SQLite cleaned",
+    "cache_state": "no application cache (D13); FDS opens per process recorded as a setup sub-phase (G0 v2b: 7 opens, 0.203 s)"
+   },
+   "inputs": {
+    "config": {
+     "path": "assets/schroeder2015_route/evac/config_gate.json",
+     "sha256": "f73267f1d848612db6dbc7bc8ae61a2923257e479ebd5d4234bd6cccfec12bb6",
+     "identical_to_sciebo_copy": true
+    },
+    "geometry": {
+     "path": "assets/schroeder2015_route/evac/geometry.wkt",
+     "sha256": "88e0aff3defd8fca7dfb27e3f9287e09365c1f13e6130d0482f2365590827279",
+     "identical_to_sciebo_copy": true
+    },
+    "fds_deck_repo": {
+     "path": "assets/schroeder2015_route/a047_pvc_h40/a047_pvc_h40.fds",
+     "sha256": "467417d73b85465a9078d6a90fa11e1a27a7807281066788af4292d5ce2d1202",
+     "note": "differs from the deck that was run only in header comment lines 4-7 (diffed)"
+    }
+   },
+   "fds_output": {
+    "location": "sciebo fds-evac-data/schroeder2015-route/a047_pvc_h40/",
+    "aggregate_sha256_excl_pickle": "441bc2c1676dfb001721b944a977424054ff4612bb27a7f72bdccb5d6e63eb8a",
+    "n_files": 145,
+    "bytes": 985519388,
+    "smv_sha256": "30f295e80a35ada70488f67de503c83acbcce61fe15249314b97f284eef94579",
+    "provenance": "FDS-6.10.1-0-g12efa16-release, 6 meshes / 6 MPI ranks, T_END 480 s, DT_SLCF 1 s; .out ends 'STOP: FDS completed successfully', 5423 s wall. Fire chosen by the maintainer from 9 variants (brief_study_schroeder2015.md).",
+    "per_file_hashes": "preflight/input_hashes.json"
+   },
+   "arms_for_explicit_questions_only": {
+    "w1_sb": "--smoke-blind with --fds-dir, no --output-route-cost-history (run_p1.sh sb): smoke and FED sampled for histories only; rerouting and tenability off. Expected to give trajectories identical to nf (verified at 7e9c4c30); re-check at 6fd7878c.",
+    "w1_nf": "= W2",
+    "w1_add": "assets/schroeder2015_route/evac/config_additive.json (sha256 0e819b90e401ce207e2abd6aaac0465f73ab1900998fcea049aa5219bd0359eb), same flags as gate",
+    "w1_min_output": "gate command without any --output-* flag, with --cleanup. Removes route-cost collection and CSV/SQLite writing; behaviour must be identical (checked in a separate untimed run that keeps --output-sqlite)."
+   },
+   "scaling_family": {
+    "levels": [
+     {
+      "n": 100,
+      "config": "scenarios/w1_scaling_n100/config_gate.json",
+      "sha256": "36e452d310927f3c9c0ad656daad0302e54d30b74fa45d61d86d4e10942f22c3",
+      "density_per_m2": 0.44
+     },
+     {
+      "n": 200,
+      "config": "assets/schroeder2015_route/evac/config_gate.json",
+      "sha256": "f73267f1d848612db6dbc7bc8ae61a2923257e479ebd5d4234bd6cccfec12bb6",
+      "density_per_m2": 0.87
+     },
+     {
+      "n": 400,
+      "config": "scenarios/w1_scaling_n400/config_gate.json",
+      "sha256": "c65ed59bb882b919de782e899c003d36a4839d4ecfead63d9995e3faf3b3ca43",
+      "density_per_m2": 1.74
+     }
+    ],
+    "fallback": "If n=400 fails placement or spawns fewer than 400, use 300 (same rule) and record why.",
+    "derivation": "scenarios/make_derived.py: only distributions.jps-distributions_0.parameters.number changes; geometry.wkt copied unchanged (sha256 88e0aff3...).",
+    "observation_window": "0-400 s simulated (max_simulation_time unchanged)",
+    "command": "W1 gate command with --scenario $STUDY/scenarios/w1_scaling_n<N>/config_gate.json"
+   },
+   "labels": "time-limited, 400 s observation window; G0 v2b at 8f7d29a2 (untimed, counters on): exit code 2, 199/200 out, 1 inside, 0 not spawned (D18: expected; reference values fixed after the determinism gate); #242 population on W1: 94.7 % of sample calls are route-side (g0v2f, one untimed seed-1 run)",
+   "expected_activation_g0v2b": {
+    "source": "results/raw/g0v2b_W1_O_study_det_s1_rep1_20261014T124453 (detail counters, not a measurement)",
+    "iterations": 40000,
+    "agent_steps": 3259925,
+    "reroute_evaluations": 32497,
+    "route_switches": 172,
+    "route_cost_rows": 64994,
+    "rank_routes": 65194,
+    "evaluate_route": 30594,
+    "generate_candidates": "200 initial (6 misses of 1200 edges) + 32497 at _reevaluate:2282 (2394 misses of 194982) + 32497 at :2340 (0 misses); 6 misses per 1 s pass",
+    "sampler_sample_calls": "IV1 closed from results/raw/g0v2f_W1_O_study_det_s1_rep1_20261014T132114 (one untimed seed-1 run, detail counters re-keyed on the caller chain above fed.sample_inputs; identical agent-steps, iterations, reroute evaluations, switches, read_cells and distance_to_polygon to g0v2b_W1 and the same 199/200 outcome). SliceFieldSampler.sample calls, per-agent update vs route cost path: CO, CO2, O2 32697 vs 723391 each (route 95.7 %; route path = fed.sample_rate <- scenario.sample_fed_rate, the FED midpoint of evaluate_segment); extinction 32697 (smoke_speed.sample) vs 160814 (_polyline_stats: 81059 via _first_hops, 78375 via _measure_route, 1380 via evaluate_segment; all on 4 distinct off-grid polyline vertices; route 83.1 %); all four quantities 130788 vs 2330987 = 94.7 % of 2461775 calls (denominator: every sample call of the run). Distinct exact (x, y): per-agent FED 8337 per quantity (3.9 calls per point), route FED 37473 per quantity (19.3 calls per point), _polyline_stats 4 points. Grid-cell route extinction (read_cells 725445 calls, 22.7M cells; line_parts 393583 hits / 16690 misses) is outside these counts. Caveat: side rule is the engineer's (route = chain contains sample_fed_rate, evaluate_segment, _polyline_stats or route_graph.); one seed, untimed, call counts not cost.",
+    "read_cells": "725445 calls, 22.7M cells; line_parts 393583 hits / 16690 misses",
+    "reached_stage": "2791592 checkpoint + 468333 exit; distance_to_polygon 468333 (14 % of agent-steps)",
+    "fds_opens": "7, 0.203 s",
+    "visibility": "off",
+    "flow_spawns_deferred": "n/a (no flow)"
+   }
+  },
+  "W2": {
+   "role": "steering/control workload, clear air",
+   "id": "w2_nf",
+   "case": "Schroeder 2015 geometry, arm nf (no fire): same deck, seed and crowd as W1, no --fds-dir",
+   "why": "Same geometry, stage graph and population as W1, so steering cost can be compared with W1 without a geometry change. Normal entry point. Rerouting stays on (CLI default) and prices routes in clear air.",
+   "command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario assets/schroeder2015_route/evac/config_gate.json --seed 1 --output-sqlite $OUT/nf_s1.sqlite --cleanup --output-route-history $OUT/nf_s1_rh.csv --output-exit-history $OUT/nf_s1_exit.csv > $OUT/nf_s1_log.txt 2>&1",
+   "command_source": "run_p1.sh, arm nf",
+   "seeds": {
+    "headline": 1,
+    "confirmation": [
+     2,
+     3
+    ]
+   },
+   "effective_settings": {
+    "movement_model": "as W1",
+    "dt_s": 0.01,
+    "max_simulation_time_s": 400,
+    "spawning": "as W1",
+    "familiarity": "full",
+    "routing": "gate config parsed from the deck; rerouting on at 1.0 s with no extinction field (clear-air costs)",
+    "smoke_speed": "off",
+    "gas_fed": "off",
+    "heat_fed": "off",
+    "tenability": "none",
+    "visibility": "none",
+    "outputs": "trajectory SQLite copy, route history, exit history",
+    "cache_state": "no FDS, no application cache"
+   },
+   "measure": "Direct-steering pass (zone speeds, reached_stage, stage advance, removal) timed separately from Simulation.iterate() inside the unchanged run (controlled cost experiment).",
+   "reference_only": {
+    "w2_hist_430": "The #430/#429 cases (assets/familiarity_test_no_journey, assets/t_junction) were measured at 4f859bf5 with a hand-built run_scenario harness, no rerouting. Use only as a labelled historical link to a different revision, never as a baseline.",
+    "native_jupedsim": "A native-JuPedSim journey reference cannot reproduce cost-based exit choice and door re-pathing; if run, label it 'diagnostic architectural comparison'."
+   },
+   "labels": "complete evacuation; G0 v2b: 200/200 at 313.53 s, exit 0, 0 route switches (expected: clear-air costs do not change)",
+   "expected_activation_g0v2b": {
+    "source": "results/raw/g0v2b_W2_nf_det_s1_rep1_20261014T124556",
+    "iterations": 31353,
+    "agent_steps": 2996487,
+    "reroute_evaluations": 29862,
+    "route_switches": 0,
+    "rank_routes": 30062,
+    "generate_candidates": "200 initial + 29862 at :2340 (1878 misses of 179172)",
+    "reached_stage": "2664752 checkpoint + 331735 exit; distance_to_polygon 331735 (11 % of agent-steps)",
+    "sampler": "0 (no FDS)"
+   }
+  },
+  "W3": {
+   "role": "visibility companion: sign legibility in smoke under no_known_exit=default_route (D14)",
+   "id": "w3_tj_discovery",
+   "case": "t_junction, committed config_discovery.json (all agents 'discovery', no_known_exit default_route), 2 MW PVC fire, smoke-aware vismap, max_simulation_time 300 s",
+   "why": "The only documented case with existing fire output and discovery agents: exercises the fdsvismap map build/load (301 x 3 x 53 x 121), sign-visibility queries at every reroute evaluation (_expand_visible) and at arrivals, cognitive-map growth for the agents that see a sign before the smoke hides it (12 of 150), coupled with smoke/FED/FIC/rerouting. It is NOT an exploration workload: with the default no_known_exit the frontier/patrol code (_decide_explore) is never reached, agents without a known exit follow the journey to exit_B_right and are counted in agents_left_by_unknown_exit (model_handoff_g0_v2.md 1.4b).",
+   "cap_reason": "Committed 300 s deck for all seeds (v1 D5). The v1 horizon bounds (<= 58.8 s) were computed on the old routing code; at 8f7d29a2 route samples are read at arrival time and capped at the FDS end (#678/#666), so an FdsHorizonError from route pricing is not expected; the rc-CSV bound is recomputed in G1 and must stay < 301.2 s. scenarios/w3_t_junction_cap270/ remains an unused fallback. Never --allow-fds-horizon-hold.",
+   "command_first_use": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario assets/t_junction/config_discovery.json --seed 42 --fds-dir $STAGE/fds/t_junction_fire_2MW_PVC --vis-cache $OUT/w3_vis.npz --output-route-cost-history $OUT/w3_rc.csv --output-fed-history $OUT/w3_fed.csv --output-sqlite $OUT/w3.sqlite --cleanup --output-route-history $OUT/w3_rh.csv --output-exit-history $OUT/w3_exit.csv > $OUT/w3_log.txt 2>&1",
+   "cache_variants": {
+    "w3_vis_first_use": "--vis-cache at a fresh nonexistent path in $OUT: load_miss, build (G0 v2b 0.47 s on a loaded host), save",
+    "w3_vis_repeated_use": "--vis-cache $STAGE/cache/w3_vis.npz built once by an untimed warm-up with identical metadata (same staged fds_dir, 3 signs, time step 1.0 s, height 1.6 m, max sign distance 30 m, format 6) -> np.load; counters must show one load and no build",
+    "w3_vis_no_cache_flag": "same command without --vis-cache: built in memory every run (discovery agents), never saved"
+   },
+   "seeds": {
+    "headline": 42,
+    "confirmation": [
+     43,
+     44
+    ]
+   },
+   "effective_settings": {
+    "movement_model": "CollisionFreeSpeedModel, same parameters as W1",
+    "dt_s": 0.01,
+    "max_simulation_time_s": 300,
+    "spawning": "flow spawning, 200 agents over 0-400 s in branch polygon x 18-22, y 1-8 (28 m2, 0.5 /s); radius 0.15, v0 1.2 constant, no premovement; #738 spacing 2 x max radius applies; G0 v2b seed 42: 150 spawned, 50 not spawned, 99 out, 51 inside at 300 s, flow_spawns_deferred 0 (exit code 2; end_reason time_limit)",
+    "familiarity": "discovery",
+    "routing": "cost_model gate (default), anticipate true, foresight inf, base_speed 1.3, w_smoke 5.0, w_fed 10.0, fed_rejection_threshold 1.0, visibility_extinction_threshold 0.5, sampling_step_m 2.0 (off-grid only), default_exit_capacity 1.3, no_known_exit default_route; rerouting on, 1.0 s; 20 graph edges",
+    "smoke_speed": "on, CLI height 1.6 m -> 2.0 m extinction slice (warning), update 1.0 s",
+    "gas_fed": "on (CO, CO2, O2; 1.6 m request -> 2.0 m slices); HCl slice present, so FIC is computed and recorded; FIC slowdown off",
+    "heat_fed": "off (no TEMPERATURE slice)",
+    "tenability": "deterministic incapacitation at FED 1.0 (the asset README example used probabilistic; CLI default kept)",
+    "visibility": "smoke-aware VisibilityModel from fdsvismap 0.3.2, 3 signs (exit_A_left, exit_B_right, jps-checkpoints_0), time points 0..299 + 300 (301, #642), grid 53 x 121, extinction slice at 2.0 m (1.6 m requested), obstruction test height 1.6 m, max sign distance 30 m, cache format 6",
+    "coverage": "earlier manifest (f5c61f21) reports 0.0 of 150.0 m2 walkable outside, no signs outside the grid",
+    "horizon": "FDS slices 0-300 s (301 frames, 4 meshes); output interval reported 1.2 s (largest spacing), guard 301.2 s; no hold",
+    "outputs": "trajectory SQLite copy, route, exit, route-cost and FED histories",
+    "cache_state": "vismap npz state per cache_variants (D13); FDS opens per process recorded (G0 v2b: 10 opens, 0.125 s, incl. _extinction_slice_index and FDSVisMap.read_fds_data)"
+   },
+   "inputs": {
+    "base_config": {
+     "path": "assets/t_junction/config_discovery.json",
+     "sha256": "f55444ae1bca2eccf813985fa35ed2978f5b3c14345909befe50a5d9826fca0f"
+    },
+    "derived_config": {
+     "path": "scenarios/w3_t_junction_cap270/config_discovery_cap270.json",
+     "sha256": "52353505f445cf6ff23a82e9bec0782802745cd52a548c118b1d07444f78efc8",
+     "change": "config.simulation_settings.simulationParams.max_simulation_time 300 -> 270"
+    },
+    "geometry": {
+     "path": "assets/t_junction/geometry.wkt",
+     "sha256": "a7610c860b51b2ffc3b2674447a5739715c8db0a3c9d46699808f94252590bbb"
+    },
+    "fds_deck": {
+     "path": "assets/t_junction/t_junction.fds",
+     "sha256": "9d4ceabb20a68cf4169ada736929c60bdec3e3e6a039fb366e1f615dedfa6dd8",
+     "note": "identical to the deck in the FDS output dir"
+    }
+   },
+   "fds_output": {
+    "location": "sciebo fds-evac-data/t_junction/fire_2MW_PVC/",
+    "aggregate_sha256_excl_pickle": "d84ee4ee12106f15ce31a3f670ef3961457ff262624fff9203e681e762b97fc2",
+    "n_files": 85,
+    "bytes": 130205032,
+    "provenance": "FDS-6.10.1-0-g12efa16-release, 4 meshes 0.25 m, T_END 300 s, DT_SLCF 1 s, slices at 2.0 m: extinction, CO, CO2, O2, HCl, VISIBILITY; completed successfully"
+   },
+   "labels": "sign legibility in smoke under default_route; no exploration (explore = wander = 0 is expected, not a stop); time-limited and incomplete; evacuated counts are not wayfinding success (most leave by an exit absent from their map, agents_left_by_unknown_exit). Activation items: model_handoff_g0_v2.md 1.4b; equivalence: section 3 (13 items).",
+   "expected_activation_g0v2b": {
+    "source": "results/raw/g0v2b_W3_O_study_det_s42_rep1_20261014T124620 (vis first-use)",
+    "iterations": 30000,
+    "agent_steps": 929877,
+    "vismap": "1 load_miss + 1 build 0.47 s (_build_vismap 0.25 incl. lazy slice read 0.013; _vis_metre_array 0.14); _get_visibility_array 1806 = 2 x 301 x 3; distinct extinction frames 300 of 301",
+    "sign_queries": "node_is_visible 14123 (13867 from _expand_visible, 256 from expand_on_arrival), 364 positive, 0 off-grid",
+    "map_growth": "_expand_visible +34 sign nodes, expand_on_arrival +111; cognitive maps 150",
+    "explore_wander": "0 / 0 (expected)",
+    "agents_with_known_exit": 12,
+    "reroute_evaluations": 9352,
+    "route_switches": 13,
+    "route_cost_rows": 277,
+    "rank_routes": 18854,
+    "evaluate_route": 188,
+    "generate_candidates": "150 flow-spawn initial choices without a cache dict (20 edges each) + 9352 at :2282 (363 misses of 4913) + 9352 at :2340 (0 misses)",
+    "sampler_sample_calls": "47324 gas (4 x 11831; 9865 distinct) + 909 route + 9352 smoke speed",
+    "read_cells": "3761 calls, 88523 cells; line_parts 1571 hits / 402 misses",
+    "reached_stage": "477587 checkpoint + 452290 exit; distance_to_polygon 452290 (49 % of agent-steps)",
+    "flow_spawn": "_occupied 150 calls, _crowds_agents 196 calls, 0 true, flow_spawns_deferred 0 (#739 inactive)",
+    "fds_opens": "10, 0.125 s"
+   }
+  },
+  "W4": {
+   "role": "correctness fixtures (mechanism and instrumentation checks, not throughput evidence)",
+   "fixtures": {
+    "w4_iso21": {
+     "command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario assets/iso_table21_coupled/config.json --seed 420 --fds-dir $STAGE/fds/iso_table21_coupled --smoke-update-interval 0.1 --output-smoke-history $OUT/smoke.csv --output-sqlite $OUT/t21.sqlite --cleanup",
+     "settings": "1 agent, seed 420 (baseSeed), 150 s cap, w_smoke 0, smoke speed at 1.6 m request -> 1.5 m slice, no FED (soot only)",
+     "fds": {
+      "source": "repo assets/iso_table21_coupled/fds (committed)",
+      "aggregate_sha256": "44e6f679a56520f981f1fdc205dbb7ec60c8c8d22cfce4d8a41df4dc0220c17b",
+      "frames": "0, 75, 150 s",
+      "K_1.5m": "0.99550 /m constant"
+     },
+     "expected": "egress 85.30 s, speed_factor 0.919626 at every sample (README, measured at 8fc26b1; re-confirm at 3ef4ea75)"
+    },
+    "w4_iso22_abcd": {
+     "command": "cd $WT && for c in a b c d; do PYTHONHASHSEED=0 $PY run.py --scenario assets/iso_table22_coupled/config_$c.json --seed 420 --fds-dir $STAGE/fds/iso_table22_$c --output-fed-history $OUT/fed_$c.csv --output-sqlite $OUT/t22_$c.sqlite --cleanup; done",
+     "settings": "1 agent held still (premovement 1.2e7-2e7 s), seed 420, caps 1150/1950/1950/1000 s, gas FED at 1.5 m slice",
+     "fds": {
+      "a": "d22773401cd4bbf18f4dffbf1742b2424d228bf76952ff82221e29d6f45d1cd0",
+      "b": "1f5e28aebf3254cad270cda1da3e39dad505be3387c3fe0eb98470b96fcbc5d1",
+      "c": "e193c9fa4478fcff41116bd641fedd385cda9242f4d8ec74f25287107a233e82",
+      "d": "64d4d5fa49f922d0622782e736051077c62591a0312abe7049790c4fab3f5d42"
+     },
+     "expected": "FED = 1 at 982 / 1666 / 1693 / 847 s; agents_remaining 1; position invariant"
+    },
+    "w4_cmm_visibility": {
+     "command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario $STUDY/scenarios/w4_cmm_cap120/config_cap120.json --seed 5150 --fds-dir $STAGE/fds/cmm_clear_air --vis-cache $OUT/vis_cmm.npz --output-sqlite $OUT/cmm.sqlite --cleanup --output-route-history $OUT/cmm_routes.csv --output-exit-history $OUT/cmm_exit.csv",
+     "settings": "20 discovery agents (no_known_exit default_route), seed 5150, 2 signs, smoke-aware vismap from a smoke-free FDS run (fdsvismap 0.3.2, time points 0..119 + 120 = 121, format 6); w_smoke 0, w_fed 0; cap 120 s so no horizon hold is needed (FDS ends 120 s, interval 2.1 s, guard 122.1 s); --show-config exit 0 at 8f7d29a2 (the base cap-300 deck exits 1 on the horizon)",
+     "derived_config": {
+      "path": "scenarios/w4_cmm_cap120/config_cap120.json",
+      "sha256": "fbcd07aad24c5e9a137042b99bfc95b092478881f050d8cfdceed6730426328a",
+      "base_sha256": "5414c37b56bb12e4cc46fe04977c3f6eead4c9ac9246d369aa09383f9e356e65"
+     },
+     "fds": {
+      "location": "sciebo fds-evac-data/cognitive_map_memory/clear_air/",
+      "aggregate_sha256_excl_pickle": "2e7466a24e27fe00bcd9f1139d6f38e655e5edc5c4ab39b0a4ebd9cc55861fc8"
+     },
+     "reference": "sciebo cognitive_map_memory/rerun_289b33d0/ (cap 300, --allow-fds-horizon-hold never triggered, run in main_f5c6 with CPython 3.11 at 289b33d0): 20/20 via E_side at 21.47 s, 20 switches E_end -> E_side at t = 5-19 s. Because the interpreter and lock differ, use it only to check egress time and switch counts. The exact check runs on the frozen environment: arm A = base config (cap 300) with --allow-fds-horizon-hold, arm B = derived cap 120 without it, same flags otherwise; trajectories, route and exit histories must match exactly, and arm A must log no 'past the FDS output' sampling warning. A difference means max_simulation_time feeds behaviour; report it, do not tolerate it.",
+     "arm_A_command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario assets/cognitive_map_memory/config.json --seed 5150 --fds-dir $STAGE/fds/cmm_clear_air --allow-fds-horizon-hold --vis-cache $OUT/vis_cmm_A.npz --output-sqlite $OUT/cmm_A.sqlite --cleanup --output-route-history $OUT/cmm_A_routes.csv --output-exit-history $OUT/cmm_A_exit.csv  (equivalence-only diagnostic arm; never timed)",
+     "role": "W3b: second visibility case and the exact-dedupe case for #236 (clear-air FDS: 1 distinct extinction frame among 121 time points); visibility kernel and learning check, not throughput; timed on arm B (cap 120) only.",
+     "expected_activation_g0v2b": {
+      "source": "results/raw/g0v2b_W3b_cmm_O_study_det_s5150_rep1_20261014T124631",
+      "outcome": "complete, 20/20 at 21.47 s, exit 0 (same egress time as the 289b33d0 reference)",
+      "iterations": 2147,
+      "agent_steps": 32228,
+      "vismap": "1 build 0.105 s (0.079 / 0.029 metre array); _get_visibility_array 484 = 2 x 121 x 2; distinct extinction frames 1 of 121",
+      "sign_queries": "666, 467 positive; +40 sign nodes",
+      "route_switches": 20,
+      "reroute_evaluations": 313,
+      "generate_candidates": "20 + 313 calls, 39 misses of 470 edges",
+      "reached_stage": "exit 32228; distance_to_polygon 32228 (100 % of agent-steps)",
+      "fds_opens": "10, 0.036 s"
+     }
+    },
+    "w4_pytest": {
+     "command": "cd $WT && PYTHONHASHSEED=0 PYTHONDONTWRITEBYTECODE=1 $PY -m pytest -q -rs -p no:cacheprovider tests/test_iso_table21_coupled.py tests/test_iso_table22_coupled.py tests/test_thin_exit.py tests/test_direct_steering_runtime.py tests/test_direct_steering_fallbacks.py tests/test_exit_door_width.py tests/test_scheduled_exits.py tests/test_rerouting_golden.py tests/test_route_graph.py tests/test_fds_sampling.py tests/test_fds_horizon.py tests/test_visibility.py tests/test_cognitive_map_memory.py tests/test_cognitive_map_history.py tests/test_exit_visibility_alpha.py tests/test_initial_exit_from_cognitive_map.py tests/test_skimage_line_contract.py tests/test_agent_seed.py tests/test_manifest.py tests/test_route_grid_sampling.py tests/test_foresight_arrival_time.py tests/test_flow_spawn_spacing.py tests/test_flow_window_end.py tests/test_fdsreader_adapter.py tests/test_fds_read_only.py tests/test_fdsvismap_adapter.py",
+     "rule": "Without PYFDS_EVAC_REGEN_GOLDEN. Any skip of an FDS-dependent test is a failure of this fixture, not a pass. Run on the uninstrumented worktree and on the instrumented one.",
+     "g0v2b_result": "857 passed, 1 skipped (tests/test_fds_read_only.py:73 'needs an xdist worker', not FDS data), 146 s; zero FDS-dependent skips; worktree clean after"
+    },
+    "w4_flow_saturated": {
+     "role": "controlled mechanism fixture for #739 (waiting flow checks every candidate each step); D16; not throughput, no outcome claim",
+     "derived_config": {
+      "path": "scenarios/w4_flow_saturated/config_flow_saturated.json",
+      "base": "assets/t_junction/config_discovery.json (f55444ae...)",
+      "geometry": "copy of assets/t_junction/geometry.wkt (a7610c86...)",
+      "changes": "max_simulation_time 200; jps-distributions_0 -> flow of 300 over 0-60 s, familiarity full; new jps-distributions_1 on the same 28 m2 polygon: 150 agents at t = 0, premovement constant 100 s, familiarity full; journey_1 + transitions + waypoint_routing copied from journey_0",
+      "perf_model_amendment": "revert the flow distribution's use_premovement to false: flow-spawned agents never receive a premovement entry at 8f7d29a2 (premovement_times is filled only in simulation_init._add_agents for t = 0 agents; the flow block in scenario.py sets none), so the key is inert and misleading. Saturation comes from the 150 standing agents (2 x 0.15 m spacing discs exceed the 28 m2 area). Regenerate via make_derived.py; new sha256 to be recorded by the engineer.",
+      "sha256_note": "v2d rebuild with the flow use_premovement left false (perf-model amendment); the first build e3f3540b... is superseded",
+      "sha256": "982c50aca481a3ac8736d6b4029821e19b4adf0aefba5c1640d4eb15739916dc (amended: flow use_premovement false; QA-verified flat diff vs base)"
+     },
+     "command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario $STUDY/scenarios/w4_flow_saturated/config_flow_saturated.json --seed 42 --output-sqlite $OUT/flowsat.sqlite --cleanup --output-exit-history $OUT/flowsat_exit.csv --output-route-history $OUT/flowsat_rh.csv > $OUT/flowsat_log.txt 2>&1   (clear air: no --fds-dir)",
+     "settings": "CollisionFreeSpeedModel, dt 0.01, cap 200 s, clear air, rerouting on 1 s (clear-air costs), visibility off (all full), --show-config exit 0 (spawn capacity estimate 198 at r 0.15; flow checked as a rate)",
+     "acceptance": "flow_spawns_deferred >= 1000 steps and 'Flow spawning: ... found no free position at N steps' printed; _crowds_agents calls >> _occupied calls; exit code 2 (not spawned > 0) with end_reason time_limit or flows_closed. Expected: deferral at nearly every step of the 0-60 s window (~6000), 300 not spawned. If deferred < 1000 the fixture is rebuilt (fewer standing agents or a longer window), not relaxed.",
+     "label": "controlled mechanism fixture; the counted work is the spawn block (_occupied, candidates x _crowds_agents) inside the unchanged run; never pooled with W1-W3",
+     "acceptance_g0v2d": {
+      "source": "results/raw/g0v2d_W4_flow_saturated_fixture_det_s42_rep1_20261014T125802 and g0v2d2_..._130102 (same trajectory hash ee23c36b...)",
+      "outcome": "Simulation incomplete: flow windows closed after 179.15 s (286/286 evacuated, 0 remaining, 164 not spawned); exit 2, end_reason flows_closed (harness summary parse to be fixed, IV2)",
+      "flow_spawns_deferred_steps": 5602,
+      "crowds_agents_calls": 1022315,
+      "crowds_agents_true": 0,
+      "add_agent_position_refusals": 1022179,
+      "occupied_calls": 5738,
+      "iterations": 17915,
+      "agent_steps": 2592057,
+      "verdict": "acceptance met (>= 1000 deferred steps; candidates x _crowds_agents >> _occupied). Note: the spacing mirror returned False for every candidate and JuPedSim's own refusal did the rejecting (1022179 refusals), so the fixture exercises both halves of the per-candidate path; 136 flow agents entered, 164 did not."
+     },
+     "limits": "resource_limits.w4_flow_saturated"
+    }
+   }
+  },
+  "W1r": {
+   "role": "optional routing-density companion for #242/#243 magnitude (D17/D19); a different workload, end-to-end label, never pooled with W1",
+   "id": "w1r_cap250",
+   "case": "world100 deck_config_stream_east.json (120 flow agents 0-240 s, familiarity 1.0, 40 checkpoints + 4 exits, WarpDriverModel) with fire_4p5MW; derived cap 250 s",
+   "decision": "KEEP as w1r_cap250 (model_handoff_g0_v2.md v2c appendix): the FDS output ends at 250 s (126 frames, interval 2.0 s, guard 252 s) against the deck cap 330 s; the only change is max_simulation_time 330 -> 250, no horizon hold. The flow window 0-240 s lies inside the cap, so all 120 uncached flow-spawn initial choices (#243) and every reroute pass over the dense graph (#242/#243) still happen; the issue's own run finished at 257 s. Time-limited, incomplete by construction (agents spawned late remain inside); its outcome is not an evacuation time.",
+   "derived_config": {
+    "path": "scenarios/w1r_cap250/config_stream_east_cap250.json",
+    "base_sha256": "fc50f2b87a4085b18a5ac7533aad2907a5abe7bf4a11fe6f1b3f6dded521027c",
+    "geometry_sha256": "e99a07d697c5fce0c0b858894b753430c1b7e865f6098fc493e4b97a1dc6964d",
+    "change": "config.simulation_settings.simulationParams.max_simulation_time 330 -> 250",
+    "sha256": "672cb1a007760f0a92942269f7ea34eb792f384fc20a33927c70ffaf07f010da",
+    "geometry_sha256_built": "e99a07d697c5fce0c0b858894b753430c1b7e865f6098fc493e4b97a1dc6964d"
+   },
+   "fds_output": {
+    "staged": "$STAGE/fds/world100_fire_4p5MW",
+    "aggregate_sha256": "1a3c577c8e5ce71a8a87806476bccd96982e58afd13355fdbeaedad257bb6b4e",
+    "n_files": 128,
+    "provenance": "T_END 250 s, 8 meshes, slices CO/CO2/O2/extinction at 2.1 m, 126 frames; .out 'STOP: FDS completed successfully'; preflight/world100_fire_4p5MW.json"
+   },
+   "command": "cd $WT && PYTHONHASHSEED=0 $PY run.py --scenario $STUDY/scenarios/w1r_cap250/config_stream_east_cap250.json --seed 1 --fds-dir $STAGE/fds/world100_fire_4p5MW --output-route-cost-history $OUT/w1r_rc.csv --output-fed-history $OUT/w1r_fed.csv --output-sqlite $OUT/w1r.sqlite --cleanup --output-route-history $OUT/w1r_rh.csv --output-exit-history $OUT/w1r_exit.csv > $OUT/w1r_log.txt 2>&1",
+   "seeds": {
+    "headline": 1,
+    "confirmation": []
+   },
+   "effective_settings": {
+    "movement_model": "WarpDriverModel (deck); #738 refusal mirror does not cover it, spacing rule 2 x max radius only",
+    "dt_s": 0.01,
+    "max_simulation_time_s": 250,
+    "spawning": "flow 120 over 0-240 s",
+    "familiarity": "1.0 (full): visibility off",
+    "routing": "deck has no routing block: RouteCostConfig defaults (gate, anticipate, base_speed_m_per_s 1.3 (confirmed: the deck sets none), w_smoke 1.0, w_fed 10); rerouting on 1 s; 368 edges",
+    "fields": "K, CO, CO2, O2 at 2.1 m (1.6 m requested; warning)",
+    "horizon": "guard 252 s (FDS ends 250 s, interval 2.0 s). Held-foresight confounder (D22, IV7): 812 of 9856 route-cost rows (8.2 %), from t = 208 s, have time_s + path_length_m / 1.3 > 250 s, so their later legs were priced at the held last frame; one '#666 Route foresight reaches beyond' warning per run (logged once by design). This is a reported confounder in every W1r table, not a relaxation and not a reason to drop W1r.",
+    "outputs": "as W1",
+    "cache_state": "no application cache"
+   },
+   "preflight_required": "--show-config exit 0 on the derived deck; fds_coverage walkable_outside_m2 = 0; spawned count = 120; no FdsHorizonError; count of the foresight-cap warning",
+   "expected_activation": "_generate_candidates no-cache-dict calls = 120 with 368 edges each; evaluate_segment and read_cells volumes far above W1; label end-to-end, time-limited",
+   "labels": "end-to-end, different workload (world100, WarpDriver), cap 250 s, time-limited; foresight held at the last FDS frame (#666) for 8.2 % of route-cost rows; counts are magnitudes of mechanism volume, not a timing claim; never pooled with W1",
+   "counters_independent_of_held_foresight": "The W1r counters that #242/#243 need do not depend on how segments past 250 s are priced: generate_candidates calls by caller (120 flow-spawn initial choices without a cache dict, 2464 + 2464 reevaluations), edges per call (368), segment hits/misses (initial 44160 misses / 0 hits; :2282 91632 misses / 815120 hits; :2340 0 misses), evaluate_segment calls (135792 from _generate_candidates, 27181 from _measure_route), read_cells calls (576285) and line_parts hits/misses (387337 / 23228), sampler calls per quantity (324678 gas each; 105079 _polyline_stats; 2584 smoke speed), distance_to_polygon 77663. Dependent on it: the VALUES sampled for those rows and therefore route choices, switches (7) and the evacuation outcome (117/120 at 250 s), i.e. everything downstream of pricing after t = 208 s; these are reported as outcomes, not compared across decks.",
+   "expected_activation_g0v2d": {
+    "source": "results/raw/g0v2d_W1r_O_study_det_s1_rep1_20261014T125941 (untimed, detail counters)",
+    "outcome": "time limit 250 s, 117/120 out, 3 inside, 0 not spawned, exit 2",
+    "iterations": 25000,
+    "agent_steps": 252617,
+    "fds_opens": 7,
+    "reroute_evaluations": 2464,
+    "route_switches": 7,
+    "route_cost_rows": 9856,
+    "rank_routes": 5048,
+    "evaluate_route": 2464,
+    "generate_candidates": "see counters_independent_of_held_foresight",
+    "reached_stage": "174954 checkpoint + 77663 exit",
+    "crowds_agents": "124 calls, 4 true; occupied 120; no deferrals"
+   },
+   "limits": "resource_limits.W1r"
+  }
+ },
+ "preflight_evidence": {
+  "fds_slice_inventory": [
+   "preflight/w1_a047_pvc_h40.json",
+   "preflight/w3_t_junction_fire_2MW_PVC.json",
+   "preflight/w4_iso_table21.json",
+   "preflight/w4_iso_table22_{a,b,c,d}.json",
+   "preflight/w4_cognitive_map_memory_clear_air.json",
+   "preflight/fed_incap_co_2000ppm.json",
+   "preflight/world100_fire_4p5MW.json"
+  ],
+  "hashes": "preflight/input_hashes.json (v1 entries + v2 appendix by preflight/hash_inputs_v2.py); results/stage_verification_v2.json 10/10",
+  "scripts": [
+   "preflight/preflight_fds.py (reads .smv/.sf directly; does not touch fdsreader caches)",
+   "preflight/hash_inputs.py",
+   "scenarios/make_derived.py"
+  ]
+ },
+ "equivalence": "Exact, per model_handoff_g0_v2.md section 3 (13 items: trajectories, spawn/removal frames, exit history incl. exit_in_map, route history, route-cost history, FED history, smoke history, agent_scalars, manifest outcome/coverage/versions, exit code and summary lines, vismap npz arrays + meta except fds_dir, cognitive-map history via the perf_run dump, metrics via the dump). No tolerance. The fdsreader cache pair is removed; pairs are baseline vs counters, O_study vs O_norc vs O_min, vismap cache states, cmm arm A vs B.",
+ "revision": "v2e, 2026-10-14 (perf-model; IV1 closed from g0v2f_W1); previous: /Users/chraibi/profiling-stage/tmp/scenarios_pre_v2d.json (v2c) and the v2d text in model_handoff_g0_v2.md",
+ "kernel_experiments": {
+  "V_build": {
+   "role": "controlled kernel experiment for #236/#241 magnitude (D15/D20); no evacuation run, no end-to-end claim",
+   "runner": "vbuild.py (calls the unchanged _build_vismap, _vis_bool_array, _vis_metre_array)",
+   "deck": "assets/fed_incap_co_2000ppm/config.json (24 checkpoints + 1 exit = 25 signs, grid 61 x 61), FDS $STAGE/fds/fed_incap_co_2000ppm (aggregate sha256 09c76e3d4330070d7f457b3409382659c34e87dce825d1aa297926c793f43690; 1001 frames 0-1000 s, interval 0.92 s; extinction ~0.9993 /m at 1.5 m)",
+   "n_time_points": "1001 = the whole _vismap_time_points(1000, 1.0) list (0..999 and 1000); n = 1000 would drop the last point. The runner's truncation is then a no-op. Engineer trial n = 10 (instrumented, loaded host): 0.587 s total, 0.045 s per time point, 500 = 2 x 10 x 25 _get_visibility_array calls.",
+   "must_measure": [
+    "seconds: _extinction_slice_index open, read_fds_data, lazy slice read, compute_all kernel (minus slice read), _vis_bool_array, _vis_metre_array; kernel = compute_all kernel + _vis_metre_array",
+    "_get_visibility_array calls = 2 x n_wp x n_t (50050) and seconds; get_mean_extco calls",
+    "distinct extinction frames (exact) and the distribution of max |K_t - K_t-1| between consecutive time points, both outside the timed part",
+    "peak RSS and the array sizes (vis bool 1001 x 25 x 61 x 61 = 93 MB, metres float16 186 MB)",
+    "5 repetitions, median and IQR, exclusive slot"
+   ],
+   "reconciliation_D20": "D23 wording. The #236 figure (~70 min) and the #241 figure (0.862 s/frame; x 1001 frames is about 14 min, not 70) were measured at pyFDS-Evac 6e70313 with fdsvismap 64d9aa7 and are retired as 'measured at another fdsvismap revision, not reconciled'; the source reading below explains a difference, it is not a measurement at the old revision. #241 is half fixed upstream: fdsvismap 0.3.2 reads the slice once for the required time steps (_get_slice_frame, FDSVisMap.py:621-640) and forms the ray means with np.add.reduceat (:698-720), so the per-call to_global and the per-cell loop of the issue text are gone; still present at 8f7d29a2 are the second _get_visibility_array pass in pyfds_evac/core/visibility.py:541-565 (_vis_metre_array; W3 counters 1806 = 2 x 301 x 3; 0.143 s against compute_all 0.218 s) and the dense bool/float16 storage. #236: the extinction field of fed_incap_co_2000ppm is nearly constant (soot extinction at 1.5 m spans 0.9992793-0.9992923 over 1001 frames, max consecutive change 1.3e-5 /m; preflight/fed_incap_co_2000ppm.json), not bit-identical; an exact dedupe removes nothing there (nor on W3: 300 of 301 distinct) and everything on W3b (1 of 121); a tolerance dedupe is a model change (sight gating decides discovery) and is not measured as an optimisation. V-build measures the second-pass split, storage and the consecutive-frame statistic; it never quotes the issue numbers without this caveat.",
+   "limits": "see resource_limits.V_build; harness runner with manifest, slot check, 1 warm-up + 5 repetitions, instrumented totals separate from the plain build time (D24)"
+  }
+ },
+ "resource_limits": {
+  "source": "plan.md D24 / QA IV9; v1 caps otherwise unchanged (300 s wall normal run, 900 s profiled, 4 GB RSS normal, 8 GB under memray/Scalene; repetitions: repeated-use 1 warm-up + 5 (to 15 if IQR/median > 5 %), first-use 3, confirmation seeds 3 each; 4 h exclusive hard cap -> PARTIAL)",
+  "W1r": {
+   "wall_s": 300,
+   "rss_gb": 4,
+   "repetitions": "as W1 (1 warm-up + 5, seed 1 only)",
+   "stop": "FdsHorizonError; foresight-warning count != 1 or held-foresight share != 8.2 % at seed 1 (changed workload); spawned != 120; fds_coverage outside > 0; zero generate_candidates no-cache calls; any equivalence item differs between plain and counters runs"
+  },
+  "w4_flow_saturated": {
+   "wall_s": 120,
+   "rss_gb": 2,
+   "repetitions": "1 warm-up + 5 for the mechanism block; counters run once",
+   "stop": "flow_spawns_deferred < 1000 steps (rebuild the fixture, never relax); crowds_agents_calls not >> occupied_calls; end_reason not in {time_limit, flows_closed}; trajectory hash differs between repetitions"
+  },
+  "V_build": {
+   "wall_s_plain": 300,
+   "wall_s_profiled": 900,
+   "rss_gb": 8,
+   "repetitions": "1 warm-up + 5 plain (uninstrumented totals) + separate instrumented stage runs",
+   "stop": "plain total over 300 s; _get_visibility_array calls != 2 x 25 x 1001 = 50050; arrays differ between repetitions; any evacuation of the deck started"
+  },
+  "general_stop_rules": "zero counter where 'active' is claimed; determinism gate or equivalence broken; cache state unidentifiable; a cap hit twice; IQR/median > 10 % after 15 runs; horizon-warning count changes between repetitions of one seed"
+ }
+}

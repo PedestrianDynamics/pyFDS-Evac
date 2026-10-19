@@ -1,0 +1,5 @@
+run_id,variant,agent_steps,hits,misses,clears,hit_share
+G5_ctr_W1_W1_O_norc_ctr_s1_rep1_20261018T061516,O_norc,3259925,266023,144644,0,0.647783
+G5_ctr_W1_W1_O_norc_ctr_s1_rep2_20261018T061630,O_norc,3259925,266023,144644,0,0.647783
+G5_ctr_W1_W1_nomemo_ctr_s1_rep1_20261018T061551,nomemo,3259925,0,0,0,
+G5_ctr_W1_W1_nomemo_ctr_s1_rep2_20261018T061706,nomemo,3259925,0,0,0,

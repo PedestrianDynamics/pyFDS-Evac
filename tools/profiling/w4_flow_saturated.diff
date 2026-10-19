@@ -1,0 +1,204 @@
+# w4_flow_saturated (v2d, flow use_premovement left false): derived config vs assets/t_junction/config_discovery.json (re-indented, 8f7d29a2); geometry.wkt is a byte copy of assets/t_junction/geometry.wkt
+@@ -3,7 +3,7 @@
+   "config": {
+     "simulation_settings": {
+       "simulationParams": {
+-        "max_simulation_time": 300,
++        "max_simulation_time": 200,
+         "model_type": "CollisionFreeSpeedModel",
+         "strength_neighbor_repulsion": 2.6,
+         "range_neighbor_repulsion": 0.1,
+@@ -124,12 +124,12 @@
+         ]
+       ],
+       "parameters": {
+-        "number": 200,
++        "number": 300,
+         "radius": 0.15,
+         "v0": 1.2,
+         "use_flow_spawning": true,
+         "flow_start_time": 0,
+-        "flow_end_time": 400,
++        "flow_end_time": 60,
+         "distribution_mode": "by_number",
+         "percentage": null,
+         "use_premovement": false,
+@@ -139,8 +139,51 @@
+         "premovement_seed": null,
+         "radius_distribution": "constant",
+         "v0_distribution": "constant",
+-        "familiarity": "discovery"
++        "familiarity": "full"
+       }
++    },
++    "jps-distributions_1": {
++      "type": "polygon",
++      "coordinates": [
++        [
++          18,
++          1
++        ],
++        [
++          22,
++          1
++        ],
++        [
++          22,
++          8
++        ],
++        [
++          18,
++          8
++        ],
++        [
++          18,
++          1
++        ]
++      ],
++      "parameters": {
++        "number": 150,
++        "radius": 0.15,
++        "v0": 1.2,
++        "use_flow_spawning": false,
++        "flow_start_time": 0,
++        "flow_end_time": 60,
++        "distribution_mode": "by_number",
++        "percentage": null,
++        "use_premovement": true,
++        "premovement_distribution": "constant",
++        "premovement_param_a": 100,
++        "premovement_param_b": 120,
++        "premovement_seed": null,
++        "radius_distribution": "constant",
++        "v0_distribution": "constant",
++        "familiarity": "full"
++      }
+     }
+   },
+   "checkpoints": {
+@@ -207,6 +250,32 @@
+           "from": "jps-checkpoints_0",
+           "to": "exit_B_right",
+           "journey_id": "journey_0"
++        }
++      ]
++    },
++    {
++      "id": "journey_1",
++      "stages": [
++        "jps-distributions_1",
++        "jps-checkpoints_0",
++        "exit_A_left",
++        "exit_B_right"
++      ],
++      "transitions": [
++        {
++          "from": "jps-distributions_1",
++          "to": "jps-checkpoints_0",
++          "journey_id": "journey_1"
++        },
++        {
++          "from": "jps-checkpoints_0",
++          "to": "exit_A_left",
++          "journey_id": "journey_1"
++        },
++        {
++          "from": "jps-checkpoints_0",
++          "to": "exit_B_right",
++          "journey_id": "journey_1"
+         }
+       ]
+     }
+@@ -226,6 +295,21 @@
+       "from": "jps-checkpoints_0",
+       "to": "exit_B_right",
+       "journey_id": "journey_0"
++    },
++    {
++      "from": "jps-distributions_1",
++      "to": "jps-checkpoints_0",
++      "journey_id": "journey_1"
++    },
++    {
++      "from": "jps-checkpoints_0",
++      "to": "exit_A_left",
++      "journey_id": "journey_1"
++    },
++    {
++      "from": "jps-checkpoints_0",
++      "to": "exit_B_right",
++      "journey_id": "journey_1"
+     }
+   ],
+   "waypoint_routing": {
+@@ -241,6 +325,18 @@
+             "percentage": 99
+           }
+         ]
++      },
++      "journey_1": {
++        "destinations": [
++          {
++            "target": "exit_A_left",
++            "percentage": 1
++          },
++          {
++            "target": "exit_B_right",
++            "percentage": 99
++          }
++        ]
+       }
+     }
+   }
+
+# make_derived.py vs the v2b version (flow premovement amendment; w1r_cap250 builder appended)
+--- /Users/chraibi/profiling-stage/tmp/make_derived.py.v2b	2026-10-14 14:57:39
++++ scenarios/make_derived.py	2026-10-14 14:57:39
+@@ -65,16 +65,20 @@
+     share the t_junction spawn polygon and wait a constant 100 s before
+     moving: 150 standing agents at t = 0 and a flow of 300 over 0-60 s, so the
+     area fills and the flow defers its spawns. One extra journey for the
+-    second distribution; max_simulation_time 200 s.
++    second distribution; max_simulation_time 200 s. Flow-spawned agents get no
++    pre-movement entry at this commit, so the flow keeps use_premovement
++    false; the saturation comes from the 150 standing agents.
+     """
+     set_max_time(200)(cfg)
+     dists = cfg["distributions"]
+     flow = dists["jps-distributions_0"]["parameters"]
+     flow.update({"number": 300, "flow_start_time": 0, "flow_end_time": 60,
+-                 "use_premovement": True, "premovement_distribution": "constant",
+-                 "premovement_param_a": 100, "familiarity": "full"})
++                 "familiarity": "full"})
+     standing = copy.deepcopy(dists["jps-distributions_0"])
+-    standing["parameters"].update({"number": 150, "use_flow_spawning": False})
++    standing["parameters"].update({"number": 150, "use_flow_spawning": False,
++                                   "use_premovement": True,
++                                   "premovement_distribution": "constant",
++                                   "premovement_param_a": 100})
+     dists["jps-distributions_1"] = standing
+     journey = copy.deepcopy(cfg["journeys"][0])
+     journey["id"] = "journey_1"
+@@ -90,3 +94,22 @@
+ 
+ derive("assets/t_junction/config_discovery.json", "w4_flow_saturated",
+        "config_flow_saturated.json", make_flow_saturated, "assets/t_junction/geometry.wkt")
++
++
++STAGE = pathlib.Path("/Users/chraibi/profiling-stage")
++
++
++def make_w1r_cap250():
++    """World100 stream-east deck with max_simulation_time 330 -> 250 and nothing else.
++
++    The FDS output ends at 250 s (guard 252 s); the deck is read from the
++    staged copy of sciebo world100/evac_4exits, the geometry copied byte for byte.
++    """
++    deck = STAGE / "decks/world100_evac_4exits"
++    cfg = json.loads((deck / "deck_config_stream_east.json").read_text())
++    set_max_time(250)(cfg)
++    write("w1r_cap250/config_stream_east_cap250.json", (json.dumps(cfg, indent=2) + "\n").encode())
++    write("w1r_cap250/geometry.wkt", (deck / "deck_geometry.wkt").read_bytes())
++
++
++make_w1r_cap250()

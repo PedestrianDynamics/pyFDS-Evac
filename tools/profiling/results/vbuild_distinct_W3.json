@@ -1,0 +1,28 @@
+{
+ "schema": "pyfds-evac V-build kernel run v1",
+ "n_time_points": 301,
+ "n_signs": 3,
+ "time_step_s": 1.0,
+ "slice_height_m": 1.6,
+ "grid_shape_vis": [
+  301,
+  3,
+  53,
+  121
+ ],
+ "metres_shape": [
+  301,
+  3,
+  53,
+  121
+ ],
+ "seconds": {
+  "_build_vismap_total": 0.25249583297409117,
+  "_vis_bool_array": 0.0008251250255852938,
+  "_vis_metre_array": 0.14179799996782094,
+  "total": 0.3951189579674974
+ },
+ "seconds_per_t_wp_metre_array": 0.0001570299002965902,
+ "distinct_extinction_frames_among_time_points": 300,
+ "method": "perf_counter in-process; instrumented (stage hooks), diagnostic"
+}
