@@ -21,6 +21,7 @@ snapshot".
 | `tests/golden/scenarios/<platform>/*.json` (15 per platform) | `regression-only` | `tests/test_rerouting_golden.py` | `run_scenario` on small decks with a synthetic extinction field; stored per platform because JuPedSim builds differ in the last bits | `PYFDS_EVAC_REGEN_GOLDEN=1`; the `linux-x86_64` set in the Docker command of the test module |
 | `tests/golden/routing_decisions/*.json` (10) | `regression-only` | `tests/test_routing_decisions.py` | The decision cases, variants, threshold-equality cases, anchor and must-flee table and shared-cache passes, with every sample and cache write | `PYFDS_EVAC_REGEN_GOLDEN=1` |
 | `tests/verification/golden/heat_default/fed_history.csv`, `manifest.json` | `regression-only` | `tests/verification/test_heat_endpoint_coupled.py` | A default-mode heat run at commit 76c9a76 (SFPE Eq. 63.44), reseeded since; see its [README](../verification/golden/heat_default/README.md) | `make_baseline.py`, `reseed_baseline.py` there |
+| `tests/init_decks.tsv`, `tests/init_deck_exits.json` | `regression-only` | `tests/test_init_deck_sweep.py` | `pyfds-evac init` on every tracked FDS deck: exit status, walkable area, exit and agent counts, reason, `config.json` hash and every exit polygon | `uv run python tests/test_init_deck_sweep.py` |
 | `tests/__snapshots__/test_tui/*.raw` (8) | `presentation-snapshot` | `tests/test_tui.py` (`snap_compare`) | Rendered TUI screens per theme | `uv run pytest tests/test_tui.py --snapshot-update` |
 
 `heat_default` uses the SFPE temperature history as the run's input, not as

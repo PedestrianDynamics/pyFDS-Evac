@@ -31,6 +31,8 @@ SECTION = "## Golden re-record:\n\nrank_routes/a.json: ranking labels only.\n"
         "tests/golden/scenarios/linux-x86_64/b.json",
         "tests/verification/golden/heat_default/fed_history.csv",
         "tests/__snapshots__/test_tui/test_snapshot_results.raw",
+        "tests/init_decks.tsv",
+        "tests/init_deck_exits.json",
     ],
 )
 def test_a_golden_change_without_the_section_fails(guard, path):
@@ -70,10 +72,19 @@ def test_a_golden_change_with_the_section_passes(guard, body):
         "## Golden re-record:\n\n## Tests\nall pass",
         "<!-- Golden re-record: fill in -->",
         "See the Golden re-record: rule.",
+        "## Golden re-record:\n\n---\n",
+        "## Golden re-record: **\n",
+        "```\n## Golden re-record:\nlabels only\n```\n",
+        "~~~md\nGolden re-record: labels only\n~~~\n",
     ],
 )
 def test_an_empty_commented_or_inline_mention_is_not_a_section(guard, body):
     assert guard.check(["tests/golden/rank_routes/a.json"], body)
+
+
+def test_a_section_after_a_fenced_example_still_counts(guard):
+    body = "```\nexample\n```\n\nGolden re-record: labels only\n"
+    assert guard.check(["tests/golden/rank_routes/a.json"], body) == []
 
 
 def _git(repo, *args):
@@ -105,3 +116,11 @@ def test_the_command_line_reads_the_diff_and_the_body(tmp_path, monkeypatch):
     assert missing.returncode == 1
     assert "tests/golden/a.json" in missing.stderr
     assert run(SECTION).returncode == 0
+
+    odd = tmp_path / "tests" / "golden" / "tab\there.json"
+    odd.write_text("{}")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-q", "-m", "odd name")
+    odd_missing = run("No section.")
+    assert odd_missing.returncode == 1
+    assert "tab\there.json" in odd_missing.stderr
