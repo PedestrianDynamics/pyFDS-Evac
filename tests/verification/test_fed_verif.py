@@ -175,11 +175,11 @@ def test_a2_6_deterministic_mode_returns_threshold_exactly():
 
 def test_a2_7_threshold_draws_are_seed_reproducible():
     cfg = TenabilityConfig(incapacitation_mode="probabilistic")
-    first = [sample_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)]
-    second = [
-        sample_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)
-    ]
+    rng_first, rng_second = random.Random(99), random.Random(99)
+    first = [sample_incapacitation_threshold(cfg, rng_first) for _ in range(50)]
+    second = [sample_incapacitation_threshold(cfg, rng_second) for _ in range(50)]
     assert first == second
+    assert len(set(first)) == len(first)
 
 
 def test_a2_7_rate_is_pure_function():

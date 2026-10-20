@@ -35,7 +35,7 @@ from harness import (
 from pyfds_evac.core.fed import TenabilityConfig
 from pyfds_evac.core.scenario import run_scenario
 
-# 6 % CO -> t* ~ 23.4 s, comfortably inside the 40 s free-walk egress.
+# 6 % CO -> t* ~ 24.3 s, comfortably inside the 40 s free-walk egress.
 CO_PPM = 60_000.0
 UPDATE_INTERVAL_S = 1.0
 
@@ -234,4 +234,6 @@ def test_probabilistic_run_is_reproducible_under_fixed_seed():
         finally:
             result.cleanup()
 
-    assert _collapse_times() == _collapse_times()
+    first = _collapse_times()
+    assert first
+    assert first == _collapse_times()

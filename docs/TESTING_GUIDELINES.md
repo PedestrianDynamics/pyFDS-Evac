@@ -96,6 +96,8 @@ consider injecting a representative defect: a wrong unit conversion, a
 reversed threshold comparison, a removed equation term. A relevant test
 should fail. Restore the original code afterwards. This is a judgement per
 change, not a required step on every pull request.
+`scripts/mutation_check.py` runs a recorded set of such defects for an area;
+the findings and results are in [tests/AUDIT.md](../tests/AUDIT.md).
 
 Do not delete a regression test only because it has no independent oracle.
 Keep it and label it. Do not read a coverage figure or a snapshot count as

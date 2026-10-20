@@ -209,6 +209,17 @@ def _rival_refusals_in_band(result) -> list[dict]:
     ]
 
 
+def _rival_rows_in_band(result) -> list[dict]:
+    """Rival rows evaluated with the dose inside (0.9, 1.0]."""
+    return [
+        r
+        for r in result.route_cost_history or []
+        if r["current_exit"]
+        and r["exit_id"] != r["current_exit"]
+        and 0.9 < float(r["fed_max_route"]) <= 1.0
+    ]
+
+
 def _left_b(result) -> list[dict]:
     """The switches that fled exit B for dose."""
     return [
@@ -253,6 +264,7 @@ def test_rival_in_the_band_is_admitted(name):
     result = _run(name, seed=11)
     try:
         assert result.success
+        assert _rival_rows_in_band(result)
         assert not _rival_refusals_in_band(result)
         assert len(_left_b(result)) >= 5
     finally:
