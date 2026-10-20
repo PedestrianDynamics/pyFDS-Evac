@@ -450,6 +450,73 @@ pins it, but no mutant targets it.
 - `test_route_gate.py` kills none of the eleven; it stays as the
   end-to-end check of the refusal and is not tightened here.
 
+## Routing: reroute
+
+Modules `pyfds_evac/core/route_graph.py` (`should_reevaluate`, the guards
+of `evaluate_and_reroute`) and `pyfds_evac/core/scenario.py` (the
+`_reevaluate`, `_arrive` and `_decide_at_flow_spawn` closures). This is the
+half of routing that decides when an agent re-decides and what it is given
+to decide with; the cost terms and the policy are audited in "Routing:
+cost" and "Routing: policy".
+
+Audited files, by node ID (each kills mutants, see below):
+`test_routing_decisions.py::test_agent_path_snapshot`,
+`::test_scan_takes_a_rejected_route_and_returns_unstamped`,
+`::test_evaluate_and_reroute_snapshot`, `::test_reference_exit_reroute_snapshot`,
+`::test_empty_ranking_stamps_before_exploring`;
+`test_switch_reasons.py::test_idle_agent_routed_to_its_own_exit_is_resume`,
+`::test_leaving_a_closed_exit_is_exit_closed`,
+`::test_station_switches_to_exits_seen_at_spawn_are_learned_exit`;
+`test_scheduled_exits.py::test_sequential_closures_leave_from_the_exit_walked_to`;
+`test_look_before_wander.py::test_a_new_visit_to_a_node_allows_a_new_look`;
+`test_no_known_exit.py::test_a_flow_agent_decides_as_it_spawns`. The
+`test_routing_decisions.py` snapshots are regression-only
+(`tests/golden/README.md`); the named behaviour tests above kill the same
+mutants where a row says so.
+
+Added: `test_route_reroute_hand_values.py` (the schedule, with binary-exact
+times: interval 0.5 from a last evaluation at 1.0 re-evaluates at exactly
+1.5 and not at 1.4375; an offset of 0.75 evaluates at exactly 0.75 and not
+at 0.5; the first evaluation ignores the interval; an interval of 0 or
+less never re-evaluates), `test_scheduled_exits.py::test_reroute_pass_evaluates_with_the_dose_taken`
+(the pass is given the cumulative FED, a constant 3.0 /min dose) and
+`test_no_known_exit.py::test_a_flow_agent_is_evaluated_from_where_it_spawned`
+(the flow-spawn decision gets the spawned position). Both scenario tests
+use the synthetic rooms already in those files; no FDS deck, no goldens.
+
+### Mutation checks
+
+`python scripts/mutation_check.py routing_reroute`: 14 of 14 mutants killed,
+10 before the audit. `test_no_known_exit.py::TestRunModes::test_the_gui_refuses_the_form`
+is deselected in the area (it needs the webapp extra, which the checking
+environment lacks, and would otherwise fail, hence "kill", every mutant).
+
+| Mutant | Kind | Killed before the audit |
+|---|---|---|
+| `should_reevaluate`: elapsed `>= interval` to `>` | reversed comparison | yes, but by one test only (`test_station_switches_to_exits_seen_at_spawn_are_learned_exit`); the hand values pin the boundary (now two) |
+| `should_reevaluate`: `current_time >= eval_offset` to `>` | reversed comparison | no: added `test_offset_exactly_reached_evaluates_the_first_time` |
+| `should_reevaluate`: `interval <= 0` to `< 0` | reversed comparison | no: added `test_zero_interval_never_reevaluates` (it terminates: interval 0 then re-evaluates every call) |
+| `evaluate_and_reroute`: a refused best route no longer returns | removed term | yes, by `test_routing_decisions.py` |
+| `evaluate_and_reroute`: the idle check of the same-exit branch dropped | removed term | yes, by `test_idle_agent_routed_to_its_own_exit_is_resume` |
+| empty ranking no longer stamps `last_eval_time_s` | removed term | yes, by `test_empty_ranking_stamps_before_exploring` |
+| chosen route no longer stamps `last_eval_time_s` | removed term | yes, by 12 tests |
+| closed default route: `old_exit` not set to the exit walked to | removed term | yes, by `test_sequential_closures_leave_from_the_exit_walked_to` |
+| closure switch not labelled `exit_closed` | removed term | yes, by `test_switch_reasons.py` and `test_scheduled_exits.py` |
+| `_reevaluate`: `current_fed` 0 instead of the cumulative FED | removed term | no: added `test_reroute_pass_evaluates_with_the_dose_taken` |
+| `_reevaluate`: exit count not moved | removed term | yes, by `test_station_switches_to_exits_seen_at_spawn_are_learned_exit` only |
+| `_arrive`: `looked_node` of another node kept | removed term | yes, by `test_a_new_visit_to_a_node_allows_a_new_look` only |
+| `_decide_at_flow_spawn`: decision skipped | removed term | yes, by `test_a_flow_agent_decides_as_it_spawns` |
+| `_decide_at_flow_spawn`: position not refreshed | removed term | no: added `test_a_flow_agent_is_evaluated_from_where_it_spawned` |
+
+### Open
+
+- No mutant survives, hangs or is equivalent after the audit.
+- The exit-count mutant (`_move_count`) and the `looked_node` mutant each
+  rest on one test; they are not strengthened here.
+- `test_the_gui_refuses_the_form` fails in an environment without the
+  webapp extra (`ModuleNotFoundError: pyfds_evac.webapp.app`); the full
+  suite there is not clean for that reason alone.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed

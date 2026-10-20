@@ -679,6 +679,120 @@ AREAS: dict[str, Area] = {
             ),
         ),
     ),
+    "routing_reroute": Area(
+        module="pyfds_evac/core/route_graph.py",
+        tests=(
+            "tests/test_route_reroute_hand_values.py",
+            "tests/test_rerouting_hand_checks.py",
+            "tests/test_routing_decisions.py",
+            "tests/test_switch_reasons.py",
+            "tests/test_no_known_exit.py",
+            # Needs the webapp extra and exercises none of the mutated lines.
+            "--deselect=tests/test_no_known_exit.py::TestRunModes::test_the_gui_refuses_the_form",
+            "tests/test_flow_spawn_errors.py",
+            "tests/test_flow_spawn_spacing.py",
+            "tests/test_look_before_wander.py",
+            "tests/test_scheduled_exits.py",
+            "tests/test_fallback_hold.py",
+            "tests/test_fallback_tau_hold.py",
+        ),
+        mutants=(
+            Mutant(
+                "reeval_interval_ge_to_gt",
+                "reversed comparison",
+                "return current_time_s - state.last_eval_time_s >= interval_s",
+                "return current_time_s - state.last_eval_time_s > interval_s",
+            ),
+            Mutant(
+                "reeval_offset_ge_to_gt",
+                "reversed comparison",
+                "return current_time_s >= state.eval_offset_s",
+                "return current_time_s > state.eval_offset_s",
+            ),
+            Mutant(
+                "reeval_disabled_le_to_lt",
+                "reversed comparison",
+                "    if interval_s <= 0:\n        return False\n",
+                "    if interval_s < 0:\n        return False\n",
+            ),
+            Mutant(
+                "refused_best_not_returned",
+                "removed term",
+                "if best.rejected and best.rejection_reason and not _is_fallback(best):",
+                "if False:",
+            ),
+            Mutant(
+                "same_exit_idle_ignored",
+                "removed term",
+                'if old_exit == best.exit_id and wait_info.get("state") != "idle":',
+                "if old_exit == best.exit_id:",
+            ),
+            Mutant(
+                "no_exit_last_eval_unset",
+                "removed term",
+                "        route_state.last_eval_time_s = current_time_s\n"
+                "        _remember_known(route_state, cognitive_map)\n"
+                "        if cognitive_map is None:",
+                "        _remember_known(route_state, cognitive_map)\n"
+                "        if cognitive_map is None:",
+            ),
+            Mutant(
+                "last_eval_unset_after_choice",
+                "removed term",
+                "    route_state.last_eval_time_s = current_time_s\n"
+                "    _remember_known(route_state, cognitive_map)\n\n"
+                "    # An idle",
+                "    _remember_known(route_state, cognitive_map)\n\n    # An idle",
+            ),
+            Mutant(
+                "closed_default_route_old_exit_dropped",
+                "removed term",
+                "decision = replace(decision, old_exit=reference.counted)",
+                "pass",
+            ),
+            Mutant(
+                "exit_closed_reason_dropped",
+                "removed term",
+                'decision = replace(decision, switch_reason="exit_closed")',
+                "pass",
+            ),
+            Mutant(
+                "reevaluate_fed_zero",
+                "removed term",
+                'current_fed = fed_state.get(agent_id, {}).get("cumulative", 0.0)',
+                "current_fed = 0.0",
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "reevaluate_counts_not_moved",
+                "removed term",
+                "_move_count(exit_counts, _counted_before, rs.counted_exit)",
+                "pass",
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "arrive_looked_node_kept",
+                "removed term",
+                'if wait_info.get("looked_node") not in (None, arrived):',
+                "if False:",
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "flow_spawn_decision_skipped",
+                "removed term",
+                "if reroute_config is None or stage_graph is None or chosen is not None:",
+                "if True:",
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "flow_spawn_position_stale",
+                "removed term",
+                'wait_info["current_position"] = extract_agent_xy(simulation.agent(agent_id))',
+                "pass",
+                module="pyfds_evac/core/scenario.py",
+            ),
+        ),
+    ),
 }
 
 

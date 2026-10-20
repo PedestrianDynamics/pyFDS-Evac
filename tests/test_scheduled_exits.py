@@ -883,6 +883,32 @@ def test_closure_rechoice_carries_the_dose_taken():
     assert blind == pytest.approx(clean, abs=1e-6)
 
 
+def test_reroute_pass_evaluates_with_the_dose_taken(monkeypatch):
+    """Every evaluation of the reroute pass is given the agent's cumulative
+    FED: the constant 3.0 /min accrued since 0 s, one FED update (0.05 s at
+    most) behind the evaluation time."""
+    import pyfds_evac.core.scenario as scenario_module
+
+    seen = []
+    evaluate = scenario_module.evaluate_and_reroute
+
+    def _spy(*args, **kw):
+        seen.append((kw["current_time_s"], kw["current_fed"]))
+        return evaluate(*args, **kw)
+
+    monkeypatch.setattr(scenario_module, "evaluate_and_reroute", _spy)
+    _run(
+        _scenario({"west": {"closed_after_s": T_CLOSE_S}}),
+        reroute_config=REROUTE,
+        fed_model=_ConstantDose(),
+    )
+    later = [(t, fed) for t, fed in seen if t >= 1.0]
+    assert later
+    for time_s, fed in later:
+        assert fed == pytest.approx(DOSE_PER_MIN * time_s / 60.0, abs=0.05 * 3.0 / 60.0)
+        assert fed > 0.0
+
+
 @pytest.mark.parametrize("mode", list(RUN_MODES))
 def test_closure_at_an_odd_time_acts_at_the_next_whole_second(mode):
     """The check runs every simulated second: a door closing at 4.3 s is
