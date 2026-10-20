@@ -146,10 +146,12 @@ class TestFridolfSpeedFactor:
             speed_factor_from_extinction_fridolf(1.0, visibility_factor_c=c)
 
     def test_larger_c_gives_higher_factor(self):
-        # Higher C means better visibility at the same K
+        # Higher C means better visibility at the same K. Eq. 7, w_free = 1:
+        # C = 3 gives V = 1 m, w = 1 - 0.34 * 2; C = 8 gives V = 8/3 m.
         f_c3 = speed_factor_from_extinction_fridolf(3.0, visibility_factor_c=3.0)
         f_c8 = speed_factor_from_extinction_fridolf(3.0, visibility_factor_c=8.0)
-        assert f_c8 > f_c3
+        assert f_c3 == pytest.approx(1.0 - 0.34 * 2.0, rel=1e-12)
+        assert f_c8 == pytest.approx(1.0 - 0.34 * (3.0 - 8.0 / 3.0), rel=1e-12)
 
 
 class TestSmokeSpeedModelFridolf:
@@ -209,11 +211,12 @@ class TestSmokeSpeedModelFridolf:
             model.sample(0.0, 0.0, 0.0, free_speed_m_per_s=1.25)
 
     def test_lund_law_used_by_default(self):
-        field = ConstantExtinctionField(0.0)
+        # K = 2: Lund gives 1 - 0.057 * 2 / 0.706; Fridolf (V = 1.5 m) 0.49.
+        field = ConstantExtinctionField(2.0)
         cfg = SmokeSpeedConfig(fds_dir=".")
         model = SmokeSpeedModel(field, cfg)
         _, factor = model.sample(0.0, 0.0, 0.0)
-        assert factor == pytest.approx(1.0)
+        assert factor == pytest.approx(1.0 - 0.057 * 2.0 / 0.706, rel=1e-12)
 
 
 def test_run_scenario_accepts_three_argument_sample():
@@ -229,14 +232,19 @@ def test_run_scenario_accepts_three_argument_sample():
     result = run_scenario(scenario, seed=420, smoke_speed_model=model)
     try:
         assert result.smoke_history
-        assert all(row["speed_factor"] == 0.5 for row in result.smoke_history)
+        for row in result.smoke_history:
+            assert row["speed_factor"] == 0.5
+            assert float(row["desired_speed"]) == pytest.approx(
+                0.5 * float(row["base_speed"]), rel=1e-9
+            )
     finally:
         result.cleanup()
 
 
 def test_speed_factor_reduces_with_extinction():
-    assert speed_factor_from_extinction(1.0) < 1.0
-    assert speed_factor_from_extinction(3.0) < speed_factor_from_extinction(1.0)
+    """Lund law: factor = 1 + beta K / alpha, beta = -0.057, alpha = 0.706."""
+    assert speed_factor_from_extinction(1.0) == pytest.approx(1.0 - 0.057 / 0.706)
+    assert speed_factor_from_extinction(3.0) == pytest.approx(1.0 - 0.057 * 3 / 0.706)
 
 
 def test_speed_factor_clamps_to_minimum():
@@ -375,7 +383,10 @@ def test_smoke_updates_record_base_speed_during_premovement():
         assert result.smoke_history
         for row in result.smoke_history:
             assert float(row["base_speed"]) > 0.0
-            assert float(row["desired_speed"]) < float(row["base_speed"])
+            # Lund law at K = 1: 1 - 0.057 / 0.706
+            assert float(row["desired_speed"]) == pytest.approx(
+                float(row["base_speed"]) * (1.0 - 0.057 / 0.706), rel=1e-9
+            )
     finally:
         result.cleanup()
 

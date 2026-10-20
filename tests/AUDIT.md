@@ -147,6 +147,68 @@ its row is fixed.
 | `test_heat_endpoint_docs.py::test_models_heat_does_not_call_the_implemented_law_fatal` | stale claim | Docstring says Eq. 63.44 is the implemented law and total-flux is missing; both are no longer true |
 | `verification/test_heat_endpoint_outputs.py` (`TEMPERATURE_C = 230`) | unsound physics claim | Above the 205 deg C limit without a wiring-only note |
 
+## Smoke speed
+
+Module `pyfds_evac/core/smoke_speed.py`: the Lund linear law with its 0.1
+clamp, the Fridolf et al. (2019) law with V = C / K, the soot to K
+conversion and `SmokeSpeedModel`. Where `scenario.py` applies the factor
+is reached only through the coupled tests.
+
+Audited files: `test_smoke_speed.py`, `test_smoke_speed_widget.py`,
+`test_speed_update_pin.py`, `test_speed_update_skip.py`,
+`test_iso_table21_coupled.py`, `test_model_speed_attrs.py`, and in
+`verification/`: `test_smoke_speed_verif.py`, `test_s2_corridor_speed.py`,
+`test_speed_update_coupling.py`, `test_fds_evac_guide_cases.py`. These are
+also the tests the mutation check runs.
+
+### Mutation checks
+
+`python scripts/mutation_check.py smoke_speed`: 10 of 10 mutants killed,
+all before the audit.
+
+| Mutant | Kind |
+|---|---|
+| Soot density read as g/m3 instead of mg/m3 | unit conversion |
+| Visibility K / C instead of C / K | unit conversion |
+| Fridolf returns the speed instead of the factor | unit conversion |
+| Fridolf reduction sign reversed | reversed comparison |
+| Fridolf `w_free <= 0` guard to `< 0` | reversed comparison (killed by one test) |
+| Lund `/ alpha` dropped | removed term |
+| Lund lower clamp dropped | removed term |
+| Fridolf 0.2 m/s floor dropped | removed term |
+| Fridolf cap at `w_free` dropped | removed term |
+| Model ignores the agent's free speed | removed term |
+
+### Fixed
+
+| Test | Smell | Change |
+|---|---|---|
+| `test_model_speed_attrs.py::test_the_model_obeys_the_write` | tolerance camouflage | `rel=0.15` passed a write honoured at 57 %; measured ratio is 0.5 to 2.4e-5, now `rel=1e-3` |
+| `test_smoke_speed.py::test_lund_law_used_by_default` | weak oracle | K = 0 gives 1 under both laws; now K = 2, `1 - 0.057 * 2 / 0.706` |
+| `test_smoke_speed.py::test_speed_factor_reduces_with_extinction` | weak oracle | ordering only; now the Lund values at K = 1 and 3 |
+| `test_smoke_speed.py::test_larger_c_gives_higher_factor` | weak oracle | ordering only; now Eq. 7 values for C = 3 and C = 8 |
+| `test_smoke_speed.py::test_smoke_updates_record_base_speed_during_premovement` | weak oracle | `desired < base`; now `desired = base * (1 - 0.057 / 0.706)` |
+| `test_smoke_speed.py::test_run_scenario_accepts_three_argument_sample` | self-fulfilling mock | asserted only the factor the stub returns; now also that the agent's desired speed is halved |
+| `test_speed_update_skip.py::test_precomputed_zones_match_the_scan` | circular | two paths of one function compared; now both against the expected zones |
+| `test_iso_table21_coupled.py::test_it_is_constant_in_space_and_time` | false comment | "two decades above" the spread; it is about nine times |
+
+### Open
+
+The rows below come from a review pass; each smell is confirmed only when
+its row is fixed.
+
+| Test | Smell | Proposed contract |
+|---|---|---|
+| `test_iso_table21_coupled.py::test_the_time_ratio_matches`, `test_smoke_speed.py::test_iso_table21_constant_extinction_matches_expected_time_ratio` | tolerance camouflage | `rel=0.08` against effects of 4 to 9 %, so a half-strength coupling passes; derive the tolerance from the measured discretisation |
+| `test_smoke_speed.py::test_iso_table21_holds_across_unimpeded_walking_speeds` | unsound claim | Says it catches a clamp on absolute speed, but at K = 1 no clamp binds; use K = 10 or drop the claim |
+| `test_iso_table21_coupled.py::test_the_recorded_factor_matches_the_observed_coefficient`, the factor check in the ISO Table 21 sweep | circular, unlabelled | Production function on both sides; label as consistency checks and add the hand value at the observed K |
+| `verification/test_speed_update_coupling.py` closed-form tests | circular | Expected speed uses the factor read from `smoke_history`, so a factor of 1 everywhere passes; pin the logged factors to the Lund values and assert one is below 1 |
+| `verification/test_s2_corridor_speed.py::test_laws_diverge_at_same_extinction` | self-fulfilling | Compares two test-local helpers; compare `SmokeSpeedModel` under both laws |
+| `test_smoke_speed.py` plot tests (sweep, guide plot) | weak oracle | Only file existence; label as plotting smoke tests |
+| `test_smoke_speed.py` `TestFridolf` | missing boundary | No `w_free < 0` case and no test at the floor knee (K = 4.636 for `w_free` = 1) |
+| `test_smoke_speed_widget.py::test_javascript_matches_python` | silent skip | Skips without node; CI has no `setup-node`, so it relies on the runner image |
+| `test_smoke_speed.py` `FRIDOLF_TABLE`, `verification/test_fds_evac_guide_cases.py::test_guide_smoke_speed_table_values` | oracle source | Values come from Eq. 7 and the closed form, not from a cited table; say so |
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
