@@ -86,6 +86,7 @@ exclude = [
 
 [dependency-groups]
 dev = [
+    "hypothesis>=6.170.2",
     "mypy>=1.19.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.1.0",

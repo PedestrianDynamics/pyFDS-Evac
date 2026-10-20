@@ -79,12 +79,15 @@ rechecked, but each smell is confirmed only when its row is fixed.
 
 ## Property-based tests
 
-Hypothesis is not a dependency; adding it needs the maintainer's yes.
-Candidate relations, none implemented:
+Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
+examples (`derandomize=True`), so CI runs are reproducible.
 
-| Relation | Area | Cost note |
+| Relation | Area | Status |
 |---|---|---|
-| FED rate is non-decreasing in each toxicant concentration and in CO2 | FED | Cheap; pure functions |
-| Accumulated FED is linear in duration under constant exposure | FED | Cheap |
-| Rate is zero for O2 at or above the threshold and clean air | FED | Cheap; one parametrised test covers it without Hypothesis |
-| Agents are conserved (spawned = evacuated + remaining + incapacitated) | scenario | Each example is a simulation run; expensive |
+| FED rate is non-negative | FED | `test_fed_properties.py` |
+| FED rate is non-decreasing in CO, CO2, HCN and each irritant | FED | `test_fed_properties.py`; NO and NO2 excluded, they lower the CN term |
+| FED rate is non-increasing in O2 | FED | `test_fed_properties.py` |
+| Rate is zero for clean air at or above the O2 threshold | FED | `test_fed_properties.py` |
+| Accumulated FED is additive in duration under constant exposure | FED | `test_fed_properties.py` |
+| Accumulating for `time_to_fed_threshold_s` gives FED 1 | FED | `test_fed_properties.py` (consistency check) |
+| Agents are conserved (spawned = evacuated + remaining + incapacitated) | scenario | Open; each example is a simulation run, expensive |
