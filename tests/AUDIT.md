@@ -384,6 +384,72 @@ absent or `None`.
   order in the heap). The tie test pins this; no documented contract
   promises it.
 
+## Routing: policy
+
+Module `pyfds_evac/core/route_graph.py`, the half of routing that decides
+what a measured route means: `GatePolicy.feasibility` (the tau refusal),
+`_fed_violations` (the FED refusal), `GatePolicy._tau_band` (the tau
+deadband), `AdditivePolicy.edge_weight`, `_fallback_rival_wins` (the
+all-refused fallback and its `hold` rule) and `taus_tie`. Optical depth is
+the integral of the extinction along the route; routing does not compute a
+Jin visibility distance, so these tests do not test Jin.
+
+Audited files, by node ID: `test_fallback_hold.py`,
+`test_fallback_tau_hold.py` and `test_gate_exit_pricing.py` (each kills
+mutants, see below); `test_route_gate.py` (end-to-end gate refusal through
+`rank_routes`; no mutant of this area depends on it). Added:
+`test_route_policy_hand_values.py`, with binary-exact boundary values:
+`tau_max = 2.0` with tau 2.0 feasible and one ulp above refused; FED
+threshold 0.75 reached by `current_fed = 0.25` plus a growth of 0.5
+(3.0 /min over a 10 s walk), and crossed with `current_fed = 0.3125`;
+deadband margin 2.0 x 0.25 = 0.5 with a tau difference of exactly 0.5 (band
+0 either way) and of 0.5625 (+1 for a cleaner candidate, -1 for a dirtier
+one); fallback margin 0.25 with a rival at exactly 3.0 against 4.0 (holds)
+and at 2.9375 (wins). No deck goldens are in the area.
+
+### Mutation checks
+
+`python scripts/mutation_check.py routing_policy`: 11 of 11 mutants killed,
+4 before the audit. None is killed by golden comparisons alone.
+
+| Mutant | Kind | Killed before the audit |
+|---|---|---|
+| `feasibility`: `tau_route > budget` to `>=` | reversed comparison | no: added `test_route_at_tau_max_is_feasible` |
+| `_tau_band`: `delta > margin` to `>=` | reversed comparison | no: added `test_candidate_cleaner_by_exactly_the_margin_is_not_clearly_cleaner` |
+| `_tau_band`: `delta < -margin` to `<=` | reversed comparison | no: added `test_candidate_dirtier_by_exactly_the_margin_is_not_clearly_dirtier` |
+| `_tau_band`: margin 0 instead of `tau_max * tau_deadband` | removed term | yes, by `test_gate_exit_pricing.py` |
+| `_tau_band`: the refusal `return -1` becomes `return 0` | changed constant | no: added `test_candidate_dirtier_by_more_than_the_margin_is_clearly_dirtier` (the missing refusal half was the oscillation bug) |
+| `AdditivePolicy.edge_weight` drops the `w_fed * fed_growth` term | removed term | no: added `test_additive_edge_weight_is_length_times_smoke_plus_the_fed_toll` |
+| `_fed_violations`: `fed_max > threshold` to `>=` | reversed comparison | no: added `test_fed_at_the_threshold_is_feasible_and_above_it_is_not` |
+| `_measure_route`: `fed_max = current_fed + growth` to `growth` | removed term | no: added `test_fed_max_is_the_dose_already_taken_plus_the_growth` |
+| `_fallback_rival_wins` ignores `fallback_rule == "hold"` | removed term | yes, by `test_fallback_hold.py` |
+| `_fallback_rival_wins`: `<` to `<=` at the margin | reversed comparison | yes, by `test_fallback_tau_hold.py` |
+| `taus_tie`: `<= EPS_TAU` to `<` | reversed comparison | yes, by `test_fallback_tau_hold.py` |
+
+`edge_weight` omits `current_fed` on purpose (it is constant across one
+agent's routes), so only a measured route with a non-zero `current_fed`
+that pushes it over the threshold can kill the `fed_max` mutant; the
+`evaluate_route` test does that. The gate's `edge_weight` has no FED term
+(dose is a refusal there, not a cost); `test_gate_edge_weight_has_no_fed_term`
+pins it, but no mutant targets it.
+
+### Model limits, recorded and not tested as behaviour
+
+- Heat dose takes no part in route choice: the router is given the gas
+  dose and a gas-only rate sampler.
+- The gate has no smoke must-flee: only a FED violation bypasses the exit
+  anchor (#696, #751). `test_must_flee_*` in the hand-value file pin the FED
+  case only.
+- Travel time uses the speed factor of the mean extinction, f(mean K), not
+  the mean of f(K). That is the model's choice; nothing here validates it.
+
+### Open
+
+- None of the mutants survives or is equivalent. The tie test for
+  `taus_tie` pins `EPS_TAU = 1e-9` as the tolerance.
+- `test_route_gate.py` kills none of the eleven; it stays as the
+  end-to-end check of the refusal and is not tightened here.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
