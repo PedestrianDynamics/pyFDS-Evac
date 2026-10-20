@@ -65,6 +65,11 @@ def test_a3_1_rate_is_reciprocal_of_printed_time():
 
 
 def test_a3_2_rate_is_zero_only_at_or_below_zero_degrees():
+    just_above = default_heat_fed_rate_per_minute(
+        HeatFedInputs(temperature_celsius=1e-3)
+    )
+    assert just_above == pytest.approx(1e-3**3.61 / 4.1e8, rel=1e-12)  # ISO Eq. (9)
+    assert just_above > 0.0
     assert (
         default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=0.0)) == 0.0
     )
@@ -72,7 +77,6 @@ def test_a3_2_rate_is_zero_only_at_or_below_zero_degrees():
         default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=-10.0))
         == 0.0
     )
-    assert not math.isfinite(float("nan"))
     assert (
         default_heat_fed_rate_per_minute(
             HeatFedInputs(temperature_celsius=float("nan"))
@@ -229,19 +233,19 @@ def test_a3_5_gas_and_heat_threshold_draws_are_independent():
 
 def test_a3_6_threshold_draws_are_seed_reproducible():
     cfg = TenabilityConfig(heat_incapacitation_mode="probabilistic")
-    first = [
-        sample_heat_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)
-    ]
-    second = [
-        sample_heat_incapacitation_threshold(cfg, random.Random(99)) for _ in range(50)
-    ]
+    rng_first, rng_second = random.Random(99), random.Random(99)
+    first = [sample_heat_incapacitation_threshold(cfg, rng_first) for _ in range(50)]
+    second = [sample_heat_incapacitation_threshold(cfg, rng_second) for _ in range(50)]
     assert first == second
+    assert len(set(first)) == len(first)
 
 
-def test_a3_6_rate_is_pure_function():
+def test_a3_6_rate_at_130_c_matches_iso_eq_9():
+    """ISO 13571 Eq. (9), clothed: rate = 1 / (4.1e8 * 130**-3.61) 1/min."""
     inputs = HeatFedInputs(temperature_celsius=130.0)
-    assert default_heat_fed_rate_per_minute(inputs) == default_heat_fed_rate_per_minute(
-        inputs
+    expected = 1.0 / (4.1e8 * 130.0**-3.61)
+    assert default_heat_fed_rate_per_minute(inputs) == pytest.approx(
+        expected, rel=1e-12
     )
 
 

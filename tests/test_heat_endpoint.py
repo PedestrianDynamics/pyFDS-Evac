@@ -293,14 +293,23 @@ def test_validity_limit_is_the_highest_convective_data_point():
     """Table 63.17 (p. 2375): highest dry-air point is 205 deg C (Veghte)."""
     from pyfds_evac.core.fed import HEAT_CONVECTIVE_VALIDITY_MAX_C
 
-    assert 200.0 <= HEAT_CONVECTIVE_VALIDITY_MAX_C <= 210.0
+    assert HEAT_CONVECTIVE_VALIDITY_MAX_C == 205.0
 
 
 @pytest.mark.parametrize(
     ("t_c", "outside"),
-    [(20.0, False), (100.0, False), (180.0, False), (250.0, True), (405.0, True)],
+    [
+        (20.0, False),
+        (100.0, False),
+        (180.0, False),
+        (205.0, False),
+        (205.5, True),
+        (250.0, True),
+        (405.0, True),
+    ],
 )
 def test_samples_above_the_data_are_flagged(t_c, outside):
+    """Only samples above 205 deg C are flagged; 205 itself is data."""
     assert _outside_validity(t_c) is outside
 
 

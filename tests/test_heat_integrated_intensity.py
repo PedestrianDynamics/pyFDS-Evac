@@ -629,7 +629,7 @@ def test_cli_help_states_range_no_default_and_excess():
     help_text = run._build_parser().format_help()
     block = help_text.split("\n  --heat-u-factor", 1)[1].split("\n  --", 1)[0]
     flat = " ".join(block.split()).lower()
-    assert "0.25" in flat and "1" in flat
+    assert "[0.25, 1]" in flat
     assert "no default" in flat
     assert "excess" in flat
 
