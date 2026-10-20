@@ -134,7 +134,7 @@ def test_band_along_y_is_marched_by_rows():
     assert k_max == 10.0
     tau, k_max = _tau(field, -1.0, 4.0, 1.0, 16.0)
     assert k_max == 10.0
-    assert tau == pytest.approx(10.0 * math.hypot(2.0, 12.0) / 12.0, abs=2.5)
+    assert tau == pytest.approx(10.0 * math.hypot(2.0, 12.0) / 12.0, abs=0.25)
 
 
 def test_lines_from_one_start_are_kept_apart():

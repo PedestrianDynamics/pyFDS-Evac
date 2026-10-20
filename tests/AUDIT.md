@@ -209,6 +209,101 @@ its row is fixed.
 | `test_smoke_speed_widget.py::test_javascript_matches_python` | silent skip | Skips without node; CI has no `setup-node`, so it relies on the runner image |
 | `test_smoke_speed.py` `FRIDOLF_TABLE`, `verification/test_fds_evac_guide_cases.py::test_guide_smoke_speed_table_values` | oracle source | Values come from Eq. 7 and the closed form, not from a cited table; say so |
 
+## Routing: cost
+
+Module `pyfds_evac/core/route_graph.py`, the measurement half of route
+cost: the extinction mean along a line of sight or polyline
+(`integrated_extinction_along_los`, `integrated_extinction_along_polyline`,
+`_polyline_stats`, `_length_weighted_mean`), `_sample_segment_extinction`,
+the foresight clock (`_arrival_time`, `_fds_end`, `_cap_at_fds_end`,
+`_ForesightClock`), `evaluate_segment`, the first leg (`_first_leg*`,
+`_leg_travel_time`, `_dose`, `_position_aware_length`), `_measure_route`,
+the measuring side of `_fed_violations` and `RouteCostConfig` validation.
+Policies, ranking and rerouting are other slices. Routing does not compute
+Jin visibility: tau is the integral of K along the walked route.
+
+Audited files: `test_route_smoke_integral.py`, `test_route_grid_sampling.py`,
+`test_foresight_arrival_time.py`, `test_route_assessment.py`,
+`test_walk_dose.py`, `test_fds_horizon.py`, `test_rerouting_hand_checks.py`,
+and by node ID in `test_route_graph.py`: `TestSegmentCost`, `TestRouteCost`,
+`TestPositionAwareRouting`, `TestIntegratedExtinctionAlongLos`,
+`TestPolylineSampling`, `TestFedRateAdapter`, `TestWalkableRemainingDistance`;
+in `test_routing_decisions.py`: `test_ramp_tau_matches_hand_value`. Added:
+`test_route_cost_hand_values.py`. These are also the tests the mutation
+check runs. The deck goldens of `test_rerouting_golden.py` are not in the
+list (15 subprocesses per mutant); no mutant survived, so none needed a
+separate run against it.
+
+### Mutation checks
+
+`python scripts/mutation_check.py routing_cost`: 23 of 23 mutants killed,
+18 before the audit. None is killed by golden comparisons alone.
+
+| Mutant | Kind | Killed before the audit |
+|---|---|---|
+| tau from `k_max` instead of `k_ave` | removed term | yes |
+| tau from `k_leg_max` instead of `k_ave` | removed term | yes |
+| tau without the effective length | removed term | yes |
+| tau from `path_length` instead of the position-aware length | removed term | yes |
+| Segment travel time ignores the smoke speed factor | removed term | yes, by two tests |
+| First-leg travel time ignores the smoke speed factor | removed term | yes, by two tests |
+| FED rate sampled at the decision time, not the arrival time | removed term | no: added `test_segment_dose_is_the_rate_at_the_arrival_time_over_the_walk` |
+| Segment dose not divided by 60 | unit conversion | yes |
+| `_dose` not divided by 60 | unit conversion | yes |
+| Cap at the last FDS frame removed | removed term | yes, by two tests |
+| Cap at the last FDS frame ignores the decision time (`max` to `min`) | reversed comparison | yes |
+| `at_many` not capped at the last FDS frame | removed term | yes, by two tests |
+| Length weighting dropped from the extinction mean | removed term | yes |
+| Foresight horizon dropped from `_arrival_time` | removed term | no: added `test_arrival_time_is_walk_over_speed_capped_by_the_horizon` |
+| `_arrival_time` ignores `anticipate` | reversed comparison | yes |
+| `_arrival_time` adds metres as seconds | unit conversion | no: same test |
+| Visible `<` to `<=` at the threshold | reversed comparison | no: added `test_a_segment_at_the_visibility_threshold_is_not_visible` |
+| FED violation `>` to `>=` at the limit | reversed comparison | no: added `test_a_route_at_the_fed_threshold_is_not_in_violation` |
+| Step sampling drops the far end | removed term | yes |
+| Position-aware length ignores the agent's walk | removed term | yes |
+| Excess walk time not pro rata | removed term | yes |
+| Clock ignores the walked offset of a piece | removed term | yes, by one test |
+| Horizon measured from zero, not the decision time | unit conversion | yes, by two tests |
+
+### Fixed
+
+| Test | Smell | Change |
+|---|---|---|
+| `test_route_graph.py::TestSegmentCost::test_heavy_smoke_segment` | weak oracle | `factor < 1`, `time > 10`; now the Lund factor at K = 5 and `10 / factor` |
+| `test_route_graph.py::TestSegmentCost::test_fed_growth_computed` | tolerance camouflage | `abs < 0.01` against 0.0167; now `0.1 x 10 / 60` at `rel=1e-12` |
+| `test_route_graph.py::TestSegmentCost::test_clear_air_segment` | tolerance camouflage | `abs < 0.1` on a length and time that are exact; now `rel=1e-12` |
+| `test_route_graph.py::TestFedRateAdapter::test_evaluate_segment_with_fed_sampler` | circular | expected dose from the segment's own `travel_time_s` at `rel=0.01`; now `0.1 x (10 / 1.3) / 60` |
+| `test_foresight_arrival_time.py::test_cache_is_not_shared_across_decision_times_under_a_horizon` | weak oracle | `shared == fresh > 0`; now tau = `0.8 x 5/6 x 10` |
+| `test_foresight_arrival_time.py::test_cache_keys_on_the_foresight_limit_for_one_start_time` | weak oracle | `tau > 0`; now `0.8 x 4/6 x 10` |
+| `test_route_grid_sampling.py::test_band_along_y_is_marched_by_rows` | tolerance camouflage | `abs=2.5` on 10.14 (measured 9.93); now `abs=0.25` |
+
+New hand-value tests (`test_route_cost_hand_values.py`): K = 0.5 over 12 m
+gives tau = 6.0 exactly; 10 m at K = 1 and 30 m at K = 0 weight to 0.25
+(0.5 unweighted); 13 m at 1.3 m/s arrives at t + 10 s, capped by a
+horizon; 0.6 /min for 100 s adds 1.0; the router speed at K = 2 equals
+the `SmokeSpeedModel` factor `1 - 0.057 x 2 / 0.706`; the foresight clock
+offsets and its cap at the last FDS frame; `_fds_end` takes the earliest.
+
+### Model limits (not test gaps)
+
+- Heat dose does not enter route choice: route FED is the gas rate.
+- The gate has no smoke must-flee (#696, #751); a FED violation is the only
+  must-flee kind under both models.
+- Travel time uses the speed factor of the mean K of a leg, not the mean
+  of the speed factors along it: a modelling choice, pinned by the hand
+  value above.
+
+### Open
+
+The rows below come from a review pass; each smell is confirmed only when
+its row is fixed.
+
+| Test | Smell | Proposed contract |
+|---|---|---|
+| `test_route_grid_sampling.py::test_band_diagonal_leg_does_not_skip_the_plume` | tolerance camouflage | `abs <= 2.9` (25 %) around 11.55, the crossing length of the core; derive the cell count for the 30 degree leg and pin it |
+| `test_route_grid_sampling.py::test_band_fixed_position_counts_the_cells` | tolerance | `abs(tau - 10) <= 0.25` documents the discretisation, but the 18 x 40 / 73 value above it already fixes the result |
+| `test_route_smoke_integral.py` convergence tests (`rel=0.02`) | tolerance | Ordered errors are asserted; derive 0.02 from the step sizes |
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
