@@ -127,7 +127,7 @@ class TestGraphConstruction:
     def test_edge_weight_is_euclidean(self, linear_graph):
         edge = linear_graph.edges["D0"][0]
         assert edge.target == "C0"
-        assert abs(edge.weight - 10.0) < 0.01
+        assert edge.weight == pytest.approx(10.0, rel=1e-12)
 
     def test_centroid_from_polygon(self, linear_graph):
         node = linear_graph.nodes["C0"]
@@ -162,7 +162,7 @@ class TestDijkstra:
         assert result is not None
         exit_id, cost, path = result
         assert exit_id == "E0"
-        assert abs(cost - 20.0) < 0.01
+        assert cost == pytest.approx(20.0, rel=1e-12)
         assert path == ["D0", "C0", "E0"]
 
     def test_diamond_picks_shorter_path(self, diamond_graph):
@@ -173,14 +173,14 @@ class TestDijkstra:
         # D0(0,0)->C0(0,10)=10, C0(0,10)->E0(20,10)=20 => total 30
         # D0(0,0)->C1(0,30)=30, C1(0,30)->E0(20,10)=~28.28 => total ~58.28
         assert path == ["D0", "C0", "E0"]
-        assert cost < 31.0
+        assert cost == pytest.approx(30.0, rel=1e-12)
 
     def test_multi_exit_picks_nearest(self, multi_exit_graph):
         result = multi_exit_graph.shortest_exit("D0")
         assert result is not None
         exit_id, cost, path = result
         assert exit_id == "E0"
-        assert abs(cost - 10.0) < 0.01
+        assert cost == pytest.approx(10.0, rel=1e-12)
 
     def test_all_exits_returned(self, multi_exit_graph):
         paths = multi_exit_graph.shortest_paths_to_exits("D0")
@@ -275,7 +275,7 @@ class TestEdgeCases:
         )
         result = graph.shortest_exit("D0")
         assert result is not None
-        assert abs(result[1] - 10.0) < 0.01
+        assert result[1] == pytest.approx(10.0, rel=1e-12)
 
     def test_distributions_from_polygon_key(self):
         """Distributions can supply a 'polygon' key instead of 'coordinates'."""
