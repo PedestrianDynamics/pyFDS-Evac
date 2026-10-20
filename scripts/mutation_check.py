@@ -600,6 +600,85 @@ AREAS: dict[str, Area] = {
             ),
         ),
     ),
+    "routing_policy": Area(
+        module="pyfds_evac/core/route_graph.py",
+        tests=(
+            "tests/test_route_policy_hand_values.py",
+            "tests/test_route_gate.py",
+            "tests/test_fallback_hold.py",
+            "tests/test_fallback_tau_hold.py",
+            "tests/test_gate_exit_pricing.py",
+        ),
+        mutants=(
+            Mutant(
+                "tau_refusal_gt_to_ge",
+                "reversed comparison",
+                "if tau_route > budget:",
+                "if tau_route >= budget:",
+            ),
+            Mutant(
+                "deadband_gt_to_ge",
+                "reversed comparison",
+                "if delta > margin:",
+                "if delta >= margin:",
+            ),
+            Mutant(
+                "deadband_lt_to_le",
+                "reversed comparison",
+                "if delta < -margin:",
+                "if delta <= -margin:",
+            ),
+            Mutant(
+                "deadband_zero",
+                "removed term",
+                "margin = cost_config.tau_max * cost_config.tau_deadband",
+                "margin = 0.0",
+            ),
+            # The missing refusal half was the oscillation bug (_tau_band).
+            Mutant(
+                "deadband_refusal_removed",
+                "changed constant",
+                "            return -1\n",
+                "            return 0\n",
+            ),
+            Mutant(
+                "additive_fed_term_dropped",
+                "removed term",
+                "+ config.w_fed * seg.fed_growth",
+                "+ 0.0",
+            ),
+            Mutant(
+                "fed_violation_gt_to_ge",
+                "reversed comparison",
+                "if fed_max > fed_threshold:",
+                "if fed_max >= fed_threshold:",
+            ),
+            Mutant(
+                "fed_max_without_current_fed",
+                "removed term",
+                "fed_max = current_fed + fed_growth",
+                "fed_max = fed_growth",
+            ),
+            Mutant(
+                "fallback_hold_ignored",
+                "removed term",
+                'if config.fallback_rule == "hold":',
+                "if False:",
+            ),
+            Mutant(
+                "fallback_margin_lt_to_le",
+                "reversed comparison",
+                "return rival.tau_route < current.tau_route * margin",
+                "return rival.tau_route <= current.tau_route * margin",
+            ),
+            Mutant(
+                "taus_tie_le_to_lt",
+                "reversed comparison",
+                "return abs(a - b) <= EPS_TAU",
+                "return abs(a - b) < EPS_TAU",
+            ),
+        ),
+    ),
 }
 
 
