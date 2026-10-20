@@ -228,11 +228,13 @@ def test_fatal_endpoint_constant_temperature():
 
 
 def _check_row_flags(rows):
-    """Hot rows are flagged, cool rows are not, humidity is always unknown."""
+    """Rows above 205 deg C are flagged, others not; humidity is unknown.
+
+    205 deg C is the assumed limit of the convective data (Table 63.17).
+    """
     for row in rows:
         t_c = float(row["temperature_celsius"])
-        assert not (t_c > 250.0 and str(row["heat_outside_validity"]) != "True")
-        assert not (t_c < 180.0 and str(row["heat_outside_validity"]) != "False")
+        assert str(row["heat_outside_validity"]) == str(t_c > 205.0), t_c
     assert {row["heat_endpoint"] for row in rows} == {"fatal"}
     assert {row["heat_humidity"] for row in rows} == {"unknown"}
     assert any(str(row["heat_outside_validity"]) == "True" for row in rows)

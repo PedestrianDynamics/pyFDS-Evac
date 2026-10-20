@@ -86,10 +86,10 @@ def test_deck_is_adiabatic_on_all_six_faces(temperature_c):
 def test_deck_init_matches_its_name(temperature_c):
     """Any &INIT TEMPERATURE in the deck is the value the deck is named after."""
     text = _deck_path(temperature_c).read_text()
-    for body in _namelists(text, "INIT"):
-        value = _real(body, "TEMPERATURE")
-        if value is not None:
-            assert value == temperature_c
+    values = [_real(body, "TEMPERATURE") for body in _namelists(text, "INIT")]
+    values = [value for value in values if value is not None]
+    assert values
+    assert all(value == temperature_c for value in values)
 
 
 @pytest.mark.parametrize("temperature_c", DECK_TEMPERATURES_C)

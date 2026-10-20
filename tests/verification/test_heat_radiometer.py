@@ -468,7 +468,9 @@ def test_incident_flux_is_between_zero_and_u(kind):
 def test_uniform_room_gives_a_quarter_of_u():
     """Isotropic field: q = U/4 for every orientation, U = 4 sigma T^4."""
     nml, dev = _output("uniform")
-    for pos, o, q, u, t in _plates(nml, dev):
+    plates = list(_plates(nml, dev))
+    assert plates
+    for pos, o, q, u, t in plates:
         np.testing.assert_allclose(
             q / u, 0.25, rtol=UNIFORM_BAND, err_msg=str((pos, o))
         )

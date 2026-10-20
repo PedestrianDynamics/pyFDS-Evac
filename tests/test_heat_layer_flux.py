@@ -223,7 +223,7 @@ def test_cli_default_is_not_the_layer_regime():
     args = run._build_parser().parse_args(
         ["--scenario", "x", "--enable-heat-fed", "--heat-fed-method", "total-flux"]
     )
-    assert getattr(args, "heat_regime", None) in (None, "smoke")
+    assert args.heat_regime == "smoke"
 
 
 @pytest.mark.parametrize(
@@ -285,7 +285,10 @@ def test_layer_flux_sign():
     negative net flux (it is not clipped here)."""
     kwargs = dict(view_factor=1.0, layer_emissivity=1.0, skin_temperature_celsius=35.0)
     assert _q_ext(35.0, **kwargs) == pytest.approx(0.0, abs=1e-12)
-    assert _q_ext(20.0, **kwargs) < 0.0
+    # sigma (293.15**4 - 308.15**4) / 1000 kW/m2
+    expected = 5.67e-8 * (293.15**4 - 308.15**4) / 1000.0
+    assert _q_ext(20.0, **kwargs) == pytest.approx(expected, rel=1e-9)
+    assert expected < 0.0
 
 
 # --- the model in the layer regime ------------------------------------------

@@ -148,6 +148,9 @@ def _start_times(rows):
 def test_layer_case_is_distinguishable_from_smoke_and_double_counting():
     q = q_layer()
     assert q == pytest.approx(2.948, abs=0.002)
+    # q_layer omits the ISO 2.5 kW/m2 cut: valid only while the layer term
+    # counts, which it does here by 0.9 %.
+    assert PARAMS["phi"] * PARAMS["eps_l"] * radiant(T_LAYER, 35.0) >= 2.5
     smoke_s = 60.0 * THRESHOLD * t_min(q_smoke())
     double_s = 60.0 * THRESHOLD * t_min(q_double_counted())
     assert smoke_s == pytest.approx(473.0, abs=2.0)

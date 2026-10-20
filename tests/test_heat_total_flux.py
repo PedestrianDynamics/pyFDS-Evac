@@ -209,7 +209,7 @@ def test_cli_default_method_is_not_total_flux():
     import run
 
     args = run._build_parser().parse_args(["--scenario", "x", "--enable-heat-fed"])
-    assert getattr(args, "heat_fed_method", None) in (None, "convective")
+    assert args.heat_fed_method == "convective"
 
 
 @pytest.mark.parametrize("t_c", [65.0, 150.0, 405.0])
@@ -391,7 +391,7 @@ def test_model_rejects_invalid_parameters(eps, h):
 
 
 def test_model_rejects_unknown_method():
-    with pytest.raises((ValueError, TypeError)):
+    with pytest.raises(ValueError, match="Unknown heat FED method"):
         _model(150.0, eps=0.5, h=5.0, t_skin_c=35.0, method="summed")
 
 
