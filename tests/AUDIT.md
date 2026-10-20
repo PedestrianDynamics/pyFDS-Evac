@@ -304,6 +304,86 @@ its row is fixed.
 | `test_route_grid_sampling.py::test_band_fixed_position_counts_the_cells` | tolerance | `abs(tau - 10) <= 0.25` documents the discretisation, but the 18 x 40 / 73 value above it already fixes the result |
 | `test_route_smoke_integral.py` convergence tests (`rel=0.02`) | tolerance | Ordered errors are asserted; derive 0.02 from the step sizes |
 
+## Routing: graph
+
+Module `pyfds_evac/core/route_graph.py`, the search half of routing:
+`StageNode.is_open`, `StageGraph.shortest_paths_to_exits`,
+`shortest_path_to`, `_dijkstra`, `_reconstruct`, `without_closed_stages`,
+`stage_closed` and `stage_closed_down`. Costs come from the cost slice;
+ranking ties (`taus_tie`) belong to the ranking slice. Routing does not
+compute Jin visibility.
+
+Audited files, by node ID in `test_route_graph.py`: `TestGraphConstruction`,
+`TestDijkstra`, `TestEdgeCases`, `TestDynamicDijkstra`,
+`TestStaggeredScheduling` (it tests re-evaluation timing and kills no graph
+mutant); in `test_scheduled_exits.py`:
+`test_unscheduled_exits_are_always_open` and
+`test_schedule_window_is_half_open`, the two tests there that use the graph
+without running a scenario. Added: `test_route_graph_hand_values.py`. The
+remaining tests of `test_scheduled_exits.py` and `test_flow_schedule_run.py`
+run scenarios and are not in the list.
+
+### Mutation checks
+
+`python scripts/mutation_check.py routing_graph`: 12 of 12 mutants killed,
+5 before the audit. None is killed by golden comparisons alone.
+
+| Mutant | Kind | Killed before the audit |
+|---|---|---|
+| `is_open`: `time_s < open_from_s` to `<=` | reversed comparison | yes |
+| `is_open`: `time_s < closed_after_s` to `<=` | reversed comparison | yes |
+| `stage_closed_down`: `>=` to `>` | reversed comparison | no: added `test_closed_down_starts_at_closed_after` |
+| `without_closed_stages` keeps edges into a closed stage | removed term | no: added `TestWithoutClosedStages` |
+| `without_closed_stages` keeps the edges out of a closed stage | removed term | no: same class |
+| `_dijkstra` relaxes edges into the source under `first_hops` | removed term | yes |
+| `_dijkstra` seeds the source itself under `first_hops` | removed term | no: added `test_source_is_not_seeded_and_its_own_edges_are_replaced` |
+| `_dijkstra` ignores `dynamic_weights` | removed term | yes, by a path-only test; exact costs added |
+| `_dijkstra` relaxes on `alt <=` (tie moves the predecessor) | reversed comparison | no: added `test_tie_keeps_the_first_path_found` |
+| `shortest_paths_to_exits` keeps exits at infinite cost | removed term | yes |
+| `shortest_path_to` keeps a target at infinite cost | removed term | no: added `test_unreachable_target_gives_none` |
+| `_reconstruct` does not stop at the source | removed term | no: added `TestReconstruct` |
+
+Not mutated: the `if d > dist[u]: continue` skip of stale heap entries.
+It is equivalent: a stale entry relaxes with a cost no lower than the
+fresh one, so no distance or predecessor changes.
+
+The `<=` mutant is written `alt <= dist[...] and edge.target != u`. Plain
+`<=` never terminates: the zero-weight self-loop of
+`TestEdgeCases::test_self_loop_ignored_in_shortest_path` relaxes forever.
+The suite catches it as a hang, but a hang cannot be reported as a kill by
+`mutation_check.py`, which has no timeout.
+
+The stop at the source in `_reconstruct` only matters if the source has a
+predecessor, which `_dijkstra` never produces for non-negative weights; the
+test feeds `_reconstruct` a `prev` map directly and pins that contract.
+
+### Fixed
+
+| Test | Smell | Change |
+|---|---|---|
+| `test_route_graph.py::TestGraphConstruction::test_edge_weight_is_euclidean` | tolerance camouflage | `abs < 0.01` on 10.0; now `rel=1e-12` |
+| `test_route_graph.py::TestDijkstra::test_linear_path` | tolerance camouflage | `abs < 0.01` on 20.0; now `rel=1e-12` |
+| `test_route_graph.py::TestDijkstra::test_diamond_picks_shorter_path` | weak oracle | `cost < 31.0`; now 10 + 20 = 30 at `rel=1e-12` |
+| `test_route_graph.py::TestDijkstra::test_multi_exit_picks_nearest` | tolerance camouflage | `abs < 0.01` on 10.0; now `rel=1e-12` |
+| `test_route_graph.py::TestEdgeCases::test_duplicate_transitions` | tolerance camouflage | `abs < 0.01` on 10.0; now `rel=1e-12` |
+
+New hand-value tests (`test_route_graph_hand_values.py`): the window
+`open_from = 10`, `closed_after = 20` is closed at 9.999, open at 10 and
+19.999, closed at 20; an exit that has not opened is `stage_closed` but not
+`stage_closed_down`; a closure removes the stage, its out-edges and the
+edges into it, and the search on what remains costs 5.0, not 2.0; a seeded
+search from a point off the graph costs `first_hop + edge weights` and
+ignores the source's own out-edges; an unreachable exit or target is
+absent or `None`.
+
+### Open
+
+- `taus_tie` and the ranking of equal routes are not tested here (ranking
+  slice).
+- Between equal-cost paths the search keeps the one expanded first (node-id
+  order in the heap). The tie test pins this; no documented contract
+  promises it.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed

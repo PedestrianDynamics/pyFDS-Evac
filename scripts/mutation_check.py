@@ -513,6 +513,93 @@ AREAS: dict[str, Area] = {
             ),
         ),
     ),
+    "routing_graph": Area(
+        module="pyfds_evac/core/route_graph.py",
+        tests=(
+            "tests/test_route_graph_hand_values.py",
+            "tests/test_route_graph.py::TestGraphConstruction",
+            "tests/test_route_graph.py::TestDijkstra",
+            "tests/test_route_graph.py::TestEdgeCases",
+            "tests/test_route_graph.py::TestDynamicDijkstra",
+            "tests/test_route_graph.py::TestStaggeredScheduling",
+            "tests/test_scheduled_exits.py::test_unscheduled_exits_are_always_open",
+            "tests/test_scheduled_exits.py::test_schedule_window_is_half_open",
+        ),
+        mutants=(
+            Mutant(
+                "open_from_lt_to_le",
+                "reversed comparison",
+                "time_s < self.open_from_s",
+                "time_s <= self.open_from_s",
+            ),
+            Mutant(
+                "closed_after_lt_to_le",
+                "reversed comparison",
+                "time_s < self.closed_after_s",
+                "time_s <= self.closed_after_s",
+            ),
+            Mutant(
+                "closed_down_ge_to_gt",
+                "reversed comparison",
+                "and time_s >= node.closed_after_s",
+                "and time_s > node.closed_after_s",
+            ),
+            Mutant(
+                "closed_target_edges_kept",
+                "removed term",
+                "if e.target not in closed",
+                "if True",
+            ),
+            Mutant(
+                "closed_source_edges_kept",
+                "removed term",
+                "if src not in closed",
+                "if True",
+            ),
+            Mutant(
+                "first_hops_back_edge_into_source",
+                "removed term",
+                "if first_hops is not None and edge.target == source:",
+                "if False:",
+            ),
+            Mutant(
+                "first_hops_seed_source",
+                "removed term",
+                "node in dist and node != source and cost < dist[node]",
+                "node in dist and cost < dist[node]",
+            ),
+            Mutant(
+                "dynamic_weights_ignored",
+                "removed term",
+                "w = dynamic_weights.get((edge.source, edge.target), edge.weight)",
+                "w = edge.weight",
+            ),
+            Mutant(
+                "relax_lt_to_le",
+                "reversed comparison",
+                "if alt < dist[edge.target]:",
+                "if alt <= dist[edge.target] and edge.target != u:",
+            ),
+            Mutant(
+                "exits_keep_infinite_cost",
+                "removed term",
+                "if exit_id in dist and math.isfinite(dist[exit_id]):",
+                "if exit_id in dist:",
+            ),
+            Mutant(
+                "path_to_keeps_infinite_cost",
+                "removed term",
+                "if target not in dist or not math.isfinite(dist[target]):",
+                "if target not in dist:",
+            ),
+            Mutant(
+                "reconstruct_no_source_stop",
+                "removed term",
+                "            if cur == source:\n                break\n",
+                "",
+            ),
+        ),
+    ),
 }
 
 
