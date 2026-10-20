@@ -350,9 +350,9 @@ class TestSegmentCost:
         field = ConstantExtinctionField(0.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
         seg = evaluate_segment(simple_route_graph, "D0", "E0", 0.0, field, None, config)
-        assert abs(seg.length_m - 10.0) < 0.1
-        assert abs(seg.speed_factor - 1.0) < 0.01
-        assert abs(seg.travel_time_s - 10.0) < 0.1
+        assert seg.length_m == pytest.approx(10.0, rel=1e-12)
+        assert seg.speed_factor == 1.0
+        assert seg.travel_time_s == pytest.approx(10.0, rel=1e-12)
         assert seg.fed_growth == 0.0
         assert seg.visible is True
 
@@ -361,8 +361,10 @@ class TestSegmentCost:
         field = ConstantExtinctionField(5.0)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
         seg = evaluate_segment(simple_route_graph, "D0", "E0", 0.0, field, None, config)
-        assert seg.speed_factor < 1.0
-        assert seg.travel_time_s > 10.0
+        # Lund: 1 - 0.057 K / 0.706 at K = 5, over 10 m at 1 m/s.
+        factor = 1.0 - 0.057 * 5.0 / 0.706
+        assert seg.speed_factor == pytest.approx(factor, rel=1e-12)
+        assert seg.travel_time_s == pytest.approx(10.0 / factor, rel=1e-12)
         assert seg.visible is False  # K=5 > threshold 0.5
 
     def test_fed_growth_computed(self, simple_route_graph):
@@ -371,9 +373,8 @@ class TestSegmentCost:
         fed = ConstantFedRateSampler(rate_per_min=0.1)
         config = RouteCostConfig(base_speed_m_per_s=1.0)
         seg = evaluate_segment(simple_route_graph, "D0", "E0", 0.0, field, fed, config)
-        # travel_time ≈ 10s, rate = 0.1/min → growth ≈ 10/60 * 0.1 ≈ 0.0167
-        assert seg.fed_growth > 0.0
-        assert abs(seg.fed_growth - 0.1 * 10.0 / 60.0) < 0.01
+        # travel time 10 s, rate 0.1 /min: growth 0.1 * 10 / 60
+        assert seg.fed_growth == pytest.approx(0.1 * 10.0 / 60.0, rel=1e-12)
 
 
 class TestRouteCost:
@@ -1842,10 +1843,8 @@ class TestFedRateAdapter:
             fed_rate_sampler=ConstantFedRate(),
             config=RouteCostConfig(),
         )
-        assert seg.fed_growth > 0.0
-        # travel_time = 10m / 1.3 m/s ≈ 7.69s; fed_growth = 0.1 * 7.69 / 60
-        expected_growth = 0.1 * seg.travel_time_s / 60.0
-        assert seg.fed_growth == pytest.approx(expected_growth, rel=0.01)
+        # travel time 10 m / 1.3 m/s; fed_growth = 0.1 /min * (10 / 1.3) s / 60
+        assert seg.fed_growth == pytest.approx(0.1 * (10.0 / 1.3) / 60.0, rel=1e-12)
 
 
 class TestStageNodeCapacity:

@@ -103,7 +103,10 @@ def test_cache_is_not_shared_across_decision_times_under_a_horizon():
 
     shared: dict = {}
     assert tau(2.1, shared) == 0.0
-    assert tau(2.3, shared) == tau(2.3, {}) > 0.0
+    # Samples at x = 12..20 m (5 of the 6 on C0 -> E0) are read at the 5.3 s
+    # cap, after the 5.2 s onset: tau = 0.8 x 5/6 x 10 m.
+    assert tau(2.3, shared) == tau(2.3, {})
+    assert tau(2.3, shared) == pytest.approx(0.8 * 5 / 6 * 10, rel=1e-12)
 
 
 def test_fallback_deck_tau_does_not_collapse_past_a_node():
@@ -243,4 +246,6 @@ def test_cache_keys_on_the_foresight_limit_for_one_start_time():
     assert first.segments[1].arrival_time_s == second.segments[1].arrival_time_s
     assert first.tau_route == 0.0
     assert second == route(1.0, 8.0, {})
-    assert second.tau_route > 0.0
+    # Read at the 4.0 s cap, x = 14..20 m (4 of the 6 samples on C0 -> E0)
+    # meet the smoke that came on at 3.5 s; x = 12 m is read at 3.0 s.
+    assert second.tau_route == pytest.approx(0.8 * 4 / 6 * 10, rel=1e-12)

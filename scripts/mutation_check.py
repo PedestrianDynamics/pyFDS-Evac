@@ -344,6 +344,175 @@ AREAS: dict[str, Area] = {
             ),
         ),
     ),
+    "routing_cost": Area(
+        module="pyfds_evac/core/route_graph.py",
+        tests=(
+            "tests/test_route_smoke_integral.py",
+            "tests/test_route_grid_sampling.py",
+            "tests/test_foresight_arrival_time.py",
+            "tests/test_route_assessment.py",
+            "tests/test_walk_dose.py",
+            "tests/test_fds_horizon.py",
+            "tests/test_rerouting_hand_checks.py",
+            "tests/test_route_cost_hand_values.py",
+            "tests/test_route_graph.py::TestSegmentCost",
+            "tests/test_route_graph.py::TestRouteCost",
+            "tests/test_route_graph.py::TestPositionAwareRouting",
+            "tests/test_route_graph.py::TestIntegratedExtinctionAlongLos",
+            "tests/test_route_graph.py::TestPolylineSampling",
+            "tests/test_route_graph.py::TestFedRateAdapter",
+            "tests/test_route_graph.py::TestWalkableRemainingDistance",
+            "tests/test_routing_decisions.py::test_ramp_tau_matches_hand_value",
+        ),
+        mutants=(
+            Mutant(
+                "tau_from_k_max",
+                "removed term",
+                "tau_route = k_ave * effective_length",
+                "tau_route = k_max * effective_length",
+            ),
+            Mutant(
+                "tau_from_k_leg_max",
+                "removed term",
+                "tau_route = k_ave * effective_length",
+                "tau_route = k_leg_max * effective_length",
+            ),
+            Mutant(
+                "tau_without_length",
+                "removed term",
+                "tau_route = k_ave * effective_length",
+                "tau_route = k_ave",
+            ),
+            Mutant(
+                "tau_from_path_length",
+                "removed term",
+                "tau_route = k_ave * effective_length",
+                "tau_route = k_ave * path_length",
+            ),
+            Mutant(
+                "segment_speed_ignores_smoke",
+                "removed term",
+                "    effective_speed = config.base_speed_m_per_s * sf\n"
+                "    travel_time = length / effective_speed",
+                "    effective_speed = config.base_speed_m_per_s\n"
+                "    travel_time = length / effective_speed",
+            ),
+            Mutant(
+                "leg_speed_ignores_smoke",
+                "removed term",
+                "    effective_speed = config.base_speed_m_per_s * sf\n"
+                "    travel_time = length_m / effective_speed",
+                "    effective_speed = config.base_speed_m_per_s\n"
+                "    travel_time = length_m / effective_speed",
+            ),
+            Mutant(
+                "fed_rate_at_decision_time",
+                "removed term",
+                "fed_rate_sampler.sample_fed_rate(arrival_time_s, mid_x, mid_y)",
+                "fed_rate_sampler.sample_fed_rate(time_s, mid_x, mid_y)",
+            ),
+            Mutant(
+                "segment_dose_seconds_as_minutes",
+                "unit conversion",
+                "fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE",
+                "fed_growth = fed_rate * travel_time",
+            ),
+            Mutant(
+                "dose_seconds_as_minutes",
+                "unit conversion",
+                "return fed_rate_per_min * travel_time_s / _SECONDS_PER_MINUTE",
+                "return fed_rate_per_min * travel_time_s",
+            ),
+            Mutant(
+                "fds_end_cap_removed",
+                "removed term",
+                "    if t_foreseen <= cap:\n        return t_foreseen",
+                "    if True:\n        return t_foreseen",
+            ),
+            Mutant(
+                "fds_end_cap_ignores_decision_time",
+                "reversed comparison",
+                "    cap = max(time_s, end_s)\n    if t_foreseen <= cap:",
+                "    cap = min(time_s, end_s)\n    if t_foreseen <= cap:",
+            ),
+            Mutant(
+                "clock_at_many_uncapped",
+                "removed term",
+                "        return np.minimum(t, cap)",
+                "        return t",
+            ),
+            Mutant(
+                "length_weighting_dropped",
+                "removed term",
+                "    weighted = sum(mean * length for mean, length in segment_means)\n"
+                "    total_length = sum(length for _, length in segment_means)",
+                "    weighted = sum(mean for mean, length in segment_means)\n"
+                "    total_length = float(len(segment_means))",
+            ),
+            Mutant(
+                "arrival_horizon_cap_dropped",
+                "removed term",
+                "return time_s + min(walked_m / speed, config.foresight_horizon_s)",
+                "return time_s + walked_m / speed",
+            ),
+            Mutant(
+                "arrival_ignores_anticipate",
+                "reversed comparison",
+                "    if not config.anticipate:\n        return time_s\n    speed =",
+                "    if config.anticipate:\n        return time_s\n    speed =",
+            ),
+            Mutant(
+                "arrival_distance_as_time",
+                "unit conversion",
+                "return time_s + min(walked_m / speed, config.foresight_horizon_s)",
+                "return time_s + min(walked_m, config.foresight_horizon_s)",
+            ),
+            Mutant(
+                "visible_lt_to_le",
+                "reversed comparison",
+                "visible = k_avg < config.visibility_extinction_threshold",
+                "visible = k_avg <= config.visibility_extinction_threshold",
+            ),
+            Mutant(
+                "fed_violation_gt_to_ge",
+                "reversed comparison",
+                "    if fed_max > fed_threshold:",
+                "    if fed_max >= fed_threshold:",
+            ),
+            Mutant(
+                "step_samples_drop_far_end",
+                "removed term",
+                "n_samples = max(2, int(math.ceil(length / step_m)) + 1)",
+                "n_samples = max(2, int(math.ceil(length / step_m)))",
+            ),
+            Mutant(
+                "position_length_ignores_agent_walk",
+                "removed term",
+                "path_length - first_length_m + remaining,",
+                "path_length + remaining,",
+            ),
+            Mutant(
+                "excess_time_not_prorated",
+                "removed term",
+                "excess_time = walk_time_s * (excess / remaining)",
+                "excess_time = walk_time_s",
+            ),
+            Mutant(
+                "clock_ignores_walked_offset",
+                "removed term",
+                "t = min(self.t0 + (self.d0 + d) / self.speed, self.horizon_end_s)",
+                "t = min(self.t0 + d / self.speed, self.horizon_end_s)",
+            ),
+            Mutant(
+                "horizon_measured_from_zero",
+                "unit conversion",
+                "horizon_end_s=time_s + config.foresight_horizon_s,\n"
+                "        decision_time_s=time_s,",
+                "horizon_end_s=config.foresight_horizon_s,\n"
+                "        decision_time_s=time_s,",
+            ),
+        ),
+    ),
 }
 
 
