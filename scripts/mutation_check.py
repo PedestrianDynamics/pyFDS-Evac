@@ -11,8 +11,10 @@ running agent::
     python scripts/mutation_check.py fed [--python .venv/bin/python]
 
 The module is restored from memory after each mutant and checked against
-its original text at the end. Exit status is 0 if every mutant is killed,
-1 otherwise.
+its original text at the end. A mutant counts as killed only when tests
+fail; a pytest run that errors without a failed test (an import or syntax
+error, a collection error) is reported as invalid. Exit status is 0 if
+every mutant is killed, 1 otherwise.
 """
 
 from __future__ import annotations
@@ -32,6 +34,7 @@ class Mutant:
     kind: str
     old: str
     new: str
+    module: str | None = None  # defaults to the area's module
 
 
 @dataclass(frozen=True)
@@ -344,8 +347,8 @@ AREAS: dict[str, Area] = {
 }
 
 
-def _run_tests(python: str, tests: tuple[str, ...]) -> tuple[bool, list[str]]:
-    """Run the tests; return (all passed, ids of failed tests)."""
+def _run_tests(python: str, tests: tuple[str, ...]) -> tuple[int, list[str]]:
+    """Run the tests; return (pytest exit code, ids of failed tests)."""
     proc = subprocess.run(
         [
             python,
@@ -368,23 +371,37 @@ def _run_tests(python: str, tests: tuple[str, ...]) -> tuple[bool, list[str]]:
         for line in proc.stdout.splitlines()
         if line.startswith("FAILED ")
     ]
-    return proc.returncode == 0, failed
+    return proc.returncode, failed
+
+
+def _outcome(returncode: int, failed: list[str]) -> str:
+    """Classify a mutant's test run as survived, killed or invalid."""
+    if returncode == 0:
+        return "survived"
+    if returncode == 1 and failed:
+        return "killed"
+    return "invalid"
 
 
 def _check_mutant(
     m: Mutant, path: Path, original: str, python: str, tests: tuple[str, ...]
-) -> bool:
-    """Apply one mutant, run the tests, restore; return True if it survived."""
+) -> str:
+    """Apply one mutant, run the tests, restore; return the outcome."""
     path.write_text(original.replace(m.old, m.new))
     try:
-        ok, failed = _run_tests(python, tests)
+        returncode, failed = _run_tests(python, tests)
     finally:
         path.write_text(original)
-    status = "SURVIVED" if ok else f"killed by {len(failed)}"
+    outcome = _outcome(returncode, failed)
+    status = {
+        "survived": "SURVIVED",
+        "killed": f"killed by {len(failed)}",
+        "invalid": f"INVALID (pytest exit {returncode})",
+    }[outcome]
     print(f"{m.name:32s} {m.kind:20s} {status}")
     for test_id in failed:
         print(f"    {test_id}")
-    return ok
+    return outcome
 
 
 def main() -> int:
@@ -394,28 +411,32 @@ def main() -> int:
     args = parser.parse_args()
 
     area = AREAS[args.area]
-    path = REPO / area.module
-    original = path.read_text()
+    paths = {m.name: REPO / (m.module or area.module) for m in area.mutants}
+    originals = {path: path.read_text() for path in set(paths.values())}
 
     for m in area.mutants:
-        if original.count(m.old) != 1:
+        if originals[paths[m.name]].count(m.old) != 1:
             print(f"{m.name}: snippet not found exactly once")
             return 2
 
-    ok, failed = _run_tests(args.python, area.tests)
-    if not ok:
+    returncode, failed = _run_tests(args.python, area.tests)
+    if returncode != 0:
         print(f"baseline fails, not mutating: {failed}")
         return 2
 
-    survivors = [
-        m.name
+    outcomes = [
+        _check_mutant(
+            m, paths[m.name], originals[paths[m.name]], args.python, area.tests
+        )
         for m in area.mutants
-        if _check_mutant(m, path, original, args.python, area.tests)
     ]
 
-    assert path.read_text() == original
-    print(f"\n{len(area.mutants) - len(survivors)}/{len(area.mutants)} killed")
-    return 1 if survivors else 0
+    for path, original in originals.items():
+        assert path.read_text() == original
+    killed = outcomes.count("killed")
+    invalid = outcomes.count("invalid")
+    print(f"\n{killed}/{len(area.mutants)} killed, {invalid} invalid")
+    return 0 if killed == len(area.mutants) else 1
 
 
 if __name__ == "__main__":
