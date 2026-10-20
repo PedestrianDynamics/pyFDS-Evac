@@ -812,6 +812,35 @@ def test_a_flow_agent_decides_as_it_spawns(mode, journey):
         result.cleanup()
 
 
+def test_a_flow_agent_is_evaluated_from_where_it_spawned(monkeypatch):
+    """The decision at a flow spawn is given the agent's own position, inside
+    the spawn polygon, not none."""
+    import pyfds_evac.core.scenario as scenario_module
+
+    positions = []
+    evaluate = scenario_module.evaluate_and_reroute
+
+    def _spy(*args, **kw):
+        positions.append((kw["current_time_s"], kw["agent_position"]))
+        return evaluate(*args, **kw)
+
+    monkeypatch.setattr(scenario_module, "evaluate_and_reroute", _spy)
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(
+            _flow_scenario("stay", journey=True),
+            seed=3,
+            reroute_config=RerouteConfig(reevaluation_interval_s=1.0),
+        )
+    result.cleanup()
+    between = [pos for time_s, pos in positions if 0.0 < time_s < 1.0]
+    assert len(between) == 4
+    min_x, min_y, max_x, max_y = FLOW_SPAWN.bounds
+    for pos in between:
+        assert pos is not None
+        assert min_x <= pos[0] <= max_x
+        assert min_y <= pos[1] <= max_y
+
+
 @pytest.mark.parametrize("mode", ["explore", "default_route"])
 def test_an_exit_learned_mid_hop_is_taken_at_once(mode):
     """AT11: an agent walking a frontier hop that learns an exit on the way
