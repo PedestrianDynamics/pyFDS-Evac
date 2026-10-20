@@ -264,6 +264,83 @@ AREAS: dict[str, Area] = {
             ),
         ),
     ),
+    "smoke_speed": Area(
+        module="pyfds_evac/core/smoke_speed.py",
+        tests=(
+            "tests/test_smoke_speed.py",
+            "tests/test_smoke_speed_widget.py",
+            "tests/test_speed_update_pin.py",
+            "tests/test_speed_update_skip.py",
+            "tests/test_iso_table21_coupled.py",
+            "tests/test_model_speed_attrs.py",
+            "tests/verification/test_smoke_speed_verif.py",
+            "tests/verification/test_s2_corridor_speed.py",
+            "tests/verification/test_speed_update_coupling.py",
+            "tests/verification/test_fds_evac_guide_cases.py",
+        ),
+        mutants=(
+            Mutant(
+                "soot_mg_as_g",
+                "unit conversion",
+                "* soot_density * 1.0e-6",
+                "* soot_density * 1.0e-3",
+            ),
+            Mutant(
+                "visibility_k_over_c",
+                "unit conversion",
+                "visibility = visibility_factor_c / extinction_per_m",
+                "visibility = extinction_per_m / visibility_factor_c",
+            ),
+            Mutant(
+                "fridolf_absolute_speed_as_factor",
+                "unit conversion",
+                "return float(speed / free_speed)",
+                "return float(speed)",
+            ),
+            Mutant(
+                "fridolf_reduction_sign",
+                "reversed comparison",
+                "reduced = free_speed - slope * (visibility_threshold_m - visibility)",
+                "reduced = free_speed - slope * (visibility - visibility_threshold_m)",
+            ),
+            Mutant(
+                "fridolf_free_speed_le_to_lt",
+                "reversed comparison",
+                "if extinction_per_m == 0.0 or free_speed <= 0.0:",
+                "if extinction_per_m == 0.0 or free_speed < 0.0:",
+            ),
+            Mutant(
+                "lund_drop_alpha",
+                "removed term",
+                "factor = 1.0 + (beta * extinction_per_m) / alpha",
+                "factor = 1.0 + beta * extinction_per_m",
+            ),
+            Mutant(
+                "lund_drop_min_clamp",
+                "removed term",
+                "return float(np.clip(factor, min_speed_factor, 1.0))",
+                "return float(min(factor, 1.0))",
+            ),
+            Mutant(
+                "fridolf_drop_floor",
+                "removed term",
+                "speed = min(free_speed, max(min_speed_m_per_s, reduced))",
+                "speed = min(free_speed, reduced)",
+            ),
+            Mutant(
+                "fridolf_drop_cap",
+                "removed term",
+                "speed = min(free_speed, max(min_speed_m_per_s, reduced))",
+                "speed = max(min_speed_m_per_s, reduced)",
+            ),
+            Mutant(
+                "model_ignores_free_speed",
+                "removed term",
+                "                    else free_speed_m_per_s\n",
+                "                    else FRIDOLF_DEFAULT_FREE_SPEED_M_PER_S\n",
+            ),
+        ),
+    ),
 }
 
 

@@ -78,10 +78,10 @@ class TestActiveSteeringZones:
             "c": {"polygon": _square(5.0, 6.0), "speed_factor": 0.1},
         }
         zones = active_steering_zones(info)
-        for xy in (INSIDE, OUTSIDE, (5.5, 1.0)):
-            assert _find_steering_zone(info, *xy, zones) == _find_steering_zone(
-                info, *xy
-            )
+        expected = {INSIDE: ("b", 0.4), OUTSIDE: None, (5.5, 1.0): ("c", 0.1)}
+        for xy, zone in expected.items():
+            assert _find_steering_zone(info, *xy) == zone
+            assert _find_steering_zone(info, *xy, zones) == zone
 
     def test_precomputed_zones_are_used_as_given(self):
         info = {"z": {"polygon": ZONE, "speed_factor": 0.5}}

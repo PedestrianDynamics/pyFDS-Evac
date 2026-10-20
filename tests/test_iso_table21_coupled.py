@@ -140,7 +140,7 @@ class TestTheExtinctionArrivesFromFds:
         Not bit-identical, though. FDS still solves the flow, so density varies
         by a few parts per million across the mesh and K varies with it; the
         committed slice spans 0.9954427..0.9954541. The tolerance is 1e-4 —
-        two decades above that spread, and two decades below the 1 % the
+        about nine times that spread, and two decades below the 1 % the
         cross-check asserts, so it still fails on any real gradient.
         """
         field = ExtinctionField.from_fds(str(FDS_DIR), slice_height_m=2.0)

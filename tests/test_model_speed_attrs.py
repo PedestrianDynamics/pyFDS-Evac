@@ -95,6 +95,7 @@ def test_the_model_obeys_the_write(model_type):
         walked[factor] = next(iter(simulation.agents())).position[0] - start
 
     # Free walking down an empty corridor, so distance tracks desired speed
-    # directly. 15 % absorbs each model's acceleration ramp.
+    # directly. The measured ratio is 0.5 to within 2.4e-5 (SocialForce, its
+    # acceleration ramp); 1e-3 keeps a partly honoured write (0.57) failing.
     assert walked[1.0] > 1.0, "the agent did not walk at all"
-    assert walked[0.5] / walked[1.0] == pytest.approx(0.5, rel=0.15)
+    assert walked[0.5] / walked[1.0] == pytest.approx(0.5, rel=1e-3)
