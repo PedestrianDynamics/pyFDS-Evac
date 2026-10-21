@@ -20,10 +20,10 @@
 
 ! --- Reaction [N] ---
 ! PVC as in the FDS User's Guide example (Schroeder 2017 Table 4.5):
-! monomer C2H3Cl, lumped, heat of combustion 16400 kJ/kg. Atom balance per mole of fuel: C 2, H 3,
+! monomer C2H3Cl, lumped, heat of combustion 10300 kJ/kg. Atom balance per mole of fuel: C 2, H 3,
 ! Cl 1, O 3.0694. Soot yield 0.172, CO yield 0.063 kg/kg [N]; all Cl to HCl.
-! 16400 kJ/kg is the heat of complete combustion in SFPE Table A.39; the
-! chemical value that goes with these yields is 5700 kJ/kg. Kept; see #796.
+! 10300 kJ/kg is the consistent set of Osburg et al. (2025), Table 2: it
+! matches the oxygen this reaction consumes at 13.1 MJ/kg O2 (#796).
 &SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
 &SPEC ID='OXYGEN', MASS_FRACTION_0=0.232 /
 &SPEC ID='WATER VAPOR', MASS_FRACTION_0=0.006 /
@@ -35,7 +35,7 @@
 &REAC FUEL='VINYL CHLORIDE',
       SPEC_ID_NU='VINYL CHLORIDE','OXYGEN','CARBON DIOXIDE','CARBON MONOXIDE','SOOT','WATER VAPOR','HYDROGEN CHLORIDE',
       NU=-1.0000,-1.5347,0.9644,0.1406,0.8950,1.0000,1.0000,
-      HEAT_OF_COMBUSTION=16400. /
+      HEAT_OF_COMBUSTION=10300. /
 
 ! --- Fire: t^2, alpha = 0.047 kW/s^2, to 1500 kW at 178.6 s [N] ---
 ! HRRPUA 250 kW/m2 on a 3 x 2 m floor burner centred in Room 3.

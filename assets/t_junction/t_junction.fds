@@ -17,12 +17,11 @@
 ! the PVC monomer C2H3Cl. All the chlorine leaves as HCl (0.583 kg/kg), which
 ! is what makes a PVC fire an irritant hazard and what the FIC term needs --
 ! the previous deck declared HCl in its README but omitted it from the input,
-! leaving FIC identically zero. CO is raised to 0.150 kg/kg, the under-
-! ventilated figure, from the 0.063 of a well-ventilated flame.
-! Atom balance per mole of fuel: C 2, H 3, Cl 1, O 2.874 on both sides.
-! HEAT_OF_COMBUSTION 16400 kJ/kg follows the FDS User's Guide PVC example;
-! in SFPE Table A.39 it is the heat of complete combustion, the chemical
-! value that goes with the yields is 5700 kJ/kg. Kept as is; see #796.
+! leaving FIC identically zero. Soot yield 0.172, CO yield 0.063 kg/kg and
+! HEAT_OF_COMBUSTION 10300 kJ/kg are the consistent PVC set of Osburg et al.
+! (2025), Table 2: the heat of combustion matches the oxygen this reaction
+! consumes (0.786 kg/kg) at the default 13.1 MJ/kg O2 (#796).
+! Atom balance per mole of fuel: C 2, H 3, Cl 1, O 3.069 on both sides.
 ! A lumped reaction tracks primitive species, so each one is declared and the
 ! background is nitrogen with ambient oxygen set explicitly -- otherwise the
 ! domain starts as pure nitrogen and nothing burns.
@@ -37,8 +36,8 @@
 
 &REAC FUEL='VINYL CHLORIDE',
       SPEC_ID_NU='VINYL CHLORIDE','OXYGEN','CARBON DIOXIDE','CARBON MONOXIDE','SOOT','WATER VAPOR','HYDROGEN CHLORIDE',
-      NU=-1.0,-1.4377,0.7704,0.3347,0.8950,1.0,1.0,
-      HEAT_OF_COMBUSTION=16400 /
+      NU=-1.0,-1.5347,0.9644,0.1406,0.8950,1.0,1.0,
+      HEAT_OF_COMBUSTION=10300 /
 
 ! --- Geometry: solid blocks forming the T-shape ---
 ! Floor, ceiling, and outer walls are default (solid).
