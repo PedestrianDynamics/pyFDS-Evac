@@ -31,6 +31,11 @@ interpreter records where it imported both from; the run fails unless both lie
 under the snapshot, and the manifest keeps the record. The manifest also holds
 the sha256 of every output file, which ``--compare`` checks against the files.
 
+The snapshot covers the repository only. The FDS data under ``--data-root``
+is read live, not from the snapshot: the input fingerprints taken before and
+after the run cover it, so an edit there that is reverted during the run is
+not excluded.
+
 Usage::
 
     uv run python scripts/golden_rerouting.py --out DIR [--decks a b ...]
