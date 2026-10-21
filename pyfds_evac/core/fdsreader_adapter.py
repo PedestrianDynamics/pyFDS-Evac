@@ -1,6 +1,6 @@
 """Open FDS output with fdsreader without touching the case directory.
 
-fdsreader 1.11.7 keeps a ``<CHID>.pickle`` cache next to the ``.smv``
+fdsreader 1.11.7 to 1.14.0 keep a ``<CHID>.pickle`` cache next to the ``.smv``
 (``Simulation._get_pickle_filename``). With caching on, it writes that
 file when none exists, and on every open after the first in a process,
 and deletes a pickle it cannot read or that is stale; with ``settings.ENABLE_CACHING = False``
@@ -31,8 +31,11 @@ only. fdsreader's own function, called as
 
 Workaround record. Reason: fdsreader has no setting for the cache
 folder and deletes the pickle when caching is off. Affected versions:
-fdsreader 1.11.7, checked by the regression test; pyproject.toml pins
-fdsreader to >=1.11.7,<1.12. Re-verify a new fdsreader minor with
+fdsreader 1.11.7 to 1.14.0, checked by the regression test (the pickle
+handling in Simulation.__new__ and _get_pickle_filename is the same in
+both, so the workaround is still needed); pyproject.toml pins fdsreader
+to >=1.11.7,<1.15 without 1.11.9 and 1.12.0, which fail on cell-centred
+slices. Re-verify a new fdsreader minor with
 tests/test_fdsreader_adapter.py before widening the pin. An fdsreader
 without the two names refuses to open. Upstream issue: none yet. Regression test:
 tests/test_fdsreader_adapter.py. Remove when fdsreader lets the cache

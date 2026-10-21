@@ -27,7 +27,7 @@ EXTERNAL_DATA = (
 
 
 #: fdsreader versions whose cache the worker patch below was checked against.
-FDSREADER_TESTED = (Version("1.11.7"), Version("1.12"))
+FDSREADER_TESTED = (Version("1.11.7"), Version("1.15"))
 
 
 def check_fdsreader_version(version: str) -> None:
@@ -44,7 +44,7 @@ def check_fdsreader_version(version: str) -> None:
 def pytest_configure(config):
     """Give each xdist worker its own fdsreader cache.
 
-    fdsreader 1.11.7 writes ``<CHID>.pickle`` next to the ``.smv``,
+    fdsreader 1.11.7 to 1.14.0 write ``<CHID>.pickle`` next to the ``.smv``,
     rewrites it on every open after the first in a process, and deletes
     a pickle it cannot read. Workers opening the same tracked case then
     read each other's half-written pickle and race on deleting it
