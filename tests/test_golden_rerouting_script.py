@@ -11,6 +11,7 @@ import importlib.util
 import json
 import math
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -99,7 +100,13 @@ def _fake_run(golden, out: Path, provenance=None, **manifest) -> Path:
         for name in golden.MODES[mode]:
             _write_fake(folder / name)
     runs = [f"{d}/{m}" for d, m in golden._inventory([DECK])]
+    outputs = {}
+    for deck, mode in golden._inventory([DECK]):
+        outputs |= golden._output_hashes(
+            f"{deck}/{mode}", out / deck / mode, golden.MODES[mode]
+        )
     record = {
+        "outputs": outputs,
         "provenance": provenance or _provenance(golden),
         "provenance_changed": [],
         "runs": runs,
@@ -271,6 +278,12 @@ def _write_outputs(argv, **kwargs):
         (out / name).write_text("x\n", encoding="utf-8")
     if mode == "history_on":
         (out / "route_cost_history.csv").write_text("x\n", encoding="utf-8")
+    code = Path(argv[argv.index("--code-root") + 1]).resolve()
+    imported = {
+        "pyfds_evac": f"{code}/pyfds_evac/__init__.py",
+        "run.py": f"{code}/run.py",
+    }
+    (out / "imports.json").write_text(json.dumps(imported), encoding="utf-8")
 
 
 def _git_stub(commits, dirty_path=None):
@@ -609,3 +622,192 @@ def test_step_folder_names_step_and_commit(golden, tmp_path, monkeypatch):
     monkeypatch.setattr(golden, "_git", lambda *a: "b0b764e9")
     expected = tmp_path / "golden_187" / "R1_b0b764e9"
     assert golden._step_folder(tmp_path, "R1") == expected
+
+
+# ── Snapshot and output hashes (#215) ─────────────────────────────────
+
+_CHILD = """
+import importlib.util, json, sys
+from pathlib import Path
+script, code, out = sys.argv[1:4]
+spec = importlib.util.spec_from_file_location("golden_rerouting", script)
+module = importlib.util.module_from_spec(spec)
+sys.modules[spec.name] = module
+spec.loader.exec_module(module)
+imported = module._import_from(Path(code))
+import pyfds_evac
+folder = Path(out)
+folder.mkdir(parents=True)
+(folder / module.IMPORTS_FILE).write_text(json.dumps(imported))
+print(pyfds_evac.MARKER)
+"""
+
+
+def _stub_code(root: Path, marker: str, package: bool = True) -> Path:
+    """A tree with a stub ``pyfds_evac`` carrying *marker*, and a stub run.py."""
+    (root / "run.py").parent.mkdir(parents=True, exist_ok=True)
+    (root / "run.py").write_text("", encoding="utf-8")
+    if package:
+        (root / "pyfds_evac").mkdir(exist_ok=True)
+        (root / "pyfds_evac" / "__init__.py").write_text(
+            f"MARKER = {marker!r}\n", encoding="utf-8"
+        )
+    return root
+
+
+def _child(code: Path, out: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        [sys.executable, "-c", _CHILD, str(SCRIPT), str(code), str(out)],
+        capture_output=True,
+        text=True,
+    )
+
+
+def test_snapshot_wins_over_the_editable_install(tmp_path):
+    """A fresh interpreter imports the snapshot's package, not the installed one."""
+    code = _stub_code(tmp_path / "snapshot", "snapshot")
+    done = _child(code, tmp_path / "out")
+    assert done.returncode == 0, done.stderr
+    assert done.stdout.strip() == "snapshot"
+    imported = json.loads((tmp_path / "out" / "imports.json").read_text())
+    assert Path(imported["pyfds_evac"]).is_relative_to(code.resolve())
+    assert Path(imported["run.py"]).is_relative_to(code.resolve())
+
+
+def test_import_fails_closed_outside_the_snapshot(tmp_path):
+    """A snapshot without the package leaves the installed one: the run exits."""
+    code = _stub_code(tmp_path / "snapshot", "x", package=False)
+    done = _child(code, tmp_path / "out")
+    assert done.returncode != 0
+    assert "not from the snapshot under test" in done.stderr
+
+
+def test_imports_outside_the_snapshot_are_problems(golden, tmp_path):
+    folder = tmp_path / "run"
+    folder.mkdir()
+    assert golden._imports_problems("deck/mode", folder, tmp_path) == [
+        "deck/mode recorded no import paths"
+    ]
+    record = {"pyfds_evac": "/elsewhere/pyfds_evac/__init__.py", "run.py": "x"}
+    (folder / "imports.json").write_text(json.dumps(record), encoding="utf-8")
+    assert len(golden._imports_problems("deck/mode", folder, tmp_path)) == 2
+
+
+def _repo(root: Path) -> Path:
+    """A committed checkout with the stub code and the in-repo deck's inputs."""
+    _stub_code(root, "committed")
+    deck = root / "assets" / DECK
+    deck.mkdir(parents=True)
+    (deck / "config.json").write_text("{}", encoding="utf-8")
+    (deck / "geometry.wkt").write_text("POLYGON EMPTY", encoding="utf-8")
+    for args in (
+        ["init", "-q"],
+        ["add", "."],
+        ["-c", "user.name=t", "-c", "user.email=t@t", "commit", "-q", "-m", "x"],
+    ):
+        subprocess.run(["git", *args], cwd=root, check=True)
+    return root
+
+
+def test_edit_and_restore_during_a_run_does_not_reach_the_outputs(
+    golden, tmp_path, monkeypatch
+):
+    """The decks run from the snapshot: an edit made and reverted is not imported."""
+    repo = _repo(tmp_path / "repo")
+    monkeypatch.setattr(golden, "REPO", repo)
+    live = repo / "pyfds_evac" / "__init__.py"
+    committed = live.read_text(encoding="utf-8")
+    real_run = subprocess.run
+
+    def fake_run(argv, **kwargs):
+        if argv[0] == "git":
+            return real_run(argv, **kwargs)
+        live.write_text("MARKER = 'edited'\n", encoding="utf-8")
+        out = Path(argv[argv.index("--out") + 1])
+        code = argv[argv.index("--code-root") + 1]
+        done = real_run([sys.executable, "-c", _CHILD, str(SCRIPT), code, str(out)])
+        live.write_text(committed, encoding="utf-8")
+        assert done.returncode == 0
+        marker = Path(code, "pyfds_evac", "__init__.py").read_text(encoding="utf-8")
+        for name in golden.MODES["history_on"]:
+            (out / name).write_text(marker, encoding="utf-8")
+
+    monkeypatch.setattr(golden.subprocess, "run", fake_run)
+    out = tmp_path / "out"
+    assert golden._run_all([DECK], tmp_path, out) == 0
+    for folder in (out / DECK).iterdir():
+        for name in golden.MODES[folder.name]:
+            assert (folder / name).read_text(encoding="utf-8") == committed
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    for imported in manifest["imports"].values():
+        assert "golden_snapshot_" in imported["pyfds_evac"]
+        assert not Path(imported["pyfds_evac"]).is_relative_to(repo.resolve())
+    listing = real_run(
+        ["git", "worktree", "list"], cwd=repo, capture_output=True, text=True
+    ).stdout
+    assert len(listing.splitlines()) == 1
+
+
+def test_run_exits_if_a_run_imported_outside_the_snapshot(
+    golden, tmp_path, monkeypatch
+):
+    def fake_run(argv, **kwargs):
+        _write_outputs(argv)
+        imports = Path(argv[argv.index("--out") + 1]) / "imports.json"
+        record = {
+            "pyfds_evac": "/live/pyfds_evac/__init__.py",
+            "run.py": "/live/run.py",
+        }
+        imports.write_text(json.dumps(record), encoding="utf-8")
+
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE] * 2))
+    monkeypatch.setattr(golden.subprocess, "run", fake_run)
+    with pytest.raises(SystemExit, match="not under"):
+        golden._run_all([DECK], tmp_path, tmp_path / "out")
+
+
+def test_run_records_output_hashes(golden, tmp_path, monkeypatch):
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE] * 2))
+    monkeypatch.setattr(golden.subprocess, "run", _write_outputs)
+    out = tmp_path / "out"
+    assert golden._run_all([DECK], tmp_path, out) == 0
+    manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
+    expected = {
+        f"{DECK}/{mode}/{name}": golden._sha256_file(out / DECK / mode / name)
+        for mode in golden.MODES
+        for name in golden.MODES[mode]
+    }
+    assert manifest["outputs"] == expected
+    assert not list(out.rglob("imports.json"))
+
+
+def test_tampered_output_fails_compare(golden, tmp_path, capsys):
+    """Both sides replaced alike match each other, but not their manifests."""
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b")
+    assert golden._compare(a, b, [DECK]) == 0
+    for side in (a, b):
+        (side / DECK / "history_on" / "route_history.csv").write_text("z,z\n9,9\n")
+    assert golden._compare(a, b, [DECK]) == 1
+    assert "route_history.csv differs from its recorded hash" in capsys.readouterr().out
+
+
+def test_manifest_without_output_hashes_fails_compare(golden, tmp_path, capsys):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b")
+    manifest = json.loads((b / "manifest.json").read_text(encoding="utf-8"))
+    del manifest["outputs"]
+    (b / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert golden._compare(a, b, [DECK]) == 1
+    assert "records no output hashes" in capsys.readouterr().out
+
+
+def test_manifest_missing_one_output_hash_fails_compare(golden, tmp_path, capsys):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b")
+    manifest = json.loads((b / "manifest.json").read_text(encoding="utf-8"))
+    del manifest["outputs"][f"{DECK}/history_off/egress_summary.json"]
+    (b / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    assert golden._compare(a, b, [DECK]) == 1
+    out = capsys.readouterr().out
+    assert f"no output hash for {DECK}/history_off/egress_summary.json" in out
