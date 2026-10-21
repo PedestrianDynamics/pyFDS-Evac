@@ -7,9 +7,9 @@ and the column at x = 30 m repeated the column at 29.75 m (fdsreader#124,
 visibility on those cells follows the extinction, so it changed with it.
 
 The expected metres below were recorded with fdsreader 1.14.0 from the
-tracked ``fire_2MW_PVC`` extinction slices (z = 2 m), sign ``alpha=90`` at
+tracked ``fire_2MW_PVC_796`` extinction slices (z = 2 m), sign ``alpha=90`` at
 (0.5, 11.5) as in ``assets/t_junction/config_full.json``. Under 1.11.7 the
-same cells read 0.3679 m and 0.2607 m. They are regression values, not a
+same cells read 0.2610 m and 0.1620 m. They are regression values, not a
 reference outside the code; the array check against the per-mesh data is
 what shows that the new values are the right ones.
 """
@@ -47,7 +47,7 @@ def sign_a_model():
 
 @pytest.mark.parametrize(
     ("time_s", "x_m", "expected_m"),
-    [(100.0, 10.0, 0.3645), (200.0, 25.0, 0.2532)],
+    [(100.0, 10.0, 0.2595), (200.0, 25.0, 0.1600)],
 )
 def test_upper_border_row_sight_distance(sign_a_model, time_s, x_m, expected_m):
     metres = sign_a_model.visibility_to_node(time_s, x_m, TOP_ROW_Y_M, "exit_A_left")
