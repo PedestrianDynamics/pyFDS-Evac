@@ -1967,14 +1967,14 @@ title="Copy code"
 &lt;tr>
 &lt;td>&lt;code>visibility_extinction_threshold&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.5&lt;/code>&lt;/td>
-&lt;td>&lt;code>K&lt;/code> above which a segment is flagged non-visible; a route whose segments are &lt;em>all&lt;/em> non-visible is refused when some other route has a visible segment.&lt;/td>
+&lt;td>Segment-mean &lt;code>K&lt;/code> at or above which a segment is flagged non-visible; a route whose segments are &lt;em>all&lt;/em> non-visible is refused when some other route has a visible segment. Jin&amp;rsquo;s limit for familiar occupants (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/516" target="_blank" rel="noopener">#516&lt;/a>).&lt;/td>
 &lt;td>&lt;strong>inert&lt;/strong>&lt;/td>
 &lt;td>active&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>impassable_extinction_threshold&lt;/code>&lt;/td>
 &lt;td>&lt;code>3.0&lt;/code>&lt;/td>
-&lt;td>Route-average &lt;code>K&lt;/code> above which a smoke rejection must be fled, bypassing the exit-switch anchor. Uncalibrated: about 1 m of visibility.&lt;/td>
+&lt;td>Route-average &lt;code>K&lt;/code> above which a smoke rejection must be fled, bypassing the exit-switch anchor. Uncalibrated, no empirical source: about 1 m of visibility for a reflecting sign (C = 3), 2.7 m for a lit sign (C = 8) (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371" target="_blank" rel="noopener">#371&lt;/a>).&lt;/td>
 &lt;td>&lt;strong>inert&lt;/strong>&lt;/td>
 &lt;td>active&lt;/td>
 &lt;/tr>
