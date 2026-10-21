@@ -111,7 +111,7 @@ chosen against a smoke target, also before any routing run.
 | Growth | t², α = 0.047 kW/s² (fast) | same | α = 0.012 kW/s² (medium) | SFPE Handbook, 6th ed., Ch. 3, Table 3.5 |
 | Cap | 1.5 MW: HRRPUA 250 kW/m² on a 3 × 2 m burner centred in Room 3 (x 4–7, y 26.6–28.6 m) | same | same | HRRPUA after DIN EN 1991-1-2/NA, via Schröder (2017), p. 74; cap [A] |
 | Cap reached at | 178.6 s | 178.6 s | 353.6 s | computed (`TAU_Q`) |
-| Fuel | PVC: soot yield 0.172, CO yield 0.063 kg/kg, ΔH<sub>c</sub> 16,400 kJ/kg | same | same | FDS User's Guide PVC example, on which Schröder (2017), Table 4.5, p. 75, is based. 16,400 kJ/kg is the heat of complete combustion of SFPE Table A.39, not the chemical one (5,700 kJ/kg) that goes with these yields; see [#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796) |
+| Fuel | PVC: soot yield 0.172, CO yield 0.063 kg/kg, ΔH<sub>c</sub> 10,300 kJ/kg | same | same | Yields from the FDS User's Guide PVC example, on which Schröder (2017), Table 4.5, p. 75, is based; heat of combustion from the consistent set of Osburg et al. (2025), Table 2, which matches the reaction's oxygen use at 13.1 MJ/kg O₂. Up to 0.6.1 the decks used 16,400 kJ/kg, the heat of complete combustion of SFPE Table A.39 ([#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796)) |
 | Ceiling | 4.0 m | 3.5 m | 3.0 m | [A]; the paper extracts smoke up to 3.0 m (Table 2, p. 334), so its ceiling is above 3 m |
 | Grid, time | 0.2 m (dz 0.1944 m at 3.5 m), 480 s, slices every 1 s | same | same | [A] |
 

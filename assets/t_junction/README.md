@@ -40,7 +40,8 @@ gases. The fire ramps up over 60 seconds.
 | Fuel | PVC monomer C2H3Cl, explicit lumped reaction |
 | Peak HRR | 2 MW (1000 kW/m^2 x 2 m^2) |
 | Soot yield | 0.172 |
-| CO yield | 0.150 (under-ventilated) |
+| CO yield | 0.063 |
+| Heat of combustion | 10300 kJ/kg (Osburg et al. 2025, Table 2; #796) |
 | HCl yield | 0.583 (all the chlorine) |
 | HCN yield | none -- PVC carries no nitrogen |
 | Ramp-up | 0 to 100% over 60 s |

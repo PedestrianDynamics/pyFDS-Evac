@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the east column of `t_junction/fire_2MW_PVC`, by 0.5 % at the median and
   up to 10 % (2.9 m) for the `alpha=90` sign; no visible/not-visible flag
   changes and no stored golden changes.
+- The PVC decks (`t_junction`, Schröder 2015 route) use the consistent
+  Osburg et al. (2025) set: soot 0.172, CO 0.063 kg/kg and
+  `HEAT_OF_COMBUSTION=10300` instead of 16400, which matches the
+  reaction's oxygen use at 13.1 MJ/kg O₂. `t_junction` drops its
+  under-ventilated CO yield (0.150). About 1.6 times the fuel mass burns
+  for the same HRR, so these fires are smokier (#796).
 
 ## [0.6.1] - 2026-10-21
 
