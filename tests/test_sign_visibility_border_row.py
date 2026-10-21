@@ -9,7 +9,7 @@ visibility on those cells follows the extinction, so it changed with it.
 The expected metres below were recorded with fdsreader 1.14.0 from the
 tracked ``fire_2MW_PVC`` extinction slices (z = 2 m), sign ``alpha=90`` at
 (0.5, 11.5) as in ``assets/t_junction/config_full.json``. Under 1.11.7 the
-same cells read 0.2607 m and 0.3679 m. They are regression values, not a
+same cells read 0.3679 m and 0.2607 m. They are regression values, not a
 reference outside the code; the array check against the per-mesh data is
 what shows that the new values are the right ones.
 """
