@@ -177,9 +177,11 @@ mild-smoke flips prevented, all 27 genuine cost-driven switches kept, 0 FED/dens
 flees affected**. Locked in by `test_mild_smoke_does_not_flee_current_exit` (mild → stay)
 and `test_smoke_triggers_reroute` (dense k_ave 8.0 → still reroutes).
 
-`impassable_extinction_threshold` is not calibrated — it is chosen to sit above the mild
-haze that caused the flip-flop (≤ ~0.9) and below genuine walls of smoke; a sensitivity
-sweep is the path to a real value.
+`impassable_extinction_threshold` is not calibrated — it is chosen to sit above the smoke
+that caused the flip-flop (≤ ~0.9) and below genuine walls of smoke; a sensitivity
+sweep is the path to a real value. "Mild" is this note's label, not a finding: at
+k_ave about 0.5–0.9 1/m Jin and Yamada (1989) saw 14 of 31 turn back
+([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
 
 ### What changed under the gate cost model
 
