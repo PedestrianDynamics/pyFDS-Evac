@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-10-21
+
+### Upgrading
+
+- Four `routing` keys are removed and now stop the run with a
+  `ValueError` naming the removal: `fallback_return_lockout_s`,
+  `fed_return_margin`, `path_switch_anchor` and `tau_return_margin`
+  (#187). Delete them from your decks. `RouteCostConfig` positional
+  arguments after `fed_rejection_threshold` and after
+  `current_exit_discount` shift by one. Rerouting results move: a rival
+  exit is refused above `fed_rejection_threshold` and above `tau_max`
+  as the current exit is, and a new path to the same exit is taken
+  whenever it is strictly cheaper. The `ft_full_additive_detour` and
+  `ft_full_gate_detour` golden decks switch more and finish sooner.
+- Python API: `RerouteConfig.exit_switch_anchor` is `float | None`
+  (default `None`; read `resolved_exit_switch_anchor`), and
+  `RerouteConfig()` now follows the scenario's `routing` block, so an
+  invalid block raises (#187, #501). The route the all-refused fallback
+  promotes keeps `rejected=True`; tell it by the `fallback: ` reason
+  prefix (#187).
+- Runs end differently. A run ends once the building is empty and no
+  flow window is open (`end_reason` `flows_closed`, #742), or once only
+  incapacitated agents remain (`all_mobile_left`, #141); both stay
+  incomplete, exit status 2. Incapacitation is absorbing: an
+  incapacitated agent is not steered, rerouted or counted as evacuated,
+  and its exposure record ends at the collapse (#145, #593).
+- A flow whose agent cannot be built (no entry stage, no exit, an
+  invalid agent parameter) now stops the run with an error naming the
+  distribution instead of counting `agents_not_spawned` (#753).
+  `CollisionFreeSpeedModelV2` decks without the neighbour-repulsion keys
+  run, with the `CollisionFreeSpeedModel` values (#757).
+- Discovery runs with default-route agents give other route-history
+  rows, switches and times (#743). FDS values at a point on a mesh
+  border no longer depend on call history (#239).
+- Developers: golden manifests recorded before 0.6.0 carry no output
+  hashes and fail `scripts/golden_rerouting.py --compare` until
+  re-run (#215).
+
 ### Added
 
 - `impassable_extinction_threshold`, the additive model's must-flee
@@ -183,6 +221,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `RuntimeError`. An agent JuPedSim has already listed as removed in a
   step has left and is not incapacitated in that step (#141, #145,
   #593).
+- A point on the border between two FDS meshes is read from the first
+  subslice that covers it, in subslice order, instead of the subslice
+  the sampler used last, so a point read depends on frame and point
+  alone (#239). Interior points are unchanged.
+- Tests: the audit of the test suite (#816, PRs #822-#831) records
+  weak tests and their fixes in `tests/AUDIT.md` for gas FED, heat,
+  smoke speed, route cost, the route graph search, the routing policy,
+  rerouting and the cognitive map. `scripts/mutation_check.py <area>`
+  injects recorded defects, runs that area's tests and lists the
+  survivors; it is run by hand, counts a mutant as killed only when
+  pytest exits 1 with a failed test and reports any other nonzero exit
+  as invalid. Survivors now have hand-calculated tests, among them
+  `tests/test_route_cost_hand_values.py`,
+  `tests/test_route_graph_hand_values.py`,
+  `tests/test_route_reroute_hand_values.py` and
+  `tests/test_cognitive_map_hand_values.py`. `hypothesis` joins the
+  `dev` dependency group; `tests/test_fed_properties.py` checks that
+  the gas FED rate is non-negative, monotone in each gas and additive
+  in duration. `tests/test_rerouting_hand_checks.py` checks four
+  rerouting goldens by hand (#810). `tests/golden/README.md` lists
+  every stored expected output with its tag and regeneration command
+  (#810). A pull request that changes a golden or snapshot needs a
+  `Golden re-record:` section in its description, checked by
+  `scripts/check_golden_rerecord.py` and
+  `.github/workflows/golden-rerecord.yml` (#810). The flow-spawn test
+  uses an id the run lacks for unknown stages, as JuPedSim's stage
+  counters are not reset per simulation (#769). Results are unchanged.
+- Golden harness: `scripts/golden_rerouting.py` runs the decks from a
+  detached worktree of the recorded commit, exits unless `pyfds_evac`
+  and `run.py` are imported from it, and records the sha256 of every
+  output file in the manifest; `--compare` fails on missing or
+  mismatching hashes (#215). `scripts/margin_audit.py` runs the
+  switching-margin audits of #187 and reports the mean walking time per
+  agent. Results are unchanged.
+- Internal: every coefficient in `smoke_speed.py` and each gas-FED
+  value in `fed.py` is named once; the breathing-zone height 1.6 m is
+  read from `HUMAN_SMOKE_HEIGHT_M`; `RouteCostConfig` reads the Lund
+  speed-law coefficients from `smoke_speed`; the mode branches of
+  `route_graph.py` sit in the mode policies; the model-builder defaults
+  in `scenario.py` are classified and an unused function is removed
+  (#187, PRs #767-#774, #784-#786, #790, #793, #795). Values and
+  results are unchanged.
+
+### Documentation
+
+- Testing guidelines (`docs/TESTING_GUIDELINES.md`): what each kind of
+  test can prove, oracles, and the rules for re-recording goldens
+  (#810). Scientific software design principles
+  (`docs/DESIGN_PRINCIPLES.md`), linked from the development guide.
+- README section "How pyFDS-Evac is built" and `AI_USAGE.md`: who is
+  scientifically responsible, how the software is built and reviewed,
+  and that nothing calls an AI service at runtime.
+- Models › Movement: each JuPedSim movement model's mapping, defaults,
+  results and deadlock behaviour, with a choice of model (#706, #745,
+  #359).
+- Routing: the gate's smoke claims are scoped to the additive model,
+  as only a FED violation bypasses the exit-switch anchor under the
+  gate (#750); the FDS+Evac door factors and margins are corrected
+  against `evac.f90` (#187); the tau-first ranking order is recorded as
+  decided (#187); the #124 return counts are dated to their commits.
+- The sources of the two additive smoke thresholds: Jin (1997) for
+  `visibility_extinction_threshold`, and no empirical source for
+  `impassable_extinction_threshold`, with Jin and Yamada (1989) and
+  Frantzich and Nilsson (2003) cited (#516, #371). Defaults are
+  unchanged.
+- DIN 18009-2 on the ASET page and in the limits, RSET and
+  fds-sampling pages (#800); smoke yield under vitiation and the
+  conditions of K_m (#798); `HEAT_OF_COMBUSTION` in Your FDS case
+  (#799) and the PVC value the decks use (#796); why the heat dose
+  defaults to convective (#223); `premovement_offset_s` as the fire
+  pre-burn setting, with the FRA 2022 study.
+- Incapacitation as an absorbing state in the limitations, outputs,
+  usage, concepts, how-to and front-end pages (#141, #145, #593).
 
 ## [0.5.0] - 2026-10-11
 
