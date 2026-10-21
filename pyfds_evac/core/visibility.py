@@ -166,7 +166,7 @@ def _vismap_time_points(t_end: float, time_step_s: float) -> list[float]:
 
     No point lies past the last FDS frame: a step that does not divide T_END
     would otherwise add a point after it, which fdsvismap answers with the
-    last frame (0.3.2) or rejects (fdsvismap#86).  The filter also drops a
+    last frame (0.3.2, 0.3.3) or rejects (fdsvismap#86).  The filter also drops a
     point that ``arange`` rounds onto or past *t_end*.
     """
     t_end = float(t_end)
@@ -867,7 +867,7 @@ class VisibilityModel:
     def signs_outside_grid(self) -> dict[str, float]:
         """Return {node_id: distance to the grid [m]} of signs off the vismap grid.
 
-        Empty for a clear-air model. fdsvismap 0.2.1-0.3.2 snaps the ray origin of
+        Empty for a clear-air model. fdsvismap 0.2.1-0.3.3 snaps the ray origin of
         such a sign onto the nearest edge cell while keeping the true distance,
         so the part of the sight line outside the grid takes the mean K of the
         part inside. Workaround: report it (warning, or error with

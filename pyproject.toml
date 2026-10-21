@@ -1,6 +1,6 @@
 [project]
 name = "pyfds-evac"
-version = "0.6.0"
+version = "0.6.1"
 description = "Fire Dynamics Simulator (FDS) evacuation modeling with visibility analysis"
 readme = "README.md"
 license = "MIT"
@@ -32,7 +32,7 @@ dependencies = [
     "shapely",
     # Exact pin: visibility.py patches the private _get_visibility_array to
     # cap each sign at its own reading distance.
-    "fdsvismap==0.3.2",
+    "fdsvismap==0.3.3",
     "numpy>=2.1",
     # On Python 3.14, 1.6.0 and 1.7.1 garble the help on a terminal with a
     # second set of colours from argparse; 1.8.0 does not.

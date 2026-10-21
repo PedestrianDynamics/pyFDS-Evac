@@ -356,7 +356,7 @@ wheels = [
 
 [[package]]
 name = "fdsvismap"
-version = "0.3.2"
+version = "0.3.3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fdsreader" },
@@ -365,9 +365,9 @@ dependencies = [
     { name = "scikit-image" },
     { name = "tqdm" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/12/f8/a94ae83a3b4ba2f891e22e5203b30baae875a6356cb30b5ef4d8b7d02838/fdsvismap-0.3.2.tar.gz", hash = "sha256:bb56cb7214742003acc562a6e34a7ccc0ac65e98e1376cd572cc5a1c431e16a0", size = 49170, upload-time = "2026-10-02T16:11:51.397Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/73/65/3f609484b7ecaf091eca0c8918e0a2efd7e4e9e7a59cb8e36478b850bb33/fdsvismap-0.3.3.tar.gz", hash = "sha256:c1efa8432a34e5392b076a93321cc315f7dc52dd315cdd4d7bc72529c87d6de1", size = 51642, upload-time = "2026-10-20T23:25:17.07Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/9b/ea/53369b447b677746f8aee278b2874e983b281dec0d3c389651225d9c9396/fdsvismap-0.3.2-py3-none-any.whl", hash = "sha256:6bbe6ab90950c398a1069ee35063f79cc8088c3a242905bf41f765419fac264a", size = 34963, upload-time = "2026-10-02T16:11:50.337Z" },
+    { url = "https://files.pythonhosted.org/packages/b9/a0/a5420ee35eccd0dac69cb69143744a5dc27ba4b63ec410ad38224c113b1b/fdsvismap-0.3.3-py3-none-any.whl", hash = "sha256:6efe4d0a5c2326847bc9a923976c2164a6879be35bd34de8b4e4fa16dddbebe9", size = 36253, upload-time = "2026-10-20T23:25:16.127Z" },
 ]
 
 [[package]]
@@ -1510,7 +1510,7 @@ wheels = [
 
 [[package]]
 name = "pyfds-evac"
-version = "0.6.0"
+version = "0.6.1"
 source = { editable = "." }
 dependencies = [
     { name = "fdsreader" },
@@ -1550,7 +1550,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "fdsreader", specifier = ">=1.11.7,<1.12" },
-    { name = "fdsvismap", specifier = "==0.3.2" },
+    { name = "fdsvismap", specifier = "==0.3.3" },
     { name = "jupedsim", specifier = ">=1.4.2" },
     { name = "matplotlib" },
     { name = "monsterui", marker = "extra == 'gui'" },
