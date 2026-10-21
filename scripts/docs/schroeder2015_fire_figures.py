@@ -871,6 +871,11 @@ def main():
     """
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--data", type=Path, required=True)
+    parser.add_argument(
+        "--no-sweep",
+        action="store_true",
+        help="skip the nine-variant fire sweep (p0b_* figures and tables)",
+    )
     args = parser.parse_args()
     data = args.data.resolve()
     geo, decks = _load("geometry"), _load("make_decks")
@@ -878,6 +883,11 @@ def main():
     # --- Data ---
     report_setup(geo, decks)
     report_premovement()
+    if args.no_sweep:
+        sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
+        fig_geometry(geo)
+        fig_fire_field(data, geo)
+        return
     df, snaps = load_sweep(data)
     report_sweep(df)
     rows, arrivals, fields = [], {}, {}
