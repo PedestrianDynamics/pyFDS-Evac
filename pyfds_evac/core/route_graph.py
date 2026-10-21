@@ -954,8 +954,10 @@ class RouteCostConfig:
     # cost only and stays subject to the exit-switch anchor — this is what stops
     # mild smoke (k_ave just over visibility_extinction_threshold) from flipping
     # an agent off its committed exit every tick. Physically ~1 m visibility
-    # (S ~ C/K); NOT calibrated, but chosen to sit well above the mild haze that
+    # (S ~ C/K); NOT calibrated, but chosen to sit well above the smoke that
     # caused the demo flip-flop (k_ave <= ~0.9) and below genuine walls of smoke.
+    # That range is not harmless: Jin and Yamada (1989) saw 14 of 31 subjects
+    # turn back at about 0.9 1/m (#371).
     # Under the gate no route is rejected as non-visible, so this never fires
     # (#750).
     impassable_extinction_threshold: float = 3.0
