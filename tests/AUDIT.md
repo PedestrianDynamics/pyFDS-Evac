@@ -517,6 +517,98 @@ environment lacks, and would otherwise fail, hence "kill", every mutant).
   webapp extra (`ModuleNotFoundError: pyfds_evac.webapp.app`); the full
   suite there is not clean for that reason alone.
 
+## Routing: cognitive map
+
+Modules `pyfds_evac/core/cognitive_map.py` (`familiarity_probability`,
+`init_cognitive_map`, `expand_on_arrival`, `expand_from_visibility`,
+`cognitive_subgraph`) and `pyfds_evac/core/scenario.py`
+(`_assign_initial_exit`). The map decides which exits an agent may rank at
+all; the cost terms, the policy and the schedule are audited in "Routing:
+cost", "Routing: policy" and "Routing: reroute".
+
+Audited files, by node ID (each kills mutants, see below):
+`test_cognitive_map_memory.py::TestAcquisitionAndPersistence::test_side_exit_is_acquired_on_entering_the_window`,
+`::test_an_agent_that_never_enters_the_window_never_learns_it`;
+`test_scalar_familiarity.py::TestFamiliarityAsAProbability::test_one_point_zero_is_the_old_full_tier`,
+`::test_a_population_lands_near_the_requested_share`,
+`::TestEntranceSeeding::test_the_entrance_is_reachable_not_merely_listed`;
+`test_blind_spawn_discovery.py::TestArrivalRespectsVisibility::test_a_neighbour_behind_a_wall_stays_unknown`,
+`::TestTraversalTeachesTheWayBack::test_the_reverse_leg_is_learned_with_the_leg`;
+`test_no_known_exit.py::test_arrival_teaches_the_leg_walked`;
+`test_initial_exit_from_cognitive_map.py::test_knowledge_changes_the_opening_choice`;
+`test_initial_exit_per_agent.py::test_agent_beside_a_door_takes_it`;
+`verification/test_cognitive_map_verif.py::test_full_knows_all_nodes_and_edges`.
+No deck golden is in the area.
+
+Added: `test_cognitive_map_hand_values.py`, five nodes and six edges
+(`S`, `A`, `B`, two exits; `A` and `B` joined both ways), a stub visibility
+model with a fixed visible set that records every query, and exact
+assertions on `known_nodes`, `known_edges` and `visited_nodes`: what a
+visible, an invisible and a two-way neighbour teach; the walked leg in and
+against the graph's direction; a full map is not even asked; familiarity
+exactly 1.0 against `1 - 1e-12`, and the inclusive bounds of the accepted
+range; the initial draw with a stub rng (strict `<`, one draw per exit in
+`exit_nodes()` order, none at 0.0 or without an rng) and a seeded
+`random.Random` for reproducibility; the entrance learned at familiarity
+0; `_assign_initial_exit` called directly (with `_apply_initial_path`
+recorded): a full map takes the near exit, a stranger takes the farther
+entrance, the map is stored and an existing one is reused.
+
+### Mutation checks
+
+`python scripts/mutation_check.py routing_cognitive_map`: 18 of 18 mutants
+killed, 15 before the audit (the area was first run with 19 mutants, one of
+them equivalent, see below). `test_the_gui_refuses_the_form` is deselected
+in the area (it needs the webapp extra).
+
+| Mutant | Kind | Killed before the audit |
+|---|---|---|
+| `expand_on_arrival`: visibility check dropped (every neighbour learned) | removed term | yes, by 3 tests |
+| `_expand_visible`: `if visible` to `if True` | removed term | yes, by 8 tests |
+| `init_cognitive_map`: probability fixed at 1.0 | removed term | yes, by 44 tests |
+| `init_cognitive_map`: `>= 1.0` to `> 1.0` | reversed comparison | yes, by 7 tests |
+| `expand_on_arrival`: no early return for a full map | removed term | no: added the full-map tests (two independent: sets and `visited_nodes`; vis queries) |
+| `expand_from_visibility`: no early return for a full map | removed term | no: added `test_a_full_map_does_not_even_ask` (the only observable is whether the model is queried) |
+| `cognitive_subgraph`: no early return for a full map | removed term | yes, by 2 tests |
+| range check `0.0 <=` to `0.0 <` | reversed comparison | yes, by 5 tests |
+| range check `<= 1.0` to `< 1.0` | reversed comparison | yes, but by one test only; the bounds tests add more |
+| draw only above `probability > 0.5` | reversed comparison | yes, by 2 tests |
+| draw `rng.random() <` reversed | reversed comparison | yes, but by one test only; the stub-rng tests add more |
+| entrance not learned | removed term | yes, by 5 tests |
+| walked leg never learned in the graph's direction | removed term | yes, by 4 tests |
+| reverse edge not learned | removed term | yes, by 4 tests |
+| `_assign_initial_exit`: ranking ignores the map | removed term | yes, by 14 tests |
+| `_assign_initial_exit`: familiarity forced to full | removed term | yes, by 16 tests |
+| `_assign_initial_exit`: agent position dropped | removed term | yes, by 2 tests |
+| `_assign_initial_exit`: map not stored for the reroute pass | removed term | no: added `test_the_map_is_kept_for_the_reroute_pass` |
+
+Equivalent, dropped from the area: in `_assign_initial_exit`,
+`ranked = [rc for rc in ranked if not rc.rejected] or ranked` to nothing.
+Every ranking policy puts `rejected` first in `order_key`, so
+`ranked[0]` is already a non-rejected route whenever one exists, and when
+all are rejected the `or ranked` branch gives the same list. The filter is
+a guard against a future ordering, not behaviour today.
+
+### Open
+
+- No mutant survives or hangs; one is equivalent (above).
+- `visibility_full_return_dropped` and `initial_exit_map_not_stored` each
+  rest on one test. The full-map early return in `expand_from_visibility`
+  changes nothing but whether the model is queried, and the map stored by
+  `_assign_initial_exit` would otherwise be built again by the reroute
+  pass from the same rng stream, so the stored object is observed only
+  through the `cognitive_maps` dict. Not strengthened further here.
+- `visibility_always_true` and `expand_skips_visibility` are killed by
+  stub and by clear-air visibility; no FDS-smoke visibility is in the area.
+
+### Closing the routing audit (PR 2 to 5)
+
+The model limits recorded as limits, not test gaps, are listed under
+"Routing: cost" (heat dose not in route choice; the gate has no smoke
+must-flee, #696, #751; travel time uses f(mean K)) and repeated under
+"Routing: policy". Nothing in this section adds to that list; the tests of this area pin the code's
+behaviour, not the model's validity.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed

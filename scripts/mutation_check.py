@@ -793,6 +793,142 @@ AREAS: dict[str, Area] = {
             ),
         ),
     ),
+    "routing_cognitive_map": Area(
+        module="pyfds_evac/core/cognitive_map.py",
+        tests=(
+            "tests/test_cognitive_map_hand_values.py",
+            "tests/test_cognitive_map_history.py",
+            "tests/test_cognitive_map_memory.py",
+            "tests/test_scalar_familiarity.py",
+            "tests/test_familiarity_routing.py",
+            "tests/test_familiarity_no_journey.py",
+            "tests/test_initial_exit_from_cognitive_map.py",
+            "tests/test_initial_exit_per_agent.py",
+            "tests/test_blind_spawn_discovery.py",
+            "tests/test_no_known_exit.py",
+            # Needs the webapp extra and exercises none of the mutated lines.
+            "--deselect=tests/test_no_known_exit.py::TestRunModes::test_the_gui_refuses_the_form",
+            "tests/verification/test_cognitive_map_verif.py",
+        ),
+        mutants=(
+            Mutant(
+                "expand_skips_visibility",
+                "removed term",
+                "            and not vis_model.node_is_visible(time_s, ax, ay, edge.target)\n",
+                "",
+            ),
+            Mutant(
+                "visibility_always_true",
+                "removed term",
+                "if vis_model.node_is_visible(time_s, ax, ay, tgt):",
+                "if True:",
+            ),
+            Mutant(
+                "familiarity_always_one",
+                "removed term",
+                "probability = familiarity_probability(familiarity)",
+                "probability = 1.0",
+            ),
+            Mutant(
+                "full_threshold_ge_to_gt",
+                "reversed comparison",
+                "if probability >= 1.0:",
+                "if probability > 1.0:",
+            ),
+            Mutant(
+                "arrival_full_return_dropped",
+                "removed term",
+                '    if cmap.familiarity == "full":\n'
+                "        return\n"
+                "    cmap.known_nodes.add(arrived_node)",
+                "    cmap.known_nodes.add(arrived_node)",
+            ),
+            Mutant(
+                "visibility_full_return_dropped",
+                "removed term",
+                '    if cmap.familiarity == "full":\n'
+                "        return\n"
+                "    _expand_visible",
+                "    _expand_visible",
+            ),
+            Mutant(
+                "subgraph_full_return_dropped",
+                "removed term",
+                '    if cmap.familiarity == "full":\n        return graph\n',
+                "",
+            ),
+            Mutant(
+                "familiarity_range_lower_open",
+                "reversed comparison",
+                "if not 0.0 <= probability <= 1.0:",
+                "if not 0.0 < probability <= 1.0:",
+            ),
+            Mutant(
+                "familiarity_range_upper_open",
+                "reversed comparison",
+                "if not 0.0 <= probability <= 1.0:",
+                "if not 0.0 <= probability < 1.0:",
+            ),
+            Mutant(
+                "draw_needs_positive_probability",
+                "reversed comparison",
+                "if rng is not None and probability > 0.0:",
+                "if rng is not None and probability > 0.5:",
+            ),
+            Mutant(
+                "draw_reversed",
+                "reversed comparison",
+                "and rng.random() < probability:",
+                "and rng.random() > probability:",
+            ),
+            Mutant(
+                "entrance_not_learned",
+                "removed term",
+                "if entrance is not None and entrance in graph.nodes:",
+                "if False:",
+            ),
+            Mutant(
+                "walked_leg_never_learned",
+                "removed term",
+                "if _has_edge(graph, from_node, arrived_node):",
+                "if False:",
+            ),
+            Mutant(
+                "reverse_edge_not_learned",
+                "removed term",
+                "if any(edge.target == source for edge in graph.edges.get(target, [])):",
+                "if False:",
+            ),
+            Mutant(
+                "initial_exit_map_ignored",
+                "removed term",
+                "        cognitive_map=cmap,\n        agent_position=agent_position,",
+                "        cognitive_map=None,\n        agent_position=agent_position,",
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "initial_exit_familiarity_full",
+                "removed term",
+                'wait_info.get("familiarity", "full"),',
+                '"full",',
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "initial_exit_position_dropped",
+                "removed term",
+                "        cognitive_map=cmap,\n        agent_position=agent_position,",
+                "        cognitive_map=cmap,\n        agent_position=None,",
+                module="pyfds_evac/core/scenario.py",
+            ),
+            Mutant(
+                "initial_exit_map_not_stored",
+                "removed term",
+                "        cognitive_maps[agent_id] = cmap\n",
+                "",
+                module="pyfds_evac/core/scenario.py",
+            ),
+        ),
+    ),
 }
 
 
