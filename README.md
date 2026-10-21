@@ -245,7 +245,7 @@ scenario proves and where that proof is checked.
 
 pyFDS-Evac depends on jupedsim, pedpy, fdsreader, fdsvismap, numpy, shapely,
 matplotlib, plotly and nbformat; the `gui` extra adds python-fasthtml,
-monsterui and python-multipart. fdsvismap is pinned exactly (0.3.2), and a
+monsterui and python-multipart. fdsvismap is pinned exactly (0.3.3), and a
 plain `pip install` works on Python 3.12, 3.13 and 3.14. Versions and pins
 are in
 [`pyproject.toml`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/pyproject.toml).

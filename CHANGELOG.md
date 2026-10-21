@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-10-21
+
+### Changed
+
+- fdsvismap is pinned to 0.3.3 (was 0.3.2). A slice chosen by index must
+  now be horizontal and hold an extinction coefficient or optical
+  density, or fdsvismap stops with a `ValueError`; the slices
+  pyFDS-Evac selects already pass. Sign visibility is bit-identical to
+  0.3.2 on `fed_incap_co_2000ppm`, `l_corridor/fire_1MW_west` and
+  `t_junction/fire_2MW_PVC`, and fdsreader stays at `>=1.11.7,<1.12`.
+  fdsvismap 0.3.3 still computes each visibility array twice (#241).
+
 ## [0.6.0] - 2026-10-21
 
 ### Upgrading
