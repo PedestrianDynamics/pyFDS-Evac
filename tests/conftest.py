@@ -27,7 +27,7 @@ EXTERNAL_DATA = (
 
 
 #: fdsreader versions whose cache the worker patch below was checked against.
-FDSREADER_TESTED = (Version("1.11.7"), Version("1.12"))
+FDSREADER_TESTED = (Version("1.11.7"), Version("1.15"))
 
 
 def check_fdsreader_version(version: str) -> None:

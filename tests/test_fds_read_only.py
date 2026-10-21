@@ -84,12 +84,12 @@ def test_an_xdist_worker_keeps_the_fdsreader_cache_out_of_the_case(tmp_path):
     assert os.path.commonpath([pickle, str(case)]) != str(case)
 
 
-@pytest.mark.parametrize("version", ["1.11.6", "1.12.0", "2.0.0"])
+@pytest.mark.parametrize("version", ["1.11.6", "1.15.0", "2.0.0"])
 def test_the_worker_cache_patch_refuses_an_untested_fdsreader(version):
     with pytest.raises(pytest.UsageError, match=f"found {version}"):
         _check_fdsreader_version(version)
 
 
-@pytest.mark.parametrize("version", ["1.11.7", "1.11.9"])
-def test_the_worker_cache_patch_accepts_fdsreader_1_11(version):
+@pytest.mark.parametrize("version", ["1.11.7", "1.14.0"])
+def test_the_worker_cache_patch_accepts_the_tested_fdsreader(version):
     _check_fdsreader_version(version)

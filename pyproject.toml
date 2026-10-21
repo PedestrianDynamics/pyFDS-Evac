@@ -24,8 +24,9 @@ dependencies = [
     "pedpy",
     # pyfds_evac/core/fdsreader_adapter.py replaces fdsreader's private
     # pickle-cache hooks; re-verify a new minor with
-    # tests/test_fdsreader_adapter.py before widening.
-    "fdsreader>=1.11.7,<1.12",
+    # tests/test_fdsreader_adapter.py before widening. 1.11.9 and 1.12.0
+    # fail on cell-centred slices.
+    "fdsreader>=1.11.7,!=1.11.9,!=1.12.0,<1.15",
     "plotly",
     "nbformat>=4.2.0",
     "matplotlib",

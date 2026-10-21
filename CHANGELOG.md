@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- fdsreader is allowed up to 1.14 (`>=1.11.7,!=1.11.9,!=1.12.0,<1.15`) and
+  locked at 1.14.0. From 1.13, `Slice.to_global()` keeps the outermost
+  node row and column of the domain (fdsreader#124, #130); 1.11.7 to 1.12
+  repeated the neighbouring row and column there. Sampler values are
+  identical. Sign visibility changes on the upper border row (y = 13 m) and
+  the east column of `t_junction/fire_2MW_PVC`, by 0.5 % at the median and
+  up to 10 % (2.9 m) for the `alpha=90` sign; no visible/not-visible flag
+  changes and no stored golden changes.
+
 ## [0.6.1] - 2026-10-21
 
 ### Changed
