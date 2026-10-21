@@ -31,5 +31,9 @@ FDS+Evac decks with `&EXIT`, `&EVAC`, `&PERS` and the other evacuation
 namelists, written by the author of FDS+Evac. They are not pyFDS-Evac
 scenarios and have no `config.json`.
 
+For runnable bundles, see the separate [converted collection](../fds_evac_guide_converted/README.md):
+94 single-floor scenarios, fire-only FDS inputs where applicable, and a batch
+runner. Its README documents adjustments, verification limits and 88 exclusions.
+
 The guide's manual, figures and reference results are not copied here;
 cite the guide instead.

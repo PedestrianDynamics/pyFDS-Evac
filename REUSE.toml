@@ -24,3 +24,10 @@ path = "materials/evac.f90"
 precedence = "override"
 SPDX-FileCopyrightText = ["National Institute of Standards and Technology", "Timo Korhonen, VTT Technical Research Centre of Finland"]
 SPDX-License-Identifier = "NIST-Software"
+
+# Converted scenario data derived from the same GPL guide inputs.
+[[annotations]]
+path = "assets/fds_evac_guide_converted/cases/**"
+precedence = "override"
+SPDX-FileCopyrightText = "Timo Korhonen, VTT Technical Research Centre of Finland"
+SPDX-License-Identifier = "GPL-3.0-only"

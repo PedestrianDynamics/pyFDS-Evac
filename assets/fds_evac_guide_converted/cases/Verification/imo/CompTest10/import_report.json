@@ -1,0 +1,870 @@
+{
+  "chid": "CompTest10",
+  "counts": {
+    "EVAC": {
+      "A": 0,
+      "C": 24,
+      "D": 12,
+      "S": 36
+    },
+    "EXIT": {
+      "A": 2,
+      "C": 4,
+      "D": 0,
+      "S": 2
+    },
+    "MISC": {
+      "A": 0,
+      "C": 2,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 4,
+      "C": 5,
+      "D": 3,
+      "S": 0
+    }
+  },
+  "deck": "CompTest10.fds",
+  "distributions": [
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 4.2,
+      "density_per_m2": 0.238095,
+      "id": "Cabin_3",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_4",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_7",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_8",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_9",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_10",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_5",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_6",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_11",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 7.8,
+      "density_per_m2": 0.25641,
+      "id": "Cabin_12",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 2,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "MainExit",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        6.0,
+        10.9,
+        7.2,
+        10.9
+      ],
+      "sign": {
+        "c": 3,
+        "x": 6.5,
+        "y": 10.8
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.6
+    },
+    {
+      "closed_after_s": null,
+      "id": "SecoExit",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        17.8,
+        5.0,
+        17.8,
+        5.9
+      ],
+      "sign": {
+        "c": 3,
+        "x": 17.7,
+        "y": 5.5
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.45
+    }
+  ],
+  "floor": {
+    "id": "FF1stFloor",
+    "meshes": [
+      "FF1stFloor"
+    ],
+    "z_band": [
+      0.95,
+      1.05
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "MainExit",
+      "level": "info",
+      "line": 100,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "MainExit",
+      "level": "info",
+      "line": 100,
+      "message": "exit strip 0.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "SecoExit",
+      "level": "info",
+      "line": 105,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "SecoExit",
+      "level": "info",
+      "line": 105,
+      "message": "exit strip 0.45 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Blue",
+      "level": "warning",
+      "line": 124,
+      "message": "TDET_SMOKE_DENS has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Blue",
+      "level": "warning",
+      "line": 124,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Blue",
+      "level": "warning",
+      "line": 124,
+      "message": "I_HERDING_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Blue",
+      "level": "warning",
+      "line": 124,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Blue",
+      "level": "warning",
+      "line": 124,
+      "message": "speed uniform -> Gaussian with the same mean and variance: v0=1.295, v0_std=0.187639",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Red",
+      "level": "warning",
+      "line": 133,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Imo1Red",
+      "level": "warning",
+      "line": 133,
+      "message": "speed uniform -> Gaussian with the same mean and variance: v0=1.295, v0_std=0.187639",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_1",
+      "level": "warning",
+      "line": 141,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_1",
+      "level": "info",
+      "line": 141,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_1",
+      "level": "info",
+      "line": 141,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_1",
+      "level": "info",
+      "line": 141,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_2",
+      "level": "warning",
+      "line": 148,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_2",
+      "level": "info",
+      "line": 148,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_2",
+      "level": "info",
+      "line": 148,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_2",
+      "level": "info",
+      "line": 148,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_3",
+      "level": "warning",
+      "line": 155,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_3",
+      "level": "info",
+      "line": 155,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_3",
+      "level": "info",
+      "line": 155,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_3",
+      "level": "info",
+      "line": 155,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_4",
+      "level": "warning",
+      "line": 162,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_4",
+      "level": "info",
+      "line": 162,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_4",
+      "level": "info",
+      "line": 162,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_4",
+      "level": "info",
+      "line": 162,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_7",
+      "level": "warning",
+      "line": 169,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_7",
+      "level": "info",
+      "line": 169,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_7",
+      "level": "info",
+      "line": 169,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_7",
+      "level": "info",
+      "line": 169,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_8",
+      "level": "warning",
+      "line": 176,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_8",
+      "level": "info",
+      "line": 176,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_8",
+      "level": "info",
+      "line": 176,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_8",
+      "level": "info",
+      "line": 176,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_9",
+      "level": "warning",
+      "line": 183,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_9",
+      "level": "info",
+      "line": 183,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_9",
+      "level": "info",
+      "line": 183,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_9",
+      "level": "info",
+      "line": 183,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_10",
+      "level": "warning",
+      "line": 190,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_10",
+      "level": "info",
+      "line": 190,
+      "message": "one known exit -> 'discovery', entrance 'MainExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_10",
+      "level": "info",
+      "line": 190,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_10",
+      "level": "info",
+      "line": 190,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_5",
+      "level": "warning",
+      "line": 198,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_5",
+      "level": "info",
+      "line": 198,
+      "message": "one known exit -> 'discovery', entrance 'SecoExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_5",
+      "level": "info",
+      "line": 198,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_5",
+      "level": "info",
+      "line": 198,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_6",
+      "level": "warning",
+      "line": 205,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_6",
+      "level": "info",
+      "line": 205,
+      "message": "one known exit -> 'discovery', entrance 'SecoExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_6",
+      "level": "info",
+      "line": 205,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_6",
+      "level": "info",
+      "line": 205,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_11",
+      "level": "warning",
+      "line": 212,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_11",
+      "level": "info",
+      "line": 212,
+      "message": "one known exit -> 'discovery', entrance 'SecoExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_11",
+      "level": "info",
+      "line": 212,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_11",
+      "level": "info",
+      "line": 212,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_12",
+      "level": "warning",
+      "line": 219,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_12",
+      "level": "info",
+      "line": 219,
+      "message": "one known exit -> 'discovery', entrance 'SecoExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_12",
+      "level": "info",
+      "line": 219,
+      "message": "delay: detection + reaction = constant 0 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "Cabin_12",
+      "level": "info",
+      "line": 219,
+      "message": "2 agents in 1 area(s)",
+      "status": "S"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "fire_meshes": 0
+    },
+    "fds_dir": null,
+    "fds_meshes": 0,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Verification/imo/CompTest10",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.6
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 185.95,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.1 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 0,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}

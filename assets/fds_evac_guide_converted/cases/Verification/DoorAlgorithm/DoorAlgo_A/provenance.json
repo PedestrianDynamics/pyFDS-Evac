@@ -1,0 +1,18 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Verification/DoorAlgorithm/DoorAlgo_A.fds",
+  "source_sha256": "97768039adfa329bfc6a1a4a0d49fcb86e93186fb209017240e8de5ac45d53eb",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); L_NON_SP has no counterpart; NOT_RANDOM has no counterpart; FED_DOOR_CRIT has no counterpart; TDET_SMOKE_DENS has no counterpart; I_HERDING_TYPE has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance); AGENT_TYPE has no counterpart; known doors {'BottomExit': 1.0, 'TopExit': 1.0} cannot be expressed; closest: 'discovery' with entrance 'BottomExit'; subtracted from &EVAC 'EVAC1st'; spawn area split into 1 hole-free piece(s)",
+  "sampling_height_adjustment": "Sampling height adjusted from imported 2.1 m (outside the 0-2 m fire mesh) to evacuation-plane midpoint 1.5 m.",
+  "fire_changes": [
+    "Removed legacy evacuation namelists, evacuation-only meshes/objects, and EVAC* parameters.",
+    "Added horizontal coupling slices at z=1.5 m; DT_SLCF capped at 1 s."
+  ],
+  "files_sha256": {
+    "config.json": "3b4811470896f548821f006ad44faae8cad7f7fc6e0942a2ca759442d4105ca4",
+    "geometry.wkt": "1eb6b0ca9f3dab4672fa5acb81d100987b5c813248c9a37ed503670154222480",
+    "fire.fds": "e9b7f308b0967ebbf1a65fd989a7423efbaed25dfc02a597532cd2aa61f4295b"
+  }
+}

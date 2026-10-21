@@ -1,0 +1,24 @@
+! SPDX-License-Identifier: GPL-3.0-only
+! Derived from Timo Korhonen / VTT FDS+Evac guide.
+! Original: https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Verification/SmokeSpeed_Test/soot_vs_speed2_1000C.fds
+! Modified 2026-10-08: fire-only FDS 6 input and coupling slices.
+! See provenance.json and the collection README for all adjustments.
+! Original benchmark material properties and source terms are retained.
+&HEAD CHID='soot_vs_speed2_1000C', TITLE='Test soot dens vs speed' /
+&MESH IJK=20,4,6, XB=0.0,10.0,0.0,2.0,0.0,3.0 /
+&TIME T_END=100.0, DT=0.5 /
+&DUMP SMOKE3D=.TRUE., NFRAMES=200, DT_PART=0.5, DT_HRR=0.5, DT_SLCF=0.5, DT_BNDF=1000000.0, DT_PL3D=1000000.0, DT_ISOF=1000000.0 /
+&MISC TMPA=20.0, NOISE=.FALSE. /
+&RADI RADIATION=.FALSE. /
+&SPEC ID='AIR', BACKGROUND=.TRUE. /
+&SPEC ID='SOOT', MASS_FRACTION_0=0.000834413 /
+&SLCF PBZ=1.5, QUANTITY='VOLUME FRACTION', SPEC_ID='SOOT' /
+&SLCF PBZ=1.5, QUANTITY='DENSITY', SPEC_ID='SOOT' /
+&SLCF PBZ=1.5, QUANTITY='EXTINCTION COEFFICIENT' /
+&SLCF PBZ=1.5, QUANTITY='VISIBILITY' /
+&DEVC XYZ=5.0,1.0,1.5, QUANTITY='VOLUME FRACTION', SPEC_ID='SOOT', ID='soot_vf' /
+&DEVC XYZ=5.0,1.0,1.5, QUANTITY='DENSITY', SPEC_ID='SOOT', ID='soot_dens' /
+&DEVC XYZ=5.0,1.0,1.5, QUANTITY='EXTINCTION COEFFICIENT', ID='ext_coef' /
+&DEVC XYZ=5.0,1.0,1.5, QUANTITY='VISIBILITY', ID='visibility' /
+&SLCF PBZ=1.5, QUANTITY='TEMPERATURE' /
+&TAIL /
