@@ -952,10 +952,13 @@ class RouteCostConfig:
     # treated as an impassable hazard the agent flees regardless of the anchor
     # (like an FED-lethal rejection). At or below it, low visibility is a soft
     # cost only and stays subject to the exit-switch anchor — this is what stops
-    # mild smoke (k_ave just over visibility_extinction_threshold) from flipping
+    # smoke at k_ave just over visibility_extinction_threshold from flipping
     # an agent off its committed exit every tick. Physically ~1 m visibility
-    # (S ~ C/K); NOT calibrated, but chosen to sit well above the mild haze that
-    # caused the demo flip-flop (k_ave <= ~0.9) and below genuine walls of smoke.
+    # for a reflecting sign (S ~ C/K, C = 3); NOT calibrated, but chosen to sit
+    # well above the smoke that caused the demo flip-flop (k_ave <= ~0.9) and
+    # below genuine walls of smoke. That range is not harmless: Jin and Yamada
+    # (1989) saw 14 of 31 subjects turn back at K 0.92 +- 0.21 1/m (towel over
+    # mouth and nose) (#371).
     # Under the gate no route is rejected as non-visible, so this never fires
     # (#750).
     impassable_extinction_threshold: float = 3.0
@@ -2947,12 +2950,13 @@ def _must_flee_rejection(rc: RouteCost, cost_config: RouteCostConfig) -> bool:
       ``all_segments_non_visible``) — the route's average extinction exceeds
       ``impassable_extinction_threshold`` (visibility of order a metre). Flee.
 
-    Under additive, a *mild* visibility rejection (``all segments non-visible``
-    from light haze) is NOT a hazard: the smoke is already in the route cost
+    Under additive, a visibility rejection (``all segments non-visible``) of
+    smoke below that density is not treated as a hazard: the smoke is already in the route cost
     via ``w_smoke * k_ave``, so also letting the rejection bypass the anchor
     double-counts it and flips the agent off its cheaper committed exit onto a
     costlier one, then back next tick. Those stay subject to the anchor. The
-    demo's flip-flop was exactly this — mild smoke (k_ave ~0.5-0.9) tripping
+    demo's flip-flop was exactly this — smoke at k_ave about 0.5-0.9 1/m,
+    where Jin and Yamada (1989) saw 14 of 31 turn back (#371), tripping
     the binary 0.5 visibility threshold every tick.
 
     The test reads the limits the route breaks (``violation_kinds``), not

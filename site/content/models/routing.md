@@ -221,7 +221,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
 | `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
-| `visibility_extinction_threshold` | `0.5` | Extinction [1/m] above which a segment counts as not visible; additive model only |
+| `visibility_extinction_threshold` | `0.5` | Extinction [1/m] at or above which a segment counts as not visible; additive model only, inert under the gate |
 | `impassable_extinction_threshold` | `3.0` | Route-average *K* [1/m] above which a visibility rejection must be fled, bypassing the anchor; additive model only, never reached under the gate |
 | `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples where the field has no grid (a constant or test field) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose [m]. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)) |
 | `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
@@ -265,7 +265,8 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | `current_exit_discount` = 0.9 | FDS+Evac `FAC_DOOR_OLD2`, which FDS+Evac applies only when no door is smoke-free (tier 4, `evac.f90:16803`); the gate applies it in every ordering |
 | `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
 | `exit_switch_anchor` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
-| `tau_deadband`, `fallback_switch_margin`, `impassable_extinction_threshold`, `visibility_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
+| `visibility_extinction_threshold` = 0.5 | Jin's allowable smoke density for occupants familiar with the building (Jin 1997, Table 1, p. 11), applied to every agent; see [Limitations](#limitations) |
+| `tau_deadband`, `fallback_switch_margin`, `impassable_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
 | `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
 | `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
 
@@ -542,10 +543,40 @@ Exit throughput throttling has no general test yet
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
 - The smoke terms are the same for every familiarity setting
   ([#362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362)).
+- `visibility_extinction_threshold` (0.5 1/m) is Jin's allowable smoke
+  density for occupants familiar with the building; for unfamiliar
+  occupants Jin gives 0.15 1/m
+  ([Familiar and unfamiliar occupants](/fundamentals/visibility.md#familiar-and-unfamiliar-occupants)).
+  Jin took it from the density at which most of the Fire Research
+  Institute researchers among his 49 subjects began to lose their
+  steadiness on a seated hand-steadiness test in white wood smoke, and
+  read it as the threshold where escape becomes difficult for familiar
+  occupants (Jin 1997, p. 11). It was not derived from a wayfinding or
+  incapacitation test. pyFDS-Evac applies it to every agent, whatever its
+  familiarity
+  ([#516](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/516),
+  [#362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362)).
+  It acts under the additive model only.
 - `impassable_extinction_threshold` (3.0 1/m) is a modelling assumption
-  with no empirical source; the field surveys give only self-estimated
-  visibility at turn-back
+  with no empirical source
   ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
+  It acts under the additive model only, on a route refused because the
+  mean *K* of every segment is at or above
+  `visibility_extinction_threshold` while some other unrejected route has
+  a visible segment, and then only when the route-average *K* exceeds
+  3.0 1/m. The field surveys (Wood 1972; Bryan 1977) give only
+  visibilities estimated by respondents, and most people who entered
+  smoke did not turn back. Two studies measured *K*. Jin and Yamada
+  (1989, p. 513): in a dead-end corridor of irritant smoke at
+  *K* = 0.92 ± 0.21 1/m, 14 of 31 subjects turned back; they had been
+  told they could return whenever they wished, wore a towel over mouth
+  and nose, and radiant heaters stood at the far end. Six of the seven
+  who stopped first turned back again in a second trial at 0.66 1/m, and
+  two of them in a third at 0.62 1/m. Frantzich and Nilsson (2003, §3.2
+  and Table 6) had 45 subjects leave a 37 m tunnel through artificial
+  smoke made irritant with acetic acid, at measured *K* of about
+  2–7 1/m; 44 continued to an exit, one left by the entrance. Neither
+  supports a fixed density at which people turn back.
 - Under the default gate, smoke on the current route never bypasses the
   exit-switch anchor as a lethal FED does: however dense it is, the agent
   leaves only for a rival the anchor accepts (clearly lower τ, or clean
@@ -622,6 +653,20 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
 
 ## Sources
 
+- Bryan, J. L. (1977). *Smoke as a Determinant of Human Behavior in Fire
+  Situations (Project People)*. NBS-GCR-77-94, University of Maryland, for
+  the National Bureau of Standards. NTIS PB271755,
+  [ntrl.ntis.gov](https://ntrl.ntis.gov/NTRL/dashboard/searchResults/titleDetail/PB271755.xhtml).
+- Frantzich, H., & Nilsson, D. (2003). *Utrymning genom tät rök:
+  beteende och förflyttning*. Report TVBB-3126, Department of Fire Safety
+  Engineering, Lund University. No DOI;
+  [lup.lub.lu.se](https://lup.lub.lu.se/search/publication/742533).
+- Jin, T. (1997). *Studies on human behavior and tenability in fire
+  smoke*. Fire Safety Science, 5, 3–21.
+  [doi:10.3801/iafss.fss.5-3](https://doi.org/10.3801/iafss.fss.5-3)
+- Jin, T., & Yamada, T. (1989). *Experimental study of human behavior in
+  smoke filled corridors*. Fire Safety Science, 2, 511–519.
+  [doi:10.3801/iafss.fss.2-511](https://doi.org/10.3801/iafss.fss.2-511)
 - Schröder, B., Haensel, D., Chraibi, M., Arnold, L., Seyfried, A., &
   Andresen, E. (2015). *Knowledge- and perception-based route choice
   modelling in case of fire*. Proceedings of the 6th International
@@ -629,3 +674,7 @@ and [Exit choice and familiarity](/fundamentals/exit-choice.md).
   2015, pp. 327–338. Interscience Communications. ISBN
   978-0-9933933-0-3. No DOI;
   [juser.fz-juelich.de/record/255940](https://juser.fz-juelich.de/record/255940).
+- Wood, P. G. (1972). *The Behaviour of People in Fires*. Fire Research
+  Note No. 953, Fire Research Station (study at Loughborough University
+  of Technology). No DOI;
+  [publications.iafss.org](https://publications.iafss.org/publications/frn/953/-1).
