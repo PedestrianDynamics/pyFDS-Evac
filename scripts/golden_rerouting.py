@@ -24,6 +24,18 @@ Each deck runs in its own interpreter: JuPedSim numbers agents process-wide,
 so a deck run after another in the same process would record its agents under
 other ids.
 
+The interpreters import ``pyfds_evac`` and ``run.py`` from a snapshot of the
+recorded commit (a detached worktree, removed afterwards), put first on
+``sys.path``, not from the live tree the editable install points at. Each
+interpreter records where it imported both from; the run fails unless both lie
+under the snapshot, and the manifest keeps the record. The manifest also holds
+the sha256 of every output file, which ``--compare`` checks against the files.
+
+The snapshot covers the repository only. The FDS data under ``--data-root``
+is read live, not from the snapshot: the input fingerprints taken before and
+after the run cover it, so an edit there that is reverted during the run is
+not excluded.
+
 Usage::
 
     uv run python scripts/golden_rerouting.py --out DIR [--decks a b ...]
@@ -52,6 +64,7 @@ missing on either side, or if anything differs.
 from __future__ import annotations
 
 import argparse
+import contextlib
 import csv
 import hashlib
 import itertools
@@ -189,8 +202,8 @@ def _inventory(names: list[str]) -> list[tuple[str, str]]:
     return [(name, mode) for name in names for mode in MODES]
 
 
-def _base(deck: GoldenDeck, root: Path) -> Path:
-    return REPO if deck.in_repo else root
+def _base(deck: GoldenDeck, root: Path, repo: Path = REPO) -> Path:
+    return repo if deck.in_repo else root
 
 
 def _missing(deck: GoldenDeck, root: Path) -> list[Path]:
@@ -201,27 +214,82 @@ def _missing(deck: GoldenDeck, root: Path) -> list[Path]:
     return [p for p in paths if not p.exists()]
 
 
-def _stage_bundle(deck: GoldenDeck, root: Path, into: Path) -> Path:
+def _stage_bundle(deck: GoldenDeck, root: Path, into: Path, repo: Path) -> Path:
     """Copy config and geometry under the names ``load_scenario`` expects."""
     into.mkdir(parents=True, exist_ok=True)
-    base = _base(deck, root)
+    base = _base(deck, root, repo)
     shutil.copy(base / deck.config, into / "config.json")
     shutil.copy(base / deck.geometry, into / "geometry.wkt")
     return into
 
 
-def _run_one(name: str, mode: str, root: Path, out: Path) -> None:
-    """Run one deck in one history mode, in this process, and write its outputs."""
-    sys.path.insert(0, str(REPO))
+IMPORTS_FILE = "imports.json"
+
+
+def _import_from(code: Path) -> dict[str, str]:
+    """Import ``pyfds_evac`` and ``run`` from *code*; return where they came from.
+
+    *code* goes first on ``sys.path``, ahead of the editable install's path.
+    Exits with an error unless both modules then lie under *code*.
+    """
+    sys.path.insert(0, str(code))
+    import pyfds_evac
+    import run
+
+    imported = {
+        "pyfds_evac": str(Path(pyfds_evac.__file__).resolve()),
+        "run.py": str(Path(run.__file__).resolve()),
+    }
+    for module, path in imported.items():
+        if not Path(path).is_relative_to(code.resolve()):
+            sys.exit(
+                f"golden run: {module} was imported from {path}, "
+                f"not from the snapshot under test {code}"
+            )
+    return imported
+
+
+@contextlib.contextmanager
+def _snapshot(commit: str):
+    """A detached worktree of *commit*, removed on exit."""
+    with tempfile.TemporaryDirectory(prefix="golden_snapshot_") as tmp:
+        path = Path(tmp) / "snapshot"
+        _git("worktree", "add", "--detach", str(path), commit)
+        try:
+            yield path
+        finally:
+            _git("worktree", "remove", "--force", str(path))
+
+
+def _imports_problems(label: str, folder: Path, snapshot: Path) -> list[str]:
+    """Where the run in *folder* imported from, as it recorded it; fail closed."""
+    path = folder / IMPORTS_FILE
+    if not path.is_file():
+        return [f"{label} recorded no import paths"]
+    imported = json.loads(path.read_text(encoding="utf-8"))
+    return [
+        f"{label}: {module} imported from {where}, not under {snapshot}"
+        for module, where in imported.items()
+        if not Path(where).is_relative_to(snapshot.resolve())
+    ]
+
+
+def _run_one(name: str, mode: str, root: Path, out: Path, code: Path) -> None:
+    """Run one deck in one history mode, in this process, and write its outputs.
+
+    The code under test is imported from *code*; the paths it was imported
+    from go to ``IMPORTS_FILE`` in *out*.
+    """
+    imported = _import_from(code)
     import run as cli
     from pyfds_evac.core import load_scenario, run_scenario
     from pyfds_evac.core.run_config import build_run_kwargs
 
-    _check_imported_from(REPO)
     deck = DECKS[name]
     out.mkdir(parents=True, exist_ok=True)
+    (out / IMPORTS_FILE).write_text(json.dumps(imported), encoding="utf-8")
     with tempfile.TemporaryDirectory() as tmp:
-        bundle = _stage_bundle(deck, root, Path(tmp) / name)
+        bundle = _stage_bundle(deck, root, Path(tmp) / name, code)
         argv = [
             "--scenario",
             str(bundle),
@@ -263,18 +331,6 @@ def _check_seed(name: str, metrics: dict) -> None:
     if metrics.get("seed") != pinned:
         sys.exit(
             f"{name}: the run used seed {metrics.get('seed')!r}, the deck pins {pinned}"
-        )
-
-
-def _check_imported_from(root: Path) -> None:
-    """Exit with an error unless ``pyfds_evac`` was imported from *root* (#721)."""
-    import pyfds_evac
-
-    package = Path(pyfds_evac.__file__).resolve().parent
-    if not package.is_relative_to(root.resolve()):
-        sys.exit(
-            f"golden run: pyfds_evac was imported from {package}, "
-            f"not from the checkout under test {root}"
         )
 
 
@@ -405,6 +461,12 @@ def _provenance(names: list[str], root: Path) -> dict:
     }
 
 
+def _output_hashes(label: str, folder: Path, files: tuple[str, ...]) -> dict:
+    """The sha256 of each of *files* in *folder* that exists, keyed by label/file."""
+    hashes = {f"{label}/{name}": _sha256_file(folder / name) for name in files}
+    return {key: digest for key, digest in hashes.items() if digest is not None}
+
+
 def _step_folder(root: Path, step: str) -> Path:
     """Where a refactor step's run at the checked-out commit goes."""
     return root / "golden_187" / f"{step}_{_git('rev-parse', '--short=8', 'HEAD')}"
@@ -427,7 +489,45 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
         print(f"refusing to run with uncommitted changes in {', '.join(dirty)}")
         return 2
     out.mkdir(parents=True, exist_ok=True)
-    ran, skipped, incomplete = [], {}, {}
+    with _snapshot(before["commit"]) as snapshot:
+        ran, skipped, incomplete, outputs, imports = _run_inventory(
+            names, root, out, snapshot
+        )
+    after = _provenance(names, root)
+    changed = sorted(k for k in before if before[k] != after[k])
+    if changed:
+        print(f"provenance changed during the run: {', '.join(changed)}")
+    manifest = {
+        "commit": before["commit"],
+        "pyfds_evac_dirty": before["dirty"]["pyfds_evac"],
+        "provenance": before,
+        "provenance_changed": changed,
+        "data_root": str(root),
+        "decks": {name: vars(DECKS[name]) for name in names},
+        "runs": ran,
+        "skipped": skipped,
+        "incomplete": incomplete,
+        "outputs": outputs,
+        "imports": imports,
+    }
+    (out / "manifest.json").write_text(
+        json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    failed = len(skipped) + len(incomplete)
+    if failed:
+        print(f"{failed} of {len(ran) + failed} runs missing or incomplete")
+        return 1
+    return 1 if changed else 0
+
+
+def _run_inventory(names: list[str], root: Path, out: Path, snapshot: Path):
+    """Run the inventory of *names* from *snapshot*.
+
+    Returns the runs made, those skipped or incomplete, the sha256 of every
+    output file and where each run imported the code from. Exits with an error
+    if a run imported from anywhere but *snapshot*.
+    """
+    ran, skipped, incomplete, outputs, imports = [], {}, {}, {}, {}
     for name, mode in _inventory(names):
         missing = _missing(DECKS[name], root)
         if missing:
@@ -447,40 +547,29 @@ def _run_all(names: list[str], root: Path, out: Path) -> int:
                 str(root),
                 "--out",
                 str(out / name / mode),
+                "--code-root",
+                str(snapshot),
             ],
             check=True,
-            cwd=REPO,
+            cwd=snapshot,
             stdout=subprocess.DEVNULL,
         )
-        absent = [f for f in MODES[mode] if not (out / name / mode / f).is_file()]
+        folder = out / name / mode
+        absent = [f for f in MODES[mode] if not (folder / f).is_file()]
         if absent:
             incomplete[f"{name}/{mode}"] = absent
             print(f"INCOMPLETE {name}/{mode}: {', '.join(absent)}")
             continue
+        problems = _imports_problems(f"{name}/{mode}", folder, snapshot)
+        if problems:
+            sys.exit("; ".join(problems))
+        imports[f"{name}/{mode}"] = json.loads(
+            (folder / IMPORTS_FILE).read_text(encoding="utf-8")
+        )
+        (folder / IMPORTS_FILE).unlink()
+        outputs.update(_output_hashes(f"{name}/{mode}", folder, MODES[mode]))
         ran.append(f"{name}/{mode}")
-    after = _provenance(names, root)
-    changed = sorted(k for k in before if before[k] != after[k])
-    if changed:
-        print(f"provenance changed during the run: {', '.join(changed)}")
-    manifest = {
-        "commit": before["commit"],
-        "pyfds_evac_dirty": before["dirty"]["pyfds_evac"],
-        "provenance": before,
-        "provenance_changed": changed,
-        "data_root": str(root),
-        "decks": {name: vars(DECKS[name]) for name in names},
-        "runs": ran,
-        "skipped": skipped,
-        "incomplete": incomplete,
-    }
-    (out / "manifest.json").write_text(
-        json.dumps(manifest, indent=1, sort_keys=True) + "\n", encoding="utf-8"
-    )
-    failed = len(skipped) + len(incomplete)
-    if failed:
-        print(f"{failed} of {len(ran) + failed} runs missing or incomplete")
-        return 1
-    return 1 if changed else 0
+    return ran, skipped, incomplete, outputs, imports
 
 
 # ── Comparing ─────────────────────────────────────────────────────────
@@ -789,6 +878,26 @@ def _fingerprint_problems(dir_a: Path, dir_b: Path, names: list[str]) -> list[st
     return problems
 
 
+def _output_problems(out: Path, role: str, names: list[str]) -> list[str]:
+    """Whether the files in *out* are the ones its manifest hashed; fail closed.
+
+    A manifest without hashes for the inventory (a run before #215) is a
+    problem, and so is a file whose sha256 is not the recorded one.
+    """
+    recorded = (_load_manifest(out) or {}).get("outputs")
+    if not isinstance(recorded, dict):
+        return [f"{role} {out} records no output hashes"]
+    problems = []
+    for deck, mode in _inventory(names):
+        for name in MODES[mode]:
+            where = f"{deck}/{mode}/{name}"
+            if not _is_digest(recorded.get(where)):
+                problems.append(f"{role} {out} has no output hash for {where}")
+            elif recorded[where] != _sha256_file(out / where):
+                problems.append(f"{role} {out}: {where} differs from its recorded hash")
+    return problems
+
+
 def _compare(
     dir_a: Path,
     dir_b: Path,
@@ -820,6 +929,10 @@ def _compare(
     for problem in _fingerprint_problems(dir_a, dir_b, names):
         print(f"BAD   {problem}")
         differs = True
+    for out, role in ((dir_a, "base"), (dir_b, "head")):
+        for problem in _output_problems(out, role, names):
+            print(f"BAD   {problem}")
+            differs = True
     for deck, mode in _inventory(names):
         for name in MODES[mode]:
             where = f"{deck}/{mode}/{name}"
@@ -871,6 +984,7 @@ def main() -> int:
         help="With --compare: fail unless HEAD was run at this commit",
     )
     parser.add_argument("--run-one", choices=sorted(DECKS), help=argparse.SUPPRESS)
+    parser.add_argument("--code-root", type=Path, help=argparse.SUPPRESS)
     parser.add_argument(
         "--mode", choices=sorted(MODES), default="history_on", help=argparse.SUPPRESS
     )
@@ -885,7 +999,9 @@ def main() -> int:
     if args.out is None:
         parser.error("--out or --step is required unless --compare is given")
     if args.run_one:
-        _run_one(args.run_one, args.mode, args.data_root, args.out)
+        if args.code_root is None:
+            parser.error("--run-one needs --code-root")
+        _run_one(args.run_one, args.mode, args.data_root, args.out, args.code_root)
         return 0
     return _run_all(args.decks, args.data_root, args.out)
 
