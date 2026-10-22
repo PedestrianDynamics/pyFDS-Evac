@@ -23,6 +23,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reaction's oxygen use at 13.1 MJ/kg O₂. `t_junction` drops its
   under-ventilated CO yield (0.150). About 1.6 times the fuel mass burns
   for the same HRR, so these fires are smokier (#796).
+- Studies › Schröder 2015 is rerun with the 10,300 kJ/kg decks (30 runs
+  per fire). Gate exit-E share on the main fire is 0.702 (was 0.689).
+  Additive does not resolve a door-split shift on the main fire (−0.08 m;
+  was −0.90 m, resolved) and its E-share change (−0.016) falls below the
+  0.048 threshold; on `a047_pvc_h35` its shift (+0.28 m) is now resolved
+  by a narrow margin. The changes combine the fuel with the code changes
+  since 0.4.0, so they are not attributed to the fuel alone (#796).
 
 ## [0.6.1] - 2026-10-21
 
