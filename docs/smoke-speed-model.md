@@ -22,7 +22,10 @@ via `SmokeSpeedConfig.speed_law`.
 The agent walks at `v0 * speed_factor(K)`, where `v0` is its clear-air speed
 and the factor follows `speed_law="lund"` (default) or `"fridolf"`. The
 `fridolf` law ([Fridolf et al. 2019, Eq. 7](https://doi.org/10.1016/j.tust.2019.04.016)) reduces speed additively, so its factor
-also depends on `v0`. The coded
+also depends on `v0`. It turns *K* into a visibility with the paper's
+*A* of Eq. 1, `visibility_factor_c`: 2 (default) for light-reflecting
+surroundings, 8 for light-emitting ones (the FDS convention 3 was the default
+before). The coded
 equations, the `SmokeSpeedConfig` defaults and the departures from the
 literature are on the [smoke-speed model](/models/smoke-speed.md) page;
 the published laws are on

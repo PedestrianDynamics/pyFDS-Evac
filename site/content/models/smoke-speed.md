@@ -28,7 +28,7 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
 
 - **`"fridolf"`**, `speed_factor_from_extinction_fridolf`: Eq. 7 of
   [Fridolf et al. (2019)](https://doi.org/10.1016/j.tust.2019.04.016)
-  (method 3; also in Fridolf et al. 2018, a summary of their 2016 SP report), with \(V = C/K\) [m] and the agent's
+  (method 3; also in Fridolf et al. 2018, a summary of their 2016 SP report), with \(V = A/K\) [m] and the agent's
   smoke-free speed \(v_0\) [m/s],
 
   $$
@@ -39,10 +39,14 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
   The reduction is additive, 0.34 m/s per metre of visibility below 3 m, and
   the floor is an absolute 0.2 m/s, not a fraction of \(v_0\). Above 3 m the
   speed is unchanged. The 2018 abstract gives no constant; the 2019 paper
-  converted each data set with *A* = 2 (reflecting) or 8 (emitting)
-  (Eq. 1). pyFDS-Evac uses the FDS default *C* = 3, so for reflecting
-  targets it slows agents later and less than the calibration (onset at
-  *K* = 1.0 instead of 0.67 1/m); set `visibility_factor_c = 2` to match.
+  converted each data set with *A* = 2 (light-reflecting) or 8
+  (light-emitting) (Eq. 1). pyFDS-Evac uses the paper's *A* = 2 by default,
+  for the walls, obstacles and surroundings a walker must see (onset at
+  *K* = 0.67 1/m); set `visibility_factor_c = 8` for light-emitting
+  surroundings. The FDS convention *C* = 3, the default before, is not the
+  paper's: it put the onset at *K* = 1.0 1/m, so agents slowed later and
+  less (at \(v_0\) = 1 m/s and *K* = 1 1/m, 1.0 instead of 0.66 m/s; the
+  floor at *K* = 4.6 instead of 3.1 1/m).
   Until [#146](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146)
   this option computed \(V/(V+2)\), a law with no known source.
 
@@ -70,7 +74,7 @@ web GUI and the terminal UI set only the last two (`--smoke-update-interval`,
 | `alpha` | `0.706` | m/s | \(\alpha\), `lund` only |
 | `beta` | `-0.057` | m²/s | \(\beta\), `lund` only |
 | `min_speed_factor` | `0.1` | - | \(f_{\min}\), `lund` only |
-| `visibility_factor_c` | `3.0` | - | *C*, `fridolf` only |
+| `visibility_factor_c` | `2.0` | - | The paper's *A* in \(V = A/K\) (Eq. 1): 2 light-reflecting, 8 light-emitting; `fridolf` only. The FDS convention is 3 |
 | `fridolf_slope` | `0.34` | m/s per m | Speed drop per metre of visibility, `fridolf` only |
 | `fridolf_visibility_threshold_m` | `3.0` | m | Visibility below which speed drops, `fridolf` only |
 | `fridolf_min_speed_m_per_s` | `0.2` | m/s | Absolute speed floor, `fridolf` only |
@@ -98,13 +102,13 @@ such sample, marks each smoke-history row outside with
 `--require-fds-coverage` a sample outside stops the run. Details on
 [FDS slice sampling](/docs/fds-sampling.md#outside-the-fds-slices).
 
-![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8](/images/concepts/speed_laws.png)
+![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with A = 2 and A = 8](/images/concepts/speed_laws.png)
 
 *Speed factor \(v/v_0\) [-] against extinction coefficient K [1/m]. Solid dark
 blue: Frantzich–Nilsson with the default constants, floor 0.1 reached at
 K = 11.1 m⁻¹. The `fridolf` option (Fridolf et al. 2019, Eq. 7) at
-\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
-for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3.
+\(v_0\) = 1.25 m/s with \(V = A/K\): red dashed for A = 2 (default), orange
+dash-dotted for A = 8. The arrow marks the largest gap between Frantzich–Nilsson and A = 2.
 Script: `scripts/figures/speed_laws.py`. The figure does not yet mark where
 the `fridolf` law is extrapolated, or the spread of \(v_0\)
 ([#228](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/228)).*
@@ -158,7 +162,7 @@ The code departs from them as follows.
   deviations.
 - **The `fridolf` option.** Fridolf et al. state visibility, not *K*; the
   2018 abstract gives no constant and the 2019 paper used *A* = 2 for
-  reflecting and 8 for emitting items. The code uses *C* = 3 by default (see
+  reflecting and 8 for emitting items. The code uses *A* = 2 by default (see
   [Walking speed in smoke](/fundamentals/walking-speed.md)). \(v_0\) is each
   agent's own free speed, as in their method 3, not the truncated normal
   distribution (mean 1.35 m/s, SD 0.25 m/s, 0.85–1.85 m/s) that method 3

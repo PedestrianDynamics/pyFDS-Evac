@@ -409,6 +409,14 @@ They describe the reduction as a combination of absolute (the same
 person's own clear-condition speed), never let the speed fall below
 0.2 m/s, and give no constant for turning *K* into visibility.
 
+pyFDS-Evac's `speed_law="fridolf"` evaluates Eq. 7 with the paper's *A* from
+Eq. 1 (`visibility_factor_c`). The default is *A* = 2, the value for
+light-reflecting items, because what a walker must see is mostly walls,
+obstacles and the lit surroundings; *A* = 8 is available for
+light-emitting surroundings. Before, the FDS convention *C* = 3 was the
+default; it is not the paper's constant and slowed agents later and less
+(at *w*_smoke free = 1 m/s and *K* = 1 1/m: 1.0 instead of 0.66 m/s).
+
 {{< details title="Caveats on Fridolf et al.'s laws" closed="true" >}}
 **The visibility constant.** *A* is chosen for each data set from its
 lighting (§3.3.1); the paper does not list which *A* was applied to which

@@ -168,7 +168,7 @@ and *x* [m] the visibility:
 
 $$
 w = \min\!\bigl(w_{\mathrm{free}},\ \max\!\bigl(0.2,\ w_{\mathrm{free}} - 0.34\,(3 - x)\bigr)\bigr),
-\qquad x = \frac{C}{K},
+\qquad x = \frac{A}{K},
 \qquad f = \frac{w}{w_{\mathrm{free}}} .
 $$
 
@@ -179,40 +179,43 @@ so a 0.25 m/s walker in dense smoke has \(f = 0.2/0.25 = 0.8\). Unlike the
 Lund factor, this factor depends on \(w_{\mathrm{free}}\).
 
 **The visibility constant.** *K* is turned into a visibility by Jin's
-relation \(x = C/K\). pyFDS-Evac uses \(C = 3\), the FDS default for a
-reflecting sign (`SmokeSpeedConfig.visibility_factor_c`). Fridolf et al.
-(2019, Eq. 1) write \(x = A/K\) and calibrated with \(A = 2\)
-(light-reflecting) or \(A = 8\) (light-emitting) items; the 2018 extended
-abstract gives no constant. With \(C = 3\) agents slow later and less than
-the calibration for reflecting signs: the knee \(x = 3\) m is at
-\(K = 1\) 1/m, against 0.67 for \(A = 2\) and 2.67 for \(A = 8\).
-\(C = 2\) reproduces the calibration. The grid's smallest *K*, 0.5 1/m,
-gives \(x = 6\) m and so no slowing at all under this law. The tests also
-check \(C = 2\) and \(C = 8\).
+relation \(x = A/K\), the paper's Eq. 1 (Fridolf et al. 2019).
+pyFDS-Evac uses \(A = 2\), the paper's value for light-reflecting items:
+the walls, obstacles and surroundings a walker must see
+(`SmokeSpeedConfig.visibility_factor_c`, which holds the paper's *A*). The
+paper uses \(A = 8\) for light-emitting items; set
+`visibility_factor_c = 8` for those. The 2018 extended abstract gives no
+constant. Before, the FDS convention \(C = 3\) was the default, which is
+not the paper's: the knee \(x = 3\) m was at \(K = 1\) 1/m, against 0.67 for
+\(A = 2\) and 2.67 for \(A = 8\), so agents slowed later and less than the
+calibration. The grid's smallest *K*, 0.5 1/m, gives \(x = 4\) m and so no
+slowing at all under this law. The tests also check \(C = 3\) and
+\(A = 8\) as configured values.
 
 ### Hand calculation
 
-\(w\) with \(C = 3\), by hand from the equation above (\(x\) = 0.3, 0.4, 1.0
-and 6.0 m for *K* = 10, 7.5, 3 and 0.5 1/m; the drop is 0.918, 0.884, 0.680
-and 0 m/s). "floor" means the unfloored value is below 0.2 m/s. The Lund
+\(w\) with \(A = 2\), by hand from the equation above (\(x\) = 0.2, 0.2667,
+0.6667 and 4 m for *K* = 10, 7.5, 3 and 0.5 1/m; the drop is 0.952, 0.9293,
+0.7933 and 0 m/s). "floor" means the unfloored value is below 0.2 m/s. The Lund
 column is \(f(K) = 1 - 0.0807\,K\), the same for every
 \(w_{\mathrm{free}}\).
 
 | *K* [1/m] | Lund *f* | \(w_{\mathrm{free}}\) = 1.25 | 1.0 | 0.75 | 0.5 | 0.25 |
 |---|---|---|---|---|---|---|
-| 10 | 0.192635 | 0.332 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
-| 7.5 | 0.394476 | 0.366 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
-| 3 | 0.757790 | 0.570 | 0.320 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
+| 10 | 0.192635 | 0.298 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
+| 7.5 | 0.394476 | 0.3207 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
+| 3 | 0.757790 | 0.4567 | 0.2067 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
 | 0.5 | 0.959632 | 1.25 | 1.0 | 0.75 | 0.5 | 0.25 |
 
 The Lund floor is not reached in the grid: \(f = 0.1\) starts at
 \(K = 0.9 \times 0.706 / 0.057 = 11.147\) 1/m, which the tests check
 separately at 11, 11.147, 12 and 100 1/m. In the Fridolf law the floor
 decides 11 of the 16 grid cells, 4 are unaffected (*K* = 0.5) and only one
-(\(w_{\mathrm{free}}\) = 1.0, *K* = 3) is on the slope. The
-1.25 m/s column is added because it is the corridor's own unimpeded speed
-and the only one where the slope shows at *K* = 7.5 and 10. For
-\(w_{\mathrm{free}}\) = 1.0 the unfloored values are 0.116 and 0.082 m/s there.
+(\(w_{\mathrm{free}}\) = 1.0, *K* = 3) is on the slope, 0.0067 m/s above the
+floor. The 1.25 m/s column is added because it is the corridor's own
+unimpeded speed and the only one where the slope shows at *K* = 7.5 and 10.
+For \(w_{\mathrm{free}}\) = 1.0 the unfloored values are 0.0707 and
+0.048 m/s there.
 
 ### What CI runs
 
@@ -222,7 +225,7 @@ and the only one where the slope shows at *K* = 7.5 and 10. For
   The expected values are the hand-written ones above, not the code's own
   function ([#259](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/259)).
   It also checks the 1.25 m/s column, the floor edges of both laws, the knee
-  at \(x = 3\) m, and \(C = 2\) and 8.
+  at \(x = 3\) m, and \(C = 3\) and \(A = 8\).
 - **Ten corridor runs** (100 × 2 m, 1 m exit, one occupant, social force
   model, seed 420, constant *K*, update every 0.1 s). The expected egress
   time is the clear time of the same occupant plus
@@ -233,10 +236,10 @@ and the only one where the slope shows at *K* = 7.5 and 10. For
 
 | Law | \(w_{\mathrm{free}}\) | *K* | \(w\) by hand [m/s] | Expected [s] | Simulated [s] | Difference [s] | Tolerance [s] | What the cell tests |
 |---|---|---|---|---|---|---|---|---|
-| Fridolf | 1.25 | 3 | 0.570 | 173.076 | 173.10 | +0.024 | 0.046 | slope |
-| Fridolf | 1.25 | 7.5 | 0.366 | 269.220 | 269.25 | +0.030 | 0.055 | slope |
-| Fridolf | 1.25 | 10 | 0.332 | 296.731 | 296.76 | +0.029 | 0.058 | slope |
-| Fridolf | 1.0 | 3 | 0.320 | 307.842 | 307.86 | +0.018 | 0.057 | slope, just above the floor |
+| Fridolf | 1.25 | 3 | 0.4567 | 215.885 | 215.91 | +0.025 | 0.050 | slope |
+| Fridolf | 1.25 | 7.5 | 0.3207 | 307.198 | 307.22 | +0.022 | 0.059 | slope |
+| Fridolf | 1.25 | 10 | 0.298 | 330.519 | 330.54 | +0.021 | 0.062 | slope |
+| Fridolf | 1.0 | 3 | 0.2067 | 476.336 | 476.32 | −0.016 | 0.074 | slope, just above the floor |
 | Fridolf | 1.0 | 7.5 | 0.2 | 492.194 | 492.17 | −0.024 | 0.076 | floor |
 | Fridolf | 0.5 | 3 | 0.2 | 492.213 | 492.17 | −0.043 | 0.066 | floor is absolute, not fractional |
 | Fridolf | 0.25 | 7.5 | 0.2 | 492.191 | 492.17 | −0.021 | 0.046 | floor against \(w_{\mathrm{free}}\), *f* = 0.8 |
@@ -352,7 +355,8 @@ at `9c820e0f` (Python 3.12.13) print the same table and figures.
   printed in the paper (p. 38): form, slope 0.34, threshold 3 m and floor
   0.2 m/s match. It checks the equation, not the paper's data. The paper
   converts extinction to visibility with \(A\) = 2 (light-reflecting) or 8
-  (light-emitting), not the default \(C\) = 3.
+  (light-emitting); the default is \(A\) = 2. The tests do not check
+  which of the two a given scene needs.
 - *K* = 0.5, 1 and 10 1/m lie outside the tunnel data (about 1.9 to
   7.4 1/m, the range given on the Fundamentals page; the report's text says
   about 2 to 7 1/m). Passing Test 18 verifies the code, not the law,
