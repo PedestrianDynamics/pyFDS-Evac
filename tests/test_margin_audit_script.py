@@ -705,3 +705,82 @@ def test_a_run_ending_at_the_time_limit_with_agents_left_is_usable(audit):
 )
 def test_any_other_non_zero_exit_is_a_failed_run(audit, code, manifest):
     assert audit.exit_status(code, manifest) == (False, f"failed (exit {code})")
+
+
+def test_routing_keys_are_the_ones_the_loader_reads(audit):
+    keys = audit.routing_keys()
+    assert {"anticipate", "cost_model", "w_smoke", "fed_rate_memo"} <= keys
+    assert "fallback_rule" not in keys
+    assert "anticpate" not in keys
+
+
+@pytest.mark.parametrize("value", ["false", '"additive"', "1"])
+def test_a_misspelt_routing_key_fails_whatever_its_value_type(audit, value):
+    for path in (f"anticpate={value}", f"routing.anticpate={value}"):
+        overrides = (audit.parse_override(path),)
+        with pytest.raises(ValueError, match="routing.anticpate"):
+            audit.check_override_keys(overrides)
+    good = (audit.parse_override("anticipate=false"),)
+    audit.check_override_keys(good)
+
+
+def test_a_bad_override_fails_before_any_run_starts(audit, capsys, monkeypatch):
+    def refuse(*args, **kwargs):
+        raise AssertionError("a run was started")
+
+    monkeypatch.setattr(audit.subprocess, "call", refuse)
+    base = ["run", "--decks", "a047_pvc_h40", "--data-root", "/nonexistent"]
+    code = audit.main([*base, "--head-set", "anticpate=false"])
+    assert code == 2
+    assert "routing.anticpate" in capsys.readouterr().out
+
+
+def test_a_bad_config_path_fails_before_any_run_starts(audit, tmp_path, monkeypatch):
+    root = tmp_path / "data"
+    fds = root / audit.DECKS["a047_pvc_h40"].fds_dir
+    fds.mkdir(parents=True)
+
+    def refuse(*args, **kwargs):
+        raise AssertionError("a run was started")
+
+    monkeypatch.setattr(audit.subprocess, "call", refuse)
+    args = ["run", "--decks", "a047_pvc_h40", "--data-root", str(root)]
+    args += ["--allow-dirty"]
+    args += ["--head-set", "config.simulation_settings.nope.x=1"]
+    assert audit.main(args) == 2
+
+
+def test_code_audit_outcome_is_worded_neutrally(audit):
+    def primary(**kw):
+        base = {"n": 10, "distinct": False, "worse": True, "effect": 3.0}
+        return {**base, **kw}
+
+    assert audit.code_audit_outcome(primary(), []) == (
+        "no distinct effect on the primary metric"
+    )
+    worse = audit.code_audit_outcome(primary(distinct=True), [])
+    assert worse.startswith("distinct effect on the primary metric: worse")
+    better = audit.code_audit_outcome(primary(distinct=True, worse=False), [])
+    assert "primary metric: better" in better
+    assert "primary metric: changed" in audit.code_audit_outcome(
+        primary(distinct=True, worse=None), []
+    )
+    harmed = [{"metric": "returns", "distinct": True, "worse": True}]
+    assert "returns" in audit.code_audit_outcome(primary(distinct=True), harmed)
+    assert audit.code_audit_outcome(primary(n=3), []).startswith("undecided")
+    for text in (worse, better):
+        assert "remove" not in text
+
+
+def test_a_code_audit_report_does_not_say_remove(audit, tmp_path):
+    folder = tmp_path / "audit"
+    _write_audit(folder, [2.0] * 6, [2.0] * 6)
+    path = folder / "manifest.json"
+    manifest = json.loads(path.read_text())
+    manifest["margin"] = "arms"
+    path.write_text(json.dumps(manifest))
+    args = ["analyse", str(folder), "--primary-deck", "l_corridor_gate"]
+    assert audit.main([*args, "--metric", "returns"]) == 0
+    text = (folder / "report.md").read_text()
+    assert "**Outcome: no distinct effect on the primary metric**" in text
+    assert "remove" not in text

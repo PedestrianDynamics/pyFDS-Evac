@@ -97,7 +97,18 @@ p < 0.05, |mean d| at least the metric's floor and at least 6 seeds
 (``outcome``). ``analyse`` needs ``--metric`` for an audit without a
 margin. The outcome text speaks of "remove": for a code audit read it as
 "the change has no distinct effect on the primary metric". A rerun with the
-same ``--out`` must use the same arms; it refuses otherwise.
+same ``--out`` must use the same arms; it refuses otherwise. In a code
+audit the report words the outcome neutrally ("no distinct effect on the
+primary metric", or the direction of a distinct one) instead of "remove".
+
+Override keys are checked before the first run starts: a ``routing.*`` key
+must be one the loader reads (a ``RouteCostConfig`` field or
+``fed_rate_memo``), and every other path must exist in each deck's config.
+
+In ``manifest.json``, ``commit`` and ``dirty`` describe the checkout the
+script was called from; ``arms`` (commit and overrides per side) and
+``imports`` (where each arm imported the code from) identify what ran. A
+code audit has ``margin`` "arms" and no ``off_value``.
 """
 
 from __future__ import annotations
@@ -441,6 +452,47 @@ def set_config_path(config: dict, path: str, value: object) -> dict:
     return copy
 
 
+def routing_keys() -> frozenset[str]:
+    """The ``routing`` keys the scenario loader reads.
+
+    The fields of ``RouteCostConfig`` (``from_routing_params`` reads one key
+    per field, but ``fallback_rule``, a code-level field) and
+    ``fed_rate_memo``. The loader ignores any other key, so an override of
+    one would run unchanged.
+    """
+    import dataclasses
+
+    from pyfds_evac.core.route_graph import RouteCostConfig
+
+    fields = {f.name for f in dataclasses.fields(RouteCostConfig)}
+    return frozenset(fields - {"fallback_rule"} | {"fed_rate_memo"})
+
+
+def check_override_keys(overrides: Overrides) -> None:
+    """Raise ValueError for a ``routing.*`` override the loader does not read."""
+    known = routing_keys()
+    for path, _ in overrides:
+        key = path.removeprefix("routing.")
+        if path.startswith("routing.") and key not in known:
+            raise ValueError(
+                f"override {path}: not a routing key the loader reads "
+                f"(known: {', '.join(sorted(known))})"
+            )
+
+
+def check_override_paths(decks: list[str], root: Path, arms: dict[str, "Arm"]) -> None:
+    """Raise ValueError unless every arm's overrides apply to every deck's config.
+
+    Stages nothing: the check runs before the first run starts.
+    """
+    for name in decks:
+        deck = DECKS[name]
+        config = json.loads((_base(deck, root) / deck.config).read_text("utf-8"))
+        for arm in arms.values():
+            for path, value in (*deck.overrides, *arm.overrides):
+                config = set_config_path(config, path, value)
+
+
 def _stage_scenario(
     deck: AuditDeck, root: Path, into: Path, overrides: Overrides
 ) -> Path:
@@ -521,6 +573,8 @@ def _run_job(
     folder = out / job.deck / f"seed{job.seed}" / job.arm
     folder.mkdir(parents=True, exist_ok=True)
     scenario = _stage_scenario(deck, root, folder / "scenario", arm.overrides)
+    # A manifest left by an earlier try must not stand in for this run's.
+    (folder / "trajectory.manifest.json").unlink(missing_ok=True)
     started = time.perf_counter()
     with (folder / "run.log").open("w", encoding="utf-8") as log:
         exit_code = subprocess.call(
@@ -734,6 +788,8 @@ def _run_all(args: argparse.Namespace) -> int:
         return 2
     try:
         label, arms = build_arms(args)
+        for arm in arms.values():
+            check_override_keys(arm.overrides)
     except ValueError as error:
         print(error)
         return 2
@@ -748,6 +804,11 @@ def _run_all(args: argparse.Namespace) -> int:
         if missing:
             print(f"{name}: missing {', '.join(map(str, missing))}")
             return 2
+    try:
+        check_override_paths(args.decks, root, arms)
+    except ValueError as error:
+        print(error)
+        return 2
     clash = _arms_clash(out, arms)
     if clash:
         print(clash)
@@ -772,7 +833,7 @@ def _run_pending(
     out: Path,
     dirty: list[str],
 ) -> int:
-    off_value: object = arms["off"].describe()
+    off_value: object = None  # a code audit: the arms record both sides
     if args.margin:
         off_value = args.off if args.off is not None else MARGINS[args.margin].off
     manifest = {
@@ -1178,6 +1239,27 @@ def outcome(primary: dict, secondary: list[dict]) -> str:
     return "remove: distinct effect, removal is better, no secondary metric worse"
 
 
+def code_audit_outcome(primary: dict, secondary: list[dict]) -> str:
+    """The outcome of a code audit, in words that do not say "remove".
+
+    The same rule as ``outcome``: not enough seeds, no distinct effect, or a
+    distinct effect with its direction on the primary metric.
+    """
+    if primary.get("n", 0) < MIN_SEEDS:
+        return f"undecided: {primary.get('n', 0)} seeds, fewer than {MIN_SEEDS}"
+    if not primary["distinct"]:
+        return "no distinct effect on the primary metric"
+    word = {None: "changed", True: "worse", False: "better"}[primary["worse"]]
+    text = (
+        f"distinct effect on the primary metric: {word} "
+        f"(mean d = {primary['effect']:.4g}, head minus base)"
+    )
+    harmed = [s["metric"] for s in secondary if s.get("distinct") and s.get("worse")]
+    if harmed:
+        text += f"; secondary metrics distinctly worse: {', '.join(harmed)}"
+    return text
+
+
 def _analyse(args: argparse.Namespace) -> int:
     folder = Path(args.run)
     manifest = _read_json(folder / "manifest.json")
@@ -1218,7 +1300,8 @@ def _analyse(args: argparse.Namespace) -> int:
         if m != metric
     ]
     report["primary"] = primary
-    report["outcome"] = outcome(primary, [s for s in secondary if s])
+    judged = code_audit_outcome if key == "arms" else outcome
+    report["outcome"] = judged(primary, [s for s in secondary if s])
     text = _report_markdown(report)
     print(text)
     _write_json(folder / "report.json", report)
