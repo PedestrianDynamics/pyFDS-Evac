@@ -7,34 +7,38 @@ speed of 1 m/s, near the middle of the 10 m wall opposite the exits. Exit 1
 becomes unavailable after 1 s. Expected result: exit 1 is not used.
 
 ISO 20414 Test 9 is the same test, but the ISO test module puts the occupant
-5 m from each door. NIST's Figure 11 puts both doors at the far end, about 14 m
-away, so the occupant is far from them when exit 1 closes. This module builds
-that layout; ``test_iso_test_9_dynamic_exit.py`` runs the ISO one.
+5 m from each door. NIST's layout puts both doors at the far end, so the
+occupant is far from them when exit 1 closes. Figure 11 carries no dimension
+for the doors; Figure 10 (Verif.3.3, report p. 35) shows the same 10 m x 15 m
+room and the same occupant spot and labels the doors 12 m from the occupant's
+wall, which is the distance used here. ``test_iso_test_9_dynamic_exit.py`` runs
+the ISO layout.
 
 Layout, in metres: the room is x in [0, 10], y in [0, 15]. The doors are on the
-15 m walls (x = 0 and x = 10), centred at y = 14 (spans 13.5 to 14.5), 1 m from
-the end wall at y = 15. The occupant starts in a 1 m x 1 m area centred at
-(5, 1), so the two doors are equidistant to within 0.5 m (the area needs room
-for the 0.2 m radius); the fixed seed picks one start.
+15 m walls (x = 0 and x = 10), centred at y = 12 (spans 11.5 to 12.5). The
+occupant starts in a 1 m x 1 m area centred at (5, 1), so the two doors are
+equidistant to within 0.5 m (the area needs room for the 0.2 m radius); the
+fixed seed picks one start.
 
 Hand derivation of the expected values
 --------------------------------------
 
-- Door centres are (0, 14) and (10, 14). From the area centre (5, 1) each is
-  sqrt(5^2 + 13^2) = 13.93 m away, 13.9 s of walking at 1 m/s.
+- Door centres are (0, 12) and (10, 12). From the area centre (5, 1) each is
+  sqrt(5^2 + 11^2) = sqrt(146) = 12.08 m away: 12.1 s of walking at 1 m/s.
 - At t = 1 s the occupant has walked 1 m toward exit 1 (the nearer door for
-  this seed, see the control). It stands near (4.64, 1.93): 12.93 m from
-  exit 1 and sqrt(5.36^2 + 12.07^2) = 13.2 m from exit 2.
-- From the closure on, exit 1 admits nobody. The occupant turns for exit 2 at
-  the next one-second check (at most 1 s later) and walks at most 13.2 m: it
-  is out by about 1 + 1 + 13.2 = 15.2 s; the start offset (up to 0.5 m in
-  each direction) and the door depth (1 m beyond the wall) move this by under
-  1.5 s. The window asserted is 12 s to 18 s.
-- Without the closure (control) the occupant walks about 13.9 s to exit 1
-  and leaves by it, same window.
+  this seed, see the control), to about (4.59, 1.91): 11.08 m from exit 1 and
+  sqrt(5.41^2 + 10.09^2) = sqrt(131.1) = 11.45 m from exit 2.
+- A schedule is event-driven: the route change is made at the closure, and is
+  recorded at t = 1.0 s, not at a later reroute check. From then on the only
+  door left is exit 2, so the occupant is out at about 1 + 11.45 = 12.45 s.
+- Window: the hand values use the centre of the 1 m x 1 m start area. The start
+  can lie 0.5 m away in each coordinate, which changes the path by up to about
+  0.5 m (0.5 s), and the occupant counts as out at the door line, within the
+  0.2 m radius and 1 m door depth, a further few tenths of a second. The window
+  is the hand value +- 1 s: 11.45 s to 13.45 s for the closure run, and for
+  the control (12.08 s to exit 1, no closure) 11.08 s to 13.08 s.
 - Exit 1 usage is the number of occupants leaving by it: 0 of 1. Evacuated
-  occupants: 1 of 1. The route change is recorded once, exit_1 to exit_2, at
-  the first reroute check at or after the closure (1 s to 2 s).
+  occupants: 1 of 1.
 """
 
 from __future__ import annotations
@@ -51,7 +55,7 @@ ROOM_WIDTH_M = 10.0
 ROOM_LENGTH_M = 15.0
 EXIT_WIDTH_M = 1.0
 EXIT_DEPTH_M = 1.0
-DOOR_CENTRE_Y_M = 14.0
+DOOR_CENTRE_Y_M = 12.0
 SPEED_MPS = 1.0
 T_CLOSE_S = 1.0
 MAX_TIME_S = 60.0
@@ -59,8 +63,10 @@ SEED = 1
 REROUTE = RerouteConfig(reevaluation_interval_s=30.0)
 START = (ROOM_WIDTH_M / 2.0, 1.0)
 START_AREA_M = 0.5
-# Hand window for the evacuation time, see the module docstring.
-EVACUATION_WINDOW_S = (12.0, 18.0)
+# Hand values for the evacuation time, see the module docstring.
+HAND_CLOSURE_S = 1.0 + 11.45
+HAND_CONTROL_S = 12.08
+WINDOW_S = 1.0
 
 
 def _coords(polygon) -> list[list[float]]:
@@ -161,8 +167,8 @@ def test_exit_1_unavailable_after_1_s_is_not_used():
     assert run["exits"] == ["exit_2"]
     closed = [r for r in run["routes"] if r["reason"] == "exit_closed"]
     assert [(r["old_exit"], r["new_exit"]) for r in closed] == [("exit_1", "exit_2")]
-    assert T_CLOSE_S <= closed[0]["time_s"] <= T_CLOSE_S + 1.0
-    assert EVACUATION_WINDOW_S[0] <= run["time_s"] <= EVACUATION_WINDOW_S[1]
+    assert closed[0]["time_s"] == pytest.approx(T_CLOSE_S, abs=0.1)
+    assert run["time_s"] == pytest.approx(HAND_CLOSURE_S, abs=WINDOW_S)
 
 
 def test_control_without_closure_leaves_by_exit_1():
@@ -172,4 +178,4 @@ def test_control_without_closure_leaves_by_exit_1():
     assert run["remaining"] == 0
     assert run["exits"] == ["exit_1"]
     assert not [r for r in run["routes"] if r["reason"] == "exit_closed"]
-    assert EVACUATION_WINDOW_S[0] <= run["time_s"] <= EVACUATION_WINDOW_S[1]
+    assert run["time_s"] == pytest.approx(HAND_CONTROL_S, abs=WINDOW_S)
