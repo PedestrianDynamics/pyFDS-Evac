@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `scripts/margin_audit.py` compares code as well as config (#187). Each arm
+  takes `--base-commit` / `--head-commit` (a detached worktree with the
+  locked environment, `uv sync --frozen`) and `--base-set` / `--head-set`
+  `PATH=VALUE` config overrides; the paired seeds, decks and decision rule
+  are those of the margin sweep. The decks `a047_pvc_h40` and
+  `a047_pvc_h35` run the Schroeder additive configs on the #796 rerun FDS
+  output (480 s), which reproduces the #835 experiment.
 - NIST TN 1822 verification status page (`site/content/verification/nist-tn1822.md`)
   listing all 17 tests: 6 run, 4 inherited from JuPedSim, 5 out of scope, 2 not
   yet run. Verif.2.5 runs NIST's corridor at K = 1.0 1/m for both smoke-speed
