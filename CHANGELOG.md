@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- ISO 20414 Test 18 (walking speed in smoke) runs both smoke-speed laws on
+  the standard's grid in `tests/test_iso_test_18_speed_laws.py`: free speeds
+  1.0, 0.75, 0.5 and 0.25 m/s times K = 10, 7.5, 3.0 and 0.5 1/m for the
+  Frantzich-Nilsson law and the Fridolf law (`speed_law="fridolf"`, Eq. 7),
+  the clamp edges of both, and ten corridor runs checked against egress
+  times calculated by hand. The Test 18 page documents the visibility
+  constant of the Fridolf law (C = 3; the paper calibrated with A = 2 or 8)
+  (#841).
 - ISO 20414 Test 9 (dynamic availability of an exit) runs in
   `tests/test_iso_test_9_dynamic_exit.py`: exit 1 closes after 1 s and the
   occupant leaves by exit 2 (#840). The pytest marker `iso20414` selects

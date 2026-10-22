@@ -12,7 +12,7 @@ aliases: [/models/verification/iso-test-18/]
 | **Level** | Runner with *K* injected (no FDS); FDS case with *K* read from committed FDS output |
 | **Asset** | `assets/ISO-table21`, `assets/iso_table21_coupled` |
 | **Expected value from** | hand calculation of the model's law, as ISO 20414 asks; for the FDS case, *K* from FDS's own slice, cross-checked against the deck's soot; egress times predicted from clear runs of the same layout (no smoke) |
-| **Status** | passes on the stored runs (figure script); CI checks the time ratio within 8 % |
+| **Status** | Frantzich–Nilsson law: passes on the stored runs (figure script); CI checks the time ratio within 8 %. Both laws on the standard's grid: CI checks the speed on all 16 cells and the egress time on 10 corridor runs |
 
 ![Five copies of the ISO corridor, tinted darker the denser the smoke: clear air and K = 1, 3, 7.5 and 10 per metre; the occupant's colour shows its walking speed, and each corridor ends with the simulated and the expected egress time](/images/verification/iso18.gif)
 
@@ -150,6 +150,113 @@ which predicts −0.60 % at *K* = 10. Once *a* is taken from the clear runs, eac
 matches to 22 ms. The collision-free model in the FDS case has no start-up
 and matches the ratio to 6 × 10⁻⁵.
 
+## Both laws on the standard's grid
+
+Table 21 asks for the correlation the model uses, repeated over a range of
+unimpeded speeds and extinction coefficients, with 1.0, 0.75, 0.5 and
+0.25 m/s and *K* = 10, 7.5, 3.0 and 0.5 1/m as examples. pyFDS-Evac ships
+two laws, and Ronchi et al. (2013) showed that results depend on which
+smoke–speed data a model uses, so both are checked
+([#841](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/841)).
+
+### The Fridolf law
+
+`speed_law="fridolf"` (Python only) uses Fridolf, Ronchi, Nilsson and
+Frantzich (2019, Eq. 7; [Fundamentals › Walking speed](/fundamentals/walking-speed.md#fridolf-et-al-2019-speed-as-a-function-of-visibility)),
+with \(w\) [m/s] the walking speed, \(w_{\mathrm{free}}\) the unimpeded speed
+and *x* [m] the visibility:
+
+$$
+w = \min\!\bigl(w_{\mathrm{free}},\ \max\!\bigl(0.2,\ w_{\mathrm{free}} - 0.34\,(3 - x)\bigr)\bigr),
+\qquad x = \frac{C}{K},
+\qquad f = \frac{w}{w_{\mathrm{free}}} .
+$$
+
+The reduction is additive: 0.34 m/s per metre of visibility below 3 m, the
+same for everyone. The floor is an absolute 0.2 m/s, not a fraction of
+\(w_{\mathrm{free}}\); it never lifts a walker above \(w_{\mathrm{free}}\),
+so a 0.25 m/s walker in dense smoke has \(f = 0.2/0.25 = 0.8\). Unlike the
+Lund factor, this factor depends on \(w_{\mathrm{free}}\).
+
+**The visibility constant.** *K* is turned into a visibility by Jin's
+relation \(x = C/K\). pyFDS-Evac uses \(C = 3\), the FDS default for a
+reflecting sign (`SmokeSpeedConfig.visibility_factor_c`). Fridolf et al.
+(2019, Eq. 1) write \(x = A/K\) and calibrated with \(A = 2\)
+(light-reflecting) or \(A = 8\) (light-emitting) items; the 2018 extended
+abstract gives no constant. With \(C = 3\) agents slow later and less than
+the calibration for reflecting signs: the knee \(x = 3\) m is at
+\(K = 1\) 1/m, against 0.67 for \(A = 2\) and 2.67 for \(A = 8\).
+\(C = 2\) reproduces the calibration. The grid's smallest *K*, 0.5 1/m,
+gives \(x = 6\) m and so no slowing at all under this law. The tests also
+check \(C = 2\) and \(C = 8\).
+
+### Hand calculation
+
+\(w\) with \(C = 3\), by hand from the equation above (\(x\) = 0.3, 0.4, 1.0
+and 6.0 m for *K* = 10, 7.5, 3 and 0.5 1/m; the drop is 0.918, 0.884, 0.680
+and 0 m/s). "floor" means the unfloored value is below 0.2 m/s. The Lund
+column is \(f(K) = 1 - 0.0807\,K\), the same for every
+\(w_{\mathrm{free}}\).
+
+| *K* [1/m] | Lund *f* | \(w_{\mathrm{free}}\) = 1.25 | 1.0 | 0.75 | 0.5 | 0.25 |
+|---|---|---|---|---|---|---|
+| 10 | 0.192635 | 0.332 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
+| 7.5 | 0.394476 | 0.366 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
+| 3 | 0.757790 | 0.570 | 0.320 | 0.2 (floor) | 0.2 (floor) | 0.2 (floor) |
+| 0.5 | 0.959632 | 1.25 | 1.0 | 0.75 | 0.5 | 0.25 |
+
+The Lund floor is not reached in the grid: \(f = 0.1\) starts at
+\(K = 0.9 \times 0.706 / 0.057 = 11.147\) 1/m, which the tests check
+separately at 11, 11.147, 12 and 100 1/m. In the Fridolf law the floor
+decides 11 of the 16 grid cells, 4 are unaffected (*K* = 0.5) and only one
+(\(w_{\mathrm{free}}\) = 1.0, *K* = 3) is on the slope. The
+1.25 m/s column is added because it is the corridor's own unimpeded speed
+and the only one where the slope shows at *K* = 7.5 and 10. For
+\(w_{\mathrm{free}}\) = 1.0 the unfloored values are 0.116 and 0.082 m/s there.
+
+### What CI runs
+
+`tests/test_iso_test_18_speed_laws.py`, marker `iso20414`, about 25 s:
+
+- **All 16 grid cells, both laws**, on the model's speed factor and speed.
+  The expected values are the hand-written ones above, not the code's own
+  function ([#259](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/259)).
+  It also checks the 1.25 m/s column, the floor edges of both laws, the knee
+  at \(x = 3\) m, and \(C = 2\) and 8.
+- **Ten corridor runs** (100 × 2 m, 1 m exit, one occupant, social force
+  model, seed 420, constant *K*, update every 0.1 s). The expected egress
+  time is the clear time of the same occupant plus
+  \(L\,(1/w - 1/w_{\mathrm{free}})\), with \(w\) by hand and
+  \(L\) = 98.321 m, the walked length fitted on this page. Each run also
+  checks the recorded *K*, the base speed, the desired speed and the factor
+  at every update.
+
+| Law | \(w_{\mathrm{free}}\) | *K* | \(w\) by hand [m/s] | Expected [s] | Simulated [s] | Difference [s] | Tolerance [s] | What the cell tests |
+|---|---|---|---|---|---|---|---|---|
+| Fridolf | 1.25 | 3 | 0.570 | 173.076 | 173.10 | +0.024 | 0.046 | slope |
+| Fridolf | 1.25 | 7.5 | 0.366 | 269.220 | 269.25 | +0.030 | 0.055 | slope |
+| Fridolf | 1.25 | 10 | 0.332 | 296.731 | 296.76 | +0.029 | 0.058 | slope |
+| Fridolf | 1.0 | 3 | 0.320 | 307.842 | 307.86 | +0.018 | 0.057 | slope, just above the floor |
+| Fridolf | 1.0 | 7.5 | 0.2 | 492.194 | 492.17 | −0.024 | 0.076 | floor |
+| Fridolf | 0.5 | 3 | 0.2 | 492.213 | 492.17 | −0.043 | 0.066 | floor is absolute, not fractional |
+| Fridolf | 0.25 | 7.5 | 0.2 | 492.191 | 492.17 | −0.021 | 0.046 | floor against \(w_{\mathrm{free}}\), *f* = 0.8 |
+| Fridolf | 0.75 | 0.5 | 0.75 | 131.690 | 131.69 | 0.000 | 0.036 | no slowing above 3 m |
+| Lund | 1.0 | 7.5 | 0.394476 | 249.834 | 249.86 | +0.026 | 0.051 | the other law in the same layout |
+| Lund | 0.5 | 3 | 0.378895 | 260.102 | 260.11 | +0.008 | 0.042 | the other law in the same layout |
+
+The three floored Fridolf runs at \(w_{\mathrm{free}}\) = 1.0, 0.5 and
+0.25 m/s all reach the exit at 492.17 s: the floor is an absolute speed. The
+tolerance is 2 time steps of 0.01 s (the clear and the smoky time are each a
+whole number of steps), the clear-run fit's largest residual of 0.016 s, and
+an assumed 0.01 m error in \(L\) times \(|1/w - 1/w_{\mathrm{free}}|\). The
+clear times are from runs of the same layout: 79.24, 98.91, 131.69, 197.25
+and 393.87 s for 1.25 to 0.25 m/s.
+
+The other grid cells are checked on the speed only. The Lund law's *K* sweep
+at 1.25 m/s and its \(w_{\mathrm{free}}\) sweep at *K* = 1 are the runs
+earlier on this page. Lund at 0.25 m/s and *K* = 10 (0.048 m/s, about
+2000 s) is not run in a corridor.
+
 ## Pass criteria
 
 1. **Factor.** The recorded factor equals *f*(*K*) by hand to round-off,
@@ -183,14 +290,14 @@ six decimals ([#259](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/259
 
 {{< example-files "iso-test-18" >}}
 
-The tests run both cases in about 20 s. They are weaker than this page: the
+The tests of the first two cases run in about 20 s. They are weaker than this page: the
 coupled test reads the 2.0 m slice, not the 1.5 m slice the default height
 picks; both compute the expected factor with the code's own function; and the
 time ratio passes within 8 %
 ([#259](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/259)):
 
 ```bash
-uv run pytest tests/test_smoke_speed.py -k iso_table21 tests/test_iso_table21_coupled.py
+uv run pytest tests/test_smoke_speed.py -k iso_table21 tests/test_iso_table21_coupled.py tests/test_iso_test_18_speed_laws.py
 ```
 
 For the figures, run the 16 cases with `run.py`. The FDS output is committed
@@ -238,10 +345,12 @@ at `9c820e0f` (Python 3.12.13) print the same table and figures.
 
 ## Limits
 
-- Only the default law is run in the ISO layout. The `fridolf` option
-  (`speed_law="fridolf"`), reachable only from Python, is checked by the
-  [S2 corridor test](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s2_corridor_speed.py),
-  not here.
+- The Fridolf law is run in the same corridor (see above) with constant *K*
+  only, not *K* from FDS. The
+  [S2 corridor test](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s2_corridor_speed.py)
+  also checks it. The hand calculation checks the code against Eq. 7 as the
+  Fundamentals page states it, not against the paper's data; the paper
+  calibrated with \(A\) = 2 or 8, not the default \(C\) = 3.
 - *K* = 0.5, 1 and 10 1/m lie outside the tunnel data (about 1.9 to
   7.4 1/m, the range given on the Fundamentals page; not re-checked against
   the report for this page). Passing Test 18 verifies the code, not the law,
