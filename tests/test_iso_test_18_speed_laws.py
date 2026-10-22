@@ -87,7 +87,7 @@ from pyfds_evac.core import (
 )
 from pyfds_evac.core.smoke_speed import speed_factor_from_extinction_fridolf
 
-pytestmark = pytest.mark.iso20414
+pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
 FREE_SPEEDS = (1.0, 0.75, 0.5, 0.25)
 EXTINCTIONS = (10.0, 7.5, 3.0, 0.5)

@@ -41,7 +41,7 @@ from pyfds_evac.core.smoke_speed import (
     speed_factor_from_extinction,
 )
 
-pytestmark = pytest.mark.iso20414
+pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
 ASSET = Path("assets/iso_table21_coupled")
 FDS_DIR = ASSET / "fds"
