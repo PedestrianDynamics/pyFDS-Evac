@@ -29,8 +29,8 @@ from geometry import (
 # Fuels [N]: soot and CO yields from Schroeder 2017 Tables 4.4-4.5.
 # PVC: the FDS User's Guide example that Table 4.5 is based on (section
 # "Fuels Not Compatible with Simple Chemistry"): monomer C2H3Cl, all Cl to
-# HCl, lumped reaction balanced below, HEAT_OF_COMBUSTION 16400 kJ/kg (SFPE
-# Handbook, as in the Guide). PUR: yields and the mean heat of combustion
+# HCl, lumped reaction balanced below, HEAT_OF_COMBUSTION 10300 kJ/kg, the
+# consistent PVC set of Osburg et al. (2025), Table 2 (#796). PUR: yields and the mean heat of combustion
 # 18770 kJ/kg from Schroeder 2017 p. 74 (TRStrab BS); the formula is that of
 # the Schroeder et al. 2020 release (NFPA Babrauskas polyurethane) [A]. The
 # thesis's HCN yield (0.070) and late-stage soot (0.129 after 600 s) are not
@@ -65,10 +65,10 @@ def pvc_reaction(soot: float, co: float) -> str:
     nu_o2 = (2 * nu_co2 + nu_co + nu_h2o) / 2
     nu = [-1.0, -nu_o2, nu_co2, nu_co, nu_s, nu_h2o, 1.0]
     return f"""! PVC as in the FDS User's Guide example (Schroeder 2017 Table 4.5):
-! monomer C2H3Cl, lumped, heat of combustion 16400 kJ/kg. Atom balance per mole of fuel: C 2, H 3,
+! monomer C2H3Cl, lumped, heat of combustion 10300 kJ/kg. Atom balance per mole of fuel: C 2, H 3,
 ! Cl 1, O {2 * nu_o2:.4f}. Soot yield {soot}, CO yield {co} kg/kg [N]; all Cl to HCl.
-! 16400 kJ/kg is the heat of complete combustion in SFPE Table A.39; the
-! chemical value that goes with these yields is 5700 kJ/kg. Kept; see #796.
+! 10300 kJ/kg is the consistent set of Osburg et al. (2025), Table 2: it
+! matches the oxygen this reaction consumes at 13.1 MJ/kg O2 (#796).
 &SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
 &SPEC ID='OXYGEN', MASS_FRACTION_0=0.232 /
 &SPEC ID='WATER VAPOR', MASS_FRACTION_0=0.006 /
@@ -80,7 +80,7 @@ def pvc_reaction(soot: float, co: float) -> str:
 &REAC FUEL='VINYL CHLORIDE',
       SPEC_ID_NU='VINYL CHLORIDE','OXYGEN','CARBON DIOXIDE','CARBON MONOXIDE','SOOT','WATER VAPOR','HYDROGEN CHLORIDE',
       NU={",".join(f"{v:.4f}" for v in nu)},
-      HEAT_OF_COMBUSTION=16400. /"""
+      HEAT_OF_COMBUSTION=10300. /"""
 
 
 def pur_reaction(soot: float, co: float) -> str:

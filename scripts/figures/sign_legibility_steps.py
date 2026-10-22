@@ -304,13 +304,12 @@ def main():
             mew=1.6,
             zorder=8,
         )
-        dy = -0.45 if key == "P" else 0.45
         ax.text(
             x + (0.5 if key == "P" else 0),
-            y + dy,
+            y + 0.45,
             key,
             ha="center",
-            va="top" if key == "P" else "bottom",
+            va="bottom",
             fontsize=9.5,
             color=colour,
             fontweight="bold",

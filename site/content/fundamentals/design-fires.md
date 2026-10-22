@@ -231,26 +231,25 @@ none is a pyFDS-Evac default. Each new study adds a row here and one to the
 | Study | Curve type | Parameters | Stated or assumed |
 |---|---|---|---|
 | [ASET-RSET maps after Schröder et al. (2020)](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 60 kW/m² on 1 × 1 m; polyurethane (NFPA Babrauskas), soot yield 0.129. Sensitivity: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m, flexible polyurethane foam | From the authors' reference implementation ([doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550)); the paper's text does not state the fire. The sensitivity burner and fuel are ours |
-| [Route choice in smoke after Schröder et al. (2015)](/docs/study-schroeder2015.md) | t² growth to a cap | Fast, α = 0.047 kW/s², capped at 1.5 MW (HRRPUA 250 kW/m² on 3 × 2 m) at 179 s; PVC, soot yield 0.172, CO yield 0.063; ceiling 4.0 m. Comparison: medium, α = 0.012 kW/s² (cap at 354 s), ceiling 3.0 m; and fast with ceiling 3.5 m | Ours. The paper does not state its fire. Chosen before any routing run, then picked among nine variants by visual match to the paper's smoke snapshot (Fig. 6c) |
-| [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride (PVC), 16.4 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
+| [Route choice in smoke after Schröder et al. (2015)](/docs/study-schroeder2015.md) | t² growth to a cap | Fast, α = 0.047 kW/s², capped at 1.5 MW (HRRPUA 250 kW/m² on 3 × 2 m) at 179 s; PVC, soot yield 0.172, CO yield 0.063, 10.3 MJ/kg; ceiling 4.0 m. Comparison: medium, α = 0.012 kW/s² (cap at 354 s), ceiling 3.0 m; and fast with ceiling 3.5 m | Ours. The paper does not state its fire. Chosen before any routing run, then picked among nine variants by visual match to the paper's smoke snapshot (Fig. 6c) |
+| [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride (PVC), soot yield 0.172, CO yield 0.063, 10.3 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
 
 All fires start at t = 0 with no incipient phase.
 
-The two PVC fires set `HEAT_OF_COMBUSTION=16400`, following the PVC
-example of the FDS User's Guide (§13.2.2), with the soot yield 0.172 and
-CO yield 0.063 of SFPE Handbook Table A.39. In that table 16.4 MJ/kg is
-the net heat of complete combustion of PVC; the chemical heat of
+The two PVC fires use the consistent PVC set of Osburg et al. (2025),
+Table 2: soot yield 0.172, CO yield 0.063 and `HEAT_OF_COMBUSTION=10300`.
+That heat of combustion matches the oxygen the lumped C₂H₃Cl reaction
+consumes (0.786 kg per kg of fuel) at the FDS default of 13.1 MJ/kg of
+oxygen. Up to 0.6.1 the decks set 16400, following the PVC example of
+the FDS User's Guide (§13.2.2). In SFPE Handbook Table A.39 16.4 MJ/kg
+is the net heat of complete combustion of PVC; the chemical heat of
 combustion that goes with the tabulated yields is 5.7 MJ/kg. FDS takes
 the fuel mass flux as the HRR divided by the heat of combustion, so the
-decks release about a third of the soot per MJ that the Table A.39 data
-set implies, and the heat released per kg of oxygen is about 1.7 times
-the FDS default of 13.1 MJ/kg. The `t_junction` deck also pairs an
-under-ventilated CO yield (0.150) with the well-ventilated soot yield.
-The decks are kept as they are for this release; a consistent set
-(Osburg et al. 2025, Table 2: 10.3 MJ/kg balanced to 13.1 MJ/kg of
-oxygen, same yields) and a rerun of the studies are planned in
-[#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796).
-Rows above state what the decks do, not the Table A.39 values.
+old decks released about a third of the soot per MJ that the Table A.39
+data set implies (10.5 against 30.2 g/MJ; the current set gives
+16.7 g/MJ). The `t_junction` deck also used an under-ventilated CO yield
+(0.150) with the well-ventilated soot yield; it now uses 0.063
+([#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796)).
 
 ## Sources
 

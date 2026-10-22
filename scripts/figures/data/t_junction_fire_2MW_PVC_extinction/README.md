@@ -1,11 +1,12 @@
 # t_junction, fire_2MW_PVC: extinction slices only
 
 The soot extinction coefficient at z = 2.0 m from the FDS run of
-`assets/t_junction/t_junction.fds` (FDS-6.10.1-0-g12efa16-release), the
+`assets/t_junction/t_junction.fds` (FDS-6.10.1-0-g12efa16-release, with
+the PVC set of #796), the
 only part of the run that `scripts/figures/sign_legibility_steps.py` reads.
 It is tracked so the docs workflow can regenerate that figure, and kept out
 of `assets/` so the TUI and other tools do not take it for a full run of the
-scenario; the full run is in sciebo `fds-evac-data/t_junction/fire_2MW_PVC/`.
+scenario; the full run is in sciebo `fds-evac-data/t_junction/fire_2MW_PVC_796/`.
 
 The four `.sf` files and their `.sf.bnd` files (one per mesh) are copied
 byte for byte from the run. `t_junction.smv` is the run's file with every
@@ -13,7 +14,7 @@ byte for byte from the run. `t_junction.smv` is the run's file with every
 block removed, because fdsreader opens every file the `.smv` lists:
 
 ```python
-lines = open("fire_2MW_PVC/t_junction.smv").read().split("\n")
+lines = open("fire_2MW_PVC_796/t_junction.smv").read().split("\n")
 out, i = [], 0
 while i < len(lines):
     head = lines[i].split()
@@ -35,16 +36,16 @@ SHA-256 of the source files in sciebo; the `.sf` and `.sf.bnd` files here
 are identical:
 
 ```
-b1d37b64d6dac98884675f65567d733a0e7ea4da2d5c410f3173933c05b6c2ec  t_junction.smv
-12423c239f2006fca04837b1b1ddec7015a64387f8901ef85b879eb93a8e7acb  t_junction_1_1.sf
-eb40387a7b45be14f7d8c6c315e7abab45ab58d75336d8ec27d12cac4ae00fc1  t_junction_2_1.sf
-48b3c8269ffcc9d8f796609704374a1673d730e96b822a7525433e8e93c51434  t_junction_3_1.sf
-731da7fa87907c787b3eff9442df3e6a5169b3747fd4beecfc733301894a2bcf  t_junction_4_1.sf
-2697d5e1ad34ebe64c7f1dc585c654cbe2efcdc970944987b56560deec4a5aa5  t_junction_1_1.sf.bnd
-1777b89056221b1ef0e0b5076df6dda4607c48bb23f489e37e43ed7af99e022f  t_junction_2_1.sf.bnd
-cb9a5444c1d77110eb1b1668d8194669a0c086b7d4c2998c2ed2b8d78fffdd2f  t_junction_3_1.sf.bnd
-f040984d9be9a63da8a13bbe0b49ff61e8a0cf72540a5e19d6e9cd60c03599f5  t_junction_4_1.sf.bnd
+733634a85214435ad4a5d2f662f6e47406969f26fc352c63098089a2beae9e06  t_junction.smv
+b245e0545b8a5832ed0f6bc8238e960a05820979674817ca4bdb7273c84a0441  t_junction_1_1.sf
+816fc7c745f40273336ffcc3f4e0cdcc3d70656f49c0d262c03954963a2faccb  t_junction_2_1.sf
+e87c208eff32d2e0d12689c1356d5f4c7565812e61feceb2f72b2a5218619e69  t_junction_3_1.sf
+8a3b32c964efd6a31c2090be518deab8c0570aef8922ad3d3631c49343be209e  t_junction_4_1.sf
+25849f65c51bafc874866f90ce66583122f50aff2fd8b21def3605988d67001e  t_junction_1_1.sf.bnd
+0bf0afa63619578adeca2f2386ac1b53642d5ad255500ae338db8d43b16d8d3b  t_junction_2_1.sf.bnd
+d18e53c7c4c204163430effc75661ba30ebdb250806edd4ec61994bc566ccce9  t_junction_3_1.sf.bnd
+9350f8d62ac1b7622158e4da7c7364b4cb61637c4ed92d5fe33dadfefb910a2f  t_junction_4_1.sf.bnd
 ```
 
 SHA-256 of the trimmed `t_junction.smv` here:
-`bbcbe86757ea9fffa2f3bf107dc525e15296e5934719a31cc16698fe4b0c7039`.
+`0f6bb8f4e5b5e38b67536d8dbaa08f3a95717eb9974b1c813a8833d546228570`.
