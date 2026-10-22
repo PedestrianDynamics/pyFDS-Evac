@@ -152,10 +152,10 @@ def test_exit_1_unavailable_after_1_s_is_not_used():
     assert T_CLOSE_S <= closed[0]["time_s"] <= T_CLOSE_S + 1.0
 
 
-def test_control_without_closure_leaves_by_one_of_the_two_exits():
+def test_control_without_closure_leaves_by_exit_1():
+    """Same seed and start as the closure run, which heads for exit 1 first."""
     run = _run({})
     assert run["evacuated"] == 1
     assert run["remaining"] == 0
-    assert len(run["exits"]) == 1
-    assert run["exits"][0] in {"exit_1", "exit_2"}
+    assert run["exits"] == ["exit_1"]
     assert not [r for r in run["routes"] if r["reason"] == "exit_closed"]
