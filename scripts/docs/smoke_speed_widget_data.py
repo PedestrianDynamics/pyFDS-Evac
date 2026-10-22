@@ -2,8 +2,8 @@
 
 The interactive widget on the Quickstart page evaluates the default speed law
 in the browser. Its parameters come from ``site/data/smoke_speed.json``, which
-this script writes from ``SmokeSpeedConfig()``, so the widget and the Python
-model share one source. ``tests/test_smoke_speed_widget.py`` fails when the
+this script writes from ``SmokeSpeedConfig()`` (the sight-distance constant
+excepted, see below), so the widget and the Python model share one source. ``tests/test_smoke_speed_widget.py`` fails when the
 file and the code disagree.
 
 Run from the repository root::
@@ -28,7 +28,8 @@ def widget_parameters():
     """The default speed-law parameters, as the widget reads them."""
     config = SmokeSpeedConfig()
     return {
-        "source": "pyfds_evac.SmokeSpeedConfig() defaults, written by "
+        "source": "pyfds_evac.SmokeSpeedConfig() defaults (visibility_factor_c: "
+        "the FDS sight-distance convention), written by "
         "scripts/docs/smoke_speed_widget_data.py",
         "speed_law": config.speed_law,
         "alpha": config.alpha,

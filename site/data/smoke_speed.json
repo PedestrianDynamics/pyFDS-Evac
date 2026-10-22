@@ -1,5 +1,5 @@
 {
-  "source": "pyfds_evac.SmokeSpeedConfig() defaults, written by scripts/docs/smoke_speed_widget_data.py",
+  "source": "pyfds_evac.SmokeSpeedConfig() defaults (visibility_factor_c: the FDS sight-distance convention), written by scripts/docs/smoke_speed_widget_data.py",
   "speed_law": "lund",
   "alpha": 0.706,
   "beta": -0.057,
