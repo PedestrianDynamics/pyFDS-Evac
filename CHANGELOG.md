@@ -19,6 +19,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a 1 m exit. With exit throttling at 1.33 p/m/s the measured flow is
   1.32 p/m/s and is asserted not to exceed the limit; without throttling the
   emergent flow is 3.78 p/m/s, reported and not asserted (#845).
+- ISO 20414 Test 8 (exit route allocation) runs in
+  `tests/test_iso_test_8_route_allocation.py`: 23 occupants in twelve rooms
+  off a corridor, journeys allocating rooms 1-4 and 7-10 to the main exit
+  and the others to the secondary one. All 23 use the allocated exit with
+  rerouting off and with rerouting on in clear air, without a route switch.
+  The allocation is user-defined; without journeys the occupants of rooms 4
+  and 10 take the nearer secondary exit (#844).
 
 ### Changed
 
