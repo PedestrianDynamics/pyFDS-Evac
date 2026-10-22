@@ -497,3 +497,211 @@ def test_every_audited_margin_has_a_plan_off_value(audit):
     assert "fed_return_margin" not in audit.MARGINS  # removed, #187 A2
     assert "path_switch_anchor" not in audit.MARGINS  # removed, #187 A3
     assert "tau_return_margin" not in audit.MARGINS  # removed, #187 A5
+
+
+# ── Arms: code and config overrides (#187 H1) ─────────────────────────
+
+
+def test_parse_override_reads_json_inf_and_bare_routing_keys(audit):
+    assert audit.parse_override("tau_deadband=0.5") == ("routing.tau_deadband", 0.5)
+    key = "routing.impassable_extinction_threshold"
+    assert audit.parse_override(f"{key}=inf") == (key, float("inf"))
+    assert audit.parse_override('routing.cost_model="additive"') == (
+        "routing.cost_model",
+        "additive",
+    )
+    path = "config.simulation_settings.simulationParams.max_simulation_time"
+    assert audit.parse_override(f"{path}=480") == (path, 480)
+
+
+@pytest.mark.parametrize("text", ["tau_deadband", "=1", "tau_deadband=high"])
+def test_parse_override_rejects_malformed_text(audit, text):
+    with pytest.raises(ValueError, match="override"):
+        audit.parse_override(text)
+
+
+def test_set_config_path_sets_a_copy_and_keeps_the_rest(audit):
+    config = {"routing": {"w_smoke": 5.0}, "config": {"a": {"b": 1}}}
+    copy = audit.set_config_path(config, "config.a.b", 2)
+    assert copy["config"]["a"]["b"] == 2
+    assert config["config"]["a"]["b"] == 1
+    new = audit.set_config_path({}, "routing.tau_deadband", 0.0)
+    assert new == {"routing": {"tau_deadband": 0.0}}
+
+
+def test_set_config_path_refuses_a_path_the_config_does_not_have(audit):
+    config = {"config": {"a": {"b": 1}}}
+    with pytest.raises(ValueError, match="no object at 'config.x'"):
+        audit.set_config_path(config, "config.x.b", 2)
+    with pytest.raises(ValueError, match="no key 'c'"):
+        audit.set_config_path(config, "config.a.c", 2)
+
+
+SIM_TIME = "config.simulation_settings.simulationParams.max_simulation_time"
+
+
+def _sim_time(staged: Path) -> int:
+    config = json.loads((staged / "config.json").read_text())
+    return config["config"]["simulation_settings"]["simulationParams"][
+        "max_simulation_time"
+    ]
+
+
+def test_schroeder_decks_run_to_their_fds_end_in_both_arms(audit, tmp_path):
+    deck = audit.DECKS["a047_pvc_h40"]
+    assert deck.fds_dir == "schroeder2015-route/rerun_796/a047_pvc_h40"
+    assert audit.DECKS["a047_pvc_h35"].fds_dir.endswith("a047_pvc_h35")
+    assert deck.seeds == tuple(range(1, 11))
+    key = "routing.impassable_extinction_threshold"
+    arm = ((key, float("inf")),)
+    staged = audit._stage_scenario(deck, tmp_path, tmp_path / "s", arm)
+    config = json.loads((staged / "config.json").read_text())
+    assert _sim_time(staged) == 480
+    assert config["routing"]["impassable_extinction_threshold"] == float("inf")
+    assert config["routing"]["cost_model"] == "additive"
+
+
+def test_a_later_override_wins_over_the_deck_override(audit, tmp_path):
+    deck = audit.DECKS["a047_pvc_h40"]
+    staged = audit._stage_scenario(deck, tmp_path, tmp_path / "s", ((SIM_TIME, 300),))
+    assert _sim_time(staged) == 300
+
+
+def test_unapplied_overrides_name_the_numeric_routing_values_not_reported(audit):
+    def manifest(cost):
+        return {"configuration": {"run": {"rerouting": {"cost_config": cost}}}}
+
+    key = "routing.impassable_extinction_threshold"
+    seen = manifest({"impassable_extinction_threshold": float("inf")})
+    assert audit.unapplied_overrides(seen, ((key, float("inf")),)) == []
+    missed = manifest({"impassable_extinction_threshold": 3.0})
+    (message,) = audit.unapplied_overrides(missed, ((key, float("inf")),))
+    assert "impassable_extinction_threshold=3.0" in message
+    # Strings and paths outside routing are not in the run manifest.
+    other = (("routing.cost_model", "additive"), ("config.a.b", 1))
+    assert audit.unapplied_overrides(manifest({}), other) == []
+
+
+def _args(audit, argv):
+    parser = audit._build_parser()
+    return parser.parse_args(["run", "--decks", "l_corridor_gate", *argv])
+
+
+def test_arms_of_a_margin_sweep_are_this_tree_with_the_key_off(audit):
+    label, arms = audit.build_arms(_args(audit, ["--margin", "tau_deadband"]))
+    assert label == "tau_deadband"
+    assert arms["base"] == audit.Arm(None, ())
+    assert arms["off"] == audit.Arm(None, (("routing.tau_deadband", 0.0),))
+
+
+def test_arms_of_a_code_audit_are_two_commits_with_their_overrides(audit):
+    args = _args(
+        audit,
+        [
+            "--base-commit",
+            "HEAD",
+            "--head-commit",
+            "HEAD",
+            "--base-set",
+            "w_smoke=1",
+            "--head-set",
+            "w_smoke=2",
+            "--head-set",
+            "tau_deadband=0",
+        ],
+    )
+    label, arms = audit.build_arms(args)
+    assert label == "arms"
+    assert len(arms["base"].commit) == 40
+    assert arms["base"].commit == arms["off"].commit
+    assert arms["base"].overrides == (("routing.w_smoke", 1),)
+    assert arms["off"].overrides == (
+        ("routing.w_smoke", 2),
+        ("routing.tau_deadband", 0),
+    )
+    assert arms["off"].describe()["overrides"] == {
+        "routing.w_smoke": 2,
+        "routing.tau_deadband": 0,
+    }
+
+
+def test_an_unknown_commit_is_named(audit, capsys):
+    code = audit.main(
+        ["run", "--decks", "l_corridor_gate", "--base-commit", "no-such-ref-187"]
+    )
+    assert code == 2
+    assert "unknown commit 'no-such-ref-187'" in capsys.readouterr().out
+
+
+def test_run_needs_a_margin_or_an_arm_option(audit, capsys):
+    assert audit.main(["run", "--decks", "l_corridor_gate"]) == 2
+    assert "pass --margin or an arm option" in capsys.readouterr().out
+
+
+def test_default_folder_names_the_commits_and_tells_overrides_apart(audit, tmp_path):
+    arms = {"base": audit.Arm("a" * 40), "off": audit.Arm("b" * 40)}
+    path = audit.default_out(tmp_path, "arms", arms)
+    assert path.name.startswith("arms_aaaaaaaa_bbbbbbbb_")
+    other = {"base": arms["base"], "off": audit.Arm("b" * 40, (("x.y", 1),))}
+    assert audit.default_out(tmp_path, "arms", other) != path
+
+
+def test_rerun_into_a_folder_of_other_arms_is_refused(audit, tmp_path):
+    arms = {"base": audit.Arm("a" * 40), "off": audit.Arm("b" * 40)}
+    assert audit._arms_clash(tmp_path, arms) is None
+    held = {k: a.describe() for k, a in arms.items()}
+    (tmp_path / "manifest.json").write_text(json.dumps({"arms": held}))
+    assert audit._arms_clash(tmp_path, arms) is None
+    moved = {"base": arms["base"], "off": audit.Arm("c" * 40)}
+    assert "other arms" in audit._arms_clash(tmp_path, moved)
+    # A folder from before the arm options holds no record to compare.
+    (tmp_path / "manifest.json").write_text(json.dumps({"margin": "tau_deadband"}))
+    assert audit._arms_clash(tmp_path, moved) is None
+
+
+def test_a_run_uses_the_interpreter_and_checkout_of_its_arm(audit, tmp_path):
+    tree = audit.CodeTree(tmp_path / "code", str(tmp_path / "code/.venv/bin/python"))
+    deck = audit.DECKS["a047_pvc_h40"]
+    argv = audit.run_command(deck, tmp_path, tmp_path, 3, tmp_path, False, tree)
+    assert argv[:2] == [tree.python, str(tree.root / "run.py")]
+    assert audit.run_env(tree.root)["PYTHONPATH"].split(os.pathsep)[0] == str(tree.root)
+    runner = audit.DECKS["fed_near1_hold_gate"]
+    argv = audit.run_command(runner, tmp_path, tmp_path, 3, tmp_path, False, tree)
+    assert argv[1] == str(tree.root / "tests" / "test_fed_margin_deck.py")
+
+
+def test_report_lists_the_arms(audit, tmp_path):
+    folder = tmp_path / "audit"
+    _write_audit(folder, [2.0] * 6, [2.0] * 6)
+    manifest = json.loads((folder / "manifest.json").read_text())
+    manifest["margin"] = "arms"
+    manifest["arms"] = {
+        "base": {"commit": "a" * 40, "overrides": {}},
+        "off": {"commit": None, "overrides": {"routing.w_smoke": 2}},
+    }
+    (folder / "manifest.json").write_text(json.dumps(manifest))
+    args = ["analyse", str(folder), "--primary-deck", "l_corridor_gate"]
+    assert audit.main([*args, "--metric", "returns"]) == 0
+    text = (folder / "report.md").read_text()
+    assert "Arm base: aaaaaaaa" in text
+    assert "Arm off: working tree, routing.w_smoke=2" in text
+
+
+def test_a_run_ending_at_the_time_limit_with_agents_left_is_usable(audit):
+    left = {"outcome": {"agents_remaining": 3}}
+    assert audit.exit_status(0, None) == (True, "ok")
+    assert audit.exit_status(0, left) == (True, "ok")
+    assert audit.exit_status(2, left) == (True, "ok (incomplete: 3 remaining)")
+
+
+@pytest.mark.parametrize(
+    ("code", "manifest"),
+    [
+        (2, None),  # argparse also exits 2, and writes nothing
+        (2, {"outcome": {"agents_remaining": 0}}),
+        (2, {}),
+        (1, {"outcome": {"agents_remaining": 3}}),
+    ],
+)
+def test_any_other_non_zero_exit_is_a_failed_run(audit, code, manifest):
+    assert audit.exit_status(code, manifest) == (False, f"failed (exit {code})")
