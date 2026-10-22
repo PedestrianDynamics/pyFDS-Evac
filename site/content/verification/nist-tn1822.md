@@ -41,7 +41,11 @@ configured through it, but no test reproduces the NIST setup. Of the 17 tests,
 NIST suggests three tests of components that pyFDS-Evac adds to JuPedSim:
 Verif.2.5, Verif.2.6 and Verif.4.1. JuPedSim alone cannot pass them: its own
 suite runs Verif.2.5 and Verif.2.6 against adapters inside the test and cannot
-run Verif.4.1, because it has no runtime exit closure.
+run Verif.4.1, because it has no runtime exit closure (JuPedSim V&V suite,
+`standards/nist/README.md` at commit
+[`41ea112`](https://github.com/PedestrianDynamics/jupedsim-web-community/blob/41ea11215b2519f72c6f0100080bbd1fbe9f9cc8/standards/nist/README.md):
+Verif.2.5 and 2.6 "test-local", Verif.4.1 "pending", "no public runtime exit
+closure").
 
 **Verif.2.5** is NIST's corridor at K = 1.0 1/m and 1.25 m/s, which is the
 ISO 18 corridor (`assets/ISO-table21`).
@@ -55,6 +59,7 @@ Tolerance 0.15 s. The ISO 18 tests add the grid of speeds and extinction
 coefficients that NIST suggests (the same values as ISO's), and
 `test_iso_table21_coupled.py` reads K = 1.0 1/m from a committed FDS slice.
 NIST does not say where the time is measured; the 60 m stretch is our choice.
+The corridor runs with the `SocialForceModel` of `assets/ISO-table21`.
 
 **Verif.2.6** is NIST's room (10 m × 10 m × 3 m, no fire, one occupant at the
 centre held by a pre-evacuation time above 10 000 000 s) and the ISO 19 setup
@@ -63,16 +68,21 @@ is the same, so the ISO 19 tests are the NIST tests; see
 
 **Verif.4.1** differs in layout. NIST's Figure 11 puts both 1 m exits on the
 15 m walls near the far end and the occupant at the middle of the near 10 m
-wall, about 14 m from either exit; the ISO test as run here puts the occupant
-5 m from each door. `test_nist_verif_4_1_dynamic_exit.py` builds NIST's layout.
-The report gives no dimension for the exit positions; the door centres at
-y = 14 m and the occupant within 0.5 m of (5 m, 1 m) are our reading of the
-figure. Each door centre is √(5² + 13²) = 13.93 m from (5, 1). At the closure
-(1 s) the occupant has walked 1 m toward exit 1 and is 12.93 m from it and
-13.2 m from exit 2. It leaves by exit 2 at about 1 + 1 + 13.2 = 15.2 s
-(asserted between 12 s and 18 s) with one route change, exit 1 to exit 2, at
-the first reroute check at or after the closure. Exit 1 usage is 0 of 1. The
-control without the closure leaves by exit 1.
+wall; the ISO test as run here puts the occupant 5 m from each door.
+`test_nist_verif_4_1_dynamic_exit.py` builds NIST's layout with the
+`CollisionFreeSpeedModel`. Figure 11 carries no dimension for the doors;
+Figure 10 (Verif.3.3, report p. 35) shows the same 10 m × 15 m room and the
+same occupant spot and labels the doors 12 m from the occupant's wall, so the
+door centres are at y = 12 m, and the occupant starts within 0.5 m of
+(5 m, 1 m). Each door centre is √(5² + 11²) = 12.08 m from (5, 1). At the
+closure (1 s) the occupant has walked 1 m toward exit 1, to about
+(4.59, 1.91): 11.08 m from exit 1 and 11.45 m from exit 2. The route change is
+made at the closure and recorded at 1.0 s. The occupant leaves by exit 2 at
+about 1 + 11.45 = 12.45 s, asserted to ±1 s (the start area is 1 m × 1 m, so
+the path can differ by 0.5 m, and the exit counts at the door line, within the
+0.2 m radius and the 1 m door depth); measured 12.17 s. Exit 1 usage is 0 of 1.
+The control without the closure leaves by exit 1 (hand value 12.08 s ± 1 s,
+measured 11.62 s).
 
 ## All verification tests
 
@@ -88,13 +98,13 @@ control without the closure leaves by exit 1.
 | Verif.2.7 | Elevator usage | Out of scope | Elevators are not modelled. |
 | Verif.2.8 | Horizontal counter-flows (rooms) | Inherited | Movement is JuPedSim's. |
 | Verif.2.9 | Group behaviours | Out of scope | Groups are not modelled. |
-| Verif.2.10 | People with movement disabilities | Inherited | Movement is JuPedSim's; slower and larger agents are set with `v0` and `radius`. |
-| Verif.3.1 | Exit route allocation | Run, passes (user-defined allocation) | The ISO 8 test: 23 occupants in twelve rooms off a corridor, rooms 1–4 and 7–10 allocated to the main exit and the rest to the secondary one, as NIST states (`test_iso_test_8_route_allocation.py`). The layout follows JuPedSim's implementation, not NIST's Figure 8, which was not checked. The allocation is user-defined (each room's journey names its exit); with the exit left to the model (the predictive reading) 4 of the 23 leave by another exit, so that reading is not passed. |
+| Verif.2.10 | People with movement disabilities | Inherited | Movement is JuPedSim's; slower and larger agents are set with `v0` and `radius`. NIST's geometry has two rooms at different heights joined by a ramp, with a slower speed on the ramp (0.4 m/s); pyFDS-Evac's walkable area is one flat floor, so the ramp is not represented, and the slower, larger occupant (0.8 m/s, over 0.75 m wide) is covered only by `v0` and `radius`. Not run. |
+| Verif.3.1 | Exit route allocation | Run, passes (user-defined allocation) | The ISO 8 test: 23 occupants in twelve rooms off a corridor, rooms 1–4 and 7–10 allocated to the main exit and the rest to the secondary one, as NIST states (`test_iso_test_8_route_allocation.py`). **Differs from NIST's Figure 8:** the tested layout follows JuPedSim's implementation. NIST's rooms are 3.0 m × 5.0 m, the tested ones 2.8–2.9 m × 3.8 m; the corridor is 1.0 m wide in NIST and 0.9 m tested; the doors are 0.9 m against 0.8 m; room 3 is 2.0 m against 1.9 m; and NIST has a 1.0 m passage to the main exit that the tested layout does not reproduce. The layout was not rebuilt, so this row is a run of the ISO 8 layout, not of Figure 8. The allocation is user-defined (each room's journey names its exit); with the exit left to the model (the predictive reading), 4 of the 23 leave by another exit in the tested layout, so that reading is not passed there, and it was not run in Figure 8. |
 | Verif.3.2 | Social influence | Out of scope | Herding is not modelled ([#78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78)). |
-| Verif.3.3 | Affiliation | Run, passes (ISO layout) | The ISO 16 test: the cognitive-map model with the entrance exit known sends the occupant to exit 2 in 100 % of runs, against 49.2 % without it (`test_iso_test_16_familiar_exit.py`). **Differs from NIST:** the room is the ISO 9 room, with exits about 5 m away and the occupant in the middle, not NIST's Figure 10 layout (exits near the far end, occupant 1 m from the near wall), which was not run. The model has no graded preference between known exits, so this shows knowledge of an exit, not a probability weight. |
+| Verif.3.3 | Affiliation | Run, passes (ISO layout) | The ISO 16 test: the cognitive-map model with the entrance exit known sends the occupant to exit 2 in 100 % of 11 runs, against 49.2 % of 61 runs without it (`test_iso_test_16_familiar_exit.py`). **Differs from NIST:** the room is the ISO 9 room, with exits about 5 m away and the occupant in the middle, not NIST's Figure 10 layout (exits near the far end, occupant 1 m from the near wall), which was not run. The model has no graded preference between known exits, so this shows knowledge of an exit, not a probability weight. |
 | Verif.4.1 | Dynamic availability of exits | Run, passes | NIST's layout, details above (`test_nist_verif_4_1_dynamic_exit.py`). A schedule acts only through rerouting and needs routed agents. The ISO 9 layout is run in `test_iso_test_9_dynamic_exit.py` (not tagged for NIST). Fire-driven closure is not run ([#850](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/850)). |
 | Verif.5.1 | Congestion | Out of scope | NIST's geometry is a room, a corridor and a stair; there are no stairs. |
-| Verif.5.2 | Maximum flow rates | Run, passes | The ISO 11 test: 100 occupants in an 8 m × 5 m room with a 1 m exit on the 5 m wall, as NIST states (`test_iso_test_11_max_flow.py`). NIST allows two readings. With exit throttling on at 1.33 p/m/s it is verification, and the measured flow stays at or below the limit. With throttling off (the default) the flow is emergent, a validation reading: JuPedSim's `CollisionFreeSpeedModel` gives 3.78 p/m/s on the tested seed, reported and not asserted against 1.33 p/m/s. One layout. |
+| Verif.5.2 | Maximum flow rates | Run, passes (throttling on) | The ISO 11 test: 100 occupants in an 8 m × 5 m room with a 1 m exit on the 5 m wall, as NIST states (`test_iso_test_11_max_flow.py`). NIST allows two readings. With exit throttling on at 1.33 p/m/s it is verification, and the measured flow stays at or below the limit. With throttling off (the default) the flow is emergent, a validation reading: JuPedSim's `CollisionFreeSpeedModel` gives 3.78 p/m/s on the tested seed, reported and not asserted against 1.33 p/m/s. One layout. |
 
 ## Where the list comes from
 
