@@ -1,0 +1,28 @@
+name: ISO 20414
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  iso-20414:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install --upgrade uv
+      - name: Install dependencies
+        run: uv sync --locked --python 3.12 --all-groups --extra gui --extra tui
+      # The verification cases of ISO 20414:2020 tests (marker iso20414).
+      # Cases that need FDS output from the external data store carry the
+      # external_data marker and are deselected.
+      - name: Run the ISO 20414 cases
+        run: uv run pytest -q -m "iso20414 and not external_data" -n auto --dist loadgroup

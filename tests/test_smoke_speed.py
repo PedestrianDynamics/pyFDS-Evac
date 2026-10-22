@@ -257,6 +257,7 @@ def test_soot_density_conversion_matches_fds_evac_default():
     assert extinction_from_soot_density(1500.0) == pytest.approx(13.05)
 
 
+@pytest.mark.iso20414
 @pytest.mark.parametrize("extinction_per_m", [0.5, 1.0, 3.0, 7.5, 10.0])
 def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_per_m):
     baseline, smoke = _run_iso_constant_extinction(extinction_per_m)
@@ -281,6 +282,7 @@ def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_
         smoke.cleanup()
 
 
+@pytest.mark.iso20414
 @pytest.mark.parametrize("v0", [1.0, 0.75, 0.5, 0.25])
 def test_iso_table21_holds_across_unimpeded_walking_speeds(v0):
     """ISO 20414 Table 21 asks for both axes, not just extinction.
@@ -313,6 +315,7 @@ def test_iso_table21_holds_across_unimpeded_walking_speeds(v0):
         smoke.cleanup()
 
 
+@pytest.mark.iso20414
 def test_iso_table21_extinction_sweep_produces_plot(tmp_path: Path):
     extinctions = [0.5, 1.0, 3.0, 7.5, 10.0]
     results = []

@@ -38,6 +38,7 @@ UNIFORM_A, UNIFORM_B = 0.0, 60.0
 # --- A6.1: moment checks against closed-form references ----------------------
 
 
+@pytest.mark.iso20414
 def test_a6_1_gamma_moments_match_closed_form():
     samples = GammaDistribution(a=GAMMA_A, b=GAMMA_B, seed=MOMENT_SEED).sample(
         N_MOMENTS
@@ -51,6 +52,7 @@ def test_a6_1_gamma_moments_match_closed_form():
     assert samples.var() == pytest.approx(expected_var, rel=0.02)
 
 
+@pytest.mark.iso20414
 def test_a6_1_weibull_mean_matches_closed_form():
     samples = WeibullDistribution(a=WEIBULL_A, b=WEIBULL_B, seed=MOMENT_SEED).sample(
         N_MOMENTS
@@ -62,6 +64,7 @@ def test_a6_1_weibull_mean_matches_closed_form():
     assert samples.mean() == pytest.approx(expected_mean, rel=0.02)
 
 
+@pytest.mark.iso20414
 def test_a6_1_lognormal_mean_matches_closed_form():
     samples = LognormalDistribution(
         a=LOGNORMAL_A, b=LOGNORMAL_B, seed=MOMENT_SEED
@@ -73,6 +76,7 @@ def test_a6_1_lognormal_mean_matches_closed_form():
     assert samples.mean() == pytest.approx(expected_mean, rel=0.03)
 
 
+@pytest.mark.iso20414
 def test_a6_1_uniform_moments_match_closed_form():
     samples = UniformDistribution(a=UNIFORM_A, b=UNIFORM_B, seed=MOMENT_SEED).sample(
         N_MOMENTS
