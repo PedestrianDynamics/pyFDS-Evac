@@ -607,6 +607,7 @@ class _ConstantInputsFedModel:
 
 
 @pytest.mark.iso20414
+@pytest.mark.nist_tn1822
 def test_iso_table22_stationary_runtime_matches_analytic_threshold_time():
     inputs = CONSTANT_EXPOSURE_CASES["combined"]
     analytic_time_s = time_to_fed_threshold_s(inputs, threshold=1.0)

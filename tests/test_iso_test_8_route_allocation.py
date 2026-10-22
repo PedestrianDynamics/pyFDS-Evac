@@ -65,7 +65,7 @@ from pyfds_evac.config.parameters import REROUTE_INTERVAL_S
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 from pyfds_evac.core.scenario import Scenario, run_scenario
 
-pytestmark = pytest.mark.iso20414
+pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
 SEED = 42
 RADIUS_M = 0.15

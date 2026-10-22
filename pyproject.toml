@@ -103,6 +103,7 @@ markers = [
     "slow: runs a real simulation in a child process; deselect with -m 'not slow'",
     "external_data: needs FDS output from the external data store (sciebo); skips when absent, CI deselects it",
     "iso20414: verification case of an ISO 20414:2020 test; run with -m iso20414",
+    "nist_tn1822: verification case of a NIST TN 1822 test (Ronchi et al. 2013); run with -m nist_tn1822",
 ]
 
 [tool.coverage.run]

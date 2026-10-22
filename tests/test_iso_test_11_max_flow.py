@@ -55,7 +55,7 @@ from shapely.geometry import box
 
 from pyfds_evac.core.scenario import Scenario, run_scenario
 
-pytestmark = pytest.mark.iso20414
+pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
 ROOM_WIDTH_M = 8.0
 ROOM_LENGTH_M = 5.0

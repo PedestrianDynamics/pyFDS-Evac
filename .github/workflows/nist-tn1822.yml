@@ -1,0 +1,28 @@
+name: NIST TN 1822
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  nist-tn1822:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install uv
+        run: pip install --upgrade uv
+      - name: Install dependencies
+        run: uv sync --locked --python 3.12 --all-groups --extra gui --extra tui
+      # The verification cases of NIST TN 1822 (marker nist_tn1822). Cases
+      # that need FDS output from the external data store carry the
+      # external_data marker and are deselected.
+      - name: Run the NIST TN 1822 cases
+        run: uv run pytest -q -m "nist_tn1822 and not external_data" -n auto --dist loadgroup

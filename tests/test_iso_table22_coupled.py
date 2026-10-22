@@ -41,6 +41,7 @@ from pyfds_evac.core.scenario import load_scenario, run_scenario
 # One worker runs this module, so its module-scoped runs happen once.
 pytestmark = [
     pytest.mark.iso20414,
+    pytest.mark.nist_tn1822,
     pytest.mark.xdist_group("test_iso_table22_coupled"),
 ]
 
