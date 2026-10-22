@@ -25,13 +25,14 @@ Hand derivation of the expected values (not taken from the code under test):
 - Lower bound: an exit that throttles to zero, or far below its cap, fails
   the test. The room is dense enough that an occupant waits at the exit
   throughout, so the exit runs at its cap and the measured flow is near
-  1.33 p/s. The accepted band is >= 0.8 x the limit (1.06 p/s, a 93 s
-  evacuation of the 99 intervals): 20 % is wide enough for removal-frame
-  rounding and start-up, narrow enough to reject a throttle that holds
-  occupants for twice the interval.
+  1.33 p/s. The accepted band is >= 0.95 x the limit (1.26 p/s, a 78.4 s
+  evacuation of the 99 intervals). The throttle's interval is quantised to
+  the simulation step, which puts the flow about 1 % under the cap, the
+  same on every seed; 5 % covers that and rejects a throttle that holds
+  occupants 10 % too long.
 - Unthrottled run: the emergent reading (validation, not a verification).
-  JuPedSim's CollisionFreeSpeedModel passes about 5 persons/m/s through a
-  1 m exit in its own V&V suite; the measured value is printed and not
+  JuPedSim's CollisionFreeSpeedModel gives 3.8-4.1 persons/m/s through
+  this exit over seeds 1-5; the measured value is printed and not
   asserted against the limit. Only the evacuation of all 100 occupants is
   asserted.
 
@@ -71,7 +72,7 @@ FRAME_S = 0.1
 # Upper tolerance on the flow: frame rounding, 0.13 % at the expected
 # evacuation time, rounded up to 1 %.
 UPPER_TOLERANCE = 0.01
-LOWER_FRACTION = 0.8
+LOWER_FRACTION = 0.95
 START_AREA = box(0.5, 0.5, 7.5, 4.5)
 
 
