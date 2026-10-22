@@ -49,7 +49,7 @@ def test_speed_factor_clear_air_is_one():
 
 
 # Fridolf et al. (2018), method 3: w = min(w_free, max(0.2, w_free - 0.34 (3 - V)))
-# with V = C / K and C = 3. Rows: V [m] -> w [m/s] at w_free = 1.19 and 1.35.
+# with V = A / K, A = 2 by default (any A gives the same w at the same V). Rows: V [m] -> w [m/s] at w_free = 1.19 and 1.35.
 FRIDOLF_VISIBILITIES = (0.5, 1.0, 2.0, 3.0, 4.0, 5.0, math.inf)
 FRIDOLF_TABLE = {
     1.19: (0.340, 0.510, 0.850, 1.190, 1.190, 1.190, 1.190),
@@ -68,7 +68,7 @@ FRIDOLF_PAPER_POINTS = (
 )
 
 
-def _extinction(visibility_m: float, c: float = 3.0) -> float:
+def _extinction(visibility_m: float, c: float = 2.0) -> float:
     return 0.0 if math.isinf(visibility_m) else c / visibility_m
 
 
@@ -78,11 +78,12 @@ class TestFridolfSpeedFactor:
     def test_clear_air_is_one(self):
         assert speed_factor_from_extinction_fridolf(0.0) == 1.0
 
+    @pytest.mark.parametrize("c", [2.0, 3.0, 8.0])
     @pytest.mark.parametrize("v0", sorted(FRIDOLF_TABLE))
-    def test_table_matches_paper(self, v0):
+    def test_table_matches_paper(self, v0, c):
         for visibility, w in zip(FRIDOLF_VISIBILITIES, FRIDOLF_TABLE[v0]):
             factor = speed_factor_from_extinction_fridolf(
-                _extinction(visibility), visibility_factor_c=3.0, free_speed_m_per_s=v0
+                _extinction(visibility, c), visibility_factor_c=c, free_speed_m_per_s=v0
             )
             assert v0 * factor == pytest.approx(w, rel=1e-12)
 
@@ -125,6 +126,13 @@ class TestFridolfSpeedFactor:
     def test_zero_free_speed_returns_one(self):
         assert speed_factor_from_extinction_fridolf(6.0, free_speed_m_per_s=0.0) == 1.0
 
+    def test_default_visibility_factor_is_the_papers_a_for_reflecting_items(self):
+        """Fridolf et al. (2019), Eq. 1: A = 2; the FDS convention 3 is not it."""
+        assert SmokeSpeedConfig().visibility_factor_c == 2.0
+        # K = 3 1/m: x = 2/3 m, w = 1 - 0.34 (3 - 2/3) = 0.206667 m/s.
+        factor = speed_factor_from_extinction_fridolf(3.0)
+        assert factor == pytest.approx(0.2066667, abs=1e-6)
+
     def test_constants_from_config(self):
         cfg = SmokeSpeedConfig()
         assert cfg.fridolf_slope == 0.34
@@ -158,18 +166,27 @@ class TestSmokeSpeedModelFridolf:
     """SmokeSpeedModel dispatches to Fridolf when speed_law='fridolf'."""
 
     def test_fridolf_law_uses_free_speed(self):
-        # V = 2 m: w = 1.19 - 0.34 = 0.85 m/s.
-        field = ConstantExtinctionField(1.5)
-        cfg = SmokeSpeedConfig(
-            fds_dir=".", speed_law="fridolf", visibility_factor_c=3.0
-        )
+        # A = 2, K = 1: V = 2 m: w = 1.19 - 0.34 = 0.85 m/s.
+        field = ConstantExtinctionField(1.0)
+        cfg = SmokeSpeedConfig(fds_dir=".", speed_law="fridolf")
         model = SmokeSpeedModel(field, cfg)
         _, factor = model.sample(0.0, 0.0, 0.0, free_speed_m_per_s=1.19)
         assert 1.19 * factor == pytest.approx(0.85, rel=1e-12)
 
+    def test_fridolf_configured_constant_reaches_the_law(self):
+        # C = 3 (FDS convention), K = 1.5: V = 2 m: w = 0.85 m/s.
+        field = ConstantExtinctionField(1.5)
+        cfg = SmokeSpeedConfig(
+            fds_dir=".", speed_law="fridolf", visibility_factor_c=3.0
+        )
+        _, factor = SmokeSpeedModel(field, cfg).sample(
+            0.0, 0.0, 0.0, free_speed_m_per_s=1.19
+        )
+        assert 1.19 * factor == pytest.approx(0.85, rel=1e-12)
+
     def test_fridolf_without_free_speed_is_method_1(self):
         # No v0 given: w_free = 1 m/s (method 1), so w = 0.66 m/s at V = 2 m.
-        field = ConstantExtinctionField(1.5)
+        field = ConstantExtinctionField(1.0)
         cfg = SmokeSpeedConfig(fds_dir=".", speed_law="fridolf")
         _, factor = SmokeSpeedModel(field, cfg).sample(0.0, 0.0, 0.0)
         assert factor == pytest.approx(0.66, rel=1e-12)
@@ -211,7 +228,7 @@ class TestSmokeSpeedModelFridolf:
             model.sample(0.0, 0.0, 0.0, free_speed_m_per_s=1.25)
 
     def test_lund_law_used_by_default(self):
-        # K = 2: Lund gives 1 - 0.057 * 2 / 0.706; Fridolf (V = 1.5 m) 0.49.
+        # K = 2: Lund gives 1 - 0.057 * 2 / 0.706; Fridolf (A = 2, V = 1 m) 0.32.
         field = ConstantExtinctionField(2.0)
         cfg = SmokeSpeedConfig(fds_dir=".")
         model = SmokeSpeedModel(field, cfg)

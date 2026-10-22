@@ -38,7 +38,8 @@ def test_data_file_holds_the_config_defaults():
     assert params["alpha"] == config.alpha
     assert params["beta"] == config.beta
     assert params["min_speed_factor"] == config.min_speed_factor
-    assert params["visibility_factor_c"] == config.visibility_factor_c
+    # The sight distance is C = 3 (FDS convention), not the fridolf law's A.
+    assert params["visibility_factor_c"] == 3.0
 
 
 def test_generator_reproduces_the_data_file():

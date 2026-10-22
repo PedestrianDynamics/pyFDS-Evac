@@ -16,6 +16,11 @@ from pathlib import Path
 
 from pyfds_evac import SmokeSpeedConfig
 
+# The widget shows the sight distance C / K next to the Frantzich-Nilsson factor
+# with the FDS convention C = 3 (as the Quickstart example does). It is not the
+# paper's A of the fridolf law, which SmokeSpeedConfig.visibility_factor_c holds.
+SIGHT_DISTANCE_FACTOR_C = 3.0
+
 OUT = Path(__file__).resolve().parents[2] / "site" / "data" / "smoke_speed.json"
 
 
@@ -29,7 +34,7 @@ def widget_parameters():
         "alpha": config.alpha,
         "beta": config.beta,
         "min_speed_factor": config.min_speed_factor,
-        "visibility_factor_c": config.visibility_factor_c,
+        "visibility_factor_c": SIGHT_DISTANCE_FACTOR_C,
     }
 
 
