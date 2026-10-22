@@ -69,16 +69,17 @@ form and with the constants of &lt;a href="https://github.com/firemodels/fds/tre
 downstream of speed cannot come from the speed law. The alternative is the
 &lt;code>fridolf&lt;/code> option, the law of &lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">Fridolf et al. (2019, Eq. 7)&lt;/a>
 in the sighting distance
-\(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
+\(V = A/K\), with the paper&amp;rsquo;s &lt;em>A&lt;/em> = 2 for light-reflecting surroundings by default
+(8 for light-emitting ones; the FDS convention 3 was the default before): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
 metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
 each agent&amp;rsquo;s \(v_0\). It is available only from Python (see &lt;a href="#the-parameter-split">the parameter split&lt;/a>). The published laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>; the coded forms are
 on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8" loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/speed_laws.png" alt="Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with A = 2 and A = 8" loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
 Frantzich–Nilsson at the defaults, with its floor. The &lt;code>fridolf&lt;/code> option at
-\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
-for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
+\(v_0\) = 1.25 m/s with \(V = A/K\): red dashed for A = 2 (default), orange dash-dotted
+for A = 8. The arrow marks the largest gap between Frantzich–Nilsson and A = 2. Script: &lt;code>scripts/figures/speed_laws.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;h3>Tenability: a brake and a stop&lt;span class="hx-absolute -hx-mt-20" id="tenability-a-brake-and-a-stop">&lt;/span>
 &lt;a href="#tenability-a-brake-and-a-stop" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Some effects of smoke depend only on what the agent meets now; others
 accumulate into a dose. pyFDS-Evac keeps them apart: speed follows what the
@@ -312,13 +313,13 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;em>S&lt;/em> = &lt;em>C&lt;/em>/&lt;em>K&lt;/em>&lt;/td>
-&lt;td>Sighting distance (Jin); &lt;em>V&lt;/em> in the code&amp;rsquo;s &lt;code>fridolf&lt;/code> option&lt;/td>
+&lt;td>Sighting distance (Jin); &lt;em>V&lt;/em> = &lt;em>A&lt;/em>/&lt;em>K&lt;/em> in the code&amp;rsquo;s &lt;code>fridolf&lt;/code> option&lt;/td>
 &lt;td>m&lt;/td>
 &lt;td>—&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;em>C&lt;/em>&lt;/td>
-&lt;td>Visibility constant of a sign (Jin); reflective or light-emitting&lt;/td>
+&lt;td>Visibility constant of a sign (Jin); reflective or light-emitting. In &lt;code>visibility_factor_c&lt;/code> it is the paper&amp;rsquo;s &lt;em>A&lt;/em> of the &lt;code>fridolf&lt;/code> option (default 2; 8 light-emitting)&lt;/td>
 &lt;td>-&lt;/td>
 &lt;td>&lt;code>visibility_factor_c&lt;/code>, sign &lt;code>c&lt;/code>&lt;/td>
 &lt;/tr>

@@ -14,7 +14,10 @@ via &lt;code>SmokeSpeedConfig.speed_law&lt;/code>.&lt;/p>
 &lt;a href="#speed-reduction-laws" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The agent walks at &lt;code>v0 * speed_factor(K)&lt;/code>, where &lt;code>v0&lt;/code> is its clear-air speed
 and the factor follows &lt;code>speed_law=&amp;quot;lund&amp;quot;&lt;/code> (default) or &lt;code>&amp;quot;fridolf&amp;quot;&lt;/code>. The
 &lt;code>fridolf&lt;/code> law (&lt;a href="https://doi.org/10.1016/j.tust.2019.04.016" target="_blank" rel="noopener">Fridolf et al. 2019, Eq. 7&lt;/a>) reduces speed additively, so its factor
-also depends on &lt;code>v0&lt;/code>. The coded
+also depends on &lt;code>v0&lt;/code>. It turns &lt;em>K&lt;/em> into a visibility with the paper&amp;rsquo;s
+&lt;em>A&lt;/em> of Eq. 1, &lt;code>visibility_factor_c&lt;/code>: 2 (default) for light-reflecting
+surroundings, 8 for light-emitting ones (the FDS convention 3 was the default
+before). The coded
 equations, the &lt;code>SmokeSpeedConfig&lt;/code> defaults and the departures from the
 literature are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page;
 the published laws are on
