@@ -348,12 +348,14 @@ at `9c820e0f` (Python 3.12.13) print the same table and figures.
 - The Fridolf law is run in the same corridor (see above) with constant *K*
   only, not *K* from FDS. The
   [S2 corridor test](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s2_corridor_speed.py)
-  also checks it. The hand calculation checks the code against Eq. 7 as the
-  Fundamentals page states it, not against the paper's data; the paper
-  calibrated with \(A\) = 2 or 8, not the default \(C\) = 3.
+  also checks it. The hand calculation checks the code against Eq. 7 as
+  printed in the paper (p. 38): form, slope 0.34, threshold 3 m and floor
+  0.2 m/s match. It checks the equation, not the paper's data. The paper
+  converts extinction to visibility with \(A\) = 2 (light-reflecting) or 8
+  (light-emitting), not the default \(C\) = 3.
 - *K* = 0.5, 1 and 10 1/m lie outside the tunnel data (about 1.9 to
-  7.4 1/m, the range given on the Fundamentals page; not re-checked against
-  the report for this page). Passing Test 18 verifies the code, not the law,
+  7.4 1/m, the range given on the Fundamentals page; the report's text says
+  about 2 to 7 1/m). Passing Test 18 verifies the code, not the law,
   there.
 - The FDS case confirms that the slice nearest 1.6 m is read. The two slices
   differ by only 6 × 10⁻⁵ 1/m, from hydrostatics. The test cannot show
