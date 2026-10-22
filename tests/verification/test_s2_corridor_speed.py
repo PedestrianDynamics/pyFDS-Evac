@@ -36,7 +36,7 @@ from harness import (
 from pyfds_evac.core.fed import TenabilityConfig
 from pyfds_evac.core.scenario import run_scenario
 
-# K0 = 2 /m: sub-lethal haze. Lund -> 0.839, Fridolf -> 0.49 at v0 = 1 (clear divergence).
+# K0 = 2 /m: sub-lethal haze. Lund -> 0.839, Fridolf -> 0.32 at v0 = 1 (clear divergence).
 K0 = 2.0
 
 
@@ -95,7 +95,7 @@ def test_fridolf_factor_applied_exactly():
 
 @pytest.mark.parametrize(("visibility_m", "w"), [(1.0, 0.51), (2.0, 0.85), (4.0, 1.19)])
 def test_fridolf_desired_speed_is_paper_w(visibility_m, w):
-    """Uniform K = 3/V, v0 = 1.19: every agent's desired speed is the paper's w.
+    """Uniform K = 2/V (A = 2), v0 = 1.19: every agent's desired speed is the paper's w.
 
     v0 != 1 so the additive law (Fridolf et al. 2018) differs from the
     multiplicative reading v0 * (1 - 0.34 (3 - V)).
@@ -108,7 +108,7 @@ def test_fridolf_desired_speed_is_paper_w(visibility_m, w):
         seed=42,
         max_simulation_time=120.0,
     )
-    k = 3.0 / visibility_m
+    k = 2.0 / visibility_m
     result = run_scenario(
         corridor_scenario(spec),
         seed=spec.seed,
@@ -144,7 +144,7 @@ def test_fridolf_egress_slows_by_paper_ratio(visibility_m, w):
         corridor_scenario(spec),
         seed=spec.seed,
         smoke_speed_model=make_smoke_model(
-            uniform(3.0 / visibility_m), speed_law="fridolf"
+            uniform(2.0 / visibility_m), speed_law="fridolf"
         ),
     )
     try:
@@ -243,7 +243,7 @@ def _flow_agent_in_slow_zone(zone_factor: float):
 
 
 def _smoke_every_5_s(visibility_m: float):
-    model = make_smoke_model(uniform(3.0 / visibility_m), speed_law="fridolf")
+    model = make_smoke_model(uniform(2.0 / visibility_m), speed_law="fridolf")
     model.config.update_interval_s = 5.0
     return model
 

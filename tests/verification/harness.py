@@ -240,9 +240,9 @@ def fridolf_speed_factor(
     extinction_per_m: float,
     *,
     free_speed_m_per_s: float = 1.0,
-    visibility_factor_c: float = 3.0,
+    visibility_factor_c: float = 2.0,
 ) -> float:
-    """Closed-form Fridolf et al. (2018) factor w / w_free with V = c/K.
+    """Closed-form Fridolf et al. (2018) factor w / w_free with V = A/K, A = 2.
 
     w = min(w_free, max(0.2, w_free - 0.34 (3 - V))), so the factor is 1 at
     K = 0 and for V >= 3 m.

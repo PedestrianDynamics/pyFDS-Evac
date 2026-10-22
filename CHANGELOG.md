@@ -15,8 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Frantzich-Nilsson law and the Fridolf law (`speed_law="fridolf"`, Eq. 7),
   the clamp edges of both, and ten corridor runs checked against egress
   times calculated by hand. The Test 18 page documents the visibility
-  constant of the Fridolf law (C = 3; the paper calibrated with A = 2 or 8)
-  (#841).
+  constant of the Fridolf law (A = 2, the paper's value; 8 for light-emitting
+  surroundings) (#841).
 - ISO 20414 Test 9 (dynamic availability of an exit) runs in
   `tests/test_iso_test_9_dynamic_exit.py`: exit 1 closes after 1 s and the
   occupant leaves by exit 2 (#840). The pytest marker `iso20414` selects
@@ -44,6 +44,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Fridolf smoke-speed law (`speed_law="fridolf"`, Python only) uses the
+  paper's visibility constant A = 2 (Fridolf et al. 2019, Eq. 1,
+  light-reflecting items) by default, in `visibility_factor_c`, instead of
+  the FDS convention C = 3. Use `visibility_factor_c = 8` for light-emitting
+  surroundings. Agents slow earlier and more: the onset (x = 3 m) moves from
+  K = 1.0 to 0.67 1/m, and at a free speed of 1.0 m/s and K = 1 1/m the
+  speed falls from 1.0 to 0.66 m/s. The 0.2 m/s floor, reached at K = 4.6
+  1/m for a free speed of 1.0 m/s, is reached at 3.1 1/m. On the ISO 20414
+  Test 18 grid (free speed 1.25 m/s) the speed at K = 3 / 7.5 / 10 1/m falls
+  from 0.570 / 0.366 / 0.332 to 0.457 / 0.321 / 0.298 m/s. The default law
+  (`lund`), the routing and sign visibility constants and every scenario run
+  from `run.py`, the GUI or the TUI are unchanged.
 - fdsreader is allowed up to 1.14 (`>=1.11.7,!=1.11.9,!=1.12.0,<1.15`) and
   locked at 1.14.0. From 1.13, `Slice.to_global()` keeps the outermost
   node row and column of the domain (fdsreader#124, #130); 1.11.7 to 1.12

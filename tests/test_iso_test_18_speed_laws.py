@@ -21,34 +21,37 @@ App. D, Table D2 model 1; as FDS+Evac uses it, with the floor 0,1)::
 Fridolf et al. (``speed_law="fridolf"``, Fridolf, Ronchi, Nilsson and
 Frantzich 2019, TUST 90:28-41, Eq. 7; method 3 of Fridolf et al. 2018)::
 
-    w = min(w_free, max(0.2, w_free - 0.34 (3 - x)))      [m/s],  x = C / K
+    w = min(w_free, max(0.2, w_free - 0.34 (3 - x)))      [m/s],  x = A / K
 
 x is the visibility [m]; the speed factor is f = w / w_free. The constant of
-Jin's relation is C = 3 (the FDS default for a reflecting sign, what
-pyFDS-Evac uses); the paper's Eq. 1, x = A / K, was calibrated with A = 2
-(reflecting) or A = 8 (emitting). The reduction is additive (0.34 m/s per
-metre below 3 m) and the floor is an absolute 0.2 m/s, not 0.2 w_free.
+the paper's Eq. 1, x = A / K, is A = 2 for light-reflecting items (walls,
+obstacles, the surroundings a walker must see; the default of
+``SmokeSpeedConfig.visibility_factor_c``) and A = 8 for light-emitting ones.
+The FDS convention C = 3 was the default before and is not the paper's. The
+reduction is additive (0.34 m/s per metre below 3 m) and the floor is an
+absolute 0.2 m/s, not 0.2 w_free.
 
-Hand calculation, Fridolf, C = 3 (x = 3 / K: 0.3, 0.4, 1.0 and 6.0 m)
-----------------------------------------------------------------------
+Hand calculation, Fridolf, A = 2 (x = 2 / K: 0.2, 0.26667, 0.66667 and 4 m)
+----------------------------------------------------------------------------
 
-    K = 10   : x = 0.3 m, drop 0.34 x 2.7 = 0.918 m/s
-    K = 7.5  : x = 0.4 m, drop 0.34 x 2.6 = 0.884 m/s
-    K = 3    : x = 1.0 m, drop 0.34 x 2.0 = 0.680 m/s
-    K = 0.5  : x = 6.0 m, above 3 m, no drop
+    K = 10   : x = 0.2     m, drop 0.34 x 2.8     = 0.952    m/s
+    K = 7.5  : x = 0.26667 m, drop 0.34 x 2.73333 = 0.929333 m/s
+    K = 3    : x = 0.66667 m, drop 0.34 x 2.33333 = 0.793333 m/s
+    K = 0.5  : x = 4 m, above 3 m, no drop
 
     w_free   K = 10     K = 7.5    K = 3       K = 0.5
-    1.25     0.332      0.366      0.570       1.25
-    1.00     0.2 floor  0.2 floor  0.320       1.00
+    1.25     0.298      0.320667   0.456667    1.25
+    1.00     0.2 floor  0.2 floor  0.206667    1.00
     0.75     0.2 floor  0.2 floor  0.2 floor   0.75
     0.50     0.2 floor  0.2 floor  0.2 floor   0.50
     0.25     0.2 floor  0.2 floor  0.2 floor   0.25
 
 (1.25 m/s is the unimpeded speed of the ISO corridor in ``assets/ISO-table21``;
-it is not in the standard's list.) At K = 3 and w_free = 1.0, 1.0 - 0.68 =
-0.32 lies above the floor; for w_free = 0.75, 0.5 and 0.25 the unfloored value
-0.07, -0.18 and -0.43 lies below it. The floor raises the speed of a slow
-walker only up to w_free, so for w_free = 0.25 the factor is 0.2 / 0.25 = 0.8.
+it is not in the standard's list.) At K = 3 and w_free = 1.0, 1.0 - 0.793333 =
+0.206667 lies just above the floor; for w_free = 0.75, 0.5 and 0.25 the
+unfloored value -0.043, -0.293 and -0.543 lies below it, and at K = 7.5 and
+w_free = 1.0 it is 0.0707. The floor raises the speed of a slow walker only up
+to w_free, so for w_free = 0.25 the factor is 0.2 / 0.25 = 0.8.
 
 Hand calculation, Lund
 ----------------------
@@ -92,11 +95,11 @@ EXTINCTIONS = (10.0, 7.5, 3.0, 0.5)
 # Lund f(K) by hand (see the module docstring); the same for every free speed.
 LUND_F = {10.0: 0.192635, 7.5: 0.394476, 3.0: 0.757790, 0.5: 0.959632}
 
-# Fridolf w [m/s] by hand, C = 3, keyed by (w_free, K). Exact decimals.
+# Fridolf w [m/s] by hand, A = 2, keyed by (w_free, K). Six decimals.
 FRIDOLF_W = {
     (1.00, 10.0): 0.2,
     (1.00, 7.5): 0.2,
-    (1.00, 3.0): 0.32,
+    (1.00, 3.0): 0.2066667,
     (1.00, 0.5): 1.0,
     (0.75, 10.0): 0.2,
     (0.75, 7.5): 0.2,
@@ -111,21 +114,22 @@ FRIDOLF_W = {
     (0.25, 3.0): 0.2,
     (0.25, 0.5): 0.25,
     # The corridor's own unimpeded speed, where the slope is not floored.
-    (1.25, 10.0): 0.332,
-    (1.25, 7.5): 0.366,
-    (1.25, 3.0): 0.57,
+    (1.25, 10.0): 0.298,
+    (1.25, 7.5): 0.3206667,
+    (1.25, 3.0): 0.4566667,
     (1.25, 0.5): 1.25,
 }
 
-# Fridolf, w_free = 1.0, for the paper's A = 2 and A = 8 as C (x = C / K):
-#   C = 2: x = 0.2, 0.2667, 0.6667, 4.0 m -> 1 - 0.34 (3 - x) = 0.052,
-#          0.0707, 0.20667, no drop;
+# Fridolf, w_free = 1.0, for the FDS convention C = 3 and the paper's A = 8
+# (light-emitting) as the configured constant (x = C / K):
+#   C = 3: x = 0.3, 0.4, 1.0, 6.0 m -> 1 - 0.34 (3 - x) = 0.082, 0.116, 0.32,
+#          no drop (the first two floored to 0.2);
 #   C = 8: x = 0.8, 1.0667, 2.6667, 16 m -> 0.252, 0.342667, 0.886667, no drop.
 FRIDOLF_W_OTHER_C = {
-    (2.0, 10.0): 0.2,
-    (2.0, 7.5): 0.2,
-    (2.0, 3.0): 0.2066667,
-    (2.0, 0.5): 1.0,
+    (3.0, 10.0): 0.2,
+    (3.0, 7.5): 0.2,
+    (3.0, 3.0): 0.32,
+    (3.0, 0.5): 1.0,
     (8.0, 10.0): 0.252,
     (8.0, 7.5): 0.3426667,
     (8.0, 3.0): 0.8866667,
@@ -159,8 +163,8 @@ class TestTheGrid:
         factor = _model("fridolf", extinction).speed_factor(
             0.0, 0.0, 0.0, free_speed_m_per_s=free_speed
         )
-        assert free_speed * factor == pytest.approx(w, abs=1e-9)
-        assert factor == pytest.approx(w / free_speed, abs=1e-9)
+        assert free_speed * factor == pytest.approx(w, abs=1e-6)
+        assert factor == pytest.approx(w / free_speed, abs=1e-6)
 
 
 class TestTheClampEdges:
@@ -185,8 +189,8 @@ class TestTheClampEdges:
     @pytest.mark.parametrize(
         ("extinction", "w"),
         [
-            (4.5, 0.2066667),  # x = 0.6667 m: 1 - 0.34 x 2.3333, above the floor
-            (4.8, 0.2),  # x = 0.625 m: 1 - 0.34 x 2.375 = 0.1925, floored
+            (3.0, 0.2066667),  # x = 0.6667 m: 1 - 0.34 x 2.3333, above the floor
+            (3.2, 0.2),  # x = 0.625 m: 1 - 0.34 x 2.375 = 0.1925, floored
             (1e6, 0.2),  # x -> 0: 1 - 1.02 = -0.02, floored
         ],
     )
@@ -207,24 +211,24 @@ class TestTheClampEdges:
         )
 
     def test_fridolf_knee_at_three_metres(self):
-        """x = 3 m, i.e. K = C / 3 = 1 1/m for C = 3: no slowing at the knee."""
-        assert _model("fridolf", 1.0).speed_factor(
+        """x = 3 m, i.e. K = A / 3 = 2/3 1/m for A = 2: no slowing at the knee."""
+        assert _model("fridolf", 2.0 / 3.0).speed_factor(
             0.0, 0.0, 0.0, free_speed_m_per_s=1.25
         ) == pytest.approx(1.0, abs=1e-12)
 
     def test_fridolf_just_inside_the_knee_slows_by_the_slope(self):
-        """K = 1.5 -> x = 2 m: w = 1.25 - 0.34 x 1 = 0.91, f = 0.728."""
-        factor = _model("fridolf", 1.5).speed_factor(
+        """K = 1 -> x = 2 m: w = 1.25 - 0.34 x 1 = 0.91, f = 0.728."""
+        factor = _model("fridolf", 1.0).speed_factor(
             0.0, 0.0, 0.0, free_speed_m_per_s=1.25
         )
         assert factor == pytest.approx(0.728, abs=1e-12)
 
 
 class TestTheVisibilityConstant:
-    """C = 3 by default; the paper's A = 2 and A = 8 as an alternative."""
+    """A = 2 by default (Eq. 1, light-reflecting); 8 and the FDS 3 configurable."""
 
-    def test_the_default_constant_is_three(self):
-        assert SmokeSpeedConfig().visibility_factor_c == 3.0
+    def test_the_default_constant_is_the_papers_a_for_reflecting_items(self):
+        assert SmokeSpeedConfig().visibility_factor_c == 2.0
 
     @pytest.mark.parametrize(("c", "extinction"), sorted(FRIDOLF_W_OTHER_C))
     def test_other_constants(self, c, extinction):

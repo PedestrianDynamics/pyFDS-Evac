@@ -79,18 +79,19 @@ form and with the constants of [FDS+Evac](https://github.com/firemodels/fds/tree
 downstream of speed cannot come from the speed law. The alternative is the
 `fridolf` option, the law of [Fridolf et al. (2019, Eq. 7)](https://doi.org/10.1016/j.tust.2019.04.016)
 in the sighting distance
-\(V = C/K\): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
+\(V = A/K\), with the paper's *A* = 2 for light-reflecting surroundings by default
+(8 for light-emitting ones; the FDS convention 3 was the default before): above 3 m the speed is unchanged, below it drops by 0.34 m/s per
 metre, to an absolute floor of 0.2 m/s. Being additive, its factor depends on
 each agent's \(v_0\). It is available only from Python (see [the parameter split](#the-parameter-split)). The published laws are on
 [Walking speed in smoke](/fundamentals/walking-speed.md); the coded forms are
 on the [smoke-speed model](/models/smoke-speed.md) page.
 
-![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with C = 3 and C = 8](/images/concepts/speed_laws.png)
+![Speed factor v/v0 against extinction coefficient K for the Frantzich–Nilsson law and for the fridolf option at v0 = 1.25 m/s with A = 2 and A = 8](/images/concepts/speed_laws.png)
 
 *Figure 1. Speed factor \(v/v_0\) [-] against K [1/m]. Solid dark blue:
 Frantzich–Nilsson at the defaults, with its floor. The `fridolf` option at
-\(v_0\) = 1.25 m/s with \(V = C/K\): red dashed for C = 3, orange dash-dotted
-for C = 8. The arrow marks the largest gap between Frantzich–Nilsson and C = 3. Script: `scripts/figures/speed_laws.py`.*
+\(v_0\) = 1.25 m/s with \(V = A/K\): red dashed for A = 2 (default), orange dash-dotted
+for A = 8. The arrow marks the largest gap between Frantzich–Nilsson and A = 2. Script: `scripts/figures/speed_laws.py`.*
 
 ### Tenability: a brake and a stop
 
@@ -349,8 +350,8 @@ pages. Defaults are on the Models pages.
 |---|---|---|---|
 | *K* | Extinction coefficient at a point (FDS `SOOT EXTINCTION COEFFICIENT`) | 1/m | `extinction_per_m` |
 | \(\bar K\) | Mean extinction along an edge or a route | 1/m | `k_avg`, `k_ave_route` |
-| *S* = *C*/*K* | Sighting distance (Jin); *V* in the code's `fridolf` option | m | — |
-| *C* | Visibility constant of a sign (Jin); reflective or light-emitting | - | `visibility_factor_c`, sign `c` |
+| *S* = *C*/*K* | Sighting distance (Jin); *V* = *A*/*K* in the code's `fridolf` option | m | — |
+| *C* | Visibility constant of a sign (Jin); reflective or light-emitting. In `visibility_factor_c` it is the paper's *A* of the `fridolf` option (default 2; 8 light-emitting) | - | `visibility_factor_c`, sign `c` |
 | \(v_0\) | Unimpeded desired speed of an agent | m/s | `v0` (distribution group) |
 | *f*(*K*) | Smoke speed factor | - | `speed_factor` |
 | \(\alpha\), \(\beta\) | Frantzich–Nilsson coefficients | m/s, m²/s | `alpha`, `beta` |

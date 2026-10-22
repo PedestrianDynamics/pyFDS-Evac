@@ -47,7 +47,8 @@
     The evacuation times above came from the actual simulation.</p>
     <p>Model: the default <code>{{ $p.speed_law }}</code> law,
     factor = 1 + β<i>K</i>/α clamped to [{{ $p.min_speed_factor }}, 1],
-    with α = {{ $p.alpha }}, β = {{ $p.beta }} and <i>C</i> = {{ $p.visibility_factor_c }},
-    the <code>SmokeSpeedConfig()</code> defaults of this version of pyFDS-Evac.</p>
+    with α = {{ $p.alpha }}, β = {{ $p.beta }} and the sight distance <i>C</i>/<i>K</i> with <i>C</i> = {{ $p.visibility_factor_c }}
+    (the FDS convention), the <code>SmokeSpeedConfig()</code> defaults of this version of pyFDS-Evac
+    for the speed law.</p>
   </figcaption>
 </figure>

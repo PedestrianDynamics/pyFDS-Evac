@@ -108,7 +108,7 @@ DEFAULTS = [
     ),
     (
         SMOKE,
-        "| `visibility_factor_c` | `3.0` |",
+        "| `visibility_factor_c` | `2.0` |",
         lambda: SmokeSpeedConfig().visibility_factor_c,
     ),
     (

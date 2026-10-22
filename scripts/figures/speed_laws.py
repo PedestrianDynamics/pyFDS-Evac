@@ -1,7 +1,7 @@
 """Speed factor against extinction: Frantzich–Nilsson (Lund) and the `fridolf` option.
 
-The `fridolf` option is the additive law of Fridolf et al. (2018),
-w = min(v0, max(0.2, v0 - 0.34 (3 - V))) with V = C/K. Its factor w/v0
+The `fridolf` option is the additive law of Fridolf et al. (2019, Eq. 7),
+w = min(v0, max(0.2, v0 - 0.34 (3 - V))) with V = A/K. Its factor w/v0
 depends on v0, so it is drawn at the default v0 = 1.25 m/s (VEL_MEAN).
 
 The curves are computed through the public API (``SmokeSpeedModel`` on a
@@ -48,9 +48,7 @@ def main():
     lund_cfg = SmokeSpeedConfig()
     k = np.linspace(0.0, 12.0, 481)
     lund = speed_factors(k, lund_cfg)
-    frid3 = speed_factors(
-        k, SmokeSpeedConfig(speed_law="fridolf", visibility_factor_c=3.0)
-    )
+    frid3 = speed_factors(k, SmokeSpeedConfig(speed_law="fridolf"))
     frid8 = speed_factors(
         k, SmokeSpeedConfig(speed_law="fridolf", visibility_factor_c=8.0)
     )
@@ -68,7 +66,7 @@ def main():
         color=red,
         lw=2.0,
         ls="--",
-        label=f"fridolf option, v₀ = {V0:g} m/s, C = 3 (reflective)",
+        label=f"fridolf option, v₀ = {V0:g} m/s, A = 2 (reflecting, default)",
     )
     ax.plot(
         k,
@@ -76,7 +74,7 @@ def main():
         color=orange,
         lw=2.0,
         ls="-.",
-        label=f"fridolf option, v₀ = {V0:g} m/s, C = 8 (emitting)",
+        label=f"fridolf option, v₀ = {V0:g} m/s, A = 8 (emitting)",
     )
     ax.axhline(fmin, color="grey", lw=0.8, ls=":", zorder=1)
     ax.axvline(ksat, color="grey", lw=0.8, ls=":", zorder=1)
@@ -99,7 +97,7 @@ def main():
         0.3,
         frid3[i] - 0.12,
         f"largest gap {gap[i]:.2f} at K = {k[i]:.1f} m⁻¹\n"
-        f"({lund[i]:.2f} vs {frid3[i]:.2f} with C = 3)",
+        f"({lund[i]:.2f} vs {frid3[i]:.2f} with A = 2)",
         fontsize=8.5,
         color="dimgrey",
         ha="left",

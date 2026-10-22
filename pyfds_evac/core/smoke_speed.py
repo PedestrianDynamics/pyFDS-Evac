@@ -21,11 +21,13 @@ Two speed-law options are available, selected via ``SmokeSpeedConfig.speed_law``
 
     Above 3 m the speed is unchanged; below, it drops by 0.34 m/s per metre
     of visibility, to an absolute floor of 0.2 m/s.  Visibility is derived
-    from extinction via V = C / K (Jin 1970-1978).  The 2018 abstract gives
-    no constant; the 2019 paper used A = 2 (reflecting) or 8 (emitting),
-    Eq. 1.  pyFDS-Evac uses the FDS default C = 3, so for reflecting targets
-    agents slow later and less than the calibration; C = 2 matches it.
-    The speed factor applied to the agent is w / w_free.
+    from extinction via V = A / K, the paper's Eq. 1 (Jin 1970-1978):
+    A = 2 for light-reflecting items (walls, obstacles, the surroundings a
+    walker must see) and A = 8 for light-emitting ones.  The default is
+    A = 2; ``visibility_factor_c`` holds A.  Before this default, the FDS
+    convention C = 3 was used, so agents slowed later and less than the
+    paper's calibration.  The speed factor applied to the agent is
+    w / w_free.
 
 When evaluating route costs, the extinction along a line of sight between
 two points is computed as the arithmetic mean of K sampled at uniform
@@ -97,9 +99,10 @@ FRIDOLF_MIN_SPEED_M_PER_S = 0.2
 # Model assumption: the free speed the fridolf law uses when the caller
 # passes none (the paper's method 1).
 FRIDOLF_DEFAULT_FREE_SPEED_M_PER_S = 1.0
-# Model assumption: Jin's visibility factor C in V = C / K. 3 is the FDS
-# default for a reflecting sign; Fridolf et al. (2019) calibrated with 2.
-VISIBILITY_FACTOR_C = 3.0
+# Fridolf et al. (2019), Eq. 1: V = A / K with A = 2 for light-reflecting
+# items and 8 for light-emitting ones. The fridolf law uses A = 2 by default,
+# the surroundings a walker must see. (The FDS convention C = 3 is not used.)
+VISIBILITY_FACTOR_C = 2.0
 # FDS default soot mass extinction coefficient [m^2/kg] (Mulholland).
 FDS_MASS_EXTINCTION_M2_PER_KG = 8700.0
 
@@ -125,9 +128,11 @@ class SmokeSpeedConfig:
         Matched exactly; any other value raises ``ValueError``.
 
     visibility_factor_c
-        Visibility factor C in the Jin (1970-1978) relation V = C / K.
-        Only used when ``speed_law = "fridolf"``.
-        C = 3 corresponds to a reflective sign; C = 8 to a light-emitting sign.
+        The constant A of Fridolf et al. (2019), Eq. 1, in V = A / K (Jin
+        1970-1978), named C here. Only used when ``speed_law = "fridolf"``.
+        Default 2 (light-reflecting items: walls, obstacles, the surroundings
+        a walker must see); 8 for light-emitting surroundings. The FDS
+        convention is 3; it was the default before.
 
     fridolf_slope, fridolf_visibility_threshold_m, fridolf_min_speed_m_per_s
         Speed drop per metre of visibility [m/s per m], the visibility below
@@ -358,7 +363,8 @@ def speed_factor_from_extinction_fridolf(
 ) -> float:
     """Convert K [1/m] to a speed factor using the Fridolf et al. (2019) law.
 
-    Visibility is derived via V = C / K (Jin 1970-1978), then:
+    Visibility is derived via V = A / K (Jin 1970-1978; A is the argument
+    ``visibility_factor_c``, default 2, Eq. 1 of the paper), then:
 
         w = min(w_free, max(0.2, w_free - 0.34 * (3 - V)))
 
@@ -368,14 +374,14 @@ def speed_factor_from_extinction_fridolf(
 
     Fridolf, Ronchi, Nilsson & Frantzich (2019), TUST 90:28-41, Eq. 7
     (method 3; also in Fridolf et al. 2018, SFPE extended abstract, a
-    summary of their 2016 SP report).  The 2019 paper used A = 2 (reflecting) or 8 (emitting);
-    C = 3 is the FDS default, C = 2 matches the calibration.
+    summary of their 2016 SP report).  The paper's A is 2 (light-reflecting)
+    or 8 (light-emitting); C = 3 is the FDS convention, not the paper's.
 
     Properties:
     - At K = 0 (clear air) or V >= 3 m: factor = 1.
     - The floor never raises the speed above w_free.
     - w_free <= 0: factor = 1 (nothing to slow).
-    - C must be finite and positive; otherwise ValueError.
+    - ``visibility_factor_c`` must be finite and positive; otherwise ValueError.
     """
 
     if not (math.isfinite(visibility_factor_c) and visibility_factor_c > 0.0):
