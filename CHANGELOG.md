@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- ISO 20414 Test 9 (dynamic availability of an exit) runs in
+  `tests/test_iso_test_9_dynamic_exit.py`: exit 1 closes after 1 s and the
+  occupant leaves by exit 2 (#840). The pytest marker `iso20414` selects
+  every ISO 20414 verification case (`pytest -m iso20414`); a new
+  "ISO 20414" workflow runs them, and the README has its badge.
+
 ### Changed
 
 - fdsreader is allowed up to 1.14 (`>=1.11.7,!=1.11.9,!=1.12.0,<1.15`) and

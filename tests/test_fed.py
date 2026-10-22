@@ -606,6 +606,7 @@ class _ConstantInputsFedModel:
         return self.inputs, rate_per_min, updated
 
 
+@pytest.mark.iso20414
 def test_iso_table22_stationary_runtime_matches_analytic_threshold_time():
     inputs = CONSTANT_EXPOSURE_CASES["combined"]
     analytic_time_s = time_to_fed_threshold_s(inputs, threshold=1.0)
@@ -723,6 +724,7 @@ def test_fds_evac_guide_stationary_cases_produce_plot(tmp_path):
     assert output.stat().st_size > 0
 
 
+@pytest.mark.iso20414
 def test_iso_table22_stationary_runtime_produces_plot(tmp_path: Path):
     inputs = CONSTANT_EXPOSURE_CASES["combined"]
     analytic_time_s = time_to_fed_threshold_s(inputs, threshold=1.0)
