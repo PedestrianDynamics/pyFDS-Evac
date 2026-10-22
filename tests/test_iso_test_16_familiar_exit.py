@@ -30,7 +30,8 @@ measured, not prescribed. The FDS+Evac import maps a known door to the same
 Stopping rule. A run is one seed. After each added run the cumulative
 fraction of occupants leaving by exit 2 is compared with the one before; the
 rule is met when that change has been below 1 % (0.01) for ``QUIET_RUNS``
-consecutive added runs, so a single flat step on the way does not stop it. The
+consecutive added runs, so a single flat step on the way does not stop it;
+this is stricter than the standard's "less than 1 % per added run". The
 seeds are 1, 2, 3, ... in order, so the run counts are deterministic.
 """
 
