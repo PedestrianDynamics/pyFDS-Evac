@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- NIST TN 1822 verification status page (`site/content/verification/nist-tn1822.md`)
+  listing all 17 tests: 6 run, 4 inherited from JuPedSim, 5 out of scope, 2 not
+  yet run. Verif.2.5 runs NIST's corridor at K = 1.0 1/m for both smoke-speed
+  laws (`tests/test_nist_verif_2_5_reduced_visibility.py`) and Verif.4.1 runs
+  NIST's far-exit layout (`tests/test_nist_verif_4_1_dynamic_exit.py`). The
+  pytest marker `nist_tn1822` also selects the ISO 20414 tests that match
+  Verif.2.5, 2.6, 3.1, 3.3 and 5.2; a new "NIST TN 1822" workflow runs
+  them, and the README has its badge (#847).
 - ISO 20414 Test 18 (walking speed in smoke) runs both smoke-speed laws on
   the standard's grid in `tests/test_iso_test_18_speed_laws.py`: free speeds
   1.0, 0.75, 0.5 and 0.25 m/s times K = 10, 7.5, 3.0 and 0.5 1/m for the

@@ -68,7 +68,8 @@ slices differ by very little
 
 Movement itself (walking, collision avoidance, flow through doors) is
 JuPedSim's and is not retested here; see
-[Status against ISO 20414](/verification/iso-20414.md).
+[Status against ISO 20414](/verification/iso-20414.md) and
+[Status against NIST TN 1822](/verification/nist-tn1822.md).
 
 ## Running the tests
 
