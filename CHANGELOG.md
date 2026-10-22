@@ -23,7 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_iso_test_8_route_allocation.py`: 23 occupants in twelve rooms
   off a corridor, journeys allocating rooms 1-4 and 7-10 to the main exit
   and the others to the secondary one. All 23 use the allocated exit with
-  rerouting off and with rerouting on in clear air, without a route switch.
+  rerouting off and with rerouting on in clear air, without a route switch;
+  a journey leaves the reroute pass only the allocated exit.
   The allocation is user-defined; without journeys the occupants of rooms 4
   and 10 take the nearer secondary exit (#844).
 

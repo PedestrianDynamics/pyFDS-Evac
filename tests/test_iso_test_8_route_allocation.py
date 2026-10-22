@@ -34,8 +34,9 @@ that file.
 Allocation is user-defined: each room's distribution is tied to its exit by a
 journey in the scenario JSON, and the model does not choose the exit from the
 geometry. The allocation is partly against distance: the occupants of rooms 4
-and 10 (x about 0.9 m) are allocated to the main exit, about 9 m away by the
-passage, although the secondary exit is about 8 m away along the corridor.
+and 10 (x about 0.9 m) are allocated to the main exit, about 9 m from the
+room door by the passage, although the secondary exit is about 8 m away
+along the corridor (agents: 10.7 m against 9.8 m of path).
 Without the journeys (predictive reading: pyFDS-Evac picks the exit by its
 route cost) the occupants of rooms 4 and 10 take the secondary exit, which
 differs from Table 9 for 4 of the 23; the other rooms agree. So pyFDS-Evac
@@ -293,6 +294,11 @@ def test_rerouting_off_records_no_route_history(runs):
 
 
 def test_rerouting_on_in_clear_air_switches_nobody(runs):
+    """The pass runs, but a journey gives the route graph only its exit.
+
+    So this shows that rerouting does not drop a journey's exit in clear
+    air, not that it would keep an allocation against a cheaper exit.
+    """
     run = runs["on"]
     assert run["has_history"]
     reasons = [(s["agent_id"], s["reason"]) for s in run["switches"]]
