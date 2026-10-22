@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a journey leaves the reroute pass only the allocated exit.
   The allocation is user-defined; without journeys the occupants of rooms 4
   and 10 take the nearer secondary exit (#844).
+- ISO 20414 Test 16 (affiliation to familiar exits) runs in
+  `tests/test_iso_test_16_familiar_exit.py`: one occupant in the Test 9 room.
+  Unfamiliar (`familiarity: "discovery"`) it uses exit 2 in 49 % of 61 runs
+  (the split is the start position); with `entrance: "exit_2"` it uses exit 2
+  in 100 % of 11 runs. The mechanism is the cognitive map, not a user-defined
+  split (#846).
 
 ### Changed
 
