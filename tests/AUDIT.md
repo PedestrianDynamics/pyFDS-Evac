@@ -699,6 +699,41 @@ the counts small; the values of `_MAX_WARNINGS` and `_MAX_LOG_LINES` are
 configuration and not pinned here. A new run starting with empty warning and
 console lists is also pinned (`test_a_new_run_starts_with_no_warnings`).
 
+## Item 1: movement and steering
+
+Weak-test survey of movement and steering (#836, item 1). Each part is
+fixed in its own pull request; the rows below are the per-model defaults.
+
+### Per-model agent defaults
+
+| Mutant | Source | Killed by |
+|---|---|---|
+| default `v0` 1.25 to 1.0, in each of six model branches | `simulation_init.create_agent_parameters` | `test_model_agent_defaults.py::test_v0_default[<model>]` |
+| default `radius` 0.2 to 0.25 | same | `test_radius_default[<model>]` |
+| GCFM `tau`, `a_v`, `a_min`, `b_min`, `b_max` default changed, with and without global parameters | same | `test_gcfm_defaults_without_global_parameters[None]`, `[global_params1]` |
+| AVM `time_gap` 1.06 to 1.5; `anticipation_time` 1.0 to 2.0; `reaction_time` 0.3 to 0.4, both default branches | same | `test_avm_defaults_without_global_parameters` |
+| Gaussian `v0` clip low 0.1 to 0.0, high 5.0 to 6.0 | `_sample_agent_values` | `test_gaussian_v0_is_clipped_to_the_documented_range` |
+
+Sources of the expected values are stated in the test module: `v0` and
+`radius` from `docs/scenario-json.md`, the clip from
+`docs/coming-from-fds-evac.md`, the GCFM and AVM numbers from JuPedSim
+1.4.2's defaults (not documented in the pyFDS-Evac pages).
+
+`test_sfm_params.py` and `test_csm_v2_params.py` run-level tests now compare
+the run without the keys with the run that sets the defaults, and pin the
+agent count. This catches a missing key that stops spawning; it does not
+catch a changed default value, which the unit tests above and in those files
+pin.
+
+### Open
+
+- GCFM `mass` default is 80 kg in the code and 1 in JuPedSim 1.4.2; no page
+  documents it, so it is not pinned. Needs a documented source or a decision.
+- AVM with global parameters reads `anticipation_time` from `global_params.T`
+  and `reaction_time` from `global_params.s0`; no test or page says why.
+- Not in this pull request: `_normalize_speed_factor` copy, choice-stream
+  seed, target clearance and the other survey rows of area A.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
