@@ -114,15 +114,28 @@ def test_journey_path_reports_an_overfull_area_as_placement(tmp_path):
         _initialize_t_junction(tmp_path, number=100000)
 
 
-def test_flow_spawning_with_sfm_keys_missing_spawns_agents():
-    scenario = _sfm_scenario_without_keys()
+def _flow_run_counts(scenario):
     scenario.set_max_time(15)
     with contextlib.redirect_stdout(io.StringIO()):
         result = run_scenario(scenario, seed=1)
     try:
-        assert result.metrics["agents_not_spawned"] < 200
+        return {
+            key: result.metrics[key] for key in ("total_agents", "agents_not_spawned")
+        }
     finally:
         result.cleanup()
+
+
+def test_flow_spawning_with_sfm_keys_missing_spawns_agents():
+    # Missing keys take the defaults, so the run equals the one that sets
+    # the defaults explicitly; and agents do spawn (8 of 200 in 15 s).
+    explicit = _sfm_scenario_without_keys()
+    for key, value in DEFAULTS.items():
+        explicit.sim_params[key] = value
+        explicit._simulation_params()[key] = value
+    counts = _flow_run_counts(_sfm_scenario_without_keys())
+    assert counts == _flow_run_counts(explicit)
+    assert counts["total_agents"] == 8  # seed 1, 15 s: a regression pin
 
 
 # --- model-level SFM parameters (#611) and the friction clamp (#635) --------

@@ -78,16 +78,29 @@ def test_v2_matches_the_cfsm_builder_for_the_same_deck(deck):
     assert _repulsion(_v2(SimpleNamespace(**deck))) == pytest.approx(_repulsion(cfsm))
 
 
-def test_v2_scenario_without_repulsion_keys_runs():
+def _run_counts(keys):
+    """Counts of a 1 s run with *keys* set (others removed) on t_junction."""
     scenario = load_scenario(T_JUNCTION)
     scenario.set_model_type(V2)
     for key in REPULSION_KEYS:
         scenario.sim_params.pop(key, None)
         scenario._simulation_params().pop(key, None)
+    for key, value in keys.items():
+        scenario.sim_params[key] = value
+        scenario._simulation_params()[key] = value
     scenario.set_max_time(1)
     with contextlib.redirect_stdout(io.StringIO()):
         result = run_scenario(scenario, seed=1)
     try:
-        assert result.metrics["total_agents"] > 0
+        return {k: result.metrics[k] for k in ("total_agents", "agents_remaining")}
     finally:
         result.cleanup()
+
+
+def test_v2_scenario_without_repulsion_keys_runs():
+    # Missing keys take the defaults, so the run equals the one that sets
+    # them explicitly (2.6, 0.1).
+    defaults = {"strength_neighbor_repulsion": 2.6, "range_neighbor_repulsion": 0.1}
+    counts = _run_counts({})
+    assert counts == _run_counts(defaults)
+    assert counts["total_agents"] == 1  # seed 1, 1 s: a regression pin
