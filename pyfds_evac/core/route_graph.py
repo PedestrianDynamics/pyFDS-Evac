@@ -513,20 +513,38 @@ def preference_nodes(raw: Mapping[str, Any]) -> frozenset[str]:
     return frozenset(nodes)
 
 
+def _exits_reached(graph: StageGraph, start: str) -> set[str]:
+    """The exits of *graph* that a walk along its edges from *start* ends at."""
+    seen = {start}
+    todo = [start]
+    while todo:
+        for edge in graph.edges.get(todo.pop(), []):
+            if edge.target not in seen:
+                seen.add(edge.target)
+                todo.append(edge.target)
+    return {node for node in seen if graph.nodes[node].stage_type == "exit"}
+
+
 def with_rival_edges(graph: StageGraph, sources: Iterable[str]) -> StageGraph:
     """A copy of *graph* where each of *sources* also sees the other exits.
 
     The added edges are those :func:`_wire_by_type` gives a node of a deck
-    without transitions; an edge that *graph* already has from the source is
-    not added again, so the journey's own edges keep their place and order.
-    *graph* is left as it is, and the copy shares its nodes.
+    without transitions, kept only when they lead to an exit that *graph*
+    does not already reach from the source. The journey's own exit, and with
+    it every stage of the journey, stays reachable only along the journey, so
+    a checkpoint cannot be skipped by a direct edge. *graph* is left as it is,
+    and the copy shares its nodes.
     """
     wired = StageGraph(nodes=graph.nodes)
     _wire_by_type(wired, [s for s in sources if s in graph.nodes], graph.routing_engine)
     edges = {src: list(out) for src, out in graph.edges.items()}
     for src, new in wired.edges.items():
-        have = {edge.target for edge in edges.get(src, [])}
-        edges.setdefault(src, []).extend(e for e in new if e.target not in have)
+        own = _exits_reached(graph, src)
+        edges.setdefault(src, []).extend(
+            e
+            for e in new
+            if graph.nodes[e.target].stage_type == "exit" and e.target not in own
+        )
     return replace(graph, edges=edges)
 
 

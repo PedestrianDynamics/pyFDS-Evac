@@ -229,6 +229,45 @@ def test_exit_behind_a_journey_checkpoint_is_no_rival():
     assert g2.edges == g1.edges
 
 
+def _checkpoint_graph(b_len: float) -> StageGraph:
+    """D0 -> C -> A, with A reachable on a direct line and B the rival to the west."""
+    stages = {
+        "C": {"polygon": golden._box(0, 10), "stage_type": "checkpoint"},
+        "A": {"polygon": golden._box(10, 0), "stage_type": "exit"},
+        "B": {"polygon": golden._box(-b_len, 0), "stage_type": "exit"},
+    }
+    spawn = {"D0": {"coordinates": list(golden._box(0, 0).exterior.coords)}}
+    transitions = [{"from": "D0", "to": "C"}, {"from": "C", "to": "A"}]
+    return StageGraph.from_scenario(stages, transitions, spawn)
+
+
+def test_rival_graph_never_shortcuts_the_journey_to_its_own_exit():
+    g2 = with_rival_edges(_checkpoint_graph(30), ["D0"])
+    assert _targets(g2) == ["C", "B"]
+
+
+def test_agent_on_a_checkpoint_journey_still_passes_the_checkpoint():
+    g1 = _checkpoint_graph(30)
+    g2 = with_rival_edges(g1, ["D0"])
+    wait_info = {
+        "mode": "path",
+        "current_origin": "D0",
+        "current_target_stage": "C",
+        "path_choices": {"D0": [("C", 100.0)], "C": [("A", 100.0)]},
+        "stage_configs": {
+            "C": {"polygon": golden._box(0, 10)},
+            "A": {"polygon": golden._box(10, 0)},
+            "B": {"polygon": golden._box(-30, 0)},
+        },
+    }
+    chosen = _assign_initial_exit(
+        0, wait_info, g1, golden._gate(), None, 0.0, 42, {}, CLEAR,
+        spawn_key=("D0", 0), rival_graph=g2,
+    )  # fmt: skip
+    assert chosen == "A"
+    assert wait_info["current_target_stage"] == "C"
+
+
 # ── Opening choice ────────────────────────────────────────────────────
 
 CLEAR = golden._CLEAR
@@ -709,7 +748,11 @@ def test_allocated_exit_closing_mid_run_gives_way_to_the_rival(rerouting):
     """The agents of area_b, still heading west at 20 s, leave it by exit_closed."""
     scenario = single_exit_scenario(exit_extra={"west": {"closed_after_s": 20.0}})
     run = _run(scenario, rerouting)
-    closed = [(s["old_exit"], s["new_exit"], s["reason"]) for s in run["switches"]]
+    closed = [
+        (s["old_exit"], s["new_exit"], s["reason"])
+        for s in run["switches"]
+        if s["reason"] == "exit_closed"
+    ]
     assert closed == [("west", "east", "exit_closed")] * AGENTS_PER_AREA
     assert run["exits"]["area_b"] == ["east"] * AGENTS_PER_AREA
 
