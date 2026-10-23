@@ -74,6 +74,24 @@ def test_monte_carlo_above_twenty_seeds_is_fixed_and_close_to_exact(audit):
     assert p_mc == pytest.approx(p_exact, abs=0.005)
 
 
+def test_exact_enumeration_holds_up_to_twenty_seeds(audit):
+    # "exact up to 20 seeds, else Monte-Carlo": 20 equal differences give
+    # p = 2 / 2^20 by enumeration; 21 are sampled.
+    p, method = audit.paired_permutation_p([1.0] * 20)
+    assert (p, method) == (2 / 2**20, "exact")
+    assert audit.paired_permutation_p([1.0] * 21)[1] == "monte-carlo"
+
+
+def test_a_tie_in_floating_point_counts_as_a_tie(audit):
+    # All sign patterns but the two all-same ones sum to less than
+    # sum(d) = 1.99 (any flipped entry lowers it by twice its size), so
+    # p = 2/64. The sums are computed in different orders and differ in the
+    # last bits; without a tolerance the observed assignment would not count
+    # itself and p would be 0.
+    p, _ = audit.paired_permutation_p([0.41, 0.18, 0.2, 0.3, 0.5, 0.4])
+    assert p == pytest.approx(2 / 64)
+
+
 def test_no_differences_is_an_error(audit):
     with pytest.raises(ValueError, match="no differences"):
         audit.paired_permutation_p([])
@@ -99,6 +117,8 @@ def test_smallest_p_matches_the_plan(audit):
         ("fed_p95", 0.2, 100.0, 0.05),
         ("rset_last", 100.0, 100.0, 3.0),
         ("rset_p95", 200.0, 100.0, 4.0),
+        ("walk_mean", 20.0, 100.0, 1.0),
+        ("walk_mean", 100.0, 100.0, 2.0),
     ],
 )
 def test_floor_follows_the_plan_table(audit, metric, base, agents, floor):
@@ -139,6 +159,33 @@ def test_judge_effect_below_the_floor_is_not_distinct(audit):
     result = audit.judge("returns", _pairs([2.0] * 6, [3.0] * 6))
     assert result["p"] < audit.ALPHA
     assert result["distinct"] is False
+
+
+def test_judge_effect_equal_to_the_floor_is_distinct(audit):
+    # "|mean d| at least the metric's floor": floor max(2, 0.5) = 2, effect 2.
+    result = audit.judge("returns", _pairs([2.0] * 6, [4.0] * 6))
+    assert result["floor"] == pytest.approx(2.0)
+    assert result["effect"] == pytest.approx(2.0)
+    assert result["distinct"] is True
+
+
+def test_judge_p_between_five_and_ten_percent_is_not_distinct(audit):
+    # d = 0.3 five times and -0.1 once: the sign flips reaching |sum d| = 1.4
+    # are the all-same-sign patterns (2) and the one with -0.1 flipped alone
+    # (2): p = 4/64 = 0.0625. The effect, 0.233, is above the floor 0.05.
+    result = audit.judge("fed_p95", _pairs([0.0] * 6, [0.3] * 5 + [-0.1], "fed_p95"))
+    assert result["p"] == pytest.approx(4 / 64)
+    assert result["effect"] > result["floor"]
+    assert result["distinct"] is False
+
+
+def test_judge_walk_mean_is_judged_against_its_floor(audit):
+    # Base 20 s: floor max(0.4, 1.0) = 1.0 s; a 0.8 s rise is below it.
+    below = audit.judge("walk_mean", _pairs([20.0] * 6, [20.8] * 6, "walk_mean"))
+    assert below["floor"] == pytest.approx(1.0)
+    assert below["distinct"] is False
+    above = audit.judge("walk_mean", _pairs([20.0] * 6, [21.0] * 6, "walk_mean"))
+    assert above["distinct"] is True
 
 
 def test_judge_a_fall_is_better(audit):
@@ -243,6 +290,19 @@ def test_route_metrics_count_switches_by_reason(audit):
     assert metrics["returns_agents"] == 1
     assert metrics["returns_within_window"] == 1
     assert metrics["returns_since_s_median"] == 15.0
+
+
+def test_a_return_counts_in_the_window_up_to_ten_seconds(audit):
+    # "returns_within_window": the 10 s of the removed return lockout.
+    rows = [
+        _row(0, 1, "A", "B"),
+        _row(9.9, 1, "B", "A"),
+        _row(0, 2, "A", "B"),
+        _row(10.1, 2, "B", "A"),
+    ]
+    metrics = audit._route_metrics(rows, n_agents=2)
+    assert metrics["returns"] == 2
+    assert metrics["returns_within_window"] == 1
 
 
 def test_override_routing_sets_the_key_and_keeps_the_rest(audit):
