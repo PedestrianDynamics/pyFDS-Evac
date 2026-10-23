@@ -669,6 +669,36 @@ Files: `test_flow_schedule_run.py`, `test_run_outcome.py` and the new
   after its start (2.1 s for a window opening at 2 s); the cadence tests
   allow one frame and do not pin which.
 
+## Item 1: GUI/TUI (#836)
+
+Survey of `webapp/`, `tui/` and `config/frontend.py` against hand-applied
+mutants (survey ids F and T). The rows below are the run lifecycle of the
+GUI (`webapp/runner.py`, the `/run` and `/clear` routes). The remaining rows
+of the survey are still open.
+
+### Run lifecycle rows closed
+
+All tests are in `test_webapp.py`; the stubbed `run_scenario` decides what the
+worker logs and prints, so each expectation is a hand count.
+
+| Finding | Smell | Test | Mutant killed |
+|---|---|---|---|
+| F14 `RunManager.start` does not clear the cancel flag | self-fulfilling mock (the stub never called `progress_callback`), missing case | `TestCancelLifecycle::test_a_run_after_a_cancel_ends_done`: cancel one run, start a second on the same manager with a stub that ticks once; it ends `done`, run id 2, last event 7.0 | `self._cancel.clear()` replaced by `pass`: the second run ends `cancelled` |
+| F36 warning handler records nothing | untested behaviour | `TestRunCapture::test_model_warnings_reach_the_run_once_each_in_order` | `self._sink.append(message)` replaced by `pass` |
+| F37 handler not installed on the logger | untested behaviour | same test, warnings logged on the child `pyfds_evac.core.stub` | `addHandler` replaced by `pass` |
+| F38 logger level not lowered | untested behaviour | `test_warnings_survive_a_logger_configured_above_warning`; also pins that level and handlers are restored | `setLevel(logging.WARNING)` replaced by `pass` |
+| F10 warnings not de-duplicated | missing case | first test: "slice height" logged twice appears once, order kept, an INFO record absent | dedupe test replaced by `True` |
+| F11 warning cap off by one | missing boundary | `test_warnings_keep_the_newest_four`: seven warnings with the cap at 4 leave w3 to w6 | `[:-(cap + 1)]` |
+| F12 console cap off by one | missing boundary | `test_console_keeps_the_newest_five_lines`: eight lines with the cap at 5 leave line3 to line7 | `[:-(cap - 1)]` |
+| F13 console keeps CR progress chunks | missing case | `test_console_drops_carriage_return_chunks_and_unfinished_lines`: two `\r` chunks, one line, one unterminated write; only `done` is kept | the `\r` branch replaced by `False` |
+| F1 `/run` reconnect to the active run dropped | name overstates coverage | `test_run_route_reconnects_to_the_active_run` (live panel pinned to the first run id, no error, no second run) and `test_run_route_reconnects_to_a_cancelling_run` ("Cancelling…") | guard replaced by `False` |
+| F42 `/clear` guard | already covered | `test_clear_keeps_the_run_panel_while_a_worker_is_active` (existing; the survey did not run this mutant) | guard replaced by `False` |
+
+The caps are lowered by `monkeypatch` (4 warnings, 5 console lines) to keep
+the counts small; the values of `_MAX_WARNINGS` and `_MAX_LOG_LINES` are
+configuration and not pinned here. A new run starting with empty warning and
+console lists is also pinned (`test_a_new_run_starts_with_no_warnings`).
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
