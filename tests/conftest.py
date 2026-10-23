@@ -201,3 +201,42 @@ def bounded_search(monkeypatch):
         SimpleNamespace(heappush=heapq.heappush, heappop=counted_pop),
     )
     return pops
+
+
+_DESELECTED_EXTERNAL: list[str] = []
+
+
+def pytest_deselected(items):
+    """Remember the ``external_data`` tests a ``-m`` expression deselected."""
+    _DESELECTED_EXTERNAL.extend(
+        item.nodeid for item in items if item.get_closest_marker("external_data")
+    )
+
+
+def pytest_sessionfinish(session):
+    """Hand an xdist worker's deselected ids to the controller."""
+    output = getattr(session.config, "workeroutput", None)
+    if output is not None:
+        output["external_deselected"] = list(_DESELECTED_EXTERNAL)
+
+
+@pytest.hookimpl(optionalhook=True)
+def pytest_testnodedown(node, error):
+    """Collect the ids a finished xdist worker deselected (xdist hook)."""
+    for nodeid in getattr(node, "workeroutput", {}).get("external_deselected", []):
+        if nodeid not in _DESELECTED_EXTERNAL:
+            _DESELECTED_EXTERNAL.append(nodeid)
+
+
+def pytest_terminal_summary(terminalreporter):
+    """Say which end-to-end checks on external FDS output did not run."""
+    if not _DESELECTED_EXTERNAL:
+        return
+    terminalreporter.section("external_data tests that did not run")
+    terminalreporter.write_line(
+        f"{len(_DESELECTED_EXTERNAL)} deselected: they read FDS output from the "
+        "external data store (sciebo) and CI does not provide it. A green run "
+        "says nothing about them."
+    )
+    for nodeid in _DESELECTED_EXTERNAL:
+        terminalreporter.write_line(f"  {nodeid}")

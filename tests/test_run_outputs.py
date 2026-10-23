@@ -8,6 +8,7 @@ and ``pyfds_evac.cli`` keeps exposing the same objects under its names.
 from __future__ import annotations
 
 import ast
+import csv
 import pathlib
 from types import SimpleNamespace
 
@@ -140,3 +141,140 @@ def test_route_history_count_is_labelled_as_rows(tmp_path):
     lines: list[str] = []
     run_outputs.apply_outputs(result, None, opts, log=lines.append)
     assert lines == ["Route history rows: 3"]
+
+
+def _csv(path):
+    """The header and the rows of a written CSV file."""
+    with path.open(encoding="utf-8", newline="") as handle:
+        reader = csv.DictReader(handle)
+        rows = list(reader)
+        return reader.fieldnames, rows
+
+
+FED_COLUMNS = [
+    "time_s",
+    "agent_id",
+    "x",
+    "y",
+    "co_percent",
+    "co2_percent",
+    "o2_percent",
+    "hcn_ppm",
+    "no_ppm",
+    "no2_ppm",
+    "co_rate_per_min",
+    "cn_rate_per_min",
+    "nox_rate_per_min",
+    "fld_rate_per_min",
+    "hv_co2",
+    "o2_rate_per_min",
+    "fed_rate_per_min",
+    "fed_cumulative",
+    "temperature_celsius",
+    "heat_fed_rate_per_min",
+    "heat_fed_cumulative",
+    "incapacitation_cause",
+    "fic",
+    "fic_speed_factor",
+    "incapacitated",
+    "base_speed",
+    "desired_speed",
+    "speed_factor",
+]
+HEAT_COLUMNS = {
+    "heat_endpoint": "convective",
+    "heat_outside_validity": "True",
+    "heat_humidity": "0.5",
+    "heat_flux_kw_m2": "1.5",
+    "heat_integrated_intensity_kw_m2": "2.5",
+    "heat_layer_temperature_c": "80.0",
+    "in_fds_domain": "False",
+}
+
+
+def test_fed_csv_has_the_gas_columns_and_each_optional_group_when_present(tmp_path):
+    """Every key of a row is written; optional columns follow in a fixed order."""
+    gas = {name: str(index) for index, name in enumerate(FED_COLUMNS)}
+    plain = tmp_path / "plain.csv"
+    run_outputs._write_fed_history_csv([gas], str(plain))
+    assert _csv(plain) == (FED_COLUMNS, [gas])
+
+    full = tmp_path / "full.csv"
+    run_outputs._write_fed_history_csv([{**gas, **HEAT_COLUMNS}], str(full))
+    header, rows = _csv(full)
+    assert header == FED_COLUMNS + list(HEAT_COLUMNS)
+    assert rows == [{**gas, **HEAT_COLUMNS}]
+
+
+def test_exit_csv_records_whether_the_exit_was_in_the_agents_map(tmp_path):
+    """``exit_in_map`` is written; the writer ignores keys it does not know."""
+    path = tmp_path / "exits.csv"
+    rows = [
+        {
+            "agent_id": 3,
+            "origin": "hall",
+            "spawn_index": 0,
+            "exit_id": "A",
+            "exit_in_map": False,
+            "unlisted": "dropped",
+        }
+    ]
+    run_outputs._write_exit_history_csv(rows, str(path))
+    header, written = _csv(path)
+    assert header == ["agent_id", "origin", "spawn_index", "exit_id", "exit_in_map"]
+    assert written == [
+        {
+            "agent_id": "3",
+            "origin": "hall",
+            "spawn_index": "0",
+            "exit_id": "A",
+            "exit_in_map": "False",
+        }
+    ]
+
+
+def test_route_cost_csv_has_the_queue_and_capacity_columns(tmp_path):
+    path = tmp_path / "costs.csv"
+    columns = [
+        "time_s",
+        "agent_id",
+        "source",
+        "current_exit",
+        "current_fed",
+        "route_rank",
+        "exit_id",
+        "path",
+        "path_length_m",
+        "k_ave_route",
+        "travel_time_s",
+        "fed_max_route",
+        "composite_cost",
+        "rank_cost",
+        "k_max_route",
+        "tau_route",
+        "k_leg_max",
+        "clean",
+        "feasible",
+        "rejected",
+        "rejection_reason",
+        "queue_time_s",
+        "exit_count",
+        "exit_capacity",
+    ]
+    row = {name: str(index) for index, name in enumerate(columns)}
+    run_outputs._write_route_cost_history_csv([row], str(path))
+    assert _csv(path) == (columns, [row])
+
+
+def test_summary_line_names_the_placed_count_and_the_upper_bound():
+    """Placed 5 of at most 8: the two numbers differ, so a swap shows."""
+    result = SimpleNamespace(
+        success=True,
+        evacuation_time=12.0,
+        agents_evacuated=5,
+        total_agents=5,
+        fill_placement={"hall": {"placed": 5, "upper_bound": 8}},
+    )
+    assert run_outputs.summary_line(result) == (
+        "Simulation finished in 12.00 s (5/5 evacuated). 'hall' placed 5 of at most 8."
+    )

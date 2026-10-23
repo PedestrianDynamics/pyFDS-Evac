@@ -192,3 +192,55 @@ def test_geometry_only_omits_fire():
     assert "&OBST XB=" in deck
     assert "BURNER" not in deck
     assert "SLCF" not in deck
+
+
+def _raster(boxes, mx0, my0, ni, nj, dx) -> np.ndarray:
+    """Cells covered by the wall boxes, found by point-in-box at the cell centres."""
+    covered = np.zeros((ni, nj), dtype=bool)
+    for i in range(ni):
+        for j in range(nj):
+            cx, cy = mx0 + (i + 0.5) * dx, my0 + (j + 0.5) * dx
+            covered[i, j] = _covered(boxes, cx, cy)
+    return covered
+
+
+@pytest.mark.parametrize("wkt", [L_ROOM_WKT, HOLE_WKT, THIN_WALL_WKT])
+def test_walls_cover_every_cell_without_walkable_overlap(wkt):
+    """The converse of "walls never cover walkable": nothing else is left open.
+
+    A deck with no walls passes the one-sided check; here every cell the
+    walkable polygon does not overlap must lie in a wall box, else FDS leaks
+    smoke through the gap. Cell overlap is decided by the cell box itself.
+    """
+    from shapely.geometry import box
+
+    dx = 0.1 if wkt == THIN_WALL_WKT else 0.25
+    walk = _load_walkable(wkt)
+    boxes, (mx0, my0, _, _, ni, nj) = _obst_boxes(walk, dx, 1)
+    covered = _raster(boxes, mx0, my0, ni, nj, dx)
+    for i in range(ni):
+        for j in range(nj):
+            cell = box(
+                mx0 + i * dx, my0 + j * dx, mx0 + (i + 1) * dx, my0 + (j + 1) * dx
+            )
+            overlaps = walk.intersection(cell).area > 1e-12
+            assert covered[i, j] != overlaps, f"cell ({i}, {j}) overlap={overlaps}"
+
+
+def test_room_with_a_hole_gets_exactly_these_wall_boxes():
+    """10 x 10 m room, 2 x 2 m hole, dx 1 m, margin 1 cell: boxes derived by hand.
+
+    The mesh runs from -1 to 11 m. The greedy decomposition scans columns
+    from the left and rows upward: the bottom frame row, the left frame
+    column above it, the top frame row to the right of that, then the hole,
+    then the right frame column between the bottom and top rows.
+    """
+    boxes, (mx0, my0, mx1, my1, ni, nj) = _obst_boxes(_load_walkable(HOLE_WKT), 1.0, 1)
+    assert (mx0, my0, mx1, my1, ni, nj) == (-1.0, -1.0, 11.0, 11.0, 12, 12)
+    assert boxes == [
+        (-1.0, 11.0, -1.0, 0.0),
+        (-1.0, 0.0, 0.0, 11.0),
+        (0.0, 11.0, 10.0, 11.0),
+        (4.0, 6.0, 4.0, 6.0),
+        (10.0, 11.0, 0.0, 10.0),
+    ]
