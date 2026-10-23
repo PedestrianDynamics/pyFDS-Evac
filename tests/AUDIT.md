@@ -634,6 +634,41 @@ must-flee, #696, #751, #835; travel time uses f(mean K)) and repeated under
 "Routing: policy". Nothing in this section adds to that list; the tests of this area pin the code's
 behaviour, not the model's validity.
 
+## Item 1: spawning and flows
+
+Modules `pyfds_evac/core/scenario.py` (flow loop, outcome counts) and
+`pyfds_evac/core/simulation_init.py` (flow spacing, both set-up paths).
+Weak-test survey of issue #836; this part closes the flow cadence and the
+run-outcome bookkeeping. The mutants were applied by hand to the file and
+line named, run against the three files below, and reverted.
+
+Files: `test_flow_schedule_run.py`, `test_run_outcome.py` and the new
+`test_agent_conservation.py`.
+
+### Fixed
+
+| Finding | Test | Mutant killed by it |
+|---|---|---|
+| No run asserted when a flow agent enters; the spacing `duration / n` was pinned only by a unit test that is given the frequency | `test_flow_spawning_enters_one_agent_every_window_over_count[journeys, no-journeys]`: 6 agents over [0, 6] s enter at 0, 1, ... 5 s, each within one 0.1 s frame | `duration / (n + 1)` at `simulation_init.py:2056` (no journeys) and `:3288` (journeys), each killed by its own parameter |
+| The same for a `flow_schedule` window | `test_a_flow_schedule_window_enters_one_agent_every_window_over_count[journeys, no-journeys]`: 6 agents in [2, 8] s enter at 2, 3, ... 7 s | `duration / (n + 1)` at `:1980` (no journeys) and `:3228` (journeys), each killed by its own parameter |
+| `0 < agents_not_spawned < 10` | `test_a_window_past_the_time_limit_leaves_agents_unspawned` now asserts `(total, not_spawned) == (2, 8)` and `(evacuated, remaining) == (0, 2)`, derived in the docstring (entries at 2 s and 3 s, the 4 s limit ends the run first) | `not_spawned` off by one (`scenario.py:3849`) |
+| `test_run_outcome.py` never asserted the identity or `agents_evacuated` | the completed, time-limit and flow-cut cases assert `total == evacuated + remaining` and `total + not_spawned == configured`, with the exact counts (6/0/0, 0/6/0, 0/1/5) | `agents_evacuated = total_agents` (`scenario.py:3881`, was killed only by an incapacitation test); `not_spawned` off by one |
+| No conservation table | `test_agent_conservation.py`: seven fixed-seed runs (by number, flow with and without journeys, initial plus scheduled, time limit on each) with hand-derived counts | `total_agents` ignoring flow agents (`scenario.py:3844`); the two above |
+| The cadence mutant "spawn all agents at window open" was killed only by the band | now also killed by the six cadence tests and the exact-count tests | `start = flow["start_time"]` (`scenario.py:983`) |
+
+### Open
+
+- `_defer_flow_spawn` count, the "did not enter" line, `_percentage_count`
+  floor, `_check_flow_rate` equality, `_schedule_window` tolerance and
+  `test_positions_are_kept_only_before_a_due_spawn` band: not in this
+  part.
+- The conservation table has no run with incapacitated agents; they stay
+  in `agents_remaining`, and `test_incapacitation_absorbing.py` covers the
+  guard.
+- The first agent of a `flow_schedule` window is first seen in the frame
+  after its start (2.1 s for a window opening at 2 s); the cadence tests
+  allow one frame and do not pin which.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
@@ -647,4 +682,4 @@ examples (`derandomize=True`), so CI runs are reproducible.
 | Rate is zero for clean air at or above the O2 threshold | FED | `test_fed_properties.py` |
 | Accumulated FED is additive in duration under constant exposure | FED | `test_fed_properties.py` |
 | Accumulating for `time_to_fed_threshold_s` gives FED 1 | FED | `test_fed_properties.py` (consistency check) |
-| Agents are conserved (spawned = evacuated + remaining + incapacitated) | scenario | Open; each example is a simulation run, expensive |
+| Agents are conserved (spawned = evacuated + remaining + incapacitated) | scenario | Seven fixed runs in `test_agent_conservation.py`; no generated cases, each is a simulation run |
