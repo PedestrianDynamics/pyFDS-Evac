@@ -661,6 +661,165 @@ class TestCancelLifecycle:
         # A client that sees ``done`` may start the next run at once.
         assert seen == ["running"]
 
+    def test_run_route_reconnects_to_the_active_run(self, rm, client):
+        import threading
+
+        mgr, calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        first = mgr.run_id
+        r = client.post("/run", data={"scenario": "ISO-table21", "seed": "1"})
+        # The live panel of the first run, not a form error and not a new run.
+        assert f'sse-connect="/progress?run={first}"' in r.text
+        assert "already in progress" not in r.text
+        assert "Cancel run" in r.text
+        assert mgr.run_id == first
+        assert calls["run"] == 0
+
+    def test_run_route_reconnects_to_a_cancelling_run(self, rm, client):
+        import threading
+
+        mgr, _calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        r = client.post("/run", data={"scenario": "ISO-table21", "seed": "1"})
+        assert "Cancelling…" in r.text
+        assert "already in progress" not in r.text
+
+    def test_a_run_after_a_cancel_ends_done(self, rm, monkeypatch):
+        import threading
+
+        mgr, calls, gate = rm
+        entered = threading.Event()
+        mgr.start(None, self._blocking(gate, "build", entered), "stub")
+        assert entered.wait(5.0)
+        mgr.cancel()
+        gate["build"].set()
+        assert mgr.join(5.0)
+        assert mgr.status == "cancelled"
+
+        # The next run reports progress; a flag left set by the cancel would
+        # raise RunCancelled at its first tick.
+        def ticking_run_scenario(scenario, progress_callback=None, **kwargs):
+            calls["run"] += 1
+            progress_callback(SimpleNamespace(sim_time=7.0))
+            return SimpleNamespace(sqlite_file=None)
+
+        monkeypatch.setattr(
+            "pyfds_evac.webapp.runner.run_scenario", ticking_run_scenario
+        )
+        mgr.start(None, dict, "stub")
+        assert mgr.join(5.0)
+        assert mgr.status == "done"
+        assert mgr.run_id == 2
+        assert calls["run"] == 1
+        assert mgr.last_event.sim_time == 7.0
+
+
+class TestRunCapture:
+    """The worker hands the model's warnings and printed lines to the GUI.
+
+    ``run_scenario`` is replaced by a stub that logs and prints, so the
+    expected lists are known by construction. The caps are lowered to 4
+    warnings and 5 console lines to keep the hand count small.
+    """
+
+    @pytest.fixture
+    def cap(self, monkeypatch):
+        import logging
+
+        import pyfds_evac.webapp.runner as runner
+        from pyfds_evac.webapp.runner import RunManager
+
+        monkeypatch.setattr(runner, "_MAX_WARNINGS", 4)
+        monkeypatch.setattr(runner, "_MAX_LOG_LINES", 5)
+        # The console capture echoes to the real stdout; keep it out of the log.
+        monkeypatch.setattr(runner.sys, "__stdout__", io.StringIO())
+        logger = logging.getLogger("pyfds_evac")
+        level, handlers = logger.level, list(logger.handlers)
+        yield RunManager(), logger, monkeypatch
+        logger.setLevel(level)
+        logger.handlers[:] = handlers
+
+    @staticmethod
+    def _run(mgr, monkeypatch, body):
+        def stub(scenario, progress_callback=None, **kwargs):
+            body()
+            return SimpleNamespace(sqlite_file=None)
+
+        monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", stub)
+        mgr.start(None, dict, "stub")
+        assert mgr.join(5.0)
+        assert mgr.status == "done"
+
+    def test_model_warnings_reach_the_run_once_each_in_order(self, cap):
+        import logging
+
+        mgr, _logger, mp = cap
+
+        def body():
+            child = logging.getLogger("pyfds_evac.core.stub")
+            child.warning("slice height")
+            child.info("not a warning")
+            child.warning("outside domain")
+            child.warning("slice height")
+
+        self._run(mgr, mp, body)
+        assert mgr.warnings == ["slice height", "outside domain"]
+
+    def test_warnings_survive_a_logger_configured_above_warning(self, cap):
+        import logging
+
+        mgr, logger, mp = cap
+        logger.setLevel(logging.ERROR)
+        before = list(logger.handlers)
+        self._run(mgr, mp, lambda: logger.warning("quiet"))
+        assert mgr.warnings == ["quiet"]
+        # The run leaves the logger as it found it.
+        assert logger.level == logging.ERROR
+        assert logger.handlers == before
+
+    def test_warnings_keep_the_newest_four(self, cap):
+        mgr, logger, mp = cap
+
+        def body():
+            for i in range(7):
+                logger.warning("w%d", i)
+
+        self._run(mgr, mp, body)
+        assert mgr.warnings == ["w3", "w4", "w5", "w6"]
+
+    def test_a_new_run_starts_with_no_warnings(self, cap):
+        mgr, logger, mp = cap
+        self._run(mgr, mp, lambda: logger.warning("first"))
+        self._run(mgr, mp, lambda: None)
+        assert mgr.warnings == []
+
+    def test_console_keeps_the_newest_five_lines(self, cap):
+        mgr, _logger, mp = cap
+
+        def body():
+            for i in range(8):
+                print(f"line{i}")
+
+        self._run(mgr, mp, body)
+        assert mgr.log_lines == ["line3", "line4", "line5", "line6", "line7"]
+
+    def test_console_drops_carriage_return_chunks_and_unfinished_lines(self, cap):
+        mgr, _logger, mp = cap
+
+        def body():
+            print("Evacuated 1/3\r", end="")
+            print("Evacuated 2/3\r", end="")
+            print("done")
+            print("unfinished", end="")
+
+        self._run(mgr, mp, body)
+        assert mgr.log_lines == ["done"]
+
 
 class TestScenarioPath:
     """The picker value reaches load_scenario as a path, so it must be clamped.
