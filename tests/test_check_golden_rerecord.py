@@ -124,3 +124,36 @@ def test_the_command_line_reads_the_diff_and_the_body(tmp_path, monkeypatch):
     odd_missing = run("No section.")
     assert odd_missing.returncode == 1
     assert "tab\there.json" in odd_missing.stderr
+
+
+def test_the_diff_is_taken_from_the_merge_base(tmp_path):
+    """A golden change that landed on the base after the branch point is not the PR's.
+
+    The branch changes a README only; the base moved on and changed a golden
+    file. The range ``base...head`` compares against the merge base, so the
+    PR passes; ``base..head`` would list the golden file as changed.
+    """
+    _git(tmp_path, "init", "-q", "-b", "main")
+    _git(tmp_path, "config", "user.email", "t@example.org")
+    _git(tmp_path, "config", "user.name", "t")
+    golden = tmp_path / "tests" / "golden" / "a.json"
+    golden.parent.mkdir(parents=True)
+    golden.write_text("{}")
+    (tmp_path / "README.md").write_text("a")
+    _git(tmp_path, "add", ".")
+    _git(tmp_path, "commit", "-q", "-m", "fork point")
+    _git(tmp_path, "checkout", "-q", "-b", "feature")
+    (tmp_path / "README.md").write_text("b")
+    _git(tmp_path, "commit", "-q", "-am", "feature")
+    _git(tmp_path, "checkout", "-q", "main")
+    golden.write_text('{"a": 1}')
+    _git(tmp_path, "commit", "-q", "-am", "base moves on")
+
+    done = subprocess.run(
+        [sys.executable, str(SCRIPT), "--base", "main", "--head", "feature"],
+        cwd=tmp_path,
+        env={"PR_BODY": "No section.", "PATH": "/usr/bin:/bin"},
+        capture_output=True,
+        text=True,
+    )
+    assert (done.returncode, done.stderr) == (0, "")
