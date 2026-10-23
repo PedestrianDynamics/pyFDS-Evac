@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-10-23
+
+### Upgrading
+
+- The routing key `impassable_extinction_threshold` is removed and stops
+  the run at load with a `ValueError` naming the removal (#835). Delete it
+  from your decks. `RouteCostConfig` positional arguments after it shift
+  by one.
+- A journey's allocated exit is now a preference (#854). Set
+  `"allocation": "hard"` on a journey to keep the exit fixed as before.
+- The Fridolf smoke-speed law defaults to A = 2; set
+  `visibility_factor_c = 3` to reproduce 0.6.x results.
+- The PVC decks burn with `HEAT_OF_COMBUSTION=10300` (#796); rerun FDS
+  for `t_junction` and the Schröder 2015 route decks before comparing
+  with 0.6.x results.
+
 ### Added
 
 - `scripts/margin_audit.py` compares code as well as config (#187). Each arm
