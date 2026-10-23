@@ -220,8 +220,9 @@ def pytest_sessionfinish(session):
         output["external_deselected"] = list(_DESELECTED_EXTERNAL)
 
 
+@pytest.hookimpl(optionalhook=True)
 def pytest_testnodedown(node, error):
-    """Collect the ids a finished xdist worker deselected."""
+    """Collect the ids a finished xdist worker deselected (xdist hook)."""
     for nodeid in getattr(node, "workeroutput", {}).get("external_deselected", []):
         if nodeid not in _DESELECTED_EXTERNAL:
             _DESELECTED_EXTERNAL.append(nodeid)
