@@ -774,6 +774,45 @@ survived.
 - Sampling geometry and horizon findings (`line_parts` edge cases, line cache
   key, horizon equality) belong to the next pull request of the survey.
 
+## Item 1: FDS sampling geometry and horizon (#836)
+
+Module `pyfds_evac/core/fds_sampling.py`; the survey's area C, the part
+that is not the vismap and clear-air cache keys. The mutants were applied
+by hand to the line named, run against the new file, and reverted
+(bytecode disabled, so a same-size mutant cannot reuse a stale `.pyc`).
+
+File: `test_fds_sampling_geometry.py`. Its slices are synthetic node grids
+(x = 0..10, y = 0..4, 1 m apart) whose frame value is the frame index, so
+every expectation is a count of nodes or frames.
+
+### Fixed
+
+| Finding | Smell | Test | Mutant killed |
+|---|---|---|---|
+| Every line in the old tests is horizontal or the diagonal | missing boundary | `test_a_segment_parallel_to_and_outside_an_edge_reads_nothing`: four segments one metre beyond an edge, parallel to it, each one outside part | `if q < 0.0: return None` removed (`_clip_to_extent`) |
+| No segment touches a corner | missing boundary | `test_a_segment_touching_a_corner_counts_as_outside` (corner at t = 0 and t = 1) | `ta < tb` to `ta <= tb` |
+| `_subtract` keeps empty pieces; only a zero-length part shows it | missing case | `test_a_subslice_inside_an_earlier_one_adds_no_part`: B inside A and ending with the line gives one part | `piece[0] < piece[1]` to `<=` |
+| Overlap rule (#653) pinned by cells, not by the part bounds | missing case | `test_the_first_subslice_takes_the_overlap_band`: A x = 0..6, B x = 5..10 give parts 0..0.6 and 0.6..1 | none in the survey; pins the rule |
+| `_same_cell` never decides a result | missing case | `test_ends_in_one_column_but_two_rows_give_two_samples` (two samples) and `test_ends_in_one_cell_give_one_sample` | `_cell_fractions` skips `_same_cell` |
+| Line cache keyed on the start and `x1` only | missing case | `test_lines_sharing_start_and_x_end_are_kept_apart`: (2, 0)-(8, 0) then (2, 0)-(8, 2); rows 0 x 7 and 0, 0, 1, 1, 1, 2, 2 | key without `y1` |
+| Vector nearest index: ties and a one-position axis unpinned | missing boundary | `test_a_start_between_two_nodes_reads_the_lower_one`, `test_nearest_indices_ties_go_to_the_lower_value_position`, `test_nearest_indices_of_a_single_position_axis_is_zero` | tie to the upper; single-position branch removed (the wrap-around -1 reads the same cell, so only the index shows it) |
+| Sampler horizon `<=` was killed by an unrelated single-frame test | missing boundary | `test_the_horizon_itself_passes_and_the_next_float_raises`: 10 s frames (11 s) and the clipped final frame (10 + 1.5 = 11.5 s), `nextafter` raises | `time_s <= last + interval` to `<` |
+| `read_cells` horizon unpinned (the upstream cap hides it) | missing case | `test_read_cells_checks_the_horizon_of_a_time_vector` (frames 0, 2, 4, 6, 10 at the horizon; one float later raises) and `test_read_cells_holds_the_last_frame_with_the_flag` (one warning) | `_frames` without the horizon check |
+| Case horizon: one case, one slice | missing case | `test_the_slice_that_ends_first_sets_the_case_horizon` (either order) and `test_a_single_frame_slice_does_not_set_the_case_horizon` | `min` to `max` in `fds_output_horizon` |
+| Height tolerance equality and tie order | missing boundary | `test_the_height_warning_stops_at_the_tolerance` (0.5 m silent, 0.51 m reported), `test_the_first_of_two_equally_near_slices_is_chosen` | `<=` to `<` at the tolerance; last equal slice wins |
+
+### Open
+
+- `_nearest_frames` without the `times > 0` rule: equivalent for frame
+  times that are not negative. For a time at or before the first frame the
+  wrapped "before" frame is the last one, never nearer; `idx == count`
+  already takes the earlier frame. Not pinned.
+- Survey rows outside this part: `SliceGrid.values` outside cells (killed
+  in the wide set), `_VisMapCache._nearest` tie, `visibility_to_node`
+  exception set, observer-outside-grid equality, `_vis_metre_array` mask.
+- The sciebo-dependent tests (`test_t_junction_*`) are still skipped
+  silently when the data is absent.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
