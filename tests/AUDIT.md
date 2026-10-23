@@ -812,7 +812,8 @@ survived.
 ### Open
 
 - Sampling geometry and horizon findings (`line_parts` edge cases, line cache
-  key, horizon equality) belong to the next pull request of the survey.
+  key, horizon equality): closed in "FDS sampling geometry and horizon"
+  below.
 
 ## Item 1: FDS sampling geometry and horizon (#836)
 
@@ -850,8 +851,9 @@ every expectation is a count of nodes or frames.
 - Survey rows outside this part: `SliceGrid.values` outside cells (killed
   in the wide set), `_VisMapCache._nearest` tie, `visibility_to_node`
   exception set, observer-outside-grid equality, `_vis_metre_array` mask.
-- The sciebo-dependent tests (`test_t_junction_*`) are still skipped
-  silently when the data is absent.
+- The sciebo-dependent tests (`test_t_junction_*`) skip without the data;
+  the skip reason and the end-of-run list now name them (see "I/O and
+  manifests").
 
 ## Item 1: I/O and manifests (#836)
 
