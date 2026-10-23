@@ -684,3 +684,39 @@ def test_scheduled_allocated_exit_closed_at_spawn_takes_the_rival():
     run = _run(scenario, False)
     assert run["exits"]["area_a"] == ["east"] * AGENTS_PER_AREA
     assert run["exits"]["area_b"] == ["east"] * AGENTS_PER_AREA
+
+
+FLOW = {"use_flow_spawning": True, "flow_start_time": 0, "flow_end_time": 6}
+
+
+@pytest.mark.parametrize("rerouting", [False, True], ids=["off", "on"])
+def test_flow_spawned_agents_hold_the_allocation_as_a_preference(rerouting):
+    run = _run(single_exit_scenario(parameters=FLOW), rerouting)
+    assert run["evacuated"] == run["total"] == 2 * AGENTS_PER_AREA
+    assert run["exits"]["area_a"] == ["east"] * AGENTS_PER_AREA
+    assert run["exits"]["area_b"] == ["west"] * AGENTS_PER_AREA
+
+
+@pytest.mark.parametrize("rerouting", [False, True], ids=["off", "on"])
+def test_flow_spawned_agents_keep_a_hard_allocation(rerouting):
+    run = _run(single_exit_scenario("hard", parameters=FLOW), rerouting)
+    assert run["exits"]["area_a"] == ["west"] * AGENTS_PER_AREA
+    assert run["exits"]["area_b"] == ["west"] * AGENTS_PER_AREA
+
+
+@pytest.mark.parametrize("rerouting", [False, True], ids=["off", "on"])
+def test_allocated_exit_closing_mid_run_gives_way_to_the_rival(rerouting):
+    """The agents of area_b, still heading west at 20 s, leave it by exit_closed."""
+    scenario = single_exit_scenario(exit_extra={"west": {"closed_after_s": 20.0}})
+    run = _run(scenario, rerouting)
+    closed = [(s["old_exit"], s["new_exit"], s["reason"]) for s in run["switches"]]
+    assert closed == [("west", "east", "exit_closed")] * AGENTS_PER_AREA
+    assert run["exits"]["area_b"] == ["east"] * AGENTS_PER_AREA
+
+
+@pytest.mark.parametrize("rerouting", [False, True], ids=["off", "on"])
+def test_hard_allocation_does_not_leave_an_exit_closing_mid_run(rerouting):
+    scenario = single_exit_scenario(
+        "hard", exit_extra={"west": {"closed_after_s": 20.0}}
+    )
+    assert not _run(scenario, rerouting)["switches"]
