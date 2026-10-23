@@ -93,11 +93,11 @@ def _node(v):
 
 def test_band_fixed_position_counts_the_cells():
     # Nodes 2.00..20.00 are 73 cells, four of them at K = 10: tau = 18*40/73.
-    # The 2 m step reads 10 samples, one on node 10.0, and gives 18.0.
+    # The 2 m step reads 10 samples, one on node 10.0, and gives 18.0. The
+    # continuous integral is 10.0; the cells give 720 / 73 = 9.863.
     tau, k_max = _tau(_band(), 2.0, 0.0, 20.0, 0.0)
-    assert tau == pytest.approx(18.0 * 40.0 / 73.0, abs=1e-6)
+    assert tau == pytest.approx(18.0 * 40.0 / 73.0, rel=1e-12)
     assert k_max == 10.0
-    assert abs(tau - 10.0) <= 0.25
 
 
 def test_band_sliding_agent_keeps_every_cell():
@@ -113,14 +113,16 @@ def test_band_sliding_agent_keeps_every_cell():
 
 
 def test_band_diagonal_leg_does_not_skip_the_plume():
-    # A 30 degree leg marches the x columns; the core is crossed over
-    # 1.0 / cos 30 = 1.155 m, so tau is near K * w / cos 30 = 11.55.
+    # A 30 degree leg marches the x columns: x = 4.00..16.00 are 49 nodes,
+    # four of them in the core, so the mean K is 40 / 49 over the length
+    # 12 / cos 30; tau = 40 / 49 * 12 / cos 30 = 11.311. The continuous
+    # crossing, K * w / cos 30 = 11.55, is 2 % higher: the cells discretise it.
     angle = math.radians(30.0)
     x0, x1 = 4.0, 16.0
     y0 = -0.5 * (x1 - x0) * math.tan(angle)
     tau, k_max = _tau(_band(), x0, y0, x1, -y0)
     assert k_max == 10.0
-    assert abs(tau - 10.0 / math.cos(angle)) <= 10.0 * 0.25 / math.cos(angle)
+    assert tau == pytest.approx(40.0 / 49.0 * 12.0 / math.cos(angle), rel=1e-12)
 
 
 def test_band_along_y_is_marched_by_rows():
@@ -134,7 +136,9 @@ def test_band_along_y_is_marched_by_rows():
     assert k_max == 10.0
     tau, k_max = _tau(field, -1.0, 4.0, 1.0, 16.0)
     assert k_max == 10.0
-    assert tau == pytest.approx(10.0 * math.hypot(2.0, 12.0) / 12.0, abs=0.25)
+    # Rows y = 4.00..16.00 are 49 nodes, four of them in the core: the mean
+    # K is 40 / 49 over the length hypot(2, 12).
+    assert tau == pytest.approx(40.0 / 49.0 * math.hypot(2.0, 12.0), rel=1e-12)
 
 
 def test_lines_from_one_start_are_kept_apart():

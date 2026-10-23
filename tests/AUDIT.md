@@ -293,16 +293,18 @@ offsets and its cap at the last FDS frame; `_fds_end` takes the earliest.
   of the speed factors along it: a modelling choice, pinned by the hand
   value above.
 
-### Open
+### Tolerance rows closed (#836)
 
-The rows below come from a review pass; each smell is confirmed only when
-its row is fixed.
+Each tolerance is replaced by the hand count and `rel=1e-12` (`1e-9` for
+the convergence values). The mutants below are ones the old tolerance
+admitted: the old test passes them, the new one fails them.
 
-| Test | Smell | Proposed contract |
+| Test | Change | Mutant killed |
 |---|---|---|
-| `test_route_grid_sampling.py::test_band_diagonal_leg_does_not_skip_the_plume` | tolerance camouflage | `abs <= 2.9` (25 %) around 11.55, the crossing length of the core; derive the cell count for the 30 degree leg and pin it |
-| `test_route_grid_sampling.py::test_band_fixed_position_counts_the_cells` | tolerance | `abs(tau - 10) <= 0.25` documents the discretisation, but the 18 x 40 / 73 value above it already fixes the result |
-| `test_route_smoke_integral.py` convergence tests (`rel=0.02`) | tolerance | Ordered errors are asserted; derive 0.02 from the step sizes |
+| `test_route_grid_sampling.py::test_band_diagonal_leg_does_not_skip_the_plume` | `abs <= 2.9` around 11.55; now 49 nodes x = 4.00..16.00, four in the core: `40 / 49 x 12 / cos 30 = 11.311` | `_cell_fractions` drops the start sample (48 samples, tau 12.0); the old test passes it |
+| `test_route_grid_sampling.py::test_band_fixed_position_counts_the_cells` | the extra `abs(tau - 10) <= 0.25` removed: the `18 x 40 / 73` line above it, now `rel=1e-12`, fixes the value (10.0 is the continuous integral, 9.863 the cell count) | `_cell_fractions` drops the end sample; the retained line kills it, and the old tolerance on it was `abs=1e-6` |
+| `test_route_grid_sampling.py::test_band_along_y_is_marched_by_rows` (second leg) | `abs=0.25`; now `40 / 49 x hypot(2, 12)` | none needed: the first leg of the same test already kills a dropped sample; this assertion was tightened for consistency |
+| `test_route_smoke_integral.py::test_step_field_converges_to_the_line_integral` | `rel=0.02` around 1 / 2.1; now the sample count: one segment `10 x 101 / 2101`, two segments `(10 x 0.1 + 10 / 2001 x 2.0) / 2.1` | `_step_los_stats` takes one extra sample (`+ 1` to `+ 2`, relative change 5e-4); the old test passes it |
 
 ## Routing: graph
 
