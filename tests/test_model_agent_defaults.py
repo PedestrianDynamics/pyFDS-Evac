@@ -8,15 +8,17 @@ taken from their sources, not read from the code:
   ``simulationParams.number``, ``.radius``, ``.v0`` row ("10, 0.2 m,
   1.25 m/s"); 1.25 m/s is FDS+Evac's ``VEL_MEAN``
   (docs/coming-from-fds-evac.md).
-- GCFM ``tau`` 0.5 s, ``a_v`` 1, ``a_min`` 0.2, ``b_min`` 0.2, ``b_max`` 0.4:
-  the ``GeneralizedCentrifugalForceModelAgentParameters`` defaults of
-  JuPedSim 1.4.2.
+- GCFM ``mass`` 1, ``tau`` 0.5 s, ``a_v`` 1, ``a_min`` 0.2, ``b_min`` 0.2,
+  ``b_max`` 0.4: the ``GeneralizedCentrifugalForceModelAgentParameters``
+  defaults of JuPedSim 1.4.2. JuPedSim scales the driving and neighbour
+  forces by ``mass`` but not the wall force, so a larger mass weakens only
+  the walls (#868).
 - AVM ``time_gap`` 1.06 s, ``anticipation_time`` 1.0 s, ``reaction_time``
   0.3 s: the ``AnticipationVelocityModelAgentParameters`` defaults of
-  JuPedSim 1.4.2.
+  JuPedSim 1.4.2. The deck keys are the JuPedSim names; the
+  CollisionFreeSpeedModel keys ``T`` and ``s0`` are not read (#868).
 
-The GCFM ``mass`` default (80 kg; JuPedSim's own default is 1) has no cited
-source and is not pinned. A JuPedSim upgrade that changes a default above
+A JuPedSim upgrade that changes a default above
 fails here on purpose: decide whether the deck default follows it.
 """
 
@@ -58,6 +60,7 @@ def test_radius_default(model):
 @pytest.mark.parametrize("global_params", [None, SimpleNamespace()])
 def test_gcfm_defaults_without_global_parameters(global_params):
     agent = _defaults(GCFM, global_params)
+    assert agent.mass == 1.0
     assert agent.tau == 0.5
     assert agent.a_v == 1.0
     assert agent.a_min == 0.2
@@ -71,6 +74,19 @@ def test_avm_defaults_without_global_parameters(global_params):
     assert agent.time_gap == 1.06
     assert agent.anticipation_time == 1.0
     assert agent.reaction_time == 0.3
+
+
+def test_avm_ignores_collision_free_speed_keys():
+    # A deck exported for CollisionFreeSpeedModel carries T and s0 (#868).
+    agent = _defaults(AVM, SimpleNamespace(T=2.0, s0=0.5))
+    assert agent.anticipation_time == 1.0
+    assert agent.reaction_time == 0.3
+
+
+def test_avm_reads_its_own_keys():
+    agent = _defaults(AVM, SimpleNamespace(anticipation_time=2.0, reaction_time=0.4))
+    assert agent.anticipation_time == 2.0
+    assert agent.reaction_time == 0.4
 
 
 class _FixedDraws:
