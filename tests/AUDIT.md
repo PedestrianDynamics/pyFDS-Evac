@@ -643,7 +643,10 @@ run-outcome bookkeeping. The mutants were applied by hand to the file and
 line named, run against the three files below, and reverted.
 
 Files: `test_flow_schedule_run.py`, `test_run_outcome.py` and the new
-`test_agent_conservation.py`.
+`test_agent_conservation.py`. The rows closed for #876 were mutated the
+same way (hand-applied, run against `test_flow_spawn_spacing.py`,
+`test_flow_spawn_checks.py` and `test_agent_conservation.py`, reverted);
+`test_flow_spawn_checks.py` is new.
 
 ### Fixed
 
@@ -655,16 +658,19 @@ Files: `test_flow_schedule_run.py`, `test_run_outcome.py` and the new
 | `test_run_outcome.py` never asserted the identity or `agents_evacuated` | the completed, time-limit and flow-cut cases assert `total == evacuated + remaining` and `total + not_spawned == configured`, with the exact counts (6/0/0, 0/6/0, 0/1/5) | `agents_evacuated = total_agents` (`scenario.py:3881`, was killed only by an incapacitation test); `not_spawned` off by one |
 | No conservation table | `test_agent_conservation.py`: seven fixed-seed runs (by number, flow with and without journeys, initial plus scheduled, time limit on each) with hand-derived counts | `total_agents` ignoring flow agents (`scenario.py:3844`); the two above |
 | The cadence mutant "spawn all agents at window open" was killed only by the band | now also killed by the six cadence tests and the exact-count tests | `start = flow["start_time"]` (`scenario.py:983`) |
+| `_defer_flow_spawn` count was asserted against the metric, which is the same count | `test_a_full_area_defers_the_flow_and_reports_it` asserts 101 deferrals and "101 steps" (t = 0.00 ... 1.00 s at 0.01 s); `test_deferrals_of_a_source_are_counted_with_their_first_and_last_time` | `count + 2` and `count` at `scenario.py:1017` |
+| The "did not enter" figure was only seen as 5 of 5, where `numbers - counters` equals `numbers` | `test_the_report_counts_the_agents_that_did_not_enter`: 2 of 5 entered gives "3 of its 5", 0 of 4 gives "4 of its 4", source named by index without a `dist_key` | `numbers[source_id]` alone (survived the run tests) and `counters[source_id]` alone at `scenario.py:1040` |
+| `_percentage_count` floor: only 10, 50 and 90 % of one area, through whole runs | `test_percentage_count_floors_the_share_of_the_capacity[10, 50, 90, 1]` and `test_percentage_count_places_at_least_one_agent` (100 m2 at 0.5 m: capacity 63; 6, 31, 56, 1; 1 m2: 0.5 raised to 1) | `round(...)` for `int(...)` and `max(0, ...)` for `max(1, ...)` at `simulation_init.py:1044` |
+| `_check_flow_rate` equality had no test at the boundary | `test_a_flow_rate_equal_to_the_capacity_is_accepted` (4 agents over 2 s, capacity 2) and `test_a_flow_rate_above_the_capacity_is_refused` (2.5 agents/s) | `rate >= capacity` at `simulation_init.py:1103` |
+| `_schedule_window` tolerance was never at the edge | `test_a_window_short_by_rounding_is_accepted` (3 agents at 0.1 s in [0, 0.3]: 3 * 0.1 = 0.30000000000000004), `test_a_window_short_by_more_than_the_tolerance_is_refused` (1e-7 s short), `test_a_window_of_exactly_one_step_per_agent_is_accepted` | dropping `+ 1e-9` and widening it to `1e-6` at `simulation_init.py:1090` |
+| `test_positions_are_kept_only_before_a_due_spawn` allowed 5 to 11 snapshots | the band is now 5 to 6, derived in the docstring (one before the run, one per later spawn, one more for the float rounding of 3 * 0.4) | the half-step margin `dt / 2` widened to `dt` at `scenario.py:1007`, which takes 9 snapshots and passed the old band |
+| The conservation table had no run with incapacitated agents | `test_incapacitated_agents_stay_in_agents_remaining[by-number, flow]` in `test_agent_conservation.py`: five agents collapse within a second under uniform lethal CO, 35 m or more from the exit; (evacuated, remaining, not_spawned, incapacitated) = (0, 5, 0, 5) | `remaining = simulation.agent_count() - len(incapacitated_agents)` at `scenario.py:3841` |
 
 ### Open
 
-- `_defer_flow_spawn` count, the "did not enter" line, `_percentage_count`
-  floor, `_check_flow_rate` equality, `_schedule_window` tolerance and
-  `test_positions_are_kept_only_before_a_due_spawn` band: not in this
-  part.
-- The conservation table has no run with incapacitated agents; they stay
-  in `agents_remaining`, and `test_incapacitation_absorbing.py` covers the
-  guard.
+- `_schedule_window` with `>=` for `>` is an equivalent mutant: the
+  `1e-9` tolerance already accepts a window of exactly `number * dt`, so
+  no input separates the two.
 - The first agent of a `flow_schedule` window is first seen in the frame
   after its start (2.1 s for a window opening at 2 s); the cadence tests
   allow one frame and do not pin which.
