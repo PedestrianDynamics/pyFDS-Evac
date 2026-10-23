@@ -734,6 +734,46 @@ pin.
 - Not in this pull request: `_normalize_speed_factor` copy, choice-stream
   seed, target clearance and the other survey rows of area A.
 
+## Item 1: FDS sampling and visibility cache
+
+Weak-test survey of the visibility cache (issue #836, item 1). Only the
+cache keys and the cached sighting distance are closed here; the sampling
+geometry and horizon findings of the same survey stay open.
+
+### Mutation checks
+
+Each defect was applied to `pyfds_evac/core/visibility.py`, the two files
+below were run, and the source was restored. Before the new tests all eight
+survived.
+
+| Defect | Killed by |
+|---|---|
+| `_make_meta` drops `time_step_s` | `test_visibility.py::TestVismapCacheKey::test_changing_one_field_rebuilds[time_step_s]` |
+| `_make_meta` drops `slice_height_m` | `...[slice_height_m]` |
+| sign `alpha` in the key replaced by `None` | `...[alpha]` |
+| sign `c` in the key replaced by 3 | `...[c]` |
+| clear-air key drops the walkable hash | `TestClearAirCacheKey::test_changing_one_field_rebuilds[walkable]` |
+| clear-air key drops `cell_size_m` | `...[cell_size_m]` |
+| clear-air key drops `extinction_per_m` | `...[extinction_per_m]` |
+| `_vis_metre_array` drops the obstruction mask | `test_fdsvismap_adapter.py::test_cached_sighting_distance_respects_an_obstruction` |
+
+### Fixed
+
+- The key tests write a cache with one config and build a model with a
+  second config that differs in one field (time step, slice height, global
+  cap, sign x, y, alpha, alpha to omni-directional, c, per-sign cap; for
+  clear air the walkable shape, cell size, extinction). The cache must not
+  answer. An identical second config must reuse it. Neither side reads
+  `_make_meta`.
+- The cached sighting distance is checked in a room with a wall. The
+  expectation is by hand: c / K = 3 / 0.5 = 6 m in front of the wall, no
+  sighting behind it although 4 m is inside 6 m.
+
+### Open
+
+- Sampling geometry and horizon findings (`line_parts` edge cases, line cache
+  key, horizon equality) belong to the next pull request of the survey.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed
