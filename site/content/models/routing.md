@@ -448,8 +448,9 @@ there ([scenario JSON](/docs/scenario-json.md#journeys-allocation)).
 
 When the opening choice overrides the allocation, `route_history` gets a row
 at the spawn time with `reason` `allocation_preference`: `old_exit` is the
-allocated exit, `old_cost` is empty and `new_cost` is 0.0, as for
-`default_route`. A later switch of such an agent is logged with the usual
+allocated exit, `old_cost` its ranked route cost (empty when it was not
+ranked, for example closed) and `new_cost` the rival's route cost. The row
+counts as a switch in `switches` and `switches_per_agent`. A later switch of such an agent is logged with the usual
 reasons (`shorter_path`, `smoke_reroute`, ...); the old allocated exit then has
 no extra standing and counts as one rival among others.
 

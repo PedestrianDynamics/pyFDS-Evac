@@ -772,6 +772,9 @@ def test_opening_override_is_logged_at_the_spawn_time():
         (0.0, "west", "east")
     ] * AGENTS_PER_AREA
     assert len(run["switches"]) == len(rows)
+    # The row carries both ranked route costs, the rival's below the anchor.
+    for s in rows:
+        assert 0 < float(s["new_cost"]) < 0.9 * float(s["old_cost"])
 
 
 def test_allocation_preference_is_a_listed_reason():

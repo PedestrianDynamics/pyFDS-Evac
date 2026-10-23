@@ -1230,16 +1230,20 @@ def _default_route_row(time_s: float, agent_id: int, exit_id: str) -> dict[str, 
 
 
 def _allocation_row(
-    time_s: float, agent_id: int, old_exit: str, new_exit: str
+    time_s: float, agent_id: int, allocated: str, held, best
 ) -> dict[str, Any]:
-    """Route-history row of an agent that leaves its allocated exit at spawn."""
+    """Route-history row of an agent that leaves its allocated exit at spawn.
+
+    *held* is the allocated route as ranked, None when it was not ranked (its
+    exit is closed or outside the agent's map); *best* is the rival taken.
+    """
     return {
         "time_s": round(float(time_s), 6),
         "agent_id": agent_id,
-        "old_exit": old_exit,
-        "new_exit": new_exit,
-        "old_cost": "",
-        "new_cost": 0.0,
+        "old_exit": allocated,
+        "new_exit": best.exit_id,
+        "old_cost": "" if held is None else round(float(held.rank_cost), 4),
+        "new_cost": round(float(best.rank_cost), 4),
         "reason": "allocation_preference",
     }
 
@@ -1308,6 +1312,7 @@ def _assign_initial_exit(
     agent_position: tuple[float, float] | None = None,
     rival_graph: "StageGraph | None" = None,
     anchor_config: RerouteConfig | None = None,
+    route_history: list | None = None,
 ) -> str | None:
     """Point a freshly spawned agent at the best exit *it knows about*.
 
@@ -1337,7 +1342,8 @@ def _assign_initial_exit(
     exit as the current one. The agent keeps it unless the exit-switch anchor
     of *anchor_config* (the cost model's by default) lets a rival replace it.
     The cognitive map is still made from *graph*. A replayed exit is followed
-    as it is.
+    as it is. When a rival replaces the allocated exit, an
+    ``allocation_preference`` row is appended to *route_history*.
 
     Returns the exit the agent is now heading for, or None when it knows no
     reachable exit, in which case the geometric assignment is left in place.
@@ -1394,7 +1400,16 @@ def _assign_initial_exit(
     if allocated is not None:
         config = anchor_config or RerouteConfig(cost_config=cost_config)
         best = _hold_allocation(best, ranked, allocated, config)
-    return best.exit_id if _apply_initial_path(wait_info, list(best.path)) else None
+    if not _apply_initial_path(wait_info, list(best.path)):
+        return None
+    if (
+        allocated is not None
+        and best.exit_id != allocated
+        and route_history is not None
+    ):
+        held = next((rc for rc in ranked if rc.exit_id == allocated), None)
+        route_history.append(_allocation_row(time_s, agent_id, allocated, held, best))
+    return best.exit_id
 
 
 def _hold_allocation(best, ranked: list, allocated: str, config: RerouteConfig):
@@ -2128,7 +2143,6 @@ def run_scenario(
             clear_air = smoke_blind or required_exit is not None
             spawn_time = simulation.elapsed_time()
             rival = _ranking_graph(wait_info)
-            allocated = terminal_exit(wait_info, stage_graph.nodes)
             chosen = _assign_initial_exit(
                 agent_id,
                 wait_info,
@@ -2150,15 +2164,8 @@ def run_scenario(
                 agent_position=extract_agent_xy(simulation.agent(agent_id)),
                 rival_graph=rival,
                 anchor_config=reroute_config,
+                route_history=route_history,
             )
-            if (
-                rival is not None
-                and required_exit is None
-                and chosen not in (None, allocated)
-            ):
-                route_history.append(
-                    _allocation_row(spawn_time, agent_id, allocated or "", chosen)
-                )
             if required_exit is not None:
                 # A replayed exit is followed whether or not it is known.
                 wait_info["replayed_exit"] = required_exit
