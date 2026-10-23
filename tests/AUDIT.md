@@ -351,9 +351,18 @@ fresh one, so no distance or predecessor changes.
 
 The `<=` mutant is written `alt <= dist[...] and edge.target != u`. Plain
 `<=` never terminates: the zero-weight self-loop of
-`TestEdgeCases::test_self_loop_ignored_in_shortest_path` relaxes forever.
-The suite catches it as a hang, but a hang cannot be reported as a kill by
-`mutation_check.py`, which has no timeout.
+`TestEdgeCases::test_self_loop_ignored_in_shortest_path` relaxes forever,
+and `mutation_check.py` has no timeout to report that as a kill. Closed
+(#836): the `bounded_search` fixture (`tests/conftest.py`) counts the heap
+pops of the search and fails the test past 10 000, and the area's search
+tests use it (`test_route_graph_hand_values.py` as a module,
+`TestDijkstra`, `TestEdgeCases` and `TestDynamicDijkstra`). Plain
+`alt <=` (`if alt < dist[edge.target]` to `<=`) now fails in 0.2 s: the
+old self-loop test hangs under it (killed by a 40 s timeout in the check),
+the new `test_a_zero_weight_self_loop_is_never_relaxed` (hand value: two
+pops, cost 2.0), `TestEdgeCases::test_self_loop_ignored_in_shortest_path`
+and `TestEqualCostPaths::test_tie_keeps_the_first_path_found` fail. The
+fixture needs no new dependency (`pytest-timeout` is not one).
 
 The stop at the source in `_reconstruct` only matters if the source has a
 predecessor, which `_dijkstra` never produces for non-negative weights; the
@@ -383,8 +392,9 @@ absent or `None`.
 - `taus_tie` and the ranking of equal routes are not tested here (ranking
   slice).
 - Between equal-cost paths the search keeps the one expanded first (node-id
-  order in the heap). The tie test pins this; no documented contract
-  promises it.
+  order in the heap). Closed (#836): the `_dijkstra` docstring states the
+  rule and names the test that pins it; it is an implementation order, and
+  no user-facing contract promises it.
 
 ## Routing: policy
 
