@@ -39,6 +39,41 @@ Hand derivation of the expected values (not taken from the code under test):
 Measured (seed 1, JuPedSim CollisionFreeSpeedModel): throttled 1.316
 p/m/s, unthrottled 3.779 p/m/s.
 
+Smoke variant (#850): the same room under a spatially uniform, constant
+extinction K from t = 0 (``ConstantExtinctionField``), with the smoke-speed
+model on (update interval 0.1 s, no rerouting), for K = 0.5, 1 and 3 /m and
+both speed laws, throttled and unthrottled. Seed 1, v0 = 1.3 m/s.
+
+Hand values of the speed factor f = w / w_free (w_free = 1.3 m/s):
+
+- Lund: f = 1 - 0.057 K / 0.706 = 0.960, 0.919, 0.758.
+- Fridolf (A = 2, V = 2 / K): V = 4, 2, 0.667 m. V > 3 m gives no slowing
+  (f = 1); w = 1.3 - 0.34 (3 - V) = 0.96 and 0.507 m/s, so f = 1.000
+  (K = 0.5), 0.738 and 0.390.
+
+Derivations of the assertions:
+
+- Throttled: the throttle is a time gate at the exit, independent of the
+  walking speed. It releases one occupant per 1 / 1.33 s as long as someone
+  waits at the door. The walking speed only needs to keep the door
+  supplied, which holds because the unthrottled flow is at least 2.1 p/s,
+  above the cap, at every K. The flow is therefore min(cap, unthrottled
+  flow) = cap, the same band as in clear air. If the slowing were counted
+  twice (once in the speed, once in the gate), the flow would be about
+  f x cap: 0.52 p/s for Fridolf K = 3, 0.98 for Fridolf K = 1, 1.01 for
+  Lund K = 3, all below the lower bound of 1.26 p/s.
+- Fridolf K = 0.5 has f = 1, so the smoke changes no speed and the sorted
+  exit times equal the clear-air run to one frame (null check).
+- Unthrottled: with r = flow(K) / flow(0) at the same seed, a flow set by
+  the walking speed alone would give r = f. A crowd at a 1 m door is limited
+  partly by congestion at the door, which does not depend on the free
+  speed, so r lies between f and 1: r >= 0.95 f (the band for the single
+  seed) and r <= 1.05, and the flow decreases with K, by less than f. The
+  1-D estimate of r is not asserted.
+
+Measured (seed 1): see the printed lines of the run (``pytest -s``) and
+the ISO 20414 verification page.
+
 Default reading: pyFDS-Evac throttles no exit unless
 ``enable_throughput_throttling`` is set, so the default reading is the
 emergent one (throttling off).
@@ -54,6 +89,11 @@ import pytest
 from shapely.geometry import box
 
 from pyfds_evac.core.scenario import Scenario, run_scenario
+from pyfds_evac.core.smoke_speed import (
+    ConstantExtinctionField,
+    SmokeSpeedConfig,
+    SmokeSpeedModel,
+)
 
 pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
@@ -151,9 +191,9 @@ def _exit_times(result) -> list[float]:
     return sorted(frame * FRAME_S for _, frame in rows)
 
 
-def _run(throttled: bool) -> tuple[int, list[float]]:
+def _run(throttled: bool, smoke=None) -> tuple[int, list[float]]:
     with contextlib.redirect_stdout(io.StringIO()):
-        result = run_scenario(_scenario(throttled), seed=SEED)
+        result = run_scenario(_scenario(throttled), seed=SEED, smoke_speed_model=smoke)
     try:
         return result.agents_evacuated, _exit_times(result)
     finally:
@@ -181,3 +221,99 @@ def test_unthrottled_exit_flow_is_reported_not_asserted():
     flow = _flow_per_m_s(times)
     print(f"ISO 11 unthrottled (emergent) flow: {flow:.3f} p/m/s")
     assert evacuated == N_OCCUPANTS
+
+
+# --- Smoke variant (#850) -------------------------------------------------
+
+EXTINCTIONS_PER_M = (0.5, 1.0, 3.0)
+SPEED_LAWS = ("lund", "fridolf")
+# Hand values of the speed factor (see the module docstring).
+SPEED_FACTOR = {
+    ("lund", 0.5): 0.960,
+    ("lund", 1.0): 0.919,
+    ("lund", 3.0): 0.758,
+    ("fridolf", 0.5): 1.000,
+    ("fridolf", 1.0): 0.738,
+    ("fridolf", 3.0): 0.390,
+}
+# r = flow(K) / flow(0) may exceed 1 by this much (single seed).
+R_UPPER = 1.05
+R_LOWER_FRACTION = 0.95
+CONGESTION_MARGIN = 0.05
+SMOKE_RUNS = [
+    (law, k, throttled)
+    for law in SPEED_LAWS
+    for k in EXTINCTIONS_PER_M
+    for throttled in (True, False)
+]
+
+
+def _smoke_model(law: str, extinction: float) -> SmokeSpeedModel:
+    config = SmokeSpeedConfig(fds_dir=".", speed_law=law, update_interval_s=0.1)
+    return SmokeSpeedModel(ConstantExtinctionField(extinction), config)
+
+
+@pytest.fixture(scope="module")
+def clear_air() -> dict[bool, list[float]]:
+    return {throttled: _run(throttled)[1] for throttled in (True, False)}
+
+
+@pytest.fixture(scope="module")
+def smoke_runs() -> dict[tuple[str, float, bool], tuple[int, list[float]]]:
+    return {
+        (law, k, throttled): _run(throttled, _smoke_model(law, k))
+        for law, k, throttled in SMOKE_RUNS
+    }
+
+
+@pytest.mark.parametrize(("law", "k", "throttled"), SMOKE_RUNS)
+def test_smoke_runs_evacuate_everyone(smoke_runs, law, k, throttled):
+    evacuated, times = smoke_runs[(law, k, throttled)]
+    assert evacuated == N_OCCUPANTS
+    assert len(times) == N_OCCUPANTS
+
+
+@pytest.mark.parametrize("k", EXTINCTIONS_PER_M)
+@pytest.mark.parametrize("law", SPEED_LAWS)
+def test_smoke_throttled_flow_stays_at_the_limit(smoke_runs, clear_air, law, k):
+    """The cap holds under smoke and is not counted twice."""
+    flow = _flow_per_m_s(smoke_runs[(law, k, True)][1])
+    clear = _flow_per_m_s(clear_air[True])
+    print(f"ISO 11 smoke {law} K={k} throttled: {flow:.3f} p/m/s")
+    assert flow <= MAX_FLOW_PER_M_S * (1.0 + UPPER_TOLERANCE)
+    assert flow >= LOWER_FRACTION * MAX_FLOW_PER_M_S
+    assert flow == pytest.approx(clear, rel=UPPER_TOLERANCE)
+
+
+@pytest.mark.parametrize("throttled", (True, False))
+def test_smoke_without_slowing_leaves_clear_air_exit_times(
+    smoke_runs, clear_air, throttled
+):
+    """Fridolf at K = 0.5 /m has V > 3 m: f = 1, so nothing changes."""
+    times = smoke_runs[("fridolf", 0.5, throttled)][1]
+    assert times == pytest.approx(clear_air[throttled], abs=FRAME_S)
+
+
+@pytest.mark.parametrize("law", SPEED_LAWS)
+def test_smoke_unthrottled_flow_drops_by_less_than_the_speed_factor(
+    smoke_runs, clear_air, law
+):
+    clear = _flow_per_m_s(clear_air[False])
+    ratios = []
+    for k in EXTINCTIONS_PER_M:
+        f = SPEED_FACTOR[(law, k)]
+        r = _flow_per_m_s(smoke_runs[(law, k, False)][1]) / clear
+        kind = (
+            "free-flow-limited"
+            if abs(r - f) <= CONGESTION_MARGIN
+            else "congestion-limited"
+            if r > f
+            else "below f"
+        )
+        print(f"ISO 11 smoke {law} K={k} unthrottled: r={r:.3f} f={f:.3f} {kind}")
+        assert R_LOWER_FRACTION * f <= r <= R_UPPER
+        ratios.append(r)
+    # Flow decreases with K, and at the largest K by less than f.
+    assert ratios[-1] < ratios[0] + 1e-9
+    assert ratios[-1] < 1.0
+    assert ratios[-1] > SPEED_FACTOR[(law, EXTINCTIONS_PER_M[-1])]
