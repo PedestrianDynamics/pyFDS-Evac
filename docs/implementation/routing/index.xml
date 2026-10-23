@@ -812,6 +812,10 @@ though the path to it may still be rewritten, which is recorded as
 &lt;td>The agent follows its default route, the journey or the nearest exit on foot (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610" target="_blank" rel="noopener">#610&lt;/a>): at spawn, or when the agent&amp;rsquo;s known exits are all closed or unreachable&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>allocation_preference&lt;/code>&lt;/td>
+&lt;td>At spawn, a rival exit replaced the exit the agent&amp;rsquo;s journey allocated: it costs less than &lt;code>exit_switch_anchor&lt;/code> times the allocated route (&lt;code>&amp;quot;allocation&amp;quot;: &amp;quot;preference&amp;quot;&lt;/code>, the default)&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>fed_reroute&lt;/code>&lt;/td>
 &lt;td>A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (&lt;code>additive&lt;/code>) the dose term contributes to a switch the hazard terms are needed for&lt;/td>
 &lt;/tr>
