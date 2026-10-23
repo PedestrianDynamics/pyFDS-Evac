@@ -333,21 +333,21 @@
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "additive-flee[2]-all segments non-visible-True": {
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "additive-flee[2]-fallback: FED_max 1.2 > 1.0-False": {
   "adoptable": {
@@ -373,21 +373,21 @@
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "additive-flee[2]-fallback: all segments non-visible-True": {
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "additive-flee[2]-tau 7.00 > 6.00 (K_ave 0.300 x 23.3 m)-False": {
   "adoptable": {
@@ -793,21 +793,21 @@
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "gate-flee[2]-all segments non-visible-True": {
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "gate-flee[2]-fallback: FED_max 1.2 > 1.0-False": {
   "adoptable": {
@@ -833,21 +833,21 @@
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "gate-flee[2]-fallback: all segments non-visible-True": {
   "adoptable": {
    "None": true,
    "a": true,
-   "b": true,
+   "b": false,
    "gone": true
   },
-  "anchor_allows": true,
-  "must_flee": true
+  "anchor_allows": false,
+  "must_flee": false
  },
  "gate-flee[2]-tau 7.00 > 6.00 (K_ave 0.300 x 23.3 m)-False": {
   "adoptable": {

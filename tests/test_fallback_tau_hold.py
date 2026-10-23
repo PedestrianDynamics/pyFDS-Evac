@@ -146,14 +146,12 @@ def test_absolute_floor_is_1e_9(model):
 
 @pytest.mark.parametrize("model", MODELS)
 def test_must_flee_overrides_the_hold_at_the_anchor(model):
-    """Impassable smoke on the current route lets go whatever the taus say."""
-    cc = _config(model)
+    """A lethal dose on the current route lets go whatever the taus say."""
     rival = _refused(RIVAL, tau=40.0, rank_cost=20.0)
     current = replace(
         _refused(CURRENT, tau=34.0, rank_cost=10.0),
-        k_ave_route=cc.impassable_extinction_threshold + 1.0,
-        rejection_reason="all segments non-visible",
-        violation_kinds=("all_segments_non_visible",),
+        rejection_reason="FED_max 1.200 > 1.000",
+        violation_kinds=("fed", "tau"),
     )
     assert _anchor_lets_go(rival, current, model) is True
 

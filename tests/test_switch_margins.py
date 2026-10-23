@@ -202,6 +202,7 @@ def test_every_routing_margin_has_a_range():
     [
         "fallback_return_lockout_s",
         "fed_return_margin",
+        "impassable_extinction_threshold",
         "path_switch_anchor",
         "tau_return_margin",
     ],
@@ -273,17 +274,6 @@ def test_out_of_range_override_is_an_error(value):
         RerouteConfig(exit_switch_anchor=value)
 
 
-def test_impassable_extinction_threshold_is_a_routing_key():
-    """The additive must-flee line reads from the routing block (#187)."""
-    built = RouteCostConfig.from_routing_params(
-        {"impassable_extinction_threshold": 2.0}
-    )
-    assert built.impassable_extinction_threshold == 2.0
-    assert (
-        RouteCostConfig.from_routing_params({}).impassable_extinction_threshold == 3.0
-    )
-
-
 # The fields of RouteCostConfig in order before the Q7 keys (fb06761f).
 _POSITIONAL_FIELDS = (
     "w_smoke",
@@ -291,7 +281,6 @@ _POSITIONAL_FIELDS = (
     "w_queue",
     "fed_rejection_threshold",
     "visibility_extinction_threshold",
-    "impassable_extinction_threshold",
     "sampling_step_m",
     "base_speed_m_per_s",
     "alpha",

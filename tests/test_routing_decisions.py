@@ -1159,7 +1159,8 @@ def _anchor_cases() -> list[tuple[str, RouteCost, RouteCost | None, RerouteConfi
                 cfg,
             )
         )
-        limit = cc.impassable_extinction_threshold
+        # K_ave around the former smoke must-flee line: now inert (#835).
+        limit = 3.0
         for i, k in enumerate(_around(limit)):
             for reason, kinds in _FLEE_REASONS:
                 for rejected in (False, True):
@@ -1219,7 +1220,7 @@ def test_promoted_hazard_is_fled():
     promoted = [
         (name, candidate, old_rc, cfg)
         for name, (candidate, old_rc, cfg) in _ANCHOR_CASES.items()
-        if _promoted_hazard(old_rc, cfg)
+        if _promoted_hazard(old_rc)
     ]
     assert promoted
     for name, candidate, old_rc, cfg in promoted:
@@ -1227,16 +1228,11 @@ def test_promoted_hazard_is_fled():
         assert live._anchor_allows(candidate, old_rc, cfg), name
 
 
-def _promoted_hazard(old_rc: RouteCost | None, cfg: RerouteConfig) -> bool:
+def _promoted_hazard(old_rc: RouteCost | None) -> bool:
     """Whether *old_rc* is a promoted route with a hazard it must flee."""
     if old_rc is None or old_rc.rejected:
         return False
-    if "fed" in old_rc.violation_kinds:
-        return True
-    return (
-        "all_segments_non_visible" in old_rc.violation_kinds
-        and old_rc.k_ave_route > cfg.cost_config.impassable_extinction_threshold
-    )
+    return "fed" in old_rc.violation_kinds
 
 
 # ── Switch labels ─────────────────────────────────────────────────────
