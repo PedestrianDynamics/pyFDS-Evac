@@ -771,13 +771,34 @@ agent count. This catches a missing key that stops spawning; it does not
 catch a changed default value, which the unit tests above and in those files
 pin.
 
+### Fixed
+
+The rows closed for #876 were mutated by hand (applied to the file named,
+run against `test_movement_targets.py` and
+`test_checkpoint_speed_factor_run.py`, reverted).
+
+| Finding | Test | Mutant killed by it |
+|---|---|---|
+| The set-up copy `_normalize_speed_factor` had no test (the runtime copy is pinned in `test_speed_update_pin.py`) | `test_simulation_init_clips_the_speed_factor_to_zero_to_three`: the same 13-value table as the runtime copy, from `docs/scenario-json.md` ([0, 3]; negative or non-numeric gives 1.0) | `3.0` to `4.0`; `< 0.0` to `<= 0.0` and to `< -1.0`; `np.isfinite` dropped; `return 1.0` to `0.0` on a non-numeric value (`simulation_init.py:1296`) |
+| The first-stage target clearance `max(0.05, 0.8 r, 0.25)` was not tested | `test_the_first_stage_target_keeps_the_documented_clearance[0.2, 0.5]`: 3000 draws in a 2 x 2 m stage keep 0.25 m (radius 0.2) and 0.4 m (radius 0.5) from the edge, and the closest draw is within 0.01 m of it (a clearance that is too deep fails) | `0.25` to `0.2`, to `0.3` and dropped; `0.8` to `0.5`; floor `0.05` to `0.3` (`simulation_init.py:1437`) |
+| The later-stage clearance `max(0.05, 0.8 r)` and its default radius 0.2 were not tested | `test_a_later_stage_target_keeps_the_documented_clearance[0.2, 0.5, none, 0.01]`: 0.16 m, 0.4 m, 0.16 m (missing radius), 0.05 m (floor) | `0.8` to `0.5` and to `1.0`; default radius 0.2 to 0.3; floor `0.05` to `0.2`; a `0.25` floor added (`direct_steering_runtime.py:52`) |
+| `test_next_stage_choice_has_its_own_stream` only checked independence of `base_seed`; the stream formula survived any constant | `test_the_next_stage_is_drawn_from_choice_seed_plus_step_stream`: five (seed, step) pairs over 20 equal-weight stages, picks pinned (recorded from the shipped stream, `random.random()` is stable) | `131` to `132`; `53` to `54`; `step_index` term dropped; `choice_seed` replaced by `base_seed` (`direct_steering_runtime.py:538`) |
+| No run showed a checkpoint's `speed_factor` acting on the agent | `test_checkpoint_speed_factor_scales_the_speed_inside_only[0.5, 2.0, 5.0, -1.0]`: one agent, v0 1.0 m/s, checkpoint [15, 25] m; desired speed read after each step is 1.0 before and after and 0.5, 2.0, 3.0 (clipped), 1.0 (negative) inside | the checkpoint's `speed_factor` set to 1.0 in each of the two `direct_steering_info` entries (`simulation_init.py:1874` and `:2467`), each alone; `active_speed_factor` ignored in `update_checkpoint_speed`; the zone applied outside its polygon (`_find_checkpoint_zone`) |
+
+The run case does not kill the runtime clip mutants (`3.0` to `9.0`,
+`< 0.0` to `<= 0.0`, `normalize_speed_factor` dropped in
+`_find_checkpoint_zone`): the set-up already clips the factor, and
+`test_speed_update_pin.py` kills them.
+
 ### Open
 
 - Closed by #868: GCFM `mass` defaults to JuPedSim's 1, and AVM reads the
   deck keys `anticipation_time` and `reaction_time` instead of `T` and
   `s0`; `test_model_agent_defaults.py` pins both.
-- Not in this pull request: `_normalize_speed_factor` copy, choice-stream
-  seed, target clearance and the other survey rows of area A.
+- "The other survey rows of area A": the survey rows were not kept in the
+  #836 issue or in PR #867 (the issue has no comments; #867 lists only the
+  per-model defaults), so they cannot be listed here. Rebuild the survey
+  of movement and steering before closing #876's movement item.
 
 ## Item 1: FDS sampling and visibility cache
 
