@@ -196,50 +196,14 @@ class StageGraph:
             graph.edges.setdefault(src, []).append(edge)
 
         # With no transitions the author has drawn stages but not routes, so
-        # wire the graph by stage type and let cost decide: spawn areas and
-        # crossings reach every crossing and every exit, exits are terminal,
-        # and nothing points back at a spawn area.
+        # wire the graph by stage type and let cost decide.
         if not transitions:
-            targets = [
-                nid
-                for nid, n in graph.nodes.items()
-                if n.stage_type in ("checkpoint", "exit")
-            ]
             sources = [
                 nid
                 for nid, n in graph.nodes.items()
                 if n.stage_type in ("distribution", "checkpoint")
             ]
-            # Connect a node only to those reachable without passing another,
-            # so "neighbour" keeps its physical meaning.  A complete graph would
-            # make it meaningless, and expand_on_arrival reveals every neighbour
-            # a vis-model-less run cannot rule out -- so one arrival would
-            # expose the whole building and flatten the familiarity gradient.
-            # Only crossings can block. An exit is terminal -- you cannot pass
-            # through one -- so an exit lying on the way to a farther exit must
-            # not prune it, or that farther exit becomes unreachable outright.
-            blockers = [
-                nid for nid, n in graph.nodes.items() if n.stage_type == "checkpoint"
-            ]
-            for src_id in sources:
-                candidates = [
-                    _make_edge(graph.nodes[src_id], graph.nodes[tgt_id], routing_engine)
-                    for tgt_id in targets
-                    if tgt_id != src_id
-                ]
-                kept = [
-                    edge
-                    for edge in candidates
-                    if not _passes_through_another_node(
-                        graph, src_id, edge, blockers, routing_engine
-                    )
-                ]
-                # Pruning must never strand a node: if everything looked
-                # blocked, keep the nearest target so it still has somewhere
-                # to go and every exit stays reachable in some number of hops.
-                if not kept and candidates:
-                    kept = [min(candidates, key=lambda e: e.weight)]
-                graph.edges.setdefault(src_id, []).extend(kept)
+            _wire_by_type(graph, sources, routing_engine)
 
         return graph
 
@@ -444,6 +408,47 @@ def _passes_through_another_node(
 # alternative route is not mistaken for one, large enough to absorb the
 # navmesh's polyline discretisation.
 _BETWEENNESS_TOLERANCE = 0.05
+
+
+def _wire_by_type(
+    graph: StageGraph, sources: list[str], routing_engine: object | None
+) -> None:
+    """Add edges from each source to the crossings and exits it sees directly.
+
+    Spawn areas and crossings reach every crossing and every exit, exits are
+    terminal, and nothing points back at a spawn area.
+    """
+    targets = [
+        nid for nid, n in graph.nodes.items() if n.stage_type in ("checkpoint", "exit")
+    ]
+    # Connect a node only to those reachable without passing another,
+    # so "neighbour" keeps its physical meaning.  A complete graph would
+    # make it meaningless, and expand_on_arrival reveals every neighbour
+    # a vis-model-less run cannot rule out -- so one arrival would
+    # expose the whole building and flatten the familiarity gradient.
+    # Only crossings can block. An exit is terminal -- you cannot pass
+    # through one -- so an exit lying on the way to a farther exit must
+    # not prune it, or that farther exit becomes unreachable outright.
+    blockers = [nid for nid, n in graph.nodes.items() if n.stage_type == "checkpoint"]
+    for src_id in sources:
+        candidates = [
+            _make_edge(graph.nodes[src_id], graph.nodes[tgt_id], routing_engine)
+            for tgt_id in targets
+            if tgt_id != src_id
+        ]
+        kept = [
+            edge
+            for edge in candidates
+            if not _passes_through_another_node(
+                graph, src_id, edge, blockers, routing_engine
+            )
+        ]
+        # Pruning must never strand a node: if everything looked
+        # blocked, keep the nearest target so it still has somewhere
+        # to go and every exit stays reachable in some number of hops.
+        if not kept and candidates:
+            kept = [min(candidates, key=lambda e: e.weight)]
+        graph.edges.setdefault(src_id, []).extend(kept)
 
 
 def _make_edge(src_node: StageNode, tgt_node: StageNode, routing_engine) -> StageEdge:
