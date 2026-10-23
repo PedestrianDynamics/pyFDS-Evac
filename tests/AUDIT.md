@@ -673,8 +673,9 @@ Files: `test_flow_schedule_run.py`, `test_run_outcome.py` and the new
 
 Survey of `webapp/`, `tui/` and `config/frontend.py` against hand-applied
 mutants (survey ids F and T). The rows below are the run lifecycle of the
-GUI (`webapp/runner.py`, the `/run` and `/clear` routes). The remaining rows
-of the survey are still open.
+GUI (`webapp/runner.py`, the `/run` and `/clear` routes), then the parameter
+mapping, export and wording rows below. Rows still open are listed at the end
+of the section.
 
 ### Run lifecycle rows closed
 
@@ -698,6 +699,45 @@ The caps are lowered by `monkeypatch` (4 warnings, 5 console lines) to keep
 the counts small; the values of `_MAX_WARNINGS` and `_MAX_LOG_LINES` are
 configuration and not pinned here. A new run starting with empty warning and
 console lists is also pinned (`test_a_new_run_starts_with_no_warnings`).
+
+### Mapping, export and wording rows closed
+
+Tests are in `test_progress_callback.py`, `test_webapp_launch.py`,
+`test_webapp_remainder.py` and `test_tui_remainder.py`. Expected values are
+hand derived (four agents give 0, 25, 50, 75 %; the Model tab sigma and the
+port default come from `docs/usage.md`; smoke bins from the fixed edges).
+
+| Finding | Smell | Test | Mutant killed |
+|---|---|---|---|
+| F33 `ProgressEvent.pct` always 0 | weak oracle (`0 <= pct <= 100`; the one-agent deck never shows a non-zero pct) | `test_progress_percentage_and_clocks_follow_the_documented_fields` on `single_exit_clear_air` (4 agents): `pct == int(100 * evacuated / 4)` for every event, at least 25 % reached | `pct=0` |
+| F34 `wall_time` always 0 | weak oracle | same test: `wall_time` non-decreasing and positive at the end; `sim_time` starts at 0 and does not decrease | `wall_time=0.0` |
+| `test_run_scenario_without_callback_is_unchanged` | rotten green by name | now compares evacuation time and agent counts with a run that has a callback | (no mutant; the old test asserted only a truthy `metrics`) |
+| F30, F31 `--port` and `$PORT` | missing case | `test_gui_command_takes_the_port_from_the_option`, `test_gui_command_defaults_the_port_to_the_environment` | `type=int` removed; `$PORT` ignored |
+| F41 `RunSpec.time_limit` | missing case | `test_run_snapshot_keeps_the_scenario_time_limit` | `time_limit=None` |
+| F45 failed run wording | missing case | `test_failed_run_is_worded_failed` | `"failed"` worded `"error"` |
+| F47 unknown incapacitated figure | missing case | `test_incapacitated_figure_is_not_shown_when_it_is_unknown` | `or count is None` dropped |
+| F22 dirty checkout in the export header | missing case | `test_export_header_names_a_dirty_checkout` (and a clean header without it) | `if dirty:` replaced by `if False:` |
+| F20 non-literal export value | missing case | `test_export_refuses_values_that_are_not_plain_literals` (list, tuple, dict) | type check replaced by `False` |
+| F50 Model tab sigma | weak oracle (`test_defaults_match_the_cli` never reads the tab) | `test_model_tab_states_the_documented_default_sigma` | `0.94` changed to `0.95` |
+| T1 TUI choice check | missing case | `test_value_outside_the_choices_is_rejected` over all seven options with choices | `_check_value` call removed |
+| T5 unparsable TUI field | missing case | `test_unparsable_field_keeps_its_default_and_reports_the_error` | default replaced by `None` |
+| T10 `status_word` | untested behaviour | `test_status_word_names_each_outcome` (four statuses) | incomplete worded `complete` |
+| T11, T12 plan-view smoke bins | snapshot-only coverage | `test_smoke_bin_counts_the_edges_at_or_below_k` (K on the edges 0.5, 1, 3, 10 and between), `test_smoke_bins_are_clear_outside_the_walkable_area` on a 10 m room | `side="left"`; the clearing of outside cells removed |
+
+### Open (GUI/TUI)
+
+- The 0.1 edge of the smoke bins is not pinned on the edge itself: K is
+  carried as float16, where 0.1 is 0.09998 and falls below the edge.
+- F17 to F19, F46, T7, T13: equivalent, cosmetic or killed elsewhere.
+- F29, F35 are killed by `test_run_events` and `test_config_model`.
+- JS and CSS source-substring tests in `test_webapp.py` (no executed
+  browser or Node test), the wall-clock bound in
+  `test_a1_help_is_fast_and_imports_no_stack`, `test_a9_no_range_rejection`
+  lock-in, and the GUI-versus-API run equivalence beyond one clear-air deck:
+  not changed here.
+- The one-agent deck `ISO-table21` emits no progress event with a non-zero
+  `pct` (the last event precedes the final exit); a source question, not
+  changed here.
 
 ## Item 1: movement and steering
 

@@ -73,3 +73,24 @@ def test_gui_command_warns_only_when_exposed(argv, host, monkeypatch, capsys):
     assert calls[0]["host"] == host
     assert calls[0]["reload"] is False
     assert ("Warning" in capsys.readouterr().err) is (host != "127.0.0.1")
+
+
+def test_gui_command_takes_the_port_from_the_option(monkeypatch):
+    pytest.importorskip("fasthtml")
+    from pyfds_evac.webapp.launch import main
+
+    calls = _record_serve(monkeypatch, "fasthtml.common.serve")
+    assert main(["--port", "6000"]) == 0
+    assert calls[0]["port"] == 6000  # an int, not the text "6000"
+
+
+def test_gui_command_defaults_the_port_to_the_environment(monkeypatch):
+    pytest.importorskip("fasthtml")
+    from pyfds_evac.webapp.launch import main
+
+    calls = _record_serve(monkeypatch, "fasthtml.common.serve")
+    monkeypatch.setenv("PORT", "7000")
+    assert main([]) == 0
+    assert calls[0]["port"] == 7000
+    assert main(["--port", "6000"]) == 0  # the option wins over $PORT
+    assert calls[1]["port"] == 6000
