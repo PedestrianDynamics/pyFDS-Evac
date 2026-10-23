@@ -110,6 +110,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   by a narrow margin. The changes combine the fuel with the code changes
   since 0.4.0, so they are not attributed to the fuel alone (#796).
 
+### Removed
+
+- The additive model's smoke must-flee rule and its routing key
+  `impassable_extinction_threshold` (3.0 1/m) (#835, part of #187). Smoke no
+  longer bypasses the exit-switch anchor under either cost model; only a FED
+  violation does. A scenario that still sets the key stops at load with a
+  `ValueError` naming the removal, as for the other removed routing keys;
+  delete it. `RouteCostConfig` loses the field, so later fields move up one
+  positional slot, and new manifests no longer record it in `cost_config`.
+  The gate and every deck where no current exit is non-visible above
+  K_ave 3.0 are unchanged, including the 12 golden rerouting decks. On the
+  Schroeder 2015 route decks (additive, ten paired seeds, one parameter set)
+  `rset_p95` moved from 332.0 to 335.1 s (h40) and from 369.3 to 369.5 s
+  (h35), not distinct from seed noise; switches fall by 10 and 24 per run.
+  FED stayed far below any limit (maximum 0.13 and 0.17), so this does not
+  show the rule harmless where dose matters.
+
 ## [0.6.1] - 2026-10-21
 
 ### Changed
