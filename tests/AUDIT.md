@@ -813,6 +813,29 @@ every expectation is a count of nodes or frames.
 - The sciebo-dependent tests (`test_t_junction_*`) are still skipped
   silently when the data is absent.
 
+## Item 1: I/O and manifests (#836)
+
+Survey of `manifest.py`, `run_outputs.py`, `wkt_to_fds.py`, the progress
+events of `scenario.py` and the deck sweep against hand-applied mutants
+(survey area D). The rows below are the ones closed with the manifest, the
+generated deck and the writers. Still open: the optional manifest fields
+(`fds_coverage`, `run_settings` `require_fds_coverage`, the vis `kind`),
+the `&MULT` and `D` exponent parser cases, the walkable-area minimum part
+and `resolve_dx` floor boundaries, and the vacuous `test_run_config` checks.
+
+### Rows closed
+
+| Finding | Smell | Test | Mutant killed |
+|---|---|---|---|
+| `sha256_of` and the manifest lock hash | circular (`== sha256_of(lock)`), weak oracle (`len == 64`) | `test_manifest.py::test_sha256_of_is_the_digest_of_the_content_not_of_the_path` and `test_build_manifest_fields` compare with the digest of `b"lock"` written out; two files of equal content, different names | hash of the path string instead of the content |
+| `git_state` dirty flag | missing case (only outside a repository) | `test_git_state_dirty_counts_tracked_changes_only`: a repository made in `tmp_path`; clean, untracked file (clean), tracked edit (dirty) | `bool(status)` replaced by `not status` |
+| Progress events | weak oracle (`0 <= pct <= 100`), single agent so `pct` is always 0 | `test_progress_callback.py::test_progress_events_report_the_evacuated_share_rounded_down`: three agents, `pct` 0, 33, 66 by hand; `sim_time` strictly increasing, `evacuated` non-decreasing | `pct` always 0; `pct` rounded up (34, 67) |
+| Walls of the generated deck | one-sided oracle (a deck without walls passes) | `test_wkt_to_fds.py::test_walls_cover_every_cell_without_walkable_overlap` for three rooms, and `test_room_with_a_hole_gets_exactly_these_wall_boxes` with the five boxes derived by hand | greedy rectangle loses its top row |
+| FED, exit and route-cost CSV columns | untested writers; `extrasaction="ignore"` hides a missing column | `test_run_outputs.py`: literal header and cell values per writer, with and without the heat group | `heat_endpoint` group dropped; `exit_in_map` dropped; `queue_time_s` dropped |
+| Fill note | circular (placed equal to the bound in the only test) | `test_summary_line_names_the_placed_count_and_the_upper_bound`: placed 5 of at most 8 | upper bound printed as `placed` |
+| `test_init_deck_sweep.py` | snapshot-only coverage, regenerated from the code under test | The module says it is a characterisation. `test_hand_derived_room_anchors_the_import`: a 10 x 10 m room, a 1.2 m door, 25 agents, area 100 m2 and exit strip 0.5 x 1.2 m from the coordinates. The area check no longer skips a row that has none | `EXIT_DEPTH_M` 0.5 changed to 0.4: the anchor fails even if the table is regenerated |
+| Silent `external_data` omission | the three `t_junction` tests (`test_fds_horizon.py`, `test_fds_sampling_grid_index.py`, `test_example_downloads.py`) are deselected in CI and skip without the data | The skip reasons name the path and `T_JUNCTION_FDS`. `conftest.py` prints the deselected `external_data` ids at the end of every run, under xdist too. CI still does not need sciebo | not a mutant; the three tests passed locally with the data |
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed

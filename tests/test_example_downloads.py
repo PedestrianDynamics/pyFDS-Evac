@@ -208,7 +208,7 @@ def test_first_fds_case_clear_air_result():
 @pytest.mark.external_data
 @pytest.mark.skipif(
     not (T_JUNCTION_FDS / "t_junction.smv").is_file(),
-    reason="t_junction FDS output not available",
+    reason=f"t_junction FDS output absent under {T_JUNCTION_FDS}; set T_JUNCTION_FDS",
 )
 def test_first_fds_case_fire_result(fds_read_only):
     """The fire result on the page and in the README, from the FDS output."""

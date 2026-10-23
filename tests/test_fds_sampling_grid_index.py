@@ -236,7 +236,7 @@ def _run_t_junction(tmp_path, fds_dir, name):
 @pytest.mark.external_data
 @pytest.mark.skipif(
     not (_T_JUNCTION_FDS / "t_junction.smv").is_file(),
-    reason="t_junction FDS output absent",
+    reason=f"t_junction FDS output absent under {_T_JUNCTION_FDS}; set T_JUNCTION_FDS",
 )
 def test_t_junction_decisions_equal_the_numpy_lookup(
     tmp_path, monkeypatch, fds_read_only

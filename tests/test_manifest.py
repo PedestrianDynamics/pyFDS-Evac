@@ -2,6 +2,7 @@
 
 import json
 import pathlib
+import subprocess
 from types import SimpleNamespace
 
 import pytest
@@ -14,6 +15,8 @@ from pyfds_evac.core.smoke_speed import (
     SmokeSpeedModel,
 )
 
+# hashlib.sha256(b"lock").hexdigest(), computed once and written out.
+LOCK_SHA256 = "0c030586945fe504b604ecc2e875c38ede400cd5cd73da9730302162e6b02c6f"
 SMV_HEAD = "TITLE\n case \n\nFDSVERSION\nFDS-6.10.1-0-g12efa16-release\n\nENDF\n"
 
 
@@ -78,6 +81,48 @@ def test_git_state_outside_a_repo(tmp_path):
     assert manifest.git_state(tmp_path) == (None, None)
 
 
+def _repo_with_one_commit(path: pathlib.Path) -> str:
+    """Make *path* a repository holding ``tracked.txt``; return the commit id."""
+
+    def run(*args: str) -> str:
+        done = subprocess.run(
+            ["git", "-c", "user.name=t", "-c", "user.email=t@example.org", *args],
+            cwd=path,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return done.stdout.strip()
+
+    run("init", "-q")
+    (path / "tracked.txt").write_text("one\n")
+    run("add", "tracked.txt")
+    run("commit", "-q", "-m", "first")
+    return run("rev-parse", "HEAD")
+
+
+def test_git_state_dirty_counts_tracked_changes_only(tmp_path):
+    """Clean, then an untracked file (still clean), then a tracked edit (dirty)."""
+    head = _repo_with_one_commit(tmp_path)
+    assert manifest.git_state(tmp_path) == (head, False)
+
+    (tmp_path / "untracked.txt").write_text("new\n")
+    assert manifest.git_state(tmp_path) == (head, False)
+
+    (tmp_path / "tracked.txt").write_text("two\n")
+    assert manifest.git_state(tmp_path) == (head, True)
+
+
+def test_sha256_of_is_the_digest_of_the_content_not_of_the_path(tmp_path):
+    """The expected digest is written out, not recomputed by the code under test."""
+    first = tmp_path / "uv.lock"
+    second = tmp_path / "other.lock"
+    first.write_bytes(b"lock")
+    second.write_bytes(b"lock")
+    assert manifest.sha256_of(first) == LOCK_SHA256
+    assert manifest.sha256_of(second) == LOCK_SHA256
+
+
 def test_fds_dir_from_models_prefers_field_dir(tmp_path):
     field = SimpleNamespace(fds_dir=str(tmp_path))
     model = SimpleNamespace(field=field, config=SimpleNamespace(fds_dir=None))
@@ -108,8 +153,7 @@ def test_build_manifest_fields(tmp_path):
     )
     assert set(data["versions"]) == {"pyfds-evac", "jupedsim", "fdsreader", "fdsvismap"}
     assert data["versions"]["pyfds-evac"] is not None
-    assert data["uv_lock_sha256"] == manifest.sha256_of(lock)
-    assert len(data["uv_lock_sha256"]) == 64
+    assert data["uv_lock_sha256"] == LOCK_SHA256
     assert data["git_commit"] is None
     assert data["git_dirty"] is None
     assert data["seed"] == 7

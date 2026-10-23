@@ -436,7 +436,7 @@ _T_JUNCTION_FDS = Path(
 @pytest.mark.external_data
 @pytest.mark.skipif(
     not (_T_JUNCTION_FDS / "t_junction.smv").is_file(),
-    reason="t_junction FDS output absent",
+    reason=f"t_junction FDS output absent under {_T_JUNCTION_FDS}; set T_JUNCTION_FDS",
 )
 def test_t_junction_runs_to_t_end_without_the_hold_flag(
     tmp_path, caplog, fds_read_only

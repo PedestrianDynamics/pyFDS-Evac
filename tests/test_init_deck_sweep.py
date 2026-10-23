@@ -12,6 +12,11 @@ of them fails here; regenerate both files on purpose with
     uv run python tests/test_init_deck_sweep.py
 
 and list the changed rows in the pull request (#606).
+
+The table is a characterisation of the importer, regenerated from the code
+it tests: it shows what changed, not that the values are right.
+``test_hand_derived_room_anchors_the_import`` checks a deck whose area,
+exit and agent count follow from its coordinates.
 """
 
 from __future__ import annotations
@@ -112,6 +117,7 @@ def _same_ring(got: list, want: list) -> bool:
 def test_init_outcome_is_pinned(deck):
     (got, exits), want = outcome(deck), PINNED[deck]
     assert got["status"] == want["status"], got["reason"]
+    assert bool(got["area_m2"]) == bool(want["area_m2"])
     if want["area_m2"]:
         assert float(got["area_m2"]) == pytest.approx(
             float(want["area_m2"]), abs=AREA_TOL_M2
@@ -123,6 +129,34 @@ def test_init_outcome_is_pinned(deck):
     moved = [k for k in exits if not _same_ring(exits[k], pinned_exits[k])]
     assert moved == []
     assert got["config_sha256"] == want["config_sha256"]
+
+
+def test_hand_derived_room_anchors_the_import(tmp_path):
+    """A 10 x 10 m room, one 1.2 m door in its left wall, 25 agents.
+
+    Area 100 m2 and 25 agents are read off the deck; the exit strip is the
+    door's width 5.6 - 4.4 = 1.2 m by the default depth 0.5 m (0.6 m2).
+    """
+    deck = tmp_path / "room.fds"
+    deck.write_text(
+        "&HEAD CHID='room' /\n"
+        "&MESH IJK=100,100,24, XB=0,10,0,10,0,2.4 /\n"
+        "&MESH IJK=100,100,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,\n"
+        "      EVAC_HUMANS=.TRUE., ID='Main' /\n"
+        "&EXIT ID='Left', IOR=-1, XB=0,0,4.4,5.6,0.4,1.6 /\n"
+        "&EVAC ID='g', XB=1,9,1,9,1,1, NUMBER_INITIAL_PERSONS=25 /\n"
+        "&TAIL /\n",
+        encoding="utf-8",
+    )
+    row, exits = outcome(str(deck))
+    assert (row["status"], row["area_m2"], row["exits"], row["agents"]) == (
+        "0",
+        "100.00",
+        "1",
+        "25",
+    )
+    xs, ys = zip(*exits["Left"], strict=True)
+    assert (min(xs), max(xs), min(ys), max(ys)) == pytest.approx((0.0, 0.5, 4.4, 5.6))
 
 
 @pytest.mark.parametrize(
