@@ -928,3 +928,19 @@ examples (`derandomize=True`), so CI runs are reproducible.
 | Accumulated FED is additive in duration under constant exposure | FED | `test_fed_properties.py` |
 | Accumulating for `time_to_fed_threshold_s` gives FED 1 | FED | `test_fed_properties.py` (consistency check) |
 | Agents are conserved (spawned = evacuated + remaining + incapacitated) | scenario | Seven fixed runs in `test_agent_conservation.py`; no generated cases, each is a simulation run |
+| Leg travel time is non-decreasing in extinction and in length; speed factor non-increasing in K | routing | `test_route_leg_properties.py`; precondition alpha > 0, beta <= 0, base speed > 0, 0 <= min factor <= 1; `inf` time allowed. A strict case guards the non-strict orderings |
+| Exported `OPTIONS` read back equal the options written (keys, order, values, types, `-0.0`, hostile text) | export | `test_script_export_properties.py` (the comparison is to `export_options`, so only the rendering is under test) |
+
+Open (PR 9 of the survey):
+
+- Agent conservation as a generated property: the outcome counts are assembled
+  inline in `run_scenario` (`scenario.py`, from `initial_agent_count` and the
+  flow counters), not in a function that can be called alone. A Hypothesis
+  test needs that extraction (a source change) or a run per example; the fixed
+  table in `test_agent_conservation.py` stays the check.
+- Full route composite non-decreasing in K and length: needs a graph fixture
+  with the additive model, one edge per route and no rival; the default
+  `gate` model ranks by time and the queue and FED terms are not monotone in
+  K alone. Not cheap enough for this pull request.
+- Threshold boundaries: the survey assigns no rows to this pull request and
+  asks for parametrised tests, not Hypothesis; none added.
