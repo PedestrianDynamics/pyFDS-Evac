@@ -21,13 +21,45 @@ def test_progress_callback_receives_events():
     assert last.wall_time > events[0].wall_time > 0.0
 
 
-def test_run_scenario_without_callback_is_unchanged():
-    scenario = load_scenario("assets/ISO-table21")
-    result = run_scenario(scenario, seed=420)
+def test_progress_percentage_and_clocks_follow_the_documented_fields():
+    """Four agents: pct is the integer percentage of evacuated/total.
+
+    ``single_exit_clear_air`` has two sources of two agents, so total is 4
+    and the percentage after k evacuated agents is ``int(100 * k / 4)``.
+    The clocks never run backwards: ``sim_time`` steps from 0 and
+    ``wall_time`` is real elapsed time, positive once the run has begun.
+    """
+    scenario = load_scenario("assets/single_exit_clear_air")
+    events: list[ProgressEvent] = []
+    result = run_scenario(scenario, seed=420, progress_callback=events.append)
     result.cleanup()
 
-    assert result.metrics
-    assert result.total_agents >= 1
+    assert {e.total for e in events} == {4}
+    assert events[0].sim_time == 0.0
+    assert all(e.pct == int(100 * e.evacuated / 4) for e in events)
+    assert max(e.evacuated for e in events) >= 1
+    assert max(e.pct for e in events) >= 25
+    sim = [e.sim_time for e in events]
+    wall = [e.wall_time for e in events]
+    assert sim == sorted(sim)
+    assert wall == sorted(wall)
+    assert wall[-1] > 0.0
+
+
+def test_run_scenario_without_callback_is_unchanged():
+    scenario = load_scenario("assets/single_exit_clear_air")
+    events: list[ProgressEvent] = []
+    with_callback = run_scenario(scenario, seed=420, progress_callback=events.append)
+    with_callback.cleanup()
+    plain = run_scenario(scenario, seed=420)
+    plain.cleanup()
+
+    assert events
+    keys = ("evacuation_time", "agents_evacuated", "agents_remaining", "total_agents")
+    assert {k: plain.metrics[k] for k in keys} == {
+        k: with_callback.metrics[k] for k in keys
+    }
+    assert plain.total_agents == 4
 
 
 def _three_agent_room(tmp_path):
