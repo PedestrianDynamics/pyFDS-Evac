@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8fd965026b92b17f9e8343d4d76ccb58cb0e7651">&lt;code>8fd9650&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/091f5a8a5015a6c1d7a6bc8620f5581d09c97c9f">&lt;code>091f5a8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">650c5dfe02a862bc7c14351714ee81ca18525cfe22f87eb6ce159dfb3a03cb0d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">85f1b317356541918ad81ee188d5ce42e3a0d2f9cf77ed26ea1aadb27f6c1db7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1816,7 +1816,8 @@ main-fire shift of −0.90 m.&lt;/li>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" target="_blank" rel="noopener">#796&lt;/a>).
 The differences from the earlier version of this study combine the fuel
 change with the code changes between &lt;code>c619a046&lt;/code> (pyFDS-Evac 0.4.0) and
-&lt;code>01a30348&lt;/code> (0.6.1), so they cannot be attributed to the fuel alone.&lt;/li>
+&lt;code>01a30348&lt;/code> (0.6.1). For the additive shift on the main fire the fuel
+alone accounts for the change; see &lt;em>Earlier version&lt;/em>.&lt;/li>
 &lt;li>&lt;strong>Heat and the 400 s cap.&lt;/strong> Heat entered neither routing nor
 tenability. Up to 9 late-starting agents per run on the main fire (up
 to 12 on &lt;code>a047_pvc_h35&lt;/code>) were still walking at 400 s.&lt;/li>
@@ -2616,9 +2617,21 @@ start, the predictor table and the boundary validity count are post hoc.&lt;/p>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" target="_blank" rel="noopener">#796&lt;/a>),
 30 runs per fire. The differences from the earlier version of this study
 combine the fuel change with the code changes between &lt;code>c619a046&lt;/code>
-(pyFDS-Evac 0.4.0) and &lt;code>01a30348&lt;/code> (0.6.1), so they cannot be attributed
-to the fuel alone. The threshold 0.048 was recomputed from the new
-smoke-blind shares and is unchanged.&lt;/p>
+(pyFDS-Evac 0.4.0) and &lt;code>01a30348&lt;/code> (0.6.1). The threshold 0.048 was
+recomputed from the new smoke-blind shares and is unchanged. For the
+additive arm on the main fire the two are separated
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/848" target="_blank" rel="noopener">#848&lt;/a>):
+smoke-blind and additive, 10 seeds each, at &lt;code>01a30348&lt;/code> on the FDS output
+of the 16,400 kJ/kg deck give Δy −0.90 m (−1.16, −0.64) and ΔE −0.07,
+the earlier version&amp;rsquo;s values, against −0.08 m (−0.38, +0.22) and −0.02
+with 10,300 kJ/kg. The shift collapsed with the fuel, not the code.
+With 10,300 kJ/kg more upper-hall agents switch from F to E between 60
+and 150 s (25.3 against 10.9 switches per seed), while the later
+switches from E to F grow less (36.1 against 31.8), so the net move
+toward door B halves. Smoke-blind equals clear air in both sets, so Δy
+has the same reference. Runs and script: &lt;code>p848_old16400_01a30348/&lt;/code> in
+the study data. The gate arm and the comparison fires were not
+separated.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>&lt;strong>Clear air.&lt;/strong> Smoke-blind runs are identical to no fire on all three
@@ -2730,7 +2743,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/8fd965026b92b17f9e8343d4d76ccb58cb0e7651">&lt;code>8fd9650&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/091f5a8a5015a6c1d7a6bc8620f5581d09c97c9f">&lt;code>091f5a8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2761,7 +2774,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">166285bdf1a327f78a48f609d83e973a9794980b93b2c8a49e78164241c0d34d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">897aaea5571f710a4b717e2e905a81d5f685afe97b60ded88b79eb92214f4f46&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -2903,7 +2916,8 @@ fires. The FDS 6.10.1 decks use the Osburg et al. (2025) PVC set and ran
 with &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code> on JURECA. The earlier version of
 this page was made at &lt;code>c619a046&lt;/code> (pyFDS-Evac 0.4.0) with 16,400 kJ/kg; its
 differences from this one combine the fuel change with the code changes
-between the two commits (see &lt;em>Earlier version&lt;/em> above). The clear-air arms
+between the two commits; for the additive shift on the main fire the fuel
+alone accounts for them (see &lt;em>Earlier version&lt;/em> above). The clear-air arms
 of &lt;code>9c820e0f&lt;/code>, &lt;code>2a94a8da&lt;/code> and &lt;code>828ae8c3&lt;/code> gave the same E share, door counts
 and boundary; their trajectories differ (see &lt;em>Clear air&lt;/em> above).&lt;/p>
 &lt;h2>Limits and open issues&lt;span class="hx-absolute -hx-mt-20" id="limits-and-open-issues">&lt;/span>
