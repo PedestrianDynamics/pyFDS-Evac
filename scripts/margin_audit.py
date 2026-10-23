@@ -242,6 +242,18 @@ def _schroeder_deck(name: str) -> AuditDeck:
     )
 
 
+def _allocation_deck(name: str) -> AuditDeck:
+    """A clear-air deck of the allocation audit (#854), ten seeds."""
+    return AuditDeck(
+        f"assets/{name}/config.json",
+        f"assets/{name}/geometry.wkt",
+        None,
+        tuple(range(1, 11)),
+        in_repo=True,
+        extra_args=_FAMILIARITY,
+    )
+
+
 DECKS: dict[str, AuditDeck] = {
     "l_corridor_gate": AuditDeck(
         "l_corridor/evac/deck_gate/config.json",
@@ -331,6 +343,17 @@ DECKS: dict[str, AuditDeck] = {
         in_repo=True,
         extra_args=_FAMILIARITY,
     ),
+    # Single-exit journeys in clear air (#854). The ISO 20414 Test 8 deck
+    # (tests/test_iso_test_8_route_allocation.py) and a hall with two spawn
+    # areas, one whose allocated exit costs 1/0.85 of the other and one 1/0.95
+    # (tests/test_allocation_preference.py); each with a twin whose journeys
+    # are "allocation": "hard", which must not move.
+    "iso_test_8_route_allocation": _allocation_deck("iso_test_8_route_allocation"),
+    "iso_test_8_route_allocation_hard": _allocation_deck(
+        "iso_test_8_route_allocation_hard"
+    ),
+    "single_exit_clear_air": _allocation_deck("single_exit_clear_air"),
+    "single_exit_clear_air_hard": _allocation_deck("single_exit_clear_air_hard"),
 }
 
 

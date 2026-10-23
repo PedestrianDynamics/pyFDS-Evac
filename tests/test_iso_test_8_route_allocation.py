@@ -33,7 +33,16 @@ that file.
 
 Allocation is user-defined: each room's distribution is tied to its exit by a
 journey in the scenario JSON, and the model does not choose the exit from the
-geometry. The allocation is partly against distance: the occupants of rooms 4
+geometry. A journey's exit is a preference unless the journey sets
+``"allocation": "hard"`` (#854): an agent keeps it unless the other exit costs
+less than ``exit_switch_anchor`` (0.9) times as much. The checks below that
+the allocation holds run with ``"allocation": "hard"`` on every journey, so
+they test the allocation itself. At seed 42 the preference reading holds too,
+by a thin margin only: rooms 4 and 10 start at a ratio of 0.913 to 0.926 of
+the cost of the secondary exit over that of the main exit and come no lower
+than 0.904 to 0.918 along the walk, which makes it a
+fragile check; the preference rule is covered by occupants pinned to one
+position instead. The allocation is partly against distance: the occupants of rooms 4
 and 10 (x about 0.9 m) are allocated to the main exit, about 9 m from the
 room door by the passage, although the secondary exit is about 8 m away
 along the corridor (agents: 10.7 m against 9.8 m of path).
@@ -50,6 +59,11 @@ Both must equal the allocated exit for every agent. The case is run twice:
 rerouting off (deterministic allocation, 100 % compliance expected) and
 rerouting on in clear air with the default interval (no smoke, no dose:
 expected no switch). Any switch would be listed with its ``switch_reason``.
+
+Pinned occupants: one occupant of room 4 at the east end of the room, 8.9 m
+from the secondary exit and 10.0 m from the main one by the navmesh (ratio
+0.885, below the anchor), takes the secondary exit under the preference rule
+and keeps the main one under ``"allocation": "hard"``.
 """
 
 from __future__ import annotations
@@ -74,6 +88,7 @@ MAX_TIME_S = 120.0
 DOOR_WIDTH_M = 0.8
 WALL_M = 0.1
 SPAWN_MARGIN_M = 0.3
+PIN_HALF_M = 0.2
 CORRIDOR = (-9.9, -0.6, 9.0, 0.3)
 MAIN = "main"
 SECONDARY = "secondary"
@@ -139,12 +154,18 @@ def _coords(polygon) -> list[list[float]]:
     return [[x, y] for x, y in polygon.exterior.coords]
 
 
-def _distribution(room: int) -> dict:
+def _distribution(room: int, pin: tuple[float, float] | None = None) -> dict:
+    """The room's spawn area, or one occupant at *pin*."""
+    area = _spawn_area(room)
+    if pin is not None:
+        area = box(
+            pin[0] - PIN_HALF_M, pin[1] - PIN_HALF_M, *(p + PIN_HALF_M for p in pin)
+        )
     return {
         "type": "polygon",
-        "coordinates": _coords(_spawn_area(room)),
+        "coordinates": _coords(area),
         "parameters": {
-            "number": OCCUPANTS[room],
+            "number": 1 if pin is not None else OCCUPANTS[room],
             "radius": RADIUS_M,
             "v0": SPEED_MPS,
             "use_flow_spawning": False,
@@ -156,7 +177,9 @@ def _distribution(room: int) -> dict:
     }
 
 
-def _journey(room: int, allocation: dict[int, str]) -> tuple[dict, dict]:
+def _journey(
+    room: int, allocation: dict[int, str], mode: str | None = None
+) -> tuple[dict, dict]:
     name = f"room_{room}"
     exit_id = allocation[room]
     transition = {"from": name, "to": exit_id, "journey_id": f"journey_{room}"}
@@ -165,13 +188,22 @@ def _journey(room: int, allocation: dict[int, str]) -> tuple[dict, dict]:
         "stages": [name, exit_id],
         "transitions": [transition],
     }
+    if mode is not None:
+        journey["allocation"] = mode
     return journey, transition
 
 
 def _scenario(
-    allocation: dict[int, str] = ALLOCATION, journeys: bool = True
+    allocation: dict[int, str] = ALLOCATION,
+    journeys: bool = True,
+    mode: str | None = None,
+    pins: dict[int, tuple[float, float]] | None = None,
 ) -> Scenario:
-    pairs = [_journey(room, allocation) for room in ROOMS] if journeys else []
+    """The test deck. *mode* is the journeys' ``allocation`` value; *pins* maps a
+    room to the one position its single occupant takes, and drops every other room.
+    """
+    rooms = list(pins) if pins else list(ROOMS)
+    pairs = [_journey(room, allocation, mode) for room in rooms] if journeys else []
     sim_params = {
         "max_simulation_time": MAX_TIME_S,
         "model_type": "CollisionFreeSpeedModel",
@@ -195,7 +227,10 @@ def _scenario(
             }
             for name, poly in EXITS.items()
         },
-        "distributions": {f"room_{room}": _distribution(room) for room in ROOMS},
+        "distributions": {
+            f"room_{room}": _distribution(room, (pins or {}).get(room))
+            for room in rooms
+        },
         "checkpoints": {},
         "zones": {},
         "journeys": [journey for journey, _ in pairs],
@@ -225,6 +260,8 @@ def _run(
     rerouting: bool,
     allocation: dict[int, str] = ALLOCATION,
     journeys: bool = True,
+    mode: str | None = None,
+    pins: dict[int, tuple[float, float]] | None = None,
 ) -> dict:
     reroute = (
         RerouteConfig(
@@ -236,7 +273,9 @@ def _run(
     )
     with contextlib.redirect_stdout(io.StringIO()):
         result = run_scenario(
-            _scenario(allocation, journeys), seed=SEED, reroute_config=reroute
+            _scenario(allocation, journeys, mode, pins),
+            seed=SEED,
+            reroute_config=reroute,
         )
     try:
         df = result.trajectory_dataframe().sort_values(["id", "frame"])
@@ -267,7 +306,10 @@ def _run(
 
 @pytest.fixture(scope="module")
 def runs() -> dict[str, dict]:
-    return {"off": _run(rerouting=False), "on": _run(rerouting=True)}
+    return {
+        "off": _run(rerouting=False, mode="hard"),
+        "on": _run(rerouting=True, mode="hard"),
+    }
 
 
 def test_layout_has_23_occupants_and_the_table_9_allocation():
@@ -294,10 +336,12 @@ def test_rerouting_off_records_no_route_history(runs):
 
 
 def test_rerouting_on_in_clear_air_switches_nobody(runs):
-    """The pass runs, but a journey gives the route graph only its exit.
+    """The pass runs on hard allocations and finds no reason to leave them.
 
-    So this shows that rerouting does not drop a journey's exit in clear
-    air, not that it would keep an allocation against a cheaper exit.
+    Under ``"allocation": "hard"`` the route graph holds only the allocated
+    exit, so this shows that rerouting does not drop a journey's exit in clear
+    air. That an allocation yields to a clearly cheaper exit, and holds against
+    a slightly cheaper one, is shown by the pinned occupants below.
     """
     run = runs["on"]
     assert run["has_history"]
@@ -321,3 +365,25 @@ def test_predictive_reading_differs_in_rooms_4_and_10():
     assert differing == {4, 10}
     for room in (4, 10):
         assert run["per_room"][room]["final"] == [SECONDARY] * 2
+
+
+PINNED_ROOM_4 = {4: (1.95, 0.85)}
+
+
+@pytest.mark.parametrize("rerouting", [False, True], ids=["off", "on"])
+def test_occupant_below_the_anchor_takes_the_secondary_exit(rerouting):
+    """Secondary 8.9 m, main 10.0 m: 0.885 of the allocated cost, below 0.9."""
+    run = _run(rerouting=rerouting, pins=PINNED_ROOM_4)
+    seen = run["per_room"][4]
+    assert seen["assigned"] == [SECONDARY]
+    assert seen["final"] == [SECONDARY]
+    assert run["evacuated"] == 1
+
+
+@pytest.mark.parametrize("rerouting", [False, True], ids=["off", "on"])
+def test_hard_allocation_keeps_the_occupant_below_the_anchor(rerouting):
+    run = _run(rerouting=rerouting, mode="hard", pins=PINNED_ROOM_4)
+    seen = run["per_room"][4]
+    assert seen["assigned"] == [MAIN]
+    assert seen["final"] == [MAIN]
+    assert not run["switches"]
