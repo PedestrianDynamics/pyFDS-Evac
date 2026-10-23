@@ -125,6 +125,7 @@ from .route_graph import (
     RouteSwitch,
     StageGraph,
     _active_path,
+    _anchor_allows,
     _cost_config,
     adopt_heading_exit,
     check_removed_routing_keys,
@@ -134,11 +135,13 @@ from .route_graph import (
     evaluate_and_reroute,
     look_radius,
     looking,
+    preference_nodes,
     rank_routes,
     reroute_agent,
     should_reevaluate,
     stage_closed,
     terminal_exit,
+    with_rival_edges,
 )
 from .smoke_speed import ConstantExtinctionField, sample_accepts_free_speed
 
@@ -1288,6 +1291,8 @@ def _assign_initial_exit(
     *,
     spawn_key: SpawnKey,
     agent_position: tuple[float, float] | None = None,
+    rival_graph: "StageGraph | None" = None,
+    anchor_config: RerouteConfig | None = None,
 ) -> str | None:
     """Point a freshly spawned agent at the best exit *it knows about*.
 
@@ -1311,6 +1316,13 @@ def _assign_initial_exit(
     With *required_exit* (exit replay) the agent takes the best ranked route to
     that exit, or the shortest graph path to it when the exit is outside the
     agent's map. Raises ExitReplayError when the exit cannot be reached.
+
+    With *rival_graph* the agent's allocated exit is a preference: routes are
+    ranked on that graph, which offers the other exits too, with the allocated
+    exit as the current one. The agent keeps it unless the exit-switch anchor
+    of *anchor_config* (the cost model's by default) lets a rival replace it.
+    The cognitive map is still made from *graph*. A replayed exit is followed
+    as it is.
 
     Returns the exit the agent is now heading for, or None when it knows no
     reachable exit, in which case the geometric assignment is left in place.
@@ -1336,8 +1348,10 @@ def _assign_initial_exit(
         )
         cognitive_maps[agent_id] = cmap
 
+    rank_graph = graph if rival_graph is None else rival_graph
+    allocated = None if rival_graph is None else terminal_exit(wait_info, graph.nodes)
     ranked = rank_routes(
-        graph,
+        rank_graph,
         spawn_node,
         time_s,
         0.0,
@@ -1347,21 +1361,41 @@ def _assign_initial_exit(
         cached_segments=cached_segments,
         cognitive_map=cmap,
         agent_position=agent_position,
+        current_exit=allocated,
     )
     if required_exit is not None:
-        path = _replayed_path(graph, spawn_node, ranked, required_exit)
+        path = _replayed_path(rank_graph, spawn_node, ranked, required_exit)
         if path is None:
             raise ExitReplayError(
                 f"Replayed exit {required_exit!r} of agent {agent_id} is not "
                 f"reachable from {spawn_node!r}."
             )
         return required_exit if _apply_initial_path(wait_info, path) else None
-    ranked = [rc for rc in ranked if not rc.rejected] or ranked
-    if not ranked:
+    candidates = [rc for rc in ranked if not rc.rejected] or ranked
+    if not candidates:
         return None
 
-    best = ranked[0]
+    best = candidates[0]
+    if allocated is not None:
+        config = anchor_config or RerouteConfig(cost_config=cost_config)
+        best = _hold_allocation(best, ranked, allocated, config)
     return best.exit_id if _apply_initial_path(wait_info, list(best.path)) else None
+
+
+def _hold_allocation(best, ranked: list, allocated: str, config: RerouteConfig):
+    """The route an agent allocated to *allocated* takes, given the *best* ranked.
+
+    Rank 1 alone cannot say: in clear air every optical depth is zero, so a
+    rival a hair cheaper would rank first. The allocated route stays unless
+    the exit-switch anchor lets *best* replace it; it is also dropped when it
+    is not ranked at all (its exit is closed or out of the agent's map).
+    """
+    if best.exit_id == allocated:
+        return best
+    held = next((rc for rc in ranked if rc.exit_id == allocated), None)
+    if held is None or _anchor_allows(best, held, config):
+        return best
+    return held
 
 
 def _flow_origin(flow_dist: dict, source_id: int) -> str:
@@ -1597,6 +1631,12 @@ def _migrate_journeys_v2(data: dict[str, Any]) -> None:
     if not sequences:
         return
 
+    allocations = {
+        j["id"]: j["allocation"]
+        for j in journeys_v2
+        if isinstance(j, dict) and j.get("id") and "allocation" in j
+    }
+
     used_ids: set = set()
     legacy_journeys = []
     legacy_transitions = []
@@ -1615,9 +1655,10 @@ def _migrate_journeys_v2(data: dict[str, Any]) -> None:
             {"from": stages[i], "to": stages[i + 1], "journey_id": legacy_id}
             for i in range(len(stages) - 1)
         ]
-        legacy_journeys.append(
-            {"id": legacy_id, "stages": stages, "transitions": transitions}
-        )
+        legacy = {"id": legacy_id, "stages": stages, "transitions": transitions}
+        if jid in allocations:
+            legacy["allocation"] = allocations[jid]
+        legacy_journeys.append(legacy)
         legacy_transitions.extend(transitions)
 
     if legacy_journeys:
@@ -1689,6 +1730,7 @@ def load_scenario(path: str) -> Scenario:
     from .simulation_init import check_journey_transitions
 
     check_journey_transitions(data)
+    preference_nodes(data)
 
     sim_settings = data.get("config", {}).get("simulation_settings", {})
     sim_params = sim_settings.get("simulationParams", {})
@@ -1946,6 +1988,11 @@ def run_scenario(
         _cmap_seen: dict[int, tuple[int, int]] = {}
         route_segment_cache: dict[tuple[str, str], Any] | None = None
         stage_graph: StageGraph | None = None
+        # The graph on which agents of a preference node are ranked: the stage
+        # graph plus the rival exits their spawn area sees. Only ranking reads
+        # it; the cognitive map and every other use stay on the stage graph.
+        rival_graph: StageGraph | None = None
+        rival_sources = preference_nodes(scenario.raw)
         distribution_stage_configs: dict[str, dict[str, Any]] = {}
         reroute_debug_printed = False
         reroute_debug_samples = 0
@@ -1962,6 +2009,8 @@ def run_scenario(
                 walkable_polygon=scenario.walkable_polygon,
             )
             route_segment_cache = {}
+            if rival_sources:
+                rival_graph = with_rival_edges(stage_graph, sorted(rival_sources))
             # Spawn areas as steerable patrol stops. Stage configs are built
             # from direct_steering_info, which holds crossings and exits only,
             # so a wandering agent could never be routed back to its own
@@ -2030,6 +2079,19 @@ def run_scenario(
             else RouteCostConfig.from_routing_params(scenario.raw.get("routing"))
         )
 
+        def _ranking_graph(wait_info: dict) -> StageGraph | None:
+            """The graph to rank on for this agent, or None for the stage graph.
+
+            Rivals are visible from the spawn area of a preference node, which
+            is the ranking source until the agent's origin moves on.
+            """
+            if rival_graph is None:
+                return None
+            source = wait_info.get("current_origin") or wait_info.get(
+                "current_target_stage"
+            )
+            return rival_graph if source in rival_sources else None
+
         def _initial_exit_choice(
             agent_id: int,
             wait_info: dict,
@@ -2069,6 +2131,8 @@ def run_scenario(
                 required_exit=required_exit,
                 spawn_key=key,
                 agent_position=extract_agent_xy(simulation.agent(agent_id)),
+                rival_graph=_ranking_graph(wait_info),
+                anchor_config=reroute_config,
             )
             if required_exit is not None:
                 # A replayed exit is followed whether or not it is known.
@@ -2326,6 +2390,7 @@ def run_scenario(
             agent decides the same way whenever it is evaluated (#610).
             """
             current_fed = fed_state.get(agent_id, {}).get("cumulative", 0.0)
+            rank_graph = _ranking_graph(wait_info) or graph
             # Expand cognitive map from current position before reevaluation.
             _cmap = cognitive_maps.get(agent_id)
             _pos = wait_info.get("current_position")
@@ -2349,7 +2414,7 @@ def run_scenario(
                 )
                 if source is not None and source in graph.nodes:
                     ranked = rank_routes(
-                        graph,
+                        rank_graph,
                         source,
                         current_time,
                         current_fed,
@@ -2410,7 +2475,7 @@ def run_scenario(
                 agent_id=agent_id,
                 wait_info=wait_info,
                 route_state=rs,
-                graph=graph,
+                graph=rank_graph,
                 current_time_s=current_time,
                 current_fed=current_fed,
                 extinction_sampler=extinction_sampler,
@@ -2495,7 +2560,7 @@ def run_scenario(
                 agent_id=agent_id,
                 wait_info=wait_info,
                 route_state=rs,
-                graph=stage_graph,
+                graph=_ranking_graph(wait_info) or stage_graph,
                 current_time_s=current_time,
                 current_fed=0.0
                 if smoke_blind

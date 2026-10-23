@@ -451,6 +451,85 @@ def _wire_by_type(
         graph.edges.setdefault(src_id, []).extend(kept)
 
 
+ALLOCATION_PREFERENCE = "preference"
+ALLOCATION_HARD = "hard"
+_ALLOCATIONS = (ALLOCATION_PREFERENCE, ALLOCATION_HARD)
+
+
+def journey_allocation(journey: Mapping[str, Any]) -> str:
+    """How binding a journey's exit is: ``"preference"`` (default) or ``"hard"``.
+
+    Raises ValueError naming the journey for any other value.
+    """
+    value = journey.get("allocation", ALLOCATION_PREFERENCE)
+    if value in _ALLOCATIONS:
+        return str(value)
+    raise ValueError(
+        f"Journey {journey.get('id')!r}: 'allocation' must be one of "
+        f"{list(_ALLOCATIONS)}, got {value!r}."
+    )
+
+
+def _reachable_exits(
+    start: str, transitions: Iterable[Mapping[str, Any]], exits: Iterable[str]
+) -> set[str]:
+    """The exits a walk along *transitions* from *start* can end at."""
+    onward: dict[str, list[str]] = {}
+    for tr in transitions:
+        onward.setdefault(tr.get("from", ""), []).append(tr.get("to", ""))
+    seen = {start}
+    todo = [start]
+    while todo:
+        for nxt in onward.get(todo.pop(), []):
+            if nxt not in seen:
+                seen.add(nxt)
+                todo.append(nxt)
+    return seen & set(exits)
+
+
+def preference_nodes(raw: Mapping[str, Any]) -> frozenset[str]:
+    """Spawn areas whose agents hold their journey's exit as a preference.
+
+    A spawn area qualifies when its transitions reach exactly one exit, no
+    journey through it is ``"allocation": "hard"``, and the deck has a second
+    exit to prefer. Raises ValueError for an invalid ``allocation`` value on
+    any journey, whatever the deck.
+    """
+    journeys = [j for j in raw.get("journeys") or [] if isinstance(j, Mapping)]
+    allocations = [journey_allocation(j) for j in journeys]
+    exits = raw.get("exits") or {}
+    if len(exits) < 2:
+        return frozenset()
+    transitions = [t for t in raw.get("transitions") or [] if isinstance(t, Mapping)]
+    nodes = set()
+    for dist_id in raw.get("distributions") or {}:
+        through = [
+            a for j, a in zip(journeys, allocations) if dist_id in j.get("stages", [])
+        ]
+        if not through or ALLOCATION_HARD in through:
+            continue
+        if len(_reachable_exits(dist_id, transitions, exits)) == 1:
+            nodes.add(dist_id)
+    return frozenset(nodes)
+
+
+def with_rival_edges(graph: StageGraph, sources: Iterable[str]) -> StageGraph:
+    """A copy of *graph* where each of *sources* also sees the other exits.
+
+    The added edges are those :func:`_wire_by_type` gives a node of a deck
+    without transitions; an edge that *graph* already has from the source is
+    not added again, so the journey's own edges keep their place and order.
+    *graph* is left as it is, and the copy shares its nodes.
+    """
+    wired = StageGraph(nodes=graph.nodes)
+    _wire_by_type(wired, [s for s in sources if s in graph.nodes], graph.routing_engine)
+    edges = {src: list(out) for src, out in graph.edges.items()}
+    for src, new in wired.edges.items():
+        have = {edge.target for edge in edges.get(src, [])}
+        edges.setdefault(src, []).extend(e for e in new if e.target not in have)
+    return replace(graph, edges=edges)
+
+
 def _make_edge(src_node: StageNode, tgt_node: StageNode, routing_engine) -> StageEdge:
     """Build a StageEdge between two nodes using polyline or straight-line geometry."""
     straight = [
