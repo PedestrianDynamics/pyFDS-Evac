@@ -614,12 +614,15 @@ a guard against a future ordering, not behaviour today.
 ### Open
 
 - No mutant survives or hangs; one is equivalent (above).
-- `visibility_full_return_dropped` and `initial_exit_map_not_stored` each
-  rest on one test. The full-map early return in `expand_from_visibility`
-  changes nothing but whether the model is queried, and the map stored by
-  `_assign_initial_exit` would otherwise be built again by the reroute
-  pass from the same rng stream, so the stored object is observed only
-  through the `cognitive_maps` dict. Not strengthened further here.
+- Closed (#836): `visibility_full_return_dropped` and
+  `initial_exit_map_not_stored` each have a second killer.
+  `test_a_full_map_does_not_even_ask` runs for `1.0` and `"full"` (two
+  construction paths to a full map; the observable is still only whether the
+  model is queried). `test_a_second_decision_reuses_the_map_the_first_stored`
+  stores a map of S, B and X2 for a stranger told the entrance X2, then
+  decides again at familiarity 1.0: the stored map gives X2, a rebuilt full
+  map would give the nearest exit X1. Both mutants fail the new tests
+  (`mutation_check.py routing_cognitive_map`, each applied to the full area).
 - `visibility_always_true` and `expand_skips_visibility` are killed by
   stub and by clear-air visibility; no FDS-smoke visibility is in the area.
 
