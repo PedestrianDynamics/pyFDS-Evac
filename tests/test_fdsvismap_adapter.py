@@ -84,3 +84,22 @@ def test_cached_metres_mirror_fdsvismaps_masked_product(tmp_path):
             expected = vismap.get_visibility_to_sign(0.0, x, y, sign_id=0)
             got = cached._vis.visibility_to_wp(0.0, x, y, 0)
             assert got == pytest.approx(expected, rel=1e-3)
+
+
+def test_cached_sighting_distance_respects_an_obstruction(tmp_path):
+    """A wall between sign and observer hides the sign from the cached grid.
+
+    Wall: x in [3, 4], full height, so cell centres 3.25 and 3.75 are blocked.
+    The sign at x = 1.25 is read from 1 m east (x = 2.25) at c / K = 6 m and
+    from 4 m east (x = 5.25), which is inside 6 m but behind the wall.
+    """
+    signs = {"s": {"x": SIGN_XY[0], "y": SIGN_XY[1], "alpha": None, "c": C}}
+    walkable = box(0, 0, 10, 4).difference(box(3, 0, 4, 4))
+    kwargs = dict(cell_size_m=0.5, extinction_per_m=K_PER_M)
+    cache = tmp_path / "vis.npz"
+    VisibilityModel.clear_air(walkable, signs, cache_path=cache, **kwargs)
+    cached = VisibilityModel.clear_air(walkable, signs, cache_path=cache, **kwargs)
+    assert not hasattr(cached._vis, "vismap")
+    assert cached.visibility_to_node(0.0, 2.25, 2.25, "s") == pytest.approx(SIGHT_M)
+    assert cached.visibility_to_node(0.0, *OBSERVER_XY, "s") is None
+    assert not cached.node_is_visible(0.0, *OBSERVER_XY, "s")

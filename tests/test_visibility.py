@@ -178,6 +178,74 @@ class TestVisibilityModelCache:
             assert saved_meta["fds_dir"] == str(Path(FDS_DIR).resolve())
 
 
+def _signs_with(node_id, **changes):
+    return {**SIGNS, node_id: {**SIGNS[node_id], **changes}}
+
+
+class TestVismapCacheKey:
+    """Each field of the cache key decides whether a cache is reused.
+
+    A cache is written by a first model, then a second model is built with one
+    field changed. The cache must not answer for it, and an identical second
+    model must reuse it. Nothing here reads ``_make_meta``.
+    """
+
+    BASE = {
+        "signs": SIGNS,
+        "time_step_s": TIME_STEP,
+        "slice_height_m": HEIGHT,
+        "max_sign_distance_m": 30.0,
+    }
+
+    @staticmethod
+    def _build(cache, config):
+        VisibilityModel(
+            FDS_DIR,
+            config["signs"],
+            cache_path=cache,
+            time_step_s=config["time_step_s"],
+            slice_height_m=config["slice_height_m"],
+            max_sign_distance_m=config["max_sign_distance_m"],
+        )
+
+    @patch("pyfds_evac.core.visibility._build_vismap")
+    def test_identical_config_shares_the_cache(self, mock_build, tmp_path):
+        mock_build.return_value = _FakeVis()
+        cache = tmp_path / "vis.npz"
+        self._build(cache, self.BASE)
+        assert mock_build.call_count == 1
+        self._build(
+            cache, {**self.BASE, "signs": {k: dict(v) for k, v in SIGNS.items()}}
+        )
+        assert mock_build.call_count == 1
+
+    @pytest.mark.parametrize(
+        "changes",
+        [
+            pytest.param({"time_step_s": 5.0}, id="time_step_s"),
+            pytest.param({"slice_height_m": 1.6}, id="slice_height_m"),
+            pytest.param({"max_sign_distance_m": 50.0}, id="global_cap"),
+            pytest.param({"signs": _signs_with("exit_A", x=1.5)}, id="x"),
+            pytest.param({"signs": _signs_with("exit_A", y=2.5)}, id="y"),
+            pytest.param({"signs": _signs_with("exit_A", alpha=180.0)}, id="alpha"),
+            pytest.param({"signs": _signs_with("exit_A", alpha=None)}, id="alpha_omni"),
+            pytest.param({"signs": _signs_with("exit_A", c=4)}, id="c"),
+            pytest.param(
+                {"signs": _signs_with("exit_A", max_distance=12.0)},
+                id="sign_cap",
+            ),
+        ],
+    )
+    @patch("pyfds_evac.core.visibility._build_vismap")
+    def test_changing_one_field_rebuilds(self, mock_build, changes, tmp_path):
+        mock_build.return_value = _FakeVis()
+        cache = tmp_path / "vis.npz"
+        self._build(cache, self.BASE)
+        assert mock_build.call_count == 1
+        self._build(cache, {**self.BASE, **changes})
+        assert mock_build.call_count == 2
+
+
 class TestSignSynthesis:
     """Every routable stage carries a sign, so nothing opts out of smoke gating.
 
@@ -414,6 +482,49 @@ class TestClearAirCacheHit:
         assert loaded.distance_to_node(5.0, 2.0, "e") == pytest.approx(
             built.distance_to_node(5.0, 2.0, "e")
         )
+
+
+def _room(wall_x=5.0):
+    from shapely.geometry import box
+
+    return box(0, 0, 10, 4).difference(box(wall_x, 0, wall_x + 1.0, 3.0))
+
+
+class TestClearAirCacheKey:
+    """The clear-air grid depends on the geometry, resolution and extinction.
+
+    A cache hit is a model without a live ``vismap`` (see the adapter test);
+    a rebuild carries one.
+    """
+
+    SIGN = {"e": {"x": 1.0, "y": 2.0, "alpha": None, "c": 3}}
+
+    def _build(self, cache, walkable=None, cell_size_m=1.0, extinction_per_m=0.5):
+        return VisibilityModel.clear_air(
+            walkable if walkable is not None else _room(),
+            self.SIGN,
+            cell_size_m=cell_size_m,
+            extinction_per_m=extinction_per_m,
+            cache_path=cache,
+        )
+
+    def test_identical_config_shares_the_cache(self, tmp_path):
+        cache = tmp_path / "vis.npz"
+        assert hasattr(self._build(cache)._vis, "vismap")
+        assert not hasattr(self._build(cache, walkable=_room())._vis, "vismap")
+
+    @pytest.mark.parametrize(
+        "changes",
+        [
+            pytest.param({"walkable": _room(6.0)}, id="walkable"),
+            pytest.param({"cell_size_m": 0.5}, id="cell_size_m"),
+            pytest.param({"extinction_per_m": 1.0}, id="extinction_per_m"),
+        ],
+    )
+    def test_changing_one_field_rebuilds(self, changes, tmp_path):
+        cache = tmp_path / "vis.npz"
+        self._build(cache)
+        assert hasattr(self._build(cache, **changes)._vis, "vismap")
 
 
 class TestClearAirGridResolution:
