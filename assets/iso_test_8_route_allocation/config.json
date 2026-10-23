@@ -1,0 +1,728 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 120.0,
+        "model_type": "CollisionFreeSpeedModel"
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 42
+    },
+    "ui_state": {
+      "useShortestPaths": false
+    }
+  },
+  "exits": {
+    "main": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -2.8,
+          5.0
+        ],
+        [
+          -2.8,
+          5.4
+        ],
+        [
+          -3.7,
+          5.4
+        ],
+        [
+          -3.7,
+          5.0
+        ],
+        [
+          -2.8,
+          5.0
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    },
+    "secondary": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          8.9,
+          -0.3
+        ],
+        [
+          8.9,
+          0.1
+        ],
+        [
+          8.7,
+          0.1
+        ],
+        [
+          8.7,
+          -0.3
+        ],
+        [
+          8.9,
+          -0.3
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    }
+  },
+  "distributions": {
+    "room_1": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -7.2,
+          0.7
+        ],
+        [
+          -7.2,
+          3.9000000000000004
+        ],
+        [
+          -9.5,
+          3.9000000000000004
+        ],
+        [
+          -9.5,
+          0.7
+        ],
+        [
+          -7.2,
+          0.7
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_2": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -4.3,
+          0.7
+        ],
+        [
+          -4.3,
+          3.9000000000000004
+        ],
+        [
+          -6.5,
+          3.9000000000000004
+        ],
+        [
+          -6.5,
+          0.7
+        ],
+        [
+          -4.3,
+          0.7
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_3": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -1.0,
+          0.7
+        ],
+        [
+          -1.0,
+          3.9000000000000004
+        ],
+        [
+          -2.3000000000000003,
+          3.9000000000000004
+        ],
+        [
+          -2.3000000000000003,
+          0.7
+        ],
+        [
+          -1.0,
+          0.7
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_4": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          1.9999999999999998,
+          0.7
+        ],
+        [
+          1.9999999999999998,
+          3.9000000000000004
+        ],
+        [
+          -0.2,
+          3.9000000000000004
+        ],
+        [
+          -0.2,
+          0.7
+        ],
+        [
+          1.9999999999999998,
+          0.7
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_5": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          5.0,
+          0.7
+        ],
+        [
+          5.0,
+          3.9000000000000004
+        ],
+        [
+          2.8,
+          3.9000000000000004
+        ],
+        [
+          2.8,
+          0.7
+        ],
+        [
+          5.0,
+          0.7
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_6": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          8.0,
+          0.7
+        ],
+        [
+          8.0,
+          3.9000000000000004
+        ],
+        [
+          5.7,
+          3.9000000000000004
+        ],
+        [
+          5.7,
+          0.7
+        ],
+        [
+          8.0,
+          0.7
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_7": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -7.2,
+          -4.2
+        ],
+        [
+          -7.2,
+          -1.0
+        ],
+        [
+          -9.5,
+          -1.0
+        ],
+        [
+          -9.5,
+          -4.2
+        ],
+        [
+          -7.2,
+          -4.2
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_8": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -4.2,
+          -4.2
+        ],
+        [
+          -4.2,
+          -1.0
+        ],
+        [
+          -6.5,
+          -1.0
+        ],
+        [
+          -6.5,
+          -4.2
+        ],
+        [
+          -4.2,
+          -4.2
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_9": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          -1.0,
+          -4.2
+        ],
+        [
+          -1.0,
+          -1.0
+        ],
+        [
+          -3.5,
+          -1.0
+        ],
+        [
+          -3.5,
+          -4.2
+        ],
+        [
+          -1.0,
+          -4.2
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_10": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          1.9999999999999998,
+          -4.2
+        ],
+        [
+          1.9999999999999998,
+          -1.0
+        ],
+        [
+          -0.2,
+          -1.0
+        ],
+        [
+          -0.2,
+          -4.2
+        ],
+        [
+          1.9999999999999998,
+          -4.2
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_11": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          5.0,
+          -4.2
+        ],
+        [
+          5.0,
+          -1.0
+        ],
+        [
+          2.6999999999999997,
+          -1.0
+        ],
+        [
+          2.6999999999999997,
+          -4.2
+        ],
+        [
+          5.0,
+          -4.2
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    },
+    "room_12": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          8.0,
+          -4.2
+        ],
+        [
+          8.0,
+          -1.0
+        ],
+        [
+          5.7,
+          -1.0
+        ],
+        [
+          5.7,
+          -4.2
+        ],
+        [
+          8.0,
+          -4.2
+        ]
+      ],
+      "parameters": {
+        "number": 2,
+        "radius": 0.15,
+        "v0": 1.3,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "use_premovement": false,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant"
+      }
+    }
+  },
+  "checkpoints": {},
+  "zones": {},
+  "journeys": [
+    {
+      "id": "journey_1",
+      "stages": [
+        "room_1",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_1",
+          "to": "main",
+          "journey_id": "journey_1"
+        }
+      ]
+    },
+    {
+      "id": "journey_2",
+      "stages": [
+        "room_2",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_2",
+          "to": "main",
+          "journey_id": "journey_2"
+        }
+      ]
+    },
+    {
+      "id": "journey_3",
+      "stages": [
+        "room_3",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_3",
+          "to": "main",
+          "journey_id": "journey_3"
+        }
+      ]
+    },
+    {
+      "id": "journey_4",
+      "stages": [
+        "room_4",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_4",
+          "to": "main",
+          "journey_id": "journey_4"
+        }
+      ]
+    },
+    {
+      "id": "journey_5",
+      "stages": [
+        "room_5",
+        "secondary"
+      ],
+      "transitions": [
+        {
+          "from": "room_5",
+          "to": "secondary",
+          "journey_id": "journey_5"
+        }
+      ]
+    },
+    {
+      "id": "journey_6",
+      "stages": [
+        "room_6",
+        "secondary"
+      ],
+      "transitions": [
+        {
+          "from": "room_6",
+          "to": "secondary",
+          "journey_id": "journey_6"
+        }
+      ]
+    },
+    {
+      "id": "journey_7",
+      "stages": [
+        "room_7",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_7",
+          "to": "main",
+          "journey_id": "journey_7"
+        }
+      ]
+    },
+    {
+      "id": "journey_8",
+      "stages": [
+        "room_8",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_8",
+          "to": "main",
+          "journey_id": "journey_8"
+        }
+      ]
+    },
+    {
+      "id": "journey_9",
+      "stages": [
+        "room_9",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_9",
+          "to": "main",
+          "journey_id": "journey_9"
+        }
+      ]
+    },
+    {
+      "id": "journey_10",
+      "stages": [
+        "room_10",
+        "main"
+      ],
+      "transitions": [
+        {
+          "from": "room_10",
+          "to": "main",
+          "journey_id": "journey_10"
+        }
+      ]
+    },
+    {
+      "id": "journey_11",
+      "stages": [
+        "room_11",
+        "secondary"
+      ],
+      "transitions": [
+        {
+          "from": "room_11",
+          "to": "secondary",
+          "journey_id": "journey_11"
+        }
+      ]
+    },
+    {
+      "id": "journey_12",
+      "stages": [
+        "room_12",
+        "secondary"
+      ],
+      "transitions": [
+        {
+          "from": "room_12",
+          "to": "secondary",
+          "journey_id": "journey_12"
+        }
+      ]
+    }
+  ],
+  "transitions": [
+    {
+      "from": "room_1",
+      "to": "main",
+      "journey_id": "journey_1"
+    },
+    {
+      "from": "room_2",
+      "to": "main",
+      "journey_id": "journey_2"
+    },
+    {
+      "from": "room_3",
+      "to": "main",
+      "journey_id": "journey_3"
+    },
+    {
+      "from": "room_4",
+      "to": "main",
+      "journey_id": "journey_4"
+    },
+    {
+      "from": "room_5",
+      "to": "secondary",
+      "journey_id": "journey_5"
+    },
+    {
+      "from": "room_6",
+      "to": "secondary",
+      "journey_id": "journey_6"
+    },
+    {
+      "from": "room_7",
+      "to": "main",
+      "journey_id": "journey_7"
+    },
+    {
+      "from": "room_8",
+      "to": "main",
+      "journey_id": "journey_8"
+    },
+    {
+      "from": "room_9",
+      "to": "main",
+      "journey_id": "journey_9"
+    },
+    {
+      "from": "room_10",
+      "to": "main",
+      "journey_id": "journey_10"
+    },
+    {
+      "from": "room_11",
+      "to": "secondary",
+      "journey_id": "journey_11"
+    },
+    {
+      "from": "room_12",
+      "to": "secondary",
+      "journey_id": "journey_12"
+    }
+  ]
+}
