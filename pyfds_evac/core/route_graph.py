@@ -9,6 +9,7 @@ import numbers
 import weakref
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field, replace
+from enum import Enum
 from typing import Any, Protocol
 
 import numpy as np
@@ -2081,6 +2082,8 @@ class RouteModePolicy(Protocol):
         config: RerouteConfig,
     ) -> bool: ...
 
+    def same_exit_improves(self, best: RouteCost, committed: RouteCost) -> bool: ...
+
     def scan_before_current_exit(self) -> bool: ...
 
     def switch_hazard_label(
@@ -2150,6 +2153,12 @@ class AdditivePolicy(_AnchoredPolicy):
         self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
     ) -> bool:
         return _clears_exit_anchor(candidate, old_rc, config)
+
+    def same_exit_improves(self, best: RouteCost, committed: RouteCost) -> bool:
+        """Whether *best* is worth taking over the walked path to the same exit."""
+        return _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
+            best, committed
+        )
 
     def scan_before_current_exit(self) -> bool:
         return False
@@ -2258,8 +2267,24 @@ class AdditivePolicy(_AnchoredPolicy):
         )
 
 
+class GateRule(Enum):
+    """Which rule of the gate decided whether a rival replaces the current exit."""
+
+    CLEAN_BYPASS = "clean_bypass"
+    TAU_CLEANER = "tau_cleaner"
+    TAU_DIRTIER = "tau_dirtier"
+    TIME_RATIO = "time_ratio"
+
+
 class GatePolicy(_AnchoredPolicy):
-    """Smoke refuses routes; optical depth ranks the rest, time breaks ties."""
+    """Smoke refuses routes; optical depth ranks the rest, time breaks ties.
+
+    The ordering and the switching rules differ on purpose. The order key
+    ranks tau first and discounts the current exit by 0.9. Switching away from
+    the current exit asks the tau band (tau_max * tau_deadband, 0.6 by
+    default) first and the time ratio (exit_switch_anchor, 0.9) second. A
+    change of path to the same exit is time-only (same_exit_improves).
+    """
 
     @staticmethod
     def _clean_bypass(candidate: RouteCost, old_rc: RouteCost) -> bool:
@@ -2295,19 +2320,36 @@ class GatePolicy(_AnchoredPolicy):
             return -1
         return 0
 
+    def deciding_rule(
+        self, candidate: RouteCost, old_rc: RouteCost, cost_config: RouteCostConfig
+    ) -> GateRule:
+        """The rule that decides a switch from *old_rc* to *candidate*."""
+        if self._clean_bypass(candidate, old_rc):
+            return GateRule.CLEAN_BYPASS
+        band = self._tau_band(candidate, old_rc, cost_config)
+        if band > 0:
+            return GateRule.TAU_CLEANER
+        if band < 0:
+            return GateRule.TAU_DIRTIER
+        return GateRule.TIME_RATIO
+
     def improvement(
         self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
     ) -> bool:
-        if self._clean_bypass(candidate, old_rc):
-            return True
-        if not candidate.feasible:
+        # An infeasible candidate is judged on time alone: the tau band orders
+        # feasible routes.
+        if not self._clean_bypass(candidate, old_rc) and not candidate.feasible:
             return _clears_exit_anchor(candidate, old_rc, config)
-        band = self._tau_band(candidate, old_rc, _cost_config(config))
-        if band > 0:
-            return True
-        if band < 0:
-            return False
-        return _clears_exit_anchor(candidate, old_rc, config)
+        rule = self.deciding_rule(candidate, old_rc, _cost_config(config))
+        if rule is GateRule.TIME_RATIO:
+            return _clears_exit_anchor(candidate, old_rc, config)
+        return rule is not GateRule.TAU_DIRTIER
+
+    def same_exit_improves(self, best: RouteCost, committed: RouteCost) -> bool:
+        """Whether *best* is worth taking over the walked path to the same exit."""
+        return _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
+            best, committed
+        )
 
     def scan_before_current_exit(self) -> bool:
         return True
@@ -2320,10 +2362,8 @@ class GatePolicy(_AnchoredPolicy):
         current_fed: float = 0.0,
     ) -> str | None:
         """``smoke_reroute`` if smoke let *best* win, else None."""
-        cost_config = _cost_config(config)
-        cleaner = self._clean_bypass(best, old_rc) or (
-            self._tau_band(best, old_rc, cost_config) > 0
-        )
+        rule = self.deciding_rule(best, old_rc, _cost_config(config))
+        cleaner = rule in (GateRule.CLEAN_BYPASS, GateRule.TAU_CLEANER)
         return (
             "smoke_reroute"
             if cleaner or _slowed_by_smoke(best, old_rc, config)
@@ -3682,9 +3722,7 @@ def _decide_same_exit(
             agent_position=agent_position,
             current_target=current_target,
         )
-        if _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
-            best, committed
-        ):
+        if policy_for(_cost_config(config)).same_exit_improves(best, committed):
             return RouteDecision(
                 kind="switch",
                 path=best.path,

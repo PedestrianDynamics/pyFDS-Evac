@@ -2341,3 +2341,12 @@ def test_walked_path_evaluation_omits_current_exit(monkeypatch):
     kwargs, rc = walked_calls[0]
     assert kwargs.get("current_exit") is None
     assert not rc.clean
+
+
+def test_both_policies_decide_same_exit_by_time_and_rejection():
+    walked = _rc("E0", rank_cost=10.0)
+    rejected = _rc("E0", rejected=True, rejection_reason="tau", rank_cost=5.0)
+    for policy in (live.GatePolicy(), live.AdditivePolicy()):
+        assert policy.same_exit_improves(_rc("E0", rank_cost=9.5), walked)
+        assert not policy.same_exit_improves(_rc("E0", rank_cost=10.0), walked)
+        assert policy.same_exit_improves(_rc("E0", rank_cost=20.0), rejected)
