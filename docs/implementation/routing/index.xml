@@ -278,8 +278,8 @@ when a cleaner alternative exists. If every route is fully obscured,
 none are visibility-rejected.&lt;/p>
 &lt;p>If all routes end up rejected, the least-bad one is promoted as a
 fallback so the agent always has a path. It stays rejected, and its reason is prefixed
-&lt;code>fallback: &lt;/code>. A route the agent must flee (FED-lethal; the additive smoke
-must-flee needs a visible rival, so it never reaches the fallback) orders behind every route it need not
+&lt;code>fallback: &lt;/code>. A route the agent must flee (FED-lethal under either model; smoke never
+qualifies) orders behind every route it need not
 flee, and the current exit never holds against such a rival when it is
 the one to flee (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128" target="_blank" rel="noopener">#128&lt;/a>). Among the rest, under the gate the least-bad route is the one with the
 lowest undiscounted &lt;code>tau_route&lt;/code>, then the lowest &lt;code>rank_cost&lt;/code>, with
@@ -381,8 +381,10 @@ title="Copy code"
 &lt;p>&lt;code>alpha&lt;/code>, &lt;code>beta&lt;/code> and &lt;code>min_speed_factor&lt;/code> are the router&amp;rsquo;s copy of the linear
 speed law, used only to estimate travel time; their defaults are on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">routing model&lt;/a> page.&lt;/p>
-&lt;p>&lt;code>impassable_extinction_threshold&lt;/code> (3.0), the additive model&amp;rsquo;s must-flee
-line, and &lt;code>exit_switch_anchor&lt;/code> (0.9) are &lt;code>routing&lt;/code> keys too.&lt;/p>
+&lt;p>&lt;code>exit_switch_anchor&lt;/code> (0.9) is a &lt;code>routing&lt;/code> key too. The additive model&amp;rsquo;s
+smoke must-flee line, &lt;code>impassable_extinction_threshold&lt;/code> (3.0), was removed in
+0.7.0 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/835" target="_blank" rel="noopener">#835&lt;/a>):
+a scenario that sets it stops at load.&lt;/p>
 &lt;p>&lt;code>w_smoke&lt;/code> and &lt;code>w_fed&lt;/code> &lt;strong>no longer reach route choice under the gate.&lt;/strong>
 Since &lt;code>0d9bf79&lt;/code> a gate run weights each Dijkstra edge by its own optical
 depth, &lt;code>k_avg * length&lt;/code> (plus a &lt;code>1e-6 * length&lt;/code> floor that keeps a
@@ -665,7 +667,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
 &lt;td>the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit&amp;rsquo;s × (1 − &lt;code>fallback_switch_margin&lt;/code>), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>; a feasible one is accepted if its τ is lower by more than &lt;code>tau_max&lt;/code> × &lt;code>tau_deadband&lt;/code>, refused if higher by more, and between those needs the same &lt;code>rank_cost&lt;/code> ratio&lt;/td>
-&lt;td>only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above &lt;code>impassable_extinction_threshold&lt;/code>), and under the same rule between two refused routes, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
+&lt;td>only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection), and under the same rule between two refused routes, else needs &lt;code>rank_cost&lt;/code> &amp;lt; old × &lt;code>exit_switch_anchor&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
@@ -706,7 +708,7 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Switch, other exit&lt;/strong>&lt;/td>
-&lt;td>&lt;code>_select_candidate&lt;/code>, then &lt;code>_decide_exit_change&lt;/code>; the anchor is &lt;code>_anchor_allows&lt;/code>; the agent&amp;rsquo;s exit is read once per evaluation into &lt;code>_ExitReference&lt;/code> (the ranking, anchor and counted exits); must-flee is &lt;code>_must_flee_rejection&lt;/code> with the policy&amp;rsquo;s &lt;code>must_flee_smoke&lt;/code>; the switch reason comes from the policy&amp;rsquo;s &lt;code>switch_hazard_label&lt;/code>, and is &lt;code>congestion&lt;/code> when the switch would not clear the anchor with the policy&amp;rsquo;s &lt;code>queue_term&lt;/code> removed (&lt;code>_clears_without&lt;/code>); the margins they apply are listed in &lt;code>_SWITCH_MARGINS&lt;/code>&lt;/td>
+&lt;td>&lt;code>_select_candidate&lt;/code>, then &lt;code>_decide_exit_change&lt;/code>; the anchor is &lt;code>_anchor_allows&lt;/code>; the agent&amp;rsquo;s exit is read once per evaluation into &lt;code>_ExitReference&lt;/code> (the ranking, anchor and counted exits); must-flee is &lt;code>_must_flee_rejection&lt;/code> (a FED violation); the switch reason comes from the policy&amp;rsquo;s &lt;code>switch_hazard_label&lt;/code>, and is &lt;code>congestion&lt;/code> when the switch would not clear the anchor with the policy&amp;rsquo;s &lt;code>queue_term&lt;/code> removed (&lt;code>_clears_without&lt;/code>); the margins they apply are listed in &lt;code>_SWITCH_MARGINS&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Applied&lt;/strong>&lt;/td>
@@ -1976,13 +1978,6 @@ title="Copy code"
 &lt;td>active&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>impassable_extinction_threshold&lt;/code>&lt;/td>
-&lt;td>&lt;code>3.0&lt;/code>&lt;/td>
-&lt;td>Route-average &lt;code>K&lt;/code> above which a smoke rejection must be fled, bypassing the exit-switch anchor. Uncalibrated, no empirical source: about 1 m of visibility for a reflecting sign (C = 3), 2.7 m for a lit sign (C = 8) (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371" target="_blank" rel="noopener">#371&lt;/a>).&lt;/td>
-&lt;td>&lt;strong>inert&lt;/strong>&lt;/td>
-&lt;td>active&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>&lt;code>sampling_step_m&lt;/code>&lt;/td>
 &lt;td>&lt;code>2.0&lt;/code>&lt;/td>
 &lt;td>Spacing of extinction samples where the field has no grid (constant or test fields) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose. An FDS field is read once per grid cell the line crosses (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653" target="_blank" rel="noopener">#653&lt;/a>).&lt;/td>
@@ -2038,8 +2033,9 @@ from &lt;code>from_routing_params&lt;/code> — until &lt;code>9508181&lt;/code>
 &lt;code>FAC_DOOR_OLD&lt;/code> supplies. The clean-tier measurements below were made at 0.8 and
 have not been repeated at 0.1.&lt;/p>
 &lt;p>Every &lt;code>RouteCostConfig&lt;/code> field in the table above is readable from the
-&lt;code>routing&lt;/code> block; &lt;code>impassable_extinction_threshold&lt;/code> was the last one to
-become so (#187).&lt;/p>
+&lt;code>routing&lt;/code> block. The additive model&amp;rsquo;s smoke must-flee line,
+&lt;code>impassable_extinction_threshold&lt;/code> (3.0), was removed in 0.7.0 (#835): a
+scenario that sets it stops at load.&lt;/p>
 &lt;p>The margin keys are range-checked; the ranges are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#parameters">Models › Routing › Parameters&lt;/a>.&lt;/p>
 &lt;h2>Known limitations&lt;span class="hx-absolute -hx-mt-20" id="known-limitations">&lt;/span>
@@ -2110,15 +2106,13 @@ effect at small nonzero &lt;code>K&lt;/code> has not been measured.&lt;/li>
 citable from FDS+Evac&amp;rsquo;s tier-4 rule, but that rule applies it to a straight
 sight line, not to a walked route, and nothing here checks 6 against a
 soot-dose or FED-equivalent limit.&lt;/li>
-&lt;li>&lt;strong>&lt;code>impassable_extinction_threshold&lt;/code> is dead code under the default model.&lt;/strong>
-&lt;code>_must_flee_rejection&lt;/code> fires only on a FED violation or the additive
-&lt;code>all segments non-visible&lt;/code> rejection; the gate refuses on dose and &lt;code>tau&lt;/code>
-only. So no
-smoke rejection bypasses the exit-switch anchor, at any density, and the field
-still takes a value and does nothing. &lt;code>visibility_extinction_threshold&lt;/code>
-(0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
-survives, and on the fires measured here FED never reaches its threshold, so
-in practice &lt;strong>nothing bypasses the anchor&lt;/strong>.&lt;/li>
+&lt;li>&lt;strong>Only a FED violation bypasses the anchor.&lt;/strong> &lt;code>_must_flee_rejection&lt;/code> reads
+the FED limit alone, under both models; no smoke rejection bypasses the
+exit-switch anchor, at any density. The additive model&amp;rsquo;s
+&lt;code>impassable_extinction_threshold&lt;/code> was removed in 0.7.0 (#835).
+&lt;code>visibility_extinction_threshold&lt;/code> (0.5 /m, per segment) is skipped under the
+gate. On the fires measured here FED never reaches its threshold, so in
+practice &lt;strong>nothing bypasses the anchor&lt;/strong>.&lt;/li>
 &lt;li>&lt;strong>Anticipation samples the field too early.&lt;/strong> Samples are read at
 &lt;code>now + walked_so_far / base_speed_m_per_s&lt;/code>, the &lt;em>unimpeded&lt;/em> speed, while an
 agent in smoke walks at as little as &lt;code>min_speed_factor&lt;/code> = 0.1 of it. The

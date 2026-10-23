@@ -4181,7 +4181,11 @@ exit is now refused above &lt;code>tau_max&lt;/code>. &lt;code>fed_return_margin
 fraction of &lt;code>fed_rejection_threshold&lt;/code> above which a rival exit was
 refused for dose, was removed in the same issue and is refused the same
 way: a rival is now held to &lt;code>fed_rejection_threshold&lt;/code>, as the current
-exit is.&lt;/p>
+exit is. &lt;code>impassable_extinction_threshold&lt;/code>, the route-average extinction
+above which the additive model fled a non-visible route regardless of the
+exit-switch anchor, was removed in &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/835" target="_blank" rel="noopener">#835&lt;/a>
+(part of #187) and is refused the same way: smoke never bypasses the anchor,
+only a FED violation does.&lt;/p>
 &lt;p>Each switching margin must be a number in its range, or the run stops with
 a &lt;code>ValueError&lt;/code> naming the key, also with &lt;code>--no-enable-rerouting&lt;/code>:
 &lt;code>exit_switch_anchor&lt;/code>,
@@ -7508,7 +7512,7 @@ None of these says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/6d0daad4e2e5824b495d33a6ab960ad08a1d23a8">&lt;code>6d0daad&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/42d737e068401a44db9fefc2ebcc79dfec1bdc37">&lt;code>42d737e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7532,7 +7536,7 @@ None of these says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3ad9a6b6f179be0ee7f6fec095d4c4aac6b2b93ebd5105640ce2a2f4b0d7f6ec&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0cb3b8368fbc802e4b15635c7a1f8f9115f8256f88b642cbbd0269460882bae1&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
