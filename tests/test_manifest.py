@@ -226,3 +226,53 @@ def test_cli_copies_manifest_beside_output_sqlite(tmp_path):
     assert json.loads(copied.read_text())["seed"] == 420
     assert f"Run manifest: {copied}" in artifacts
     assert result.manifest_file is None
+
+
+def _manifest(**fields):
+    return manifest.build_manifest(
+        seed=1,
+        scenario_path=None,
+        fds_dir=None,
+        uv_lock=None,
+        project_root=None,
+        **fields,
+    )
+
+
+def test_fds_coverage_is_recorded_as_given_and_only_when_given():
+    """The docstring: recorded when FDS is sampled; an empty report is a report."""
+    report = {"inside": 3, "outside": 1}
+    assert _manifest(fds_coverage=report)["fds_coverage"] == report
+    assert _manifest(fds_coverage={})["fds_coverage"] == {}
+    assert "fds_coverage" not in _manifest()
+
+
+@pytest.mark.parametrize("required", [False, True])
+def test_run_settings_records_require_fds_coverage(required):
+    settings = manifest.run_settings(seed=3, require_fds_coverage=required)
+    assert settings["require_fds_coverage"] is required
+
+
+def test_run_settings_require_fds_coverage_defaults_to_off():
+    assert manifest.run_settings(seed=3)["require_fds_coverage"] is False
+
+
+def test_run_settings_visibility_kind_follows_the_model():
+    """No parameters: the kind is smoky for an FDS field, clear-air otherwise.
+
+    A model with parameters is recorded as those parameters, copied.
+    """
+    smoky = SimpleNamespace(from_fds=True)
+    clear = SimpleNamespace(from_fds=False)
+    parameters = {"kind": "clear-air", "cell_size_m": 0.5}
+    given = SimpleNamespace(parameters=parameters, from_fds=True)
+    assert manifest.run_settings(seed=1, vis_model=smoky)["visibility"] == {
+        "kind": "smoky"
+    }
+    assert manifest.run_settings(seed=1, vis_model=clear)["visibility"] == {
+        "kind": "clear-air"
+    }
+    recorded = manifest.run_settings(seed=1, vis_model=given)["visibility"]
+    assert recorded == parameters
+    assert recorded is not parameters
+    assert manifest.run_settings(seed=1)["visibility"] is None

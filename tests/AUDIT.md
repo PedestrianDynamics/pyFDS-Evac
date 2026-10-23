@@ -908,10 +908,10 @@ arrays of the new file are built by hand: metres = 100 t + 10 w + x + 1.
 Survey of `manifest.py`, `run_outputs.py`, `wkt_to_fds.py`, the progress
 events of `scenario.py` and the deck sweep against hand-applied mutants
 (survey area D). The rows below are the ones closed with the manifest, the
-generated deck and the writers. Still open: the optional manifest fields
-(`fds_coverage`, `run_settings` `require_fds_coverage`, the vis `kind`),
-the `&MULT` and `D` exponent parser cases, the walkable-area minimum part
-and `resolve_dx` floor boundaries, and the vacuous `test_run_config` checks.
+generated deck and the writers. The rows closed for #876 are at the end of
+the table; each mutant was applied by hand, run against the touched test
+files and reverted. Still open: nothing from the survey list; the notes
+under the table record what the new tests do not pin.
 
 ### Rows closed
 
@@ -925,6 +925,25 @@ and `resolve_dx` floor boundaries, and the vacuous `test_run_config` checks.
 | Fill note | circular (placed equal to the bound in the only test) | `test_summary_line_names_the_placed_count_and_the_upper_bound`: placed 5 of at most 8 | upper bound printed as `placed` |
 | `test_init_deck_sweep.py` | snapshot-only coverage, regenerated from the code under test | The module says it is a characterisation. `test_hand_derived_room_anchors_the_import`: a 10 x 10 m room, a 1.2 m door, 25 agents, area 100 m2 and exit strip 0.5 x 1.2 m from the coordinates. The area check no longer skips a row that has none | `EXIT_DEPTH_M` 0.5 changed to 0.4: the anchor fails even if the table is regenerated |
 | Silent `external_data` omission | the three `t_junction` tests (`test_fds_horizon.py`, `test_fds_sampling_grid_index.py`, `test_example_downloads.py`) are deselected in CI and skip without the data | The skip reasons name the path and `T_JUNCTION_FDS`. `conftest.py` prints the deselected `external_data` ids at the end of every run, under xdist too. CI still does not need sciebo | not a mutant; the three tests passed locally with the data |
+| Optional manifest fields | one-sided oracle (the fields were never absent and never present in a test) | `test_manifest.py::test_fds_coverage_is_recorded_as_given_and_only_when_given` (given, empty dict kept, absent when `None`); `test_run_settings_records_require_fds_coverage[False, True]` and `..._defaults_to_off`; `test_run_settings_visibility_kind_follows_the_model` (no parameters: smoky for an FDS field, clear-air otherwise; parameters recorded as a copy; no model gives `None`) | `if fds_coverage:` and `if False:`; `require_fds_coverage` fixed `False` and negated; smoky and clear-air swapped; `dict(parameters)` for `parameters` |
+| `&MULT` forms | only I/J and N with `DXB` on z were tested | `test_fds_deck.py::test_mult_k_and_j_offsets_and_negative_lower_indices`, `..._i_lower_shifts_x_to_the_left`, `..._without_indices_is_one_copy_...`, `..._n_form_with_a_lower_bound_and_all_axes`, `..._n_form_needs_six_dxb_numbers[3, 7 numbers]`, `..._mixing_the_n_form_...`, `..._expands_the_documented_groups[HOLE, VENT, OBST]`, `..._expands_a_mesh_and_leaves_other_groups_alone`, `..._needs_xb_on_the_record`; defaults and index ranges from the FDS User Guide | `K` or `J` or `I` axis order changed; `dz` or `dy` dropped; `DY0` and `DZ0` swapped; `*_LOWER` ignored; `N_LOWER` ignored; `len(dxb) != 6` to `< 6`; each of the two refusals dropped; `HOLE`, `VENT` or `MESH` removed from `MULT_GROUPS` |
+| `D` exponent | no test of `1.5D+2` | `test_exponent_numbers_read_as_fortran_reals[...]` (`1.5D+2`, `1.5d2`, `2D-1`, `-2.5d-1`, `.5D1`, `E` forms), `test_d_exponent_in_xb_and_mult_spacing`, `test_a_malformed_exponent_stays_text[1D, D2, 1.5D+, 1DD2, 1D2.5]` | `D` dropped from the number pattern; the `D` to `E` replacement broken |
+| Walkable-area minimum part | the 0.25 m2 limit was never at the edge | `test_walkable_provider.py::test_a_free_part_of_exactly_the_limit_is_dropped` (0.25 dropped, 0.2501 and 0.3 kept) and `test_a_ring_of_exactly_the_limit_is_kept_and_a_smaller_one_filled` (0.25 kept, 0.2499 filled) | `MIN_PART_M2` 0.25 to 0.2 and to 0.3; `>` to `>=` (`walkable_provider.py:98`); `>=` to `>` and `+ 0.0003` in `fill_small_rings` (`fds_import_geometry.py:127`) |
+| `resolve_dx` floor | the floor 0.1 m and its tolerance were never reached | `test_wkt_to_fds.py::test_auto_dx_is_the_thinnest_wall_between_the_default_and_the_floor[0.3, 0.25, 0.2, 0.1, 0.05]`, `test_a_wall_at_the_floor_does_not_warn` (5.1 - 5.0 is 0.0999999999999996), `test_a_wall_below_the_floor_warns_and_keeps_the_floor` (0.09 m, message text) | `_MIN_DX` 0.1 to 0.05 and to 0.15; `- 1e-9` dropped (spurious warning at 0.1) and widened to `- 0.02`; `max` to `min`; floor dropped |
+| Vacuous `test_run_config` checks | no assertion (`vis_cache_without_fds_dir`), `is not None`, `any("smoke" in m)`, `isinstance` only | `test_constant_extinction_builds_smoke_model` pins the field, extinction 0.5, interval 2.5 and height 1.8; `test_rerouting_builds_reroute_config` uses interval 2.5; `test_vis_cache_without_fds_dir_is_allowed` pins `vis_model is None` and the two log lines; new `test_a_plain_deck_without_cache_or_flags_asks_for_no_visibility_model`; the log test compares the full message list | `or opts.vis_cache` condition dropped and forced `True`; `ConstantExtinctionField(1.0)`; interval and slice height replaced by constants; `reevaluation_interval_s=1.0` |
+
+Notes on the rows above:
+
+- The floor `_MIN_DX = 0.1` is recorded from the code; no page states it.
+- The module docstring of `walkable_provider.py` says rings "smaller than
+  that" are filled, the comment on `MIN_PART_M2` says "or less". The code
+  keeps a ring of exactly 0.25 m2; the test pins the code and the
+  docstring. The comment disagrees (source wording, not changed here).
+- `1D2` reads as the integer 100 and `1E2` as the float 100.0 (`_atom`
+  tests `"E" not in upper` after upper-casing, so a `D` exponent counts as
+  no exponent). The values are equal; the type differs and is not pinned.
+- The order in which `&MULT` copies are emitted (`K` outermost, `I`
+  innermost) is not documented and is not pinned; the tests sort.
 
 ## Item 1: CLI
 

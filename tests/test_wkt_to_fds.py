@@ -244,3 +244,43 @@ def test_room_with_a_hole_gets_exactly_these_wall_boxes():
         (4.0, 6.0, 4.0, 6.0),
         (10.0, 11.0, 0.0, 10.0),
     ]
+
+
+def _two_rooms(wall: float) -> str:
+    """Two 5 m rooms side by side, a wall of width *wall* between them."""
+    left = "((0 0, 5 0, 5 10, 0 10, 0 0))"
+    right = f"(({5 + wall} 0, 10 0, 10 10, {5 + wall} 10, {5 + wall} 0))"
+    return f"MULTIPOLYGON ({left}, {right})"
+
+
+@pytest.mark.parametrize(
+    ("wall", "expected"),
+    [(0.3, 0.25), (0.25, 0.25), (0.2, 0.2), (0.1, 0.1), (0.05, 0.1)],
+)
+def test_auto_dx_is_the_thinnest_wall_between_the_default_and_the_floor(wall, expected):
+    """``dx=None`` gives min(0.25, wall), never below the 0.1 m floor.
+
+    Values follow the ``resolve_dx`` docstring and the module comments
+    (default 0.25 m, floor 0.1 m); the floor value itself is recorded from
+    the code, no page states it.
+    """
+    walk = _load_walkable(_two_rooms(wall))
+    assert resolve_dx(walk, None) == pytest.approx(expected)
+
+
+def test_a_wall_at_the_floor_does_not_warn(caplog):
+    """5.1 - 5.0 is 0.0999999999999996 in floating point, still the floor."""
+    walk = _load_walkable(_two_rooms(0.1))
+    with caplog.at_level(logging.WARNING):
+        assert resolve_dx(walk, None) == pytest.approx(0.1)
+    assert caplog.records == []
+
+
+def test_a_wall_below_the_floor_warns_and_keeps_the_floor(caplog):
+    walk = _load_walkable(_two_rooms(0.09))
+    with caplog.at_level(logging.WARNING):
+        assert resolve_dx(walk, None) == pytest.approx(0.1)
+    assert [r.getMessage() for r in caplog.records] == [
+        "thinnest feature 0.09 m is below the 0.1 m floor; walls thinner "
+        "than 0.1 m may not resolve."
+    ]

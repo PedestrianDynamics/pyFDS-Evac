@@ -5,8 +5,9 @@ from types import SimpleNamespace
 
 import pytest
 
+from pyfds_evac.config.messages import NO_SIGNS
 from pyfds_evac.core.run_config import build_run_kwargs
-from pyfds_evac.core.smoke_speed import SmokeSpeedModel
+from pyfds_evac.core.smoke_speed import ConstantExtinctionField, SmokeSpeedModel
 
 # Defaults mirror run.py's argparse dests for the fields build_run_kwargs reads.
 _DEFAULT_OPTS = dict(
@@ -46,17 +47,28 @@ def test_defaults_produce_no_models():
 
 
 def test_constant_extinction_builds_smoke_model():
-    kwargs = build_run_kwargs(_scenario(), _opts(constant_extinction=0.5))
-    assert isinstance(kwargs["smoke_speed_model"], SmokeSpeedModel)
+    kwargs = build_run_kwargs(
+        _scenario(),
+        _opts(
+            constant_extinction=0.5, smoke_update_interval=2.5, smoke_slice_height=1.8
+        ),
+    )
+    model = kwargs["smoke_speed_model"]
+    assert isinstance(model, SmokeSpeedModel)
+    assert isinstance(model.field, ConstantExtinctionField)
+    assert model.field.extinction_per_m == 0.5
+    assert model.config.update_interval_s == 2.5
+    assert model.config.slice_height_m == 1.8
     # No FDS dir means no FED model and therefore no tenability config.
     assert kwargs["fed_model"] is None
     assert kwargs["tenability_config"] is None
 
 
 def test_rerouting_builds_reroute_config():
-    kwargs = build_run_kwargs(_scenario(), _opts(enable_rerouting=True))
-    assert kwargs["reroute_config"] is not None
-    assert kwargs["reroute_config"].reevaluation_interval_s == 1.0
+    kwargs = build_run_kwargs(
+        _scenario(), _opts(enable_rerouting=True, reroute_interval=2.5)
+    )
+    assert kwargs["reroute_config"].reevaluation_interval_s == 2.5
 
 
 def test_reroute_uses_scenario_routing_overrides():
@@ -82,7 +94,25 @@ def test_collect_route_cost_history_explicit_flag():
 def test_vis_cache_without_fds_dir_is_allowed():
     # Since clear-air sight became the default for fire-free decks, a cache with
     # no --fds-dir is meaningful: it holds the geometry-only visibility.
-    build_run_kwargs(_scenario(), _opts(vis_cache="cache.pkl", enable_rerouting=True))
+    messages = []
+    kwargs = build_run_kwargs(
+        _scenario(),
+        _opts(vis_cache="cache.pkl", enable_rerouting=True),
+        log=messages.append,
+    )
+    # A scenario without signs builds no model; reaching that point shows the
+    # cache alone asked for one (without it a plain deck is not asked).
+    assert kwargs["vis_model"] is None
+    assert messages == ["Configuring rerouting.", NO_SIGNS]
+
+
+def test_a_plain_deck_without_cache_or_flags_asks_for_no_visibility_model():
+    messages = []
+    kwargs = build_run_kwargs(
+        _scenario(), _opts(enable_rerouting=True), log=messages.append
+    )
+    assert kwargs["vis_model"] is None
+    assert messages == ["Configuring rerouting."]
 
 
 def test_vis_cache_requires_rerouting():
@@ -93,7 +123,7 @@ def test_vis_cache_requires_rerouting():
 def test_log_callable_receives_status_lines():
     messages = []
     build_run_kwargs(_scenario(), _opts(constant_extinction=0.5), log=messages.append)
-    assert any("smoke" in m.lower() for m in messages)
+    assert messages == ["Configuring smoke calculation."]
 
 
 _GAS_DIR = "assets/iso_table22_coupled/fds/a"
