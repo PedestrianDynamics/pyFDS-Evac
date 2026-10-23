@@ -74,3 +74,15 @@ def test_outside_the_fds_domain_line_follows_the_summary_line(monkeypatch, capsy
 def test_no_samples_outside_the_domain_print_no_line(monkeypatch, capsys, metrics):
     out = _run_printing(monkeypatch, capsys, metrics)
     assert "Outside the FDS domain" not in out
+
+
+def test_inspect_fds_without_fds_dir_is_a_one_line_error(monkeypatch):
+    # docs/usage.md: --inspect-fds "Needs --fds-dir"; CLI errors are one
+    # line, not a traceback.
+    monkeypatch.setattr(cli, "load_scenario", lambda _path: _scenario(ENOUGH_S))
+    monkeypatch.setattr(
+        "sys.argv", ["pyfds-evac", "--scenario", "unused", "--inspect-fds"]
+    )
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main()
+    assert str(excinfo.value) == "pyfds-evac: error: --inspect-fds requires --fds-dir"

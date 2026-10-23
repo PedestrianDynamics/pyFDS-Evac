@@ -17,7 +17,7 @@ Command-line errors start with the name of the command you ran:
 | Message | Cause | Fix |
 |---|---|---|
 | `OSError: No simulations were found in the directory: DIR` | `--fds-dir` points at a directory without FDS output, for example one holding only the `.fds` deck. | Point it at the directory with the `.smv` file of a finished FDS run. |
-| `ValueError: --inspect-fds requires --fds-dir` | `--inspect-fds` has nothing to inspect. | Add `--fds-dir`. |
+| `pyfds-evac: error: --inspect-fds requires --fds-dir` | `--inspect-fds` has nothing to inspect. | Add `--fds-dir`. |
 | `ValueError: --vis-cache requires --enable-rerouting` | `--vis-cache` with `--no-enable-rerouting`. | Drop one of the two; rerouting is on by default. |
 | `ValueError: --clear-air-visibility contradicts --fds-dir: …` | Clear-air sight on a deck with a fire. | Drop `--clear-air-visibility`; with `--fds-dir` the smoke decides what agents see. |
 | `ValueError: --no-visibility and --clear-air-visibility conflict` | Both flags given. | Keep one. |

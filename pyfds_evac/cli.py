@@ -275,7 +275,7 @@ def main() -> int:
 
     if args.inspect_fds:
         if not args.fds_dir:
-            raise ValueError("--inspect-fds requires --fds-dir")
+            raise SystemExit("pyfds-evac: error: --inspect-fds requires --fds-dir")
         inventory = inspect_fds_quantities(args.fds_dir)
         print(json.dumps(inventory.__dict__, indent=2, sort_keys=True))
         return 0
