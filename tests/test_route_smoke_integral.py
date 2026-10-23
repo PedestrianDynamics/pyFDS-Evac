@@ -203,11 +203,27 @@ class TestIntegratedExtinctionAlongPolyline:
         assert k == pytest.approx(integral / length)
 
     @pytest.mark.parametrize(
-        "waypoints",
-        [[(0.0, 0.0), (0.1, 0.0), (2.1, 0.0)], [(0.0, 0.0), (2.1, 0.0)]],
+        ("waypoints", "at_fine_step"),
+        [
+            # One segment: 2101 samples at 0.001 m, those at x = 0..0.100
+            # (101 of them) read K = 10.
+            ([(0.0, 0.0), (2.1, 0.0)], 10.0 * 101 / 2101),
+            # Two segments: 0..0.1 has 101 samples, all at K = 10, mean 10;
+            # 0.1..2.1 has 2001, only its first (x = 0.1) at K = 10, mean
+            # 10 / 2001; weighted by 0.1 and 2.0 m.
+            (
+                [(0.0, 0.0), (0.1, 0.0), (2.1, 0.0)],
+                (10.0 * 0.1 + 10.0 / 2001 * 2.0) / 2.1,
+            ),
+        ],
     )
-    def test_step_field_converges_to_the_line_integral(self, waypoints):
-        """K = 10 on the first 0.1 m of 2.1 m: the exact mean is 1 / 2.1."""
+    def test_step_field_converges_to_the_line_integral(self, waypoints, at_fine_step):
+        """K = 10 on the first 0.1 m of 2.1 m: the exact mean is 1 / 2.1.
+
+        The fine-step value is the sample count by hand (above), not a
+        tolerance around the integral: it exceeds 1 / 2.1 by the one extra
+        sample the closed end x = 0.1 contributes.
+        """
         field = _SmokyStart()
         exact = 1.0 / 2.1
         errors = [
@@ -217,7 +233,7 @@ class TestIntegratedExtinctionAlongPolyline:
         assert errors[0] > errors[1] > errors[2]
         assert integrated_extinction_along_polyline(
             waypoints, 0.0, field, 0.001
-        ) == pytest.approx(exact, rel=0.02)
+        ) == pytest.approx(at_fine_step, rel=1e-9)
 
     def test_step_field_at_a_coarse_step_keeps_the_segment_resolution(self):
         """At step 2 m the 0.1 m segment has two samples at K = 10 (mean 10)

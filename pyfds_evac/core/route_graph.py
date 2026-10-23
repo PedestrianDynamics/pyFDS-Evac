@@ -291,6 +291,12 @@ class StageGraph:
         cost and *source* as its predecessor. *source* stands for the agent's
         position only: no edge into it is relaxed, so it is never reached
         through the graph and appears once, at the start of every path.
+
+        Between paths of equal cost the one whose last predecessor was
+        expanded first wins: the heap orders equal costs by node id, and a
+        relaxation needs a strictly lower cost, so a later equal path never
+        replaces the predecessor. The order is pinned by
+        ``TestEqualCostPaths`` in the hand-value tests.
         """
         if source not in self.nodes:
             return {}, {}

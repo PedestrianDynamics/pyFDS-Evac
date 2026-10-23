@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import math
 
+import pytest
+
 from pyfds_evac.core.route_graph import (
     StageEdge,
     StageGraph,
@@ -19,6 +21,8 @@ from pyfds_evac.core.route_graph import (
     stage_closed_down,
     without_closed_stages,
 )
+
+pytestmark = pytest.mark.usefixtures("bounded_search")
 
 
 def _line_graph(
@@ -248,3 +252,19 @@ class TestReconstruct:
     def test_path_starts_at_the_source_even_if_the_source_has_a_predecessor(self):
         prev = {"S": "X", "X": None, "T": "S"}
         assert StageGraph._reconstruct(prev, "S", "T") == ["S", "T"]
+
+
+def test_a_zero_weight_self_loop_is_never_relaxed(bounded_search):
+    """S has a zero-weight loop and an edge of 2 to T.
+
+    A relaxation takes an edge only for a strictly lower cost, and the loop
+    would give S 0 + 0 = 0, no lower than its 0. So S is expanded once and T
+    once: two pops, cost 2. A relaxation that accepts equal cost pushes S
+    again for ever; the bound turns that into a failure instead of a hang.
+    """
+    graph = _line_graph(
+        {"S": "distribution", "T": "exit"},
+        {("S", "S"): 0.0, ("S", "T"): 2.0},
+    )
+    assert graph.shortest_paths_to_exits("S") == {"T": (2.0, ["S", "T"])}
+    assert bounded_search.count == 2

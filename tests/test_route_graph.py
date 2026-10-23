@@ -156,6 +156,7 @@ class TestGraphConstruction:
 # ── Dijkstra shortest path ───────────────────────────────────────────
 
 
+@pytest.mark.usefixtures("bounded_search")
 class TestDijkstra:
     def test_linear_path(self, linear_graph):
         result = linear_graph.shortest_exit("D0")
@@ -232,6 +233,7 @@ class TestDijkstra:
 # ── edge cases ────────────────────────────────────────────────────────
 
 
+@pytest.mark.usefixtures("bounded_search")
 class TestEdgeCases:
     def test_empty_graph(self):
         graph = StageGraph.from_scenario({}, [], None)
@@ -1734,6 +1736,7 @@ class TestPolylineSampling:
 # ── Phase 4: Dynamic Dijkstra with smoke-adjusted weights ────────────────
 
 
+@pytest.mark.usefixtures("bounded_search")
 class TestDynamicDijkstra:
     def test_dynamic_weights_override_static(self, diamond_graph):
         """Dijkstra with dynamic weights picks a different path than static."""

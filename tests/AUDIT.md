@@ -293,16 +293,18 @@ offsets and its cap at the last FDS frame; `_fds_end` takes the earliest.
   of the speed factors along it: a modelling choice, pinned by the hand
   value above.
 
-### Open
+### Tolerance rows closed (#836)
 
-The rows below come from a review pass; each smell is confirmed only when
-its row is fixed.
+Each tolerance is replaced by the hand count and `rel=1e-12` (`1e-9` for
+the convergence values). The mutants below are ones the old tolerance
+admitted: the old test passes them, the new one fails them.
 
-| Test | Smell | Proposed contract |
+| Test | Change | Mutant killed |
 |---|---|---|
-| `test_route_grid_sampling.py::test_band_diagonal_leg_does_not_skip_the_plume` | tolerance camouflage | `abs <= 2.9` (25 %) around 11.55, the crossing length of the core; derive the cell count for the 30 degree leg and pin it |
-| `test_route_grid_sampling.py::test_band_fixed_position_counts_the_cells` | tolerance | `abs(tau - 10) <= 0.25` documents the discretisation, but the 18 x 40 / 73 value above it already fixes the result |
-| `test_route_smoke_integral.py` convergence tests (`rel=0.02`) | tolerance | Ordered errors are asserted; derive 0.02 from the step sizes |
+| `test_route_grid_sampling.py::test_band_diagonal_leg_does_not_skip_the_plume` | `abs <= 2.9` around 11.55; now 49 nodes x = 4.00..16.00, four in the core: `40 / 49 x 12 / cos 30 = 11.311` | `_cell_fractions` drops the start sample (48 samples, tau 12.0); the old test passes it |
+| `test_route_grid_sampling.py::test_band_fixed_position_counts_the_cells` | the extra `abs(tau - 10) <= 0.25` removed: the `18 x 40 / 73` line above it, now `rel=1e-12`, fixes the value (10.0 is the continuous integral, 9.863 the cell count) | `_cell_fractions` drops the end sample; the retained line kills it, and the old tolerance on it was `abs=1e-6` |
+| `test_route_grid_sampling.py::test_band_along_y_is_marched_by_rows` (second leg) | `abs=0.25`; now `40 / 49 x hypot(2, 12)` | none needed: the first leg of the same test already kills a dropped sample; this assertion was tightened for consistency |
+| `test_route_smoke_integral.py::test_step_field_converges_to_the_line_integral` | `rel=0.02` around 1 / 2.1; now the sample count: one segment `10 x 101 / 2101`, two segments `(10 x 0.1 + 10 / 2001 x 2.0) / 2.1` | `_step_los_stats` takes one extra sample (`+ 1` to `+ 2`, relative change 5e-4); the old test passes it |
 
 ## Routing: graph
 
@@ -349,9 +351,18 @@ fresh one, so no distance or predecessor changes.
 
 The `<=` mutant is written `alt <= dist[...] and edge.target != u`. Plain
 `<=` never terminates: the zero-weight self-loop of
-`TestEdgeCases::test_self_loop_ignored_in_shortest_path` relaxes forever.
-The suite catches it as a hang, but a hang cannot be reported as a kill by
-`mutation_check.py`, which has no timeout.
+`TestEdgeCases::test_self_loop_ignored_in_shortest_path` relaxes forever,
+and `mutation_check.py` has no timeout to report that as a kill. Closed
+(#836): the `bounded_search` fixture (`tests/conftest.py`) counts the heap
+pops of the search and fails the test past 10 000, and the area's search
+tests use it (`test_route_graph_hand_values.py` as a module,
+`TestDijkstra`, `TestEdgeCases` and `TestDynamicDijkstra`). Plain
+`alt <=` (`if alt < dist[edge.target]` to `<=`) now fails in 0.2 s: the
+old self-loop test hangs under it (killed by a 40 s timeout in the check),
+the new `test_a_zero_weight_self_loop_is_never_relaxed` (hand value: two
+pops, cost 2.0), `TestEdgeCases::test_self_loop_ignored_in_shortest_path`
+and `TestEqualCostPaths::test_tie_keeps_the_first_path_found` fail. The
+fixture needs no new dependency (`pytest-timeout` is not one).
 
 The stop at the source in `_reconstruct` only matters if the source has a
 predecessor, which `_dijkstra` never produces for non-negative weights; the
@@ -381,8 +392,9 @@ absent or `None`.
 - `taus_tie` and the ranking of equal routes are not tested here (ranking
   slice).
 - Between equal-cost paths the search keeps the one expanded first (node-id
-  order in the heap). The tie test pins this; no documented contract
-  promises it.
+  order in the heap). Closed (#836): the `_dijkstra` docstring states the
+  rule and names the test that pins it; it is an implementation order, and
+  no user-facing contract promises it.
 
 ## Routing: policy
 
@@ -496,14 +508,14 @@ environment lacks, and would otherwise fail, hence "kill", every mutant).
 | `should_reevaluate`: elapsed `>= interval` to `>` | reversed comparison | yes, but by one test only (`test_station_switches_to_exits_seen_at_spawn_are_learned_exit`); the hand values pin the boundary (now two) |
 | `should_reevaluate`: `current_time >= eval_offset` to `>` | reversed comparison | no: added `test_offset_exactly_reached_evaluates_the_first_time` |
 | `should_reevaluate`: `interval <= 0` to `< 0` | reversed comparison | no: added `test_zero_interval_never_reevaluates` (it terminates: interval 0 then re-evaluates every call) |
-| `evaluate_and_reroute`: a refused best route no longer returns | removed term | yes, by `test_routing_decisions.py` |
+| `evaluate_and_reroute`: a refused best route no longer returns | removed term | yes, by `test_routing_decisions.py` (one snapshot, one golden-case test); #836 added `TestEvaluateAndReroute::test_a_refused_route_the_scan_lands_on_is_not_taken_or_stamped` |
 | `evaluate_and_reroute`: the idle check of the same-exit branch dropped | removed term | yes, by `test_idle_agent_routed_to_its_own_exit_is_resume` |
-| empty ranking no longer stamps `last_eval_time_s` | removed term | yes, by `test_empty_ranking_stamps_before_exploring` |
-| chosen route no longer stamps `last_eval_time_s` | removed term | yes, by 12 tests |
+| empty ranking no longer stamps `last_eval_time_s` | removed term | yes, by `test_empty_ranking_stamps_before_exploring` and 10 more, 3 of them snapshots; #836 added `TestEvaluateAndReroute::test_no_reachable_exit_stamps_and_decides_nothing` |
+| chosen route no longer stamps `last_eval_time_s` | removed term | yes, by 12 tests (5 snapshots); #836 added `TestEvaluateAndReroute::test_a_chosen_exit_stamps_the_evaluation` |
 | closed default route: `old_exit` not set to the exit walked to | removed term | yes, by `test_sequential_closures_leave_from_the_exit_walked_to` |
 | closure switch not labelled `exit_closed` | removed term | yes, by `test_switch_reasons.py` and `test_scheduled_exits.py` |
 | `_reevaluate`: `current_fed` 0 instead of the cumulative FED | removed term | no: added `test_reroute_pass_evaluates_with_the_dose_taken` |
-| `_reevaluate`: exit count not moved | removed term | yes, by `test_station_switches_to_exits_seen_at_spawn_are_learned_exit` only |
+| `_reevaluate`: exit count not moved | removed term | yes, by `test_station_switches_to_exits_seen_at_spawn_are_learned_exit` only (a Station run); #836 added `test_scheduled_exits.py::test_a_switch_moves_the_agents_count_between_the_exits` (synthetic room) |
 | `_arrive`: `looked_node` of another node kept | removed term | yes, by `test_a_new_visit_to_a_node_allows_a_new_look` only |
 | `_decide_at_flow_spawn`: decision skipped | removed term | yes, by `test_a_flow_agent_decides_as_it_spawns` |
 | `_decide_at_flow_spawn`: position not refreshed | removed term | no: added `test_a_flow_agent_is_evaluated_from_where_it_spawned` |
@@ -511,8 +523,18 @@ environment lacks, and would otherwise fail, hence "kill", every mutant).
 ### Open
 
 - No mutant survives, hangs or is equivalent after the audit.
-- The exit-count mutant (`_move_count`) and the `looked_node` mutant each
-  rest on one test; they are not strengthened here.
+- Closed (#836): the exit-count mutant now has a second killer in a
+  synthetic room, and `evaluate_and_reroute` has direct hand-valued tests
+  (`TestEvaluateAndReroute`, `test_route_reroute_hand_values.py`) for the
+  refused-best return and the two stamps, so those kills no longer come
+  from snapshots alone. Each was checked with `mutation_check.py`'s
+  mutants applied to the full area (`refused_best_not_returned`,
+  `no_exit_last_eval_unset`, `last_eval_unset_after_choice`,
+  `reevaluate_counts_not_moved`): the new tests fail under each.
+- The `looked_node` mutant still rests on one test. The map entry only
+  matters on a revisit after a visit that completed without a look, and
+  `test_a_new_visit_to_a_node_allows_a_new_look` is the one scenario that
+  builds it; a second test would repeat that scenario, so it is left as it is.
 - `test_the_gui_refuses_the_form` fails in an environment without the
   webapp extra (`ModuleNotFoundError: pyfds_evac.webapp.app`); the full
   suite there is not clean for that reason alone.
@@ -592,12 +614,15 @@ a guard against a future ordering, not behaviour today.
 ### Open
 
 - No mutant survives or hangs; one is equivalent (above).
-- `visibility_full_return_dropped` and `initial_exit_map_not_stored` each
-  rest on one test. The full-map early return in `expand_from_visibility`
-  changes nothing but whether the model is queried, and the map stored by
-  `_assign_initial_exit` would otherwise be built again by the reroute
-  pass from the same rng stream, so the stored object is observed only
-  through the `cognitive_maps` dict. Not strengthened further here.
+- Closed (#836): `visibility_full_return_dropped` and
+  `initial_exit_map_not_stored` each have a second killer.
+  `test_a_full_map_does_not_even_ask` runs for `1.0` and `"full"` (two
+  construction paths to a full map; the observable is still only whether the
+  model is queried). `test_a_second_decision_reuses_the_map_the_first_stored`
+  stores a map of S, B and X2 for a stranger told the entrance X2, then
+  decides again at familiarity 1.0: the stored map gives X2, a rebuilt full
+  map would give the nearest exit X1. Both mutants fail the new tests
+  (`mutation_check.py routing_cognitive_map`, each applied to the full area).
 - `visibility_always_true` and `expand_skips_visibility` are killed by
   stub and by clear-air visibility; no FDS-smoke visibility is in the area.
 

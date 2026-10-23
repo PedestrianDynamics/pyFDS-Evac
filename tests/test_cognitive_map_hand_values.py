@@ -197,9 +197,10 @@ class TestExpandFromVisibility:
         assert cmap.known_nodes == {"S"}
         assert cmap.known_edges == set()
 
-    def test_a_full_map_does_not_even_ask(self):
+    @pytest.mark.parametrize("familiarity", [1.0, "full"])
+    def test_a_full_map_does_not_even_ask(self, familiarity):
         graph, vis = _graph(), _Vis({"A"})
-        cmap = init_cognitive_map("S", graph, 1.0, None, 0.0)
+        cmap = init_cognitive_map("S", graph, familiarity, None, 0.0)
         expand_from_visibility(cmap, "S", graph, vis, 0.0, 0.0, 0.0)
         assert vis.calls == []
 
@@ -395,6 +396,16 @@ class TestInitialExit:
         self._assign(0.0, maps, entrance="X2")
         assert set(maps) == {1}
         assert maps[1].known_nodes == {"S", "B", "X2"}
+
+    def test_a_second_decision_reuses_the_map_the_first_stored(self, chosen_paths):
+        """A stranger told the entrance X2 stores a map of S, B and X2. A
+        second decision for the same agent, now at familiarity 1.0, would
+        take the nearest exit X1 from a fresh full map; it takes X2, from
+        the stored one."""
+        maps: dict = {}
+        assert self._assign(0.0, maps, entrance="X2") == "X2"
+        assert self._assign(1.0, maps) == "X2"
+        assert chosen_paths == [["S", "B", "X2"], ["S", "B", "X2"]]
 
     def test_an_existing_map_is_used_not_rebuilt(self, chosen_paths):
         existing = init_cognitive_map(

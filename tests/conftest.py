@@ -159,3 +159,45 @@ def _external_data_unchanged(request):
             if before[root].get(name) != after.get(name)
         )
         assert not changed, f"files changed in {root} during the test: {changed}"
+
+
+class SearchPops:
+    """Counts the heap pops of ``StageGraph._dijkstra``."""
+
+    #: No test graph needs more; a search past it is not going to stop.
+    LIMIT = 10_000
+
+    def __init__(self) -> None:
+        self.count = 0
+
+
+@pytest.fixture
+def bounded_search(monkeypatch):
+    """Fail a ``StageGraph`` search that pops the heap too often.
+
+    A relaxation that accepts equal cost never ends on a zero-weight
+    self-loop. Without a bound that is a hang, which a mutation run cannot
+    tell from a slow test; with it, the search fails the test. Returns the
+    pop counter.
+    """
+    import heapq
+    from types import SimpleNamespace
+
+    from pyfds_evac.core import route_graph
+
+    pops = SearchPops()
+
+    def counted_pop(heap):
+        pops.count += 1
+        if pops.count > SearchPops.LIMIT:
+            raise AssertionError(
+                f"StageGraph search popped its heap more than {SearchPops.LIMIT} times"
+            )
+        return heapq.heappop(heap)
+
+    monkeypatch.setattr(
+        route_graph,
+        "heapq",
+        SimpleNamespace(heappush=heapq.heappush, heappop=counted_pop),
+    )
+    return pops
