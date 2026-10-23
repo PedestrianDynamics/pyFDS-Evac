@@ -2102,6 +2102,12 @@ class RouteModePolicy(Protocol):
 class _AnchoredPolicy:
     """The exit-switch anchor, shared by both cost models."""
 
+    def same_exit_improves(self, best: RouteCost, committed: RouteCost) -> bool:
+        """Whether *best* is worth taking over the walked path to the same exit."""
+        return _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
+            best, committed
+        )
+
     def improvement(
         self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
     ) -> bool:
@@ -2153,12 +2159,6 @@ class AdditivePolicy(_AnchoredPolicy):
         self, candidate: RouteCost, old_rc: RouteCost, config: RerouteConfig
     ) -> bool:
         return _clears_exit_anchor(candidate, old_rc, config)
-
-    def same_exit_improves(self, best: RouteCost, committed: RouteCost) -> bool:
-        """Whether *best* is worth taking over the walked path to the same exit."""
-        return _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
-            best, committed
-        )
 
     def scan_before_current_exit(self) -> bool:
         return False
@@ -2344,12 +2344,6 @@ class GatePolicy(_AnchoredPolicy):
         if rule is GateRule.TIME_RATIO:
             return _clears_exit_anchor(candidate, old_rc, config)
         return rule is not GateRule.TAU_DIRTIER
-
-    def same_exit_improves(self, best: RouteCost, committed: RouteCost) -> bool:
-        """Whether *best* is worth taking over the walked path to the same exit."""
-        return _leaves_rejected_path(committed, best) or _path_strictly_cheaper(
-            best, committed
-        )
 
     def scan_before_current_exit(self) -> bool:
         return True
