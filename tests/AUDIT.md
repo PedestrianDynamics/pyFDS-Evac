@@ -767,10 +767,9 @@ pin.
 
 ### Open
 
-- GCFM `mass` default is 80 kg in the code and 1 in JuPedSim 1.4.2; no page
-  documents it, so it is not pinned. Needs a documented source or a decision.
-- AVM with global parameters reads `anticipation_time` from `global_params.T`
-  and `reaction_time` from `global_params.s0`; no test or page says why.
+- Closed by #868: GCFM `mass` defaults to JuPedSim's 1, and AVM reads the
+  deck keys `anticipation_time` and `reaction_time` instead of `T` and
+  `s0`; `test_model_agent_defaults.py` pins both.
 - Not in this pull request: `_normalize_speed_factor` copy, choice-stream
   seed, target clearance and the other survey rows of area A.
 

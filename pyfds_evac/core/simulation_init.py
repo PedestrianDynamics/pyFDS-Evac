@@ -397,7 +397,8 @@ def create_agent_parameters(
         gcfm_params = {
             "position": position,
             "desired_speed": params.get("v0", 1.25),
-            "mass": getattr(global_params, "mass", 80.0) if global_params else 80.0,
+            # JuPedSim's default; its wall repulsion is not scaled by mass (#868).
+            "mass": getattr(global_params, "mass", 1.0) if global_params else 1.0,
             "tau": getattr(global_params, "tau", 0.5) if global_params else 0.5,
             "a_v": getattr(global_params, "a_v", 1.0) if global_params else 1.0,
             "a_min": getattr(global_params, "a_min", 0.2) if global_params else 0.2,
@@ -448,16 +449,11 @@ def create_agent_parameters(
         avm_params = base_params.copy()
         avm_params["desired_speed"] = params.get("v0", 1.25)
         avm_params["time_gap"] = 1.06  # Default value
-        if global_params:
-            avm_params["anticipation_time"] = (
-                global_params.T if hasattr(global_params, "T") else 1.0
-            )
-            avm_params["reaction_time"] = (
-                global_params.s0 if hasattr(global_params, "s0") else 0.3
-            )
-        else:
-            avm_params["anticipation_time"] = 1.0
-            avm_params["reaction_time"] = 0.3
+        # JuPedSim defaults; the deck keys carry the JuPedSim names (#868).
+        avm_params["anticipation_time"] = getattr(
+            global_params, "anticipation_time", 1.0
+        )
+        avm_params["reaction_time"] = getattr(global_params, "reaction_time", 0.3)
         return jps.AnticipationVelocityModelAgentParameters(**avm_params)
 
     raise ValueError(

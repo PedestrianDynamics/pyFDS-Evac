@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading
+
+- `GeneralizedCentrifugalForceModel`: a deck without `mass` now runs with
+  JuPedSim's mass 1, not 80 (#868). JuPedSim does not scale the wall force
+  by mass, so 80 made walls 80 times weaker than the code's other
+  defaults assume. Set `"mass": 80` to reproduce 0.7.0 results.
+- `AnticipationVelocityModel` reads `anticipation_time` and
+  `reaction_time` from `simulationParams`; it no longer reads `T` and `s0`
+  (#868). A deck with `s0` other than 0.3 gets `reaction_time` 0.3 unless
+  it sets `reaction_time`.
+
 ## [0.7.0] - 2026-10-23
 
 ### Upgrading

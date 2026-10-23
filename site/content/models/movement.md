@@ -202,9 +202,12 @@ manifest records the requested and the applied friction.
 **`AnticipationVelocityModel`**: no model-level value is passed, so
 `pushout_strength` is JuPedSim's 0.3 and `rng_seed` is drawn at import
 ([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
-Per agent, `anticipation_time` comes from the deck key `T` (1.0 s) and
-`reaction_time` from `s0` (0.3 s); `time_gap` is fixed at 1.06 s, and the
-neighbour repulsion keeps JuPedSim's 8.0.
+Per agent, `anticipation_time` (1.0 s) and `reaction_time` (0.3 s) come
+from the deck keys of the same name, defaulting to JuPedSim's values; the
+CollisionFreeSpeedModel keys `T` and `s0` are not read
+([#868](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/868)).
+`time_gap` is fixed at 1.06 s, and the neighbour repulsion keeps JuPedSim's
+8.0.
 
 **`GeneralizedCentrifugalForceModel`**: the model takes
 `gcfm_strength_neighbor_repulsion` (0.3),
@@ -213,9 +216,13 @@ neighbour repulsion keeps JuPedSim's 8.0.
 `gcfm_max_geometry_interaction_distance` (2.0 m),
 `gcfm_max_neighbor_repulsion_force` (9.0) and
 `gcfm_max_geometry_repulsion_force` (3.0). Per agent it takes the deck keys `mass`
-(80), `tau` (0.5 s), `a_v` (1.0), `a_min` (0.2 m), `b_min` (0.2 m) and
+(1, JuPedSim's default), `tau` (0.5 s), `a_v` (1.0), `a_min` (0.2 m), `b_min` (0.2 m) and
 `b_max` (0.4 m). The deck's `radius` is not passed; the body size comes
-from `a_min`, `b_min` and `b_max`.
+from `a_min`, `b_min` and `b_max`. JuPedSim 1.4.2 multiplies the driving
+and neighbour forces by `mass` and divides their sum by it, but leaves the
+wall force unscaled, so a `mass` above 1 weakens only the walls
+([#868](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/868)).
+Decks exported from the JuPedSim web app carry `"mass": 80`.
 
 **`WarpDriverModel`**: `time_horizon` (2.0 s), `step_size` (0.5 s),
 `sigma` (0.3), `time_uncertainty` (0.5), `velocity_uncertainty_x` and
