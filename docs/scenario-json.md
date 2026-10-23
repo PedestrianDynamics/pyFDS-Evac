@@ -49,6 +49,15 @@ journey needs its `transitions`
 [Create a scenario](howto-create-scenario.md#add-the-pyfds-evac-keys-last).
 `waypoints` carry signs only.
 
+### Journeys: `allocation`
+
+| Key | Default | Values | Effect |
+|---|---|---|---|
+| `journeys[].allocation` | `"preference"` | `"preference"`, `"hard"` | `"preference"`: when the journey's spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than `exit_switch_anchor` (0.9) times the allocated route. `"hard"`: the agent walks to the journey's exit, as before. Any other value raises `ValueError` naming the journey. A `journeys_v2` entry may carry the key; the migration copies it. |
+
+One `hard` journey through a spawn area makes the whole area hard. The rule
+is on [Models › Routing](/models/routing.md#allocated-exit-preference-or-hard).
+
 ## Simulation settings
 
 Under `config.simulation_settings`.

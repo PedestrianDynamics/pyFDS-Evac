@@ -217,7 +217,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `anticipate` | `true` | Read every smoke sample on the path to each exit at the time the agent would reach it; the path search uses the smoke at decision time. No FDS+Evac counterpart |
 | `foresight_horizon_s` | `inf` | How far ahead [s] anticipation reads the FDS record |
 | `fallback_switch_margin` | `0.2` | Between two refused routes, a rival's `tau` must be more than this fraction below the current exit's; differences up to 1e-9 are ties, which hold. Before 0.4.0 it compared worst extinction `k_max_route` ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)) |
-| `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's; an explicit `RerouteConfig.exit_switch_anchor` overrides it |
+| `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's; an explicit `RerouteConfig.exit_switch_anchor` overrides it. It also decides whether a rival replaces the exit a journey allocated ([Allocated exit: preference or hard](#allocated-exit-preference-or-hard)) |
 | `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
 | `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
@@ -312,6 +312,9 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
      tried, and it needs `rank_cost` below `exit_switch_anchor` × the current
      one.
 
+The same anchor applies to the exit a journey allocated to the agent, when
+that allocation is a preference ([below](#allocated-exit-preference-or-hard)).
+
 A new path to the **same** exit is taken when its `rank_cost` is below
 the walked path's (`path_switch_anchor`, which required 0.9 of it, was
 removed in [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187)), or when the walked path is
@@ -402,6 +405,57 @@ pyFDS-Evac, in Python, in the main loop of `run_scenario` (`scenario.py`):
   ([#434](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/434)). A
   deck in which such an exit also has a schedule (`open_from_s` or
   `closed_after_s`) is refused at start.
+
+### Allocated exit: preference or hard
+
+A journey that ends at one exit allocates that exit to its agents. By default
+the allocation is a preference. The agent keeps the exit unless a rival exit
+costs less than `exit_switch_anchor` (0.9) times the allocated route's
+`rank_cost`, with strict inequality: a rival at exactly 0.9 does not replace
+it. With equal speeds on both routes, the ratio is the ratio of path lengths.
+The test applies once at the opening choice and again at every re-evaluation,
+and it adds no new margin. A journey with `"allocation": "hard"` keeps today's
+behaviour: the route graph holds only the journey's exit, and the agent walks
+there ([scenario JSON](/docs/scenario-json.md#journeys-allocation)).
+
+- **Rival.** An exit with an unobstructed direct route from the agent's spawn
+  node that the journey does not already reach. The route graph used to rank
+  these agents is the stage graph plus one edge from the spawn node to each
+  such exit, added with the same rule as a deck without transitions: a target
+  is dropped when a checkpoint lies within 5 % detour of the direct path, and
+  exits never block (`route_graph.py`, `preference_nodes`, `with_rival_edges`).
+  An exit behind a journey checkpoint is not a rival.
+- **Which spawn areas.** A spawn area is a preference node when its
+  transitions reach exactly one exit, no journey through it is `hard`, and the
+  deck has at least two exits. If one journey through the area is `hard`, the
+  whole area is hard.
+- **Where rivals are visible.** Rival edges start at the spawn node. They are
+  visible while the agent's route starts there, and gone once the agent has
+  passed the first checkpoint of its journey. A journey that goes from the
+  spawn area straight to its exit keeps its rivals for the whole walk.
+- **Which agents.** Agents with `familiarity` `full`. The cognitive map is
+  built on the stage graph without the rival edges, so agents with partial
+  familiarity or `discovery` do not see a rival and run as before. Decks with
+  more than one exit reachable from the spawn node, decks without journeys,
+  decks with one exit, and exit replay are unchanged.
+- **Closed allocated exit.** An exit closed by its schedule when the agent
+  chooses is not ranked. Under preference the agent takes the best rival.
+  Under `hard` it walks to the scripted exit as before.
+- **Smoke.** Smoke, FED and the must-flee rule enter through the same anchor
+  as for any current exit: an allocated route that must be fled does not hold
+  the agent. The smoke outcome of a preference agent is not yet run on a fire
+  deck ([#850](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/850)).
+
+When the opening choice overrides the allocation, `route_history` gets a row
+at the spawn time with `reason` `allocation_preference`: `old_exit` is the
+allocated exit, `old_cost` is empty and `new_cost` is 0.0, as for
+`default_route`. A later switch of such an agent is logged with the usual
+reasons (`shorter_path`, `smoke_reroute`, ...); the old allocated exit then has
+no extra standing and counts as one rival among others.
+
+The 0.9 is the value of FDS+Evac's `FAC_DOOR_WAIT`, applied here to a different
+cost and not calibrated (see [Assumptions](#assumptions)). A deck that models
+staff-directed evacuation sets `"allocation": "hard"`.
 
 ### Why direct steering
 

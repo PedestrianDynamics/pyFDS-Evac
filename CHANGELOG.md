@@ -46,8 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_iso_test_8_route_allocation.py`: 23 occupants in twelve rooms
   off a corridor, journeys allocating rooms 1-4 and 7-10 to the main exit
   and the others to the secondary one. All 23 use the allocated exit with
-  rerouting off and with rerouting on in clear air, without a route switch;
-  a journey leaves the reroute pass only the allocated exit.
+  rerouting off and with rerouting on in clear air, without a route switch.
+  The check runs with `"allocation": "hard"` on every journey (see Changed);
+  pinned occupants show the default preference.
   The allocation is user-defined; without journeys the occupants of rooms 4
   and 10 take the nearer secondary exit (#844).
 - ISO 20414 Test 16 (affiliation to familiar exits) runs in
@@ -59,6 +60,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The exit a journey allocates is a preference, not a fixed route (#854, part
+  of #187). An agent at a spawn area whose journeys reach one exit, in a deck
+  with at least two exits and `full` familiarity, keeps the allocated exit
+  unless a rival exit with an unobstructed direct route from the spawn area
+  costs less than `exit_switch_anchor` (0.9) times the allocated route, at the
+  opening choice and at every re-evaluation. A journey sets
+  `"allocation": "hard"` to keep the exit fixed as before; any other value
+  raises `ValueError` naming the journey. An opening choice that overrides the
+  allocation writes a `route_history` row with the new reason
+  `allocation_preference`. Rivals are visible only from the spawn area, and a
+  closed allocated exit takes a rival under the default. Decks without a
+  single-exit journey, `hard` journeys and agents below `full` familiarity are
+  unchanged. On the ISO 20414 Test 8 layout over seeds 1-10, 1.7 agents per
+  seed leave the allocated exit (1.2 at the opening choice, 0.5 by
+  `shorter_path`), and the secondary exit's share goes from 0.348 to 0.422.
+  The 12 golden rerouting decks are unchanged.
 - The Fridolf smoke-speed law (`speed_law="fridolf"`, Python only) uses the
   paper's visibility constant A = 2 (Fridolf et al. 2019, Eq. 1,
   light-reflecting items) by default, in `visibility_factor_c`, instead of
