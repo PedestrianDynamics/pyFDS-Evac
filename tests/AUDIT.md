@@ -876,6 +876,44 @@ and `resolve_dx` floor boundaries, and the vacuous `test_run_config` checks.
 | `test_init_deck_sweep.py` | snapshot-only coverage, regenerated from the code under test | The module says it is a characterisation. `test_hand_derived_room_anchors_the_import`: a 10 x 10 m room, a 1.2 m door, 25 agents, area 100 m2 and exit strip 0.5 x 1.2 m from the coordinates. The area check no longer skips a row that has none | `EXIT_DEPTH_M` 0.5 changed to 0.4: the anchor fails even if the table is regenerated |
 | Silent `external_data` omission | the three `t_junction` tests (`test_fds_horizon.py`, `test_fds_sampling_grid_index.py`, `test_example_downloads.py`) are deselected in CI and skip without the data | The skip reasons name the path and `T_JUNCTION_FDS`. `conftest.py` prints the deselected `external_data` ids at the end of every run, under xdist too. CI still does not need sciebo | not a mutant; the three tests passed locally with the data |
 
+## Item 1: CLI
+
+Weak-test survey of the CLI constants and flags (#836, item 1, area E).
+Expected values come from `docs/usage.md`, the `init --help` text and the
+`scripts/margin_audit.py` docstring, or from a hand count (stated in the
+test).
+
+| Mutant | Source | Killed by |
+|---|---|---|
+| `EXIT_NOT_RUNNABLE` 3 to 2 | `cli_init.py` | `test_init_flags.py::test_exit_status_numbers_of_a_plain_init` (subprocess, literals 0, 3, 1) |
+| `_exit_spec` accepts six values | `cli_init.py` | `test_a_malformed_exit_is_an_argument_error` |
+| `--no-fds` ignored | `cli_init.py` | `test_no_fds_leaves_the_fds_dir_out_of_the_run_command` |
+| `--z-band` not passed to the importer (plain `init`) | `cli_init.py` | `test_z_band_makes_the_beam_block_walking` (walkable area 200 m2 instead of 20 m2) |
+| `enable_rerouting`, `no_visibility`, `disable_tenability` `python_default` flipped | `config/parameters.py` | `test_config_model.py::test_python_defaults_of_the_switches_are_the_omitted_arguments` |
+| `horizon_overrun` `<=` to `<` | `config/rules.py` | `test_max_time_may_reach_the_last_frame_plus_one_interval` |
+| `ALPHA` 0.05 to 0.1 | `margin_audit.py` | `test_judge_p_between_five_and_ten_percent_is_not_distinct` (p = 4/64) |
+| `EXACT_MAX_N` 20 to 19 | same | `test_exact_enumeration_holds_up_to_twenty_seeds` |
+| `size >= floor` to `>` | same | `test_judge_effect_equal_to_the_floor_is_distinct` |
+| `walk_mean` floor 1.0 to 0.5 | same | `test_floor_follows_the_plan_table[walk_mean-...]`, `test_judge_walk_mean_is_judged_against_its_floor` |
+| `RETURN_WINDOW_S` 10 to 5 | same | `test_a_return_counts_in_the_window_up_to_ten_seconds` (9.9 s in, 10.1 s out) |
+| permutation tolerance removed | same | `test_a_tie_in_floating_point_counts_as_a_tie` (p = 2/64 by hand; 0 without the tolerance) |
+
+`test_init_flags.py` runs the command in a fresh process only for the exit
+status numbers; the flag tests call `cli_init.main`.
+
+### Open
+
+- The `walk_mean` floor (the larger of 2 % of the base mean and 1 s) is
+  pinned from the code: no page or docstring states it. It needs a
+  documented source.
+- The 10 s return window is documented as a number; whether a return at
+  exactly 10.0 s counts is not, so it is not pinned.
+- Not in this pull request: `--inspect-fds` without `--fds-dir` (raw
+  `ValueError`), `--print-summary` and the "Outside the FDS domain" line
+  through `main()`, the `base...head` diff range of
+  `check_golden_rerecord.py`, and the diagnostic lines of
+  `golden_rerouting.py`.
+
 ## Property-based tests
 
 Hypothesis is a dev dependency (maintainer's yes, #816). Tests use fixed

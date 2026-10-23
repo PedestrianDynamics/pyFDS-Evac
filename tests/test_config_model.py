@@ -431,6 +431,20 @@ def test_heat_only_case_warnings_are_predicted(caplog, heat_scenario, argv):
     assert list(predicted) == _setup_warnings(caplog, heat_scenario, opts)
 
 
+def test_python_defaults_of_the_switches_are_the_omitted_arguments():
+    """A flag's python_default is what run_scenario does when its argument is
+    omitted: no reroute_config (rerouting off), no vis_model (sight gating
+    off), no tenability_config (tenability off)."""
+    from pyfds_evac.core.scenario import run_scenario
+
+    arguments = inspect.signature(run_scenario).parameters
+    for name in ("reroute_config", "vis_model", "tenability_config"):
+        assert arguments[name].default is None, name
+    assert parameter("enable_rerouting").python_default is False
+    assert parameter("no_visibility").python_default is True
+    assert parameter("disable_tenability").python_default is True
+
+
 def test_horizon_error_is_predicted(heat_scenario):
     """D32: the run stops at setup; the model reports the same message."""
     opts = _parse("--scenario", "x", "--fds-dir", HEAT_ONLY_FDS, "--enable-heat-fed")
@@ -439,6 +453,21 @@ def test_horizon_error_is_predicted(heat_scenario):
     errors = effective_configuration(opts, heat_scenario).errors
     assert [e.rule for e in errors] == ["D32"]
     assert errors[0].message == str(raised.value)
+
+
+def test_max_time_may_reach_the_last_frame_plus_one_interval():
+    """usage.md: a max_simulation_time more than one slice output interval
+    past the last FDS frame stops the run; exactly one interval is allowed."""
+    from types import SimpleNamespace
+
+    from pyfds_evac.config.rules import horizon_overrun
+
+    opts = _parse("--scenario", "x", "--fds-dir", "fds")
+    fds = SimpleNamespace(horizon=(100.0, 5.0))
+    assert horizon_overrun(opts, 105.0, fds) is None
+    message = horizon_overrun(opts, 105.0 + 1e-9, fds)
+    assert message is not None
+    assert "ends at t=100.0 s (output interval 5.0 s)" in message
 
 
 def test_new_warnings_are_logged_once(caplog):
