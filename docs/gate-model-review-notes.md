@@ -144,7 +144,8 @@ on t_junction — gate w_smoke=0 reproduced gate w_smoke=5 exactly.)
 
 **B8. `feasible` conflates gate failure with every other rejection (`:1098`).**
 An exit rejected for `"all segments non-visible"` — which `_must_flee_rejection`
-deliberately treats as *not* a hazard — dies permanently. And FED rejection uses
+deliberately treats as *not* a hazard (and, since 0.7.0, #835, never as one
+at any density) — dies permanently. And FED rejection uses
 the asymmetric deadband, so **whether an exit dies forever depends on whether it
 was current that tick**: order-dependent irreversible state. A transient FED puff
 kills an exit at the *stricter* rival threshold (`/tmp/proof3.py`).
@@ -168,7 +169,7 @@ the same defect. Any real check must use K = 1e-4.
 
 **B10. Double-gating.** `visibility_extinction_threshold` (`:1223`) and
 `impassable_extinction_threshold` (`:1305`) still apply under `gate`, contrary
-to plan section 3.
+to plan section 3. (The latter was removed in 0.7.0, #835.)
 
 ---
 
@@ -329,7 +330,8 @@ requirement is zero, so this stays open.
   gate, so two objectives are stacked: smoke prices the path, then gates the
   exit.
 - **B10** `visibility_extinction_threshold` (0.5 /m) and
-  `impassable_extinction_threshold` (3.0 /m) both still fire under the gate.
+  `impassable_extinction_threshold` (3.0 /m; removed in 0.7.0, #835) both still
+  fire under the gate.
   With the sight criterion that is three smoke gates, not one.
 - **A5** anticipation advances the clock at the unimpeded `base_speed_m_per_s`
   while a smoke-slowed agent walks at as little as 0.1x it, so the field is
@@ -535,7 +537,8 @@ violation kind (it matched the reason strings until [#128](https://github.com/Pe
 smoke rejection is `tau` (was `sight (path) ...`),
 and `visibility_extinction_threshold` no longer fires under the gate, so the
 non-visible branch is unreachable there and `impassable_extinction_threshold` is
-dead code under the default model. The only surviving flee path is FED, which on
+dead code under the default model (removed in 0.7.0, #835, for both models).
+The only surviving flee path is FED, which on
 these fires never fires (`max fed_max_route = 0.0016` against a threshold of
 1.0). This is defensible if the gate is genuinely not a hazard statement, which
 per the ruling above it is not -- but it should be stated rather than left as

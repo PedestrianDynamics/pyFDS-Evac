@@ -287,8 +287,8 @@ offsets and its cap at the last FDS frame; `_fds_end` takes the earliest.
 ### Model limits (not test gaps)
 
 - Heat dose does not enter route choice: route FED is the gas rate.
-- The gate has no smoke must-flee (#696, #751); a FED violation is the only
-  must-flee kind under both models.
+- Neither model has a smoke must-flee (#696, #751, #835); a FED violation is
+  the only must-flee kind.
 - Travel time uses the speed factor of the mean K of a leg, not the mean
   of the speed factors along it: a modelling choice, pinned by the hand
   value above.
@@ -437,8 +437,8 @@ pins it, but no mutant targets it.
 
 - Heat dose takes no part in route choice: the router is given the gas
   dose and a gas-only rate sampler.
-- The gate has no smoke must-flee: only a FED violation bypasses the exit
-  anchor (#696, #751). `test_must_flee_*` in the hand-value file pin the FED
+- Neither model has a smoke must-flee: only a FED violation bypasses the exit
+  anchor (#696, #751, #835). `test_must_flee_*` in the hand-value file pin the FED
   case only.
 - Travel time uses the speed factor of the mean extinction, f(mean K), not
   the mean of f(K). That is the model's choice; nothing here validates it.
@@ -604,8 +604,8 @@ a guard against a future ordering, not behaviour today.
 ### Closing the routing audit (PR 2 to 5)
 
 The model limits recorded as limits, not test gaps, are listed under
-"Routing: cost" (heat dose not in route choice; the gate has no smoke
-must-flee, #696, #751; travel time uses f(mean K)) and repeated under
+"Routing: cost" (heat dose not in route choice; neither model has a smoke
+must-flee, #696, #751, #835; travel time uses f(mean K)) and repeated under
 "Routing: policy". Nothing in this section adds to that list; the tests of this area pin the code's
 behaviour, not the model's validity.
 

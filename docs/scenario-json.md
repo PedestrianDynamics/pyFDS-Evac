@@ -309,7 +309,11 @@ exit is now refused above `tau_max`. `fed_return_margin`, the
 fraction of `fed_rejection_threshold` above which a rival exit was
 refused for dose, was removed in the same issue and is refused the same
 way: a rival is now held to `fed_rejection_threshold`, as the current
-exit is.
+exit is. `impassable_extinction_threshold`, the route-average extinction
+above which the additive model fled a non-visible route regardless of the
+exit-switch anchor, was removed in [#835](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/835)
+(part of #187) and is refused the same way: smoke never bypasses the anchor,
+only a FED violation does.
 
 Each switching margin must be a number in its range, or the run stops with
 a `ValueError` naming the key, also with `--no-enable-rerouting`:
