@@ -811,3 +811,104 @@ def test_manifest_missing_one_output_hash_fails_compare(golden, tmp_path, capsys
     assert golden._compare(a, b, [DECK]) == 1
     out = capsys.readouterr().out
     assert f"no output hash for {DECK}/history_off/egress_summary.json" in out
+
+
+# The lines below are what a person reads to find out why a run or a
+# comparison failed. The expected text is the script's wording, stated as
+# literals; the modes are the two of MODES.
+
+
+def test_run_names_the_folder_it_refuses(golden, tmp_path, capsys):
+    out = _fake_run(golden, tmp_path / "old")
+    assert golden._run_all([DECK], tmp_path, out) == 2
+    assert capsys.readouterr().out == (
+        f"refusing to write into non-empty {out}; use a fresh folder\n"
+    )
+
+
+def test_run_names_the_dirty_paths_it_refuses(golden, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE] * 2, "run.py"))
+    assert golden._run_all([DECK], tmp_path, tmp_path / "out") == 2
+    assert capsys.readouterr().out == (
+        "refusing to run with uncommitted changes in run.py\n"
+    )
+
+
+def test_run_names_what_changed_during_the_run(golden, tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(golden, "_git", _git_stub([BASE, HEAD]))
+    monkeypatch.setattr(golden.subprocess, "run", _write_outputs)
+    assert golden._run_all([DECK], tmp_path, tmp_path / "out") == 1
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        "provenance changed during the run: commit"
+    )
+
+
+def test_run_lists_each_run_and_the_incomplete_ones(
+    golden, tmp_path, monkeypatch, capsys
+):
+    """A run that wrote nothing lists every file it should have written."""
+    monkeypatch.setattr(golden.subprocess, "run", lambda *a, **k: None)
+    monkeypatch.setattr(golden, "_git", lambda *a: "")
+    assert golden._run_all([DECK], tmp_path, tmp_path / "new") == 1
+    assert capsys.readouterr().out.splitlines() == [
+        f"run  {DECK}/history_on",
+        f"INCOMPLETE {DECK}/history_on: route_history.csv, "
+        "route_cost_history.csv, egress_summary.json, trajectory.sqlite",
+        f"run  {DECK}/history_off",
+        f"INCOMPLETE {DECK}/history_off: route_history.csv, "
+        "egress_summary.json, trajectory.sqlite",
+        "2 of 2 runs missing or incomplete",
+    ]
+
+
+def test_run_lists_the_inputs_a_missing_run_lacks(
+    golden, tmp_path, monkeypatch, capsys
+):
+    gone = tmp_path / "gone" / "config.json"
+    monkeypatch.setattr(golden, "_git", lambda *a: "")
+    monkeypatch.setattr(golden, "_missing", lambda deck, root: [gone])
+    assert golden._run_all([DECK], tmp_path, tmp_path / "new") == 1
+    assert capsys.readouterr().out.splitlines() == [
+        f"MISSING {DECK}/history_on: {gone}",
+        f"MISSING {DECK}/history_off: {gone}",
+        "2 of 2 runs missing or incomplete",
+    ]
+
+
+def test_identical_runs_are_listed_file_by_file(golden, tmp_path, capsys):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b")
+    assert golden._compare(a, b, [DECK]) == 0
+    lines = capsys.readouterr().out.splitlines()
+    assert lines[0].startswith(f"base  {a}: commit {BASE}, dirty ")
+    assert lines[1].startswith(f"head  {b}: commit {BASE}, dirty ")
+    assert lines[2:] == [
+        f"same  {DECK}/{mode}/{name}"
+        for mode, files in (
+            ("history_on", golden.MODES["history_on"]),
+            ("history_off", golden.MODES["history_off"]),
+        )
+        for name in files
+    ] + ["identical"]
+
+
+def test_a_differing_file_is_marked_and_the_run_is_not_identical(
+    golden, tmp_path, capsys
+):
+    a = _fake_run(golden, tmp_path / "a")
+    b = _fake_run(golden, tmp_path / "b")
+    (b / DECK / "history_off" / "route_history.csv").write_text("a,b\n1,3\n")
+    assert golden._compare(a, b, [DECK]) == 1
+    lines = capsys.readouterr().out.splitlines()
+    assert f"DIFF  {DECK}/history_off/route_history.csv" in lines
+    assert f"same  {DECK}/history_on/route_history.csv" in lines
+    assert lines[-1] == "differences found"
+
+
+def test_comparing_a_run_with_itself_says_so(golden, tmp_path, capsys):
+    a = _fake_run(golden, tmp_path / "a")
+    assert golden._compare(a, a, [DECK]) == 1
+    assert capsys.readouterr().out.splitlines() == [
+        f"BAD   refusing to compare {a} with itself",
+        "differences found",
+    ]

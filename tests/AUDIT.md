@@ -966,6 +966,11 @@ test).
 | `walk_mean` floor 1.0 to 0.5 | same | `test_floor_follows_the_plan_table[walk_mean-...]`, `test_judge_walk_mean_is_judged_against_its_floor` |
 | `RETURN_WINDOW_S` 10 to 5 | same | `test_a_return_counts_in_the_window_up_to_ten_seconds` (9.9 s in, 10.1 s out) |
 | permutation tolerance removed | same | `test_a_tie_in_floating_point_counts_as_a_tie` (p = 2/64 by hand; 0 without the tolerance) |
+| `if args.print_summary` always false | `cli.py` | `test_cli_main_output.py::test_print_summary_prints_the_scenario_summary` (lines by hand count: 1 exit, 1 distribution, ~6 agents) |
+| outside line printed for `rows == 0` (`if outside`) | `cli.py` | `test_no_samples_outside_the_domain_print_no_line[zero-rows]` |
+| outside line `.1f` to `.2f`; wording changed | `cli.py` | `test_outside_the_fds_domain_line_follows_the_summary_line` (wording of `docs/fds-sampling.md`, 56.04 prints 56.0) |
+| `base...head` to `base..head` | `check_golden_rerecord.py` | `test_check_golden_rerecord.py::test_the_diff_is_taken_from_the_merge_base` (base moves on, branch changes a README only) |
+| diagnostic lines of `golden_rerouting.py` reworded or dropped (refusal to write, refusal on dirty paths, provenance change, `run`, `INCOMPLETE`, `MISSING`, `n of m runs`, `same`/`DIFF`, `identical`/`differences found`, `base`/`head` provenance line, refusal to compare with itself) | `golden_rerouting.py` | `test_golden_rerouting_script.py::test_run_names_*`, `test_run_lists_*`, `test_identical_runs_are_listed_file_by_file`, `test_a_differing_file_is_marked_*`, `test_comparing_a_run_with_itself_says_so` (script wording as literals) |
 
 `test_init_flags.py` runs the command in a fresh process only for the exit
 status numbers; the flag tests call `cli_init.main`.
@@ -977,11 +982,11 @@ status numbers; the flag tests call `cli_init.main`.
   documented source.
 - The 10 s return window is documented as a number; whether a return at
   exactly 10.0 s counts is not, so it is not pinned.
-- Not in this pull request: `--inspect-fds` without `--fds-dir` (raw
-  `ValueError`), `--print-summary` and the "Outside the FDS domain" line
-  through `main()`, the `base...head` diff range of
-  `check_golden_rerecord.py`, and the diagnostic lines of
-  `golden_rerouting.py`.
+- `--inspect-fds` without `--fds-dir` ends in a raw `ValueError`
+  traceback (`cli.py`, `main`), although `docs/usage.md` says the flag
+  "Needs `--fds-dir`". That is a source defect (it should be a one-line
+  `pyfds-evac: error:` exit like the other CLI errors); no test is
+  written, so that none pins the traceback.
 
 ## Property-based tests
 
