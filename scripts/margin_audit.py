@@ -72,7 +72,7 @@ with it:
 ``--base-set PATH=VALUE`` / ``--head-set PATH=VALUE``
     Override one config value of that arm, repeatable. PATH is a dotted path
     into the scenario config, or a bare routing key
-    (``impassable_extinction_threshold`` is ``routing.impassable_extinction_threshold``).
+    (``fallback_switch_margin`` is ``routing.fallback_switch_margin``).
     VALUE is JSON, or ``inf``. A path other than ``routing.*`` must exist in
     the config. A numeric routing override is checked against the value the
     run manifest reports.
@@ -80,15 +80,15 @@ with it:
 A deck may carry its own overrides for both arms (``AuditDeck.overrides``),
 as the ``a047_pvc_*`` decks do for the 480 s cap of their FDS output.
 
-Examples, the code arm of a model-change PR and the #835 experiment (the
-additive must-flee threshold 3.0 against off, ten paired seeds)::
+Examples, the code arm of a model-change PR and a config arm (the fallback
+switch margin 0.2 against off, ten paired seeds)::
 
     uv run python scripts/margin_audit.py run --base-commit origin/main \\
         --head-commit my-branch --decks l_corridor_gate --seeds 1 2 3 4 5 6 \\
         --jobs 4 --out DIR
     uv run python scripts/margin_audit.py run --decks a047_pvc_h40 \\
-        --base-set routing.impassable_extinction_threshold=3.0 \\
-        --head-set routing.impassable_extinction_threshold=inf --jobs 4 --out DIR
+        --base-set routing.fallback_switch_margin=0.2 \\
+        --head-set routing.fallback_switch_margin=0.0 --jobs 4 --out DIR
     uv run python scripts/margin_audit.py analyse DIR \\
         --primary-deck a047_pvc_h40 --metric rset_p95
 

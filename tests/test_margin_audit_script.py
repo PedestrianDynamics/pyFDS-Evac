@@ -504,7 +504,7 @@ def test_every_audited_margin_has_a_plan_off_value(audit):
 
 def test_parse_override_reads_json_inf_and_bare_routing_keys(audit):
     assert audit.parse_override("tau_deadband=0.5") == ("routing.tau_deadband", 0.5)
-    key = "routing.impassable_extinction_threshold"
+    key = "routing.fallback_switch_margin"
     assert audit.parse_override(f"{key}=inf") == (key, float("inf"))
     assert audit.parse_override('routing.cost_model="additive"') == (
         "routing.cost_model",
@@ -552,12 +552,12 @@ def test_schroeder_decks_run_to_their_fds_end_in_both_arms(audit, tmp_path):
     assert deck.fds_dir == "schroeder2015-route/rerun_796/a047_pvc_h40"
     assert audit.DECKS["a047_pvc_h35"].fds_dir.endswith("a047_pvc_h35")
     assert deck.seeds == tuple(range(1, 11))
-    key = "routing.impassable_extinction_threshold"
-    arm = ((key, float("inf")),)
+    key = "routing.fallback_switch_margin"
+    arm = ((key, 0.0),)
     staged = audit._stage_scenario(deck, tmp_path, tmp_path / "s", arm)
     config = json.loads((staged / "config.json").read_text())
     assert _sim_time(staged) == 480
-    assert config["routing"]["impassable_extinction_threshold"] == float("inf")
+    assert config["routing"]["fallback_switch_margin"] == 0.0
     assert config["routing"]["cost_model"] == "additive"
 
 
@@ -571,12 +571,12 @@ def test_unapplied_overrides_name_the_numeric_routing_values_not_reported(audit)
     def manifest(cost):
         return {"configuration": {"run": {"rerouting": {"cost_config": cost}}}}
 
-    key = "routing.impassable_extinction_threshold"
-    seen = manifest({"impassable_extinction_threshold": float("inf")})
-    assert audit.unapplied_overrides(seen, ((key, float("inf")),)) == []
-    missed = manifest({"impassable_extinction_threshold": 3.0})
-    (message,) = audit.unapplied_overrides(missed, ((key, float("inf")),))
-    assert "impassable_extinction_threshold=3.0" in message
+    key = "routing.fallback_switch_margin"
+    seen = manifest({"fallback_switch_margin": 0.0})
+    assert audit.unapplied_overrides(seen, ((key, 0.0),)) == []
+    missed = manifest({"fallback_switch_margin": 0.2})
+    (message,) = audit.unapplied_overrides(missed, ((key, 0.0),))
+    assert "fallback_switch_margin=0.2" in message
     # Strings and paths outside routing are not in the run manifest.
     other = (("routing.cost_model", "additive"), ("config.a.b", 1))
     assert audit.unapplied_overrides(manifest({}), other) == []
