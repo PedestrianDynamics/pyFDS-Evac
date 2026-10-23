@@ -328,9 +328,11 @@ the tau band (`tau_max` × `tau_deadband` = 0.6) and then the time ratio
 (`exit_switch_anchor` = 0.9); a new path to the same exit is judged on time alone.
 A diagnostic on the gate decks and on the Schröder 2015 h40 gate deck (10 seeds
 each) found the two rules disagreeing mostly on Schröder, in 18,859 of 321,886
-evaluations and for 938 of 2000 agent-seeds: a cleaner but slower rival inside
-the 0.6 tau band, refused by the time ratio. Paired probes of a single rule and
-of a (tau, time) same-exit rule showed no effect on outcomes.
+evaluations and for 938 of 2000 agent-seeds, mostly a cleaner but slower rival
+inside the 0.6 tau band, refused by the time ratio. Paired probes of a single
+rule and of a (tau, time) same-exit rule changed neither `rset_p95`, FED nor exit
+share beyond the predeclared floors (10 seeds); the same-exit probe increased
+path switching.
 
 ### Code structure
 
