@@ -74,7 +74,8 @@ zero.
   ([#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796)).
   The differences from the earlier version of this study combine the fuel
   change with the code changes between `c619a046` (pyFDS-Evac 0.4.0) and
-  `01a30348` (0.6.1), so they cannot be attributed to the fuel alone.
+  `01a30348` (0.6.1). For the additive shift on the main fire the fuel
+  alone accounts for the change; see *Earlier version*.
 - **Heat and the 400 s cap.** Heat entered neither routing nor
   tenability. Up to 9 late-starting agents per run on the main fire (up
   to 12 on `a047_pvc_h35`) were still walking at 400 s.
@@ -473,9 +474,21 @@ the 1.6 m slice.
   ([#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796)),
   30 runs per fire. The differences from the earlier version of this study
   combine the fuel change with the code changes between `c619a046`
-  (pyFDS-Evac 0.4.0) and `01a30348` (0.6.1), so they cannot be attributed
-  to the fuel alone. The threshold 0.048 was recomputed from the new
-  smoke-blind shares and is unchanged.
+  (pyFDS-Evac 0.4.0) and `01a30348` (0.6.1). The threshold 0.048 was
+  recomputed from the new smoke-blind shares and is unchanged. For the
+  additive arm on the main fire the two are separated
+  ([#848](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/848)):
+  smoke-blind and additive, 10 seeds each, at `01a30348` on the FDS output
+  of the 16,400 kJ/kg deck give Δy −0.90 m (−1.16, −0.64) and ΔE −0.07,
+  the earlier version's values, against −0.08 m (−0.38, +0.22) and −0.02
+  with 10,300 kJ/kg. The shift collapsed with the fuel, not the code.
+  With 10,300 kJ/kg more upper-hall agents switch from F to E between 60
+  and 150 s (25.3 against 10.9 switches per seed), while the later
+  switches from E to F grow less (36.1 against 31.8), so the net move
+  toward door B halves. Smoke-blind equals clear air in both sets, so Δy
+  has the same reference. Runs and script: `p848_old16400_01a30348/` in
+  the study data. The gate arm and the comparison fires were not
+  separated.
 - **Clear air.** Smoke-blind runs are identical to no fire on all three
   fires. Start positions are the same in every arm, so the comparisons are
   paired by seed. The deck's radius is 0.15 m, so 0.5.0
@@ -638,7 +651,8 @@ fires. The FDS 6.10.1 decks use the Osburg et al. (2025) PVC set and ran
 with `FDS-6.10.1-0-g12efa16-release` on JURECA. The earlier version of
 this page was made at `c619a046` (pyFDS-Evac 0.4.0) with 16,400 kJ/kg; its
 differences from this one combine the fuel change with the code changes
-between the two commits (see *Earlier version* above). The clear-air arms
+between the two commits; for the additive shift on the main fire the fuel
+alone accounts for them (see *Earlier version* above). The clear-air arms
 of `9c820e0f`, `2a94a8da` and `828ae8c3` gave the same E share, door counts
 and boundary; their trajectories differ (see *Clear air* above).
 
