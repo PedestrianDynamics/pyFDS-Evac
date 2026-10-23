@@ -12,6 +12,7 @@ import contextlib
 import io
 import json
 import random
+import sqlite3
 from types import SimpleNamespace
 
 import jupedsim as jps
@@ -47,6 +48,41 @@ def _window(start, end, number):
     return {"flow_start_time": start, "flow_end_time": end, "number": number}
 
 
+def _without_journeys(scenario):
+    """The deck as a bare room with an exit: the fallback set-up places the agents."""
+    scenario.raw["journeys"] = []
+    scenario.raw["transitions"] = []
+    return scenario
+
+
+def _entry_times(result):
+    """Time of the first trajectory frame of each agent, in order of entry."""
+    con = sqlite3.connect(result.sqlite_file)
+    try:
+        fps = float(
+            con.execute("SELECT value FROM metadata WHERE key='fps'").fetchone()[0]
+        )
+        frames = con.execute(
+            "SELECT MIN(frame) FROM trajectory_data GROUP BY id ORDER BY MIN(frame)"
+        ).fetchall()
+    finally:
+        con.close()
+    return [frame / fps for (frame,) in frames]
+
+
+def _assert_entries_follow(result, first_s, spacing_s, count):
+    """Agent k enters in ``[first + k * spacing, first + k * spacing + 1 frame]``.
+
+    A trajectory frame is 0.1 s, so an agent added at a step shows in the
+    frame at or just after it.
+    """
+    entries = _entry_times(result)
+    assert len(entries) == count
+    for k, entered in enumerate(entries):
+        due = first_s + k * spacing_s
+        assert due - 1e-6 <= entered <= due + 0.1 + 1e-6, (k, due, entered)
+
+
 def test_overlapping_windows_add_all_their_agents():
     result = _run(_scheduled([_window(0, 4, 5), _window(2, 6, 5)]))
     assert (result.total_agents, result.agents_not_spawned) == (10, 0)
@@ -71,10 +107,17 @@ def test_a_window_too_short_for_its_agents_stops_the_run():
 
 
 def test_a_window_past_the_time_limit_leaves_agents_unspawned():
-    """A window cut off by ``max_simulation_time`` is reported, not dropped."""
+    """A window cut off by ``max_simulation_time`` is reported, not dropped.
+
+    10 agents over [2, 12] s enter at 2, 3, 4, ... s. The run ends at 4 s
+    before the step of t = 4 s, so the agents of 2 s and 3 s are in and 8
+    are not. The exit is 5.8 m or more from the spawn area; at 1.3 m/s the
+    first agent covers at most 2.6 m in its 2 s, so nobody has left.
+    """
     result = _run(_scheduled([_window(2, 12, 10)], max_time_s=4.0))
     assert result.status == "incomplete"
-    assert 0 < result.agents_not_spawned < 10
+    assert (result.total_agents, result.agents_not_spawned) == (2, 8)
+    assert (result.agents_evacuated, result.agents_remaining) == (0, 2)
     assert summary_line(result).endswith(f"{result.agents_not_spawned} not spawned).")
 
 
@@ -121,3 +164,57 @@ def test_initial_and_scheduled_agents_draw_their_own_positions(tmp_path):
         )
     assert info["starting_pos_per_source"] == [pool]
     assert sorted(positions) == sorted(initial)
+
+
+@pytest.fixture(params=[True, False], ids=["journeys", "no-journeys"])
+def with_journeys(request):
+    return request.param
+
+
+def _maybe_without_journeys(scenario, with_journeys):
+    return scenario if with_journeys else _without_journeys(scenario)
+
+
+def test_flow_spawning_enters_one_agent_every_window_over_count(with_journeys):
+    """6 agents over [0, 6] s enter at 0, 1, 2, 3, 4 and 5 s.
+
+    The spacing is the window length over the agent count, 6 / 6 = 1 s, so
+    the last agent comes a full spacing before the window closes. Over
+    ``duration / (n + 1)`` they would enter at 0, 0.86, 1.7, 2.6, 3.4 and
+    4.3 s. Both set-up paths compute the spacing: the one with journeys and
+    the fallback without.
+    """
+    scenario = _maybe_without_journeys(
+        _scenario(
+            ENOUGH_S,
+            number=6,
+            use_flow_spawning=True,
+            flow_start_time=0,
+            flow_end_time=6,
+        ),
+        with_journeys,
+    )
+    result = _run(scenario)
+    try:
+        assert (result.total_agents, result.agents_not_spawned) == (6, 0)
+        _assert_entries_follow(result, first_s=0.0, spacing_s=1.0, count=6)
+    finally:
+        result.cleanup()
+
+
+def test_a_flow_schedule_window_enters_one_agent_every_window_over_count(
+    with_journeys,
+):
+    """6 agents in the window [2, 8] s enter at 2, 3, 4, 5, 6 and 7 s.
+
+    The spacing is 6 s / 6 = 1 s, counted from the window's opening; over
+    ``duration / (n + 1)`` it would be 0.86 s and the last agent would
+    enter at 6.3 s.
+    """
+    scenario = _maybe_without_journeys(_scheduled([_window(2, 8, 6)]), with_journeys)
+    result = _run(scenario)
+    try:
+        assert (result.total_agents, result.agents_not_spawned) == (6, 0)
+        _assert_entries_follow(result, first_s=2.0, spacing_s=1.0, count=6)
+    finally:
+        result.cleanup()

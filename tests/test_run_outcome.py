@@ -102,8 +102,29 @@ def _manifest_outcome(result) -> dict:
         return json.load(fh)["outcome"]
 
 
+def _assert_counts(result, *, evacuated, remaining, not_spawned, configured):
+    """Every configured agent is evacuated, inside or not spawned.
+
+    ``total_agents`` counts the agents that entered, so it is the evacuated
+    and the remaining ones, and with the not spawned ones it is the number
+    the deck asked for.
+    """
+    assert result.agents_evacuated == evacuated
+    assert result.agents_remaining == remaining
+    assert result.agents_not_spawned == not_spawned
+    assert result.total_agents == result.agents_evacuated + result.agents_remaining
+    assert result.total_agents + result.agents_not_spawned == configured
+
+
 def test_run_that_empties_is_completed(run):
     result = run(_scenario(ENOUGH_S))
+    _assert_counts(
+        result,
+        evacuated=NUM_AGENTS,
+        remaining=0,
+        not_spawned=0,
+        configured=NUM_AGENTS,
+    )
     assert result.agents_remaining == 0
     assert result.success is True
     assert result.status == "completed"
@@ -119,6 +140,14 @@ def test_run_that_empties_is_completed(run):
 
 def test_time_limit_with_agents_inside_is_incomplete(run):
     result = run(_scenario(TOO_SHORT_S))
+    # The exit is 5.8 m or more away: 1 s at 1.3 m/s gets nobody out.
+    _assert_counts(
+        result,
+        evacuated=0,
+        remaining=NUM_AGENTS,
+        not_spawned=0,
+        configured=NUM_AGENTS,
+    )
     assert result.evacuation_time >= TOO_SHORT_S
     assert result.agents_remaining == NUM_AGENTS
     assert result.success is False
@@ -143,7 +172,14 @@ def test_time_limit_before_every_flow_agent_entered_is_incomplete(run):
             flow_end_time=10 * NUM_AGENTS,
         )
     )
-    assert result.agents_not_spawned > 0
+    # One agent every 10 s: the one of t = 0 is in, five are not.
+    _assert_counts(
+        result,
+        evacuated=0,
+        remaining=1,
+        not_spawned=NUM_AGENTS - 1,
+        configured=NUM_AGENTS,
+    )
     assert result.success is False
     assert result.status == "incomplete"
     # The flow window is still open at the limit.
