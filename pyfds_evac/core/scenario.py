@@ -1229,6 +1229,21 @@ def _default_route_row(time_s: float, agent_id: int, exit_id: str) -> dict[str, 
     }
 
 
+def _allocation_row(
+    time_s: float, agent_id: int, old_exit: str, new_exit: str
+) -> dict[str, Any]:
+    """Route-history row of an agent that leaves its allocated exit at spawn."""
+    return {
+        "time_s": round(float(time_s), 6),
+        "agent_id": agent_id,
+        "old_exit": old_exit,
+        "new_exit": new_exit,
+        "old_cost": "",
+        "new_cost": 0.0,
+        "reason": "allocation_preference",
+    }
+
+
 def _route_row(switch: RouteSwitch) -> dict[str, Any]:
     """Route-history row of an applied route switch."""
     return {
@@ -2112,6 +2127,8 @@ def run_scenario(
             # A replayed or smoke-blind choice is made as in clear air.
             clear_air = smoke_blind or required_exit is not None
             spawn_time = simulation.elapsed_time()
+            rival = _ranking_graph(wait_info)
+            allocated = terminal_exit(wait_info, stage_graph.nodes)
             chosen = _assign_initial_exit(
                 agent_id,
                 wait_info,
@@ -2131,9 +2148,17 @@ def run_scenario(
                 required_exit=required_exit,
                 spawn_key=key,
                 agent_position=extract_agent_xy(simulation.agent(agent_id)),
-                rival_graph=_ranking_graph(wait_info),
+                rival_graph=rival,
                 anchor_config=reroute_config,
             )
+            if (
+                rival is not None
+                and required_exit is None
+                and chosen not in (None, allocated)
+            ):
+                route_history.append(
+                    _allocation_row(spawn_time, agent_id, allocated or "", chosen)
+                )
             if required_exit is not None:
                 # A replayed exit is followed whether or not it is known.
                 wait_info["replayed_exit"] = required_exit

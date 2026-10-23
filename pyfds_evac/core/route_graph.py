@@ -3213,7 +3213,8 @@ class RouteSwitch:
 
     ``reason`` is one of :data:`SWITCH_REASONS`. A change of exit is labelled
     by the decision branch that let it through, first match wins:
-    ``fallback`` (every route refused), ``initial`` (no exit before, or the
+    ``allocation_preference`` (at spawn, a rival exit replaced the exit the
+    journey allocated), ``fallback`` (every route refused), ``initial`` (no exit before, or the
     exit of the default route the agent walks),
     ``exit_closed`` (the old exit closed on its schedule), ``fed_reroute``
     (the old route is over the dose limit, or under ``additive`` the dose term
@@ -3246,6 +3247,7 @@ class RouteSwitch:
 SWITCH_REASONS = (
     "initial",
     "default_route",
+    "allocation_preference",
     "fed_reroute",
     "smoke_reroute",
     "exit_closed",

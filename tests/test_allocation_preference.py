@@ -763,3 +763,18 @@ def test_hard_allocation_does_not_leave_an_exit_closing_mid_run(rerouting):
         "hard", exit_extra={"west": {"closed_after_s": 20.0}}
     )
     assert not _run(scenario, rerouting)["switches"]
+
+
+def test_opening_override_is_logged_at_the_spawn_time():
+    run = _run(single_exit_scenario(), True)
+    rows = [s for s in run["switches"] if s["reason"] == "allocation_preference"]
+    assert [(s["time_s"], s["old_exit"], s["new_exit"]) for s in rows] == [
+        (0.0, "west", "east")
+    ] * AGENTS_PER_AREA
+    assert len(run["switches"]) == len(rows)
+
+
+def test_allocation_preference_is_a_listed_reason():
+    from pyfds_evac.core.route_graph import SWITCH_REASONS
+
+    assert "allocation_preference" in SWITCH_REASONS

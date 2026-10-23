@@ -640,6 +640,7 @@ Each `RouteSwitch` record includes a `reason` field:
 |-----------------|------------------------------------------------------------------|
 | `initial`       | Agent had no previous exit assignment, or it follows its default route and takes its default exit or the default exit is not open |
 | `default_route` | The agent follows its default route, the journey or the nearest exit on foot ([#610](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/610)): at spawn, or when the agent's known exits are all closed or unreachable |
+| `allocation_preference` | At spawn, a rival exit replaced the exit the agent's journey allocated: it costs less than `exit_switch_anchor` times the allocated route (`"allocation": "preference"`, the default) |
 | `fed_reroute`   | A different exit: the route to the old exit is over the FED limit (whatever else refuses it), or (`additive`) the dose term contributes to a switch the hazard terms are needed for |
 | `smoke_reroute` | A different exit: the route to the old exit is refused on smoke alone (τ, or non-visible under `additive`); under `gate` the new route is clean where the old one is not, lower in τ by more than the deadband, or would not clear the anchor with clear-air travel times; under `additive` the switch needs the smoke term and not the dose term |
 | `exit_closed`   | The exit the agent walks to has closed on its schedule; the best open exit it knows, also when that route is a gate fallback |
