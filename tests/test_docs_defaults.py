@@ -226,11 +226,6 @@ DEFAULTS = [
     ),
     (
         ROUTING_DOC,
-        "`impassable_extinction_threshold` (3.0)",
-        lambda: RouteCostConfig().impassable_extinction_threshold,
-    ),
-    (
-        ROUTING_DOC,
         "`capacity_agents_per_s` (default 1.3)",
         lambda: _routing().default_exit_capacity,
     ),

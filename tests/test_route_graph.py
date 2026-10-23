@@ -1104,11 +1104,16 @@ class TestEvaluateAndReroute:
         assert switch is None
 
     def test_smoke_triggers_reroute(self, two_exit_graph):
-        """Heavy smoke on short path triggers reroute to longer path."""
+        """Heavy smoke on the short path: the longer path is anchor-cheaper.
+
+        Smoke covers E0's path for x > 3 and not E1's, so E0 costs 116.7
+        (non-visible, K_ave 5.33) against E1's 50 < 0.9 x 116.7: the anchor
+        lets the agent go, with no must-flee involved.
+        """
 
         class SmokeOnE0:
             def sample_extinction(self, time_s, x, y):
-                return 8.0 if y < 15 else 0.0
+                return 8.0 if y < 15 and x > 3 else 0.0
 
         config = RerouteConfig(
             cost_config=RouteCostConfig(
@@ -1139,7 +1144,7 @@ class TestEvaluateAndReroute:
         assert route_state.current_exit == "E1"
 
     def test_mild_smoke_does_not_flee_current_exit(self, two_exit_graph):
-        """Mild smoke on the current exit (below impassable threshold) is a soft
+        """Mild smoke on the current exit is a soft
         cost, not a flee trigger: the agent stays unless a *different* exit is
         anchor-cheaper. This is the demo flip-flop fix — the current exit is
         K_vis-rejected ('all segments non-visible') but the smoke is light, so
@@ -1147,7 +1152,7 @@ class TestEvaluateAndReroute:
 
         class MildSmokeOnE0:
             # extinction 1.0: above visibility threshold (0.5) so E0's segment is
-            # 'non-visible', but well below impassable_extinction_threshold (3.0).
+            # 'non-visible', but mild (k_ave below 3.0).
             def sample_extinction(self, time_s, x, y):
                 return 1.0 if y < 15 else 0.0
 
@@ -1169,7 +1174,7 @@ class TestEvaluateAndReroute:
         e0 = next(r for r in ranked if r.exit_id == "E0")
         assert e0.rejected is True
         assert e0.rejection_reason == "all segments non-visible"
-        assert e0.k_ave_route < config.cost_config.impassable_extinction_threshold
+        assert e0.k_ave_route < 3.0
 
         switch = evaluate_and_reroute(
             agent_id=0,

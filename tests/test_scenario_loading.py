@@ -373,14 +373,15 @@ def test_migration_ignores_weights_naming_an_unknown_journey():
     assert "journeys" not in deck
 
 
-def test_run_rejects_the_removed_lockout_key_with_an_explicit_cost_config():
+@pytest.mark.parametrize(
+    "key", ["fallback_return_lockout_s", "impassable_extinction_threshold"]
+)
+def test_run_rejects_a_removed_key_with_an_explicit_cost_config(key):
     """The guard in from_routing_params is bypassed by a cost config; run checks."""
     deck = _deck()
-    deck["routing"] = {"fallback_return_lockout_s": 10.0}
+    deck["routing"] = {key: 10.0}
     config = RerouteConfig(cost_config=RouteCostConfig())
-    with pytest.raises(
-        ValueError, match=r"^routing\.fallback_return_lockout_s was removed in #187"
-    ):
+    with pytest.raises(ValueError, match=rf"^routing\.{key} was removed in #187"):
         run_scenario(_scenario(deck), seed=1, reroute_config=config)
     with pytest.raises(ValueError, match="removed in #187"):
         run_scenario(_scenario(deck), seed=1)

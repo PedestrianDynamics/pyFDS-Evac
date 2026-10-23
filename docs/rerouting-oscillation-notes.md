@@ -183,9 +183,17 @@ sweep is the path to a real value. "Mild" is this note's label, not a finding: a
 k_ave about 0.5–0.9 1/m Jin and Yamada (1989) saw 14 of 31 turn back
 ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
 
+*Removed in 0.7.0 (#835):* the impassably-dense-smoke bypass and its
+`impassable_extinction_threshold` no longer exist; only a FED violation bypasses
+the anchor, under both models. The text above is the history of the rule. On
+the Schroeder 2015 route decks the removal moved `rset_p95` from 332.0 to 335.1 s
+(h40) and from 369.3 to 369.5 s (h35), not distinct; FED stayed far below its limit,
+so the run does not show the rule harmless where FED matters.
+
 ### What changed under the gate cost model
 
-**`_must_flee_rejection` is nearly dead under the gate.** It fires only on a FED
+**`_must_flee_rejection` is nearly dead under the gate** (as written then; since
+0.7.0, #835, it reads FED alone under both models). It fired only on a FED
 violation or the additive `all segments non-visible` rejection, and the gate's only
 smoke rejection is `tau`. So `impassable_extinction_threshold` cannot fire under the default model at any
 smoke density, and the only surviving bypass is FED — which on the fires measured here
@@ -348,7 +356,7 @@ timer is *less* behaviourally realistic, not more.
 - **Bug 3 (the demo cause):** *any* visibility rejection of the current exit bypassed the
   anchor, so mild smoke (k_ave ~0.5–0.9) tripping the binary 0.5 threshold flipped agents
   onto costlier exits → **fix:** `_must_flee_rejection` — only FED-lethal or impassably
-  dense smoke (`impassable_extinction_threshold`, 3.0) bypasses the anchor; mild haze is a
+  dense smoke (`impassable_extinction_threshold`, 3.0; removed in 0.7.0, #835) bypasses the anchor; mild haze is a
   soft cost. Proven on the demo log: 14/14 flips fixed, 27 real switches kept.
 - **Bug 4 (deepest cause):** routes were priced from the upstream junction node, ignoring
   where the agent actually was — so an agent 1 m from an exit walked away from it and

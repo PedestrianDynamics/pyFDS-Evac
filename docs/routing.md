@@ -266,8 +266,8 @@ none are visibility-rejected.
 
 If all routes end up rejected, the least-bad one is promoted as a
 fallback so the agent always has a path. It stays rejected, and its reason is prefixed
-`fallback: `. A route the agent must flee (FED-lethal; the additive smoke
-must-flee needs a visible rival, so it never reaches the fallback) orders behind every route it need not
+`fallback: `. A route the agent must flee (FED-lethal under either model; smoke never
+qualifies) orders behind every route it need not
 flee, and the current exit never holds against such a rival when it is
 the one to flee ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)). Among the rest, under the gate the least-bad route is the one with the
 lowest undiscounted `tau_route`, then the lowest `rank_cost`, with
@@ -351,8 +351,10 @@ config = RouteCostConfig(
 speed law, used only to estimate travel time; their defaults are on the
 [routing model](/models/routing.md#parameters) page.
 
-`impassable_extinction_threshold` (3.0), the additive model's must-flee
-line, and `exit_switch_anchor` (0.9) are `routing` keys too.
+`exit_switch_anchor` (0.9) is a `routing` key too. The additive model's
+smoke must-flee line, `impassable_extinction_threshold` (3.0), was removed in
+0.7.0 ([#835](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/835)):
+a scenario that sets it stops at load.
 
 `w_smoke` and `w_fed` **no longer reach route choice under the gate.**
 Since `0d9bf79` a gate run weights each Dijkstra edge by its own optical
@@ -564,7 +566,7 @@ discovery agent with no known exit explores or wanders instead (see below).
 | **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
 | **Fallback** | when every route is rejected: re-sorted by must-flee (last), then raw τ, then `rank_cost`; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner's τ is below the current exit's × (1 − `fallback_switch_margin`) and differs from it by more than 1e-9; the first route is promoted, stays rejected and gets a `fallback: ` reason, its `feasible` unchanged | same |
 | **Switch, same exit** | for an agent that is not idle: the walked path is re-measured, and the agent is rerouted if the new path's `rank_cost` is below the walked path's, or if the walked path is rejected and the new one is feasible and not rejected, or is the fallback's promoted route (`better_path`); otherwise, or if rerouting fails, it keeps walking, and the recorded path is updated either way | same |
-| **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit's × (1 − `fallback_switch_margin`), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection, or a non-visible one above `impassable_extinction_threshold`), and under the same rule between two refused routes, else needs `rank_cost` < old × `exit_switch_anchor` |
+| **Switch, other exit** | the candidates ranked above the current exit are tried in order and the first the anchor accepts is taken; a rejected pick that is not a fallback ends the tick. The anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection; no smoke rejection qualifies). Next, between two refused routes the rival needs a τ strictly below the current exit's × (1 − `fallback_switch_margin`), more than 1e-9 apart, and nothing else decides: no clean bypass, no time anchor. For the remaining pairs the anchor accepts a clean rival when the current exit is not; otherwise an infeasible rival needs `rank_cost` < old × `exit_switch_anchor`; a feasible one is accepted if its τ is lower by more than `tau_max` × `tau_deadband`, refused if higher by more, and between those needs the same `rank_cost` ratio | only the top-ranked route is tried; the anchor accepts when the old exit was not ranked, or when it must be fled (a FED rejection), and under the same rule between two refused routes, else needs `rank_cost` < old × `exit_switch_anchor` |
 | **Applied** | `path_choices` rewritten along the new path, the agent retargeted to the stage after the one it last left when the new path passes that stage (the route is walked as it was priced, #445), else to its first unvisited stage, the exit and path recorded, a `RouteSwitch` recorded; if rerouting fails no `RouteSwitch` is recorded | same |
 
 In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
@@ -577,7 +579,7 @@ In `pyfds_evac/core/route_graph.py` the two columns are `GatePolicy` and
 | **Ranking** | the policy's `order_key` on the policy's `rank_cost` |
 | **Fallback** | `_apply_fallback`; `_is_fallback` tells the route it promoted |
 | **Switch, same exit** | `_decide_same_exit`, comparing against the walked path from `_active_path`; the route state keeps the `recorded_path` |
-| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows`; the agent's exit is read once per evaluation into `_ExitReference` (the ranking, anchor and counted exits); must-flee is `_must_flee_rejection` with the policy's `must_flee_smoke`; the switch reason comes from the policy's `switch_hazard_label`, and is `congestion` when the switch would not clear the anchor with the policy's `queue_term` removed (`_clears_without`); the margins they apply are listed in `_SWITCH_MARGINS` |
+| **Switch, other exit** | `_select_candidate`, then `_decide_exit_change`; the anchor is `_anchor_allows`; the agent's exit is read once per evaluation into `_ExitReference` (the ranking, anchor and counted exits); must-flee is `_must_flee_rejection` (a FED violation); the switch reason comes from the policy's `switch_hazard_label`, and is `congestion` when the switch would not clear the anchor with the policy's `queue_term` removed (`_clears_without`); the margins they apply are listed in `_SWITCH_MARGINS` |
 | **Applied** | `_apply_decision` |
 
 The explore and wander decisions are made by `_decide_explore`.

@@ -161,10 +161,8 @@ smoke, so routing on both would double-count.
 **What this model does not do.** It is not hazard avoidance. On the fires
 measured here the dose veto never comes close to firing -- the largest projected
 FED over a whole `l_corridor` run is 0.0016 against a threshold of 1.0 -- and
-`impassable_extinction_threshold` cannot fire under the gate at all, because it
-is reached only from the additive `all segments non-visible` rejection and the
-gate refuses on dose and `tau` only. So no smoke rejection bypasses the
-exit-switch anchor at any density. What the gate does is exposure-gated wayfinding.
+no smoke rejection bypasses the exit-switch anchor at any density, under
+either cost model. What the gate does is exposure-gated wayfinding.
 
 The gate at work, with its evidence, is in [docs/route-cost-gate.md](/docs/route-cost-gate.md);
 provenance and the open questions are in
@@ -222,7 +220,6 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
 | `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
 | `visibility_extinction_threshold` | `0.5` | Extinction [1/m] at or above which a segment counts as not visible; additive model only, inert under the gate |
-| `impassable_extinction_threshold` | `3.0` | Route-average *K* [1/m] above which a visibility rejection must be fled, bypassing the anchor; additive model only, never reached under the gate |
 | `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples where the field has no grid (a constant or test field) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose [m]. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)) |
 | `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
 | `alpha` | `0.706` | Router's copy of \(\alpha\) [m/s], for travel time only |
@@ -266,7 +263,7 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | `clean_exit_margin` = 0.1 | FDS+Evac `FAC_DOOR_OLD` |
 | `exit_switch_anchor` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
 | `visibility_extinction_threshold` = 0.5 | Jin's allowable smoke density for occupants familiar with the building (Jin 1997, Table 1, p. 11), applied to every agent; see [Limitations](#limitations) |
-| `tau_deadband`, `fallback_switch_margin`, `impassable_extinction_threshold`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
+| `tau_deadband`, `fallback_switch_margin`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
 | `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
 | `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
 
@@ -283,9 +280,7 @@ neighbouring ties chain into one group (`taus_tie`, `_order_routes`). The anchor
 
 1. No current route: accept.
 2. **Must flee** (`_must_flee_rejection`): the current route breaks the FED
-   limit or, under additive only, is refused as `all segments non-visible`
-   with a route-average *K* above `impassable_extinction_threshold`; under
-   the gate only the FED limit qualifies. Accept, whatever the cost. The test reads
+   limit, under either cost model; smoke never qualifies. Accept, whatever the cost. The test reads
    which limits the route breaks (`RouteCost.violation_kinds`), not its
    rejection reason, so a route over both the FED and the `tau` limit is fled
    although its reason names `tau`, and so is a route the fallback promoted.
@@ -441,9 +436,9 @@ there ([scenario JSON](/docs/scenario-json.md#journeys-allocation)).
 - **Closed allocated exit.** An exit closed by its schedule when the agent
   chooses is not ranked. Under preference the agent takes the best rival.
   Under `hard` it walks to the scripted exit as before.
-- **Smoke.** Smoke, FED and the must-flee rule enter through the same anchor
-  as for any current exit: an allocated route that must be fled does not hold
-  the agent. The smoke outcome of a preference agent is not yet run on a fire
+- **Smoke.** Smoke and FED enter through the same anchor
+  as for any current exit: an allocated route that must be fled (FED) does not
+  hold the agent. The smoke outcome of a preference agent is not yet run on a fire
   deck ([#850](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/850)).
 
 When the opening choice overrides the allocation, `route_history` gets a row
@@ -624,14 +619,20 @@ Exit throughput throttling has no general test yet
   ([#516](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/516),
   [#362](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/362)).
   It acts under the additive model only.
-- `impassable_extinction_threshold` (3.0 1/m) is a modelling assumption
-  with no empirical source
-  ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)).
-  It acts under the additive model only, on a route refused because the
-  mean *K* of every segment is at or above
-  `visibility_extinction_threshold` while some other unrejected route has
-  a visible segment, and then only when the route-average *K* exceeds
-  3.0 1/m. The field surveys (Wood 1972; Bryan 1977) give only
+- No smoke density makes an agent leave its exit regardless of the anchor.
+  The additive model once did, on a route refused as non-visible with a
+  route-average *K* above 3.0 1/m (`impassable_extinction_threshold`, a
+  modelling assumption with no empirical source,
+  [#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)); it
+  was removed in 0.7.0 ([#835](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/835)),
+  and a scenario that still sets the key stops at load. On the Schroeder
+  2015 route decks (additive, ten paired seeds, one parameter set) the
+  removal moved `rset_p95` from 332.0 to 335.1 s (h40) and from 369.3 to
+  369.5 s (h35), not distinct from seed noise, and cut switches by 10 and 24
+  per run. That is a measured absence of an effect on one parameter set, not
+  a validation: FED stayed far below any limit in those runs (maximum 0.13
+  and 0.17), so a safety benefit of the rule could not show. The field
+  surveys (Wood 1972; Bryan 1977) give only
   visibilities estimated by respondents, and most people who entered
   smoke did not turn back. Two studies measured *K*. Jin and Yamada
   (1989, p. 513): in a dead-end corridor of irritant smoke at
@@ -644,7 +645,7 @@ Exit throughput throttling has no general test yet
   smoke made irritant with acetic acid, at measured *K* of about
   2–7 1/m; 44 continued to an exit, one left by the entrance. Neither
   supports a fixed density at which people turn back.
-- Under the default gate, smoke on the current route never bypasses the
+- Under either cost model, smoke on the current route never bypasses the
   exit-switch anchor as a lethal FED does: however dense it is, the agent
   leaves only for a rival the anchor accepts (clearly lower τ, or clean
   where the current route is not)

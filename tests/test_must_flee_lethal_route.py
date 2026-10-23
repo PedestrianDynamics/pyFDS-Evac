@@ -22,10 +22,13 @@ from pyfds_evac.core.route_graph import (
     AgentRouteState,
     RerouteConfig,
     RouteCost,
+    RouteCostConfig,
     _anchor_allows,
     _fallback_rival_wins,
     _must_flee_rejection,
+    check_removed_routing_keys,
     evaluate_and_reroute,
+    policy_for,
     rank_routes,
 )
 
@@ -115,25 +118,16 @@ def test_promoted_route_keeps_its_hazard():
     assert routes["east"].violation_kinds == ("fed", "tau")
 
 
-@pytest.mark.parametrize(
-    ("k_west", "expected"), [(3.5, ("east", "smoke_reroute")), (2.0, ("stay", None))]
-)
-def test_additive_impassable_smoke_bypasses_the_anchor(k_west, expected):
-    """Additive, decision level: only impassable non-visible smoke is fled.
+def _decide_additive(current, extinction, fed=None) -> tuple[str, str | None]:
+    """The exit an additive agent at the hub takes at 5 s, and why.
 
-    w_smoke 0, so the composite is length: east 40 against west 20, and the
-    anchor (east < 0.9 x west) refuses the switch. West is non-visible
-    (K_ave 10/11 of the arm value, over 0.5) and east is clear, so the K_vis
-    screen refuses west. At K 3.5 (K_ave 3.18 > 3.0) must-flee lets the
-    agent go; at K 2.0 (K_ave 1.82) the anchor holds it.
+    w_smoke 0, so the composite is length: west 20, east 40.
     """
-    config = golden._additive(w_smoke=0.0)
-    smoke = golden.ArmField({"west": k_west})
-    rs = AgentRouteState(current_exit="west", current_path=["spawn", "west"])
+    rs = AgentRouteState(current_exit=current, current_path=["spawn", current])
     wait_info = {
         "current_origin": "spawn",
-        "current_target_stage": "west",
-        "path_choices": {"spawn": [("west", 100.0)]},
+        "current_target_stage": current,
+        "path_choices": {"spawn": [(current, 100.0)]},
         "state": "to_target",
     }
     switch = evaluate_and_reroute(
@@ -143,18 +137,47 @@ def test_additive_impassable_smoke_bypasses_the_anchor(k_west, expected):
         golden._star2(),
         5.0,
         0.0,
+        extinction,
+        fed,
+        RerouteConfig(cost_config=golden._additive(w_smoke=0.0)),
+    )
+    return ("stay", None) if switch is None else (switch.new_exit, switch.reason)
+
+
+def test_additive_dense_smoke_does_not_bypass_the_anchor():
+    """Additive: non-visible smoke at K_ave 3.18 is decided by the anchor (#835).
+
+    West (20 m) is non-visible at K 3.5 (K_ave 3.5 x 10/11 = 3.18), east
+    (40 m) is clear. East is not below 0.9 x west, so the agent stays; it
+    used to leave because K_ave exceeded 3.0.
+    """
+    smoke = golden.ArmField({"west": 3.5})
+    assert _decide_additive("west", smoke) == ("stay", None)
+    ranked = rank_routes(
+        golden._star2(),
+        "spawn",
+        5.0,
+        0.0,
         smoke,
         None,
-        RerouteConfig(cost_config=config),
-    )
-    decision = ("stay", None) if switch is None else (switch.new_exit, switch.reason)
-    assert decision == expected
-    ranked = rank_routes(
-        golden._star2(), "spawn", 5.0, 0.0, smoke, None, config, current_exit="west"
+        golden._additive(w_smoke=0.0),
+        current_exit="west",
     )
     west = next(rc for rc in ranked if rc.exit_id == "west")
     assert west.rejection_reason == "all segments non-visible"
-    assert west.k_ave_route == pytest.approx(k_west * 10 / 11)
+    assert west.k_ave_route == pytest.approx(3.5 * 10 / 11)
+
+
+def test_additive_dense_smoke_leaves_for_a_cheaper_rival():
+    """East (40 m) is non-visible at K 3.5; west (20 m) < 0.9 x 40: leave."""
+    smoke = golden.ArmField({"east": 3.5})
+    assert _decide_additive("east", smoke)[0] == "west"
+
+
+def test_additive_dense_smoke_with_lethal_dose_is_still_fled():
+    """FED must-flee is unchanged: K_ave 3.18 and FED 2.0 on west leaves."""
+    smoke = golden.ArmField({"west": 3.5})
+    assert _decide_additive("west", smoke, LETHAL_WEST) == ("east", "fed_reroute")
 
 
 def _refused(exit_id: str, tau: float, kinds: tuple[str, ...], k_ave=0.5):
@@ -203,13 +226,27 @@ def test_fallback_rule_puts_lethal_routes_last():
     )
 
 
-@pytest.mark.parametrize(("k_ave", "flee"), [(4.0, True), (2.0, False)])
-def test_additive_impassable_smoke_is_fled(k_ave, flee):
-    """Additive: a non-visible route is fled only above K_ave 3.0 /m."""
-    config = golden._additive()
-    rc = _refused("west", 0.0, ("all_segments_non_visible",), k_ave=k_ave)
-    assert config.impassable_extinction_threshold == 3.0
-    assert _must_flee_rejection(rc, config) is flee
+@pytest.mark.parametrize("k_ave", [2.0, 4.0, 100.0])
+def test_non_visible_smoke_is_never_a_must_flee(k_ave):
+    """Under either model only a FED violation is fled, whatever the density."""
+    for config in (golden._gate(), golden._additive()):
+        rc = _refused("west", 0.0, ("all_segments_non_visible",), k_ave=k_ave)
+        assert not _must_flee_rejection(rc, config)
+        assert _must_flee_rejection(_refused("west", 0.0, ("fed",)), config)
+
+
+def test_the_smoke_must_flee_is_gone():
+    assert not hasattr(RouteCostConfig(), "impassable_extinction_threshold")
+    assert not hasattr(policy_for(golden._additive()), "must_flee_smoke")
+
+
+@pytest.mark.parametrize("value", [3.0, float("inf")])
+def test_setting_the_removed_threshold_raises(value):
+    routing = {"impassable_extinction_threshold": value}
+    with pytest.raises(ValueError, match="impassable_extinction_threshold.*#835"):
+        RouteCostConfig.from_routing_params(routing)
+    with pytest.raises(ValueError, match="impassable_extinction_threshold.*#835"):
+        check_removed_routing_keys(routing)
 
 
 def test_alternating_lethal_dose_switches_every_tick():

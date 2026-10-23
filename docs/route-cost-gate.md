@@ -675,7 +675,6 @@ Every key below is read from the scenario's `routing` block by
 | `w_queue` | `0.0` | Congestion weight, off by default. | active (as `w_queue * queue_time_s` on the rank cost) | active (as distance-equivalent in the composite) |
 | `fed_rejection_threshold` | `1.0` | Projected FED above which a route is refused. Veto only: dose never ranks. | active | active |
 | `visibility_extinction_threshold` | `0.5` | Segment-mean `K` at or above which a segment is flagged non-visible; a route whose segments are *all* non-visible is refused when some other route has a visible segment. Jin's limit for familiar occupants ([#516](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/516)). | **inert** | active |
-| `impassable_extinction_threshold` | `3.0` | Route-average `K` above which a smoke rejection must be fled, bypassing the exit-switch anchor. Uncalibrated, no empirical source: about 1 m of visibility for a reflecting sign (C = 3), 2.7 m for a lit sign (C = 8) ([#371](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/371)). | **inert** | active |
 | `sampling_step_m` | `2.0` | Spacing of extinction samples where the field has no grid (constant or test fields) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)). | active | active |
 | `base_speed_m_per_s` | `1.3` | Clear-air walking speed. Sets travel time, anticipation, and the queue conversion. It is not a speed floor; `min_speed_factor` is. | active | active |
 | `alpha` | `0.706` | Router's copy of the linear speed-law coefficient, for travel time only; agents walk with `SmokeSpeedConfig` ([smoke-speed model](/models/smoke-speed.md)). | active | active |
@@ -690,8 +689,9 @@ from `from_routing_params` — until `9508181` made both 0.1, the value
 have not been repeated at 0.1.
 
 Every `RouteCostConfig` field in the table above is readable from the
-`routing` block; `impassable_extinction_threshold` was the last one to
-become so (#187).
+`routing` block. The additive model's smoke must-flee line,
+`impassable_extinction_threshold` (3.0), was removed in 0.7.0 (#835): a
+scenario that sets it stops at load.
 
 The margin keys are range-checked; the ranges are on
 [Models › Routing › Parameters](/models/routing.md#parameters).
@@ -766,15 +766,13 @@ prediction from `evac.f90`, not a measured run of it.
   citable from FDS+Evac's tier-4 rule, but that rule applies it to a straight
   sight line, not to a walked route, and nothing here checks 6 against a
   soot-dose or FED-equivalent limit.
-- **`impassable_extinction_threshold` is dead code under the default model.**
-  `_must_flee_rejection` fires only on a FED violation or the additive
-  `all segments non-visible` rejection; the gate refuses on dose and `tau`
-  only. So no
-  smoke rejection bypasses the exit-switch anchor, at any density, and the field
-  still takes a value and does nothing. `visibility_extinction_threshold`
-  (0.5 /m, per segment) is likewise skipped under the gate. The FED bypass
-  survives, and on the fires measured here FED never reaches its threshold, so
-  in practice **nothing bypasses the anchor**.
+- **Only a FED violation bypasses the anchor.** `_must_flee_rejection` reads
+  the FED limit alone, under both models; no smoke rejection bypasses the
+  exit-switch anchor, at any density. The additive model's
+  `impassable_extinction_threshold` was removed in 0.7.0 (#835).
+  `visibility_extinction_threshold` (0.5 /m, per segment) is skipped under the
+  gate. On the fires measured here FED never reaches its threshold, so in
+  practice **nothing bypasses the anchor**.
 - **Anticipation samples the field too early.** Samples are read at
   `now + walked_so_far / base_speed_m_per_s`, the *unimpeded* speed, while an
   agent in smoke walks at as little as `min_speed_factor` = 0.1 of it. The
