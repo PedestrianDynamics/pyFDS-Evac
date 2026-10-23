@@ -322,6 +322,18 @@ node after that one, even when its current target lies further along the route
 every route is refused, the least-smoky one is promoted as a fallback; it stays rejected, marked `fallback:`. The
 full decision table is in [Routing in practice](/docs/routing.md#rerouting-decision-flow).
 
+The gate keeps two rules on purpose. The order key ranks routes by tau first and
+discounts the current exit by 0.9, while a switch away from the current exit asks
+the tau band (`tau_max` × `tau_deadband` = 0.6) and then the time ratio
+(`exit_switch_anchor` = 0.9); a new path to the same exit is judged on time alone.
+A diagnostic on the gate decks and on the Schröder 2015 h40 gate deck (10 seeds
+each) found the two rules disagreeing mostly on Schröder, in 18,859 of 321,886
+evaluations and for 938 of 2000 agent-seeds, mostly a cleaner but slower rival
+inside the 0.6 tau band, refused by the time ratio. Paired probes of a single
+rule and of a (tau, time) same-exit rule changed neither `rset_p95`, FED nor exit
+share beyond the predeclared floors (10 seeds); the same-exit probe increased
+path switching.
+
 ### Code structure
 
 For maintainers, one re-decision runs through: `_measure_route` (samples the
