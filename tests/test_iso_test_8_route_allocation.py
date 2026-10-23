@@ -38,8 +38,9 @@ geometry. A journey's exit is a preference unless the journey sets
 less than ``exit_switch_anchor`` (0.9) times as much. The checks below that
 the allocation holds run with ``"allocation": "hard"`` on every journey, so
 they test the allocation itself. At seed 42 the preference reading holds too,
-but by 0.4 % to 1.8 % only (rooms 4 and 10 sit at a ratio of 0.913 to 0.926 of
-the cost of the secondary exit over that of the main exit), which makes it a
+by a thin margin only: rooms 4 and 10 start at a ratio of 0.913 to 0.926 of
+the cost of the secondary exit over that of the main exit and come no lower
+than 0.904 to 0.918 along the walk, which makes it a
 fragile check; the preference rule is covered by occupants pinned to one
 position instead. The allocation is partly against distance: the occupants of rooms 4
 and 10 (x about 0.9 m) are allocated to the main exit, about 9 m from the
