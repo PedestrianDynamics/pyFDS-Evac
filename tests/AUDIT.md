@@ -982,11 +982,9 @@ status numbers; the flag tests call `cli_init.main`.
   documented source.
 - The 10 s return window is documented as a number; whether a return at
   exactly 10.0 s counts is not, so it is not pinned.
-- `--inspect-fds` without `--fds-dir` ends in a raw `ValueError`
-  traceback (`cli.py`, `main`), although `docs/usage.md` says the flag
-  "Needs `--fds-dir`". That is a source defect (it should be a one-line
-  `pyfds-evac: error:` exit like the other CLI errors); no test is
-  written, so that none pins the traceback.
+- Closed: `--inspect-fds` without `--fds-dir` ended in a raw `ValueError`
+  traceback; it now exits with the one-line `pyfds-evac: error:` message,
+  pinned by `test_cli_main_output.py::test_inspect_fds_without_fds_dir_is_a_one_line_error`.
 
 ## Property-based tests
 
