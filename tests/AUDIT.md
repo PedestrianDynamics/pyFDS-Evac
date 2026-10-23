@@ -875,11 +875,33 @@ every expectation is a count of nodes or frames.
   wrapped "before" frame is the last one, never nearer; `idx == count`
   already takes the earlier frame. Not pinned.
 - Survey rows outside this part: `SliceGrid.values` outside cells (killed
-  in the wide set), `_VisMapCache._nearest` tie, `visibility_to_node`
-  exception set, observer-outside-grid equality, `_vis_metre_array` mask.
+  in the wide set); the other four rows are closed in "Visibility cache
+  edges (#876)" below.
 - The sciebo-dependent tests (`test_t_junction_*`) skip without the data;
   the skip reason and the end-of-run list now name them (see "I/O and
   manifests").
+
+## Item 1: Visibility cache edges (#876)
+
+Module `pyfds_evac/core/visibility.py`. The mutants were applied by hand
+to the line named, run against `test_visibility_cache_edges.py` and
+`test_fdsvismap_adapter.py`, and reverted (bytecode disabled). The cache
+arrays of the new file are built by hand: metres = 100 t + 10 w + x + 1.
+
+### Fixed
+
+| Finding | Test | Mutant killed by it |
+|---|---|---|
+| `_VisMapCache._nearest` tie unpinned (time, x and a one-position axis) | `test_nearest_coordinate_ties_go_to_the_lower_one[0.5, 1.5, hair above and below, on a node, below, above]`, `test_a_one_position_axis_is_always_index_zero`, `test_a_query_time_halfway_between_frames_reads_the_earlier_frame`, `test_an_x_halfway_between_cells_reads_the_lower_cell`. The tie rule is not documented; the literals follow the sampler's "ties to the lower" | `<` to `<=` in the comparison; `idx >= len` to `>`; `idx <= 0` to `< 0` (`visibility.py:483`) |
+| `visibility_to_node` exception set: no test raised any of the three, none checked that others pass | `test_a_backend_without_an_answer_gives_none[RuntimeError, IndexError, KeyError]` (stub backend), `test_any_other_backend_error_is_raised`, `test_a_cache_without_distances_gives_none`, `test_a_sign_beyond_the_cache_waypoints_gives_none` (real `_VisMapCache`, index out of range) | each of the three dropped alone; `except Exception` (`visibility.py:1113`) |
+| Masked zero | `test_a_masked_zero_distance_gives_none_and_a_positive_one_is_returned` | `metres > 0.0` to `>= 0.0` (`:1115`) |
+| Observer off the grid: reading distance equality and the cell edge | `test_an_observer_exactly_at_the_reading_distance_sees_the_sign` (5 m, cap 5 m seen; one 1e-7 m further not), `test_an_observer_on_the_cell_edge_is_on_the_grid[-0.5, 2.5]`, `test_an_observer_a_hair_beyond_the_cell_edge_is_off_the_grid[-0.5000001, 2.5000001]` | `distance <= cap` to `<` (`:937`); `== 0.0` widened to `< 1e-3` and `< 1e-6` (`:906`); the x-bounds terms of `_distance_outside` shifted by 1e-3 (`:748`) |
+| `_vis_metre_array` mask: each of the three factors | already pinned by `test_fdsvismap_adapter.py`; mutated per factor here | angle array replaced by 1 and visibility array replaced by 1 (`test_cached_metres_mirror_fdsvismaps_masked_product`); non-concealed array replaced by 1 (`test_cached_sighting_distance_respects_an_obstruction`) |
+
+### Open
+
+- The y bounds of `_distance_outside` are not mutated: the new grids have a
+  single y row (zero extent), so only the x terms are pinned at the edge.
 
 ## Item 1: I/O and manifests (#836)
 
