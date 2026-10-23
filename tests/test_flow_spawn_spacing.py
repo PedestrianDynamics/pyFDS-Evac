@@ -24,7 +24,11 @@ from shapely.geometry import Polygon, box
 from test_run_outcome import D, _coords, _scenario
 
 import pyfds_evac.core.simulation_init as simulation_init
-from pyfds_evac.core.scenario import run_scenario
+from pyfds_evac.core.scenario import (
+    _defer_flow_spawn,
+    _deferred_spawn_lines,
+    run_scenario,
+)
 from pyfds_evac.core.simulation_init import (
     _CONTACT_OWN_RADIUS,
     _CONTACT_RADIUS_SUM,
@@ -137,19 +141,43 @@ def test_flow_agents_keep_the_spacing_to_walking_agents(monkeypatch, model, seed
 
 
 def test_a_full_area_defers_the_flow_and_reports_it(monkeypatch):
-    """Four agents fill a 1.2 m square; the flow of five never finds room."""
+    """Four agents fill a 1.2 m square; the flow of five never finds room.
+
+    The window is [0, 1] s at 0.01 s steps, so the source tries at
+    t = 0.00, 0.01, ... 1.00 s: 101 steps, each of them deferred.
+    """
     scenario = _scenario_with_flow(
         "CollisionFreeSpeedModel", box(1.0, 1.0, 2.2, 2.2), (4, 0.2), (5, 0.2), 1.0, 2.0
     )
     added, result, out = _run_recording_gaps(monkeypatch, scenario, 1)
     assert len(added) == 4
     assert result.agents_not_spawned == 5
-    assert result.metrics.get("flow_spawns_deferred", 0) > 0
+    assert result.metrics["flow_spawns_deferred"] == 101
     reports = [line for line in out.splitlines() if "found no free position" in line]
     assert reports == [
-        f"Flow spawning: '{D1}' found no free position at "
-        f"{result.metrics['flow_spawns_deferred']} steps between t=0.00 s and "
-        "t=1.00 s; 5 of its 5 agents did not enter"
+        f"Flow spawning: '{D1}' found no free position at 101 steps between "
+        "t=0.00 s and t=1.00 s; 5 of its 5 agents did not enter"
+    ]
+
+
+def test_deferrals_of_a_source_are_counted_with_their_first_and_last_time():
+    """Three deferrals of source 0 and one of source 1, counted apart."""
+    deferred = {}
+    for source_id, time_s in [(0, 1.0), (1, 1.5), (0, 1.25), (0, 2.0)]:
+        _defer_flow_spawn(deferred, source_id, time_s)
+    assert deferred == {0: (3, 1.0, 2.0), 1: (1, 1.5, 1.5)}
+
+
+def test_the_report_counts_the_agents_that_did_not_enter():
+    """Source 0 let 2 of its 5 agents in, so 3 did not enter; source 1 let 0
+    of its 4 in. A source without a ``dist_key`` is named by its index."""
+    deferred = {0: (7, 0.5, 1.0), 1: (2, 0.25, 0.5)}
+    flows = [{"dist_key": "a"}, {}]
+    assert _deferred_spawn_lines(deferred, flows, [5, 4], [2, 0]) == [
+        "Flow spawning: 'a' found no free position at 7 steps between "
+        "t=0.50 s and t=1.00 s; 3 of its 5 agents did not enter",
+        "Flow spawning: '1' found no free position at 2 steps between "
+        "t=0.25 s and t=0.50 s; 4 of its 4 agents did not enter",
     ]
 
 
@@ -190,14 +218,18 @@ def test_positions_are_kept_only_before_a_due_spawn(monkeypatch):
     """Five agents over a 2 s window in a 3 s run: a spawn every 0.4 s.
 
     One snapshot before the run, and one before each step with a spawn
-    due, rather than one per step.
+    due, rather than one per step (300 of them). The first spawn, at 0 s,
+    reads the snapshot before the run, so the four later spawns add four:
+    5 at least. 3 * 0.4 is 1.2000000000000002 s in floating point: that
+    spawn is tried one step after the snapshot the half-step margin took
+    for it, and a second snapshot is taken: 6 at most.
     """
     scenario = _scenario_with_flow(
         "CollisionFreeSpeedModel", AREA, (0, STANDING_R), (5, FLOW_R), 2.0, 3.0
     )
     calls, result = _count_snapshots(monkeypatch, scenario)
     assert result.metrics["flow_spawns_deferred"] == 0
-    assert 5 <= len(calls) <= 1 + 2 * 5
+    assert 5 <= len(calls) <= 6
 
 
 def _occupied(*agents, seen=None):
