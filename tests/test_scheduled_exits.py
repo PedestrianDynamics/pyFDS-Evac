@@ -909,6 +909,42 @@ def test_reroute_pass_evaluates_with_the_dose_taken(monkeypatch):
         assert fed > 0.0
 
 
+def test_a_switch_moves_the_agents_count_between_the_exits(monkeypatch):
+    """Each agent that leaves the closed west door takes one off west and puts
+    one on east.
+
+    The reroute pass at the closure (4 s, every agent in turn) hands each
+    evaluation the live exit counts. After an agent that switched west to
+    east, the next evaluation of the same pass sees west one lower and east
+    one higher, and no other change: nobody else leaves the room between two
+    agents of one pass.
+    """
+    import pyfds_evac.core.scenario as scenario_module
+
+    seen = []
+    evaluate = scenario_module.evaluate_and_reroute
+
+    def _spy(*args, **kw):
+        counts = dict(kw["exit_counts"])
+        switch = evaluate(*args, **kw)
+        seen.append((kw["current_time_s"], counts, switch))
+        return switch
+
+    monkeypatch.setattr(scenario_module, "evaluate_and_reroute", _spy)
+    _run(_scenario({"west": {"closed_after_s": T_CLOSE_S}}), reroute_config=REROUTE)
+    in_pass = [(counts, switch) for t, counts, switch in seen if t == T_CLOSE_S]
+    moves = 0
+    for (counts, switch), (after, _) in zip(in_pass, in_pass[1:]):
+        expected = dict(counts)
+        if switch is not None:
+            assert (switch.old_exit, switch.new_exit) == ("west", "east")
+            expected["west"] -= 1
+            expected["east"] += 1
+            moves += 1
+        assert after == expected
+    assert moves >= 5
+
+
 @pytest.mark.parametrize("mode", list(RUN_MODES))
 def test_closure_at_an_odd_time_acts_at_the_next_whole_second(mode):
     """The check runs every simulated second: a door closing at 4.3 s is
