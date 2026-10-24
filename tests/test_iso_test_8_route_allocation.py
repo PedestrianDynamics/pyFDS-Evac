@@ -64,6 +64,22 @@ Pinned occupants: one occupant of room 4 at the east end of the room, 8.9 m
 from the secondary exit and 10.0 m from the main one by the navmesh (ratio
 0.885, below the anchor), takes the secondary exit under the preference rule
 and keeps the main one under ``"allocation": "hard"``.
+
+Fire variant (issue #850, allocation under smoke). A step extinction field
+switches on at t = 5 s in the main passage, a box x in [-3.8, -2.7] m,
+y in [0.3, 2.3] m (2.0 m long), K = 5 /m, Lund speed law; the router samples
+every 0.25 m and re-evaluates every 1 s. The box lies on main-exit routes only.
+Under the gate model a route is refused above tau = K_ave x L > tau_max = 6,
+and an exit is left when its tau exceeds the rival's by more than
+tau_max x tau_deadband = 0.6.
+
+- A main route entered from the corridor: tau = 5 x 2.0 = 10, refused;
+  the secondary route has tau = 0. By default the allocation is a preference
+  and yields: occupants not yet in the passage switch to the secondary exit
+  (``smoke_reroute``) on the first pass at or after t_on, within 1 s + 0.03 s.
+- Occupants already past the box (y > 2.3 m) have tau = 0 and keep main.
+- Under ``"allocation": "hard"`` nobody moves: the route graph holds only the
+  allocated exit, and the agents walk the smoke slowed (D5).
 """
 
 from __future__ import annotations
@@ -78,6 +94,7 @@ from shapely.ops import unary_union
 from pyfds_evac.config.parameters import REROUTE_INTERVAL_S
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
 from pyfds_evac.core.scenario import Scenario, run_scenario
+from pyfds_evac.core.smoke_speed import SmokeSpeedConfig, SmokeSpeedModel
 
 pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
@@ -118,6 +135,26 @@ EXITS = {
     MAIN: box(-3.7, 5.0, -2.8, 5.4),
     SECONDARY: box(8.7, -0.3, 8.9, 0.1),
 }
+# Fire variant: smoke box in the main passage, switched on at SMOKE_ON_S.
+SMOKE_BOX = (-3.8, 0.3, -2.7, 2.3)
+SMOKE_K_PER_M = 5.0
+SMOKE_ON_S = 5.0
+SAMPLING_STEP_M = 0.25
+FRAME_RATE = 10.0
+# Stagger offset (at most 0.02 s) plus one step.
+SWITCH_SLACK_S = 0.03
+
+
+class _BoxSmoke:
+    """Step extinction field: K inside ``SMOKE_BOX`` from ``SMOKE_ON_S`` on."""
+
+    def __init__(self, k: float) -> None:
+        self.k = k
+
+    def sample_extinction(self, t: float, x: float, y: float) -> float:
+        x0, y0, x1, y1 = SMOKE_BOX
+        inside = x0 <= x <= x1 and y0 <= y <= y1
+        return self.k if t >= SMOKE_ON_S and inside else 0.0
 
 
 def _room_box(room: int):
@@ -262,13 +299,27 @@ def _run(
     journeys: bool = True,
     mode: str | None = None,
     pins: dict[int, tuple[float, float]] | None = None,
+    smoke_anticipate: bool | None = None,
+    smoke_k: float = SMOKE_K_PER_M,
 ) -> dict:
+    """Run the deck. *smoke_anticipate* None means clear air; a bool adds the box
+    smoke field with that ``anticipate`` setting, re-evaluated every second."""
+    smoke = smoke_anticipate is not None
+    params = {"sampling_step_m": SAMPLING_STEP_M, "anticipate": smoke_anticipate}
     reroute = (
         RerouteConfig(
             reevaluation_interval_s=REROUTE_INTERVAL_S,
-            cost_config=RouteCostConfig.from_routing_params({}),
+            cost_config=RouteCostConfig.from_routing_params(params if smoke else {}),
         )
         if rerouting
+        else None
+    )
+    model = (
+        SmokeSpeedModel(
+            _BoxSmoke(smoke_k),
+            SmokeSpeedConfig(fds_dir=".", speed_law="lund", update_interval_s=1.0),
+        )
+        if smoke
         else None
     )
     with contextlib.redirect_stdout(io.StringIO()):
@@ -276,6 +327,7 @@ def _run(
             _scenario(allocation, journeys, mode, pins),
             seed=SEED,
             reroute_config=reroute,
+            smoke_speed_model=model,
         )
     try:
         df = result.trajectory_dataframe().sort_values(["id", "frame"])
@@ -292,8 +344,12 @@ def _run(
             room = home[rec["agent_id"]]
             per_room[room]["assigned"].append(rec["exit_id"])
             per_room[room]["final"].append(final[rec["agent_id"]])
+        at_t_on = df[df.frame >= round(SMOKE_ON_S * FRAME_RATE)].groupby("id").first()
         return {
             "per_room": per_room,
+            "home": home,
+            "t_end_s": float(df.frame.max()) / FRAME_RATE,
+            "at_t_on": {int(i): (r.x, r.y) for i, r in at_t_on.iterrows()},
             "evacuated": result.agents_evacuated,
             "remaining": result.agents_remaining,
             "total": result.total_agents,
@@ -387,3 +443,159 @@ def test_hard_allocation_keeps_the_occupant_below_the_anchor(rerouting):
     assert seen["assigned"] == [MAIN]
     assert seen["final"] == [MAIN]
     assert not run["switches"]
+
+
+def _group(run: dict, agent: int) -> str:
+    """Where a main-allocated agent stands at the first frame at or after t_on."""
+    x, y = run["at_t_on"][agent]
+    x0, y0, x1, y1 = SMOKE_BOX
+    if not x0 <= x <= x1 or y < y0:
+        return "before"
+    return "inside" if y <= y1 else "past"
+
+
+def _main_agents(run: dict) -> dict[int, str]:
+    return {a: _group(run, a) for a, room in run["home"].items() if room in MAIN_ROOMS}
+
+
+def _usage(run: dict) -> dict[int, dict[str, int]]:
+    return {
+        room: {e: seen["final"].count(e) for e in (MAIN, SECONDARY)}
+        for room, seen in run["per_room"].items()
+    }
+
+
+def _reasons(run: dict) -> dict[str, int]:
+    reasons: dict[str, int] = {}
+    for row in run["switches"]:
+        reasons[row["reason"]] = reasons.get(row["reason"], 0) + 1
+    return reasons
+
+
+@pytest.fixture(scope="module")
+def smoke_runs(runs) -> dict[str, dict]:
+    return {
+        "clear": runs["on"],
+        "preference": _run(rerouting=True, smoke_anticipate=False),
+        "hard": _run(rerouting=True, mode="hard", smoke_anticipate=False),
+        "weak": _run(rerouting=True, smoke_anticipate=False, smoke_k=1.0),
+        "foresight": _run(rerouting=True, smoke_anticipate=True),
+    }
+
+
+def test_fire_variant_report(smoke_runs):
+    """Print exit usage per room with and without smoke, and the switches."""
+    for name in ("clear", "preference", "hard", "foresight"):
+        run = smoke_runs[name]
+        print(
+            f"\n{name}: evacuated {run['evacuated']}/{run['total']}, "
+            f"end {run['t_end_s']:.1f} s, switches {_reasons(run)}"
+        )
+        for room, use in _usage(run).items():
+            print(f"  room {room:2d}: main {use[MAIN]}, secondary {use[SECONDARY]}")
+        assert run["total"] == 23
+
+
+def test_smoke_in_the_passage_moves_agents_before_it_to_the_secondary_exit(
+    smoke_runs,
+):
+    """Preference allocation, ``anticipate: false``, K = 5 /m from t = 5 s.
+
+    Hand values: the passage box is 2.0 m long, so a main route entered from
+    the corridor has tau = 5 x 2.0 = 10 > tau_max = 6 and is refused; the
+    secondary route never meets the box, tau = 0. Agents north of y = 2.3 m
+    have tau = 0 on the main route and keep it. Clear-air control (seed 42):
+    at t = 5 s ten main-allocated agents are before the passage, three inside
+    it and two past it. The first pass at or after t_on switches the ten
+    within one interval (stagger and step add at most 0.03 s).
+    """
+    run = smoke_runs["preference"]
+    groups = _main_agents(run)
+    assert list(groups.values()).count("before") == 10
+    assert list(groups.values()).count("past") == 2
+    rows: dict[int, list[dict]] = {}
+    for row in run["switches"]:
+        rows.setdefault(row["agent_id"], []).append(row)
+    latest = SMOKE_ON_S + REROUTE_INTERVAL_S + SWITCH_SLACK_S
+    for agent, group in groups.items():
+        if group == "before":
+            moves = [(r["old_exit"], r["new_exit"]) for r in rows[agent]]
+            assert moves == [(MAIN, SECONDARY)]
+            assert rows[agent][0]["reason"] == "smoke_reroute"
+            assert SMOKE_ON_S <= rows[agent][0]["time_s"] <= latest
+        if group == "past":
+            assert agent not in rows
+    for room, seen in run["per_room"].items():
+        if ALLOCATION[room] == SECONDARY:
+            assert seen["final"] == [SECONDARY] * OCCUPANTS[room]
+    secondary_agents = {a for a, r in run["home"].items() if ALLOCATION[r] == SECONDARY}
+    assert not secondary_agents & set(rows)
+    assert run["evacuated"] == 23
+    assert run["remaining"] == 0
+
+
+def test_agents_inside_the_passage_take_the_cleaner_way_out(smoke_runs):
+    """An agent at height y in the box has main tau = 5 (2.3 - y) and, turning
+    back, tau = 5 (y - 0.3). It leaves the main exit when main is dirtier by
+    more than 0.6, i.e. for y < 1.255 m. Measured at t = 5 s: y = 0.78 (main
+    7.6, back 2.4) turns back; y = 1.53 (3.85 against 6.15) and y = 2.07
+    (1.15 against 8.85) go on to main.
+    """
+    run = smoke_runs["preference"]
+    switched = {r["agent_id"] for r in run["switches"]}
+    inside = [a for a, g in _main_agents(run).items() if g == "inside"]
+    assert len(inside) == 3
+    for agent in inside:
+        y = run["at_t_on"][agent][1]
+        assert (agent in switched) == (y < 1.255), f"agent {agent} at y = {y:.2f}"
+    assert all(r["new_exit"] == SECONDARY for r in run["switches"])
+
+
+def test_preference_yields_to_smoke_below_the_refusal_limit(smoke_runs):
+    """K = 1 /m: tau = 2.0 on the main route, under tau_max = 6 (not refused),
+    and 2.0 above the secondary route's 0, more than the 0.6 band
+    (tau_max x tau_deadband). The preference yields on the band alone (D4),
+    as at K = 5.
+    """
+    weak = smoke_runs["weak"]
+    groups = _main_agents(weak)
+    rows = {r["agent_id"]: r for r in weak["switches"]}
+    for agent, group in groups.items():
+        if group == "before":
+            assert rows[agent]["reason"] == "smoke_reroute"
+            assert (rows[agent]["old_exit"], rows[agent]["new_exit"]) == (
+                MAIN,
+                SECONDARY,
+            )
+        if group == "past":
+            assert agent not in rows
+    assert list(groups.values()).count("before") == 10
+    assert weak["evacuated"] == 23
+
+
+def test_hard_allocation_keeps_the_exit_through_the_smoke(smoke_runs):
+    """``"allocation": "hard"`` is the documented meaning: the route graph holds
+    only the allocated exit, so smoke cannot move anyone (D5). Measured: no
+    route row at all, not even a ``fallback``. The refused route is walked at
+    Lund f(5) = 1 - 0.057 x 5 / 0.706 = 0.596 of the free speed, which costs
+    time: the run ends later than in clear air (17.5 s against 16.0 s).
+    """
+    clear, hard = smoke_runs["clear"], smoke_runs["hard"]
+    assert hard["switches"] == []
+    assert _usage(hard) == _usage(clear)
+    for room, seen in hard["per_room"].items():
+        assert seen["assigned"] == [ALLOCATION[room]] * OCCUPANTS[room]
+        assert seen["final"] == seen["assigned"]
+    assert hard["evacuated"] == 23
+    assert hard["t_end_s"] > clear["t_end_s"]
+
+
+def test_default_anticipation_never_switches_towards_main(smoke_runs):
+    """With foresight the router sees the box at spawn: agents that would meet
+    it leave their preference at t = 0 (``allocation_preference``), the rest
+    on a later pass (``smoke_reroute``). Reported, not a timing check.
+    """
+    run = smoke_runs["foresight"]
+    assert run["evacuated"] == 23
+    assert all(r["new_exit"] == SECONDARY for r in run["switches"])
+    assert any(r["reason"] == "allocation_preference" for r in run["switches"])
