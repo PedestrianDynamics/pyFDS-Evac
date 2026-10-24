@@ -224,7 +224,10 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
             status = "ok"
 
         if global_max < 1e-9:
-            status = "✗  zero / no data"
+            clear_air = label == "Extinction K"
+            status = (
+                "present, all zero (clear air)" if clear_air else "✗  zero / no data"
+            )
 
         stats = QuantityStats(
             name=qinfo["fds_name"],
@@ -259,12 +262,16 @@ def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
         ]
         print(f"  ✗ Missing or zero: {', '.join(missing)} → FED will be negligible")
 
-    smoke_ok = any(
-        r[1].global_max > 1e-9 for r in results if r[0]["label"] == "Extinction K"
-    )
-    print(
-        f"  {'✓' if smoke_ok else '✗'} Extinction coefficient → smoke-speed model {'will' if smoke_ok else 'will NOT'} run"
-    )
+    smoke = [r[1] for r in results if r[0]["label"] == "Extinction K"]
+    if not smoke:
+        print("  ✗ Extinction coefficient → smoke-speed model will NOT run")
+    elif smoke[0].global_max > 1e-9:
+        print("  ✓ Extinction coefficient → smoke-speed model will run")
+    else:
+        print(
+            "  ✓ Extinction coefficient present, all zero → "
+            "smoke-speed model runs (clear air)"
+        )
 
     if not plot:
         return

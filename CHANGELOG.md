@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   irritant slowdown off or sped agents up. Defaults (0.3, 0.7) are
   unchanged.
 
+### Fixed
+
+- `scripts/inspect_fds.py` reports a present, all-zero extinction slice as
+  clear air and says the smoke-speed model runs, instead of marking it
+  missing (#326).
+
 ## [0.7.0] - 2026-10-23
 
 ### Upgrading
