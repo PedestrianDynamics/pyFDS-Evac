@@ -1646,6 +1646,20 @@ def _has_exit_schedule(stage_graph: "StageGraph | None") -> bool:
     )
 
 
+def _last_exit_opening_s(stage_graph: "StageGraph | None") -> float:
+    """The latest ``open_from_s`` of any exit of *stage_graph*, 0 if none."""
+    if stage_graph is None:
+        return 0.0
+    return max(
+        (
+            node.open_from_s
+            for node in stage_graph.nodes.values()
+            if node.open_from_s is not None
+        ),
+        default=0.0,
+    )
+
+
 def _check_exit_schedule(has_schedule: bool, replay_exits) -> None:
     """Reject a scheduled exit in a run that replays its exits."""
     if has_schedule and replay_exits is not None:
@@ -2126,6 +2140,7 @@ def run_scenario(
             no_known_exit_by_dist,
         )
         has_exit_schedule = _has_exit_schedule(stage_graph)
+        last_exit_opening_s = _last_exit_opening_s(stage_graph)
         _check_exit_schedule(has_exit_schedule, replay_exits)
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
@@ -2760,7 +2775,9 @@ def run_scenario(
                 stopped_deadlock = deadlock_detector.observe(
                     current_time,
                     _mobile_positions(simulation, incapacitated_agents),
+                    # A crowd may wait for an exit that has yet to open (#373).
                     held=can_spawn
+                    or current_time < last_exit_opening_s
                     or _deadlock_held(
                         simulation,
                         incapacitated_agents,

@@ -124,7 +124,8 @@ class Outcome:
     inside or flow agents not yet spawned (#139, #444), or when it empties
     after its flow windows closed with agents not spawned (#742), or when
     every agent able to move has left and only incapacitated ones remain
-    (#141). Incapacitated agents stay inside, so they are among the agents
+    (#141), or when every mobile agent stood still over the deadlock window
+    (#760). Incapacitated agents stay inside, so they are among the agents
     that remain; the incapacitated count is shown on its own
     (:func:`incapacitated_text`).
     """
