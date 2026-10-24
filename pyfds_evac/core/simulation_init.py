@@ -1843,6 +1843,7 @@ def _initialize_with_fallback(
                     "stage_type": "exit",
                     "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
                     **_exit_schedule(exit_id, exit_data),
+                    "signed": exit_data.get("sign") is not False,
                 }
 
     if not exits:
@@ -1875,6 +1876,7 @@ def _initialize_with_fallback(
             "enable_throughput_throttling": enable_throttling,
             "max_throughput": cp_data.get("max_throughput", 1.0),
             "stage_type": "checkpoint",
+            "signed": cp_data.get("sign") is not False,
         }
 
     # Geometry-only speed zones are applied at runtime and are not journey stages.
@@ -2468,6 +2470,7 @@ def _add_stages(
             "ds_stage_id": ds_stage,
             "enable_throughput_throttling": enable_throttling,
             "max_throughput": cp_data.get("max_throughput", 1.0),
+            "signed": cp_data.get("sign") is not False,
         }
         stage_map[cp_id] = ds_stage
         print(
@@ -2525,6 +2528,7 @@ def _add_stages(
             "stage_type": "exit",
             "capacity_agents_per_s": exit_data.get("capacity_agents_per_s"),
             **_exit_schedule(exit_id, exit_data),
+            "signed": exit_data.get("sign") is not False,
         }
 
     for dist_id, dist_data in data.get("distributions", {}).items():

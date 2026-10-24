@@ -6,8 +6,10 @@ the tau limit reports ``tau ...``. When every route is refused, a route the
 agent must flee orders behind every route it need not flee.
 
 Star of ``test_rerouting_golden``: west arm 20 m, east arm 40 m, gate,
-1 m/s, current exit west. Hand values: a lethal arm doses 6 FED/min, so 20 s
-on the west arm in clear air is FED 2.0 > 1.0. tau is K_ave times the length;
+1 m/s, current exit west. Hand values: a lethal arm doses 6 FED/min, read at
+the 11 points of the 20 m west leg (the hub point is clear air, 10 of 11 are
+on the arm), so the mean rate is 6 x 10/11 and 20 s on the west arm in clear
+air is FED 6 x 10/11 x 20/60 = 20/11 = 1.82 > 1.0. tau is K_ave times the length;
 the hub sample is clear air, so K_ave is 20/21 of the arm value on the east
 arm and 10/11 on the west arm: east at K 0.2 has tau 40 x 0.2 x 20/21 = 7.62,
 over the rival budget 6 x 0.8 = 4.8.
@@ -79,7 +81,7 @@ def test_lethal_current_in_clear_air_is_left():
     smoke = golden.ArmField({"east": 0.2})
     assert _decide(smoke, LETHAL_WEST) == ("east", "fallback")
     routes = _ranked(smoke, LETHAL_WEST)
-    assert routes["west"].fed_max_route == pytest.approx(2.0)
+    assert routes["west"].fed_max_route == pytest.approx(20 / 11)
     assert routes["west"].violation_kinds == ("fed",)
     assert routes["east"].tau_route == pytest.approx(40 * 0.2 * 20 / 21)
     assert routes["east"].violation_kinds == ("tau",)
@@ -112,7 +114,7 @@ def test_promoted_route_keeps_its_hazard():
     west = routes["west"]
     assert list(routes) == ["west", "east"]
     assert west.rejected
-    assert west.rejection_reason == "fallback: FED_max 2.000 > 1.000"
+    assert west.rejection_reason == "fallback: FED_max 1.818 > 1.000"
     assert west.violation_kinds == ("fed",)
     assert _must_flee_rejection(west, golden._gate())
     assert routes["east"].violation_kinds == ("fed", "tau")
@@ -258,12 +260,18 @@ def test_alternating_lethal_dose_switches_every_tick():
     limit 0.9. Each tick the agent flees its current exit, back onto the one
     it left a second ago. This pins the behaviour
     the contract asks for; it is not a damping guarantee.
+
+    The leg dose is the mean rate over the leg's points, 10/11 of the arm
+    rate on the west leg and 20/21 on the east leg (the hub point is clear),
+    so the arm rates are the dose-giving rates divided by those fractions:
+    west 3.0 x 11/10 = 3.3, 2.5 x 11/10 = 2.75; east 1.2 x 21/20 = 1.26,
+    1.5 x 21/20 = 1.575. The predicted doses below are unchanged.
     """
     smoke = golden.ArmField({"west": 0.5, "east": 0.25})
     # Predicted FED: west 1.04, east 0.82 / west 0.87, east 1.02.
     doses = (
-        golden.ArmFed({"west": 3.0, "east": 1.2}),
-        golden.ArmFed({"west": 2.5, "east": 1.5}),
+        golden.ArmFed({"west": 3.3, "east": 1.26}),
+        golden.ArmFed({"west": 2.75, "east": 1.575}),
     )
     config = RerouteConfig(cost_config=golden._gate())
     graph = golden._star2()

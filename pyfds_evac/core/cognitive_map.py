@@ -197,6 +197,63 @@ def _learn_edge(cmap: AgentCognitiveMap, graph, source: str, target: str) -> Non
         cmap.known_edges.add((target, source))
 
 
+def _signed(graph, node_id: str) -> bool:
+    """Whether *node_id* has a sign; an unsigned node is never seen (#376)."""
+    node = graph.nodes.get(node_id)
+    return node is None or node.signed
+
+
+def _signed_targets(graph, node_id: str) -> list[str]:
+    return [e.target for e in graph.edges.get(node_id, []) if _signed(graph, e.target)]
+
+
+def reaches_signed_exit(graph, start: str) -> bool:
+    """Whether an exit can be learnt from *start* by sight or contact (#376).
+
+    Follows only signed nodes: an unsigned one is never revealed, so nothing
+    behind it is reached until an agent stands on it.
+    """
+    exits = set(graph.exit_nodes())
+    seen = {start}
+    frontier = [start]
+    while frontier:
+        fresh = [t for t in _signed_targets(graph, frontier.pop()) if t not in seen]
+        if exits.intersection(fresh):
+            return True
+        seen.update(fresh)
+        frontier.extend(fresh)
+    return False
+
+
+def _must_discover_an_exit(params: dict, mode: str) -> bool:
+    """Whether agents with *params* start with no exit and nothing leads them."""
+    return (
+        mode != DEFAULT_NO_KNOWN_EXIT
+        and params.get("entrance") is None
+        and familiarity_probability(params.get("familiarity", "full")) == 0.0
+    )
+
+
+def stranded_distributions(graph, raw) -> list[str]:
+    """Distributions whose agents can learn no exit by sight or contact (#376).
+
+    Such an agent knows no exit and, under an opt-in ``no_known_exit`` mode,
+    has no default route to follow: when every way out runs through an unsigned
+    node it stands in the spawn area for the whole run.
+    """
+    modes = distribution_no_known_exit(raw)
+    stranded = []
+    for dist_id, dist in (raw.get("distributions") or {}).items():
+        params = parameters_as_dict(dist.get("parameters")) or {}
+        if dist_id not in graph.nodes or not _must_discover_an_exit(
+            params, modes[dist_id]
+        ):
+            continue
+        if not reaches_signed_exit(graph, dist_id):
+            stranded.append(dist_id)
+    return stranded
+
+
 def _has_edge(graph, source: str, target: str) -> bool:
     return any(edge.target == target for edge in graph.edges.get(source, []))
 
@@ -240,6 +297,8 @@ def expand_on_arrival(
     (ax, ay) -- the same gate perception uses in :func:`_expand_visible`.
     Without one there is no evidence either way, and every neighbour is
     revealed so an unperceiving agent can still progress hop by hop.
+    An unsigned neighbour (``"sign": false``) is skipped either way, so nothing
+    behind an unsigned node is learnt until the agent stands on it.
     """
     if cmap.familiarity == "full":
         return
@@ -247,6 +306,8 @@ def expand_on_arrival(
     cmap.visited_nodes.add(arrived_node)
     _learn_walked_leg(cmap, graph, from_node, arrived_node)
     for edge in graph.edges.get(arrived_node, []):
+        if not _signed(graph, edge.target):
+            continue
         if (
             vis_model is not None
             and ax is not None
@@ -294,13 +355,17 @@ def _expand_visible(
     of the building's exits at t=0 and make ``familiarity`` inert in every run
     without a visibility cache. Perception is not the only way a map grows --
     :func:`expand_on_arrival` still reveals visible neighbours on physical
-    arrival (and, without a visibility model, all of them), so an agent is
-    never stranded by this.
+    arrival (and, without a visibility model, all of them), so an agent that
+    walks on is not stranded by this.  An unsigned neighbour (``"sign":
+    false``) is skipped, and an agent whose only way out runs through one
+    stays stranded (see :func:`stranded_distributions`).
     """
     if vis_model is None:
         return
     for edge in graph.edges.get(node_id, []):
         tgt = edge.target
+        if not _signed(graph, tgt):
+            continue
         if vis_model.node_is_visible(time_s, ax, ay, tgt):
             cmap.known_nodes.add(tgt)
             _learn_edge(cmap, graph, edge.source, edge.target)

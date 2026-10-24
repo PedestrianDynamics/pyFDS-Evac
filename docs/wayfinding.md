@@ -38,14 +38,15 @@ The argument of the section is that **route choice can only choose among
 routes the agent knows, so what the agent knows is as much part of the model
 as how it prices smoke**. An agent starts with what its familiarity gives it.
 After that, its map grows only through legible signs, or, with
-`--no-visibility`, through every neighbour of the nodes it advances from.
+`--no-visibility`, through every neighbour of the nodes it advances from, except an unsigned one.
 
 ## 1. A sign is more than a position
 
 A node is a place. A sign tells someone standing elsewhere that the place
 exists. Every exit, checkpoint and waypoint therefore carries a sign
 descriptor \(\{x, y, \alpha_s, C\}\), authored or synthesised
-(`visibility.py`, `_default_sign`, `extract_sign_descriptors`).
+(`visibility.py`, `_default_sign`, `extract_sign_descriptors`), unless
+its `sign` is `false`.
 
 pyFDS-Evac does not compute legibility itself. It hands the descriptors to
 [fdsvismap](https://github.com/FireDynamics/fdsvismap), the implementation of
@@ -415,7 +416,7 @@ Do not quote a discovery egress time without its grid.
 
 The talk also shows discovery with and without sign gating on the NIST floor
 plan of The Station (`assets/station_fahy`). With `--no-visibility`, advancing
-from a node teaches every neighbour. With a visibility model, only neighbours
+from a node teaches every neighbour except an unsigned one. With a visibility model, only neighbours
 with legible signs are learned, so walls and bearings cut the known set even
 in clear air. The talk's counts (8 of 11 and 3 of 11 nodes) were not
 reproduced for this page.

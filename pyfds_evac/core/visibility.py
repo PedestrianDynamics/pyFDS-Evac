@@ -71,11 +71,14 @@ def extract_sign_descriptors(raw_config: dict) -> dict[str, dict]:
     """Return {node_id: {x, y, alpha, c}} for every exit, crossing and waypoint.
 
     Nodes with an authored 'sign' keep it verbatim; the rest get a default so
-    that no routable stage escapes smoke-dependent legibility.
+    that no routable stage escapes smoke-dependent legibility.  ``"sign":
+    false`` gives the node no sign (#376).
     """
     descriptors: dict[str, dict] = {}
     for section in ("exits", "checkpoints", "waypoints"):
         for node_id, data in raw_config.get(section, {}).items():
+            if data.get("sign") is False:
+                continue
             sign = data.get("sign") or _default_sign(data)
             if sign is not None:
                 descriptors[node_id] = sign

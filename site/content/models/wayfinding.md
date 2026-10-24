@@ -63,13 +63,23 @@ These words are used with one meaning each, here and on the linked pages.
 
 ### 1. The sign-legibility test
 
-Every exit, checkpoint and waypoint carries a sign (`visibility.py`, `extract_sign_descriptors`). A
+Every exit, checkpoint and waypoint carries a sign unless it says `"sign": false` (`visibility.py`, `extract_sign_descriptors`). A
 non-empty authored `"sign"` is used as written and must give `x` and `y`. A
 node without one, or with an empty one, receives a synthesised sign at its
 routing point with \(C = 3\) and \(\alpha_s\) = `None` (`visibility.py`, `_default_sign`).
 A node whose polygon cannot give a position gets no sign. Spawn areas carry no
-sign. The model treats every node without a sign as legible from everywhere
-(`visibility.py`, `VisibilityModel.node_is_visible`).
+sign. The model treats such a node as legible from everywhere
+(`visibility.py`, `VisibilityModel.node_is_visible`); a `"sign": false` node
+is the opposite case, described next.
+
+`"sign": false` gives an exit, checkpoint or waypoint no sign at all, and the
+cognitive map then never reveals it by sight or by reaching a neighbouring
+node, with or without a visibility model (#376). A discovery agent knows such
+an exit only through `"full"` familiarity, the familiarity draw or the
+distribution's `entrance`; `null` or a missing `sign` keeps the default sign.
+Under the default `no_known_exit` mode `"default_route"` an agent still walks
+its default route, which may end at an unsigned exit; `"explore"` avoids that
+unless the unsigned node is the only way out of the spawn area. See [Scenario JSON](/docs/scenario-json.md#signs-sign).
 
 ```json
 "exits": {
@@ -642,9 +652,11 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   not modelled ([#78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78)).
   The opt-in modes are mechanisms, not validated behaviour: we found no
   published data on how occupants explore unknown space.
-- **FED of node-to-node legs.** Each leg after the first takes its FED
-  growth from one FED-rate sample at the polyline midpoint. The first leg's
-  dose, including a walk behind the route's origin node, is charged as
+- **FED of node-to-node legs.** Each leg after the first is charged the mean
+  FED rate along it, sampled every `sampling_step_m` (extinction on an FDS
+  field is read per grid cell instead)
+  ([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)). The
+  first leg's dose, including a walk behind the route's origin node, is charged as
   [Routing](/models/routing.md#limitations) describes
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), fixed
   in 0.5.0). Anticipated times are

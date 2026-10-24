@@ -1687,8 +1687,8 @@ class TestPolylineSampling:
         assert cost.k_avg == pytest.approx(6.7, abs=1.0)
         assert cost.k_avg > 4.0  # definitely not zero (centroid-ray result)
 
-    def test_polyline_midpoint_used_for_fed(self):
-        """FED rate is sampled at polyline midpoint, not centroid midpoint."""
+    def test_polyline_mean_rate_used_for_fed(self):
+        """FED rate is averaged along the polyline, not read at its midpoint."""
         from pyfds_evac.core.route_graph import (
             RouteCostConfig,
             StageEdge,
@@ -1704,10 +1704,9 @@ class TestPolylineSampling:
                 return 1.0 if y >= 9.0 else 0.0
 
         # Centroid midpoint: (5, 0) → FED rate = 0
-        # Polyline midpoint of (0,0)->(0,10)->(10,10)->(10,0) is at arc-half
-        # Total arc = 10+10+10 = 30, half = 15.
-        # Arc 0→10 along first segment: at arc=10 we're at (0,10).
-        # Remaining 5 → midpoint is (5, 10), y=10 ≥ 9 → FED rate = 1.
+        # Polyline midpoint of (0,0)->(0,10)->(10,10)->(10,0) is (5, 10),
+        # y=10 ≥ 9 → FED rate = 1, so a midpoint sample would charge 1.0/min.
+        # Only part of the 30 m path is at y ≥ 9, so the mean rate is lower.
         src = StageNode(
             stage_id="A", centroid_x=0.0, centroid_y=0.0, stage_type="distribution"
         )
@@ -1730,7 +1729,8 @@ class TestPolylineSampling:
             fed_rate_sampler=FedAtY10(),
             config=RouteCostConfig(sampling_step_m=1.0),
         )
-        assert cost.fed_growth > 0.0  # polyline midpoint is in high-FED zone
+        midpoint_growth = 1.0 * cost.travel_time_s / 60.0
+        assert 0.0 < cost.fed_growth < midpoint_growth
 
 
 # ── Phase 4: Dynamic Dijkstra with smoke-adjusted weights ────────────────

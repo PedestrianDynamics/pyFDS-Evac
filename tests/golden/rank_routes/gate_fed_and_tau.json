@@ -23,7 +23,7 @@
    "composite_cost": 20.0,
    "exit_id": "west",
    "feasible": false,
-   "fed_max_route": 1.5841,
+   "fed_max_route": 1.4583,
    "k_leg_max": 0.4545,
    "k_max_route": 0.5,
    "path": [

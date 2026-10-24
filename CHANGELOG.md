@@ -31,9 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   from the 900 s limit with 74 agents left to `deadlock` at 270 s, and
   `assets/station_fahy` from the 600 s limit with 1 agent left to `deadlock`
   at 145 s.
+- Route costs that weigh FED now charge each node-to-node leg the mean FED
+  rate along it instead of the rate at its midpoint (#725). Runs with a FED
+  field can choose other routes than 0.7.0. No option restores the old rule.
 
 ### Added
 
+- `"sign": false` on an exit, checkpoint or waypoint: the node has no sign
+  and a discovery agent never learns it by sight (#376). Under the default
+  `no_known_exit` mode `default_route`, an agent that knows no exit still
+  walks its default route; under `explore`, `return` or `stay`, a run warns
+  when a spawn area with no entrance and no familiarity can learn no exit.
 - `metrics["deadlock"]` and the manifest `outcome["deadlock"]` (`agents`,
   `since_s`, `positions`), and the `deadlock` wording on the CLI line and
   the GUI/TUI label (#760).

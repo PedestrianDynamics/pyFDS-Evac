@@ -74,6 +74,8 @@ class StageNode:
     # on either side leaves that side unbounded.
     open_from_s: float | None = None
     closed_after_s: float | None = None
+    # False for a node whose scenario entry says "sign": false (#376).
+    signed: bool = True
 
     def is_open(self, time_s: float) -> bool:
         """Whether the stage accepts agents at *time_s*."""
@@ -182,6 +184,7 @@ class StageGraph:
                 capacity_agents_per_s=info.get("capacity_agents_per_s"),
                 open_from_s=info.get("open_from_s"),
                 closed_after_s=info.get("closed_after_s"),
+                signed=info.get("signed", True),
             )
 
         # Add edges from transitions.
@@ -1064,7 +1067,7 @@ class RouteCostConfig:
     # Spacing of route smoke samples [m] for a field without a grid
     # (constant K, test fields) and where a route leaves the FDS slice. An
     # FDS field is read once per grid cell instead (#653), and the FED rate
-    # of the walk dose (#171) every sampling_step_m.
+    # of the walk dose (#171) and of a leg dose (#725) every sampling_step_m.
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
     # The router's copy of the Lund speed law, used only to estimate travel
@@ -1577,7 +1580,8 @@ def evaluate_segment(
     is charged is the smoke it will meet rather than the smoke standing there
     while it decides. Defaults to *time_s*, which is the no-foresight answer.
     With a *clock*, each extinction sample is read when the agent reaches it
-    instead (#650); the FED rate stays one sample at *arrival_time_s*.
+    instead (#650). The FED rate is averaged along the same geometry and at
+    the same times as the extinction, every ``sampling_step_m`` (#725).
     """
     if arrival_time_s is None:
         arrival_time_s = time_s
@@ -1611,13 +1615,16 @@ def evaluate_segment(
 
     fed_growth = 0.0
     if fed_rate_sampler is not None:
-        if waypoints and len(waypoints) >= 2:
-            mid_x, mid_y = _polyline_midpoint(waypoints)
-        else:
-            mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
-            mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
-        fed_rate = fed_rate_sampler.sample_fed_rate(arrival_time_s, mid_x, mid_y)
-        fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE
+        _, fed_rate, _ = _sample_segment_extinction(
+            src_node,
+            tgt_node,
+            arrival_time_s,
+            _FedRateAsExtinction(fed_rate_sampler),
+            config.sampling_step_m,
+            waypoints=waypoints,
+            clock=clock,
+        )
+        fed_growth = _dose(fed_rate, travel_time)
 
     visible = k_avg < config.visibility_extinction_threshold
 

@@ -124,9 +124,12 @@ the following steps:
 3. Estimate the travel time from the segment length and reduced
    speed.
 4. Optionally, estimate the FED growth along the segment from the
-   FED rate at the polyline midpoint (by arc length) and the
-   estimated travel time. (Active only when a `fed_model` is
-   provided; otherwise `fed_rate_sampler` is `None`.)
+   mean FED rate along the polyline, sampled every `sampling_step_m`
+   (extinction on an FDS field is read per grid cell instead), and the
+   estimated travel time
+   ([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)).
+   (Active only when a `fed_model` is provided; otherwise
+   `fed_rate_sampler` is `None`.)
 
 ### Line-of-sight extinction
 
@@ -151,7 +154,11 @@ sigma_bar = sum(L_s * K_bar_s) / sum(L_s)
 
 so the result approximates the line integral of K divided by the edge
 length and does not depend on where the polyline has its vertices.
-Zero-length segments carry no weight. The worst sample over all
+Zero-length segments carry no weight. The FED rate of a leg
+([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)) does
+not use the per-cell reading: it is sampled every `sampling_step_m`, so a
+plume narrower than the step can show in the extinction and not in the dose.
+The worst sample over all
 segments is kept as `k_max`. This is the discrete form of the Beer-Lambert
 path-integrated mean of
 [Boerger et al. (2024)](https://doi.org/10.1016/j.firesaf.2024.104269),
@@ -178,8 +185,12 @@ agent position it starts at the route's first node. Every leg is sampled
 this way, so the cost does not jump when the agent passes a node (#650;
 reading each edge at its start did, since the first leg starts where the
 agent stands). The sample positions are those of the decision-time
-measurement; only their times differ. The FED rate of an edge stays one
-sample, at its midpoint, read at `t` of the edge's start.
+measurement; only their times differ. The FED rate of an edge is read
+every `sampling_step_m` (not per grid cell, see
+[Line-of-sight extinction](#line-of-sight-extinction)) at the same arrival
+times as its extinction, so the leg is charged the mean rate the agent will
+meet along it
+([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)).
 
 The unimpeded `base_speed_m_per_s` is used, not the smoke-reduced speed.
 `foresight_horizon_s` defaults to infinity. A time past the earliest last

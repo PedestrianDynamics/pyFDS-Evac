@@ -157,6 +157,17 @@ def integrated_intensity_slice_missing(fds_dir: str) -> str:
     )
 
 
+def unsigned_exits_only(dist_id: str) -> str:
+    """#376: a discovery spawn area whose every way out is unsigned."""
+    return (
+        f"Distribution {dist_id!r} can learn no exit by sight or contact: every "
+        'way out runs through a node with "sign": false. Its agents know no '
+        "exit and, under their no_known_exit mode, follow no default route, so "
+        "they stay where they spawned. Give the node a sign, or use the default "
+        "no_known_exit 'default_route'."
+    )
+
+
 def no_known_exit_needs_rerouting(dist_id: str, mode: str, smoke_blind: bool) -> str:
     """D33: an opt-in no_known_exit mode in a run without a reroute pass."""
     prefix = f"Distribution {dist_id!r} sets no_known_exit {mode!r}, which"
