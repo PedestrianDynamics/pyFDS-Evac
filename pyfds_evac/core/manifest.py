@@ -157,18 +157,26 @@ def _fed_config(config: Any) -> dict[str, Any]:
     }
 
 
-def _slice_heights(model: Any) -> dict[str, Any]:
-    """``slice_heights_m`` for the FDS slices *model*'s field reads, else empty.
-
-    Samplers without a slice (constant or synthetic fields) are left out.
-    """
-    samplers = getattr(getattr(model, "field", None), "samplers", None)
+def _field_heights(field: Any, suffix: str = "") -> dict[str, float]:
+    samplers = getattr(field, "samplers", None)
     if samplers is None:
         return {}
-    heights = {
-        sampler.quantity: sampler.slice_z_m
+    return {
+        sampler.quantity + suffix: sampler.slice_z_m
         for sampler in samplers()
         if hasattr(sampler, "slice_z_m")
+    }
+
+
+def _slice_heights(model: Any) -> dict[str, Any]:
+    """``slice_heights_m`` for the FDS slices *model*'s fields read, else empty.
+
+    Samplers without a slice (constant or synthetic fields) are left out. The
+    heat layer regime's second TEMPERATURE slice is keyed ``TEMPERATURE (layer)``.
+    """
+    heights = {
+        **_field_heights(getattr(model, "field", None)),
+        **_field_heights(getattr(model, "layer_field", None), " (layer)"),
     }
     return {"slice_heights_m": heights} if heights else {}
 

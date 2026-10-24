@@ -422,7 +422,7 @@ class SliceFieldSampler:
     @property
     def slice_z_m(self) -> float:
         """Height of the slice this sampler reads [m], as the run manifest records it."""
-        return _slice_z_mid(self._slice)
+        return self.z_m
 
     def grid(self, x_centres, y_centres) -> SliceGrid:
         """A reader of this slice on a regular grid; see :class:`SliceGrid`."""

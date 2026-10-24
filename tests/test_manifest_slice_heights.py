@@ -127,3 +127,28 @@ def test_heat_with_integrated_intensity_records_both_slices():
         "TEMPERATURE": pytest.approx(1.6),
         "INTEGRATED INTENSITY": pytest.approx(1.6),
     }
+
+
+def test_heat_layer_regime_records_the_layer_slice():
+    settings = _settings(
+        "--scenario",
+        "assets/fed_incap_heat_150c",
+        "--fds-dir",
+        "assets/heat_integrated_intensity/fds",
+        "--enable-heat-fed",
+        "--heat-fed-method",
+        "total-flux",
+        "--heat-regime",
+        "layer",
+        "--heat-layer-height",
+        "0.4",
+        "--heat-view-factor",
+        "0.5",
+        "--heat-layer-emissivity",
+        "0.9",
+        "--allow-fds-horizon-hold",
+    )
+    assert settings["heat_fed"]["slice_heights_m"] == {
+        "TEMPERATURE": pytest.approx(1.6),
+        "TEMPERATURE (layer)": pytest.approx(0.4),
+    }
