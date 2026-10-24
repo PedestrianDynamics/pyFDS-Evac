@@ -58,13 +58,17 @@ def _rank_case(case: golden.RankCase) -> tuple[dict, list[str]]:
 def test_route_fed_is_the_rate_times_the_walk_in_minutes():
     """``additive_fed_refuses``: west arm FED rate 4.0 /min, current FED 0.2.
 
-    FED on a route = current FED + rate x walk time / 60 (rate per minute,
-    time in seconds); composite cost = length + w_fed x route FED.
-    West: 0.2 + 4.0 x 20 / 60 = 1.5333, cost 20 + 10 x 1.5333 = 35.3333.
+    FED on a route = current FED + mean rate x walk time / 60 (rate per
+    minute, time in seconds); composite cost = length + w_fed x route FED.
+    The mean rate is the plain mean of the samples on the leg: a 20 m leg
+    at the default 2 m step is read at 11 points, x = 0, -2, ..., -20. The
+    point at x = 0 lies in the spawn area (no rate); the other 10 are on
+    the west arm. Mean rate = 4.0 x 10 / 11 = 3.6364.
+    West: 0.2 + 3.6364 x 20 / 60 = 1.4121, cost 20 + 10 x 1.4121 = 34.1212.
     East has no FED rate: 0.2, cost 40 + 10 x 0.2 = 42.0.
     """
     routes, _ = _rank("additive_fed_refuses")
-    west_fed = 0.2 + 4.0 * WEST_M / 60.0
+    west_fed = 0.2 + 4.0 * (10 / 11) * WEST_M / 60.0
     assert routes["west"].fed_max_route == pytest.approx(west_fed, abs=FLOAT)
     assert routes["west"].composite_cost == pytest.approx(
         WEST_M + W_FED * west_fed, abs=FLOAT
@@ -78,10 +82,13 @@ def test_route_fed_is_the_rate_times_the_walk_in_minutes():
 def test_fed_on_both_arms_scales_with_each_walk():
     """``additive_fed_fallback``: both arms at 4.0 /min, current FED 0.2.
 
-    East: 0.2 + 4.0 x 40 / 60 = 2.8667, cost 40 + 10 x 2.8667 = 68.6667.
+    A 40 m leg at the 2 m step is read at 21 points, x = 0, 2, ..., 40; the
+    point at x = 0 is in the spawn area, the other 20 on the east arm, so
+    the mean rate is 4.0 x 20 / 21 = 3.8095.
+    East: 0.2 + 3.8095 x 40 / 60 = 2.7397, cost 40 + 10 x 2.7397 = 67.3968.
     """
     routes, _ = _rank("additive_fed_fallback")
-    east_fed = 0.2 + 4.0 * EAST_M / 60.0
+    east_fed = 0.2 + 4.0 * (20 / 21) * EAST_M / 60.0
     assert routes["east"].fed_max_route == pytest.approx(east_fed, abs=FLOAT)
     assert routes["east"].composite_cost == pytest.approx(
         EAST_M + W_FED * east_fed, abs=FLOAT
@@ -136,9 +143,10 @@ def test_fed_and_queue_scale_with_speed_and_weights():
     """Star, v0 = 1.3 m/s, ``w_fed = 2``, ``w_queue = 3``, west FED rate
     4.0 /min, current FED 0.2, 40 agents at west.
 
-    West walk: 20 / 1.3 = 15.3846 s, so FED = 0.2 + 4.0 x 15.3846 / 60 =
-    1.2256. Queue: 40 / 1.3 = 30.7692 s, priced as 3 x 1.3 x 30.7692 = 120 m.
-    Composite: 20 + 2 x 1.2256 + 120 = 142.4513.
+    West walk: 20 / 1.3 = 15.3846 s, and the mean rate over the 11 points of
+    the leg is 4.0 x 10 / 11 = 3.6364 (the point at x = 0 is in the spawn
+    area), so FED = 0.2 + 3.6364 x 15.3846 / 60 = 1.1324. Queue: 40 / 1.3 = 30.7692 s, priced as 3 x 1.3 x 30.7692 = 120 m.
+    Composite: 20 + 2 x 1.1324 + 120 = 142.2648.
     """
     case = golden.RankCase(
         golden._star2,
@@ -148,7 +156,7 @@ def test_fed_and_queue_scale_with_speed_and_weights():
         exit_counts={"west": 40, "east": 0},
     )
     routes, _ = _rank_case(case)
-    west_fed = 0.2 + 4.0 * (WEST_M / 1.3) / 60.0
+    west_fed = 0.2 + 4.0 * (10 / 11) * (WEST_M / 1.3) / 60.0
     queue_s = 40 / 1.3
     assert routes["west"].fed_max_route == pytest.approx(west_fed, abs=FLOAT)
     assert routes["west"].queue_time_s == pytest.approx(queue_s, abs=FLOAT)
