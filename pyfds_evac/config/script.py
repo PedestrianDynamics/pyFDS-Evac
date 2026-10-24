@@ -147,6 +147,7 @@ def _body(
         "    reason = {",
         '        "flows_closed": "flow windows closed",',
         '        "all_mobile_left": "all mobile agents left",',
+        '        "deadlock": "deadlock",',
         '    }.get(result.end_reason, "time limit reached")',
         "    print(",
         '        f"Simulation incomplete: {reason} after "',

@@ -310,7 +310,9 @@ def build_manifest(
     slices (``rows``, ``agents``, ``agent_seconds``), recorded with it.
     ``outcome`` is how the run ended: ``status`` (``"completed"`` or
     ``"incomplete"``), ``end_reason`` (``"all_evacuated"``, ``"time_limit"``,
-    ``"flows_closed"`` or ``"all_mobile_left"``), ``agents_remaining`` and ``agents_not_spawned``.
+    ``"flows_closed"``, ``"all_mobile_left"`` or ``"deadlock"``),
+    ``agents_remaining`` and ``agents_not_spawned``, and ``deadlock``
+    (``agents``, ``since_s``, ``positions``) when the run stopped as a deadlock.
     ``sfm`` is what a SocialForceModel run gave JuPedSim: ``body_force``,
     ``friction``, ``friction_requested`` and ``friction_clamped``
     (``scenario.sfm_model_settings``), recorded for that model only.
