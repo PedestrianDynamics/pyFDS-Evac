@@ -634,8 +634,9 @@ def check_fic_alpha(value: object) -> None:
 def check_fic_min_factor(value: object) -> None:
     """Raise ValueError unless ``fic_min_factor`` is a finite number in (0, 1].
 
-    A floor of 0 lets the irritant factor reach 0, and it then stays there
-    while FIC is 0 (#142); a floor above 1 speeds agents up in irritant smoke.
+    A floor of 0 lets the irritant factor reach 0 and stop an agent without
+    marking it incapacitated; a floor above 1 speeds agents up in irritant
+    smoke.
     """
     if not _is_real(value) or not 0 < value <= 1:  # type: ignore[operator]
         raise ValueError(
