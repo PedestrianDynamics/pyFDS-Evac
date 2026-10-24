@@ -336,13 +336,12 @@ Both differences make the coded rule milder, except at very low FIC:
   `fic_min_factor` of 0.3, \(g\) floors at 0.3, so the agent walks on at 0.3
   of its smoke-reduced speed. FIC never marks an agent incapacitated;
   irritants count toward incapacitation only through \(FLD_{irr}\) inside
-  the gas FED. With `--fic-min-factor 0`, \(g\) reaches 0 at
-  FIC = 1/`fic_alpha` (about 1.43), but the agent is still not marked
-  incapacitated ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398)).
-  \(g\) is recomputed only while FIC is above 0: the agent walks on once
-  FIC falls but stays above 0, and if FIC returns to exactly 0 the factor
-  of 0 stays in force and the agent stands still for the rest of the run
-  without being counted as incapacitated
+  the gas FED ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398)).
+  A floor of 0, which would let \(g\) reach 0 and stop an agent without
+  marking it incapacitated, is rejected
+  ([#404](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/404)).
+  \(g\) is recomputed only while FIC is above 0: if FIC returns to exactly
+  0 the last factor stays in force for the rest of the run
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 
 Because the Frantzich–Nilsson smoke contained
