@@ -245,6 +245,16 @@ computes it
   from primate and human data (p. 2361). That range is not documented for the
   exponential term; that the term is an extrapolation below 80 ppm is our
   inference ([#159](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/159)).
+- **NO₂ counted twice.** NO₂ enters both \(\dot{\mathrm{FED}}_{\mathrm{NO_x}}\)
+  and \(\dot{\mathrm{FLD}}_{\mathrm{irr}}\), as in the FDS+Evac guide
+  (Eqs. 16 and 17) and the `FED` function of FDS 6.7.6 `func.f90`. pyFDS-Evac
+  keeps this form so that its gas FED matches FDS+Evac, and offers no option to
+  drop either term. Whether Purser's scheme means NO₂ to appear in both terms
+  of one incapacitation sum is not established
+  ([#400](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/400)). In a
+  deck that writes NO₂, its share of the gas FED rate is therefore
+  \(C_{\mathrm{NO_2}}(1/1500 + 1/1900)\,\mathrm{HV}_{\mathrm{CO_2}}\) per
+  minute, 1.8 times the NOₓ term alone and 2.3 times the irritant term alone.
 - **CO₂.** Eq. 63.34 (`fed.py`, `_hyperventilation_factor`), not its simplification Eq. 63.35 used in
   Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
   the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.
