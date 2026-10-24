@@ -461,9 +461,11 @@ times to one decimal:
 - "Incomplete: flow windows closed, *m* not spawned, simulated time *t* s, …";
 - "Incomplete: all mobile agents left, *j* incapacitated inside[, *m* not
   spawned], simulated time *t* s, …";
+- "Incomplete: deadlock, *k* agents stuck[, *m* not spawned], simulated time
+  *t* s, …";
 - failed, cancelled, or not recorded.
 
-In the first four, "…" is "*j* incapacitated" when the run modelled
+In the first five, "…" is "*j* incapacitated" when the run modelled
 incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.

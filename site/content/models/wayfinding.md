@@ -705,7 +705,10 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   #250). That test bounds the rate. Under `CollisionFreeSpeedModel` the
   deck does not deadlock
   ([Movement models](/models/movement.md#deadlock-behaviour)).
-  Since #760 such a run stops when the whole crowd has stood still for 100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in `metrics["deadlock"]`, instead of running to `max_simulation_time`. The jam itself is not cleared.
+  Since #760 such a run stops when the whole crowd has stood still for
+  100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in
+  `metrics["deadlock"]`, instead of running to `max_simulation_time`. The
+  jam itself is not cleared.
   `familiarity_test_no_journey` with 5 agents at seed 23 ends `deadlock` at
   136 s (2 agents stuck since t = 36 s); with 20 agents, seeds 3, 12, 13
   and 14 end `deadlock` between 152 s and 161 s (`8e513ea1`).

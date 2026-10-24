@@ -33,14 +33,15 @@ area that sets no pre-movement key gets a constant 10 s, as [FDS+Evac](https://g
 pre-movement, so its exit times are travel times only.
 
 A run that stops at its time limit with agents still inside has no RSET, and
-more seeds do not supply one, since every seed stops at the same limit;
+more seeds do not supply one, because a run that does not finish has no RSET;
 [A crowd in a fire](first-fds-case.md#aset-rset) is such a run.
 
 ## Why not `result.evacuation_time`?
 
 - `result.evacuation_time` is the time at which the simulation loop stopped.
   The loop stops when no agent is left and no flow source can still spawn,
-  when only incapacitated agents are left, or at `max_simulation_time`. An
+  when only incapacitated agents are left, when every mobile agent has stood
+  still for 100 s (`deadlock`), or at `max_simulation_time`. An
   incapacitated agent stays in the simulation, so with one incapacitation
   `evacuation_time` is the time the last mobile agent left or, if none
   remain mobile, the time of the last collapse

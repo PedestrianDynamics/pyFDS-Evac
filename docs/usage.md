@@ -364,7 +364,7 @@ The tracked FDS output of the T-junction fire is not in the repository; run
 | Status | Meaning |
 |---|---|
 | 0 | the run completed: every agent entered and left |
-| 2 | the run is incomplete: it reached `max_simulation_time` with agents inside or flow agents still to enter, the building emptied after its flow windows closed with flow agents not spawned, or it ended with only incapacitated agents inside; all requested outputs are written |
+| 2 | the run is incomplete: it reached `max_simulation_time` with agents inside or flow agents still to enter, the building emptied after its flow windows closed with flow agents not spawned, it ended with only incapacitated agents inside, or every mobile agent stood still for 100 s and the run stopped as a deadlock; all requested outputs are written |
 | 1 | an error; the run did not finish |
 
 Both runs above exit with status 2. A script that runs `run.py` under

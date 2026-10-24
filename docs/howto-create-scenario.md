@@ -306,7 +306,8 @@ Three checks, from weakest to strongest:
    A run in which not every agent left ends with
    `Simulation incomplete: time limit reached …` or
    `Simulation incomplete: flow windows closed …` or
-   `Simulation incomplete: all mobile agents left …` and exit status 2
+   `Simulation incomplete: all mobile agents left …` or
+   `Simulation incomplete: deadlock …` and exit status 2
    (`EXIT_INCOMPLETE` in `pyfds_evac/cli.py`). With `max_simulation_time`
    set to 30 in the copy above:
 

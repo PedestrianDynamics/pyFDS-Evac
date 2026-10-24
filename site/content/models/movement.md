@@ -155,11 +155,15 @@ A deck that names it stops with a `ValueError`.
 
 **At run time.** `pyfds_evac/core/deadlock.py` applies the study's
 definition during a run: the thresholds are the same, 0.03 m of net
-displacement over 100 s. The run-time rule differs in one point: it needs
-*every* counted agent to be still, not "at least two", so a working
-bottleneck with a few agents creeping through never fires it. The run then
-stops with `end_reason` `"deadlock"`; pyFDS-Evac reports the jam and does not
-clear it. See [Reading the results](/docs/outputs.md#reading-the-results).
+displacement over 100 s. The run-time rule is stricter: it needs *every*
+counted agent to be still, not "at least two", so a working bottleneck with
+a few agents creeping through never fires it. It also holds back while any
+agent is held by design (pre-movement, a waiting stage, a desired speed of
+0, a flow source that can still spawn, an exit yet to open), and it stops the
+run while it is under way instead of judging the end state. The counts of
+runs that end `deadlock` are therefore not comparable with the study's
+counts. The run then stops with `end_reason` `"deadlock"`; pyFDS-Evac reports
+the jam and does not clear it. See [Reading the results](/docs/outputs.md#reading-the-results).
 
 ## Coded mapping
 

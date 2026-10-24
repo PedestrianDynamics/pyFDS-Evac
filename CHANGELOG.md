@@ -27,7 +27,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   for 100 s, with `end_reason` `"deadlock"`, still incomplete (exit 2).
   Before, it ran to `max_simulation_time`. `evacuation_time` of such a run
   is now the detection time. The rule is fixed and has no option (#760,
-  #706, #359, #745).
+  #706, #359, #745). Two shipped decks change outcome: `assets/Haspel` goes
+  from the 900 s limit with 74 agents left to `deadlock` at 270 s, and
+  `assets/station_fahy` from the 600 s limit with 1 agent left to `deadlock`
+  at 145 s.
 
 ### Added
 
