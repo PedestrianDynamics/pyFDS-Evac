@@ -38,7 +38,7 @@ FDS slice nearest `--smoke-slice-height`: 1.6 m by default, the `HUMAN_SMOKE_HEI
 [FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source). This
 holds for extinction, the gas species, temperature and, when selected,
 `INTEGRATED INTENSITY`. The height is an absolute z in the FDS domain, not
-a height above each floor. If the nearest slice is more than 0.5 m away,
+a height above each floor. If the nearest slice is more than 0.2 m away,
 the run logs a warning and carries on at that slice's height, so check the
 slice elevations in your case ([FDS slice sampling](/docs/fds-sampling.md)).
 A deck with slices only at 2.0 m is read at 2.0 m without a warning, and the

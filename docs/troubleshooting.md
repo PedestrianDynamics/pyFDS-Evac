@@ -66,7 +66,7 @@ Each message, its cause and its fix are in
 | `Heat FED is disabled for DIR: it has no TEMPERATURE slice.` | `--enable-heat-fed` on a case without temperature. | Add `&SLCF QUANTITY='TEMPERATURE'`. |
 | `Smoke speed reduction is disabled for DIR: …` | No extinction slice; agents walk at clear-air speed. | Add the `SOOT EXTINCTION COEFFICIENT` slice, or pass `--constant-extinction`. |
 | `Visibility falls back to clear air for DIR: …` | No extinction slice for sign legibility. | As above. |
-| `Requested a '…' slice at z=… m but the nearest available … is at z=… m` | No slice within 0.5 m of `--smoke-slice-height`; the run reads another height. | Add slices at 1.6 m, or set `--smoke-slice-height` to a height the deck has. A slice within 0.5 m is used without a warning ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)). |
+| `Requested a '…' slice at z=… m but the nearest available … is at z=… m` | No slice within 0.2 m of `--smoke-slice-height`; the run reads another height. The warning appears once per quantity. | Add slices at 1.6 m, or set `--smoke-slice-height` to a height the deck has. A slice within 0.2 m is used without a warning ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)). |
 | `--heat-… has no effect without --enable-heat-fed.` | A heat option without the heat dose. | Add `--enable-heat-fed`, or drop the option. |
 | `--heat-fed-threshold … departs from ISO 13571:2012 …` | A separate heat threshold is set. | Intended if you set it; the manifest records it. |
 | `Distribution '…' sets no pre-movement; using the FDS+Evac default, a constant 10 s.` | The spawn area has no pre-movement keys. | Set `use_premovement` and the `premovement_*` keys ([Scenario JSON](scenario-json.md)). |

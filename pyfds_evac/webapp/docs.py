@@ -227,7 +227,7 @@ def model_docs() -> Any:
                     "Walking speed, route smoke and the gas and heat doses read "
                     "the horizontal FDS slice nearest the slice height, an absolute "
                     "z in the FDS domain, not a height above each floor. If the "
-                    "nearest slice is more than 0.5 m away, the run logs a warning "
+                    "nearest slice is more than 0.2 m away, the run logs a warning "
                     "and carries on at that slice's height."
                 ),
             ],

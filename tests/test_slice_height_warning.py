@@ -65,6 +65,23 @@ def test_another_quantity_still_warns(caplog):
     assert len(caplog.records) == 2
 
 
+def test_two_spellings_of_one_directory_count_once(caplog):
+    with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
+        with fds_sampling.height_warnings_once():
+            _select(2.0, 1.6, fds_dir="d")
+            _select(2.0, 1.6, fds_dir="./d")
+    assert len(caplog.records) == 1
+
+
+def test_another_height_or_directory_still_warns(caplog):
+    with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
+        with fds_sampling.height_warnings_once():
+            _select(2.0, 1.6)
+            _select(2.0, 1.2)
+            _select(2.0, 1.6, fds_dir="e")
+    assert len(caplog.records) == 3
+
+
 def test_the_memory_ends_with_the_context(caplog):
     with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
         with fds_sampling.height_warnings_once():
@@ -90,6 +107,11 @@ def test_the_text_has_one_source(caplog):
     with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
         _select(2.0, 1.6)
     assert caplog.messages == [messages.slice_height_mismatch("q", 1.6, "d", 2.0, 2)]
+    caplog.clear()
+    with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
+        chosen = fds_sampling.select_horizontal_slice([_at(2.0, "a")], 1.6, "q", "d")
+    assert chosen.name == "a"
+    assert caplog.messages == [messages.slice_height_mismatch("q", 1.6, "d", 2.0, 1)]
 
 
 def test_the_prediction_lists_each_gas_and_extinction_warning_once(caplog):

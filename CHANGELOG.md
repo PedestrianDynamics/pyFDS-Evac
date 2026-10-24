@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Route costs that weigh FED now charge each node-to-node leg the mean FED
   rate along it instead of the rate at its midpoint (#725). Runs with a FED
   field can choose other routes than 0.7.0. No option restores the old rule.
+- The slice-height warning now fires when the slice read lies more than
+  0.2 m from `--smoke-slice-height` (was 0.5 m). A deck with only 2.0 m
+  slices warns at the default 1.6 m, once per quantity;
+  `pyfds-evac-init --check` marks those slices `!`. Add slices at 1.6 m or
+  pass `--smoke-slice-height 2.0`
+  ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 
 ### Added
 

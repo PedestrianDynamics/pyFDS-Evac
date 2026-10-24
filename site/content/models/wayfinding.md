@@ -162,7 +162,7 @@ Script: `scripts/figures/sign_rotation.py`.*
   from the FDS output. The `SOOT EXTINCTION COEFFICIENT` slice is the
   horizontal one nearest `--smoke-slice-height` (1.6 m by default since #164,
   `config/parameters.py`, `SMOKE_SLICE_HEIGHT_M`), chosen by the same rule as walking speed and
-  FED, with a warning when it is more than 0.5 m away (`fds_sampling.py`,
+  FED, with a warning when it is more than 0.2 m away (`fds_sampling.py`,
   `select_horizontal_slice`). Stored times are spaced by `--reroute-interval`
   and end at the last frame of the extinction slice, which is always stored
   (`visibility.py`, `_build_vismap`; `run_config.py`, `_build_vis_model`).
