@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   into the results directory, not the FDS directory (#313).
 - docs: every heat flag warns when `--enable-heat-fed` is missing, with or
   without `--fds-dir`; a test pins it (#325).
+- The irritant slowdown (`--enable-fic-speed`) now ends when the sampled
+  FIC falls to zero; before, an agent leaving an irritant plume into clean
+  air kept its last slowdown (#142).
 
 ## [0.7.0] - 2026-10-23
 

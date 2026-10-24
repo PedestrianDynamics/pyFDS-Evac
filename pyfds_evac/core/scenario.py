@@ -3411,7 +3411,6 @@ def run_scenario(
                             elif (
                                 fed_model is not None
                                 and tenability_config.enable_fic_speed
-                                and fic_value > 0.0
                             ):
                                 fic_speed_factor = max(
                                     float(tenability_config.fic_min_factor),

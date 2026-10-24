@@ -90,8 +90,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   `fic_alpha` must be finite and at least 0, and `fic_min_factor` finite and in
   (0, 1]; `TenabilityConfig` and the CLI reject other values
   ([#404](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/404)).
-  When FIC is exactly 0 the last factor stays in force
-  ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
+  When FIC falls to exactly 0 the factor returns to 1.
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
   agent's threshold for that dose, its desired speed is set to zero and it
   remains as a static obstacle. The speed is never restored (pre-movement,
@@ -340,9 +339,8 @@ Both differences make the coded rule milder, except at very low FIC:
   A floor of 0, which would let \(g\) reach 0 and stop an agent without
   marking it incapacitated, is rejected
   ([#404](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/404)).
-  \(g\) is recomputed only while FIC is above 0: if FIC returns to exactly
-  0 the last factor stays in force for the rest of the run
-  ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
+  \(g\) is recomputed at every FED update, so when FIC returns to exactly 0
+  the factor returns to 1.
 
 Because the Frantzich–Nilsson smoke contained
 acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
