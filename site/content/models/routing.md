@@ -138,7 +138,9 @@ to the next node included, is read at the time the agent would reach it,
 walk from the agent's position to the sample along the path and the speed is
 unimpeded. `tau`, travel time and projected FED are measured from those
 samples (`_measure_route`, `_ForesightClock`). The FED rate of each edge is
-one sample, at its midpoint, read when the agent reaches the edge's start.
+read at the same samples and times as its extinction, so the leg is charged
+the mean rate the agent will meet along it
+([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)).
 Reading the whole edge at its start instead made the cost of a route jump
 when the agent passed a node
 ([#650](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/650)). A
@@ -581,8 +583,7 @@ Exit throughput throttling has no general test yet
   carry a higher `tau` on arrival than another path to the same exit.
 - The search never offers "walk back to the origin node, then on". When that
   is the only way round the smoke, the direct walk is priced on its own smoke.
-- Node-to-node legs take their FED growth from one FED-rate sample at the
-  polyline midpoint. The first leg is charged by its own rule
+- The first leg is charged by its own rule
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171)): an
   agent on or ahead of the origin node is charged the share of the first
   segment's FED growth that is left of it; an agent behind it is charged the

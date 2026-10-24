@@ -642,8 +642,9 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   not modelled ([#78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78)).
   The opt-in modes are mechanisms, not validated behaviour: we found no
   published data on how occupants explore unknown space.
-- **FED of node-to-node legs.** Each leg after the first takes its FED
-  growth from one FED-rate sample at the polyline midpoint. The first leg's
+- **FED of node-to-node legs.** Each leg after the first is charged the mean
+  FED rate along it, sampled where its extinction is
+  ([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)). The first leg's
   dose, including a walk behind the route's origin node, is charged as
   [Routing](/models/routing.md#limitations) describes
   ([#171](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/171), fixed
