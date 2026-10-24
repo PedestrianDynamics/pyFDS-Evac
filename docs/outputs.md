@@ -250,7 +250,8 @@ Four things to keep in mind:
   such an agent starts to move; it also waits while a flow source can still
   spawn agents or an exit has yet to open. A crowd that stands still with
   nothing left to wait for, such as one whose only reachable exit has
-  closed, is reported the same way.
+  closed or whose `max_throughput` lets an agent through less often than
+  every 100 s, is reported the same way.
   `evacuation_time` is the detection time, not an egress time, and
   `metrics["deadlock"]` and the manifest `outcome["deadlock"]` list the
   stuck agents' count, the start of the window (`since_s`) and their

@@ -304,7 +304,7 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 ## Known defects
 
 - **Crowds deadlock at doors and narrow gaps**
-  ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706), planned for 0.6.0). With the default
+  ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706)). With the default
   collision-free speed model, a crowd can stop in front of an opening
   several body widths wide and never clear it, so the run reaches
   `max_simulation_time` with agents inside. Imported FDS+Evac decks such
@@ -315,8 +315,14 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   `WarpDriverModel` all 13, with the closest pair of agents within
   0.9 × 2r in 3 of them
   ([Movement models](/models/movement.md#deadlock-behaviour)).
+  Since #760 such a run stops when the whole crowd has stood still for 100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in `metrics["deadlock"]`, instead of running to `max_simulation_time`. The jam itself is not cleared.
+  `HUT_Library` at 0.15 m ends `deadlock` in seeds 2 and 6 of seeds 1–8
+  (seed 2: 40 agents stuck since t = 139 s, stopped at 239 s with 80 of 120
+  evacuated; seed 6: 26 agents stuck since t = 135 s, stopped at 235 s with
+  94 of 120 evacuated) and finishes in the other six
+  (`8e513ea1`).
 - **Doorway deadlocks of exploring agents**
-  ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359), planned for 0.6.0). Under `no_known_exit: explore`, and
+  ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)). Under `no_known_exit: explore`, and
   `return` when it explores, two agents that meet head-on in a door, or
   four jammed at a checkpoint, can stand there for the rest of the run. On `familiarity_test_no_journey`,
   a deck that uses `SocialForceModel`
@@ -328,8 +334,12 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   `CollisionFreeSpeedModel` the same deck does not deadlock: 0 of 150 and
   0 of 60 runs at `47cfeec5`
   ([Movement models](/models/movement.md#deadlock-behaviour)).
+  Since #760 such a run stops when the whole crowd has stood still for 100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in `metrics["deadlock"]`, instead of running to `max_simulation_time`. The jam itself is not cleared.
+  `familiarity_test_no_journey` with 5 agents at seed 23 ends `deadlock` at
+  136 s (2 agents stuck since t = 36 s); with 20 agents, seeds 3, 12, 13
+  and 14 end `deadlock` between 152 s and 161 s (`8e513ea1`).
 - **Dense counterflow can lock**
-  ([#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745), planned for 0.6.0). In dense head-on counterflow under the
+  ([#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745)). In dense head-on counterflow under the
   default `CollisionFreeSpeedModel`, the two streams can meet and stand
   for the rest of the run. jupedsim-web-community (`82404ee`) publishes
   two such cases, each under two names: Iso-06-counterflow-50 and
@@ -349,6 +359,15 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   The jam is head-on contact in JuPedSim's operational model;
   pyFDS-Evac has no dedicated counterflow algorithm
   ([Model comparison](model-comparison.md#1-movement-model)).
+  On the current commit that patch makes each group take its nearest exit,
+  so there is no counterflow and Iso-06-counterflow-50 finishes 150 of 150
+  in 23.0–23.4 s (seeds 1–3). The reproduction keeps the deck's two
+  journeys with the transitions #504 requires and `"allocation": "hard"`.
+  Since #760 such a run stops when the whole crowd has stood still for 100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in `metrics["deadlock"]`, instead of running to `max_simulation_time`. The jam itself is not cleared.
+  Iso-06-counterflow-50 so configured ends `deadlock` in seeds 1–3:
+  149 agents stuck since t = 89 s (stopped at 189 s, 1 of 150 evacuated),
+  150 stuck since t = 97 s (197 s, none evacuated) and 150 stuck since
+  t = 150 s (250 s, none evacuated) (`8e513ea1`).
 - **Re-evaluation at most once per second** ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
   `run_scenario` runs the reroute pass at most once per simulated second, so
   a `reevaluation_interval_s` (`--reroute-interval`) below 1 s acts as 1 s.
