@@ -158,8 +158,8 @@ by default, as FDS+Evac has none. The equations are on
 |------|---------|---------|
 | `--disable-tenability` | off | Turn off the FIC slowdown and both incapacitation checks. FED and heat FED are still accumulated and written. |
 | `--enable-fic-speed` | off | Turn the FIC slowdown on. |
-| `--fic-alpha F` | 0.7 | Slope of `v/v₀ = max(μ, 1 − α·FIC)`; needs `--enable-fic-speed`. |
-| `--fic-min-factor F` | 0.3 | Floor `μ`; needs `--enable-fic-speed`. |
+| `--fic-alpha F` | 0.7 | Slope of `v/v₀ = max(μ, 1 − α·FIC)`; finite, ≥ 0; needs `--enable-fic-speed`. |
+| `--fic-min-factor F` | 0.3 | Floor `μ`, in (0, 1]; needs `--enable-fic-speed`. |
 | `--fed-threshold F` | 1.0 | FED at which agents are incapacitated, as FDS+Evac; in probabilistic mode the median of the per-agent threshold. |
 | `--o2-threshold-percent P` | 20.0 % | O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default. |
 | `--incapacitation-mode MODE` | `deterministic` | `deterministic` or `probabilistic`. `deterministic`: every agent stops at `--fed-threshold`, as FDS+Evac. `probabilistic`: each agent draws a log-normal threshold with median `--fed-threshold`. |
