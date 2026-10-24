@@ -74,6 +74,8 @@ class StageNode:
     # on either side leaves that side unbounded.
     open_from_s: float | None = None
     closed_after_s: float | None = None
+    # False for a node whose scenario entry says "sign": false (#376).
+    signed: bool = True
 
     def is_open(self, time_s: float) -> bool:
         """Whether the stage accepts agents at *time_s*."""
@@ -182,6 +184,7 @@ class StageGraph:
                 capacity_agents_per_s=info.get("capacity_agents_per_s"),
                 open_from_s=info.get("open_from_s"),
                 closed_after_s=info.get("closed_after_s"),
+                signed=info.get("signed", True),
             )
 
         # Add edges from transitions.

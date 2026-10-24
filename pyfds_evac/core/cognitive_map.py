@@ -197,6 +197,12 @@ def _learn_edge(cmap: AgentCognitiveMap, graph, source: str, target: str) -> Non
         cmap.known_edges.add((target, source))
 
 
+def _signed(graph, node_id: str) -> bool:
+    """Whether *node_id* has a sign; an unsigned node is never seen (#376)."""
+    node = graph.nodes.get(node_id)
+    return node is None or node.signed
+
+
 def _has_edge(graph, source: str, target: str) -> bool:
     return any(edge.target == target for edge in graph.edges.get(source, []))
 
@@ -240,6 +246,7 @@ def expand_on_arrival(
     (ax, ay) -- the same gate perception uses in :func:`_expand_visible`.
     Without one there is no evidence either way, and every neighbour is
     revealed so an unperceiving agent can still progress hop by hop.
+    An unsigned neighbour (``"sign": false``) is skipped either way.
     """
     if cmap.familiarity == "full":
         return
@@ -247,6 +254,8 @@ def expand_on_arrival(
     cmap.visited_nodes.add(arrived_node)
     _learn_walked_leg(cmap, graph, from_node, arrived_node)
     for edge in graph.edges.get(arrived_node, []):
+        if not _signed(graph, edge.target):
+            continue
         if (
             vis_model is not None
             and ax is not None
@@ -295,12 +304,15 @@ def _expand_visible(
     without a visibility cache. Perception is not the only way a map grows --
     :func:`expand_on_arrival` still reveals visible neighbours on physical
     arrival (and, without a visibility model, all of them), so an agent is
-    never stranded by this.
+    never stranded by this.  An unsigned neighbour (``"sign": false``) is
+    skipped.
     """
     if vis_model is None:
         return
     for edge in graph.edges.get(node_id, []):
         tgt = edge.target
+        if not _signed(graph, tgt):
+            continue
         if vis_model.node_is_visible(time_s, ax, ay, tgt):
             cmap.known_nodes.add(tgt)
             _learn_edge(cmap, graph, edge.source, edge.target)
