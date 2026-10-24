@@ -11,7 +11,8 @@ that learned the exit mid-leg (fixed alongside this file; see
 ``TestRerouteAgent.test_reroute_clears_stale_choices_at_new_terminal``).
 
 A small share of runs never finishes: two agents meet head-on in a doorway,
-or four jam at CP1, and stand there for the rest of the run (#359). An
+or four jam at CP1, and stand there until the run stops them as a
+deadlock (#359, #760). An
 exploring agent with nothing left to explore used to patrol, and its patrol
 broke such stands up; since it looks from the node point first (#250), the
 stand is permanent. The model fix is #359's. Until then the module bounds
@@ -98,7 +99,10 @@ def test_discovery_agents_find_the_exit_but_for_deadlocks(
 ):
     """Every run ends complete or in a #359 deadlock, and deadlocks are rare.
 
-    Measured at c619a046 (0.5.0) with these settings: 5 agents deadlock in
+    Measured at e8e3109d (2026-10-24) with these settings: 5 agents deadlock
+    in 1 of seeds 1-30 (seed 23), 20 agents in 4 of seeds 1-20 (3, 12, 13,
+    14). Since #760 such a run stops with ``end_reason`` ``"deadlock"`` 100 s
+    after its agents stood still. At c619a046 (0.5.0) 5 agents deadlocked in
     3 of seeds 1-150 (2.0 %), 20 agents in 7 of seeds 1-60 (11.7 %); at #250,
     5 of 150 and 5 of 60; before #250, 3 of 150 and 0 of 60. Each bound is
     the smallest k with P(X > k) <= 1 % at the #250 rate, binomial over the
@@ -115,10 +119,11 @@ def test_discovery_agents_find_the_exit_but_for_deadlocks(
         try:
             assert result.total_agents == n_agents, seed
             left = n_agents - result.agents_evacuated
-            assert left <= MOST_LEFT_IN_A_DEADLOCK, (seed, left)
-            if left:
+            if result.end_reason == "deadlock":
+                assert 0 < left <= MOST_LEFT_IN_A_DEADLOCK, (seed, left)
                 deadlocked.append(seed)
             else:
+                assert left == 0, (seed, result.end_reason, left)
                 assert 0.0 < result.evacuation_time < max_time_s, seed
         finally:
             result.cleanup()
