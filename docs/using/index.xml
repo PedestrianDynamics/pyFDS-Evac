@@ -1055,7 +1055,7 @@ else shapely&amp;rsquo;s &lt;code>representative_point()&lt;/code>. The node poi
 path from JuPedSim&amp;rsquo;s routing engine. If the node point is off the
 navigation mesh, the edge falls back to a straight ray and its cost ignores
 walls;&lt;/li>
-&lt;li>the position of the default sign of a checkpoint without a &lt;code>sign&lt;/code>: omni-directional, &lt;em>c&lt;/em> = 3
+&lt;li>the position of the default sign of a checkpoint without a &lt;code>sign&lt;/code> (none with &lt;code>&amp;quot;sign&amp;quot;: false&lt;/code>): omni-directional, &lt;em>c&lt;/em> = 3
 (&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>). An authored &lt;code>sign&lt;/code> keeps its own &lt;code>x, y&lt;/code>
 (&lt;code>extract_sign_descriptors&lt;/code>), so visibility is then computed at the sign;&lt;/li>
 &lt;li>the point an exploring agent walks to and looks from before it patrols on
@@ -4001,7 +4001,7 @@ it starts at its full clear-air speed.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>sign&lt;/code>&lt;/td>
 &lt;td>an omni-directional sign at the exit&amp;rsquo;s centre, &lt;code>c&lt;/code> = 3&lt;/td>
-&lt;td>The sign agents read; keys below.&lt;/td>
+&lt;td>The sign agents read; keys below. &lt;code>false&lt;/code>: no sign.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -4053,6 +4053,21 @@ journeys). Without a schedule nothing changes.&lt;/p>
 &lt;a href="#signs-sign" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Exits, checkpoints and waypoints can carry a &lt;code>sign&lt;/code>. A node without one gets
 an omni-directional sign at its position with &lt;code>c&lt;/code> = 3, so every exit is
 subject to smoke-dependent legibility.&lt;/p>
+&lt;p>&lt;code>&amp;quot;sign&amp;quot;: false&lt;/code> gives the node no sign, for an exit nobody can see from the
+room, the case the Station validation needs (Fahy); &lt;code>assets/station_fahy&lt;/code>
+does not set it yet. A discovery agent
+then never learns that exit or checkpoint by sight or by reaching a
+neighbouring node, with or without a visibility model; it knows it only
+through &lt;code>&amp;quot;full&amp;quot;&lt;/code> familiarity, the familiarity draw or the distribution&amp;rsquo;s
+&lt;code>entrance&lt;/code> (#376). An agent that arrives on the node while walking a route it
+knew learns it as before. &lt;code>null&lt;/code> or no &lt;code>sign&lt;/code> keeps the default sign, and
+&lt;code>false&lt;/code> is the only boolean value that is read (&lt;code>true&lt;/code> is not valid). An agent
+that knows no exit under the default &lt;code>no_known_exit&lt;/code> mode &lt;code>&amp;quot;default_route&amp;quot;&lt;/code>
+still walks its default route, which may end at an unsigned exit; &lt;code>&amp;quot;explore&amp;quot;&lt;/code>
+avoids that. If every way out of a spawn area runs through unsigned nodes, its
+&lt;code>explore&lt;/code>, &lt;code>return&lt;/code> and &lt;code>stay&lt;/code> agents that have no &lt;code>entrance&lt;/code> and no
+familiarity can learn no exit and stay where they
+spawned; the run warns once per such distribution.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -7547,7 +7562,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/045e86d256dc76d3248a4320c424b6ebf0876520">&lt;code>045e86d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/cb8bb086e422302ff759eaec61e3877817045385">&lt;code>cb8bb08&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7571,7 +7586,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9fb04e3f760d240f7937eff70d21826745d20edb65fc4741e9a80b3bb6030dbf&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a0c317602263e173fdf22546c78d4fb622672a2b8b64a4310475a8246eb2fb1f&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

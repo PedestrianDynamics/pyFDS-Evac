@@ -353,12 +353,13 @@ verify that the implementation does what this page says.&lt;/p>
 routes the agent knows, so what the agent knows is as much part of the model
 as how it prices smoke&lt;/strong>. An agent starts with what its familiarity gives it.
 After that, its map grows only through legible signs, or, with
-&lt;code>--no-visibility&lt;/code>, through every neighbour of the nodes it advances from.&lt;/p>
+&lt;code>--no-visibility&lt;/code>, through every neighbour of the nodes it advances from, except an unsigned one.&lt;/p>
 &lt;h2>1. A sign is more than a position&lt;span class="hx-absolute -hx-mt-20" id="1-a-sign-is-more-than-a-position">&lt;/span>
 &lt;a href="#1-a-sign-is-more-than-a-position" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A node is a place. A sign tells someone standing elsewhere that the place
 exists. Every exit, checkpoint and waypoint therefore carries a sign
 descriptor \(\{x, y, \alpha_s, C\}\), authored or synthesised
-(&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>, &lt;code>extract_sign_descriptors&lt;/code>).&lt;/p>
+(&lt;code>visibility.py&lt;/code>, &lt;code>_default_sign&lt;/code>, &lt;code>extract_sign_descriptors&lt;/code>), unless
+its &lt;code>sign&lt;/code> is &lt;code>false&lt;/code>.&lt;/p>
 &lt;p>pyFDS-Evac does not compute legibility itself. It hands the descriptors to
 &lt;a href="https://github.com/FireDynamics/fdsvismap" target="_blank" rel="noopener">fdsvismap&lt;/a>, the implementation of
 the waypoint method of Börger, Belt and Arnold (2024). fdsvismap precomputes,
@@ -770,7 +771,7 @@ deadlocks end 12 of these 120 runs, against 4 before
 Do not quote a discovery egress time without its grid.&lt;/p>
 &lt;p>The talk also shows discovery with and without sign gating on the NIST floor
 plan of The Station (&lt;code>assets/station_fahy&lt;/code>). With &lt;code>--no-visibility&lt;/code>, advancing
-from a node teaches every neighbour. With a visibility model, only neighbours
+from a node teaches every neighbour except an unsigned one. With a visibility model, only neighbours
 with legible signs are learned, so walls and bearings cut the known set even
 in clear air. The talk&amp;rsquo;s counts (8 of 11 and 3 of 11 nodes) were not
 reproduced for this page.&lt;/p>

@@ -116,9 +116,12 @@ linear speed law, using the router&amp;rsquo;s own &lt;code>alpha&lt;/code>, &lt
 &lt;li>Estimate the travel time from the segment length and reduced
 speed.&lt;/li>
 &lt;li>Optionally, estimate the FED growth along the segment from the
-FED rate at the polyline midpoint (by arc length) and the
-estimated travel time. (Active only when a &lt;code>fed_model&lt;/code> is
-provided; otherwise &lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>.)&lt;/li>
+mean FED rate along the polyline, sampled every &lt;code>sampling_step_m&lt;/code>
+(extinction on an FDS field is read per grid cell instead), and the
+estimated travel time
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725" target="_blank" rel="noopener">#725&lt;/a>).
+(Active only when a &lt;code>fed_model&lt;/code> is provided; otherwise
+&lt;code>fed_rate_sampler&lt;/code> is &lt;code>None&lt;/code>.)&lt;/li>
 &lt;/ol>
 &lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
 &lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The mean extinction along an edge is computed from its polyline. On an
@@ -148,7 +151,11 @@ title="Copy code"
 &lt;/div>
 &lt;p>so the result approximates the line integral of K divided by the edge
 length and does not depend on where the polyline has its vertices.
-Zero-length segments carry no weight. The worst sample over all
+Zero-length segments carry no weight. The FED rate of a leg
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725" target="_blank" rel="noopener">#725&lt;/a>) does
+not use the per-cell reading: it is sampled every &lt;code>sampling_step_m&lt;/code>, so a
+plume narrower than the step can show in the extinction and not in the dose.
+The worst sample over all
 segments is kept as &lt;code>k_max&lt;/code>. This is the discrete form of the Beer-Lambert
 path-integrated mean of
 &lt;a href="https://doi.org/10.1016/j.firesaf.2024.104269" target="_blank" rel="noopener">Boerger et al. (2024)&lt;/a>,
@@ -179,8 +186,12 @@ agent position it starts at the route&amp;rsquo;s first node. Every leg is sampl
 this way, so the cost does not jump when the agent passes a node (#650;
 reading each edge at its start did, since the first leg starts where the
 agent stands). The sample positions are those of the decision-time
-measurement; only their times differ. The FED rate of an edge stays one
-sample, at its midpoint, read at &lt;code>t&lt;/code> of the edge&amp;rsquo;s start.&lt;/p>
+measurement; only their times differ. The FED rate of an edge is read
+every &lt;code>sampling_step_m&lt;/code> (not per grid cell, see
+&lt;a href="#line-of-sight-extinction">Line-of-sight extinction&lt;/a>) at the same arrival
+times as its extinction, so the leg is charged the mean rate the agent will
+meet along it
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725" target="_blank" rel="noopener">#725&lt;/a>).&lt;/p>
 &lt;p>The unimpeded &lt;code>base_speed_m_per_s&lt;/code> is used, not the smoke-reduced speed.
 &lt;code>foresight_horizon_s&lt;/code> defaults to infinity. A time past the earliest last
 frame of the extinction and FED slices routing reads is held at that frame,
