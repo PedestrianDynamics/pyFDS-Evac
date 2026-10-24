@@ -1577,7 +1577,8 @@ def evaluate_segment(
     is charged is the smoke it will meet rather than the smoke standing there
     while it decides. Defaults to *time_s*, which is the no-foresight answer.
     With a *clock*, each extinction sample is read when the agent reaches it
-    instead (#650); the FED rate stays one sample at *arrival_time_s*.
+    instead (#650). The FED rate is averaged along the leg at the same points
+    and times as the extinction (#725).
     """
     if arrival_time_s is None:
         arrival_time_s = time_s
@@ -1611,13 +1612,16 @@ def evaluate_segment(
 
     fed_growth = 0.0
     if fed_rate_sampler is not None:
-        if waypoints and len(waypoints) >= 2:
-            mid_x, mid_y = _polyline_midpoint(waypoints)
-        else:
-            mid_x = (src_node.centroid_x + tgt_node.centroid_x) / 2
-            mid_y = (src_node.centroid_y + tgt_node.centroid_y) / 2
-        fed_rate = fed_rate_sampler.sample_fed_rate(arrival_time_s, mid_x, mid_y)
-        fed_growth = fed_rate * travel_time / _SECONDS_PER_MINUTE
+        _, fed_rate, _ = _sample_segment_extinction(
+            src_node,
+            tgt_node,
+            arrival_time_s,
+            _FedRateAsExtinction(fed_rate_sampler),
+            config.sampling_step_m,
+            waypoints=waypoints,
+            clock=clock,
+        )
+        fed_growth = _dose(fed_rate, travel_time)
 
     visible = k_avg < config.visibility_extinction_threshold
 
