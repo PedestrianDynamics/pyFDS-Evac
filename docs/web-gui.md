@@ -290,6 +290,10 @@ open reads "Incomplete: all mobile agents left, *j* incapacitated inside[, *m*
 not spawned]", with its end time under "Simulated time"; the Incapacitated
 tile gives *j*
 ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
+A run that stopped because every mobile agent stood still for 100 s reads
+"Incomplete: deadlock, *k* agents stuck", with its detection time under
+"Simulated time"
+([#760](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/760)).
 The Incapacitated tile is shown on every finished run; see
 [Results](#results).
 
@@ -457,9 +461,11 @@ times to one decimal:
 - "Incomplete: flow windows closed, *m* not spawned, simulated time *t* s, …";
 - "Incomplete: all mobile agents left, *j* incapacitated inside[, *m* not
   spawned], simulated time *t* s, …";
+- "Incomplete: deadlock, *k* agents stuck[, *m* not spawned], simulated time
+  *t* s, …";
 - failed, cancelled, or not recorded.
 
-In the first four, "…" is "*j* incapacitated" when the run modelled
+In the first five, "…" is "*j* incapacitated" when the run modelled
 incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.

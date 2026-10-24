@@ -77,6 +77,7 @@ from .cognitive_map import (
     init_cognitive_map,
     no_known_exit_mode,
 )
+from .deadlock import Deadlock, DeadlockDetector
 from .direct_steering_runtime import (
     active_steering_zones,
     advance_path_target,
@@ -926,6 +927,43 @@ def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
 
 
+def _mobile_positions(
+    simulation: Any, incapacitated: set[int]
+) -> dict[int, tuple[float, float]]:
+    """Position of every agent inside that is not incapacitated (#760)."""
+    return {
+        int(agent.id): (float(agent.position[0]), float(agent.position[1]))
+        for agent in simulation.agents()
+        if int(agent.id) not in incapacitated
+    }
+
+
+def _deadlock_held(
+    simulation: Any,
+    incapacitated: set[int],
+    premovement_times: Mapping[int, dict[str, Any]],
+    agent_wait_info: Mapping[int, dict[str, Any]],
+) -> bool:
+    """Whether a mobile agent inside stands still by design and may move later.
+
+    That is an agent in pre-movement, waiting at a stage, idle (stopped by the
+    reroute pass until a decision gives it somewhere to go), or with a desired
+    speed of zero (a stationary occupant, or a speed factor of 0 in a zone).
+    Such an agent keeps the deadlock rule from firing (#760).
+    """
+    for agent in simulation.agents():
+        agent_id = int(agent.id)
+        if agent_id in incapacitated:
+            continue
+        if not premovement_times.get(agent_id, {}).get("activated", True):
+            return True
+        if agent_wait_info.get(agent_id, {}).get("state") in ("waiting", "idle"):
+            return True
+        if (get_agent_desired_speed(agent) or 0.0) <= 0.0:
+            return True
+    return False
+
+
 def _hold_incapacitated_agent(
     simulation: Any,
     agent: Any,
@@ -1103,12 +1141,15 @@ class ScenarioResult:
     @property
     def end_reason(self) -> str | None:
         """Why the run stopped: ``"all_evacuated"``, ``"time_limit"``,
-        ``"flows_closed"`` or ``"all_mobile_left"``.
+        ``"flows_closed"``, ``"all_mobile_left"`` or ``"deadlock"``.
 
         ``"flows_closed"``: the building emptied after the last flow window
         with agents still to enter had closed, before the time limit.
         ``"all_mobile_left"``: only incapacitated agents remain inside and
         no flow window is open; the run ends then, before the time limit.
+        ``"deadlock"``: every mobile agent inside stood still over the
+        deadlock window (:mod:`pyfds_evac.core.deadlock`); the run ends
+        then, before the time limit.
         """
         return self.metrics.get("end_reason")
 
@@ -1605,6 +1646,20 @@ def _has_exit_schedule(stage_graph: "StageGraph | None") -> bool:
     )
 
 
+def _last_exit_opening_s(stage_graph: "StageGraph | None") -> float:
+    """The latest ``open_from_s`` of any exit of *stage_graph*, 0 if none."""
+    if stage_graph is None:
+        return 0.0
+    return max(
+        (
+            node.open_from_s
+            for node in stage_graph.nodes.values()
+            if node.open_from_s is not None
+        ),
+        default=0.0,
+    )
+
+
 def _check_exit_schedule(has_schedule: bool, replay_exits) -> None:
     """Reject a scheduled exit in a run that replays its exits."""
     if has_schedule and replay_exits is not None:
@@ -2085,6 +2140,7 @@ def run_scenario(
             no_known_exit_by_dist,
         )
         has_exit_schedule = _has_exit_schedule(stage_graph)
+        last_exit_opening_s = _last_exit_opening_s(stage_graph)
         _check_exit_schedule(has_exit_schedule, replay_exits)
         # Pre-compute familiarity per distribution index. The value may be
         # "full", "discovery", or a probability in [0, 1] that each exit is
@@ -2652,6 +2708,9 @@ def run_scenario(
         last_progress_agents = simulation.agent_count()
         # Set when the building emptied with no flow window left open.
         stopped_empty = False
+        # Set when the whole crowd stood still over the deadlock window (#760).
+        deadlock_detector = DeadlockDetector()
+        stopped_deadlock: Deadlock | None = None
 
         while simulation.elapsed_time() < scenario.max_simulation_time:
             current_time = simulation.elapsed_time()
@@ -2712,6 +2771,22 @@ def run_scenario(
             if all_mobile_left:
                 stopped_all_mobile_left = True
                 break
+            if deadlock_detector.due(current_time):
+                stopped_deadlock = deadlock_detector.observe(
+                    current_time,
+                    _mobile_positions(simulation, incapacitated_agents),
+                    # A crowd may wait for an exit that has yet to open (#373).
+                    held=can_spawn
+                    or current_time < last_exit_opening_s
+                    or _deadlock_held(
+                        simulation,
+                        incapacitated_agents,
+                        premovement_times,
+                        agent_wait_info,
+                    ),
+                )
+                if stopped_deadlock is not None:
+                    break
             if has_flow_spawning:
                 current_time = simulation.elapsed_time()
 
@@ -3867,6 +3942,8 @@ def run_scenario(
             end_reason = "flows_closed"
         elif stopped_all_mobile_left:
             end_reason = "all_mobile_left"
+        elif stopped_deadlock is not None:
+            end_reason = "deadlock"
         else:
             end_reason = "time_limit"
         metrics = {
@@ -3892,6 +3969,10 @@ def run_scenario(
         # with one get the key.
         if spawning_info.get("fill_placement"):
             metrics["fill_placement"] = spawning_info["fill_placement"]
+        # The stuck agents of a run stopped by the deadlock rule (#760); only
+        # such a run gets the key.
+        if stopped_deadlock is not None:
+            metrics["deadlock"] = stopped_deadlock.to_dict()
         # Only agents that were given an exit can have taken a replayed one.
         _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:
@@ -3968,7 +4049,9 @@ def run_scenario(
                         "end_reason",
                         "agents_remaining",
                         "agents_not_spawned",
+                        "deadlock",
                     )
+                    if key in metrics
                 },
                 sfm=(
                     sfm_model_settings(scenario.sim_params)

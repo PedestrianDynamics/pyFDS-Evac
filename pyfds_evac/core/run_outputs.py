@@ -298,16 +298,29 @@ def _ending(result) -> str:
         if result.agents_not_spawned
         else ""
     )
-    reason = {
-        "flows_closed": "flow windows closed",
-        "all_mobile_left": "all mobile agents left",
-    }.get(getattr(result, "end_reason", None) or "", "time limit reached")
+    reason = _stop_reason(result)
     return (
         f"Simulation incomplete: {reason} after "
         f"{result.evacuation_time:.2f} s "
         f"({result.agents_evacuated}/{result.total_agents} evacuated, "
         f"{result.agents_remaining} remaining{not_spawned})."
     )
+
+
+def _stop_reason(result) -> str:
+    """The phrase for why an incomplete run stopped."""
+    end_reason = getattr(result, "end_reason", None) or ""
+    if end_reason == "deadlock":
+        deadlock = (getattr(result, "metrics", None) or {}).get("deadlock") or {}
+        stuck = deadlock.get("agents", 0)
+        agents = "1 agent" if stuck == 1 else f"{stuck} agents"
+        return (
+            f"deadlock, {agents} stuck since t = {deadlock.get('since_s', 0.0):.2f} s,"
+        )
+    return {
+        "flows_closed": "flow windows closed",
+        "all_mobile_left": "all mobile agents left",
+    }.get(end_reason, "time limit reached")
 
 
 def apply_outputs(result, scenario, opts, log=print) -> list[str]:

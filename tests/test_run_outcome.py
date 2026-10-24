@@ -292,6 +292,45 @@ def test_generated_script_words_a_run_that_ended_with_only_dead_agents_inside():
     assert '"all_mobile_left": "all mobile agents left"' in code
 
 
+def test_cli_summary_of_a_deadlocked_run():
+    import run as cli
+
+    line = cli._summary_line(
+        _result(
+            success=False,
+            evacuation_time=118.0,
+            agents_evacuated=3,
+            total_agents=5,
+            agents_remaining=2,
+            end_reason="deadlock",
+            metrics={"deadlock": {"agents": 2, "since_s": 18.0, "positions": []}},
+        )
+    )
+    assert line == (
+        "Simulation incomplete: deadlock, 2 agents stuck since t = 18.00 s, "
+        "after 118.00 s (3/5 evacuated, 2 remaining)."
+    )
+
+
+def test_run_outcome_words_a_deadlocked_run():
+    from pyfds_evac.config.frontend import run_outcome
+
+    outcome = run_outcome("incomplete", 3, 0, "deadlock", incapacitated=1)
+    assert outcome.complete is False
+    assert outcome.label == "Incomplete: deadlock, 2 agents stuck"
+    assert outcome.time_label == "Simulated time"
+    assert run_outcome("incomplete", 1, 4, "deadlock").label == (
+        "Incomplete: deadlock, 1 agent stuck, 4 not spawned"
+    )
+
+
+def test_generated_script_words_a_deadlocked_run():
+    from pyfds_evac.config.script import python_script
+
+    code = python_script({"scenario": "x.json"})
+    assert '"deadlock": "deadlock"' in code
+
+
 @pytest.mark.parametrize(
     ("max_time_s", "expected"),
     [(ENOUGH_S, 0), (TOO_SHORT_S, 2)],

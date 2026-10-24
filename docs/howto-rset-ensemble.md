@@ -33,14 +33,15 @@ area that sets no pre-movement key gets a constant 10 s, as [FDS+Evac](https://g
 pre-movement, so its exit times are travel times only.
 
 A run that stops at its time limit with agents still inside has no RSET, and
-more seeds do not supply one, since every seed stops at the same limit;
+more seeds do not supply one, because a run that does not finish has no RSET;
 [A crowd in a fire](first-fds-case.md#aset-rset) is such a run.
 
 ## Why not `result.evacuation_time`?
 
 - `result.evacuation_time` is the time at which the simulation loop stopped.
   The loop stops when no agent is left and no flow source can still spawn,
-  when only incapacitated agents are left, or at `max_simulation_time`. An
+  when only incapacitated agents are left, when every mobile agent has stood
+  still for 100 s (`deadlock`), or at `max_simulation_time`. An
   incapacitated agent stays in the simulation, so with one incapacitation
   `evacuation_time` is the time the last mobile agent left or, if none
   remain mobile, the time of the last collapse
@@ -49,10 +50,16 @@ more seeds do not supply one, since every seed stops at the same limit;
 - `result.success` is `False` and `result.status` is `"incomplete"` when the
   run reaches `max_simulation_time` with agents still inside, when the
   building empties after its flow windows closed with flow agents not spawned,
-  or when only incapacitated agents remain inside and no flow window is open
+  when only incapacitated agents remain inside and no flow window is open
   (`end_reason` `"all_mobile_left"`)
-  ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
-  None of these says when the last mobile agent left.
+  ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)), or
+  when every mobile agent inside stood still for 100 s (`end_reason`
+  `"deadlock"`, [#760](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/760)).
+  None of these says when the last mobile agent left. A deadlocked run's
+  `evacuation_time` is the time the rule fired, not an egress time and not
+  the time limit. Its stuck agents never left, so count it as a run that did
+  not finish, and do not use its time as a value censored at
+  `max_simulation_time`.
 
 Part 2 below shows both.
 

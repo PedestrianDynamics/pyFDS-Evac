@@ -294,6 +294,7 @@ The outcome comes first, in the same words as the Web GUI:
 | "Incomplete: time limit reached, *k* agents inside[, *m* not spawned]" | 2 |
 | "Incomplete: flow windows closed, *m* not spawned" | 2 |
 | "Incomplete: all mobile agents left, *j* incapacitated inside[, *m* not spawned]" | 2 |
+| "Incomplete: deadlock, *k* agents stuck" | 2 |
 | "Run failed: …"; "(during setup; the run was not started)" when the run failed before it started | 1 |
 | "Cancelled at sim *t* s", or "Cancelled before the first progress sample" | none |
 | "The run stopped without a result (process exit *N*)" | none |

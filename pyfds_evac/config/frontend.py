@@ -124,7 +124,8 @@ class Outcome:
     inside or flow agents not yet spawned (#139, #444), or when it empties
     after its flow windows closed with agents not spawned (#742), or when
     every agent able to move has left and only incapacitated ones remain
-    (#141). Incapacitated agents stay inside, so they are among the agents
+    (#141), or when every mobile agent stood still over the deadlock window
+    (#760). Incapacitated agents stay inside, so they are among the agents
     that remain; the incapacitated count is shown on its own
     (:func:`incapacitated_text`).
     """
@@ -152,7 +153,8 @@ def run_outcome(
     *end_reason* is the run's ``end_reason`` metric; without it an
     incomplete run is worded as stopped by the time limit. *incapacitated*
     is the number of agents incapacitated; an ``all_mobile_left`` run
-    words it, and *remaining* when it is not given.
+    words it, and *remaining* when it is not given. A ``deadlock`` run
+    words the mobile agents stuck inside.
     """
     if status is None:
         return Outcome(None, "Outcome not reported", "Simulated time")
@@ -164,6 +166,12 @@ def run_outcome(
     if end_reason == "all_mobile_left":
         dead = remaining if incapacitated is None else incapacitated
         label = f"Incomplete: all mobile agents left, {dead} incapacitated inside"
+        if not_spawned:
+            label += f", {not_spawned} not spawned"
+        return Outcome(False, label, "Simulated time")
+    if end_reason == "deadlock":
+        stuck = (remaining or 0) - (incapacitated or 0)
+        label = f"Incomplete: deadlock, {agents_label(stuck)} stuck"
         if not_spawned:
             label += f", {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")

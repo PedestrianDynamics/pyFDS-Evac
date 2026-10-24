@@ -174,7 +174,8 @@ can do:
 - Run several seeds. A smaller agent radius does not remove the jam:
   `HUT_Library` at 0.15 m still jams in 5 of 13 seeds.
 - Before you read the evacuation time, check that every agent left before
-  `max_simulation_time`. A deadlock shows as agents still inside at the end.
+  `max_simulation_time`. A deadlock stops the run early with `end_reason`
+  `"deadlock"`.
 
 ## Check list
 

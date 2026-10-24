@@ -35,10 +35,10 @@ No supported model passes all three test cases below, so the default stays
   `GeneralizedCentrifugalForceModel`, and `WarpDriverModel`, which
   completes some runs only by letting agents overlap.
 
-pyFDS-Evac does not yet detect or report agents that stand still for the
-rest of a run
-([#760](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/760)).
-A stuck run shows as agents still inside at `max_simulation_time`.
+A run whose whole crowd stands still for 100 s stops with `end_reason`
+`"deadlock"` and reports the stuck agents
+([#760](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/760));
+the jam itself is not cleared.
 
 ## Deadlock behaviour
 
@@ -152,6 +152,18 @@ model; its choice is under review in
 pyFDS-Evac
 ([#759](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/759)).
 A deck that names it stops with a `ValueError`.
+
+**At run time.** `pyfds_evac/core/deadlock.py` applies the study's
+definition during a run: the thresholds are the same, 0.03 m of net
+displacement over 100 s. The run-time rule is stricter: it needs *every*
+counted agent to be still, not "at least two", so a working bottleneck with
+a few agents creeping through never fires it. It also holds back while any
+agent is held by design (pre-movement, a waiting stage, a desired speed of
+0, a flow source that can still spawn, an exit yet to open), and it stops the
+run while it is under way instead of judging the end state. The counts of
+runs that end `deadlock` are therefore not comparable with the study's
+counts. The run then stops with `end_reason` `"deadlock"`; pyFDS-Evac reports
+the jam and does not clear it. See [Reading the results](/docs/outputs.md#reading-the-results).
 
 ## Coded mapping
 

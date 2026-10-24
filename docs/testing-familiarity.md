@@ -161,7 +161,7 @@ tour so far. No agent turns back at CP3's door.
 | discovery: tour up to CP3 | CP0 → CP1 → CP2 → CP3 where CP2's sign is legible at CP1 | **fails**: 16 / 20; agent 11 goes from CP1 to CP3, CP2's sign hidden there; 3 tours end in CP1's door, deadlocked ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) |
 | discovery: patrols started with the exit in sight | 0 | 0; no agent starts a patrol |
 | discovery: first agent out (sanity check) | near \(t_{\text{ref}}\) = 40.0 s | 40.6 s |
-| discovery: last agent out | no reference | 16 of 20 out; 4 deadlocked in CP1's door until the 300 s limit; no agent turned back at CP3 |
+| discovery: last agent out | no reference | 16 of 20 out; 4 deadlocked in CP1's door until the 300 s limit (such a run now stops earlier, with `end_reason` `"deadlock"`); no agent turned back at CP3 |
 
 On other grids:
 

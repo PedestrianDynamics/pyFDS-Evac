@@ -104,7 +104,8 @@ class ResultEvent:
     run, the time limit, the last exit when its flow windows closed, or the
     time the last mobile agent left when only incapacitated agents remain.
     ``end_reason`` is the run's ``end_reason`` metric (``"all_evacuated"``,
-    ``"time_limit"``, ``"flows_closed"`` or ``"all_mobile_left"``), None
+    ``"time_limit"``, ``"flows_closed"``, ``"all_mobile_left"`` or
+    ``"deadlock"``), None
     when not reported. ``seed`` is the seed
     the run used. ``exit_counts`` is the agents per exit of the frame
     stream (see :class:`FrameEvent`), None without frames.
