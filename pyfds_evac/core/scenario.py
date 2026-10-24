@@ -76,6 +76,7 @@ from .cognitive_map import (
     expand_on_arrival,
     init_cognitive_map,
     no_known_exit_mode,
+    stranded_distributions,
 )
 from .deadlock import Deadlock, DeadlockDetector
 from .direct_steering_runtime import (
@@ -2139,6 +2140,9 @@ def run_scenario(
             stage_graph,
             no_known_exit_by_dist,
         )
+        if stage_graph is not None:
+            for dist_id in stranded_distributions(stage_graph, scenario.raw):
+                _logger.warning(messages.unsigned_exits_only(dist_id))
         has_exit_schedule = _has_exit_schedule(stage_graph)
         last_exit_opening_s = _last_exit_opening_s(stage_graph)
         _check_exit_schedule(has_exit_schedule, replay_exits)
