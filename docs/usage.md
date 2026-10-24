@@ -168,9 +168,8 @@ by default, as FDS+Evac has none. The equations are on
 ### Heat dose (opt-in)
 
 All flags in this table need `--enable-heat-fed`; without it they have no
-effect. With `--fds-dir`, the run then warns for `--heat-endpoint`,
-`--heat-clothing`, `--heat-fed-method`, `--heat-radiant-source` and
-`--heat-regime`; the other heat flags are ignored silently. The laws, parameters and their
+effect, and the run warns once for each heat flag set away from its default,
+with or without `--fds-dir`. The laws, parameters and their
 sources are on [Models › Heat](/models/heat.md); the table only lists what
 each flag sets.
 

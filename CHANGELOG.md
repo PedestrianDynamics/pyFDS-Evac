@@ -51,6 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/inspect_fds.py` reports a present, all-zero extinction slice as
   clear air and says the smoke-speed model runs, instead of marking it
   missing (#326).
+- `scripts/inspect_fds.py` defaults to the 1.6 m slice height `run.py`
+  reads, not 2.0 m, and `scripts/run_and_plot.sh` writes its vismap cache
+  into the results directory, not the FDS directory (#313).
+- docs: every heat flag warns when `--enable-heat-fed` is missing, with or
+  without `--fds-dir`; a test pins it (#325).
 
 ## [0.7.0] - 2026-10-23
 
