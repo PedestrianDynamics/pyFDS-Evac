@@ -375,12 +375,11 @@ status 2, before the run starts.
 ## Inspecting an FDS case
 
 `scripts/inspect_fds.py` summarises what quantities FDS wrote and whether
-they are within tenability-relevant ranges. Its `--height` defaults to 2.0 m;
-pass 1.6 to match `run.py`
-([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)).
+they are within tenability-relevant ranges. Its `--height` defaults to 1.6 m,
+the height `run.py` reads.
 
 ```bash
-uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a --height 1.6
+uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a
 ```
 
 ```text
@@ -928,6 +927,5 @@ finished FDS run (the `.smv` file); `$FDS` stands for such a directory, for
 example the output of `assets/t_junction/t_junction.fds`. The script calls
 `run.py` with all diagnostic outputs enabled and then invokes each
 plotting script against the resulting CSVs / SQLite. It writes the vismap
-cache into `<fds-dir>/vismap_cache.npz`, so do not point it at a tracked
-directory under `assets/`
-([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)).
+cache into `<results-dir>/vismap_cache.npz`, so the FDS directory is only
+read.

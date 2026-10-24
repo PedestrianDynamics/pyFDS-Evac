@@ -1179,13 +1179,9 @@ class DefaultFedModel:
 class FdsHeatField:
     """Sample gas-phase temperature from FDS slice output via fdsreader.
 
-    Required slice: TEMPERATURE. Unlike ``FdsFedField``, this goes through
-    ``load_slice_sampler`` so a mismatched slice height triggers the same
-    warning the extinction/smoke-speed path already gets -- ``FdsFedField``
-    bypasses that check entirely (raw ``filter_by_quantity(...)[0]``, no
-    height-matching), a known blind spot this project has been bitten by
-    twice before (the O2 hypoxia rate bug, the conflicting ``&INIT`` bug);
-    the new heat sampler should not repeat it.
+    Required slice: TEMPERATURE. Like ``FdsFedField``, this goes through
+    ``load_slice_sampler``, which picks the slice nearest the slice height
+    and warns when it lies too far from it.
     """
 
     def __init__(

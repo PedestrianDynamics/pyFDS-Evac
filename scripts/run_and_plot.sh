@@ -28,7 +28,7 @@ SMOKE_CSV="$RESULTS_DIR/smoke.csv"
 FED_CSV="$RESULTS_DIR/fed.csv"
 ROUTES_CSV="$RESULTS_DIR/routes.csv"
 ROUTE_COSTS_CSV="$RESULTS_DIR/route_costs.csv"
-VIS_CACHE="$FDS_DIR/vismap_cache.pkl"
+VIS_CACHE="$RESULTS_DIR/vismap_cache.npz"
 
 echo "==> Simulation"
 uv run python run.py \

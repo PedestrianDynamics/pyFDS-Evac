@@ -9,7 +9,6 @@ Checks availability and time-series statistics for:
 Usage:
     uv run python scripts/inspect_fds.py assets/t_junction
     uv run python scripts/inspect_fds.py assets/t_junction --plot
-    uv run python scripts/inspect_fds.py assets/t_junction --height 2.0 --plot
 """
 
 from __future__ import annotations
@@ -19,6 +18,8 @@ import sys
 from dataclasses import dataclass
 
 import numpy as np
+
+from pyfds_evac.config.parameters import SMOKE_SLICE_HEIGHT_M
 
 try:
     import fdsreader  # noqa: F401
@@ -168,7 +169,9 @@ def _extract_stats(slice_obj, scale: float) -> QuantityStats | None:
         return None
 
 
-def inspect(fds_dir: str, height: float = 2.0, plot: bool = False) -> None:
+def inspect(
+    fds_dir: str, height: float = SMOKE_SLICE_HEIGHT_M, plot: bool = False
+) -> None:
     print(f"\nLoading FDS simulation: {fds_dir}")
     from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
@@ -367,8 +370,8 @@ def main() -> None:
     parser.add_argument(
         "--height",
         type=float,
-        default=2.0,
-        help="Slice height in metres (default: 2.0)",
+        default=SMOKE_SLICE_HEIGHT_M,
+        help=f"Slice height in metres (default: {SMOKE_SLICE_HEIGHT_M})",
     )
     parser.add_argument("--plot", action="store_true", help="Generate and save plots")
     args = parser.parse_args()
