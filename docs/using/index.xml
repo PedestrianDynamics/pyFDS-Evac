@@ -1423,12 +1423,12 @@ by default, as FDS+Evac has none. The equations are on
 &lt;tr>
 &lt;td>&lt;code>--fic-alpha F&lt;/code>&lt;/td>
 &lt;td>0.7&lt;/td>
-&lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code>; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
+&lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code>; finite, ≥ 0; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fic-min-factor F&lt;/code>&lt;/td>
 &lt;td>0.3&lt;/td>
-&lt;td>Floor &lt;code>μ&lt;/code>; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
+&lt;td>Floor &lt;code>μ&lt;/code>, in (0, 1]; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
@@ -7512,7 +7512,7 @@ None of these says when the last mobile agent left.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/11c0a045174151bb8fa5fe0287fd0b42be3077d5">&lt;code>11c0a04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8e3109d25306c6474a44341f3de4c826e89d0d5">&lt;code>e8e3109&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7536,7 +7536,7 @@ None of these says when the last mobile agent left.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0e64cf30b49c57a3d76b810b35279cc9c86dbeecbe39e2e8dce60750a8f08aaf&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">8c8a509c4e81600f37fc69026e60c3d49bedec00f044fcbb4f661eadbe41d2cb&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
