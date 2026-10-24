@@ -64,7 +64,7 @@ def test_walkthrough_shows_the_silent_fed_failure(runs):
     proc = runs["walkthrough.py"]
     assert "FED is disabled for" in proc.stderr
     assert "before: fed_model = None" in proc.stdout
-    assert "after:  fed_history = None, 'fed_max' in metrics = False" in proc.stdout
+    assert "after:  fed_history = None, fed_enabled = False" in proc.stdout
     assert "FdsFedField.from_fds: IndexError" in proc.stdout
 
 

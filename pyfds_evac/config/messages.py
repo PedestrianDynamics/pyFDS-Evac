@@ -40,8 +40,8 @@ def fed_without_gases(fds_dir: str, missing: Iterable[str]) -> str:
     noun = "slice" if len(missing) == 1 else "slices"
     return (
         f"FED is disabled for {fds_dir}: it has no {named} {noun}, and all "
-        "three of CO, CO2 and O2 are needed. Results will report zero dose and "
-        "no incapacitation. FDS only writes these species when the &REAC line "
+        "three of CO, CO2 and O2 are needed. Results will have no gas FED and no "
+        "gas-FED incapacitation. FDS only writes these species when the &REAC line "
         f"asks for them (CO needs CO_YIELD); see {FDS_CASE_DOCS}"
     )
 

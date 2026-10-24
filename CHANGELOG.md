@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `metrics["deadlock"]` and the manifest `outcome["deadlock"]` (`agents`,
   `since_s`, `positions`), and the `deadlock` wording on the CLI line and
   the GUI/TUI label (#760).
+- `metrics["fed_enabled"]`: whether the gas FED ran (#137).
 
 ### Fixed
 
@@ -59,6 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The irritant slowdown (`--enable-fic-speed`) now ends when the sampled
   FIC falls to zero; before, an agent leaving an irritant plume into clean
   air kept its last slowdown (#142).
+- The FED-disabled warning no longer promises a zero dose: a run without
+  CO, CO2 or O2 reports no gas FED at all (#137).
 
 ## [0.7.0] - 2026-10-23
 

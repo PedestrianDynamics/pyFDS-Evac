@@ -113,7 +113,7 @@ smoke speed only. If the heat FED is off too, the result has no FED at all:
 `fed_history` is `None`, `metrics` has no `fed_max`, and
 `--output-fed-history` writes no file. If the heat FED runs but the gas FED
 does not, the FED history exists and its `fed_cumulative` column is all
-zero, which looks exactly like a survivable fire. Check `metrics["fed_max"]`,
+zero, which looks exactly like a survivable fire. Check `metrics["fed_enabled"]`,
 or the warning, which is logged every time
 ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)):
 

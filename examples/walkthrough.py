@@ -136,7 +136,7 @@ print(
 print(f"before: fed_model = {kwargs['fed_model']}")
 print(
     f"after:  fed_history = {silent.fed_history}, "
-    f"'fed_max' in metrics = {'fed_max' in silent.metrics}"
+    f"fed_enabled = {silent.metrics['fed_enabled']}"
 )
 
 # %%
