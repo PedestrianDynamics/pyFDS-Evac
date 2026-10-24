@@ -1064,7 +1064,7 @@ class RouteCostConfig:
     # Spacing of route smoke samples [m] for a field without a grid
     # (constant K, test fields) and where a route leaves the FDS slice. An
     # FDS field is read once per grid cell instead (#653), and the FED rate
-    # of the walk dose (#171) every sampling_step_m.
+    # of the walk dose (#171) and of a leg dose (#725) every sampling_step_m.
     sampling_step_m: float = 2.0
     base_speed_m_per_s: float = 1.3
     # The router's copy of the Lund speed law, used only to estimate travel
@@ -1577,8 +1577,8 @@ def evaluate_segment(
     is charged is the smoke it will meet rather than the smoke standing there
     while it decides. Defaults to *time_s*, which is the no-foresight answer.
     With a *clock*, each extinction sample is read when the agent reaches it
-    instead (#650). The FED rate is averaged along the leg at the same points
-    and times as the extinction (#725).
+    instead (#650). The FED rate is averaged along the same geometry and at
+    the same times as the extinction, every ``sampling_step_m`` (#725).
     """
     if arrival_time_s is None:
         arrival_time_s = time_s

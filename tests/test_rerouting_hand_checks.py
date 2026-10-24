@@ -145,7 +145,8 @@ def test_fed_and_queue_scale_with_speed_and_weights():
 
     West walk: 20 / 1.3 = 15.3846 s, and the mean rate over the 11 points of
     the leg is 4.0 x 10 / 11 = 3.6364 (the point at x = 0 is in the spawn
-    area), so FED = 0.2 + 3.6364 x 15.3846 / 60 = 1.1324. Queue: 40 / 1.3 = 30.7692 s, priced as 3 x 1.3 x 30.7692 = 120 m.
+    area), so FED = 0.2 + 3.6364 x 15.3846 / 60 = 1.1324.
+    Queue: 40 / 1.3 = 30.7692 s, priced as 3 x 1.3 x 30.7692 = 120 m.
     Composite: 20 + 2 x 1.1324 + 120 = 142.2648.
     """
     case = golden.RankCase(

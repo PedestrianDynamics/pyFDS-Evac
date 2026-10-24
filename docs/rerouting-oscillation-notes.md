@@ -123,7 +123,8 @@ so the rejection knows which exit is the agent's own. Locked in by
 
 Removed in #187 (see the CHANGELOG): the margin was inert on every fire
 deck, and on the targeted decks removing it lowered exposure (FED p95
-2.83 → 2.11) at the cost of more `fed_reroute` switches.
+2.83 → 2.11, measured before #725 with the leg FED read at its midpoint)
+at the cost of more `fed_reroute` switches.
 
 Result: agent 119 went 4 switches → 0. But aggregate demo oscillation only dropped
 modestly (≈33 → 30 reversals), because the deadband only targets FED-flicker (~half

@@ -355,6 +355,7 @@ AREAS: dict[str, Area] = {
             "tests/test_fds_horizon.py",
             "tests/test_rerouting_hand_checks.py",
             "tests/test_route_cost_hand_values.py",
+            "tests/test_leg_fed_integral.py",
             "tests/test_route_graph.py::TestSegmentCost",
             "tests/test_route_graph.py::TestRouteCost",
             "tests/test_route_graph.py::TestPositionAwareRouting",
@@ -412,6 +413,12 @@ AREAS: dict[str, Area] = {
                 "            _FedRateAsExtinction(fed_rate_sampler),",
                 "            time_s,\n"
                 "            _FedRateAsExtinction(fed_rate_sampler),",
+            ),
+            Mutant(
+                "fed_rate_without_clock",
+                "removed term",
+                "            clock=clock,\n        )\n        fed_growth",
+                "            clock=None,\n        )\n        fed_growth",
             ),
             Mutant(
                 "segment_dose_seconds_as_minutes",

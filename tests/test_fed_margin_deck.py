@@ -41,7 +41,8 @@ The agent turns back to A with reason ``fed_reroute`` and takes a dose
 near 0.93 (walking at v0 1.2 m/s, slower than the 1.3 m/s the prediction
 assumes, so the dose taken runs a little over the one predicted, and
 congestion adds to it). With the margin it was held on B instead, walking
-on into the strip: audited over 10 seeds on these decks, removing it
+on into the strip: audited over 10 seeds on these decks as they were
+before #725 (arm rate 4.0 /min, FED read at the leg midpoint), removing it
 lowered the FED p95 from 2.83 to 2.11 and the agents at FED >= 1 from
 20.5 to 7.3 per run, at the cost of more ``fed_reroute`` switches.
 
