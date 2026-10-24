@@ -66,7 +66,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
-| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed` or `all_mobile_left`), `agents_remaining` and `agents_not_spawned`, as in [Reading the results](#reading-the-results) |
+| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed`, `all_mobile_left` or `deadlock`), `agents_remaining` and `agents_not_spawned`, and `deadlock` (`agents`, `since_s`, `positions`) when the run stopped as a deadlock, as in [Reading the results](#reading-the-results) |
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint` |
@@ -217,19 +217,19 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 
 | Field | Meaning |
 |---|---|
-| `evacuation_time` | simulated time when the loop stopped: all agents left, only incapacitated agents left inside, the flows closed, or the time limit |
+| `evacuation_time` | simulated time when the loop stopped: all agents left, only incapacitated agents left inside, the flows closed, a deadlock was detected, or the time limit |
 | `metrics["last_exit_time"]` | simulated time the last agent left, by direct-steering removal or through a JuPedSim exit, rounded to 0.01 s; `None` when nobody left. Never later than `evacuation_time` |
 | `total_agents`, `agents_evacuated`, `agents_remaining` | head counts at the end |
 | `agents_not_spawned` | flow agents that had not entered when the run stopped: cut off by `max_simulation_time`, or still waiting for a free position when their flow window closed. A configuration error while building a flow agent stops the run instead of being counted here |
 | `metrics["flow_spawns_deferred"]` | how often a flow found no free position in its spawn area and waited, counted per flow and time step: two flows waiting in one step count twice; the run then prints one line per such flow (#710) |
-| `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter, when the building emptied after its flow windows closed with flow agents not spawned, or when only incapacitated agents remain inside and no flow window is open |
-| `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit; `"all_mobile_left"` when every mobile agent has left, only incapacitated agents remain inside and no flow window is open. Also in `metrics["end_reason"]` |
+| `status` | `"completed"` when every agent entered and left; `"incomplete"` when the run reached `max_simulation_time` with agents inside or still to enter, when the building emptied after its flow windows closed with flow agents not spawned, when only incapacitated agents remain inside and no flow window is open, or when the whole crowd stood still and the run stopped as a deadlock |
+| `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit; `"all_mobile_left"` when every mobile agent has left, only incapacitated agents remain inside and no flow window is open; `"deadlock"` when every mobile agent inside stood still (net displacement below 0.03 m over the last 100 s) and no agent was in pre-movement, at a waiting stage or still to spawn. The run stops at once, before the time limit. Also in `metrics["end_reason"]` |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
 | `metrics["route_switches"]` | per agent, each time step whose decision changes the agent's target (`new_exit`), or its path to an exit it holds (a row with an `old_exit`). A time step counts at most once, judged by its last row, the decision the agent acts on. The agent's first step counts only if its row names an old exit, the exit seeded at spawn. Reasons are not read (#733, #744). Each new `explore` or `wander` node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0 |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran. It stops at the collapse row of an incapacitated agent |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran. It stops at the collapse row of an incapacitated agent |
 
-Three things to keep in mind:
+Four things to keep in mind:
 
 - **An incapacitated agent stays in the simulation.** It stays where it
   collapsed until the run ends, is never counted in `agents_evacuated` and
@@ -240,6 +240,23 @@ Three things to keep in mind:
   `metrics["last_exit_time"]` or the trajectory for exit times, as the
   [RSET how-to](howto-rset-ensemble.md) does
   ([#141](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141)).
+- **A deadlocked run stops early.** When every mobile agent inside has
+  moved less than 0.03 m, net, over the last 100 s, the run stops at once
+  with `end_reason` `"deadlock"`, `"incomplete"` and `success` `False`,
+  instead of running to `max_simulation_time`. The rule is fixed and has no
+  option. Incapacitated agents are not counted. The rule waits while any
+  other agent is in pre-movement, at a waiting stage, idle until a decision
+  gives it somewhere to go, or has a desired speed of 0, and for 100 s after
+  such an agent starts to move; it also waits while a flow source can still
+  spawn agents or an exit has yet to open. A crowd that stands still with
+  nothing left to wait for, such as one whose only reachable exit has
+  closed, is reported the same way.
+  `evacuation_time` is the detection time, not an egress time, and
+  `metrics["deadlock"]` and the manifest `outcome["deadlock"]` list the
+  stuck agents' count, the start of the window (`since_s`) and their
+  positions. A working bottleneck, with some agents still moving, never
+  fires the rule. pyFDS-Evac only reports the jam; it does not clear it
+  (see [Known defects](limitations.md#known-defects)).
 - **No FED is not zero FED.** If neither FED track ran, `fed_history` is
   `None`, `metrics` has no `fed_max`, and `--output-fed-history` writes no
   file. If only the heat FED ran, the FED history exists and its

@@ -49,10 +49,16 @@ more seeds do not supply one, since every seed stops at the same limit;
 - `result.success` is `False` and `result.status` is `"incomplete"` when the
   run reaches `max_simulation_time` with agents still inside, when the
   building empties after its flow windows closed with flow agents not spawned,
-  or when only incapacitated agents remain inside and no flow window is open
+  when only incapacitated agents remain inside and no flow window is open
   (`end_reason` `"all_mobile_left"`)
-  ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)).
-  None of these says when the last mobile agent left.
+  ([#139](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/139)), or
+  when every mobile agent inside stood still for 100 s (`end_reason`
+  `"deadlock"`, [#760](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/760)).
+  None of these says when the last mobile agent left. A deadlocked run's
+  `evacuation_time` is the time the rule fired, not an egress time and not
+  the time limit. Its stuck agents never left, so count it as a run that did
+  not finish, and do not use its time as a value censored at
+  `max_simulation_time`.
 
 Part 2 below shows both.
 
