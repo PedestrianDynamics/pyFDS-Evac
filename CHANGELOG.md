@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `reaction_time` from `simulationParams`; it no longer reads `T` and `s0`
   (#868). A deck with `s0` other than 0.3 gets `reaction_time` 0.3 unless
   it sets `reaction_time`.
+- `fic_min_factor` outside (0, 1] and `fic_alpha` below 0 (or non-finite,
+  non-numeric, or a bool) are rejected with a `ValueError` naming the
+  field in `TenabilityConfig`, and by `--fic-min-factor` and `--fic-alpha`
+  at parse time (#404). Before, such values silently switched the
+  irritant slowdown off or sped agents up. Defaults (0.3, 0.7) are
+  unchanged.
 
 ## [0.7.0] - 2026-10-23
 

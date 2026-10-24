@@ -618,6 +618,31 @@ def heat_flux_row_fields(
     }
 
 
+def _is_real(value: object) -> bool:
+    """Return whether *value* is a finite int or float (a bool is not)."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return False
+    return math.isfinite(value)
+
+
+def check_fic_alpha(value: object) -> None:
+    """Raise ValueError unless ``fic_alpha`` is a finite number >= 0."""
+    if not _is_real(value) or value < 0:  # type: ignore[operator]
+        raise ValueError(f"fic_alpha must be a finite number >= 0, got {value!r}")
+
+
+def check_fic_min_factor(value: object) -> None:
+    """Raise ValueError unless ``fic_min_factor`` is a finite number in (0, 1].
+
+    A floor of 0 lets the irritant factor reach 0, and it then stays there
+    while FIC is 0 (#142); a floor above 1 speeds agents up in irritant smoke.
+    """
+    if not _is_real(value) or not 0 < value <= 1:  # type: ignore[operator]
+        raise ValueError(
+            f"fic_min_factor must be a finite number in (0, 1], got {value!r}"
+        )
+
+
 @dataclass(frozen=True)
 class TenabilityConfig:
     """Runtime tenability rules applied on top of Frantzich smoke-speed.
@@ -675,6 +700,10 @@ class TenabilityConfig:
     # value.
     heat_incapacitation_mode: str = "deterministic"
     heat_susceptibility_sigma: float = 0.94
+
+    def __post_init__(self) -> None:
+        check_fic_alpha(self.fic_alpha)
+        check_fic_min_factor(self.fic_min_factor)
 
     @property
     def resolved_heat_fed_threshold(self) -> float:

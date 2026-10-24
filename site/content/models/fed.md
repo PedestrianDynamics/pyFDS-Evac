@@ -87,6 +87,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147));
   how it compares with the published rule is
   [below](#irritant-slowdown-against-the-published-rule).
+  `fic_alpha` must be finite and at least 0, and `fic_min_factor` finite and in
+  (0, 1]; `TenabilityConfig` and the CLI reject other values
+  ([#404](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/404)).
   When FIC is exactly 0 the last factor stays in force
   ([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the

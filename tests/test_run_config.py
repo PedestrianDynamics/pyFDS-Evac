@@ -21,7 +21,7 @@ _DEFAULT_OPTS = dict(
     vis_cache=None,
     disable_tenability=False,
     fic_alpha=1.2,
-    fic_min_factor=0.0,
+    fic_min_factor=0.1,
     fed_threshold=1.0,
     output_route_cost_history=None,
 )

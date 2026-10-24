@@ -32,6 +32,8 @@ from pyfds_evac.core.fed import (
     HEAT_FLUX_REGIMES,
     HEAT_RADIANT_SOURCES,
     HEAT_U_FACTOR_RANGE,
+    check_fic_alpha,
+    check_fic_min_factor,
 )
 
 
@@ -65,6 +67,23 @@ def _u_factor(text: str) -> float:
     if not low <= value <= high:  # also rejects nan
         raise argparse.ArgumentTypeError(f"must be in [{low}, {high}], got {text}")
     return value
+
+
+def _fic_option(check: Callable[[object], None]) -> Callable[[str], float]:
+    """Build an argparse type: a float that *check* accepts."""
+
+    def parse(text: str) -> float:
+        try:
+            value = float(text)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(f"not a number: {text!r}") from exc
+        try:
+            check(value)
+        except ValueError as exc:
+            raise argparse.ArgumentTypeError(str(exc)) from None
+        return value
+
+    return parse
 
 
 @dataclass(frozen=True)
@@ -586,10 +605,10 @@ PARAMETERS: tuple[Parameter, ...] = (
         "fic_alpha",
         ("--fic-alpha",),
         GROUP_GAS,
-        "Slope of the FIC speed-reduction rule, a pyFDS-Evac "
+        "Slope of the FIC speed-reduction rule (>= 0), a pyFDS-Evac "
         "assumption, source unknown (#147); needs --enable-fic-speed "
         f"(default: {FIC_ALPHA})",
-        type=float,
+        type=_fic_option(check_fic_alpha),
         default=FIC_ALPHA,
         python=f"{_TENABILITY}.fic_alpha",
         gui_help="How strongly irritant gases slow an agent. Higher = agents "
@@ -599,9 +618,9 @@ PARAMETERS: tuple[Parameter, ...] = (
         "fic_min_factor",
         ("--fic-min-factor",),
         GROUP_GAS,
-        "Lower bound on the FIC speed factor; needs --enable-fic-speed "
+        "Lower bound on the FIC speed factor, in (0, 1]; needs --enable-fic-speed "
         f"(default: {FIC_MIN_FACTOR})",
-        type=float,
+        type=_fic_option(check_fic_min_factor),
         default=FIC_MIN_FACTOR,
         python=f"{_TENABILITY}.fic_min_factor",
         gui_help="Floor on irritant slowdown — an agent never drops below this "
