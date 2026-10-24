@@ -33,6 +33,20 @@ def smoke_without_extinction(fds_dir: str) -> str:
     )
 
 
+def slice_height_mismatch(
+    quantity: str, requested_m: float, fds_dir: str, chosen_m: float, n_matches: int
+) -> str:
+    """The nearest horizontal slice lies beyond the tolerance from the height."""
+    counted = "1 slice" if n_matches == 1 else f"{n_matches} slices"
+    return (
+        f"Requested a '{quantity}' slice at z={requested_m:.2f} m but the nearest "
+        f"available in {fds_dir} is at z={chosen_m:.2f} m "
+        f"({abs(chosen_m - requested_m):.2f} m away; {counted} of this quantity "
+        f"in the case). Sampling continues at z={chosen_m:.2f} m, so every "
+        "reading from this quantity describes that height, not the one requested."
+    )
+
+
 def fed_without_gases(fds_dir: str, missing: Iterable[str]) -> str:
     """D6: the case lacks one of the CO, CO2 and O2 slices."""
     missing = sorted(missing)

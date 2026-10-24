@@ -73,12 +73,13 @@ def test_t_junction_is_ready_and_prints_both_heights(capsys):
     assert status == cli_init.EXIT_OK
     for label in ("Extinction", "CO ", "CO2", "O2"):
         line = _line(lines, label)
-        assert line.startswith("  ✓")
+        assert line.startswith("  !")
         assert "z 2 m (requested 1.6 m" in line
+        assert "0.40 m away" in line
     assert "none" in _line(lines, "Temperature")
     assert _line(lines, "T_END").startswith("  ✓ T_END       300 s")
     assert "1 s (&DUMP DT_SLCF)" in _line(lines, "DT_SLCF")
-    assert not [x for x in lines if x.startswith("  !")]
+    assert len([x for x in lines if x.startswith("  !")]) == 4
 
 
 def test_smoke_speed_deck_has_extinction_but_no_gases(capsys):
@@ -810,20 +811,16 @@ def test_plain_init_prints_and_records_the_check(tmp_path, capsys):
     assert slices["DT_SLCF"]["ok"] is True  # 120 s / 1000 frames
 
 
-def test_t_junction_report_marks_healthy_items_ok(tmp_path, capsys):
+def test_t_junction_report_flags_the_slices_beyond_the_tolerance(tmp_path, capsys):
     out = tmp_path / "scenario"
     assert cli_init.main([str(T_JUNCTION), "-o", str(out)]) == cli_init.EXIT_OK
     rec = json.loads((out / "import_report.json").read_text("utf-8"))["recommendations"]
     assert rec["slice_check_ok"] is True
-    for key in (
-        "EXTINCTION COEFFICIENT",
-        "VOLUME FRACTION OXYGEN",
-        "T_END",
-        "DT_SLCF",
-        "optional FED gases",
-    ):
+    for key in ("EXTINCTION COEFFICIENT", "VOLUME FRACTION OXYGEN"):
+        assert rec["slices"][key]["ok"] is False, key
+        assert rec["slices"][key]["nearest_pbz"] == 2.0, key
+    for key in ("T_END", "DT_SLCF", "optional FED gases"):
         assert rec["slices"][key]["ok"] is True, key
-    assert rec["slices"]["EXTINCTION COEFFICIENT"]["nearest_pbz"] == 2.0
 
 
 def test_plain_init_without_t_end_names_it(tmp_path, capsys):

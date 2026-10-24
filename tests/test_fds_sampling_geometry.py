@@ -268,11 +268,11 @@ def test_the_first_of_two_equally_near_slices_is_chosen():
 
 
 def test_the_height_warning_stops_at_the_tolerance(caplog):
-    """The tolerance is 0.5 m: a slice 0.5 m from the requested height is
-    accepted silently, one 0.51 m away is reported."""
+    """The tolerance is 0.2 m: a slice 0.2 m from the requested height is
+    accepted silently, one 0.21 m away is reported."""
     with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
-        select_horizontal_slice([_at(2.0, "a"), _at(9.0, "b")], 1.5, "q", "d")
+        select_horizontal_slice([_at(2.0, "a"), _at(9.0, "b")], 1.8, "q", "d")
     assert caplog.text == ""
     with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
-        select_horizontal_slice([_at(2.01, "a"), _at(9.0, "b")], 1.5, "q", "d")
-    assert "0.51 m away" in caplog.text
+        select_horizontal_slice([_at(2.01, "a"), _at(9.0, "b")], 1.8, "q", "d")
+    assert "0.21 m away" in caplog.text

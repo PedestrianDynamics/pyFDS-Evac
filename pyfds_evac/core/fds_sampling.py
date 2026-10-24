@@ -9,10 +9,15 @@ from __future__ import annotations
 
 import logging
 from bisect import bisect_left
+from collections.abc import Iterator
+from contextlib import contextmanager
 from functools import cached_property
+from pathlib import Path
 from typing import Any, NamedTuple
 
 import numpy as np
+
+from pyfds_evac.config import messages
 
 _logger = logging.getLogger(__name__)
 
@@ -28,7 +33,49 @@ def _open_simulation(fds_dir):
 # mismatch is worth reporting.  A slice this far off samples a different part
 # of the smoke layer than the caller asked for, which silently changes every
 # extinction and gas reading downstream.
-_SLICE_HEIGHT_TOLERANCE_M = 0.5
+_SLICE_HEIGHT_TOLERANCE_M = 0.2
+
+# The height warnings of the current run, keyed by directory, quantity and
+# heights; None outside height_warnings_once, where every call warns.
+_height_warnings_seen: set[tuple[str, str, float, float]] | None = None
+
+
+@contextmanager
+def height_warnings_once() -> Iterator[None]:
+    """Log each slice-height mismatch once while the context is open.
+
+    A run reads the same quantity from several models (smoke speed and
+    visibility both read the extinction slice), and each would repeat the
+    warning.  Outside the context every call warns.  An inner context shares
+    the memory of the outer one.
+    """
+    global _height_warnings_seen
+    outer = _height_warnings_seen
+    if outer is None:
+        _height_warnings_seen = set()
+    try:
+        yield
+    finally:
+        _height_warnings_seen = outer
+
+
+def _already_warned(
+    fds_dir: str, quantity: str, requested_m: float, chosen_m: float
+) -> bool:
+    """Whether this mismatch was logged in the open context; remembers it."""
+    if _height_warnings_seen is None:
+        return False
+    key = (
+        str(Path(fds_dir).resolve()),
+        quantity,
+        round(requested_m, 6),
+        round(chosen_m, 6),
+    )
+    if key in _height_warnings_seen:
+        return True
+    _height_warnings_seen.add(key)
+    return False
+
 
 # Frame indices a sampler remembers by requested time. Route foresight reads
 # each sample at its own time (#650), so a single cached time misses on
@@ -704,19 +751,12 @@ def _warn_on_height_mismatch(
     z_mid = _slice_z_mid(chosen)
     if abs(z_mid - requested_height_m) <= _SLICE_HEIGHT_TOLERANCE_M:
         return
-    counted = "1 slice" if n_matches == 1 else f"{n_matches} slices"
+    if _already_warned(fds_dir, quantity, requested_height_m, z_mid):
+        return
     _logger.warning(
-        "Requested a '%s' slice at z=%.2f m but the nearest available in %s is "
-        "at z=%.2f m (%.2f m away; %s of this quantity in the case). "
-        "Sampling continues at z=%.2f m, so every reading from this quantity "
-        "describes that height, not the one requested.",
-        quantity,
-        requested_height_m,
-        fds_dir,
-        z_mid,
-        abs(z_mid - requested_height_m),
-        counted,
-        z_mid,
+        messages.slice_height_mismatch(
+            quantity, requested_height_m, fds_dir, z_mid, n_matches
+        )
     )
 
 
