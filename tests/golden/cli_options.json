@@ -137,7 +137,7 @@
   "dest": "fic_alpha",
   "nargs": null,
   "required": false,
-  "type": "float"
+  "type": "_fic_alpha"
  },
  "--fic-min-factor": {
   "action": "_StoreAction",
@@ -147,7 +147,7 @@
   "dest": "fic_min_factor",
   "nargs": null,
   "required": false,
-  "type": "float"
+  "type": "_fic_min_factor"
  },
  "--heat-clothing": {
   "action": "_StoreAction",

@@ -83,6 +83,8 @@ def _fic_option(check: Callable[[object], None]) -> Callable[[str], float]:
             raise argparse.ArgumentTypeError(str(exc)) from None
         return value
 
+    # Named like the sibling ``_u_factor`` (the CLI option table records it).
+    parse.__name__ = "_" + check.__name__.removeprefix("check_")
     return parse
 
 
