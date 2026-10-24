@@ -71,6 +71,15 @@ A node whose polygon cannot give a position gets no sign. Spawn areas carry no
 sign. The model treats every node without a sign as legible from everywhere
 (`visibility.py`, `VisibilityModel.node_is_visible`).
 
+`"sign": false` gives an exit, checkpoint or waypoint no sign at all, and the
+cognitive map then never reveals it by sight or by reaching a neighbouring
+node, with or without a visibility model (#376). A discovery agent knows such
+an exit only through `"full"` familiarity, the familiarity draw or the
+distribution's `entrance`; `null` or a missing `sign` keeps the default sign.
+Under the default `no_known_exit` mode `"default_route"` an agent still walks
+its default route, which may end at an unsigned exit; `"explore"` avoids that.
+See [Scenario JSON](/docs/scenario-json.md#signs-sign).
+
 ```json
 "exits": {
   "exit_A": { "sign": {"x": 0.5, "y": 11.5, "alpha": 90, "c": 3} }

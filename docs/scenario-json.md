@@ -234,6 +234,20 @@ Exits, checkpoints and waypoints can carry a `sign`. A node without one gets
 an omni-directional sign at its position with `c` = 3, so every exit is
 subject to smoke-dependent legibility.
 
+`"sign": false` gives the node no sign, for an exit nobody can see from the
+room, such as the Station's stage door or its kitchen door. A discovery agent
+then never learns that exit or checkpoint by sight or by reaching a
+neighbouring node, with or without a visibility model; it knows it only
+through `"full"` familiarity, the familiarity draw or the distribution's
+`entrance` (#376). An agent that arrives on the node while walking a route it
+knew learns it as before. `null` or no `sign` keeps the default sign, and
+`false` is the only boolean value that is read (`true` is not valid). An agent
+that knows no exit under the default `no_known_exit` mode `"default_route"`
+still walks its default route, which may end at an unsigned exit; `"explore"`
+avoids that. If every way out of a spawn area runs through unsigned nodes, its
+`explore`, `return` and `stay` agents can learn no exit and stay where they
+spawned; the run warns once per such distribution.
+
 | Key | Default | Effect |
 |---|---|---|
 | `x`, `y` | required in an authored `sign` | Sign position [m]. |

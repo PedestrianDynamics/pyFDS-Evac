@@ -201,7 +201,7 @@ else shapely's `representative_point()`. The node point is
   path from JuPedSim's routing engine. If the node point is off the
   navigation mesh, the edge falls back to a straight ray and its cost ignores
   walls;
-- the position of the default sign of a checkpoint without a `sign`: omni-directional, *c* = 3
+- the position of the default sign of a checkpoint without a `sign` (none with `"sign": false`): omni-directional, *c* = 3
   (`visibility.py`, `_default_sign`). An authored `sign` keeps its own `x, y`
   (`extract_sign_descriptors`), so visibility is then computed at the sign;
 - the point an exploring agent walks to and looks from before it patrols on
