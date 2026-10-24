@@ -2,10 +2,10 @@
  "ranked": [
   {
    "clean": false,
-   "composite_cost": 68.6667,
+   "composite_cost": 67.3968,
    "exit_id": "east",
    "feasible": false,
-   "fed_max_route": 2.8667,
+   "fed_max_route": 2.7397,
    "k_leg_max": 0.0,
    "k_max_route": 0.0,
    "path": [
@@ -13,17 +13,17 @@
     "east"
    ],
    "queue_time_s": 0.0,
-   "rank_cost": 68.6667,
+   "rank_cost": 67.3968,
    "status": "fallback/fed",
    "tau_route": 0.0,
    "travel_time_s": 40.0
   },
   {
    "clean": false,
-   "composite_cost": 35.3333,
+   "composite_cost": 34.1212,
    "exit_id": "west",
    "feasible": false,
-   "fed_max_route": 1.5333,
+   "fed_max_route": 1.4121,
    "k_leg_max": 0.0,
    "k_max_route": 0.0,
    "path": [
@@ -31,7 +31,7 @@
     "west"
    ],
    "queue_time_s": 0.0,
-   "rank_cost": 35.3333,
+   "rank_cost": 34.1212,
    "status": "fed",
    "tau_route": 0.0,
    "travel_time_s": 20.0
