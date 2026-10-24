@@ -268,3 +268,36 @@ def test_smoke_clearing_restores_full_speed(recorder, with_zones):
         _assert_closed_form(recorder.rows, with_zones, smoke, lambda agent_id, t: 1.0)
     finally:
         result.cleanup()
+
+
+@pytest.mark.parametrize("with_zones", [True, False], ids=["zones", "no_zones"])
+def test_irritant_clearing_restores_full_speed(recorder, with_zones):
+    """HCl that clears to FIC = 0 gives agents their speed back (#142)."""
+    spec, scenario = _scenario(with_zones)
+
+    def hcl(t, x, y):
+        return 450e-6 if 2.0 <= t < 5.0 else 0.0
+
+    fed = make_fed_model(
+        co_volume_fraction=uniform(0.0),
+        co2_volume_fraction=uniform(0.0),
+        o2_volume_fraction=uniform(0.209),
+        hcl=hcl,
+    )
+    tenability = TenabilityConfig(enable_fic_speed=True, enable_incapacitation=False)
+    result = run_scenario(
+        scenario, seed=spec.seed, fed_model=fed, tenability_config=tenability
+    )
+    try:
+        fic = _factor_lookup(result.fed_history, "fic_speed_factor")
+        assert any(fic(r[1], r[0]) < 1.0 for r in recorder.rows)
+        cleared = [
+            r
+            for r in recorder.rows
+            if r[0] >= 6.0 and _zone_factor(r[2], r[3], with_zones) == 1.0
+        ]
+        assert cleared
+        assert all(speed == pytest.approx(V0) for *_, speed in cleared)
+        _assert_closed_form(recorder.rows, with_zones, lambda a, t: 1.0, fic)
+    finally:
+        result.cleanup()
