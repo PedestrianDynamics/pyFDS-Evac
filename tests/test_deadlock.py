@@ -45,6 +45,20 @@ def test_a_displacement_just_under_the_threshold_is_still():
     assert _feed(DeadlockDetector(), 100.0, positions) is not None
 
 
+def test_a_diagonal_displacement_is_measured_as_a_distance():
+    def positions(t):
+        return {1: (1.0 + 0.022 * t / 100.0, 2.0 + 0.022 * t / 100.0)}
+
+    assert _feed(DeadlockDetector(), 100.0, positions) is None  # 0.031 m net
+
+
+def test_a_displacement_of_exactly_the_threshold_is_not_still():
+    def positions(t):
+        return {1: (DEADLOCK_DISPLACEMENT_M if t >= 100.0 else 0.0, 0.0)}
+
+    assert _feed(DeadlockDetector(), 100.0, positions) is None
+
+
 def test_net_displacement_not_path_length():
     def positions(t):
         return {1: (1.0 + (0.5 if int(t) % 2 else 0.0), 2.0)}
@@ -94,6 +108,20 @@ def test_due_follows_the_sample_interval():
     detector.observe(0.0, {1: (0.0, 0.0)}, held=False)
     assert not detector.due(0.5)
     assert detector.due(1.0)
+
+
+def test_samples_off_the_one_second_grid_keep_the_latest_start_sample():
+    detector = DeadlockDetector()
+    t = 0.0
+    while t < 200.0:
+        if detector.due(t):
+            found = detector.observe(t, {1: (1.0, 2.0)}, held=False)
+            if found is not None:
+                break
+        t += 0.3
+    assert found is not None
+    assert t == pytest.approx(100.8)
+    assert found.since_s == pytest.approx(0.0)
 
 
 def test_a_held_observation_still_paces_the_samples():

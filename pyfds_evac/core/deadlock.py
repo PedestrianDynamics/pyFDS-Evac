@@ -3,8 +3,8 @@
 A run is deadlocked when nobody who could still move has moved: every agent
 inside but the incapacitated has a net displacement below
 ``DEADLOCK_DISPLACEMENT_M`` over the last ``DEADLOCK_WINDOW_S``, and no agent
-is held (in pre-movement, at a waiting stage, or still to spawn from an open
-flow source). The thresholds are those of the deadlock model study on #706.
+is held (in pre-movement, at a waiting stage, idle, with a desired speed of
+zero, or still to spawn from an open flow source). The thresholds are those of the deadlock model study on #706.
 The jam itself is a limitation of the operational model (#706, #359, #745);
 the run only stops and reports it, it never moves an agent to clear it.
 """
