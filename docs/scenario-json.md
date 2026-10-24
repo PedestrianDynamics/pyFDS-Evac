@@ -179,7 +179,7 @@ it starts at its full clear-air speed.
 | `capacity_agents_per_s` | `routing.default_exit_capacity` (1.3 agents/s) | Exit capacity used to estimate queue time when routes are priced. |
 | `open_from_s` | none (open from the start) | The exit opens at this time [s], a finite number ≥ 0. |
 | `closed_after_s` | none (never closes) | The exit closes at this time [s], a finite number ≥ 0 and greater than `open_from_s`. |
-| `sign` | an omni-directional sign at the exit's centre, `c` = 3 | The sign agents read; keys below. |
+| `sign` | an omni-directional sign at the exit's centre, `c` = 3 | The sign agents read; keys below. `false`: no sign. |
 
 An exit with `open_from_s` or `closed_after_s` is open while
 `open_from_s` ≤ *t* < `closed_after_s`
@@ -235,7 +235,8 @@ an omni-directional sign at its position with `c` = 3, so every exit is
 subject to smoke-dependent legibility.
 
 `"sign": false` gives the node no sign, for an exit nobody can see from the
-room, such as the Station's stage door or its kitchen door. A discovery agent
+room, the case the Station validation needs (Fahy); `assets/station_fahy`
+does not set it yet. A discovery agent
 then never learns that exit or checkpoint by sight or by reaching a
 neighbouring node, with or without a visibility model; it knows it only
 through `"full"` familiarity, the familiarity draw or the distribution's
@@ -245,7 +246,8 @@ knew learns it as before. `null` or no `sign` keeps the default sign, and
 that knows no exit under the default `no_known_exit` mode `"default_route"`
 still walks its default route, which may end at an unsigned exit; `"explore"`
 avoids that. If every way out of a spawn area runs through unsigned nodes, its
-`explore`, `return` and `stay` agents can learn no exit and stay where they
+`explore`, `return` and `stay` agents that have no `entrance` and no
+familiarity can learn no exit and stay where they
 spawned; the run warns once per such distribution.
 
 | Key | Default | Effect |

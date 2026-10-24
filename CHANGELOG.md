@@ -38,7 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `"sign": false` on an exit, checkpoint or waypoint: the node has no sign
-  and a discovery agent never learns it by sight (#376).
+  and a discovery agent never learns it by sight (#376). A run warns when a
+  spawn area can learn no exit.
 - `metrics["deadlock"]` and the manifest `outcome["deadlock"]` (`agents`,
   `since_s`, `positions`), and the `deadlock` wording on the CLI line and
   the GUI/TUI label (#760).

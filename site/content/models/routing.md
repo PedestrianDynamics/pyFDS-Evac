@@ -138,8 +138,9 @@ to the next node included, is read at the time the agent would reach it,
 walk from the agent's position to the sample along the path and the speed is
 unimpeded. `tau`, travel time and projected FED are measured from those
 samples (`_measure_route`, `_ForesightClock`). The FED rate of each edge is
-read at the same samples and times as its extinction, so the leg is charged
-the mean rate the agent will meet along it
+read every `sampling_step_m` (extinction on an FDS field is read per grid
+cell instead) at the same arrival times as its extinction, so the leg is
+charged the mean rate the agent will meet along it
 ([#725](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/725)).
 Reading the whole edge at its start instead made the cost of a route jump
 when the agent passed a node
