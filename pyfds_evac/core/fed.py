@@ -184,10 +184,11 @@ def _irritant_fld_rate_per_minute(inputs: DefaultFedInputs) -> float:
 
 
 # Purser's F_FIC values (ppm, incapacitating concentration) from the
-# FDS+Evac Technical Reference (Korhonen 2021), Table 2.  Used to compute
-# the *instantaneous* Fractional Irritant Concentration that drives
-# pre-incapacitation walking-speed degradation (Jin's irritant-smoke
-# experiments).
+# FDS+Evac Technical Reference (Korhonen 2021), Table 2; equal to the
+# incapacitation column of SFPE Handbook Table 63.6.  Used to compute the
+# *instantaneous* Fractional Irritant Concentration.  The opt-in speed rule
+# that FIC drives (``TenabilityConfig.enable_fic_speed``) has no published
+# source (#147); FDS+Evac never applies FIC to walking speed.
 _FIC_COEFFS_PPM: tuple[tuple[str, float], ...] = (
     ("hcl_ppm", 900.0),
     ("hbr_ppm", 900.0),
@@ -204,9 +205,11 @@ def default_fic(inputs: DefaultFedInputs) -> float:
 
     FIC = sum_i C_i / F_FIC,i for irritant species; dimensionless.  Unlike
     FED (an accumulated dose) this is a point-in-time exposure index and
-    it is not integrated.  At ``FIC >= 1`` roughly half of the exposed
-    population would reach irritant incapacitation under sustained
-    exposure; sub-unity values degrade performance progressively.
+    it is not integrated: Purser (SFPE Handbook Ch. 63) treats the sensory
+    irritant effects as immediate, easing when the concentration falls.
+    The sources predict incapacitation at ``FIC = 1``; pyFDS-Evac does not
+    stop agents there, and FIC lowers speed only with ``enable_fic_speed``
+    (#398).
     """
     total = 0.0
     for attr, fic_ppm in _FIC_COEFFS_PPM:
