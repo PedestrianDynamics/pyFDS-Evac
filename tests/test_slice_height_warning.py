@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 from pyfds_evac import cli
 from pyfds_evac.config import messages
+from pyfds_evac.config.effective import effective_configuration
 from pyfds_evac.core import fds_sampling
 from pyfds_evac.core.run_config import build_run_kwargs
 from pyfds_evac.core.scenario import load_scenario
@@ -89,3 +90,28 @@ def test_the_text_has_one_source(caplog):
     with caplog.at_level(logging.WARNING, logger=fds_sampling.__name__):
         _select(2.0, 1.6)
     assert caplog.messages == [messages.slice_height_mismatch("q", 1.6, "d", 2.0, 2)]
+
+
+def test_the_prediction_lists_each_gas_and_extinction_warning_once(caplog):
+    """--show-config predicts the warnings the run logs, once per quantity."""
+    opts = cli._build_parser().parse_args(
+        [
+            "--scenario",
+            "assets/iso_table22_coupled/config_a.json",
+            "--fds-dir",
+            "assets/iso_table22_coupled/fds/a",
+            "--smoke-slice-height",
+            "2.5",
+        ]
+    )
+    scenario = load_scenario(opts.scenario)
+    with caplog.at_level(logging.WARNING):
+        build_run_kwargs(scenario, opts)
+    logged = [m for m in caplog.messages if m.startswith("Requested a '")]
+    predicted = [
+        w
+        for w in effective_configuration(opts, scenario).warnings
+        if w.startswith("Requested a '")
+    ]
+    assert len(logged) == 4
+    assert predicted == logged

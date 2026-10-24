@@ -730,6 +730,43 @@ def _slice_z_mid(slice_obj) -> float:
     return (slice_obj.extent.z_start + slice_obj.extent.z_end) / 2
 
 
+def nearest_height_index(heights: list[float], requested_m: float) -> int:
+    """Index of the height nearest *requested_m*; the first of equally near."""
+    return min(range(len(heights)), key=lambda i: abs(heights[i] - requested_m))
+
+
+def horizontal_slice_heights(
+    fds_dir: str, *, simulation=None
+) -> dict[str, tuple[float, ...]]:
+    """Mid-heights [m] of the horizontal slices of each quantity, in declaration order.
+
+    Reads what ``select_horizontal_slice`` chooses from, without logging.
+    """
+    sim = simulation if simulation is not None else _open_simulation(fds_dir)
+    heights: dict[str, list[float]] = {}
+    for slice_obj in sim.slices:
+        if not _is_horizontal(slice_obj):
+            continue
+        heights.setdefault(str(slice_obj.quantity.name), []).append(
+            _slice_z_mid(slice_obj)
+        )
+    return {quantity: tuple(zs) for quantity, zs in heights.items()}
+
+
+def height_mismatch_text(
+    heights: tuple[float, ...], requested_m: float, quantity: str, fds_dir: str
+) -> str | None:
+    """The warning ``select_horizontal_slice`` logs for slices at *heights*, or None."""
+    if not heights:
+        return None
+    chosen = heights[nearest_height_index(list(heights), requested_m)]
+    if abs(chosen - requested_m) <= _SLICE_HEIGHT_TOLERANCE_M:
+        return None
+    return messages.slice_height_mismatch(
+        quantity, requested_m, fds_dir, chosen, len(heights)
+    )
+
+
 def _warn_on_height_mismatch(
     chosen,
     requested_height_m: float | None,
@@ -846,7 +883,8 @@ def select_horizontal_slice(
             f"No horizontal (PBZ) slice with quantity '{quantity}' found in {fds_dir}"
         )
     if slice_height_m is not None and len(matches) > 1:
-        chosen = min(matches, key=lambda s: abs(_slice_z_mid(s) - slice_height_m))
+        heights = [_slice_z_mid(s) for s in matches]
+        chosen = matches[nearest_height_index(heights, slice_height_m)]
     else:
         chosen = matches[0]
     _warn_on_height_mismatch(chosen, slice_height_m, quantity, len(matches), fds_dir)

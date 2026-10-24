@@ -19,14 +19,23 @@ when asked for.
 from __future__ import annotations
 
 import math
-from collections.abc import Callable, Mapping
-from dataclasses import dataclass
+from collections.abc import Callable, Iterable, Mapping
+from dataclasses import dataclass, field
 from typing import Any, NamedTuple
 
 from . import messages
 from .parameters import is_set_value, option, parameter
 
 GAS_SLICES = ("co", "co2", "o2")
+
+EXTINCTION_QUANTITY = "SOOT EXTINCTION COEFFICIENT"
+GAS_QUANTITIES = (
+    "CARBON MONOXIDE VOLUME FRACTION",
+    "CARBON DIOXIDE VOLUME FRACTION",
+    "OXYGEN VOLUME FRACTION",
+)
+TEMPERATURE_QUANTITY = "TEMPERATURE"
+INTENSITY_QUANTITY = "INTEGRATED INTENSITY"
 
 
 @dataclass(frozen=True)
@@ -36,25 +45,41 @@ class FdsFacts:
     ``slices`` uses the names of ``FdsQuantityInventory.canonical_slice_names``
     (``extinction``, ``co``, ``co2``, ``o2``, ``temperature``,
     ``integrated_intensity``). ``horizon`` is ``(last time, output interval)``
-    [s] or None.
+    [s] or None. ``slice_heights`` maps each FDS quantity name to the
+    mid-heights [m] of its horizontal slices, in declaration order (empty
+    when unknown: no height warning is predicted).
     """
 
     slices: frozenset[str]
     horizon: tuple[float, float] | None = None
+    slice_heights: Mapping[str, tuple[float, ...]] = field(default_factory=dict)
 
     def has(self, quantity: str) -> bool:
         return quantity in self.slices
+
+    def height_mismatch(
+        self, quantity: str, requested_m: float, fds_dir: str
+    ) -> str | None:
+        """The slice-height warning the run logs for *quantity*, or None."""
+        from pyfds_evac.core.fds_sampling import height_mismatch_text
+
+        heights = self.slice_heights.get(quantity, ())
+        return height_mismatch_text(heights, requested_m, quantity, fds_dir)
 
     @classmethod
     def read(cls, fds_dir: str) -> FdsFacts:
         """Inspect *fds_dir* (imports fdsreader)."""
         from pyfds_evac.core.fds_inventory import inspect_fds_quantities
-        from pyfds_evac.core.fds_sampling import fds_output_horizon
+        from pyfds_evac.core.fds_sampling import (
+            fds_output_horizon,
+            horizontal_slice_heights,
+        )
 
         inventory = inspect_fds_quantities(fds_dir)
         return cls(
             frozenset(inventory.canonical_slice_names()),
             fds_output_horizon(fds_dir),
+            horizontal_slice_heights(fds_dir),
         )
 
 
@@ -65,6 +90,11 @@ class _Unknown:
 
     def has(self, quantity: str) -> bool:
         return True
+
+    def height_mismatch(
+        self, quantity: str, requested_m: float, fds_dir: str
+    ) -> str | None:
+        return None
 
 
 UNKNOWN_FDS = _Unknown()
@@ -224,6 +254,37 @@ def _check_heat_layer(opts: Any) -> ConfigIssue | None:
             "D19", "heat_layer_height", messages.LAYER_HEIGHT_NOT_FINITE, "F"
         )
     return None
+
+
+def gas_quantities() -> tuple[str, ...]:
+    """The slice quantities the gas FED model reads: CO, CO2, O2, then the optional gases."""
+    from pyfds_evac.core.fed import FdsFedField
+
+    optional = tuple(quantity for _, quantity in FdsFedField._OPTIONAL_SPECIES)
+    return GAS_QUANTITIES + optional
+
+
+def height_warnings(
+    opts: Any, fds: Any, quantities: Iterable[str], seen: set[str]
+) -> list[str]:
+    """The slice-height warnings of *quantities*, each quantity once per run.
+
+    *seen* holds the quantities already predicted; the run logs a quantity
+    once however many models read it.
+    """
+    fds_dir = option(opts, "fds_dir")
+    requested = option(opts, "smoke_slice_height")
+    if not fds_dir or requested is None:
+        return []
+    found = []
+    for quantity in quantities:
+        if quantity in seen:
+            continue
+        seen.add(quantity)
+        text = fds.height_mismatch(quantity, requested, fds_dir)
+        if text is not None:
+            found.append(text)
+    return found
 
 
 def horizon_overrun(opts: Any, max_time: Any, fds: Any) -> str | None:
