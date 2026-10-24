@@ -386,11 +386,8 @@ uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a --height 1
 ```text
 FED readiness:
   ✓ CO / CO2 / O2 all present and non-zero → default FED model will run
-  ✗ Extinction coefficient → smoke-speed model will NOT run
+  ✓ Extinction coefficient present, all zero → smoke-speed model runs (clear air)
 ```
-
-This case has an extinction slice whose values are all zero, so `run.py` does
-build the smoke model; it reads *K* = 0 (clear air).
 
 ## Probing FED without running a simulation
 
