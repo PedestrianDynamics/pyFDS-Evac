@@ -75,9 +75,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `fds_outside` | with `fds_coverage`: the history rows sampled outside the FDS slices, as `rows`, `agents` and `agent_seconds`, the same as `metrics["fds_outside"]` |
 | `replay_exits` | only with `--replay-exits`: `agents`, the number of replayed spawns, and `sha256`, of the sorted `origin<TAB>spawn_index<TAB>exit_id` lines, one per spawn and joined by newlines, to match the run whose exit history was replayed |
 | `heat_fed_method`, `heat_flux_parameters` | only with `--heat-fed-method total-flux`: ε, h, skin temperature, dose *D*, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or `radiant_source`, `u_factor` and `radiant_flux` |
-
-The manifest does not yet record the slice height that was actually read
-([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+| `slice_heights_m` | in `configuration.run`, inside `smoke_speed`, `gas_fed`, `heat_fed` and `visibility`, for each model that reads FDS slices: the FDS quantity name and the height [m] of the slice it read. Compare with `slice_height_m` beside it, the height requested: a deck with only 2.0 m slices, run at the default 1.6 m, shows 2.0 next to 1.6. Absent for a constant-extinction smoke model and a clear-air visibility model |
 
 Example, from the command above:
 

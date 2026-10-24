@@ -794,6 +794,9 @@ class VisibilityModel:
     _allow_horizon_hold = False
     # The settings the model was built with (for the run manifest).
     parameters: dict[str, object] | None = None
+    # (FDS directory, requested slice height [m]) of an FDS-built model, for
+    # slice_heights_m; kept out of ``parameters``, which names the cache.
+    _slice_source: tuple[str, float] | None = None
     _warned_horizon = False
     # Area the FDS vismap grid covers; None for clear air, whose grid is the
     # walkable area's bounding box and so holds every agent by construction.
@@ -848,6 +851,7 @@ class VisibilityModel:
             node_id: wp_id for wp_id, node_id in enumerate(sign_descriptors)
         }
         self._sign_xy = _sign_positions(sign_descriptors)
+        self._slice_source = (str(fds_dir), slice_height_m)
         self.parameters = {
             "kind": "smoky",
             "time_step_s": time_step_s,
@@ -866,6 +870,20 @@ class VisibilityModel:
     def from_fds(self) -> bool:
         """True for a model built from an FDS run, False for clear air."""
         return self._horizon is not None
+
+    @property
+    def slice_heights_m(self) -> dict[str, float]:
+        """Height [m] of the extinction slice this model reads; empty for clear air.
+
+        Derived from the FDS directory with the rule that chose the slice, so a
+        vismap loaded from the cache reports it too.
+        """
+        if self._slice_source is None:
+            return {}
+        fds_dir, requested_m = self._slice_source
+        heights = fds_sampling.horizontal_slice_heights(fds_dir)[_EXTINCTION_QUANTITY]
+        index = fds_sampling.nearest_height_index(list(heights), requested_m)
+        return {_EXTINCTION_QUANTITY: heights[index]}
 
     def signs_outside_grid(self) -> dict[str, float]:
         """Return {node_id: distance to the grid [m]} of signs off the vismap grid.

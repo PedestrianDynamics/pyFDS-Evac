@@ -1189,6 +1189,10 @@ def test_predicted_run_settings_match_the_built_models(heat_scenario, argv):
     )
     cfg = effective_configuration(opts, heat_scenario)
     assert used["heat_fed"] is not None and used["visibility"] is not None
+    # The heights are read from the FDS output; the options do not predict them.
+    # Only the heat FED reads a slice here: the deck has no soot.
+    assert used["heat_fed"].pop("slice_heights_m") == {"TEMPERATURE": 2.0}
+    assert all("slice_heights_m" not in v for v in used.values() if isinstance(v, dict))
     assert predicted_run_settings(opts, heat_scenario.raw, cfg) == used
 
 

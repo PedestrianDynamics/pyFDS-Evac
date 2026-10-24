@@ -919,7 +919,12 @@ def run_record(
         return record
     run = _json_safe(dict(used))
     predicted = predicted_run_settings(opts, _raw(scenario), cfg)
-    mismatches = _differences(predicted, used)
+    # The heights are read from the FDS output, which the options do not give.
+    mismatches = [
+        name
+        for name in _differences(predicted, used)
+        if not name.endswith(".slice_heights_m")
+    ]
     if not mismatches:
         record["source"] = "run"
         record["run"] = run

@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
 import pytest
 
 from pyfds_evac import cli
+from pyfds_evac.config.effective import effective_configuration, run_record
 from pyfds_evac.core import manifest
 from pyfds_evac.core.fds_sampling import load_slice_sampler
+from pyfds_evac.core.fed import FdsHeatField
 from pyfds_evac.core.run_config import build_run_kwargs
 from pyfds_evac.core.scenario import load_scenario
 from pyfds_evac.core.visibility import VisibilityModel, _VisMapCache
@@ -93,3 +96,34 @@ def test_visibility_records_the_extinction_slice_it_reads(requested, read):
 def test_the_heights_stay_out_of_the_vismap_cache_key():
     model = _vismap_from(TABLE21_FDS, 1.6)
     assert "slice_heights_m" not in model.parameters
+
+
+def test_the_heights_do_not_make_the_options_differ_from_the_run():
+    """The heights are read from the FDS output, not predicted from the options."""
+    opts = cli._build_parser().parse_args(
+        ["--scenario", TABLE22_SCENARIO, "--fds-dir", TABLE22_FDS]
+    )
+    scenario = load_scenario(opts.scenario)
+    kwargs = build_run_kwargs(scenario, opts)
+    used = manifest.run_settings(
+        seed=scenario.seed,
+        **{
+            k: v for k, v in kwargs.items() if k in manifest.run_settings.__kwdefaults__
+        },
+    )
+    record = run_record(effective_configuration(opts, scenario), used, opts, scenario)
+    assert "slice_heights_m" in record["run"]["smoke_speed"]
+    assert record["source"] == "run"
+
+
+def test_heat_with_integrated_intensity_records_both_slices():
+    field = FdsHeatField.from_fds(
+        "assets/heat_integrated_intensity/fds", integrated_intensity=True
+    )
+    settings = manifest.run_settings(
+        seed=1, heat_fed_model=SimpleNamespace(field=field)
+    )
+    assert settings["heat_fed"]["slice_heights_m"] == {
+        "TEMPERATURE": pytest.approx(1.6),
+        "INTEGRATED INTENSITY": pytest.approx(1.6),
+    }

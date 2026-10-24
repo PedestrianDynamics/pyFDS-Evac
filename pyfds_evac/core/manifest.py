@@ -157,6 +157,22 @@ def _fed_config(config: Any) -> dict[str, Any]:
     }
 
 
+def _slice_heights(model: Any) -> dict[str, Any]:
+    """``slice_heights_m`` for the FDS slices *model*'s field reads, else empty.
+
+    Samplers without a slice (constant or synthetic fields) are left out.
+    """
+    samplers = getattr(getattr(model, "field", None), "samplers", None)
+    if samplers is None:
+        return {}
+    heights = {
+        sampler.quantity: sampler.slice_z_m
+        for sampler in samplers()
+        if hasattr(sampler, "slice_z_m")
+    }
+    return {"slice_heights_m": heights} if heights else {}
+
+
 def _smoke_settings(model: Any) -> dict[str, Any] | None:
     if model is None:
         return None
@@ -168,6 +184,7 @@ def _smoke_settings(model: Any) -> dict[str, Any] | None:
         "source": "constant" if constant else "fds",
         "extinction_per_m": getattr(field, "extinction_per_m", None),
         **_fed_config(getattr(model, "config", None)),
+        **_slice_heights(model),
     }
 
 
@@ -178,6 +195,7 @@ def _gas_settings(model: Any) -> dict[str, Any] | None:
     return {
         **_fed_config(config),
         "o2_threshold_percent": getattr(config, "o2_threshold_percent", None),
+        **_slice_heights(model),
     }
 
 
@@ -201,7 +219,11 @@ def _heat_settings(model: Any) -> dict[str, Any] | None:
     if model is None:
         return None
     settings = {name: getattr(model, name, None) for name in _HEAT_ATTRIBUTES}
-    return {**settings, **_fed_config(getattr(model, "config", None))}
+    return {
+        **settings,
+        **_fed_config(getattr(model, "config", None)),
+        **_slice_heights(model),
+    }
 
 
 def _reroute_settings(config: Any) -> dict[str, Any] | None:
@@ -219,7 +241,11 @@ def _vis_settings(model: Any) -> dict[str, Any] | None:
         return None
     parameters = getattr(model, "parameters", None)
     if parameters is not None:
-        return dict(parameters)
+        recorded = dict(parameters)
+        heights = getattr(model, "slice_heights_m", None)
+        if heights:
+            recorded["slice_heights_m"] = heights
+        return recorded
     return {"kind": "smoky" if getattr(model, "from_fds", False) else "clear-air"}
 
 

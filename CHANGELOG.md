@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `since_s`, `positions`), and the `deadlock` wording on the CLI line and
   the GUI/TUI label (#760).
 - `metrics["fed_enabled"]`: whether the gas FED ran (#137).
+- The run manifest records, per model, the height at which each FDS slice
+  was actually read (`slice_heights_m`) ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 
 ### Fixed
 
