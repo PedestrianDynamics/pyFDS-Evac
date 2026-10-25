@@ -136,10 +136,8 @@ conventions; what each one proves, and where that proof is checked, is below.
   `assets/familiarity_test_full/familiarity_test.fds` (real
   combustion via `&REAC`, not a prescribed `&INIT`; walls mirror the
   walkable geometry exactly so smoke propagates through the same
-  doorways agents use). These two configs use the legacy `journeys`/
-  `transitions` shape directly (the web editor's `journeys_v2` format is
-  auto-migrated to this shape by `load_scenario`, but was hand-converted
-  here to add the extra edge below). The maze's start room is one open
+  doorways agents use). These configs carry no journeys: `journeys`,
+  `transitions` and `journeys_v2` are empty. The maze's start room is one open
   box that connects directly to the checkpoint outside the exit door
   (`jps-checkpoints_0 → jps-checkpoints_3`), completely bypassing the
   scripted checkpoint tour through the rest of the maze — a real ~39%

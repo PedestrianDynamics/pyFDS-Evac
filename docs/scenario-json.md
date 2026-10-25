@@ -47,8 +47,8 @@ check the result.
 `journeys_v2` is the journey format of JuPedSim Web and of pyFDS-Evac
 ([#900](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/900)).
 A scenario written by pyFDS-Evac opens in the app, and a scenario drawn in the
-app runs here with the journeys as drawn. The file format is shared; how the
-agents walk (route choice, rerouting, smoke, FED) is pyFDS-Evac's own.
+app runs here with its journeys as the agents' starting routes. The file
+format is shared; how the agents walk (route choice, rerouting, smoke, FED) is pyFDS-Evac's own.
 
 ```json
 "journeys_v2": [
@@ -74,10 +74,17 @@ agents walk (route choice, rerouting, smoke, FED) is pyFDS-Evac's own.
 
 **Weights.** A start area's agents are split over its journeys at spawn by
 exact counts, not by random draws: each journey gets its rounded share and the
-last one takes the rest. A weight that is not a number, or is 0 or less, is
+last one takes the rest. A weight that cannot be read as a number, or is 0 or less, is
 skipped. A start area with no usable weight, and a start area without
-`journey_weights`, has no journey: its agents walk to the nearest exit by
-walking distance.
+`journey_weights`, has no journey: at spawn its agents walk to the nearest
+exit by walking distance.
+
+The weights set each agent's starting journey and the split of the counts at
+spawn. With rerouting on, the default of `run.py`, the route-cost model picks
+each agent's exit, and the shares need not carry over to the exits taken;
+only `--no-enable-rerouting` keeps the drawn exits. See
+[Journey splits](#journey-splits-waypoint_routing) and
+[Models › Routing](/models/routing.md).
 
 **Several journeys per start area.** Give a start area one `journey_weights`
 entry for each journey it uses. Two journeys with weights 60 and 40 send 60 %
@@ -325,7 +332,7 @@ pyfds-evac-convert config.json -o config_v2.json
 ```
 
 Each route a start area walks becomes one `journeys_v2` entry, listed in that
-start area's `journey_weights` with weights that sum to 100. Exit shares at a
+start area's `journey_weights` with weights scaled to sum to 100 where that keeps the split unchanged. Exit shares at a
 checkpoint become one weighted entry per branch, and a patrol that returns to
 its first checkpoint becomes `"loop": true`. A start area whose journey
 leaves the exit to the route choice gets no journey, and the command prints a

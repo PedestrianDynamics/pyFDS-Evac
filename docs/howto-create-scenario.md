@@ -137,7 +137,9 @@ does not write `max_distance`.
 **Journeys.** `load_scenario` reads `journeys_v2` as it is
 (`_migrate_journeys_v2` in `pyfds_evac/core/scenario.py`), several journeys per
 spawn area included: the agents of a spawn area are split over its
-`journey_weights` at spawn. It does so only when `journeys` is empty. See
+`journey_weights` at spawn. With rerouting on, the default, the route-cost
+model picks each agent's exit, so the split of the exits taken can differ from
+the weights. It reads `journeys_v2` only when `journeys` is empty. See
 [Journeys: `journeys_v2`](scenario-json.md#journeys-journeys_v2).
 {{< /details >}}
 
@@ -154,8 +156,8 @@ a re-export or hand-written transitions.
 
 If the file also has `journeys_v2`, set `"journeys": []` and
 `"transitions": []` so that `journeys_v2` is read. Otherwise export the
-scenario again from the current app, or add the `transitions` by hand. A file
-that only has the old shape can be rewritten with `pyfds-evac-convert`; see
+scenario again from the current app, or add the `transitions` by hand;
+`pyfds-evac-convert` needs the `transitions` too. See
 [Old format](scenario-json.md#old-format-still-read).
 {{< /details >}}
 
