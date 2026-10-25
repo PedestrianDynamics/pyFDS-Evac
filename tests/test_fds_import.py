@@ -227,6 +227,67 @@ def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
     assert "radius_std" not in params
 
 
+IMO_SPEEDS = [
+    ("IMO_MALE<30", 1.11, 1.85),
+    ("IMO_MALECREW", 1.11, 1.85),
+    ("IMO_MALE30-50", 0.97, 1.62),
+    ("IMO_MALE>50", 0.84, 1.40),
+    ("IMO_MALE>50MI1", 0.64, 1.06),
+    ("IMO_MALE>50MI2", 0.55, 0.91),
+    ("IMO_FEMALE<30", 0.93, 1.55),
+    ("IMO_FEMALECREW", 0.93, 1.55),
+    ("IMO_FEMALE30-50", 0.71, 1.19),
+    ("IMO_FEMALE>50", 0.56, 0.94),
+    ("IMO_FEMALE>50MI1", 0.43, 0.71),
+    ("IMO_FEMALE>50MI2", 0.37, 0.61),
+    ("IMO_Male30-50", 0.97, 1.62),
+    ("imo_female>50", 0.56, 0.94),
+]
+
+
+@pytest.mark.parametrize(("name", "lo", "hi"), IMO_SPEEDS)
+def test_imo_pers_gets_the_imo_speed(tmp_path, name, lo, hi):
+    result = _radius_import(tmp_path, f"DEFAULT_PROPERTIES='{name}'")
+    params = _params(result, "g")
+    assert params["v0"] == pytest.approx((lo + hi) / 2)
+    assert params["v0_distribution"] == "gaussian"
+    assert params["v0_std"] == pytest.approx((hi - lo) / 2 / math.sqrt(3))
+    assert not _items(result, "D", "PERS")
+
+
+def test_imo_pers_gets_the_male_or_female_body(tmp_path):
+    male = _radius_import(tmp_path, "DEFAULT_PROPERTIES='IMO_Male30-50'")
+    assert _params(male, "g")["radius"] == 0.16
+    female = _radius_import(tmp_path, "DEFAULT_PROPERTIES='IMO_Female<30'")
+    assert _params(female, "g")["radius"] == 0.14
+    explicit = _radius_import(
+        tmp_path,
+        "DEFAULT_PROPERTIES='IMO_Male30-50', DIAMETER_DIST=1, DIA_LOW=0.4, "
+        "DIA_HIGH=0.6, DIA_MEAN=0.5",
+    )
+    # 0.5 * D_TORSO_MEAN 0.30 * E[D] 0.5 / DIA_MEAN 0.5
+    assert _params(explicit, "g")["radius"] == pytest.approx(0.15)
+
+
+def test_imo_pers_reports_the_stair_factors_once(tmp_path):
+    def stair_items(keys):
+        result = _radius_import(tmp_path, keys)
+        return [i for i in _items(result, "A", "PERS") if "FAC_V0_UP/DOWN" in i.message]
+
+    assert len(stair_items("DEFAULT_PROPERTIES='IMO_Female>50'")) == 1
+    assert stair_items("DEFAULT_PROPERTIES='Adult'") == []
+
+
+def test_negative_velocity_dist_keeps_the_preset_speed(tmp_path):
+    result = _radius_import(
+        tmp_path, "DEFAULT_PROPERTIES='Adult', VELOCITY_DIST=-1, VEL_MEAN=2.0"
+    )
+    assert _params(result, "g")["v0"] == 1.25
+    assert any(
+        i.message.startswith("VEL_MEAN ignored") for i in _items(result, "A", "PERS")
+    )
+
+
 @pytest.mark.parametrize(
     ("keys", "radius", "ignored"),
     [
@@ -253,10 +314,8 @@ def test_pers_explicit_uniform_reports_the_torso_range(tmp_path):
 @pytest.mark.parametrize(
     "keys",
     [
-        "DEFAULT_PROPERTIES='IMO_Male30-50'",  # IMO presets: separate issue
         "VELOCITY_DIST=0, VEL_MEAN=1.2",  # no preset, no DIA_*
         "DIAMETER_DIST=0",  # constant without DIA_MEAN
-        "DEFAULT_PROPERTIES='IMO_Male30-50', DIA_MEAN=0.5",  # IMO: Male body
         "DIA_MEAN=0",  # FDS+Evac's body undefined, 0.05 m clamp
         "DIAMETER_DIST=5, DIA_MEAN=1, DIA_PARA=40",  # log-normal mean overflows
         "DIAMETER_DIST=6, DIA_PARA=0, DIA_PARA2=0",  # beta mean 0/0

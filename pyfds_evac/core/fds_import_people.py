@@ -51,6 +51,22 @@ DEFAULT_PROPERTIES_BODY = {
     "CHILD": (0.42, 0.39, 0.45, 0.24, 0.14),
     "ELDERLY": (0.50, 0.46, 0.54, 0.30, 0.18),
 }
+#: FDS+Evac IMO person types: Guide body and speed uniform [VEL_LOW,
+#: VEL_HIGH] [m/s] (IMO MSC.1/Circ.1238, Annex 2, Table 3.4; evac.f90:1713-1840).
+IMO_PROPERTIES = {
+    "IMO_MALE<30": ("MALE", 1.11, 1.85),
+    "IMO_MALECREW": ("MALE", 1.11, 1.85),
+    "IMO_MALE30-50": ("MALE", 0.97, 1.62),
+    "IMO_MALE>50": ("MALE", 0.84, 1.40),
+    "IMO_MALE>50MI1": ("MALE", 0.64, 1.06),
+    "IMO_MALE>50MI2": ("MALE", 0.55, 0.91),
+    "IMO_FEMALE<30": ("FEMALE", 0.93, 1.55),
+    "IMO_FEMALECREW": ("FEMALE", 0.93, 1.55),
+    "IMO_FEMALE30-50": ("FEMALE", 0.71, 1.19),
+    "IMO_FEMALE>50": ("FEMALE", 0.56, 0.94),
+    "IMO_FEMALE>50MI1": ("FEMALE", 0.43, 0.71),
+    "IMO_FEMALE>50MI2": ("FEMALE", 0.37, 0.61),
+}
 #: FDS+Evac global D_TORSO_MEAN default [m] (evac.f90:1683).
 D_TORSO_MEAN_DEFAULT = 0.30
 _BODY_SOURCE = "FDS+Evac Guide Table_DefaultHumans; evac.f90 PERS presets"
@@ -174,6 +190,24 @@ _READERS = {
 }
 
 
+def _guide_type(name: str) -> str | None:
+    """``DEFAULT_PROPERTIES_BODY`` key of a Guide or IMO preset name."""
+    key = name.upper()
+    if key in DEFAULT_PROPERTIES_BODY:
+        return key
+    imo = IMO_PROPERTIES.get(key)
+    return imo[0] if imo else None
+
+
+def _preset_speed(name: str) -> tuple[float, float] | None:
+    """Speed (mean, half-range) [m/s] of a Guide or IMO preset name."""
+    key = name.upper()
+    if key in DEFAULT_PROPERTIES_SPEED:
+        return DEFAULT_PROPERTIES_SPEED[key]
+    imo = IMO_PROPERTIES.get(key)
+    return ((imo[1] + imo[2]) / 2, (imo[2] - imo[1]) / 2) if imo else None
+
+
 # --- speed -----------------------------------------------------------------
 
 
@@ -191,13 +225,13 @@ def speed_parameters(pers: NamelistRecord | None, add: AddItem) -> dict[str, Any
 
 
 def _preset_wins(pers: NamelistRecord) -> bool:
-    """FDS+Evac applies a DEFAULT_PROPERTIES speed only while VELOCITY_DIST
-    is unset (-1, evac.f90:1645), and then overwrites VEL_MEAN/LOW/HIGH
-    (``IF (VELOCITY_DIST < 0)``, evac.f90:1850-1857 for 'Adult'; FDS
+    """FDS+Evac applies a DEFAULT_PROPERTIES speed (Guide or IMO type) only
+    while VELOCITY_DIST is unset (-1, evac.f90:1645), and then overwrites
+    VEL_MEAN/LOW/HIGH (``IF (VELOCITY_DIST < 0)``, evac.f90:1713-1857; FDS
     6.7.6-404-gc9da70d7a)."""
     name = pers.text("DEFAULT_PROPERTIES")
-    known = name is not None and name.upper() in DEFAULT_PROPERTIES_SPEED
-    return known and not pers.has("VELOCITY_DIST")
+    known = name is not None and _preset_speed(name) is not None
+    return known and pers.num("VELOCITY_DIST", -1) < 0
 
 
 def _note_ignored_vel_keys(pers: NamelistRecord, add: AddItem) -> None:
@@ -221,20 +255,32 @@ def _default_properties_speed(pers: NamelistRecord, add: AddItem) -> dict[str, A
     name = pers.text("DEFAULT_PROPERTIES")
     if name is None:
         return {}
-    preset = DEFAULT_PROPERTIES_SPEED.get(name.upper())
+    preset = _preset_speed(name)
     if preset is None:
         add("D", "warning", "PERS", f"DEFAULT_PROPERTIES={name!r} is unknown", pers)
         return {}
     mean, half = preset
     std = half / math.sqrt(3)
+    imo = name.upper() in IMO_PROPERTIES
+    source = " (IMO MSC.1/Circ.1238 Table 3.4)" if imo else ""
     add(
         "A",
         "warning",
         "PERS",
-        f"DEFAULT_PROPERTIES={name!r}: speed uniform {mean - half:g}..{mean + half:g} "
-        f"m/s -> Gaussian v0={mean:g}, v0_std={std:.6g} (same mean and variance)",
+        f"DEFAULT_PROPERTIES={name!r}: speed{source} uniform "
+        f"{mean - half:g}..{mean + half:g} m/s -> Gaussian v0={mean:g}, "
+        f"v0_std={std:.6g} (same mean and variance)",
         pers,
     )
+    if imo:
+        add(
+            "A",
+            "warning",
+            "PERS",
+            f"DEFAULT_PROPERTIES={name!r}: stair factors FAC_V0_UP/DOWN not "
+            "imported (no stairs)",
+            pers,
+        )
     return {"v0": mean, "v0_distribution": "gaussian", "v0_std": round(std, 9)}
 
 
@@ -280,10 +326,11 @@ def body_size_parameters(pers: NamelistRecord, add: AddItem) -> dict[str, Any]:
     evac.f90:1998). Empty when no branch defines a body.
     """
     name = pers.text("DEFAULT_PROPERTIES")
-    preset = DEFAULT_PROPERTIES_BODY.get(name.upper()) if name else None
+    guide = _guide_type(name) if name else None
+    preset = DEFAULT_PROPERTIES_BODY[guide] if guide else None
     explicit = pers.num("DIAMETER_DIST", -1) >= 0
     if name is not None and preset is None:
-        why = f"DEFAULT_PROPERTIES={name!r} is not one of the five Guide presets"
+        why = f"DEFAULT_PROPERTIES={name!r} is not a Guide or IMO preset"
         return _body_not_mapped(pers, add, why)
     if preset is not None and not explicit:
         _note_ignored_body_keys(
