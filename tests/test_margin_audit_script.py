@@ -312,6 +312,13 @@ def test_a_return_at_exactly_ten_seconds_counts_in_the_window(audit):
     assert metrics["returns_within_window"] == 1
 
 
+def test_the_window_edge_is_a_float_comparison(audit):
+    # 16.1 - 6.1 is 10.000000000000002 in floats, so this 10 s gap is out.
+    rows = [_row(6.1, 1, "A", "B"), _row(16.1, 1, "B", "A")]
+    metrics = audit._route_metrics(rows, n_agents=1)
+    assert metrics["returns_within_window"] == 0
+
+
 def test_override_routing_sets_the_key_and_keeps_the_rest(audit):
     config = {"routing": {"w_smoke": 5.0}, "exits": {}}
     copy = audit.override_routing(config, "tau_deadband", 0.0)

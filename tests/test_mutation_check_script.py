@@ -44,6 +44,7 @@ def test_failed_test_is_a_kill(check):
         (3, []),  # pytest internal error
         (4, []),  # usage error
         (5, []),  # no tests collected
+        (-9, []),  # killed by a signal, not a timeout
     ],
 )
 def test_error_without_failed_test_is_invalid(check, returncode, failed):
@@ -69,3 +70,31 @@ def test_run_tests_turns_a_timeout_into_timed_out(check, monkeypatch):
 
     monkeypatch.setattr(check.subprocess, "run", run)
     assert check._run_tests("python", ("tests/x.py",), 7.0) == (check.TIMED_OUT, [])
+
+
+def test_a_baseline_timeout_exits_2_without_mutating(check, monkeypatch, capsys):
+    monkeypatch.setattr(check, "_run_tests", lambda *args: (check.TIMED_OUT, []))
+    monkeypatch.setattr(check, "_check_mutant", pytest.fail)
+    monkeypatch.setattr(sys, "argv", ["mutation_check.py", "fed", "--timeout", "1"])
+    assert check.main() == 2
+    assert "baseline timed out after 1 s, not mutating" in capsys.readouterr().out
+
+
+def test_a_timed_out_mutant_is_reported_as_killed_by_timeout(
+    check, monkeypatch, capsys, tmp_path
+):
+    path = tmp_path / "module.py"
+    mutant = check.Mutant("m", "kind", "old", "new")
+    monkeypatch.setattr(check, "_run_tests", lambda *args: (check.TIMED_OUT, []))
+    assert check._check_mutant(mutant, path, "old", "python", (), 1.0) == "killed"
+    assert "killed by timeout" in capsys.readouterr().out
+    assert path.read_text() == "old"
+
+
+def test_other_errors_from_the_test_run_propagate(check, monkeypatch):
+    def run(*args, **kwargs):
+        raise OSError("no such interpreter")
+
+    monkeypatch.setattr(check.subprocess, "run", run)
+    with pytest.raises(OSError):
+        check._run_tests("python", ("tests/x.py",), 7.0)

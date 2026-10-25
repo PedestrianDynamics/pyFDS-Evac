@@ -977,9 +977,11 @@ status numbers; the flag tests call `cli_init.main`.
 
 ### Open
 
-- Closed (#876): the `walk_mean` floor and the inclusive 10.0 s window are
-  stated in the `margin_audit.py` docstring;
-  `test_a_return_at_exactly_ten_seconds_counts_in_the_window` pins the edge.
+- Closed (#876): the `walk_mean` floor and the 10 s window (`since_s <= 10.0`
+  on the float difference of the logged times, so a gap of 10 s up to
+  rounding may fall on either side) are stated in the `margin_audit.py`
+  docstring; `test_a_return_at_exactly_ten_seconds_counts_in_the_window` and
+  `test_the_window_edge_is_a_float_comparison` pin the edge.
 - Closed: `--inspect-fds` without `--fds-dir` ended in a raw `ValueError`
   traceback; it now exits with the one-line `pyfds-evac: error:` message,
   pinned by `test_cli_main_output.py::test_inspect_fds_without_fds_dir_is_a_one_line_error`.
