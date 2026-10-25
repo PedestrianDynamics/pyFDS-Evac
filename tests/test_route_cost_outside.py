@@ -1,12 +1,21 @@
 """length_outside_m: route length outside the FDS coverage (#431)."""
 
+import contextlib
+import io
 from types import SimpleNamespace
 
 import pytest
 from shapely.geometry import box
+from test_run_outcome import ENOUGH_S, SEED, _scenario
 
 from pyfds_evac.core.fds_coverage import route_length_outside
-from pyfds_evac.core.route_graph import StageEdge, StageGraph
+from pyfds_evac.core.route_graph import (
+    RerouteConfig,
+    RouteCostConfig,
+    StageEdge,
+    StageGraph,
+)
+from pyfds_evac.core.scenario import run_scenario
 
 DOMAIN = box(0, 0, 10, 10)
 
@@ -42,3 +51,22 @@ def test_length_outside_sums_the_route_segments():
 def test_segment_without_geometry_counts_zero():
     graph = _graph(("a", "b", [(12, 5)]))
     assert route_length_outside([_seg("a", "b"), _seg("b", "c")], graph, DOMAIN) == 0.0
+
+
+def test_rows_without_fds_have_an_empty_length_outside():
+    scenario = _scenario(ENOUGH_S)
+    with contextlib.redirect_stdout(io.StringIO()):
+        result = run_scenario(
+            scenario,
+            seed=SEED,
+            reroute_config=RerouteConfig(
+                reevaluation_interval_s=1.0, cost_config=RouteCostConfig(w_queue=1.0)
+            ),
+            collect_route_cost_history=True,
+        )
+    try:
+        rows = list(result.route_cost_history or [])
+    finally:
+        result.cleanup()
+    assert rows, "no route was priced"
+    assert {row["length_outside_m"] for row in rows} == {""}

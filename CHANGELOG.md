@@ -63,6 +63,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pyfds-evac init` imports the FDS+Evac `IMO_*` person types: speed uniform
   from IMO MSC.1/Circ.1238 Table 3.4, as a Gaussian with the same mean and
   variance, and the Male or Female body (#712).
+- The route-cost CSV has a `length_outside_m` column: the length of each
+  evaluated route outside the FDS slice coverage (#431).
 - `"sign": false` on an exit, checkpoint or waypoint: the node has no sign
   and a discovery agent never learns it by sight (#376). Under the default
   `no_known_exit` mode `default_route`, an agent that knows no exit still

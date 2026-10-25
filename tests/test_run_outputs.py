@@ -260,6 +260,7 @@ def test_route_cost_csv_has_the_queue_and_capacity_columns(tmp_path):
         "queue_time_s",
         "exit_count",
         "exit_capacity",
+        "length_outside_m",
     ]
     row = {name: str(index) for index, name in enumerate(columns)}
     run_outputs._write_route_cost_history_csv([row], str(path))

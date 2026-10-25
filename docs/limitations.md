@@ -64,8 +64,9 @@ histories mark each row outside with `in_fds_domain = False`, and
 `metrics["fds_outside"]` and the manifest's `fds_outside` count the
 agents, samples and agent-seconds outside. Check these two; the single
 warning at the first extinction sample outside says nothing about later
-agents. The route-cost history does not record the length outside per
-row ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
+agents. The route-cost history records, per evaluated route, its length
+outside the slices (`length_outside_m`,
+[#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
 `--require-fds-coverage` turns every case outside into an error.
 
 **Signs seen from outside the FDS grid.** An agent beyond the grid of an

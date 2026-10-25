@@ -166,8 +166,9 @@ of ambient air and clear sight.
 
 These two are the signal to check. The first-sample warning of *K* fires
 once per run, often at t = 0 for a route sample, and says nothing about
-agents later. The route-cost history does not record the length outside
-per row ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
+agents later. The route-cost history records, per evaluated route, its
+length outside the slices (`length_outside_m`,
+[#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
 
 **Strict option.** `--require-fds-coverage` (`require_fds_coverage=True` on
 `run_scenario`, `ExtinctionField`, `FdsFedField`, `FdsHeatField` and
