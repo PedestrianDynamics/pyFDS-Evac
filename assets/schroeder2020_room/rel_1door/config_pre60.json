@@ -136,33 +136,25 @@
         "v0_distribution": "gaussian",
         "v0_std": 0.1,
         "familiarity": "full"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 100.0
+        }
+      ]
     }
   },
   "checkpoints": {},
   "zones": {},
-  "journeys": [
+  "journeys_v2": [
     {
       "id": "journey_0",
-      "stages": [
-        "jps-distributions_0",
+      "name": "journey_0",
+      "color": "#4e79a7",
+      "sequence": [
         "E1_east"
-      ],
-      "transitions": [
-        {
-          "from": "jps-distributions_0",
-          "to": "E1_east",
-          "journey_id": "journey_0"
-        }
       ]
     }
-  ],
-  "transitions": [
-    {
-      "from": "jps-distributions_0",
-      "to": "E1_east",
-      "journey_id": "journey_0"
-    }
-  ],
-  "waypoint_routing": {}
+  ]
 }
