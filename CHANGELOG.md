@@ -27,6 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `weight` places no agents, as in the app. Before, a start area with a
   single such entry still got its journey; now its agents go to the
   nearest exit (#900).
+- The shipped scenarios are now written in `journeys_v2` with several
+  weighted journeys per start area, some with `"loop": true`. pyFDS-Evac
+  0.7.x and earlier migrates only a start area with a single weight and
+  ignores `loop`, so it reads such a file without those journeys and sends
+  the start area to the nearest exit, without a warning. Run these files
+  with this version or later (#900).
 - A run whose crowd jams now stops when every mobile agent has stood still
   for 100 s, with `end_reason` `"deadlock"`, still incomplete (exit 2).
   Before, it ran to `max_simulation_time`. `evacuation_time` of such a run

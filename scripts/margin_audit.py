@@ -68,7 +68,9 @@ with it:
     unless ``--allow-dirty`` is given. The decks (config, geometry, FDS
     output) are the same for both arms: the config and geometry come from
     this checkout, not from REF, so a model-change PR compares like with
-    like. Two arms at one commit share a worktree.
+    like. Two arms at one commit share a worktree. The decks are written in
+    ``journeys_v2`` with several weights per start area and ``loop``; a REF
+    that predates #900 misreads them and runs another scenario.
 ``--base-set PATH=VALUE`` / ``--head-set PATH=VALUE``
     Override one config value of that arm, repeatable. PATH is a dotted path
     into the scenario config, or a bare routing key
