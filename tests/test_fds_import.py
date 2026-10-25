@@ -942,7 +942,8 @@ def test_small_obstruction_is_filled_and_a_larger_one_kept(tmp_path):
         tmp_path, "&OBST XB=2,2.4,2,2.4,0,3 /", "&OBST XB=5,6,5,6,0,3 /"
     )
     walkable = shapely_wkt.loads(result.walkable_wkt)
-    assert walkable.area == pytest.approx(99.5 - 1.0)
+    # 5-6 m is 5.2-6.0 m on the 0.4 m grid (#715)
+    assert walkable.area == pytest.approx(99.5 - 0.8)
     assert result.report.walkable["holes"] == 1
 
 
@@ -1286,7 +1287,7 @@ def test_exit_behind_a_solid_strip_is_dropped_not_moved(tmp_path):
     [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
     assert item.message == (
         "exit dropped: its strip on the room side is empty; "
-        "the line is 0.600 m from the walkable area"
+        "the line is 0.500 m from the walkable area"
     )
 
 
