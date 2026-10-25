@@ -95,6 +95,29 @@ PREMOVEMENT_PRESETS = {
     "constant": {"a": 10.0, "b": None},
 }
 
+# MBIE (2012), Commentary for Verification Method C/VM2, Table 3.3 Pre-travel
+# activity times (with Errata 1), seconds. Pre-travel activity only, without
+# detection and the 30 s notification time of §3.2.2; hospital_origin is the
+# staff response time without the 120 s per patient per 2 staff term.
+CVM2_PREMOVEMENT_PRESETS: dict[str, float] = {
+    "cvm2_office_origin": 30.0,
+    "cvm2_office_remote": 60.0,
+    "cvm2_retail_origin": 60.0,
+    "cvm2_retail_remote": 120.0,
+    "cvm2_retail_origin_voice": 30.0,
+    "cvm2_retail_remote_voice": 60.0,
+    "cvm2_apartment_origin": 60.0,
+    "cvm2_apartment_remote": 300.0,
+    "cvm2_hotel_origin": 60.0,
+    "cvm2_hotel_remote": 600.0,
+    "cvm2_hotel_remote_voice": 300.0,
+    "cvm2_daycare_origin": 60.0,
+    "cvm2_daycare_remote": 120.0,
+    "cvm2_hospital_origin": 60.0,
+    "cvm2_hospital_remote": 1800.0,
+    "cvm2_focused_origin": 0.0,
+}
+
 
 def create_premovement_distribution(
     distribution_type: str,
