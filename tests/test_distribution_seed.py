@@ -190,7 +190,7 @@ def _record_streams(monkeypatch, config, walkable, seed):
     "asset",
     [
         "assets/station_fahy",  # no journeys: the fallback initialiser
-        "assets/Haspel",  # journeys: the full-config initialiser
+        "assets/iso_test_8_route_allocation",  # journeys: the full-config initialiser
     ],
 )
 def test_consecutive_seeds_share_no_distribution_stream(asset, monkeypatch, tmp_path):

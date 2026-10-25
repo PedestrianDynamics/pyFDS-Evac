@@ -70,6 +70,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   air kept its last slowdown (#142).
 - The FED-disabled warning no longer promises a zero dose: a run without
   CO, CO2 or O2 reports no gas FED at all (#137).
+- `assets/Haspel` evacuates in clear air: 400 of 400 agents leave by
+  103 s (seed 42), where 74 of 300 deadlocked. Two checkpoints sat in
+  doorways the agents then walked back from; the scenario now has no
+  journeys, so pyfds-evac chooses the routes, adds the outdoor exit north
+  of the building and the exhibition area's 100 agents, and turns every
+  sign to face the agents (#894, #132).
 
 ## [0.7.0] - 2026-10-23
 
