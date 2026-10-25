@@ -237,7 +237,8 @@ visibility model applies the same function to the extinction slice it hands
 to fdsvismap.
 
 The height is an absolute z in the FDS domain, so it equals the height
-above the floor where the floor is at z = 0. C/VM2, the Engineers
+above the floor where the floor is at z = 0. On a sloped floor or a stage it does not;
+see [Limitations](limitations.md#what-is-not-modelled). C/VM2, the Engineers
 Australia note and DIN 18009-2 (§7.2.1) evaluate tenability at 2.0 m
 ([ASET and RSET](/fundamentals/aset-rset.md)). For a check against them,
 run with `--smoke-slice-height 2.0` and write the slices at that

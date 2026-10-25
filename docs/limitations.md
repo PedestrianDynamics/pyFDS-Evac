@@ -185,11 +185,16 @@ not a height above the local floor. On a raked floor, such as a lecture hall
 with tiered seating, or on a raised stage or platform, agents stand at
 different floor levels, so one slice samples smoke, gases, heat and sign
 legibility too low above the feet of agents on the higher floor and too high
-above those on the lower one. Visibility, FED, heat and tenability results
-there are biased. Until floor-relative sampling exists
+above those on the lower one. Smoke is usually densest near the ceiling, so
+the hazard is underestimated for the agents on the higher floor and
+overestimated for those on the lower one. Visibility, FED, heat and
+tenability results there are biased, and so are the smoke-dependent walking
+speed and route choice that read the same slice. Until floor-relative
+sampling exists
 ([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)), run
-each level separately at its own height, or pick the height that is
-conservative for the occupants who matter most and say so.
+each level separately at its own height, with the matching `&SLCF PBZ=` in
+the FDS deck, or pick the height that is conservative for the occupants who
+matter most and say so.
 
 **FED activity level.** The CO term of the toxic dose uses one fixed
 coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
