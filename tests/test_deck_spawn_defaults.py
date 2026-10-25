@@ -2,11 +2,11 @@
 
 A distribution that leaves out ``number``, ``radius`` or ``v0`` takes the
 deck's ``simulationParams`` value, else 10 agents, 0.2 m and 1.25 m/s. The
-same rule holds with journeys (Haspel, complete initialiser) and without
-(station_fahy, fallback initialiser); nothing is taken from another
-distribution. Before #567 the fallback copied the first distribution's
-values and defaulted ``number`` to 100, and the journey path ignored
-``simulationParams``.
+same rule holds with journeys (iso_test_8_route_allocation, complete
+initialiser) and without (station_fahy, fallback initialiser); nothing is
+taken from another distribution. Before #567 the fallback copied the first
+distribution's values and defaulted ``number`` to 100, and the journey path
+ignored ``simulationParams``.
 
 Pre-movement and flow spawning are off: with pre-movement on, agents spawn
 at speed 0 and the assertions would not concern ``v0``.
@@ -30,8 +30,9 @@ from pyfds_evac.core.simulation_init import (
     initialize_simulation_from_json,
 )
 
-# Haspel has journeys (complete initialiser); station_fahy has none (fallback).
-ASSETS = ["assets/Haspel", "assets/station_fahy"]
+# iso_test_8_route_allocation has journeys (complete initialiser); station_fahy
+# has none (fallback).
+ASSETS = ["assets/iso_test_8_route_allocation", "assets/station_fahy"]
 SPAWN_KEYS = ("number", "radius", "v0", "desired_speed")
 
 
@@ -52,7 +53,7 @@ def _stripped_raw(asset: str, drop: tuple[str, ...]) -> tuple[dict, list[str]]:
 
 
 def _first_populated(raw: dict, keys: list[str]) -> str:
-    """The first distribution that places agents (Haspel's first has 0)."""
+    """The first distribution that places agents."""
     return next(k for k in keys if raw["distributions"][k]["parameters"].get("number"))
 
 

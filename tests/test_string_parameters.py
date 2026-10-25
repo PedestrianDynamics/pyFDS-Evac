@@ -178,8 +178,9 @@ def test_tui_agent_count_reads_string_parameters():
     assert info.agents == 7
 
 
-# Haspel has journeys (complete initialiser); station_fahy has none (fallback).
-INIT_ASSETS = ["assets/Haspel", "assets/station_fahy"]
+# iso_test_8_route_allocation has journeys (complete initialiser); station_fahy
+# has none (fallback).
+INIT_ASSETS = ["assets/iso_test_8_route_allocation", "assets/station_fahy"]
 _MISSING = object()
 
 

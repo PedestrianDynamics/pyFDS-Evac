@@ -28,8 +28,9 @@ from pyfds_evac.core.simulation_init import (
     initialize_simulation_from_json,
 )
 
-# Haspel has journeys (complete initialiser); station_fahy has none (fallback).
-ASSETS = ["assets/Haspel", "assets/station_fahy"]
+# iso_test_8_route_allocation has journeys (complete initialiser); station_fahy
+# has none (fallback).
+ASSETS = ["assets/iso_test_8_route_allocation", "assets/station_fahy"]
 SPEED_PREFIXES = ("v0", "desired_speed")
 
 
