@@ -102,23 +102,30 @@ def distribution() -> dict:
                 "v0_std": 0.2,
                 "familiarity": "full",
             },
+            "journey_weights": [
+                {"journey_id": j["id"], "weight": 25.0} for j in journeys()
+            ],
         }
     }
 
 
-DIST = "jps-distributions_0"
 DOORS = ["jps-checkpoints_doorA", "jps-checkpoints_doorB"]
 EXITS = ["exit_E", "exit_F"]
-TRANSITIONS = [{"from": DIST, "to": d, "journey_id": "journey_0"} for d in DOORS] + [
-    {"from": d, "to": e, "journey_id": "journey_0"} for d in DOORS for e in EXITS
-]
-# The engine requires an explicit split at every checkpoint with two
-# outgoing edges. The percentages only seed the journey variants; the route
-# ranking at spawn and on reroute picks each agent's path.
-WAYPOINT_ROUTING = {
-    d: {"journey_0": {"destinations": [{"target": e, "percentage": 50} for e in EXITS]}}
-    for d in DOORS
-}
+COLORS = ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2"]
+
+
+def journeys() -> list[dict]:
+    """One journey per door and exit pair.
+
+    The weights only seed the journey variants; the route ranking at spawn
+    and on reroute picks each agent's path.
+    """
+    routes = [[d, e] for d in DOORS for e in EXITS]
+    ids = ["journey_0"] + [f"journey_0_{i}" for i in range(1, len(routes))]
+    return [
+        {"id": i, "name": i, "color": c, "sequence": r}
+        for i, c, r in zip(ids, COLORS, routes)
+    ]
 
 
 def config(cost_model: str) -> dict:
@@ -157,15 +164,7 @@ def config(cost_model: str) -> dict:
         "distributions": distribution(),
         "checkpoints": checkpoints(),
         "zones": {},
-        "journeys": [
-            {
-                "id": "journey_0",
-                "stages": [DIST, *DOORS, *EXITS],
-                "transitions": TRANSITIONS,
-            }
-        ],
-        "transitions": TRANSITIONS,
-        "waypoint_routing": WAYPOINT_ROUTING,
+        "journeys_v2": journeys(),
     }
 
 

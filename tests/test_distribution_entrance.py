@@ -4,13 +4,14 @@
 know it whatever their familiarity, so a ``discovery`` agent must start with
 the route to it in its cognitive map.
 
-The asset is the T-junction: journeys and transitions are declared and the
-junction is a checkpoint, so initialisation takes the complete-config path and
-agents are steered directly. On that path ``_process_distributions`` built the
-parameter dict with an explicit whitelist that omitted ``entrance``, so agents
-placed at t = 0 were seeded as if none had been declared. Flow-spawned agents
-read ``entrance`` from the raw scenario in ``scenario.py`` and are pinned here
-so the two paths keep the same contract.
+The asset is the T-junction: ``journeys_v2`` and ``journey_weights`` are
+declared and the junction is a checkpoint, so initialisation takes the
+complete-config path and agents are steered directly. On that path
+``_process_distributions`` built the parameter dict with an explicit whitelist
+that omitted ``entrance``, so agents placed at t = 0 were seeded as if none
+had been declared. Flow-spawned agents read ``entrance`` from the raw scenario
+in ``scenario.py`` and are pinned here so the two paths keep the same
+contract.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ from pathlib import Path
 import pytest
 
 from pyfds_evac.core.route_graph import RerouteConfig, RouteCostConfig
-from pyfds_evac.core.scenario import Scenario, run_scenario
+from pyfds_evac.core.scenario import Scenario, _migrate_journeys_v2, run_scenario
 
 ASSET = Path("assets/t_junction")
 SPAWN_KEY = "jps-distributions_0"
@@ -35,6 +36,21 @@ SEED = 42
 @pytest.fixture(scope="module")
 def base_raw() -> dict:
     return json.loads((ASSET / "config_discovery.json").read_text(encoding="utf-8"))
+
+
+def _build(raw: dict) -> Scenario:
+    """A scenario from *raw*, with ``journeys_v2`` migrated as ``load_scenario`` does."""
+    _migrate_journeys_v2(raw)
+    assert raw["journeys"], "the complete-config path needs the migrated journeys"
+    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=(ASSET / "geometry.wkt").read_text(encoding="utf-8").strip(),
+        model_type="CollisionFreeSpeedModel",
+        seed=SEED,
+        sim_params=sim_params,
+        source_path=None,
+    )
 
 
 def _scenario(base_raw: dict, *, use_flow_spawning: bool) -> Scenario:
@@ -53,15 +69,7 @@ def _scenario(base_raw: dict, *, use_flow_spawning: bool) -> Scenario:
             "entrance": ENTRANCE,
         }
     )
-    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
-    return Scenario(
-        raw=raw,
-        walkable_area_wkt=(ASSET / "geometry.wkt").read_text(encoding="utf-8").strip(),
-        model_type="CollisionFreeSpeedModel",
-        seed=SEED,
-        sim_params=sim_params,
-        source_path=None,
-    )
+    return _build(raw)
 
 
 def _first_maps(scenario: Scenario) -> dict[int, dict]:
@@ -87,7 +95,7 @@ def _first_maps(scenario: Scenario) -> dict[int, dict]:
 def test_the_asset_names_both_exits(base_raw):
     """The entrance must be a real exit, and not the only one."""
     assert {ENTRANCE, OTHER_EXIT} <= set(base_raw["exits"])
-    assert base_raw["journeys"] and base_raw["checkpoints"]
+    assert base_raw["journeys_v2"] and base_raw["checkpoints"]
 
 
 @pytest.mark.parametrize(
@@ -135,26 +143,8 @@ def _two_distributions(base_raw: dict) -> Scenario:
         }
     )
     raw["distributions"] = {FULL_KEY: full, SPAWN_KEY: flow}
-    journey = copy.deepcopy(raw["journeys"][0])
-    journey["id"] = "journey_full"
-    journey["stages"][0] = FULL_KEY
-    for t in journey["transitions"]:
-        t["journey_id"] = "journey_full"
-        if t["from"] == SPAWN_KEY:
-            t["from"] = FULL_KEY
-    raw["journeys"].append(journey)
-    raw["transitions"] = raw["transitions"] + [
-        t for t in journey["transitions"] if t["from"] == FULL_KEY
-    ]
-    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
-    return Scenario(
-        raw=raw,
-        walkable_area_wkt=(ASSET / "geometry.wkt").read_text(encoding="utf-8").strip(),
-        model_type="CollisionFreeSpeedModel",
-        seed=SEED,
-        sim_params=sim_params,
-        source_path=None,
-    )
+    full["journey_weights"] = copy.deepcopy(flow["journey_weights"])
+    return _build(raw)
 
 
 def test_flow_agents_take_their_own_distribution(base_raw):

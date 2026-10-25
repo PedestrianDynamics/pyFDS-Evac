@@ -118,6 +118,43 @@ def _as_v2(raw: dict, journeys_v2: list[dict], weights: list[dict]) -> dict:
     return v2
 
 
+START, CHECKPOINT = "jps-distributions_0", "jps-checkpoints_0"
+LEFT, RIGHT = "exit_A_left", "exit_B_right"
+T_JUNCTION_ROUTING = {
+    CHECKPOINT: {
+        "journey_0": {
+            "destinations": [
+                {"target": LEFT, "percentage": 1},
+                {"target": RIGHT, "percentage": 99},
+            ]
+        }
+    }
+}
+
+
+def _as_legacy(raw: dict, stages: list[str], pairs: list, routing=None) -> dict:
+    """A journeys_v2 case written in the old journeys / transitions shape."""
+    old = copy.deepcopy(raw)
+    old.pop("journeys_v2")
+    (dist,) = old["distributions"].values()
+    dist.pop("journey_weights")
+    transitions = [{"from": a, "to": b, "journey_id": "journey_0"} for a, b in pairs]
+    old["journeys"] = [
+        {"id": "journey_0", "stages": stages, "transitions": transitions}
+    ]
+    old["transitions"] = transitions
+    if routing:
+        old["waypoint_routing"] = routing
+    return old
+
+
+def _t_junction_legacy(raw: dict) -> dict:
+    """t_junction as it was written before journeys_v2: a 1/99 split at the checkpoint."""
+    pairs = [(START, CHECKPOINT), (CHECKPOINT, LEFT), (CHECKPOINT, RIGHT)]
+    stages = [START, CHECKPOINT, LEFT, RIGHT]
+    return _as_legacy(raw, stages, pairs, T_JUNCTION_ROUTING)
+
+
 def test_shares_written_as_journeys_run_as_before(tmp_path):
     """t_junction's 1/99 split at the checkpoint, as two weighted journeys."""
     journeys = [
@@ -131,7 +168,7 @@ def test_shares_written_as_journeys_run_as_before(tmp_path):
         "all_b": (journeys[1:], [{**b, "weight": 100}]),
     }
     old_dir, raw = _copy_case("t_junction", tmp_path, "old")
-    old = _trajectories(old_dir, raw, 60.0)
+    old = _trajectories(old_dir, _t_junction_legacy(raw), 60.0)
     # Some agent turns west of the checkpoint, so the window sees the 1 % share.
     assert old.groupby("id")["x"].min().lt(15).any()
     same = {}
@@ -145,18 +182,12 @@ def test_shares_written_as_journeys_run_as_before(tmp_path):
 def test_a_loop_patrols_as_before(tmp_path):
     """One lap of fed_incap_co_2000ppm's patrol, closed by loop."""
     old_dir, raw = _copy_case("fed_incap_co_2000ppm", tmp_path, "old")
-    (journey,) = raw["journeys"]
-    start = journey["stages"][0]
-    lap = journey["stages"][1:5]
-    stages = [start, *lap]
+    (journey,) = raw["journeys_v2"]
+    lap = journey["sequence"][:4]
+    stages = [START, *lap]
     pairs = [*zip(stages, stages[1:]), (lap[-1], lap[0])]
-    journey["stages"] = stages
-    journey["transitions"] = [
-        {"from": a, "to": b, "journey_id": journey["id"]} for a, b in pairs
-    ]
-    raw["transitions"] = journey["transitions"]
     weights = [{"journey_id": "patrol", "weight": 100}]
-    old = _trajectories(old_dir, raw, 60.0)
+    old = _trajectories(old_dir, _as_legacy(raw, stages, pairs), 60.0)
     assert len(old) > 0
     same = {}
     for name, loop in (("loop", True), ("no_loop", False)):
@@ -174,7 +205,7 @@ def _t_junction_v2(tmp_path: Path, keep_routing: bool) -> Path:
         [{"journey_id": "journey_0", "weight": 100}],
     )
     if keep_routing:
-        v2["waypoint_routing"] = raw["waypoint_routing"]
+        v2["waypoint_routing"] = T_JUNCTION_ROUTING
     (folder / "config.json").write_text(json.dumps(v2), encoding="utf-8")
     return folder / "config.json"
 

@@ -29,13 +29,13 @@ asset's own config uses the discovery tier, which is exercised elsewhere.
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
 import pytest
 from shapely.geometry import Polygon
 
 from pyfds_evac.core.route_graph import RouteCostConfig, StageGraph, rank_routes
+from pyfds_evac.core.scenario import load_scenario
 
 ASSET = Path("assets/t_junction")
 
@@ -64,7 +64,7 @@ class UniformSmoke:
 
 
 def _graph() -> StageGraph:
-    raw = json.loads((ASSET / "config.json").read_text(encoding="utf-8"))
+    raw = load_scenario(str(ASSET / "config.json")).raw
     stages = {
         key: {"polygon": Polygon(value["coordinates"]), "stage_type": "exit"}
         for key, value in raw["exits"].items()

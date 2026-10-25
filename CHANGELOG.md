@@ -67,6 +67,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `"loop": true`, and a start area that left the exit to the route choice
   gets no journey (#900).
 
+### Changed
+
+- The shipped scenarios with journeys are written in `journeys_v2` (exit
+  shares as weighted journeys, the dose-test patrols with `"loop": true`);
+  their runs are unchanged (#900).
+
 ### Fixed
 
 - `scripts/inspect_fds.py` reports a present, all-zero extinction slice as

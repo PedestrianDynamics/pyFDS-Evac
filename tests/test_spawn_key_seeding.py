@@ -128,9 +128,8 @@ def test_refused_adds_do_not_change_any_agent(deck, monkeypatch):
 def _even_split_t_junction(max_time: float, agents: int):
     """``t_junction`` with its two journey variants at equal weight."""
     scenario = _load("t_junction/config.json", max_time, agents)
-    routing = scenario.raw["waypoint_routing"]["jps-checkpoints_0"]["journey_0"]
-    for destination in routing["destinations"]:
-        destination["percentage"] = 50
+    for journey in scenario.raw["journeys"]:
+        journey["spawn_weight"] = 50.0
     return scenario
 
 
@@ -163,6 +162,8 @@ def test_refused_flow_positions_do_not_shift_later_draws(monkeypatch):
         return {key_of[agent_id]: value for agent_id, value in recorded.items()}
 
     expected = draws()
+    # Both exits get agents, so the even split took effect.
+    assert len({value[0] for value in expected.values()}) == 2
     calls = {"n": 0}
 
     def refuse_every_other(self, parameters):
