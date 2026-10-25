@@ -179,6 +179,18 @@ an imported upper floor means "reached the stair door"
 `speed_factor` can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.
 
+**Sloped floors and stages.** The slice height (`--smoke-slice-height`,
+`simulationParams.smoke_slice_height`) is an absolute z in the FDS domain,
+not a height above the local floor. On a raked floor, such as a lecture hall
+with tiered seating, or on a raised stage or platform, agents stand at
+different floor levels, so one slice samples smoke, gases, heat and sign
+legibility too low above the feet of agents on the higher floor and too high
+above those on the lower one. Visibility, FED, heat and tenability results
+there are biased. Until floor-relative sampling exists
+([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)), run
+each level separately at its own height, or pick the height that is
+conservative for the occupants who matter most and say so.
+
 **FED activity level.** The CO term of the toxic dose uses one fixed
 coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
 the [FED model](/models/fed.md#coded-form)). Rest and heavy work cannot be selected, although

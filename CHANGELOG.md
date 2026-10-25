@@ -101,6 +101,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   it derives the walkable area, as FDS does, and warns about walls thinner
   than a cell, walls that merge, openings that close and obstructions FDS
   drops (#715).
+- Docs: the absolute slice height biases results on sloped floors and
+  stages; documented as a limitation (#365).
 - `VELOCITY_DIST=-1` on a `&PERS` with a preset keeps the preset speed, as in
   FDS+Evac (#712).
 - The shipped scenarios with journeys are written in `journeys_v2` (exit
