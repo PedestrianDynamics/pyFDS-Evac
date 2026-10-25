@@ -117,6 +117,8 @@ class ImportResult:
     deck_path: Path
     #: The spawn areas as built, kept in memory for the terminal summary.
     spawns: list[ImportedSpawn] = field(default_factory=list)
+    #: The floor's ``&MESH`` records, kept in memory for ``--check-solids``.
+    floor_meshes: tuple = ()
 
     def run_command(self, out_dir: str | Path) -> str:
         command = f"pyfds-evac --scenario {out_dir}"
@@ -1196,7 +1198,7 @@ def _finish(
     _check_capacity(report, walkable, spawns)
     raw = _raw(deck, report, exits, spawns, height)
     text = shapely_wkt.dumps(walkable, rounding_precision=6, trim=True)
-    return ImportResult(raw, text, report, deck_path, spawns)
+    return ImportResult(raw, text, report, deck_path, spawns, tuple(floor.meshes))
 
 
 def _check_connectivity(walkable, exits, spawns, report) -> None:
