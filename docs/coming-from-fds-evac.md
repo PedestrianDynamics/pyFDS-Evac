@@ -228,6 +228,52 @@ While an agent waits, its walking speed is not reduced by the smoke around
 it. It starts at its full clear-air speed when it is released. Its toxic dose
 does accumulate while it waits.
 
+#### C/VM2 Table 3.3 presets
+
+`"premovement_preset": "<name>"` on a spawn area gives every agent of it the
+constant pre-travel activity time of one row of Table 3.3 of the New Zealand
+verification method C/VM2. It sets `use_premovement` and a constant delay, so
+it cannot be combined with `premovement_distribution`,
+`premovement_param_a/b` or `use_premovement: false`; an unknown name, or a
+conflict, stops the set-up with a `ValueError` that names the spawn area.
+`premovement_offset_s` and `premovement_seed` still apply, and the run logs
+the preset once per spawn area.
+
+| `premovement_preset` | Delay [s] | Building use and position |
+|---|---|---|
+| `cvm2_office_origin` | 30 | Awake, alert, familiar (offices, warehouses not open to the public): enclosure of origin |
+| `cvm2_office_remote` | 60 | The same: remote from the enclosure of origin |
+| `cvm2_retail_origin` | 60 | Awake, alert, unfamiliar (retail shops, exhibition spaces, restaurants): enclosure of origin, standard alarm |
+| `cvm2_retail_remote` | 120 | The same: remote, standard alarm |
+| `cvm2_retail_origin_voice` | 30 | The same: enclosure of origin, voice alarm |
+| `cvm2_retail_remote_voice` | 60 | The same: remote, voice alarm |
+| `cvm2_apartment_origin` | 60 | Sleeping, familiar (apartments): enclosure of origin, standard alarm |
+| `cvm2_apartment_remote` | 300 | The same: remote, standard alarm |
+| `cvm2_hotel_origin` | 60 | Sleeping, unfamiliar (hotels and motels): enclosure of origin |
+| `cvm2_hotel_remote` | 600 | The same: remote, standard alarm |
+| `cvm2_hotel_remote_voice` | 300 | The same: remote, voice alarm |
+| `cvm2_daycare_origin` | 60 | Awake, under the care of trained staff (day care, dental office, clinic): enclosure of origin |
+| `cvm2_daycare_remote` | 120 | The same: remote |
+| `cvm2_hospital_origin` | 60 | Sleeping, under the care of trained staff (hospitals, rest homes): enclosure of origin, the 60 s for staff to respond |
+| `cvm2_hospital_remote` | 1800 | The same: remote |
+| `cvm2_focused_origin` | 0 | Spaces with only focused activities (cinemas, theatres, stadiums): space of origin |
+
+Source: MBIE (2012), *Commentary for Verification Method C/VM2*, Ministry of
+Business, Innovation and Employment, Wellington, December 2012, ISBN
+978-0-478-39942-4, Table 3.3 "Pre-travel activity times" (with Errata 1,
+30 April 2012).
+
+The times are the pre-travel activity time only. C/VM2 adds a notification
+time of 30 s for standard evacuation strategies (§3.2.2), and detection comes
+before that. Add both through `premovement_offset_s`; a preset alone
+understates RSET.
+
+Two hospital terms are not modelled: the 120 s per patient per 2 staff that
+follows the 60 s staff response, and the "1800 s or as per specific
+requirements, whichever is the greater" for occupants who cannot be moved
+(`cvm2_hospital_remote` uses 1800 s). Early childhood centres are not in
+Table 3.3 and have no preset.
+
 ## What is lost
 
 Some FDS+Evac features have no counterpart. The social-force movement model
