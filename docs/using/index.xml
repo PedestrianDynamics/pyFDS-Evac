@@ -1233,7 +1233,7 @@ add and the failure modes that stay silent unless you read the warnings.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--smoke-slice-height M&lt;/code>&lt;/td>
 &lt;td>1.6 m&lt;/td>
-&lt;td>Height of the horizontal slices that are read (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.2 m away. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>.&lt;/td>
+&lt;td>Height of the horizontal slices that are read (&lt;a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source" target="_blank" rel="noopener">FDS+Evac&lt;/a> &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.2 m away. An absolute z, so it is wrong above sloped floors and stages (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#what-is-not-modelled">Limitations&lt;/a>). See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/">FDS slice sampling&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--allow-fds-horizon-hold&lt;/code>&lt;/td>
@@ -2254,7 +2254,7 @@ command, only the list of what to fix.&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
 [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-[--exit-depth 0.5] [--no-fds] [--force] [-v]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+[--exit-depth 0.5] [--no-fds] [--check-solids SIM_DIR] [--force] [-v]&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -2265,6 +2265,18 @@ title="Copy code"
 &lt;/div>
 &lt;/div>
 &lt;ul>
+&lt;li>&lt;code>--check-solids SIM_DIR&lt;/code> compares the derived walkable area with the solid
+cells of a finished FDS run of the deck in &lt;code>SIM_DIR&lt;/code> (#715). It reports the
+number of compared and disagreeing cells and every region of two or more
+connected disagreeing cells within one mesh, with its bounds, as warnings,
+and writes the summary to &lt;code>import_report.json&lt;/code> under &lt;code>walkable.check_solids&lt;/code>. A
+&lt;code>SIM_DIR&lt;/code> without a readable &lt;code>.smv&lt;/code>, or a run in which no floor mesh
+matches, is an error (exit 3).
+The comparison has limits: it looks at the walking band only; it skips solid
+islands below 0.25 m², which &lt;code>init&lt;/code> fills in on purpose; it compares
+cells inside the outer ring of the kept parts, so rooms &lt;code>init&lt;/code> dropped are
+skipped; and a wall that &lt;code>init&lt;/code> makes thicker than FDS on the outer
+boundary is not seen.&lt;/li>
 &lt;li>An FDS+Evac deck keeps its &lt;code>&amp;amp;EXIT&lt;/code>, &lt;code>&amp;amp;DOOR&lt;/code>, &lt;code>&amp;amp;EVAC&lt;/code>, &lt;code>&amp;amp;EVHO&lt;/code>, &lt;code>&amp;amp;ENTR&lt;/code> and
 &lt;code>&amp;amp;PERS&lt;/code> records, on one floor (the lowest; &lt;code>--floor&lt;/code> picks another).&lt;/li>
 &lt;li>A plain FDS deck gets an exit for every &lt;code>SURF_ID='OPEN'&lt;/code> vent on the
@@ -2343,7 +2355,14 @@ the main evacuation meshes only), whose edge is a wall, minus the &lt;code>&amp;
 footprints in the band, less the &lt;code>&amp;amp;HOLE&lt;/code> footprints in the band. &lt;code>MULT_ID&lt;/code>
 is expanded; &lt;code>MESH_ID&lt;/code> is honoured; on an FDS+Evac floor, records with
 &lt;code>EVACUATION=.FALSE.&lt;/code> are skipped. &lt;code>&amp;amp;OBST&lt;/code> and &lt;code>&amp;amp;HOLE&lt;/code> with &lt;code>DEVC_ID&lt;/code> or
-&lt;code>CTRL_ID&lt;/code> are taken as written. &lt;code>&amp;amp;GEOM&lt;/code> is not represented; &lt;code>&amp;amp;CATF&lt;/code>
+&lt;code>CTRL_ID&lt;/code> are taken as written. Obstructions and holes are first put on
+the gridlines of the floor&amp;rsquo;s meshes as FDS does (&lt;code>NINT&lt;/code> per bound, the
+quarter-cell rule, &lt;code>THICKEN&lt;/code>, obstructions that collapse onto one gridline
+in two directions dropped, holes cut in index space), so the area is the
+one FDS computes. On an FDS+Evac floor an obstruction has the mesh&amp;rsquo;s full
+height, as in FDS+Evac. A stretched grid (&lt;code>&amp;amp;TRNX&lt;/code>/&lt;code>&amp;amp;TRNY&lt;/code>) anywhere in the
+deck leaves every obstruction as written; a &lt;code>--walkable&lt;/code> WKT is used as
+given. &lt;code>&amp;amp;GEOM&lt;/code> is not represented; &lt;code>&amp;amp;CATF&lt;/code>
 stops the import. Two touching evacuation meshes of one floor are joined,
 with a warning (FDS+Evac keeps their shared edge a wall).&lt;/li>
 &lt;li>&lt;strong>&lt;code>&amp;amp;EVHO&lt;/code>, plain deck.&lt;/strong> An &lt;code>&amp;amp;EVHO&lt;/code> whose z range meets the floor level up
@@ -2366,13 +2385,20 @@ walking band; each gets an omni-directional sign (c = 3) at its centre. An
 its face, is flagged as a possible open boundary.&lt;/li>
 &lt;li>&lt;strong>Exits, FDS+Evac deck.&lt;/strong> The &lt;code>&amp;amp;EXIT&lt;/code> and &lt;code>&amp;amp;DOOR&lt;/code> lines of the floor. A
 &lt;code>&amp;amp;DOOR&lt;/code> that leads off the floor (to a &lt;code>&amp;amp;CORR&lt;/code> or &lt;code>&amp;amp;STRS&lt;/code>) is imported as
-an exit. A &lt;code>COUNT_ONLY&lt;/code> &lt;code>&amp;amp;EXIT&lt;/code> is a counter, not an exit. The line stays
-where the deck puts it; &lt;code>exits[].fds_evac_segment&lt;/code> reports where FDS+Evac
-would round it to its evacuation grid, without applying it.&lt;/li>
+an exit. A &lt;code>COUNT_ONLY&lt;/code> &lt;code>&amp;amp;EXIT&lt;/code> is a counter, not an exit. The line is
+put on the evacuation grid as FDS+Evac does (&amp;ldquo;XB adjusted to mesh&amp;rdquo;): each
+bound is clipped to the mesh and rounded to the nearest gridline, and a
+warning gives the old and the new position. The same holds for &lt;code>&amp;amp;DOOR&lt;/code> and
+for the line of an &lt;code>&amp;amp;ENTR&lt;/code>. &lt;code>exits[].segment&lt;/code> is the moved line, and
+&lt;code>exits[].fds_evac_segment&lt;/code> repeats it when the line moved and is empty when
+it did not. A line on the grid is not touched. A deck with a stretched
+grid (&lt;code>&amp;amp;TRNX&lt;/code>/&lt;code>&amp;amp;TRNY&lt;/code>) keeps every line as written, with an info item per
+line; so does a line for which no single mesh is found, without an item.&lt;/li>
 &lt;li>&lt;strong>Exit strip.&lt;/strong> Every exit is a strip &lt;code>--exit-depth&lt;/code> deep on the room
-side of its line, clipped to the walkable area. An exit is never moved; it
-is dropped, at error level, when its strip is empty or narrower than
-0.1 m.&lt;/li>
+side of its (snapped) line, clipped to the walkable area. An exit is not
+moved to reach the walkable area; it is dropped, at error level, when its
+strip is empty or narrower than 0.1 m. A slot that the grid rounds to
+nothing is dropped with the position it was moved from in the message.&lt;/li>
 &lt;li>&lt;strong>Agents, plain deck.&lt;/strong> Each kept part with an exit, minus the exit
 strips, is a spawn area; &lt;code>--agents N&lt;/code> (or the placeholder of 100) is
 shared between them by area. A part without an exit gets no agents.&lt;/li>
@@ -2419,6 +2445,11 @@ not cut out.&lt;/li>
 &lt;td>Free parts dropped and holes filled up to&lt;/td>
 &lt;td>0.25 m²&lt;/td>
 &lt;td>assumption&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Grid snapping of &lt;code>&amp;amp;OBST&lt;/code> and &lt;code>&amp;amp;HOLE&lt;/code>&lt;/td>
+&lt;td>FDS &lt;code>READ_OBST&lt;/code>/&lt;code>READ_HOLE&lt;/code> rules&lt;/td>
+&lt;td>FDS&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Exit strip depth (&lt;code>--exit-depth&lt;/code>)&lt;/td>
@@ -2503,6 +2534,12 @@ not cut out.&lt;/li>
 &lt;td>Plain deck: a smaller &lt;code>--agents&lt;/code> or a larger area. FDS+Evac deck: a lower &lt;code>NUMBER_INITIAL_PERSONS&lt;/code> or a larger &lt;code>&amp;amp;EVAC&lt;/code> area, in a copy of the deck.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>Item &lt;code>EXIT&lt;/code>, &lt;code>DOOR&lt;/code> or &lt;code>ENTR&lt;/code> &lt;code>line moved onto the evacuation grid of MESH, as FDS+Evac does ('XB adjusted to mesh'): …&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>The line&amp;rsquo;s &lt;code>XB&lt;/code> is off the mesh gridlines, or sticks out of its mesh and is clipped to it first; the message gives the new and the deck&amp;rsquo;s position.&lt;/td>
+&lt;td>For a line inside one mesh, none: FDS+Evac does the same. FDS+Evac stops on a line that sticks out of its mesh; fix that in the deck. To keep the width, put the line on the grid in a copy of the deck.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>Error item &lt;code>exit dropped: its strip on the room side is empty; the line is D m from the walkable area&lt;/code>&lt;/td>
 &lt;td>3, runnable&lt;/td>
 &lt;td>The exit is not next to the kept walkable area.&lt;/td>
@@ -2513,6 +2550,54 @@ not cut out.&lt;/li>
 &lt;td>3, runnable&lt;/td>
 &lt;td>A slot narrower than 0.1 m.&lt;/td>
 &lt;td>Widen the exit in a copy of the deck, or pass &lt;code>--exit&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>OBST&lt;/code> &lt;code>thinner than its mesh cell in plan: FDS puts it on one gridline&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>A wall whose two sides round to the same gridline (thinner than one cell, up to just under it) collapses onto that line; the walkable area uses that line, widened by 0.05 m each side.&lt;/td>
+&lt;td>Put the wall on the grid, or set &lt;code>THICKEN=.TRUE.&lt;/code> on it.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>OBST&lt;/code> &lt;code>smaller than half a cell in two directions: FDS drops it&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>The obstruction collapses onto one gridline in two directions and FDS throws it out.&lt;/td>
+&lt;td>Make it at least one cell, or &lt;code>THICKEN=.TRUE.&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>HOLE&lt;/code> &lt;code>snaps to no cell: the opening stays closed in FDS&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>The hole is narrower than a cell, so FDS cuts no opening in the wall under it.&lt;/td>
+&lt;td>Widen the hole to a cell, or move it onto the grid.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>OBST&lt;/code> &lt;code>lands on the same gridline as another &amp;amp;OBST&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>Two separate thin walls snap onto one gridline and merge.&lt;/td>
+&lt;td>Move one of them onto its own gridline.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>--check-solids: the walkable area and FDS's solid cells disagree in a region; see import_report.json walkable.check_solids&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>Over two or more connected cells, the walkable area and the cells FDS treats as solid at walking height differ. The bounds are in &lt;code>walkable.check_solids.regions&lt;/code> as &lt;code>[x0, x1, y0, y1]&lt;/code>.&lt;/td>
+&lt;td>Compare the deck with the run: an obstruction added or moved after the run, a &lt;code>DEVC_ID&lt;/code>-controlled obstruction, or a stretched grid. An obstruction only 0–0.1 m high (a curb) on a coarse grid collapses in z in FDS, so FDS has no solid cell there while &lt;code>init&lt;/code> keeps it. A region that crosses a mesh seam is reported once per mesh.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Item &lt;code>--check-solids: a floor mesh has no match in the FDS run&lt;/code> (warning)&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>No mesh of the run has the floor mesh&amp;rsquo;s &lt;code>XB&lt;/code> (to 1e-6 m plus float32 rounding), so it is not compared; its label is in &lt;code>meshes_unmatched&lt;/code>.&lt;/td>
+&lt;td>Run FDS again from this deck, or point &lt;code>--check-solids&lt;/code> at the run of this deck.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Error item &lt;code>--check-solids: no readable FDS run in DIR&lt;/code>&lt;/td>
+&lt;td>3, runnable&lt;/td>
+&lt;td>&lt;code>DIR&lt;/code> holds no readable &lt;code>.smv&lt;/code>.&lt;/td>
+&lt;td>Point &lt;code>--check-solids&lt;/code> at the folder of the finished run.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Error item &lt;code>--check-solids: no floor mesh matches the FDS run in DIR&lt;/code>&lt;/td>
+&lt;td>3, runnable&lt;/td>
+&lt;td>Nothing was compared: no floor mesh has a match in the run, for example the run of another deck.&lt;/td>
+&lt;td>Point &lt;code>--check-solids&lt;/code> at the run of this deck.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Item &lt;code>EVHO&lt;/code> &lt;code>cut out of the walkable area (plain deck)&lt;/code> (info)&lt;/td>
@@ -2641,7 +2726,7 @@ not cut out.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>walkable&lt;/code>&lt;/td>
-&lt;td>&lt;code>source&lt;/code> (&lt;code>derived:deck&lt;/code>, &lt;code>derived:evac-mesh&lt;/code> or &lt;code>user&lt;/code>), &lt;code>area_m2&lt;/code>, &lt;code>components&lt;/code>, &lt;code>holes&lt;/code>, &lt;code>kept_by&lt;/code> (&lt;code>single&lt;/code>, &lt;code>spawn&lt;/code>, &lt;code>exit&lt;/code> or &lt;code>all&lt;/code>), &lt;code>components_dropped&lt;/code> (area, bounds, reason), &lt;code>diagnostics&lt;/code>&lt;/td>
+&lt;td>&lt;code>source&lt;/code> (&lt;code>derived:deck&lt;/code>, &lt;code>derived:evac-mesh&lt;/code> or &lt;code>user&lt;/code>), &lt;code>area_m2&lt;/code>, &lt;code>components&lt;/code>, &lt;code>holes&lt;/code>, &lt;code>kept_by&lt;/code> (&lt;code>single&lt;/code>, &lt;code>spawn&lt;/code>, &lt;code>exit&lt;/code> or &lt;code>all&lt;/code>), &lt;code>components_dropped&lt;/code> (area, bounds, reason), &lt;code>diagnostics&lt;/code>, &lt;code>snap&lt;/code> (&lt;code>max_shift_m&lt;/code>, &lt;code>record&lt;/code>, &lt;code>dropped&lt;/code>, &lt;code>holes_closed&lt;/code>, or &lt;code>skipped&lt;/code> with the reason)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>counts&lt;/code>&lt;/td>
@@ -2752,7 +2837,7 @@ width, which the run cannot read as horizontal. &lt;code>MESH_NUMBER&lt;/code> c
 fire meshes only, the &lt;code>MULT&lt;/code> copies in order. A deck with &lt;code>&amp;amp;TRNZ&lt;/code> keeps
 the deck&amp;rsquo;s z, since the check does not compute the stretched grid; the cull still applies, as &lt;code>&amp;amp;TRNZ&lt;/code> moves
 the nodes and not the mesh bounds. &lt;code>-o&lt;/code>, &lt;code>--walkable&lt;/code>, &lt;code>--exit&lt;/code>,
-&lt;code>--agents&lt;/code>, &lt;code>--exit-depth&lt;/code>, &lt;code>--force&lt;/code>, &lt;code>--no-fds&lt;/code> and &lt;code>-v&lt;/code> shape the
+&lt;code>--agents&lt;/code>, &lt;code>--exit-depth&lt;/code>, &lt;code>--force&lt;/code>, &lt;code>--no-fds&lt;/code>, &lt;code>--check-solids&lt;/code> and &lt;code>-v&lt;/code> shape the
 written scenario and are refused with &lt;code>--check&lt;/code>.&lt;/p>
 &lt;table>
 &lt;thead>
@@ -3485,6 +3570,10 @@ evaluation:&lt;/p>
 &lt;td>&lt;code>queue_time_s&lt;/code>, &lt;code>exit_count&lt;/code>, &lt;code>exit_capacity&lt;/code>&lt;/td>
 &lt;td>queue estimate at the exit&lt;/td>
 &lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>length_outside_m&lt;/code>&lt;/td>
+&lt;td>length of the route outside the FDS slice coverage [m], measured on the edges between its nodes, like &lt;code>path_length_m&lt;/code>, so it does not change as the agent walks; empty without FDS data. Outside the slices the route is costed in clear air (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>)&lt;/td>
+&lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> model, routes are ordered on &lt;code>tau_route&lt;/code>, not on
@@ -3795,7 +3884,7 @@ In the old format the key sits on &lt;code>journeys[]&lt;/code>.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.smoke_slice_height&lt;/code>&lt;/td>
 &lt;td>none (&lt;code>--smoke-slice-height&lt;/code>, 1.6 m)&lt;/td>
-&lt;td>Absolute FDS slice height [m] for smoke, gases and sign legibility. &lt;code>pyfds-evac --smoke-slice-height&lt;/code> overrides it; the run prints the value when it comes from here. &lt;code>pyfds-evac init&lt;/code> writes the floor level plus &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>. The GUI and TUI do not read it yet.&lt;/td>
+&lt;td>Absolute FDS slice height [m] for smoke, gases and sign legibility. It is not relative to the floor, so sloped floors and stages are sampled at the wrong height above the feet (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#what-is-not-modelled">Limitations&lt;/a>). &lt;code>pyfds-evac --smoke-slice-height&lt;/code> overrides it; the run prints the value when it comes from here. &lt;code>pyfds-evac init&lt;/code> writes the floor level plus &lt;code>HUMAN_SMOKE_HEIGHT&lt;/code>. The GUI and TUI do not read it yet.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>baseSeed&lt;/code>&lt;/td>
@@ -3974,6 +4063,12 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;td>the preset of the distribution&lt;/td>
 &lt;td>—&lt;/td>
 &lt;td>Override the preset; the presets and their sources are in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#pre-movement-parameters">Coming from FDS+Evac&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>premovement_preset&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>one of the 16 &lt;code>cvm2_*&lt;/code> names&lt;/td>
+&lt;td>A constant pre-travel time from C/VM2 Table 3.3 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#cvm2-table-33-presets">list&lt;/a>). Cannot be combined with &lt;code>premovement_distribution&lt;/code>, &lt;code>premovement_param_a/b&lt;/code> or &lt;code>use_premovement: false&lt;/code>. &lt;code>premovement_offset_s&lt;/code> adds detection and notification.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>premovement_seed&lt;/code>&lt;/td>
@@ -7683,7 +7778,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7689907eda78c940e283542a5ed85ee9815fc7d9">&lt;code>7689907&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7707,7 +7802,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">488c055881dc60deeda01f03c1da39b5a80965ad1f4e98619acb11c44364a7f8&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5316ff5055675a5b763f1e42c467346c3502f058f53d062985aebdedf01f97e9&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

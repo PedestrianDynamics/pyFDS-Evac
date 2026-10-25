@@ -484,8 +484,9 @@ histories mark each row outside with &lt;code>in_fds_domain = False&lt;/code>, a
 &lt;code>metrics[&amp;quot;fds_outside&amp;quot;]&lt;/code> and the manifest&amp;rsquo;s &lt;code>fds_outside&lt;/code> count the
 agents, samples and agent-seconds outside. Check these two; the single
 warning at the first extinction sample outside says nothing about later
-agents. The route-cost history does not record the length outside per
-row (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).
+agents. The route-cost history records, per evaluated route, its length
+outside the slices (&lt;code>length_outside_m&lt;/code>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).
 &lt;code>--require-fds-coverage&lt;/code> turns every case outside into an error.&lt;/p>
 &lt;p>&lt;strong>Signs seen from outside the FDS grid.&lt;/strong> An agent beyond the grid of an
 FDS visibility model sees every sign within its reading distance, measured
@@ -585,6 +586,22 @@ an imported upper floor means &amp;ldquo;reached the stair door&amp;rdquo;
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/#limits">Start from your own FDS case › Limits&lt;/a>). A &lt;code>zones&lt;/code> entry with a
 &lt;code>speed_factor&lt;/code> can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.&lt;/p>
+&lt;p>&lt;strong>Sloped floors and stages.&lt;/strong> The slice height (&lt;code>--smoke-slice-height&lt;/code>,
+&lt;code>simulationParams.smoke_slice_height&lt;/code>) is an absolute z in the FDS domain,
+not a height above the local floor. On a raked floor, such as a lecture hall
+with tiered seating, or on a raised stage or platform, agents stand at
+different floor levels, so one slice samples smoke, gases, heat and sign
+legibility too low above the feet of agents on the higher floor and too high
+above those on the lower one. Smoke is usually densest near the ceiling, so
+the hazard is underestimated for the agents on the higher floor and
+overestimated for those on the lower one. Visibility, FED, heat and
+tenability results there are biased, and so are the smoke-dependent walking
+speed and route choice that read the same slice. Until floor-relative
+sampling exists
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365" target="_blank" rel="noopener">#365&lt;/a>), run
+each level separately at its own height, with the matching &lt;code>&amp;amp;SLCF PBZ=&lt;/code> in
+the FDS deck, or pick the height that is conservative for the occupants who
+matter most and say so.&lt;/p>
 &lt;p>&lt;strong>FED activity level.&lt;/strong> The CO term of the toxic dose uses one fixed
 coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
 the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>). Rest and heavy work cannot be selected, although
@@ -657,10 +674,10 @@ is finished before the evacuation starts, so occupants cannot open doors or
 otherwise change the fire. The time resolution of the hazard is that of the
 slice output (&lt;code>&amp;amp;DUMP DT_SLCF&lt;/code>).&lt;/p>
 &lt;p>&lt;strong>Body shape.&lt;/strong> An agent is one circle. &lt;code>pyfds-evac init&lt;/code> gives the
-five FDS+Evac Guide agent types the radius of their torso circle
-R&lt;sub>t&lt;/sub> (Adult 0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly
-0.15), the same value for every operational model; the &lt;code>IMO_*&lt;/code> presets
-keep 0.2 m
+five FDS+Evac Guide agent types and the &lt;code>IMO_*&lt;/code> presets (Male or Female
+body) the radius of their torso circle R&lt;sub>t&lt;/sub> (Adult 0.15 m, Male
+0.16, Female 0.14, Child 0.12, Elderly 0.15), the same value for every
+operational model
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699" target="_blank" rel="noopener">#699&lt;/a>).
 The circle is as deep as the FDS+Evac body (0.30 m for an adult) but
 narrower than its shoulders (0.51 m), so two agents pass side by side

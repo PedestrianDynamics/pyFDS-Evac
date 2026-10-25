@@ -987,8 +987,9 @@ title="Copy code"
 &lt;/div>
 &lt;p>These two are the signal to check. The first-sample warning of &lt;em>K&lt;/em> fires
 once per run, often at t = 0 for a route sample, and says nothing about
-agents later. The route-cost history does not record the length outside
-per row (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).&lt;/p>
+agents later. The route-cost history records, per evaluated route, its
+length outside the slices (&lt;code>length_outside_m&lt;/code>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431" target="_blank" rel="noopener">#431&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Strict option.&lt;/strong> &lt;code>--require-fds-coverage&lt;/code> (&lt;code>require_fds_coverage=True&lt;/code> on
 &lt;code>run_scenario&lt;/code>, &lt;code>ExtinctionField&lt;/code>, &lt;code>FdsFedField&lt;/code>, &lt;code>FdsHeatField&lt;/code> and
 &lt;code>VisibilityModel&lt;/code>) turns both checks into errors. The run stops at setup
@@ -1062,7 +1063,8 @@ and &lt;code>--show-config&lt;/code> lists it. The layer heat regime requests a 
 visibility model applies the same function to the extinction slice it hands
 to fdsvismap.&lt;/p>
 &lt;p>The height is an absolute z in the FDS domain, so it equals the height
-above the floor where the floor is at z = 0. C/VM2, the Engineers
+above the floor where the floor is at z = 0. On a sloped floor or a stage it does not;
+see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#what-is-not-modelled">Limitations&lt;/a>. C/VM2, the Engineers
 Australia note and DIN 18009-2 (§7.2.1) evaluate tenability at 2.0 m
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a>). For a check against them,
 run with &lt;code>--smoke-slice-height 2.0&lt;/code> and write the slices at that
