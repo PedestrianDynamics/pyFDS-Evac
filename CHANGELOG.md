@@ -50,6 +50,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pyfds-evac-init --check` marks those slices `!`. Add slices at 1.6 m or
   pass `--smoke-slice-height 2.0`
   ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+- `pyfds-evac init` on a deck with `DEFAULT_PROPERTIES='IMO_…'` now sets a
+  Gaussian speed with the mean and variance of the IMO range (0.37 to
+  1.85 m/s over the ten types) and the Male or Female radius (0.16 or
+  0.14 m). Before, such a line got neither and the loader defaults
+  applied, so re-importing changes RSET. On a `&PERS` with a Guide or IMO
+  preset, `VELOCITY_DIST=-1` now keeps the preset speed instead of the
+  line's `VEL_*`, as in FDS+Evac (#712).
 
 ### Added
 

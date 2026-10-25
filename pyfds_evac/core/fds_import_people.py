@@ -241,7 +241,7 @@ def _note_ignored_vel_keys(pers: NamelistRecord, add: AddItem) -> None:
             "A",
             "warning",
             "PERS",
-            f"{', '.join(ignored)} ignored: without "
+            f"{', '.join(ignored)} ignored: with unset or negative "
             "VELOCITY_DIST, FDS+Evac uses the DEFAULT_PROPERTIES speed",
             pers,
         )

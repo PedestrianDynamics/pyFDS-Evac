@@ -288,6 +288,14 @@ def test_negative_velocity_dist_keeps_the_preset_speed(tmp_path):
     )
 
 
+def test_ignored_speed_keys_message_covers_a_negative_velocity_dist(tmp_path):
+    result = _radius_import(
+        tmp_path, "DEFAULT_PROPERTIES='IMO_Male30-50', VELOCITY_DIST=-1, VEL_LOW=0.5"
+    )
+    (item,) = [i for i in _items(result, "A", "PERS") if "VEL_LOW ignored" in i.message]
+    assert "unset or negative VELOCITY_DIST" in item.message
+
+
 @pytest.mark.parametrize(
     ("keys", "radius", "ignored"),
     [
