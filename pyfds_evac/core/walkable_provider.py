@@ -158,8 +158,16 @@ def _mesh_axes(mesh: NamelistRecord) -> tuple[_Axis, _Axis, _Axis] | None:
     )
 
 
-def _snap_axis(axis: _Axis, lo: float, hi: float, thicken: bool) -> tuple[int, int]:
-    """Cell indices of the clipped range ``lo..hi``: FDS ``READ_OBST``."""
+def _snap_axis(
+    axis: _Axis, lo: float, hi: float, thicken: bool, side_start: float
+) -> tuple[int, int]:
+    """Cell indices of the clipped range ``lo..hi``: FDS ``READ_OBST``.
+
+    Which gridline a collapsed pair lands on is FDS's own test, which
+    compares metres with cell indices (``GINV`` is the identity on a
+    uniform grid) and, in y, subtracts the x start: ``side_start`` is the
+    start FDS subtracts from the lower bound.
+    """
     i1, i2 = axis.index(lo), axis.index(hi)
     if thicken:
         if i1 == i2:
@@ -168,7 +176,7 @@ def _snap_axis(axis: _Axis, lo: float, hi: float, thicken: bool) -> tuple[int, i
         return i1, i2
     if (hi - lo) >= _COLLAPSE_CELLS * axis.step or i1 == i2:
         return i1, i2
-    if axis.scaled(lo) - i1 < i2 - axis.scaled(hi):
+    if (lo - side_start) - i1 < i2 - (hi - axis.start):
         return i1, i1
     return i2, i2
 
@@ -192,10 +200,16 @@ def _touches_face(spans, clipped) -> bool:
     )
 
 
-def _snap_in_mesh(record, axes, *, hole: bool, thicken: bool):
-    """``(SnappedBox | None, dropped)`` of *record* on one mesh's grid."""
+def _snap_in_mesh(record, axes, *, hole: bool, thicken: bool, evac_z: bool):
+    """``(SnappedBox | None, dropped)`` of *record* on one mesh's grid.
+
+    FDS+Evac stretches an evacuation obstruction to the mesh's full height
+    (*evac_z*), so z never collapses there.
+    """
     box6 = record.box6()
     spans = [(box6[2 * k], box6[2 * k + 1]) for k in range(3)]
+    if evac_z and not hole:
+        spans[2] = (axes[2].start, axes[2].end)
     if any(hi < a.start or lo > a.end for a, (lo, hi) in zip(axes, spans)):
         return None, False
     clipped = [(max(lo, a.start), min(hi, a.end)) for a, (lo, hi) in zip(axes, spans)]
@@ -203,7 +217,8 @@ def _snap_in_mesh(record, axes, *, hole: bool, thicken: bool):
         return None, False
     dirs = [False] * 3 if hole else _thicken_dirs(record, axes, thicken)
     used = 2 if hole else 3
-    idx = [_snap_axis(axes[k], *clipped[k], dirs[k]) for k in range(used)]
+    sides = [axes[0].start, axes[0].start, axes[2].start]
+    idx = [_snap_axis(axes[k], *clipped[k], dirs[k], sides[k]) for k in range(used)]
     flat = [i1 == i2 for i1, i2 in idx]
     if not hole and sum(flat) >= 2:
         return None, True
@@ -221,12 +236,16 @@ class _RecordSnap:
     dropped: bool
 
 
-def _snap_each(records, grids, *, hole: bool, thicken: bool) -> list[_RecordSnap]:
+def _snap_each(
+    records, grids, *, hole: bool, thicken: bool, evac_z: bool = False
+) -> list[_RecordSnap]:
     out = []
     for record in records:
         boxes, dropped = [], False
         for axes in grids:
-            snapped, gone = _snap_in_mesh(record, axes, hole=hole, thicken=thicken)
+            snapped, gone = _snap_in_mesh(
+                record, axes, hole=hole, thicken=thicken, evac_z=evac_z
+            )
             boxes.extend([snapped] if snapped else [])
             dropped = dropped or gone
         out.append(_RecordSnap(record, boxes, dropped and not boxes))
@@ -239,6 +258,7 @@ def snap_footprints(
     *,
     hole: bool,
     thicken: bool,
+    evac_z: bool = False,
 ) -> list[SnappedBox]:
     """The plan boxes of *records* on the gridlines of each mesh they overlap.
 
@@ -246,10 +266,11 @@ def snap_footprints(
     per bound, ``THICKEN`` (the record's flag, else *thicken*) or the
     quarter-cell collapse; an obstruction that collapses in two axes gives
     no box. ``READ_HOLE`` (``hole=True``): clip and ``NINT`` only. Meshes
-    without ``XB`` and ``IJK`` are ignored.
+    without ``XB`` and ``IJK`` are ignored. *evac_z*: the records are on
+    evacuation meshes, where FDS+Evac gives an obstruction the mesh's z.
     """
     grids = [g for g in map(_mesh_axes, meshes) if g is not None]
-    snaps = _snap_each(records, grids, hole=hole, thicken=thicken)
+    snaps = _snap_each(records, grids, hole=hole, thicken=thicken, evac_z=evac_z)
     return [box for snap in snaps for box in snap.boxes]
 
 
@@ -262,6 +283,21 @@ def _written_flat(record: NamelistRecord) -> tuple[bool, bool]:
     return x1 - x0 < _GRID_TOL, y1 - y0 < _GRID_TOL
 
 
+def _written_overlap(wall: NamelistRecord, hole: NamelistRecord) -> bool:
+    """``READ_HOLE``'s test on the written bounds of the wall and the hole.
+
+    After the index test, FDS skips a wall whose intersection with the hole
+    ends at the hole's lower bound or starts at its upper bound in x or y,
+    so a hole that only touches the wall, or has no width, never cuts.
+    """
+    w, h = wall.box6(), hole.box6()
+    for k in (0, 2):
+        lo, hi = max(h[k], w[k]), min(h[k + 1], w[k + 1])
+        if hi <= h[k] or lo >= h[k + 1]:
+            return False
+    return True
+
+
 def _flat_cut_box(ob: SnappedBox, hole: SnappedBox):
     """The box of *hole* that cuts the one-gridline wall *ob*, or ``None``.
 
@@ -269,6 +305,8 @@ def _flat_cut_box(ob: SnappedBox, hole: SnappedBox):
     gridline; otherwise the hole is widened across the wall's flat
     direction, so a gridline inside the hole's snapped range is cut.
     """
+    if not _written_overlap(ob.record, hole.record):
+        return None
     hx0, hx1, hy0, hy1 = hole.box
     if hole.flat_x and not (ob.flat_x and abs(hx0 - ob.box[0]) < _GRID_TOL):
         return None
@@ -431,7 +469,13 @@ def _snap_floor(deck: FdsDeck, floor: FloorSpec) -> _FloorSnap:
             None,
         )
         return _FloorSnap(None, [note], {"skipped": _STRETCHED})
-    obsts = _snap_each(floor.obstructions, grids, hole=False, thicken=floor.thicken)
+    obsts = _snap_each(
+        floor.obstructions,
+        grids,
+        hole=False,
+        thicken=floor.thicken,
+        evac_z=floor.evac_mesh_ids is not None,
+    )
     holes = _snap_each(floor.holes, grids, hole=True, thicken=False)
     boxes = [b for s in (*obsts, *holes) for b in s.boxes]
     worst = max(boxes, key=lambda b: b.shift_m, default=None)

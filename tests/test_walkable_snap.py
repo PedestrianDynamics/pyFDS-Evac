@@ -59,6 +59,32 @@ def test_quarter_cell_wall_collapses_to_the_nearer_gridline():
     assert note[:3] == ("A", "warning", "OBST")
 
 
+def _boxes(records, mesh=MESH, **kwargs):
+    deck = parse_fds_text("&HEAD CHID='t' /\n" + mesh + records)
+    return snap_footprints(
+        deck.group("OBST"), deck.group("MESH"), hole=False, thicken=False, **kwargs
+    )
+
+
+def test_collapse_side_is_the_one_read_f90_computes():
+    # READ_OBST compares metres with cell indices: 3.2 - 6 < 7 - 3.3, so the
+    # lower gridline wins on this 0.5 m grid (the cell-unit test would give 3.5).
+    [x] = _boxes("&OBST XB=3.2,3.3,0,10,0,3 /")
+    assert x.box[:2] == (3.0, 3.0)
+    [y] = _boxes("&OBST XB=0,10,6.2,6.3,0,3 /")
+    assert y.box[2:] == (6.0, 6.0)
+
+
+def test_evacuation_obstruction_takes_the_mesh_height():
+    # FDS+Evac stretches an EVACUATION obstruction in z, so a low thin wall
+    # collapses in x only and is kept; on a fire mesh it collapses in x and z.
+    mesh = "&MESH IJK=20,20,1, XB=0,10,0,10,0,1.6 /\n"
+    wall = "&OBST XB=3.0,3.01,0,10,0,0.5 /"
+    [kept] = _boxes(wall, mesh, evac_z=True)
+    assert kept.flat_x
+    assert _boxes(wall, mesh) == []
+
+
 def test_obstruction_collapsed_in_two_axes_is_dropped():
     result = _walk(MESH + "&OBST XB=3.0,3.01,0,10,1.0,1.1 /")
     assert result.polygon.area == approx(100.0)
@@ -206,3 +232,14 @@ def test_snap_footprints_gives_one_box_per_record_and_mesh():
     )
     assert [b.box for b in boxes] == [(0, 5, 5.0, 5.5), (5, 10, 4.8, 5.2)]
     assert [b.shift_m for b in boxes] == [approx(0.2), approx(0.1)]
+
+
+def test_hole_that_does_not_overlap_the_wall_as_written_does_not_cut():
+    wall = "&OBST XB=0,10,4.99,5.0,0,3 /\n"
+    apart = _walk(MESH + wall + "&HOLE XB=1.0,1.9,4.8,4.95,0,3 /")
+    assert apart.polygon.area == approx(99.0)
+    assert _parts(apart) == 2
+    on_face = _walk(MESH + wall + "&HOLE XB=1.0,1.9,5.0,5.3,0,3 /")
+    assert _parts(on_face) == 2
+    door = _walk(MESH + wall + "&HOLE XB=1.0,1.9,4.8,5.1,0,3 /")
+    assert _parts(door) == 1
