@@ -227,6 +227,75 @@ def test_pers_body_maps_to_the_mean_torso_radius(tmp_path, keys, radius):
     assert "radius_std" not in params
 
 
+IMO_SPEEDS = [
+    ("IMO_MALE<30", 1.11, 1.85),
+    ("IMO_MALECREW", 1.11, 1.85),
+    ("IMO_MALE30-50", 0.97, 1.62),
+    ("IMO_MALE>50", 0.84, 1.40),
+    ("IMO_MALE>50MI1", 0.64, 1.06),
+    ("IMO_MALE>50MI2", 0.55, 0.91),
+    ("IMO_FEMALE<30", 0.93, 1.55),
+    ("IMO_FEMALECREW", 0.93, 1.55),
+    ("IMO_FEMALE30-50", 0.71, 1.19),
+    ("IMO_FEMALE>50", 0.56, 0.94),
+    ("IMO_FEMALE>50MI1", 0.43, 0.71),
+    ("IMO_FEMALE>50MI2", 0.37, 0.61),
+    ("IMO_Male30-50", 0.97, 1.62),
+    ("imo_female>50", 0.56, 0.94),
+]
+
+
+@pytest.mark.parametrize(("name", "lo", "hi"), IMO_SPEEDS)
+def test_imo_pers_gets_the_imo_speed(tmp_path, name, lo, hi):
+    result = _radius_import(tmp_path, f"DEFAULT_PROPERTIES='{name}'")
+    params = _params(result, "g")
+    assert params["v0"] == pytest.approx((lo + hi) / 2)
+    assert params["v0_distribution"] == "gaussian"
+    assert params["v0_std"] == pytest.approx((hi - lo) / 2 / math.sqrt(3))
+    assert not _items(result, "D", "PERS")
+
+
+def test_imo_pers_gets_the_male_or_female_body(tmp_path):
+    male = _radius_import(tmp_path, "DEFAULT_PROPERTIES='IMO_Male30-50'")
+    assert _params(male, "g")["radius"] == 0.16
+    female = _radius_import(tmp_path, "DEFAULT_PROPERTIES='IMO_Female<30'")
+    assert _params(female, "g")["radius"] == 0.14
+    explicit = _radius_import(
+        tmp_path,
+        "DEFAULT_PROPERTIES='IMO_Male30-50', DIAMETER_DIST=1, DIA_LOW=0.4, "
+        "DIA_HIGH=0.6, DIA_MEAN=0.5",
+    )
+    # 0.5 * D_TORSO_MEAN 0.30 * E[D] 0.5 / DIA_MEAN 0.5
+    assert _params(explicit, "g")["radius"] == pytest.approx(0.15)
+
+
+def test_imo_pers_reports_the_stair_factors_once(tmp_path):
+    def stair_items(keys):
+        result = _radius_import(tmp_path, keys)
+        return [i for i in _items(result, "A", "PERS") if "FAC_V0_UP/DOWN" in i.message]
+
+    assert len(stair_items("DEFAULT_PROPERTIES='IMO_Female>50'")) == 1
+    assert stair_items("DEFAULT_PROPERTIES='Adult'") == []
+
+
+def test_negative_velocity_dist_keeps_the_preset_speed(tmp_path):
+    result = _radius_import(
+        tmp_path, "DEFAULT_PROPERTIES='Adult', VELOCITY_DIST=-1, VEL_MEAN=2.0"
+    )
+    assert _params(result, "g")["v0"] == 1.25
+    assert any(
+        i.message.startswith("VEL_MEAN ignored") for i in _items(result, "A", "PERS")
+    )
+
+
+def test_ignored_speed_keys_message_covers_a_negative_velocity_dist(tmp_path):
+    result = _radius_import(
+        tmp_path, "DEFAULT_PROPERTIES='IMO_Male30-50', VELOCITY_DIST=-1, VEL_LOW=0.5"
+    )
+    (item,) = [i for i in _items(result, "A", "PERS") if "VEL_LOW ignored" in i.message]
+    assert "unset or negative VELOCITY_DIST" in item.message
+
+
 @pytest.mark.parametrize(
     ("keys", "radius", "ignored"),
     [
@@ -253,10 +322,8 @@ def test_pers_explicit_uniform_reports_the_torso_range(tmp_path):
 @pytest.mark.parametrize(
     "keys",
     [
-        "DEFAULT_PROPERTIES='IMO_Male30-50'",  # IMO presets: separate issue
         "VELOCITY_DIST=0, VEL_MEAN=1.2",  # no preset, no DIA_*
         "DIAMETER_DIST=0",  # constant without DIA_MEAN
-        "DEFAULT_PROPERTIES='IMO_Male30-50', DIA_MEAN=0.5",  # IMO: Male body
         "DIA_MEAN=0",  # FDS+Evac's body undefined, 0.05 m clamp
         "DIAMETER_DIST=5, DIA_MEAN=1, DIA_PARA=40",  # log-normal mean overflows
         "DIAMETER_DIST=6, DIA_PARA=0, DIA_PARA2=0",  # beta mean 0/0
@@ -875,7 +942,8 @@ def test_small_obstruction_is_filled_and_a_larger_one_kept(tmp_path):
         tmp_path, "&OBST XB=2,2.4,2,2.4,0,3 /", "&OBST XB=5,6,5,6,0,3 /"
     )
     walkable = shapely_wkt.loads(result.walkable_wkt)
-    assert walkable.area == pytest.approx(99.5 - 1.0)
+    # 5-6 m is 5.2-6.0 m on the 0.4 m grid (#715)
+    assert walkable.area == pytest.approx(99.5 - 0.8)
     assert result.report.walkable["holes"] == 1
 
 
@@ -1165,34 +1233,36 @@ def test_user_exit_keeps_its_component_on_an_evac_mesh(tmp_path):
 # #673: a 10 x 10 m evacuation mesh with dx = 0.25 m and one group.
 GRID = """\
 &HEAD CHID='grid' /
-&MESH IJK=40,40,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,
+&MESH IJK={ijk}, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE.,
       EVAC_HUMANS=.TRUE., ID='Main' /
 &EVAC ID='g', XB=1,4,1,9,1,1, NUMBER_INITIAL_PERSONS=10 /
 {extra}
 """
 
 
-def _grid(tmp_path, *extra: str):
-    path = _deck(tmp_path, GRID.format(extra="\n".join(extra)))
+def _grid(tmp_path, *extra: str, ijk: str = "40,40,1"):
+    path = _deck(tmp_path, GRID.format(ijk=ijk, extra="\n".join(extra)))
     return import_fds_deck(path)
 
 
-def test_exit_off_the_grid_is_kept_and_the_fds_evac_position_reported(tmp_path):
+def test_exit_off_the_grid_is_moved_onto_it_and_reported(tmp_path):
     result = _grid(tmp_path, "&EXIT ID='E', IOR=+1, XB=9.9,9.9,4.1,6,0.4,1.6 /")
     exit_ = result.raw["exits"]["E"]
-    assert _same(_poly(exit_["coordinates"]), box(9.4, 4.1, 9.9, 6))
+    assert _same(_poly(exit_["coordinates"]), box(9.5, 4, 10, 6))
     [entry] = result.report.exits
+    assert entry["segment"] == [10.0, 4.0, 10.0, 6.0]
     assert entry["fds_evac_segment"] == [10.0, 4.0, 10.0, 6.0]
     [item] = [i for i in _items(result, "A", "EXIT") if "evacuation grid" in i.message]
-    assert item.level == "info" and "x 10..10, y 4..6" in item.message
+    assert item.level == "warning"
+    assert "x 10..10, y 4..6; the deck has x 9.9..9.9, y 4.1..6" in item.message
 
 
-def test_exit_beyond_its_named_mesh_is_clipped_in_the_report(tmp_path):
+def test_exit_beyond_its_named_mesh_is_clipped_then_moved(tmp_path):
     """MESH_ID names the mesh; FDS+Evac clips the line to it, then rounds."""
     record = "&EXIT ID='E', MESH_ID='Main', IOR=+1, XB=10,10,-0.1,6.1,0.4,1.6 /"
     result = _grid(tmp_path, record)
     exit_ = result.raw["exits"]["E"]
-    assert _same(_poly(exit_["coordinates"]), box(9.5, 0, 10, 6.1))
+    assert _same(_poly(exit_["coordinates"]), box(9.5, 0, 10, 6))
     assert result.report.exits[0]["fds_evac_segment"] == [10.0, 0.0, 10.0, 6.0]
 
 
@@ -1202,14 +1272,53 @@ def test_exit_beyond_the_mesh_without_mesh_id_uses_the_one_it_touches(tmp_path):
     assert result.report.exits[0]["fds_evac_segment"] == [10.0, 0.0, 10.0, 6.0]
 
 
-def test_exit_on_the_grid_reports_no_fds_evac_position(tmp_path):
+def test_exit_on_the_grid_does_not_move(tmp_path):
     result = _grid(tmp_path, "&EXIT ID='E', IOR=+1, XB=10,10,4,6,0.4,1.6 /")
+    exit_ = result.raw["exits"]["E"]
+    assert _same(_poly(exit_["coordinates"]), box(9.5, 4, 10, 6))
+    assert result.report.exits[0]["segment"] == [10.0, 4.0, 10.0, 6.0]
     assert result.report.exits[0]["fds_evac_segment"] is None
     assert not [i for i in _items(result, "A") if "evacuation grid" in i.message]
 
 
+def test_exit_bound_half_a_cell_out_rounds_up_as_nint_does(tmp_path):
+    """4.125 is cell 16.5 of dx 0.25: NINT gives 17, so 4.25."""
+    result = _grid(tmp_path, "&EXIT ID='E', IOR=+1, XB=10,10,4.125,6,0.4,1.6 /")
+    assert result.report.exits[0]["segment"] == [10.0, 4.25, 10.0, 6.0]
+
+
+def test_door_is_moved_onto_the_grid_like_an_exit(tmp_path):
+    door = "&DOOR ID='D', IOR=+1, TO_NODE='Up', XB=9.9,9.9,4.1,6,0.4,1.6 /"
+    result = _grid(tmp_path, door, "&STRS ID='Up' /")
+    assert result.report.exits[0]["segment"] == [10.0, 4.0, 10.0, 6.0]
+    assert [i for i in _items(result, "A", "DOOR") if "evacuation grid" in i.message]
+
+
+def test_entry_is_moved_onto_the_grid_like_an_exit(tmp_path):
+    entr = "&ENTR ID='In', IOR=+1, MAX_FLOW=0.5, XB=0.1,0.1,4.1,6,0.4,1.6 /"
+    result = _grid(tmp_path, entr)
+    spawn = result.raw["distributions"]["In"]
+    assert _same(_poly(spawn["coordinates"]), box(0, 4, 0.5, 6))
+    assert [i for i in _items(result, "A", "ENTR") if "evacuation grid" in i.message]
+
+
+def test_exit_on_a_stretched_grid_stays_as_written(tmp_path):
+    exit_ = "&EXIT ID='E', IOR=+1, XB=9.9,9.9,4.1,6,0.4,1.6 /"
+    result = _grid(tmp_path, "&TRNX MESH_NUMBER=1, CC=0, PC=0.5 /", exit_)
+    assert result.report.exits[0]["segment"] == [9.9, 4.1, 9.9, 6.0]
+    assert result.report.exits[0]["fds_evac_segment"] is None
+    assert [i for i in _items(result, "A", "EXIT") if "stretched grid" in i.message]
+
+
+def test_exit_collapsed_by_the_grid_is_dropped_and_says_it_moved(tmp_path):
+    slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.05,0.4,1.6 /"
+    result = _grid(tmp_path, slot)
+    [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
+    assert "moved onto the evacuation grid from x 10..10, y 4..4.05" in item.message
+
+
 def test_exit_behind_a_solid_strip_is_dropped_not_moved(tmp_path):
-    """No snapping (maintainer D5): the distance is in the message."""
+    """An exit is not moved to reach the walkable area (maintainer D5)."""
     records = (
         "&OBST XB=9.4,10,0,10,0,2.4 /",
         "&EXIT ID='E', IOR=+1, XB=10,10,4,6,0.4,1.6 /",
@@ -1219,13 +1328,13 @@ def test_exit_behind_a_solid_strip_is_dropped_not_moved(tmp_path):
     [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
     assert item.message == (
         "exit dropped: its strip on the room side is empty; "
-        "the line is 0.600 m from the walkable area"
+        "the line is 0.500 m from the walkable area"
     )
 
 
 def test_exits_narrower_than_the_minimum_name_flow_field_targets(tmp_path):
     slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.05,0.4,1.6 /"
-    result = _grid(tmp_path, slot)
+    result = _grid(tmp_path, slot, ijk="100000,100000,1")
     [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
     assert "0.050 m wide, below the minimum exit width of 0.1 m" in item.message
     [reason] = result.report.not_runnable
@@ -1234,7 +1343,7 @@ def test_exits_narrower_than_the_minimum_name_flow_field_targets(tmp_path):
 
 def test_exit_width_just_below_the_minimum_prints_below_it(tmp_path):
     slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.0999,0.4,1.6 /"
-    result = _grid(tmp_path, slot)
+    result = _grid(tmp_path, slot, ijk="100000,100000,1")
     [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
     assert "0.0999 m wide, below the minimum exit width of 0.1 m" in item.message
 
@@ -1242,7 +1351,7 @@ def test_exit_width_just_below_the_minimum_prints_below_it(tmp_path):
 def test_exit_width_short_by_rounding_noise_prints_the_full_float(tmp_path):
     # 4.1 - 4.0 is 0.09999999999999964 in floating point (CorridorFlowExample).
     slot = "&EXIT ID='S', IOR=+1, XB=10,10,4,4.1,0.4,1.6 /"
-    result = _grid(tmp_path, slot)
+    result = _grid(tmp_path, slot, ijk="100000,100000,1")
     [item] = [i for i in _items(result, "D", "EXIT") if i.level == "error"]
     assert (
         "0.09999999999999964 m wide, below the minimum exit width of 0.1 m"

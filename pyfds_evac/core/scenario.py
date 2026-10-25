@@ -102,6 +102,7 @@ from .fds_coverage import (
     domain_fields,
     in_fds_domain,
     model_samplers,
+    route_length_outside,
 )
 from .fds_sampling import FdsHorizonError
 from .fed import (
@@ -2596,6 +2597,13 @@ def run_scenario(
                                 "queue_time_s": float(rc.queue_time_s),
                                 "exit_count": exit_counts.get(rc.exit_id, 0),
                                 "exit_capacity": float(_exit_cap),
+                                "length_outside_m": (
+                                    route_length_outside(
+                                        rc.segments, rank_graph, fds_coverage.domain
+                                    )
+                                    if fds_coverage is not None
+                                    else ""
+                                ),
                             }
                         )
             _counted_before = rs.counted_exit

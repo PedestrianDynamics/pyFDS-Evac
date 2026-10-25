@@ -59,7 +59,7 @@ add and the failure modes that stay silent unless you read the warnings.
 | `--fds-dir DIR` | none | FDS output directory. Drives smoke speed, gas FED, heat FED (with `--enable-heat-fed`) and smoke-aware sign legibility. |
 | `--constant-extinction K` | none | Use a constant `K` [1/m] instead of the FDS extinction slice for walking speed and for route pricing (the optical depth `K·L` of the route gate). FED, heat FED and sign legibility still read `--fds-dir` when it is given; without `--fds-dir`, sign legibility stays clear air, so a constant `K` hides no sign. A constant `K` is a controlled setting for verification and speed-law studies, not a stand-in for an FDS smoke field (#500). |
 | `--smoke-update-interval S` | 1.0 s | Seconds between smoke-speed updates. The same interval is the integration step of the gas FED and heat FED, and the row spacing of the smoke and FED histories. |
-| `--smoke-slice-height M` | 1.6 m | Height of the horizontal slices that are read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.2 m away. See [FDS slice sampling](fds-sampling.md). |
+| `--smoke-slice-height M` | 1.6 m | Height of the horizontal slices that are read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.2 m away. An absolute z, so it is wrong above sloped floors and stages ([Limitations](limitations.md#what-is-not-modelled)). See [FDS slice sampling](fds-sampling.md). |
 | `--allow-fds-horizon-hold` | off | Let the run outlast the FDS output by holding the last slice frame, with a warning at setup and one per quantity. Without it, a `max_simulation_time` more than one slice output interval past the last FDS frame stops the run at setup, and so does any smoke, FED, heat or sign-visibility sample past it, except route foresight, which reads the last frame (#666). See [FDS slice sampling](fds-sampling.md#past-the-end-of-the-fds-output). |
 | `--require-fds-coverage` | off | Stop the run when part of the scenario lies outside the FDS slices: at setup for the walkable area, an exit, checkpoint, spawn area, sign or route edge, and at any smoke, FED, heat or sign-visibility sample. Without it, those places read ambient air and clear sight, as in FDS+Evac; the run logs what lies outside at setup, with the bounds of the walkable area and of the FDS domain and a hint when swapped x and y or a shift could explain it, flags each history row with `in_fds_domain`, and counts the samples outside at the end. See [Outputs](outputs.md). |
 | `--output-smoke-history CSV` | none | Write the smoke history; columns on [Outputs](outputs.md#smoke-history). |
@@ -574,9 +574,21 @@ command, only the list of what to fix.
 ```
 pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-    [--exit-depth 0.5] [--no-fds] [--force] [-v]
+    [--exit-depth 0.5] [--no-fds] [--check-solids SIM_DIR] [--force] [-v]
 ```
 
+- `--check-solids SIM_DIR` compares the derived walkable area with the solid
+  cells of a finished FDS run of the deck in `SIM_DIR` (#715). It reports the
+  number of compared and disagreeing cells and every region of two or more
+  connected disagreeing cells within one mesh, with its bounds, as warnings,
+  and writes the summary to `import_report.json` under `walkable.check_solids`. A
+  `SIM_DIR` without a readable `.smv`, or a run in which no floor mesh
+  matches, is an error (exit 3).
+  The comparison has limits: it looks at the walking band only; it skips solid
+  islands below 0.25 m², which `init` fills in on purpose; it compares
+  cells inside the outer ring of the kept parts, so rooms `init` dropped are
+  skipped; and a wall that `init` makes thicker than FDS on the outer
+  boundary is not seen.
 - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
   `&PERS` records, on one floor (the lowest; `--floor` picks another).
 - A plain FDS deck gets an exit for every `SURF_ID='OPEN'` vent on the
@@ -640,7 +652,14 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   footprints in the band, less the `&HOLE` footprints in the band. `MULT_ID`
   is expanded; `MESH_ID` is honoured; on an FDS+Evac floor, records with
   `EVACUATION=.FALSE.` are skipped. `&OBST` and `&HOLE` with `DEVC_ID` or
-  `CTRL_ID` are taken as written. `&GEOM` is not represented; `&CATF`
+  `CTRL_ID` are taken as written. Obstructions and holes are first put on
+  the gridlines of the floor's meshes as FDS does (`NINT` per bound, the
+  quarter-cell rule, `THICKEN`, obstructions that collapse onto one gridline
+  in two directions dropped, holes cut in index space), so the area is the
+  one FDS computes. On an FDS+Evac floor an obstruction has the mesh's full
+  height, as in FDS+Evac. A stretched grid (`&TRNX`/`&TRNY`) anywhere in the
+  deck leaves every obstruction as written; a `--walkable` WKT is used as
+  given. `&GEOM` is not represented; `&CATF`
   stops the import. Two touching evacuation meshes of one floor are joined,
   with a warning (FDS+Evac keeps their shared edge a wall).
 - **`&EVHO`, plain deck.** An `&EVHO` whose z range meets the floor level up
@@ -663,13 +682,20 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   its face, is flagged as a possible open boundary.
 - **Exits, FDS+Evac deck.** The `&EXIT` and `&DOOR` lines of the floor. A
   `&DOOR` that leads off the floor (to a `&CORR` or `&STRS`) is imported as
-  an exit. A `COUNT_ONLY` `&EXIT` is a counter, not an exit. The line stays
-  where the deck puts it; `exits[].fds_evac_segment` reports where FDS+Evac
-  would round it to its evacuation grid, without applying it.
+  an exit. A `COUNT_ONLY` `&EXIT` is a counter, not an exit. The line is
+  put on the evacuation grid as FDS+Evac does ("XB adjusted to mesh"): each
+  bound is clipped to the mesh and rounded to the nearest gridline, and a
+  warning gives the old and the new position. The same holds for `&DOOR` and
+  for the line of an `&ENTR`. `exits[].segment` is the moved line, and
+  `exits[].fds_evac_segment` repeats it when the line moved and is empty when
+  it did not. A line on the grid is not touched. A deck with a stretched
+  grid (`&TRNX`/`&TRNY`) keeps every line as written, with an info item per
+  line; so does a line for which no single mesh is found, without an item.
 - **Exit strip.** Every exit is a strip `--exit-depth` deep on the room
-  side of its line, clipped to the walkable area. An exit is never moved; it
-  is dropped, at error level, when its strip is empty or narrower than
-  0.1 m.
+  side of its (snapped) line, clipped to the walkable area. An exit is not
+  moved to reach the walkable area; it is dropped, at error level, when its
+  strip is empty or narrower than 0.1 m. A slot that the grid rounds to
+  nothing is dropped with the position it was moved from in the message.
 - **Agents, plain deck.** Each kept part with an exit, minus the exit
   strips, is a spawn area; `--agents N` (or the placeholder of 100) is
   shared between them by area. A part without an exit gets no agents.
@@ -698,6 +724,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Walking band, plain deck | 0.1–1.8 m above the floor | assumption |
 | Widening of a zero-thickness `&OBST` or `&HOLE` | 0.05 m each side | assumption |
 | Free parts dropped and holes filled up to | 0.25 m² | assumption |
+| Grid snapping of `&OBST` and `&HOLE` | FDS `READ_OBST`/`READ_HOLE` rules | FDS |
 | Exit strip depth (`--exit-depth`) | 0.5 m | assumption |
 | Minimum exit width | 0.1 m | assumption; below one agent diameter (0.4 m) |
 | Band for a point or line `&EVAC` | 0.6 m | assumption |
@@ -716,8 +743,17 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `no exit found (every &EXIT is narrower than the minimum exit width 0.1 m: …` | 3 | The deck uses its exits only as flow-field targets, which pyFDS-Evac does not model. | None; draw real exits with `--exit` only if the building has them. |
 | `no agents to place` | 3 | A plain deck with no exit, or an FDS+Evac floor with no `&EVAC`. | Plain deck: add exits, `--agents`. FDS+Evac deck: read `floors_not_imported[].agents`, and use `--floor MESH_ID` only when another floor has agents. When every floor has 0, the agents enter only through `&ENTR` fed by stairs or doors, and the deck is out of scope. |
 | `spawn area X (A m2) holds about N agents of radius r m, but M are requested: …` | 3 | Capacity, see above. | Plain deck: a smaller `--agents` or a larger area. FDS+Evac deck: a lower `NUMBER_INITIAL_PERSONS` or a larger `&EVAC` area, in a copy of the deck. |
+| Item `EXIT`, `DOOR` or `ENTR` `line moved onto the evacuation grid of MESH, as FDS+Evac does ('XB adjusted to mesh'): …` (warning) | 0 | The line's `XB` is off the mesh gridlines, or sticks out of its mesh and is clipped to it first; the message gives the new and the deck's position. | For a line inside one mesh, none: FDS+Evac does the same. FDS+Evac stops on a line that sticks out of its mesh; fix that in the deck. To keep the width, put the line on the grid in a copy of the deck. |
 | Error item `exit dropped: its strip on the room side is empty; the line is D m from the walkable area` | 3, runnable | The exit is not next to the kept walkable area. | Check the floor and the band (`--z-band`), or pass `--exit`. The run works without that exit. |
 | Error item `exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m` | 3, runnable | A slot narrower than 0.1 m. | Widen the exit in a copy of the deck, or pass `--exit`. |
+| Item `OBST` `thinner than its mesh cell in plan: FDS puts it on one gridline` (warning) | 0 | A wall whose two sides round to the same gridline (thinner than one cell, up to just under it) collapses onto that line; the walkable area uses that line, widened by 0.05 m each side. | Put the wall on the grid, or set `THICKEN=.TRUE.` on it. |
+| Item `OBST` `smaller than half a cell in two directions: FDS drops it` (warning) | 0 | The obstruction collapses onto one gridline in two directions and FDS throws it out. | Make it at least one cell, or `THICKEN=.TRUE.`. |
+| Item `HOLE` `snaps to no cell: the opening stays closed in FDS` (warning) | 0 | The hole is narrower than a cell, so FDS cuts no opening in the wall under it. | Widen the hole to a cell, or move it onto the grid. |
+| Item `OBST` `lands on the same gridline as another &OBST` (warning) | 0 | Two separate thin walls snap onto one gridline and merge. | Move one of them onto its own gridline. |
+| Item `--check-solids: the walkable area and FDS's solid cells disagree in a region; see import_report.json walkable.check_solids` (warning) | 0 | Over two or more connected cells, the walkable area and the cells FDS treats as solid at walking height differ. The bounds are in `walkable.check_solids.regions` as `[x0, x1, y0, y1]`. | Compare the deck with the run: an obstruction added or moved after the run, a `DEVC_ID`-controlled obstruction, or a stretched grid. An obstruction only 0–0.1 m high (a curb) on a coarse grid collapses in z in FDS, so FDS has no solid cell there while `init` keeps it. A region that crosses a mesh seam is reported once per mesh. |
+| Item `--check-solids: a floor mesh has no match in the FDS run` (warning) | 0 | No mesh of the run has the floor mesh's `XB` (to 1e-6 m plus float32 rounding), so it is not compared; its label is in `meshes_unmatched`. | Run FDS again from this deck, or point `--check-solids` at the run of this deck. |
+| Error item `--check-solids: no readable FDS run in DIR` | 3, runnable | `DIR` holds no readable `.smv`. | Point `--check-solids` at the folder of the finished run. |
+| Error item `--check-solids: no floor mesh matches the FDS run in DIR` | 3, runnable | Nothing was compared: no floor mesh has a match in the run, for example the run of another deck. | Point `--check-solids` at the run of this deck. |
 | Item `EVHO` `cut out of the walkable area (plain deck)` (info) | 0 | An `&EVHO` on the floor of a plain deck. | None; agents neither spawn nor walk in it. |
 | Item `EVHO` `ignored: not on the imported floor` (warning) | 0 | The `&EVHO` z range misses the floor up to the top of the walking band. | Check its `XB` z values, or `--floor-z`/`--z-band`. |
 | Item `EVHO` `ignored: MESH_ID 'X' is not a mesh of the imported floor` (warning) | 0 | The `&EVHO` names a mesh of another floor. | Check its `MESH_ID`, or `--floor-z`/`--z-band`. |
@@ -743,7 +779,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `deck`, `chid`, `kind` | the deck path, its `CHID`, and `legacy` (FDS+Evac) or `modern` (plain FDS) |
 | `floor` | `id`, `meshes`, `z_floor` and `z_band` of the imported floor |
 | `floors_not_imported` | the other floors of an FDS+Evac deck, with their agent, `&EVAC`, `&EXIT` and `&DOOR` counts |
-| `walkable` | `source` (`derived:deck`, `derived:evac-mesh` or `user`), `area_m2`, `components`, `holes`, `kept_by` (`single`, `spawn`, `exit` or `all`), `components_dropped` (area, bounds, reason), `diagnostics` |
+| `walkable` | `source` (`derived:deck`, `derived:evac-mesh` or `user`), `area_m2`, `components`, `holes`, `kept_by` (`single`, `spawn`, `exit` or `all`), `components_dropped` (area, bounds, reason), `diagnostics`, `snap` (`max_shift_m`, `record`, `dropped`, `holes_closed`, or `skipped` with the reason) |
 | `counts` | per namelist, the number of records supported (S), approximated (A), dropped (D) and cosmetic (C) |
 | `items` | one entry per record: `status` (S, A, D, C), `level` (info, warning, error), `group`, `id`, deck `line`, `message` |
 | `exits` | per exit: `id`, `source` (`X1` vent, `X3` `--exit`, `&EXIT`, `&DOOR`), `segment`, `strip_area_m2`, `sign`, `fds_evac_segment`, and `open_from_s`, `closed_after_s`, `role` |
@@ -793,7 +829,7 @@ width, which the run cannot read as horizontal. `MESH_NUMBER` counts the
 fire meshes only, the `MULT` copies in order. A deck with `&TRNZ` keeps
 the deck's z, since the check does not compute the stretched grid; the cull still applies, as `&TRNZ` moves
 the nodes and not the mesh bounds. `-o`, `--walkable`, `--exit`,
-`--agents`, `--exit-depth`, `--force`, `--no-fds` and `-v` shape the
+`--agents`, `--exit-depth`, `--force`, `--no-fds`, `--check-solids` and `-v` shape the
 written scenario and are refused with `--check`.
 
 | Status | Meaning |

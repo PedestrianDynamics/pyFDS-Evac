@@ -483,8 +483,8 @@ outdoors through an `OPEN` vent makes that outdoor space walkable.
   `COUNT_ONLY` exits are counters and are not imported.
 
 Every exit is a strip 0.5 m deep (`--exit-depth`) on the room side of its
-line. An exit is never moved to reach the walkable area. One whose strip is
-empty, or narrower than 0.1 m, is dropped at error level, and `init` exits
+line, after the line is put on the evacuation grid as FDS+Evac does. An exit
+is never moved to reach the walkable area. One whose strip is empty, or narrower than 0.1 m, is dropped at error level, and `init` exits
 with 3 although the scenario can run.
 {{< /details >}}
 
@@ -516,9 +516,13 @@ with 3 although the scenario can run.
   there is no speed reduction on inclines.
 - **Exits narrower than 0.1 m** are dropped. Exits used only as flow-field
   targets, as in the guide's `CorridorFlowExample`, are not modelled.
-- **Exits stay where the deck puts them.** FDS+Evac rounds an exit to its
-  evacuation grid; `import_report.json` gives that position
-  (`fds_evac_segment`) without applying it.
+- **Exits move onto the evacuation grid.** FDS+Evac rounds an exit, a door
+  and an entry to its evacuation grid ("XB adjusted to mesh"), and so does
+  `init`, with a warning; a deck with a stretched grid is left as written.
+  For a line inside one mesh each end moves by at most half a cell, so an
+  exit can come out narrower or wider than the deck writes it. A line that
+  sticks out of its mesh is clipped to it first; FDS+Evac stops on such a
+  deck.
 - **The deck is read by pyFDS-Evac's own parser.** `&GEOM` is not
   represented, `&CATF` is refused, and obstructions with `DEVC_ID` or
   `CTRL_ID` are taken as written, without their time dependence.

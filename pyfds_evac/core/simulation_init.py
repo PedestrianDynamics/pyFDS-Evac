@@ -47,6 +47,7 @@ from .agent_seed import (
     steering_seeds,
 )
 from .premovement_distributions import (
+    CVM2_PREMOVEMENT_PRESETS,
     PREMOVEMENT_PRESETS,
     create_premovement_distribution,
 )
@@ -189,6 +190,54 @@ def _convert_flow_schedule(params: dict[str, Any], dist_id: Any) -> None:
     except ValueError as error:
         raise SpawnConfigError(str(error)) from error
     params["initial_number"] = value
+
+
+_PRESET_CONFLICTS = (
+    "premovement_distribution",
+    "premovement_param_a",
+    "premovement_param_b",
+)
+
+
+def _apply_premovement_preset(params: dict, dist_id: Any) -> dict:
+    """Turn ``premovement_preset`` into a constant pre-movement (#418).
+
+    The preset names a row of C/VM2 Table 3.3; it cannot be combined with
+    the distribution keys or with ``use_premovement: false``.
+    """
+    if "premovement_preset" not in params:
+        return params
+    name = params["premovement_preset"]
+    if name is None:
+        return {k: v for k, v in params.items() if k != "premovement_preset"}
+    if not isinstance(name, str) or name not in CVM2_PREMOVEMENT_PRESETS:
+        raise ValueError(
+            f"Distribution {dist_id!r}: unknown premovement_preset {name!r}; "
+            f"one of {sorted(CVM2_PREMOVEMENT_PRESETS)}"
+        )
+    clash = [k for k in _PRESET_CONFLICTS if k in params]
+    if params.get("use_premovement") is False:
+        clash.append("use_premovement: false")
+    if clash:
+        raise ValueError(
+            f"Distribution {dist_id!r}: premovement_preset cannot be combined "
+            f"with {', '.join(clash)}"
+        )
+    seconds = CVM2_PREMOVEMENT_PRESETS[name]
+    if not params.get("use_flow_spawning", False):
+        _logger.info(
+            "Distribution '%s': pre-movement %s, constant %.0f s (C/VM2 Table 3.3)",
+            dist_id,
+            name,
+            seconds,
+        )
+    rest = {k: v for k, v in params.items() if k != "premovement_preset"}
+    return {
+        **rest,
+        "use_premovement": True,
+        "premovement_distribution": "constant",
+        "premovement_param_a": seconds,
+    }
 
 
 def _apply_default_premovement(params: dict, dist_id: Any) -> dict:
@@ -2568,6 +2617,7 @@ def _distribution_params(dist_id, dist_data, spawn_defaults, premovement_default
     params = parameters_as_dict(dist_data.get("parameters")) or {}
     _convert_distribution_spawn_values(params, dist_id)
     _convert_flow_schedule(params, dist_id)
+    params = _apply_premovement_preset(params, dist_id)
     if premovement_default:
         params = _apply_default_premovement(params, dist_id)
     spawn_params = _spawn_params(params, spawn_defaults)

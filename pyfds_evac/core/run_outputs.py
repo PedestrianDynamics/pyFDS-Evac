@@ -183,6 +183,7 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
         "queue_time_s",
         "exit_count",
         "exit_capacity",
+        "length_outside_m",
     ]
     with destination.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fieldnames)

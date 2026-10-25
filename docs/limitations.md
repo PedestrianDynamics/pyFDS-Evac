@@ -64,8 +64,9 @@ histories mark each row outside with `in_fds_domain = False`, and
 `metrics["fds_outside"]` and the manifest's `fds_outside` count the
 agents, samples and agent-seconds outside. Check these two; the single
 warning at the first extinction sample outside says nothing about later
-agents. The route-cost history does not record the length outside per
-row ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
+agents. The route-cost history records, per evaluated route, its length
+outside the slices (`length_outside_m`,
+[#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
 `--require-fds-coverage` turns every case outside into an error.
 
 **Signs seen from outside the FDS grid.** An agent beyond the grid of an
@@ -178,6 +179,23 @@ an imported upper floor means "reached the stair door"
 `speed_factor` can slow agents inside a polygon, but it does not represent
 direction of travel on a stair.
 
+**Sloped floors and stages.** The slice height (`--smoke-slice-height`,
+`simulationParams.smoke_slice_height`) is an absolute z in the FDS domain,
+not a height above the local floor. On a raked floor, such as a lecture hall
+with tiered seating, or on a raised stage or platform, agents stand at
+different floor levels, so one slice samples smoke, gases, heat and sign
+legibility too low above the feet of agents on the higher floor and too high
+above those on the lower one. Smoke is usually densest near the ceiling, so
+the hazard is underestimated for the agents on the higher floor and
+overestimated for those on the lower one. Visibility, FED, heat and
+tenability results there are biased, and so are the smoke-dependent walking
+speed and route choice that read the same slice. Until floor-relative
+sampling exists
+([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)), run
+each level separately at its own height, with the matching `&SLCF PBZ=` in
+the FDS deck, or pick the height that is conservative for the occupants who
+matter most and say so.
+
 **FED activity level.** The CO term of the toxic dose uses one fixed
 coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
 the [FED model](/models/fed.md#coded-form)). Rest and heavy work cannot be selected, although
@@ -260,10 +278,10 @@ otherwise change the fire. The time resolution of the hazard is that of the
 slice output (`&DUMP DT_SLCF`).
 
 **Body shape.** An agent is one circle. `pyfds-evac init` gives the
-five FDS+Evac Guide agent types the radius of their torso circle
-R<sub>t</sub> (Adult 0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly
-0.15), the same value for every operational model; the `IMO_*` presets
-keep 0.2 m
+five FDS+Evac Guide agent types and the `IMO_*` presets (Male or Female
+body) the radius of their torso circle R<sub>t</sub> (Adult 0.15 m, Male
+0.16, Female 0.14, Child 0.12, Elderly 0.15), the same value for every
+operational model
 ([#699](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699)).
 The circle is as deep as the FDS+Evac body (0.30 m for an adult) but
 narrower than its shoulders (0.51 m), so two agents pass side by side

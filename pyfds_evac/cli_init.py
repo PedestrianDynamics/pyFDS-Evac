@@ -15,6 +15,10 @@ the deck could not be imported, or an argument error (nothing written).
 and writes nothing: exit 0 when the run will find the extinction, CO, CO2
 and O2 slices and ``&TIME T_END``; 3 when one is missing; 1 when the deck
 cannot be read or an argument is wrong.
+
+``pyfds-evac init DECK.fds --check-solids SIM_DIR`` also compares the walkable
+area with the solid cells of the finished FDS run in SIM_DIR and writes the
+result into ``import_report.json`` (``walkable.check_solids``).
 """
 
 from __future__ import annotations
@@ -50,7 +54,8 @@ examples:
   pyfds-evac init room.fds --check    # before running FDS: check the slices
   pyfds-evac init room.fds            # writes room_scenario/ next to room.fds
   pyfds-evac init room.fds --walkable room.wkt --agents 40
-  pyfds-evac init room.fds -o out/ --exit 0,4.4,0,5.6,-1"""
+  pyfds-evac init room.fds -o out/ --exit 0,4.4,0,5.6,-1
+  pyfds-evac init room.fds --check-solids room_run/   # after the FDS run"""
 
 
 def _exit_spec(text: str) -> tuple[float, ...]:
@@ -153,6 +158,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="with --check: absolute height [m] to check the slices at "
         "(default: the one init writes, floor + HUMAN_SMOKE_HEIGHT or 1.6 m)",
     )
+    parser.add_argument(
+        "--check-solids",
+        metavar="SIM_DIR",
+        help="compare the walkable area with the solid cells of a finished "
+        "FDS run of the deck; findings go to import_report.json",
+    )
     return parser
 
 
@@ -165,6 +176,7 @@ _WRITE_ONLY = (
     ("exit_depth", "--exit-depth"),
     ("force", "--force"),
     ("no_fds", "--no-fds"),
+    ("check_solids", "--check-solids"),
     ("verbose", "-v/--verbose"),
 )
 
@@ -228,6 +240,7 @@ def main(argv: list[str] | None = None) -> int:
         check_output_folder,
         import_fds_deck,
     )
+    from pyfds_evac.core.fds_solids_check import check_solids
 
     slices: list[str] = []
     try:
@@ -252,6 +265,8 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_ERROR
     if args.no_fds:
         result.report.recommendations["fds_dir"] = None
+    if args.check_solids:
+        check_solids(args.check_solids, result)
     try:
         result.write(args.output)
     except OSError as exc:

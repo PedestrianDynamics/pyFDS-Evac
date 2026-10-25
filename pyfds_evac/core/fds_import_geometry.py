@@ -25,6 +25,8 @@ class ExitLine:
     x1: float
     y1: float
     normal: tuple[float, float]
+    #: The deck's line when it was moved onto the FDS grid, else None.
+    written: tuple[float, float, float, float] | None = None
 
     @property
     def line(self) -> LineString:

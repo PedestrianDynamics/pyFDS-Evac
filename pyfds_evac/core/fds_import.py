@@ -117,6 +117,8 @@ class ImportResult:
     deck_path: Path
     #: The spawn areas as built, kept in memory for the terminal summary.
     spawns: list[ImportedSpawn] = field(default_factory=list)
+    #: The floor's ``&MESH`` records, kept in memory for ``--check-solids``.
+    floor_meshes: tuple[NamelistRecord, ...] = ()
 
     def run_command(self, out_dir: str | Path) -> str:
         command = f"pyfds-evac --scenario {out_dir}"
@@ -494,6 +496,8 @@ def _walkable_and_stages(
         _record_walkable(report, walkable, result)
         return (walkable, *build(walkable, report))
     result = provider(deck, spec)
+    for note in result.notes:
+        report.add(*note)
     derived = _checked(result)
     if len(polygons_of(derived)) == 1:
         _record_walkable(report, derived, result, kept_by="single")
@@ -525,6 +529,11 @@ def _checked(result: WalkableResult):
     return polygon
 
 
+def _misc_thicken(deck: FdsDeck) -> bool:
+    misc = deck.first("MISC")
+    return bool(misc and misc.flag("THICKEN_OBSTRUCTIONS"))
+
+
 def _record_walkable(report, polygon, result: WalkableResult, kept_by=None) -> None:
     parts = polygons_of(polygon)
     report.walkable = {
@@ -534,6 +543,8 @@ def _record_walkable(report, polygon, result: WalkableResult, kept_by=None) -> N
         "holes": sum(len(p.interiors) for p in parts),
         "diagnostics": list(result.diagnostics),
     }
+    if result.snap is not None:
+        report.walkable["snap"] = result.snap
     if kept_by is not None:
         report.walkable["kept_by"] = kept_by
         report.walkable["components_dropped"] = []
@@ -631,6 +642,8 @@ def _import_legacy(
         tuple(m.id or "" for m in floor.meshes),
         _floor_obstructions(deck, floor, band, legacy=True),
         _floor_obstructions(deck, floor, band, legacy=True, group="HOLE"),
+        tuple(floor.meshes),
+        _misc_thicken(deck),
     )
     tol = max(floor.dx or 0.0, 0.05)
     build = partial(_legacy_stages, deck, floor, floors, opts, tol)
@@ -747,6 +760,8 @@ def _import_modern(
         None,
         _floor_obstructions(deck, floor, band, legacy=False),
         _floor_obstructions(deck, floor, band, legacy=False, group="HOLE"),
+        tuple(floor.meshes),
+        _misc_thicken(deck),
     )
     tol = max(floor.dx or 0.0, 0.05)
     evhos = _plain_evhos(deck, floor, band, user_wkt is not None, report)
@@ -831,7 +846,13 @@ def _minus_evhos(
                 f"the walkable area ({result.source}) is empty once {names} "
                 f"{verb} cut out; no scenario written"
             )
-        return WalkableResult(polygon, [*result.diagnostics, note], result.source)
+        return WalkableResult(
+            polygon,
+            [*result.diagnostics, note],
+            result.source,
+            result.notes,
+            result.snap,
+        )
 
     return derive
 
@@ -1177,7 +1198,7 @@ def _finish(
     _check_capacity(report, walkable, spawns)
     raw = _raw(deck, report, exits, spawns, height)
     text = shapely_wkt.dumps(walkable, rounding_precision=6, trim=True)
-    return ImportResult(raw, text, report, deck_path, spawns)
+    return ImportResult(raw, text, report, deck_path, spawns, tuple(floor.meshes))
 
 
 def _check_connectivity(walkable, exits, spawns, report) -> None:

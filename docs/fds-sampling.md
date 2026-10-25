@@ -166,8 +166,9 @@ of ambient air and clear sight.
 
 These two are the signal to check. The first-sample warning of *K* fires
 once per run, often at t = 0 for a route sample, and says nothing about
-agents later. The route-cost history does not record the length outside
-per row ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
+agents later. The route-cost history records, per evaluated route, its
+length outside the slices (`length_outside_m`,
+[#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)).
 
 **Strict option.** `--require-fds-coverage` (`require_fds_coverage=True` on
 `run_scenario`, `ExtinctionField`, `FdsFedField`, `FdsHeatField` and
@@ -236,7 +237,8 @@ visibility model applies the same function to the extinction slice it hands
 to fdsvismap.
 
 The height is an absolute z in the FDS domain, so it equals the height
-above the floor where the floor is at z = 0. C/VM2, the Engineers
+above the floor where the floor is at z = 0. On a sloped floor or a stage it does not;
+see [Limitations](limitations.md#what-is-not-modelled). C/VM2, the Engineers
 Australia note and DIN 18009-2 (§7.2.1) evaluate tenability at 2.0 m
 ([ASET and RSET](/fundamentals/aset-rset.md)). For a check against them,
 run with `--smoke-slice-height 2.0` and write the slices at that

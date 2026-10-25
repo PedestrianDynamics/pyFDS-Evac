@@ -50,9 +50,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pyfds-evac-init --check` marks those slices `!`. Add slices at 1.6 m or
   pass `--smoke-slice-height 2.0`
   ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+- `pyfds-evac init` on a deck with `DEFAULT_PROPERTIES='IMO_…'` now sets a
+  Gaussian speed with the mean and variance of the IMO range (0.37 to
+  1.85 m/s over the ten types) and the Male or Female radius (0.16 or
+  0.14 m). Before, such a line got neither and the loader defaults
+  applied, so re-importing changes RSET. On a `&PERS` with a Guide or IMO
+  preset, `VELOCITY_DIST=-1` now keeps the preset speed instead of the
+  line's `VEL_*`, as in FDS+Evac (#712).
+- The walkable area `pyfds-evac init` derives changes for decks whose
+  obstructions are off the FDS grid: 54 of the 227 decks in
+  `tests/init_decks.tsv` (largest: DoorAlgorithm -43.9 m², MonStairs
+  +22.1 m², Haspel -14.3 m²). No deck changes its status, exit count or
+  agents (#715).
+- `pyfds-evac init` puts the `&EXIT`, `&DOOR` and `&ENTR` lines of an
+  FDS+Evac deck on the evacuation grid as FDS+Evac does ("XB adjusted to
+  mesh"), with a warning that gives the old and the new position. Before,
+  the line kept the deck's position and `exits[].fds_evac_segment` only
+  reported the grid position. In `tests/init_decks.tsv`, 26 of the 227 decks
+  get an exit that moves (51 exits; the snapped walls above also clip the
+  strips of 34 of them): the DoorAlgorithm decks' three side exits go from
+  1.2 to 1.0 m, `CompTest10B` from 1.19 to 1.1 m and from 0.9 to 0.8 m,
+  the twelve `FED_Test` decks' `DummyExit` from 0.5 to 0.6 m, the four
+  `AssemblySpace` decks' and `CompTest2`'s exits move by 0.2 and 0.16 m,
+  without changing width. A line already on
+  the grid is unchanged, and so is any line in a deck with `&TRNX` or
+  `&TRNY` (#715).
 
 ### Added
 
+- `pyfds-evac init` imports the FDS+Evac `IMO_*` person types: speed uniform
+  from IMO MSC.1/Circ.1238 Table 3.4, as a Gaussian with the same mean and
+  variance, and the Male or Female body (#712).
+- `pyfds-evac init --check-solids SIM_DIR` compares the derived walkable
+  area with the solid cells of a finished FDS run and reports where they
+  disagree (#715).
+- `premovement_preset` sets a constant pre-movement time from C/VM2
+  Table 3.3 (16 occupancy and position rows; #418).
+- The route-cost CSV has a `length_outside_m` column: the length of each
+  evaluated route outside the FDS slice coverage (#431).
 - `"sign": false` on an exit, checkpoint or waypoint: the node has no sign
   and a discovery agent never learns it by sight (#376). Under the default
   `no_known_exit` mode `default_route`, an agent that knows no exit still
@@ -75,6 +110,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `pyfds-evac init` places `&OBST` and `&HOLE` on the FDS mesh grid before
+  it derives the walkable area, as FDS does, and warns about walls thinner
+  than a cell, walls that merge, openings that close and obstructions FDS
+  drops (#715).
+- Docs: the absolute slice height biases results on sloped floors and
+  stages; documented as a limitation (#365).
+- `VELOCITY_DIST=-1` on a `&PERS` with a preset keeps the preset speed, as in
+  FDS+Evac (#712).
 - The shipped scenarios with journeys are written in `journeys_v2` (exit
   shares as weighted journeys, the dose-test patrols with `"loop": true`);
   their runs are unchanged (#900).
