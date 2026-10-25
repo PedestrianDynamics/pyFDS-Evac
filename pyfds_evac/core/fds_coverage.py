@@ -62,6 +62,7 @@ class FdsCoverageReport:
     walkable_bounds: tuple[float, float, float, float] | None = None
     domain_bounds: tuple[float, float, float, float] | None = None
     frame_hint: str | None = None
+    domain: Any = field(default=None, repr=False, compare=False)
 
     @property
     def is_empty(self) -> bool:
@@ -291,6 +292,25 @@ def _outside_edges(stage_graph, domain) -> dict[str, float]:
     return outside
 
 
+def route_length_outside(segments, graph, domain) -> float:
+    """Length of a route's segment geometry outside *domain* [m] (#431).
+
+    Each segment is measured on the waypoints of its edge in *graph*, the
+    graph the route was ranked on; a segment without an edge or with fewer
+    than two waypoints adds nothing.
+    """
+    total = 0.0
+    for seg in segments:
+        edge = next(
+            (e for e in graph.edges.get(seg.source, []) if e.target == seg.target),
+            None,
+        )
+        if edge is None or len(edge.waypoints) < 2:
+            continue
+        total += LineString(edge.waypoints).difference(domain).length
+    return round(total, 6)
+
+
 def check_fds_coverage(
     *,
     walkable,
@@ -315,6 +335,7 @@ def check_fds_coverage(
         walkable_outside_m2=float(walkable.difference(domain).area),
         areas_outside_m2=_outside_areas(raw, domain),
         edges_outside_m=_outside_edges(stage_graph, domain),
+        domain=domain,
         **_frame_fields(walkable, domain),
     )
     signs = getattr(vis_model, "_sign_xy", None)
