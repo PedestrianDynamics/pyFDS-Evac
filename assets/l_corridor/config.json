@@ -140,7 +140,17 @@
         "radius_distribution": "constant",
         "v0_distribution": "constant",
         "familiarity": 1.0
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 99.0
+        },
+        {
+          "journey_id": "journey_0_1",
+          "weight": 1.0
+        }
+      ]
     }
   },
   "checkpoints": {
@@ -220,86 +230,25 @@
     }
   },
   "zones": {},
-  "journeys": [
+  "journeys_v2": [
     {
       "id": "journey_0",
-      "stages": [
-        "jps-distributions_0",
+      "name": "journey_0",
+      "color": "#4e79a7",
+      "sequence": [
         "jps-checkpoints_junction",
-        "exit_A_near",
+        "exit_A_near"
+      ]
+    },
+    {
+      "id": "journey_0_1",
+      "name": "journey_0_1",
+      "color": "#f28e2b",
+      "sequence": [
+        "jps-checkpoints_junction",
         "jps-checkpoints_topcorner",
         "exit_B_far"
-      ],
-      "transitions": [
-        {
-          "from": "jps-distributions_0",
-          "to": "jps-checkpoints_junction",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_junction",
-          "to": "exit_A_near",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_junction",
-          "to": "jps-checkpoints_topcorner",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_topcorner",
-          "to": "exit_B_far",
-          "journey_id": "journey_0"
-        }
       ]
     }
-  ],
-  "transitions": [
-    {
-      "from": "jps-distributions_0",
-      "to": "jps-checkpoints_junction",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_junction",
-      "to": "exit_A_near",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_junction",
-      "to": "jps-checkpoints_topcorner",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_topcorner",
-      "to": "exit_B_far",
-      "journey_id": "journey_0"
-    }
-  ],
-  "waypoint_routing": {
-    "jps-checkpoints_junction": {
-      "journey_0": {
-        "destinations": [
-          {
-            "target": "exit_A_near",
-            "percentage": 99
-          },
-          {
-            "target": "jps-checkpoints_topcorner",
-            "percentage": 1
-          }
-        ]
-      }
-    },
-    "jps-checkpoints_topcorner": {
-      "journey_0": {
-        "destinations": [
-          {
-            "target": "exit_B_far",
-            "percentage": 100
-          }
-        ]
-      }
-    }
-  }
+  ]
 }

@@ -103,7 +103,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_1",
+          "weight": 100.0
+        }
+      ]
     },
     "room_2": {
       "type": "polygon",
@@ -138,7 +144,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_2",
+          "weight": 100.0
+        }
+      ]
     },
     "room_3": {
       "type": "polygon",
@@ -173,7 +185,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_3",
+          "weight": 100.0
+        }
+      ]
     },
     "room_4": {
       "type": "polygon",
@@ -208,7 +226,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_4",
+          "weight": 100.0
+        }
+      ]
     },
     "room_5": {
       "type": "polygon",
@@ -243,7 +267,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_5",
+          "weight": 100.0
+        }
+      ]
     },
     "room_6": {
       "type": "polygon",
@@ -278,7 +308,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_6",
+          "weight": 100.0
+        }
+      ]
     },
     "room_7": {
       "type": "polygon",
@@ -313,7 +349,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_7",
+          "weight": 100.0
+        }
+      ]
     },
     "room_8": {
       "type": "polygon",
@@ -348,7 +390,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_8",
+          "weight": 100.0
+        }
+      ]
     },
     "room_9": {
       "type": "polygon",
@@ -383,7 +431,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_9",
+          "weight": 100.0
+        }
+      ]
     },
     "room_10": {
       "type": "polygon",
@@ -418,7 +472,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_10",
+          "weight": 100.0
+        }
+      ]
     },
     "room_11": {
       "type": "polygon",
@@ -453,7 +513,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_11",
+          "weight": 100.0
+        }
+      ]
     },
     "room_12": {
       "type": "polygon",
@@ -488,253 +554,125 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_12",
+          "weight": 100.0
+        }
+      ]
     }
   },
   "checkpoints": {},
   "zones": {},
-  "journeys": [
+  "journeys_v2": [
     {
       "id": "journey_1",
-      "stages": [
-        "room_1",
+      "name": "journey_1",
+      "color": "#4e79a7",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_1",
-          "to": "main",
-          "journey_id": "journey_1"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_2",
-      "stages": [
-        "room_2",
+      "name": "journey_2",
+      "color": "#f28e2b",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_2",
-          "to": "main",
-          "journey_id": "journey_2"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_3",
-      "stages": [
-        "room_3",
+      "name": "journey_3",
+      "color": "#e15759",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_3",
-          "to": "main",
-          "journey_id": "journey_3"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_4",
-      "stages": [
-        "room_4",
+      "name": "journey_4",
+      "color": "#76b7b2",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_4",
-          "to": "main",
-          "journey_id": "journey_4"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_5",
-      "stages": [
-        "room_5",
+      "name": "journey_5",
+      "color": "#59a14f",
+      "sequence": [
         "secondary"
-      ],
-      "transitions": [
-        {
-          "from": "room_5",
-          "to": "secondary",
-          "journey_id": "journey_5"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_6",
-      "stages": [
-        "room_6",
+      "name": "journey_6",
+      "color": "#edc948",
+      "sequence": [
         "secondary"
-      ],
-      "transitions": [
-        {
-          "from": "room_6",
-          "to": "secondary",
-          "journey_id": "journey_6"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_7",
-      "stages": [
-        "room_7",
+      "name": "journey_7",
+      "color": "#b07aa1",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_7",
-          "to": "main",
-          "journey_id": "journey_7"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_8",
-      "stages": [
-        "room_8",
+      "name": "journey_8",
+      "color": "#ff9da7",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_8",
-          "to": "main",
-          "journey_id": "journey_8"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_9",
-      "stages": [
-        "room_9",
+      "name": "journey_9",
+      "color": "#9c755f",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_9",
-          "to": "main",
-          "journey_id": "journey_9"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_10",
-      "stages": [
-        "room_10",
+      "name": "journey_10",
+      "color": "#bab0ac",
+      "sequence": [
         "main"
-      ],
-      "transitions": [
-        {
-          "from": "room_10",
-          "to": "main",
-          "journey_id": "journey_10"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_11",
-      "stages": [
-        "room_11",
+      "name": "journey_11",
+      "color": "#4e79a7",
+      "sequence": [
         "secondary"
-      ],
-      "transitions": [
-        {
-          "from": "room_11",
-          "to": "secondary",
-          "journey_id": "journey_11"
-        }
       ],
       "allocation": "hard"
     },
     {
       "id": "journey_12",
-      "stages": [
-        "room_12",
+      "name": "journey_12",
+      "color": "#f28e2b",
+      "sequence": [
         "secondary"
       ],
-      "transitions": [
-        {
-          "from": "room_12",
-          "to": "secondary",
-          "journey_id": "journey_12"
-        }
-      ],
       "allocation": "hard"
-    }
-  ],
-  "transitions": [
-    {
-      "from": "room_1",
-      "to": "main",
-      "journey_id": "journey_1"
-    },
-    {
-      "from": "room_2",
-      "to": "main",
-      "journey_id": "journey_2"
-    },
-    {
-      "from": "room_3",
-      "to": "main",
-      "journey_id": "journey_3"
-    },
-    {
-      "from": "room_4",
-      "to": "main",
-      "journey_id": "journey_4"
-    },
-    {
-      "from": "room_5",
-      "to": "secondary",
-      "journey_id": "journey_5"
-    },
-    {
-      "from": "room_6",
-      "to": "secondary",
-      "journey_id": "journey_6"
-    },
-    {
-      "from": "room_7",
-      "to": "main",
-      "journey_id": "journey_7"
-    },
-    {
-      "from": "room_8",
-      "to": "main",
-      "journey_id": "journey_8"
-    },
-    {
-      "from": "room_9",
-      "to": "main",
-      "journey_id": "journey_9"
-    },
-    {
-      "from": "room_10",
-      "to": "main",
-      "journey_id": "journey_10"
-    },
-    {
-      "from": "room_11",
-      "to": "secondary",
-      "journey_id": "journey_11"
-    },
-    {
-      "from": "room_12",
-      "to": "secondary",
-      "journey_id": "journey_12"
     }
   ]
 }
