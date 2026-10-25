@@ -66,10 +66,12 @@ There is one mesh, so no MPI. Run outside the sync folder, then copy:
 SCIEBO="$HOME/sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
 REPO=/path/to/pyFDS-Evac   # checkout that holds this asset
 A=iso_test_16_fire
+ls "$REPO"/assets/$A/${A}_k*.fds > /dev/null || exit 1   # stop if REPO is wrong
 for DECK in "$REPO"/assets/$A/${A}_k*.fds; do
   CHID=$(basename "$DECK" .fds); K=${CHID#${A}_}
   RUN=/tmp/fds850/$A/$K; mkdir -p "$RUN"; cp "$DECK" "$RUN"/
-  (cd "$RUN" && OMP_NUM_THREADS=1 /Applications/FDS/FDS6/bin/fds "$CHID.fds")
+  (cd "$RUN" && OMP_NUM_THREADS=1 /Applications/FDS/FDS6/bin/fds "$CHID.fds" &&
+    grep -q "FDS completed successfully" "$CHID.out") || { echo "FDS failed: $CHID"; continue; }
   mkdir -p "$SCIEBO/fds-evac-data/$A/$K"; cp "$RUN"/* "$SCIEBO/fds-evac-data/$A/$K/"
 done
 ```

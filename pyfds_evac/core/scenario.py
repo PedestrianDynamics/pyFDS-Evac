@@ -1094,8 +1094,9 @@ class ProgressEvent:
     flow agents still to enter (provisional fields, 0.3.0).
     Samples are taken while agents remain: when a run ends with the last
     agent leaving, the last event has ``evacuated < total``, so ``pct`` does
-    not reach 100. Runs that end at the time limit or in deadlock are
-    different. The final counts are in ``ScenarioResult``.
+    not reach 100. In runs that end at the time limit or in deadlock, the
+    last event is close to the final state. The final counts are in
+    ``ScenarioResult``.
     """
 
     evacuated: int

@@ -703,10 +703,10 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   every time. A sign seen through a door that opens is never legible, and a
   sign behind an obstruction that appears later is not legible before it
   appears either. In a two-room fixture run in FDS, a sign behind a leaf
-  removed at 3.1 s is not legible at any time (legible from 4 s once the
-  leaf is gone), and a sign behind a leaf created at 6.1 s is not legible
-  at 0–6 s either (fdsvismap 0.3.3). Static obstructions and the clear-air
-  model are not affected.
+  removed at 3.1 s is not legible at any time (it should be legible from
+  4 s, once the leaf is gone), and a sign behind a leaf created at 6.1 s
+  is not legible at 0–6 s either (fdsvismap 0.3.3). Static obstructions
+  and the clear-air model are not affected.
 - **Learning is limited to neighbours**, spawn perception is per spawn area,
   and periodic learning uses the previous step's position (§2.1–2.2).
 - **The patrol can stall**
