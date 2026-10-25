@@ -574,9 +574,19 @@ command, only the list of what to fix.
 ```
 pyfds-evac init DECK.fds [-o DIR] [--walkable FILE.wkt] [--agents N] \
     [--exit x0,y0,x1,y1[,ior]] [--floor MESH_ID] [--floor-z Z] [--z-band LO HI] \
-    [--exit-depth 0.5] [--no-fds] [--force] [-v]
+    [--exit-depth 0.5] [--no-fds] [--check-solids SIM_DIR] [--force] [-v]
 ```
 
+- `--check-solids SIM_DIR` compares the derived walkable area with the solid
+  cells of a finished FDS run of the deck in `SIM_DIR` (#715). It reports the
+  number of compared and disagreeing cells and every region of two or more
+  connected disagreeing cells with its bounds, as warnings, and writes the
+  summary to `import_report.json` under `walkable.check_solids`. A
+  `SIM_DIR` without a readable `.smv` is an error (exit 3).
+  The comparison has limits: it looks at the walking band only; it compares
+  cells inside the outer ring of the kept parts, so rooms `init` dropped are
+  skipped; and a wall that `init` makes thicker than FDS on the outer
+  boundary is not seen.
 - An FDS+Evac deck keeps its `&EXIT`, `&DOOR`, `&EVAC`, `&EVHO`, `&ENTR` and
   `&PERS` records, on one floor (the lowest; `--floor` picks another).
 - A plain FDS deck gets an exit for every `SURF_ID='OPEN'` vent on the
@@ -730,6 +740,9 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Item `OBST` `smaller than half a cell in two directions: FDS drops it` (warning) | 0 | The obstruction collapses onto one gridline in two directions and FDS throws it out. | Make it at least one cell, or `THICKEN=.TRUE.`. |
 | Item `HOLE` `snaps to no cell: the opening stays closed in FDS` (warning) | 0 | The hole is narrower than a cell, so FDS cuts no opening in the wall under it. | Widen the hole to a cell, or move it onto the grid. |
 | Item `OBST` `lands on the same gridline as another &OBST` (warning) | 0 | Two separate thin walls snap onto one gridline and merge. | Move one of them onto its own gridline. |
+| Item `--check-solids: the walkable area and FDS's solid cells disagree in a region; see import_report.json walkable.check_solids` (warning) | 0 | Over two or more connected cells, the walkable area and the cells FDS treats as solid at walking height differ. The bounds are in `walkable.check_solids.regions` as `[x0, x1, y0, y1]`. | Compare the deck with the run: an obstruction added or moved after the run, a `DEVC_ID`-controlled obstruction, or a stretched grid. |
+| Item `--check-solids: a floor mesh has no match in the FDS run` (warning) | 0 | No mesh of the run has the floor mesh's `XB` (to 1e-6 m), so it is not compared; its label is in `meshes_unmatched`. | Run FDS again from this deck, or point `--check-solids` at the run of this deck. |
+| Error item `--check-solids: no readable FDS run in DIR` | 3, runnable | `DIR` holds no readable `.smv`. | Point `--check-solids` at the folder of the finished run. |
 | Item `EVHO` `cut out of the walkable area (plain deck)` (info) | 0 | An `&EVHO` on the floor of a plain deck. | None; agents neither spawn nor walk in it. |
 | Item `EVHO` `ignored: not on the imported floor` (warning) | 0 | The `&EVHO` z range misses the floor up to the top of the walking band. | Check its `XB` z values, or `--floor-z`/`--z-band`. |
 | Item `EVHO` `ignored: MESH_ID 'X' is not a mesh of the imported floor` (warning) | 0 | The `&EVHO` names a mesh of another floor. | Check its `MESH_ID`, or `--floor-z`/`--z-band`. |
@@ -805,7 +818,7 @@ width, which the run cannot read as horizontal. `MESH_NUMBER` counts the
 fire meshes only, the `MULT` copies in order. A deck with `&TRNZ` keeps
 the deck's z, since the check does not compute the stretched grid; the cull still applies, as `&TRNZ` moves
 the nodes and not the mesh bounds. `-o`, `--walkable`, `--exit`,
-`--agents`, `--exit-depth`, `--force`, `--no-fds` and `-v` shape the
+`--agents`, `--exit-depth`, `--force`, `--no-fds`, `--check-solids` and `-v` shape the
 written scenario and are refused with `--check`.
 
 | Status | Meaning |

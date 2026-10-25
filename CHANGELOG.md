@@ -68,6 +68,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `pyfds-evac init` imports the FDS+Evac `IMO_*` person types: speed uniform
   from IMO MSC.1/Circ.1238 Table 3.4, as a Gaussian with the same mean and
   variance, and the Male or Female body (#712).
+- `pyfds-evac init --check-solids SIM_DIR` compares the derived walkable
+  area with the solid cells of a finished FDS run and reports where they
+  disagree (#715).
 - `premovement_preset` sets a constant pre-movement time from C/VM2
   Table 3.3 (16 occupancy and position rows; #418).
 - The route-cost CSV has a `length_outside_m` column: the length of each
