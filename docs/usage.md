@@ -640,7 +640,12 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   footprints in the band, less the `&HOLE` footprints in the band. `MULT_ID`
   is expanded; `MESH_ID` is honoured; on an FDS+Evac floor, records with
   `EVACUATION=.FALSE.` are skipped. `&OBST` and `&HOLE` with `DEVC_ID` or
-  `CTRL_ID` are taken as written. `&GEOM` is not represented; `&CATF`
+  `CTRL_ID` are taken as written. Obstructions and holes are first put on
+  the gridlines of the floor's meshes as FDS does (`NINT` per bound, the
+  quarter-cell rule, `THICKEN`, obstructions smaller than half a cell in two
+  directions dropped, holes cut in index space), so the area is the one FDS
+  computes. A stretched grid (`&TRNX`/`&TRNY`) is taken as written; a
+  `--walkable` WKT is used as given. `&GEOM` is not represented; `&CATF`
   stops the import. Two touching evacuation meshes of one floor are joined,
   with a warning (FDS+Evac keeps their shared edge a wall).
 - **`&EVHO`, plain deck.** An `&EVHO` whose z range meets the floor level up
@@ -698,6 +703,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | Walking band, plain deck | 0.1–1.8 m above the floor | assumption |
 | Widening of a zero-thickness `&OBST` or `&HOLE` | 0.05 m each side | assumption |
 | Free parts dropped and holes filled up to | 0.25 m² | assumption |
+| Grid snapping of `&OBST` and `&HOLE` | FDS `READ_OBST`/`READ_HOLE` rules | FDS |
 | Exit strip depth (`--exit-depth`) | 0.5 m | assumption |
 | Minimum exit width | 0.1 m | assumption; below one agent diameter (0.4 m) |
 | Band for a point or line `&EVAC` | 0.6 m | assumption |
@@ -718,6 +724,10 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `spawn area X (A m2) holds about N agents of radius r m, but M are requested: …` | 3 | Capacity, see above. | Plain deck: a smaller `--agents` or a larger area. FDS+Evac deck: a lower `NUMBER_INITIAL_PERSONS` or a larger `&EVAC` area, in a copy of the deck. |
 | Error item `exit dropped: its strip on the room side is empty; the line is D m from the walkable area` | 3, runnable | The exit is not next to the kept walkable area. | Check the floor and the band (`--z-band`), or pass `--exit`. The run works without that exit. |
 | Error item `exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m` | 3, runnable | A slot narrower than 0.1 m. | Widen the exit in a copy of the deck, or pass `--exit`. |
+| Item `OBST` `thinner than its mesh cell in plan: FDS puts it on one gridline` (warning) | 0 | A wall thinner than a quarter of its mesh cell collapses onto one gridline; the walkable area uses that line, widened by 0.05 m each side. | Put the wall on the grid, or set `THICKEN=.TRUE.` on it. |
+| Item `OBST` `smaller than half a cell in two directions: FDS drops it` (warning) | 0 | The obstruction collapses in two axes and FDS throws it out. | Make it at least one cell, or `THICKEN=.TRUE.`. |
+| Item `HOLE` `snaps to no cell: the opening stays closed in FDS` (warning) | 0 | The hole is narrower than a cell, so FDS cuts no opening in the wall under it. | Widen the hole to a cell, or move it onto the grid. |
+| Item `OBST` `lands on the same gridline as another &OBST` (warning) | 0 | Two separate thin walls snap onto one gridline and merge. | Move one of them onto its own gridline. |
 | Item `EVHO` `cut out of the walkable area (plain deck)` (info) | 0 | An `&EVHO` on the floor of a plain deck. | None; agents neither spawn nor walk in it. |
 | Item `EVHO` `ignored: not on the imported floor` (warning) | 0 | The `&EVHO` z range misses the floor up to the top of the walking band. | Check its `XB` z values, or `--floor-z`/`--z-band`. |
 | Item `EVHO` `ignored: MESH_ID 'X' is not a mesh of the imported floor` (warning) | 0 | The `&EVHO` names a mesh of another floor. | Check its `MESH_ID`, or `--floor-z`/`--z-band`. |
@@ -743,7 +753,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `deck`, `chid`, `kind` | the deck path, its `CHID`, and `legacy` (FDS+Evac) or `modern` (plain FDS) |
 | `floor` | `id`, `meshes`, `z_floor` and `z_band` of the imported floor |
 | `floors_not_imported` | the other floors of an FDS+Evac deck, with their agent, `&EVAC`, `&EXIT` and `&DOOR` counts |
-| `walkable` | `source` (`derived:deck`, `derived:evac-mesh` or `user`), `area_m2`, `components`, `holes`, `kept_by` (`single`, `spawn`, `exit` or `all`), `components_dropped` (area, bounds, reason), `diagnostics` |
+| `walkable` | `source` (`derived:deck`, `derived:evac-mesh` or `user`), `area_m2`, `components`, `holes`, `kept_by` (`single`, `spawn`, `exit` or `all`), `components_dropped` (area, bounds, reason), `diagnostics`, `snap` (`max_shift_m`, `record`, `dropped`, `holes_closed`, or `skipped` with the reason) |
 | `counts` | per namelist, the number of records supported (S), approximated (A), dropped (D) and cosmetic (C) |
 | `items` | one entry per record: `status` (S, A, D, C), `level` (info, warning, error), `group`, `id`, deck `line`, `message` |
 | `exits` | per exit: `id`, `source` (`X1` vent, `X3` `--exit`, `&EXIT`, `&DOOR`), `segment`, `strip_area_m2`, `sign`, `fds_evac_segment`, and `open_from_s`, `closed_after_s`, `role` |

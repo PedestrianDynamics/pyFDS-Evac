@@ -57,6 +57,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   applied, so re-importing changes RSET. On a `&PERS` with a Guide or IMO
   preset, `VELOCITY_DIST=-1` now keeps the preset speed instead of the
   line's `VEL_*`, as in FDS+Evac (#712).
+- The walkable area `pyfds-evac init` derives changes for decks whose
+  obstructions are off the FDS grid: 54 of the 227 decks in
+  `tests/init_decks.tsv` (largest: DoorAlgorithm -43.9 m², MonStairs
+  +22.1 m², Haspel -14.3 m²). No deck changes its status, exits or agents
+  (#715).
 
 ### Added
 
@@ -89,6 +94,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `pyfds-evac init` places `&OBST` and `&HOLE` on the FDS mesh grid before
+  it derives the walkable area, as FDS does, and warns about walls thinner
+  than a cell, walls that merge, openings that close and obstructions FDS
+  drops (#715).
 - `VELOCITY_DIST=-1` on a `&PERS` with a preset keeps the preset speed, as in
   FDS+Evac (#712).
 - The shipped scenarios with journeys are written in `journeys_v2` (exit
