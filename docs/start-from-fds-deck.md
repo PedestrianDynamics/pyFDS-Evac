@@ -519,8 +519,10 @@ with 3 although the scenario can run.
 - **Exits move onto the evacuation grid.** FDS+Evac rounds an exit, a door
   and an entry to its evacuation grid ("XB adjusted to mesh"), and so does
   `init`, with a warning; a deck with a stretched grid is left as written.
-  Each end moves by at most half a cell, so an exit can come out narrower or
-  wider than the deck writes it.
+  For a line inside one mesh each end moves by at most half a cell, so an
+  exit can come out narrower or wider than the deck writes it. A line that
+  sticks out of its mesh is clipped to it first; FDS+Evac stops on such a
+  deck.
 - **The deck is read by pyFDS-Evac's own parser.** `&GEOM` is not
   represented, `&CATF` is refused, and obstructions with `DEVC_ID` or
   `CTRL_ID` are taken as written, without their time dependence.
