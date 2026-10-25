@@ -118,7 +118,7 @@ class ImportResult:
     #: The spawn areas as built, kept in memory for the terminal summary.
     spawns: list[ImportedSpawn] = field(default_factory=list)
     #: The floor's ``&MESH`` records, kept in memory for ``--check-solids``.
-    floor_meshes: tuple = ()
+    floor_meshes: tuple[NamelistRecord, ...] = ()
 
     def run_command(self, out_dir: str | Path) -> str:
         command = f"pyfds-evac --scenario {out_dir}"
