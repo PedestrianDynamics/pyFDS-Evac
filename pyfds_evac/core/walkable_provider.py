@@ -274,6 +274,26 @@ def snap_footprints(
     return [box for snap in snaps for box in snap.boxes]
 
 
+def snap_segment(
+    mesh: NamelistRecord, x0: float, y0: float, x1: float, y1: float
+) -> tuple[float, float, float, float] | None:
+    """A plan segment moved onto *mesh*'s gridlines: FDS+Evac ``READ_EXIT``.
+
+    Each bound is clipped to the mesh and rounded with ``NINT`` to a
+    gridline, as for ``&EXIT``, ``&DOOR`` and ``&ENTR``. None when the mesh
+    has no ``XB`` and ``IJK``.
+    """
+    grid = _mesh_axes(mesh)
+    if grid is None:
+        return None
+    ax, ay = grid[0], grid[1]
+
+    def snap(axis: _Axis, v: float) -> float:
+        return axis.coord(axis.index(min(max(v, axis.start), axis.end)))
+
+    return snap(ax, x0), snap(ay, y0), snap(ax, x1), snap(ay, y1)
+
+
 def _label(record: NamelistRecord) -> str:
     return f"{record.label} (line {record.line})"
 

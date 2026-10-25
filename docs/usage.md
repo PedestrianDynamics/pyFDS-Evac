@@ -682,13 +682,20 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   its face, is flagged as a possible open boundary.
 - **Exits, FDS+Evac deck.** The `&EXIT` and `&DOOR` lines of the floor. A
   `&DOOR` that leads off the floor (to a `&CORR` or `&STRS`) is imported as
-  an exit. A `COUNT_ONLY` `&EXIT` is a counter, not an exit. The line stays
-  where the deck puts it; `exits[].fds_evac_segment` reports where FDS+Evac
-  would round it to its evacuation grid, without applying it.
+  an exit. A `COUNT_ONLY` `&EXIT` is a counter, not an exit. The line is
+  put on the evacuation grid as FDS+Evac does ("XB adjusted to mesh"): each
+  bound is clipped to the mesh and rounded to the nearest gridline, and a
+  warning gives the old and the new position. The same holds for `&DOOR` and
+  for the line of an `&ENTR`. `exits[].segment` is the moved line, and
+  `exits[].fds_evac_segment` repeats it when the line moved and is empty when
+  it did not. A line on the grid is not touched, and neither is any line in
+  a deck with a stretched grid (`&TRNX`/`&TRNY`) or when no single mesh is
+  found for it (an info item says so).
 - **Exit strip.** Every exit is a strip `--exit-depth` deep on the room
-  side of its line, clipped to the walkable area. An exit is never moved; it
-  is dropped, at error level, when its strip is empty or narrower than
-  0.1 m.
+  side of its (snapped) line, clipped to the walkable area. An exit is not
+  moved to reach the walkable area; it is dropped, at error level, when its
+  strip is empty or narrower than 0.1 m. A slot that the grid rounds to
+  nothing is dropped with the position it was moved from in the message.
 - **Agents, plain deck.** Each kept part with an exit, minus the exit
   strips, is a spawn area; `--agents N` (or the placeholder of 100) is
   shared between them by area. A part without an exit gets no agents.
@@ -736,6 +743,7 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
 | `no exit found (every &EXIT is narrower than the minimum exit width 0.1 m: …` | 3 | The deck uses its exits only as flow-field targets, which pyFDS-Evac does not model. | None; draw real exits with `--exit` only if the building has them. |
 | `no agents to place` | 3 | A plain deck with no exit, or an FDS+Evac floor with no `&EVAC`. | Plain deck: add exits, `--agents`. FDS+Evac deck: read `floors_not_imported[].agents`, and use `--floor MESH_ID` only when another floor has agents. When every floor has 0, the agents enter only through `&ENTR` fed by stairs or doors, and the deck is out of scope. |
 | `spawn area X (A m2) holds about N agents of radius r m, but M are requested: …` | 3 | Capacity, see above. | Plain deck: a smaller `--agents` or a larger area. FDS+Evac deck: a lower `NUMBER_INITIAL_PERSONS` or a larger `&EVAC` area, in a copy of the deck. |
+| Item `EXIT`, `DOOR` or `ENTR` `line moved onto the evacuation grid of MESH, as FDS+Evac does ('XB adjusted to mesh'): …` (warning) | 0 | The line's `XB` is off the mesh gridlines or beyond the mesh; the message gives the new and the deck's position. | None, FDS+Evac does the same; to keep the width, put the line on the grid in a copy of the deck. |
 | Error item `exit dropped: its strip on the room side is empty; the line is D m from the walkable area` | 3, runnable | The exit is not next to the kept walkable area. | Check the floor and the band (`--z-band`), or pass `--exit`. The run works without that exit. |
 | Error item `exit dropped: its strip on the room side is W m wide, below the minimum exit width of 0.1 m` | 3, runnable | A slot narrower than 0.1 m. | Widen the exit in a copy of the deck, or pass `--exit`. |
 | Item `OBST` `thinner than its mesh cell in plan: FDS puts it on one gridline` (warning) | 0 | A wall whose two sides round to the same gridline (thinner than one cell, up to just under it) collapses onto that line; the walkable area uses that line, widened by 0.05 m each side. | Put the wall on the grid, or set `THICKEN=.TRUE.` on it. |

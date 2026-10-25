@@ -8,7 +8,6 @@ non-exact mapping leaves a report item.
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -29,6 +28,7 @@ from .fds_import_geometry import (
     union,
 )
 from .fds_import_report import Floor, ImportedExit, ImportedSpawn, ImportReport
+from .walkable_provider import snap_segment
 
 #: Keys each group maps; a trailing ``*`` is a prefix. Other keys are cosmetic
 #: (:data:`COSMETIC`) or dropped with a report item.
@@ -281,12 +281,17 @@ def _strip_exit(ctx, record: NamelistRecord, source: str) -> ImportedExit | None
     strip = exit_strip(line, ctx.depth, ctx.walkable)
     if strip is None:
         problem = strip_problem(line, ctx.depth, ctx.walkable)
+        if line.written is not None:
+            problem += _moved_from(line.written)
         ctx.add("D", "error", record.group, f"exit dropped: {problem}", record)
         return None
     exit_ = ImportedExit(
         record.id or "", strip, source, (line.x0, line.y0, line.x1, line.y1)
     )
-    exit_.fds_evac_segment = _grid_segment(ctx, record, line)
+    if line.written is not None:
+        exit_.fds_evac_segment = [
+            rounded(v) for v in (line.x0, line.y0, line.x1, line.y1)
+        ]
     exit_.sign = _sign(ctx, record)
     _schedule(ctx, record, exit_)
     ctx.add(
@@ -299,37 +304,48 @@ def _strip_exit(ctx, record: NamelistRecord, source: str) -> ImportedExit | None
     return exit_
 
 
-def _grid_segment(ctx, record: NamelistRecord, line: ExitLine) -> list | None:
-    """The line where FDS+Evac puts it, when that differs by over 1e-4 m.
+def _moved_from(seg: tuple) -> str:
+    return (
+        f" (the line was moved onto the evacuation grid from "
+        f"x {seg[0]:g}..{seg[2]:g}, y {seg[1]:g}..{seg[3]:g})"
+    )
+
+
+def _on_grid(ctx, record: NamelistRecord, seg: tuple) -> tuple[tuple, tuple | None]:
+    """*seg* on the evacuation grid, and the deck's *seg* when it moved.
 
     FDS+Evac clips an exit's ``XB`` to its evacuation mesh and moves it to
-    the nearest grid lines ("XB adjusted to mesh", ``evac.f90``). Reported
-    only; the exit here keeps the deck's position.
+    the nearest gridlines ("XB adjusted to mesh", ``evac.f90``); the same
+    holds for ``&DOOR`` and ``&ENTR``. A line within 1e-4 m of the grid, or
+    on a stretched grid or no single mesh, stays as written.
     """
-    mesh = _mesh_of(ctx, record, line)
-    ijk = [] if mesh is None else mesh.values("IJK")
-    if mesh is None or len(ijk) != 3:
-        return None
-    xs, xf, ys, yf = mesh.box6()[:4]
-    dx, dy = (xf - xs) / float(ijk[0]), (yf - ys) / float(ijk[1])
-    x0, x1 = (_grid(v, xs, xf, dx) for v in (line.x0, line.x1))
-    y0, y1 = (_grid(v, ys, yf, dy) for v in (line.y0, line.y1))
-    moved = (x0, y0, x1, y1)
-    given = (line.x0, line.y0, line.x1, line.y1)
-    if max(abs(a - b) for a, b in zip(moved, given, strict=True)) <= 1e-4:
-        return None
+    if ctx.deck.group("TRNX") or ctx.deck.group("TRNY"):
+        ctx.add(
+            "A", "info", record.group, "stretched grid: line taken as written", record
+        )
+        return seg, None
+    mesh = _mesh_of(ctx, record, seg)
+    moved = None if mesh is None else snap_segment(mesh, *seg)
+    if (
+        moved is None
+        or max(abs(a - b) for a, b in zip(moved, seg, strict=True)) <= 1e-4
+    ):
+        return seg, None
+    moved = tuple(rounded(v) for v in moved)
     ctx.add(
         "A",
-        "info",
+        "warning",
         record.group,
-        f"FDS+Evac moves this line to its evacuation grid ({mesh.label}): "
-        f"x {x0:g}..{x1:g}, y {y0:g}..{y1:g}; the deck's position is kept here",
+        f"line moved onto the evacuation grid of {mesh.label}, as FDS+Evac "
+        f"does ('XB adjusted to mesh'): x {moved[0]:g}..{moved[2]:g}, "
+        f"y {moved[1]:g}..{moved[3]:g}; the deck has x {seg[0]:g}..{seg[2]:g}, "
+        f"y {seg[1]:g}..{seg[3]:g}",
         record,
     )
-    return [rounded(v) for v in moved]
+    return moved, tuple(seg)
 
 
-def _mesh_of(ctx, record: NamelistRecord, line: ExitLine) -> NamelistRecord | None:
+def _mesh_of(ctx, record: NamelistRecord, seg: tuple) -> NamelistRecord | None:
     """The evacuation mesh FDS+Evac would clip *record*'s line to.
 
     An explicit ``MESH_ID`` names it. Without one, the mesh that contains
@@ -340,8 +356,8 @@ def _mesh_of(ctx, record: NamelistRecord, line: ExitLine) -> NamelistRecord | No
     mesh_id = record.text("MESH_ID")
     if mesh_id is not None:
         return next((m for m in meshes if m.id == mesh_id), None)
-    lo_x, hi_x = sorted((line.x0, line.x1))
-    lo_y, hi_y = sorted((line.y0, line.y1))
+    lo_x, hi_x = sorted((seg[0], seg[2]))
+    lo_y, hi_y = sorted((seg[1], seg[3]))
     touched = []
     for mesh in meshes:
         xs, xf, ys, yf = mesh.box6()[:4]
@@ -350,12 +366,6 @@ def _mesh_of(ctx, record: NamelistRecord, line: ExitLine) -> NamelistRecord | No
         if lo_x <= xf and hi_x >= xs and lo_y <= yf and hi_y >= ys:
             touched.append(mesh)
     return touched[0] if len(touched) == 1 else None
-
-
-def _grid(value: float, start: float, end: float, step: float) -> float:
-    """Fortran ``NINT`` of the cell index (half away from zero), as FDS+Evac."""
-    index = (min(max(value, start), end) - start) / step
-    return start + math.floor(index + 0.5) * step
 
 
 def _exit_line(ctx, record: NamelistRecord, outward: bool) -> ExitLine | None:
@@ -373,18 +383,19 @@ def _exit_line(ctx, record: NamelistRecord, outward: bool) -> ExitLine | None:
     except ValueError as exc:
         ctx.add("D", "error", record.group, f"dropped: {exc}", record)
         return None
+    (x0, y0, x1, y1), written = _on_grid(ctx, record, (x0, y0, x1, y1))
     if ior is None:
-        return _guess_side(ctx, record, (x0, y0, x1, y1))
+        return _guess_side(ctx, record, (x0, y0, x1, y1), written)
     normal = (-nx, -ny) if outward else (nx, ny)
-    return ExitLine(x0, y0, x1, y1, normal)
+    return ExitLine(x0, y0, x1, y1, normal, written)
 
 
-def _guess_side(ctx, record, seg) -> ExitLine:
+def _guess_side(ctx, record, seg, written) -> ExitLine:
     x0, y0, x1, y1 = seg
     axis = (1.0, 0.0) if x0 == x1 else (0.0, 1.0)
     sides = [
-        ExitLine(x0, y0, x1, y1, axis),
-        ExitLine(x0, y0, x1, y1, (-axis[0], -axis[1])),
+        ExitLine(x0, y0, x1, y1, axis, written),
+        ExitLine(x0, y0, x1, y1, (-axis[0], -axis[1]), written),
     ]
     areas = [_strip_area(s, ctx) for s in sides]
     chosen = sides[0] if areas[0] >= areas[1] else sides[1]

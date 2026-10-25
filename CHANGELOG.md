@@ -62,6 +62,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/init_decks.tsv` (largest: DoorAlgorithm -43.9 m², MonStairs
   +22.1 m², Haspel -14.3 m²). No deck changes its status, exits or agents
   (#715).
+- `pyfds-evac init` puts the `&EXIT`, `&DOOR` and `&ENTR` lines of an
+  FDS+Evac deck on the evacuation grid as FDS+Evac does ("XB adjusted to
+  mesh"), with a warning that gives the old and the new position. Before,
+  the line kept the deck's position and `exits[].fds_evac_segment` only
+  reported the grid position. In `tests/init_decks.tsv`, 26 of the 227 decks
+  get an exit that moves (51 exits; the snapped walls above also clip the
+  strips of 34 of them): the DoorAlgorithm decks' three side exits go from
+  1.2 to 1.0 m, `CompTest10B` from 1.19 to 1.1 m and from 0.9 to 0.8 m,
+  the twelve `FED_Test` decks' `DummyExit` from 0.5 to 0.6 m, the four
+  `AssemblySpace` decks' and `CompTest2`'s exits move by 0.2 and 0.16 m,
+  without changing width. A line already on
+  the grid is unchanged, and so is any line in a deck with `&TRNX` or
+  `&TRNY` (#715).
 
 ### Added
 
