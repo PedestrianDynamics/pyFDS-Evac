@@ -42,8 +42,8 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
 | | 1 door, 0.2 m grid | 1 door, 0.1 m grid | 2 doors, 0.2 m grid | Paper, Fig. 5 (read off) |
 |---|---|---|---|---|
 | min DIFF | −27 s | −27 s | −40 s | about −29 s |
-| Area with DIFF < 0 | 6.7 m² | 6.4 m² | 7.4 m² | about 20 m² |
-| C (bin-free) | −112 m²s | −107 m²s | −174 m²s | – |
+| Area with DIFF < 0 | 6.7 m² | 6.4 m² | 7.8 m² | about 20 m² |
+| C (bin-free) | −112 m²s | −107 m²s | −171 m²s | – |
 | RSET, latest cell | 101 s | 101 s | 63 s | about 104 s (Fig. 3) |
 
 - **Smoke sets ASET here.** Every cell reaches K ≥ 0.23 1/m at 2.0 m, the
@@ -56,7 +56,7 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:
   those cells at 72–74 s; the last person leaves them at about 100 s.
 - **The door-flow model decides the one-door sign.** Without the cap, the
   room empties in 42–45 s and no cell has DIFF < 0. With two doors even the
-  uncapped crowd fails, by 11 s, beside the west door near the fire.
+  uncapped crowd fails, by 12 s, beside the west door near the fire.
 - **The grids agree.** The 0.1 m FDS grid moves min DIFF by less than 1 s
   and the negative area by 0.3 m².
 - **The negative area is about a third of the paper's.** The release's own
@@ -88,16 +88,16 @@ middle column separates that code change from the change of conditions.
 | min DIFF, one door, 0.2 m (0.1 m) | −30 s (−25 s) | −31 s (−26 s) | −27 s (−27 s) |
 | Area DIFF < 0, one door, 0.2 m (0.1 m) | 6.2 m² (5.5) | 6.2 m² (5.8) | 6.7 m² (6.4) |
 | C, one door, 0.2 m (0.1 m) | −113 m²s (−87) | −118 m²s (−92) | −112 m²s (−107) |
-| min DIFF / area, two doors | −41 s / 6.2 m² | −42 s / 5.8 m² | −40 s / 7.4 m² |
-| min DIFF / area, two doors, N = 200 | −103 s / 21.9 m² | −103 s / 21.9 m² | −97 s / 22.9 m² |
-| min DIFF, uncapped, one / two doors | +3 s / +1 s | +2 s / −4 s | +4 s / −11 s |
+| min DIFF / area, two doors | −41 s / 6.2 m² | −42 s / 5.8 m² | −40 s / 7.8 m² |
+| min DIFF / area, two doors, N = 200 | −103 s / 21.9 m² | −103 s / 21.9 m² | −97 s / 23.5 m² |
+| min DIFF, uncapped, one / two doors | +3 s / +1 s | +2 s / −4 s | +4 s / −12 s |
 
 The engine change moves min DIFF by about 1 s. The release conditions move
 it by about 4 s and bring the two FDS grids into agreement.
 The uncapped two-door run turns negative with the exit-rule change already
 (+1 → −4 s, not robust over seeds: per-seed mean +0.3 s); the release
-conditions deepen it to −11 s, negative in the per-seed mean as well
-(−4.6 [−6.9, −2.5] s).
+conditions deepen it to −12 s, negative in the per-seed mean as well
+(−5.5 [−7.8, −2.9] s).
 
 {{< /details >}}
 
@@ -416,7 +416,7 @@ therefore run two versions on the same FDS output:
   the agents in the release's ten runs (0.96–1.05 persons/s);
 - **uncapped:** the model's own flow, reported as a model difference.
 
-![Two panels of agents in the room against time. Left, one door: the capped runs fall along the release's ten JuPedSim runs, drawn as a dotted grey band, and through the paper's Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 52 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 102 to 118 s.](/images/studies/schroeder2020/agents_remaining.png)
+![Two panels of agents in the room against time. Left, one door: the capped runs fall along the release's ten JuPedSim runs, drawn as a dotted grey band, and through the paper's Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 51 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 101 to 118 s.](/images/studies/schroeder2020/agents_remaining.png)
 
 *n = 10 seeds per version: line median, band minimum to maximum. Dotted
 grey: the release's ten JuPedSim runs (doi:10.5281/zenodo.3875550,
@@ -521,22 +521,22 @@ visited" and are outside the five DIFF states.*
   1.4 m² out of the corner where RSET is highest, so the areas here are up
   to that much smaller than without them.
 
-![Two dot plots, one row per version. Left, min DIFF: the capped versions from −27 to −100 s, the uncapped at +4 s for one door and −11 s for two doors, with the paper's −29 s as a star next to −27. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.4 to 210.3 m² for two doors, the paper's 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point.](/images/studies/schroeder2020/diff_measures.png)
+![Two dot plots, one row per version. Left, min DIFF: the capped versions from −27 to −100 s, the uncapped at +4 s for one door and −12 s for two doors, with the paper's −29 s as a star next to −27. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.8 to 210.6 m² for two doors, the paper's 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point.](/images/studies/schroeder2020/diff_measures.png)
 
 *Maximum over n = 10 seeds. Filled: 0.2 m FDS grid; open diamonds: 0.1 m
 grid; grey bar: the grid band. Two doors: no 0.1 m run, so no grid band.*
 
 ### Two doors
 
-![Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 54 s.](/images/studies/schroeder2020/agents_smoke_2door.gif)
+![Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 53 s.](/images/studies/schroeder2020/agents_smoke_2door.gif)
 
-*Two doors, capped, pre-movement 0, seed 7 (the seed closest to the median
-of 53.7 s; its room empties at 54.2 s), 8 times real time. Same encoding
+*Two doors, capped, pre-movement 0, seed 8 (the seed closest to the median
+of 53.8 s; its room empties at 53.2 s), 8 times real time. Same encoding
 as the one-door animation; the outline is the DIFF < 0 area of map (a)
 below.*
 
 From 15 s agents at the west door D2 stand in cells whose ASET has passed,
-up to 25 of them at 30 s, and from 47 s every agent still inside does. No
+up to 18 of them at 30 s, and the last one leaves them at 47 s. No
 agent at the east door D1 does. D2, about 7 m from the burner, sets the
 two-door result.
 
@@ -547,24 +547,24 @@ band.*
 
 | Two doors, maximum over n = 10 | min DIFF | Area DIFF < 0 | C |
 |---|---|---|---|
-| Capped, pre-movement 0 | −40 s | 7.4 m² | −174 m²s |
-| Capped, pre-movement 10 s | −50 s | 16.2 m² | −277 m²s |
-| Capped, pre-movement 30 s | −70 s | 64.2 m² | −1,012 m²s |
-| Capped, pre-movement 60 s | −100 s | 210.3 m² | −4,978 m²s |
-| Uncapped, pre-movement 0 | −11 s | 2.7 m² | −18 m²s |
-| Capped, N = 200, pre-movement 0 | −97 s | 22.9 m² | −962 m²s |
+| Capped, pre-movement 0 | −40 s | 7.8 m² | −171 m²s |
+| Capped, pre-movement 10 s | −50 s | 15.8 m² | −277 m²s |
+| Capped, pre-movement 30 s | −71 s | 65.0 m² | −1,021 m²s |
+| Capped, pre-movement 60 s | −100 s | 210.6 m² | −4,988 m²s |
+| Uncapped, pre-movement 0 | −12 s | 3.8 m² | −18 m²s |
+| Capped, N = 200, pre-movement 0 | −97 s | 23.5 m² | −972 m²s |
 
 - **The second door is our assumption.** The paper names no position for it.
   We mirrored D1 onto the west wall, about 7 m from the burner. Smoke
   reaches the cells at D2 at 19–29 s, against 69–70 s at D1, so D2 sets
   every two-door min DIFF.
 - **Here the uncapped crowd fails too.** Its worst cell, at (0.9, 6.9) m on
-  the way to D2, exceeds at 14 s; agents pass it until about 25 s.
+  the way to D2, exceeds at 14 s; agents pass it until about 26 s.
 - **N = 200 tests the paper's thought experiment.** In §3.1 the paper
   doubles the occupants *and* adds a second exit, and states that the
   margin "remains more or less unchanged". Here N = 200 with two doors gives
   −97 s against −27 s for one door with N = 100, and the last agent leaves
-  at 102–118 s against 100–101 s. We attribute the difference to our D2
+  at 101–118 s against 100–101 s. We attribute the difference to our D2
   position; we did not run another position. The paper does not report a
   simulation of this case ("experiment in mind"), so the result neither
   confirms nor refutes it.
@@ -576,7 +576,7 @@ band.*
   distribution with the west share of the floor, 0.49335. Over the ten
   seeds 50.4 % of the agents go west (N = 100) and 51.4 % (N = 200). Seed 10
   of N = 200 puts 118 agents west and sets the maximum; the per-seed mean
-  of min DIFF is −82.3 s.
+  of min DIFF is −81.8 s.
 
 ## How far to trust the numbers
 
@@ -658,7 +658,7 @@ the tables above. The release code pools by the 95th percentile
 With 10 seeds the 95th percentile interpolates between the 9th and 10th
 values, so it lies close to the maximum. For two doors the views differ
 more (capped, pre-movement 0): maximum −40 s, 95th percentile −40 s,
-per-seed mean −30.2 [−34.2, −25.9] s, because the binomial split changes
+per-seed mean −30.4 [−34.2, −26.1] s, because the binomial split changes
 how many agents use D2.
 
 {{< /details >}}
@@ -768,15 +768,18 @@ uv run python scripts/docs/schroeder_grid_figures.py --data DATA \
 `grid_perturbation.png` comes from the same grid script with
 `--family hrr060`.
 
-**Provenance.** The evacuation runs on this page were made at `4a7142f`, a
-branch commit that is not on main; its `pyfds_evac/` equals main at
-`100e91d`. Each run's manifest records that commit with `git_dirty: false`
-and `agent_seeding: spawn-key-blake2b-v2`. A re-run of all 160 evacuations
-on main at `449a755d`, and again at `9c820e0f` (Python 3.12.13, through
-the release check, `release_check.sh --full --only study-schroeder2020`), prints the
-same values for the headline, so cite `9c820e0f`. When the code
-changes, re-run the command into a new `RUNS` folder and compare the
-printed tables with this page.
+**Provenance.** The evacuation runs on this page were made at `b1e1926c` on
+the `feat/900-journeys-v2` branch, with the scenarios in `journeys_v2`
+(two doors: no journey, the route choice picks each agent's door). Each
+run's manifest records that commit with `git_dirty: false` and
+`agent_seeding: spawn-key-blake2b-v2`. The one-door runs give the same
+trajectories as with the old journey format; the two-door runs differ from
+the earlier version of this page by the route choice. The paper-only
+rebuild (`hrr060`) is not part of this run, so its two-door rows in
+[Sensitivity: the room rebuilt from the paper alone](#sensitivity-the-room-rebuilt-from-the-paper-alone)
+still come from the earlier runs. When the code changes, re-run the
+command into a new `RUNS` folder and compare the printed tables with this
+page.
 
 ## Setup, deviations and caveats
 

@@ -72,6 +72,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The shipped scenarios with journeys are written in `journeys_v2` (exit
   shares as weighted journeys, the dose-test patrols with `"loop": true`);
   their runs are unchanged (#900).
+- The schroeder2020 study scenarios are written in `journeys_v2`; in the
+  two-door room the route choice now picks each agent's door instead of a
+  journey that listed both doors. The study page
+  (`docs/study-schroeder2020.md`) shows a rerun (#900).
 
 ### Fixed
 
