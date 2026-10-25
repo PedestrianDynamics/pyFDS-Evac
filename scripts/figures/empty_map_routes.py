@@ -145,8 +145,7 @@ def write_deck(folder, walls, mode=None):
             }
         },
         "checkpoints": {},
-        "journeys": [],
-        "transitions": [],
+        "journeys_v2": [],
     }
     (folder / "config.json").write_text(json.dumps(cfg))
     (folder / "geometry.wkt").write_text(walkable.wkt)
