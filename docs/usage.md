@@ -688,9 +688,9 @@ dropped, with its line number; `-v`/`--verbose` prints all of it.
   warning gives the old and the new position. The same holds for `&DOOR` and
   for the line of an `&ENTR`. `exits[].segment` is the moved line, and
   `exits[].fds_evac_segment` repeats it when the line moved and is empty when
-  it did not. A line on the grid is not touched, and neither is any line in
-  a deck with a stretched grid (`&TRNX`/`&TRNY`) or when no single mesh is
-  found for it (an info item says so).
+  it did not. A line on the grid is not touched. A deck with a stretched
+  grid (`&TRNX`/`&TRNY`) keeps every line as written, with an info item per
+  line; so does a line for which no single mesh is found, without an item.
 - **Exit strip.** Every exit is a strip `--exit-depth` deep on the room
   side of its (snapped) line, clipped to the walkable area. An exit is not
   moved to reach the walkable area; it is dropped, at error level, when its

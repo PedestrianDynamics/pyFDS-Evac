@@ -327,11 +327,12 @@ def _on_grid(ctx, record: NamelistRecord, seg: tuple) -> tuple[tuple, tuple | No
     mesh = _mesh_of(ctx, record, seg)
     moved = None if mesh is None else snap_segment(mesh, *seg)
     if (
-        moved is None
+        mesh is None
+        or moved is None
         or max(abs(a - b) for a, b in zip(moved, seg, strict=True)) <= 1e-4
     ):
         return seg, None
-    moved = tuple(rounded(v) for v in moved)
+    moved = (rounded(moved[0]), rounded(moved[1]), rounded(moved[2]), rounded(moved[3]))
     ctx.add(
         "A",
         "warning",

@@ -1318,7 +1318,7 @@ def test_exit_collapsed_by_the_grid_is_dropped_and_says_it_moved(tmp_path):
 
 
 def test_exit_behind_a_solid_strip_is_dropped_not_moved(tmp_path):
-    """No snapping (maintainer D5): the distance is in the message."""
+    """An exit is not moved to reach the walkable area (maintainer D5)."""
     records = (
         "&OBST XB=9.4,10,0,10,0,2.4 /",
         "&EXIT ID='E', IOR=+1, XB=10,10,4,6,0.4,1.6 /",

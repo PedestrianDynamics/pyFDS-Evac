@@ -60,8 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The walkable area `pyfds-evac init` derives changes for decks whose
   obstructions are off the FDS grid: 54 of the 227 decks in
   `tests/init_decks.tsv` (largest: DoorAlgorithm -43.9 m², MonStairs
-  +22.1 m², Haspel -14.3 m²). No deck changes its status, exits or agents
-  (#715).
+  +22.1 m², Haspel -14.3 m²). No deck changes its status, exit count or
+  agents (#715).
 - `pyfds-evac init` puts the `&EXIT`, `&DOOR` and `&ENTR` lines of an
   FDS+Evac deck on the evacuation grid as FDS+Evac does ("XB adjusted to
   mesh"), with a warning that gives the old and the new position. Before,
