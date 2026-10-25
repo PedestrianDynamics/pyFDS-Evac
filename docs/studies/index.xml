@@ -15,7 +15,7 @@ cell by cell.&lt;/li>
 last person has left, and how the door-flow model, pre-movement and a
 second door move that.&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__jump">&lt;a href="#files-study-schroeder2020">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (235 kB zip)&lt;/a>&lt;/p>
+&lt;p class="docs-files__jump">&lt;a href="#files-study-schroeder2020">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (221 kB zip)&lt;/a>&lt;/p>
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
 ℹ️
@@ -50,7 +50,7 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>min DIFF&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>−27 s&lt;/td>
 &lt;td>−40 s&lt;/td>
 &lt;td>about −29 s&lt;/td>
@@ -59,14 +59,14 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:&lt;/p>
 &lt;td>Area with DIFF &amp;lt; 0&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>6.4 m²&lt;/td>
-&lt;td>7.4 m²&lt;/td>
+&lt;td>7.8 m²&lt;/td>
 &lt;td>about 20 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>C (bin-free)&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;td>−107 m²s&lt;/td>
-&lt;td>−174 m²s&lt;/td>
+&lt;td>−171 m²s&lt;/td>
 &lt;td>–&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -89,8 +89,8 @@ front of the door, where people wait at the capped exit. Smoke reaches
 those cells at 72–74 s; the last person leaves them at about 100 s.&lt;/li>
 &lt;li>&lt;strong>The door-flow model decides the one-door sign.&lt;/strong> Without the cap, the
 room empties in 42–45 s and no cell has DIFF &amp;lt; 0. With two doors even the
-uncapped crowd fails, by 11 s, beside the west door near the fire.&lt;/li>
-&lt;li>&lt;strong>The grids agree.&lt;/strong> The 0.1 m FDS grid moves min DIFF by less than 1 s
+uncapped crowd fails, by 12 s, beside the west door near the fire.&lt;/li>
+&lt;li>&lt;strong>The grids agree.&lt;/strong> The 0.1 m FDS grid moves min DIFF by about 1 s
 and the negative area by 0.3 m².&lt;/li>
 &lt;li>&lt;strong>The negative area is about a third of the paper&amp;rsquo;s.&lt;/strong> The release&amp;rsquo;s own
 RSET map has a queue about twice as large as ours
@@ -177,7 +177,7 @@ middle column separates that code change from the change of conditions.&lt;/p>
 &lt;td>min DIFF, one door, 0.2 m (0.1 m)&lt;/td>
 &lt;td>−30 s (−25 s)&lt;/td>
 &lt;td>−31 s (−26 s)&lt;/td>
-&lt;td>−27 s (−27 s)&lt;/td>
+&lt;td>−28 s (−27 s)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Area DIFF &amp;lt; 0, one door, 0.2 m (0.1 m)&lt;/td>
@@ -194,29 +194,29 @@ middle column separates that code change from the change of conditions.&lt;/p>
 &lt;tr>
 &lt;td>min DIFF / area, two doors&lt;/td>
 &lt;td>−41 s / 6.2 m²&lt;/td>
-&lt;td>−42 s / 5.8 m²&lt;/td>
-&lt;td>−40 s / 7.4 m²&lt;/td>
+&lt;td>−42 s / 6.2 m²&lt;/td>
+&lt;td>−40 s / 7.8 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>min DIFF / area, two doors, N = 200&lt;/td>
 &lt;td>−103 s / 21.9 m²&lt;/td>
-&lt;td>−103 s / 21.9 m²&lt;/td>
-&lt;td>−97 s / 22.9 m²&lt;/td>
+&lt;td>−103 s / 22.5 m²&lt;/td>
+&lt;td>−97 s / 23.5 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>min DIFF, uncapped, one / two doors&lt;/td>
 &lt;td>+3 s / +1 s&lt;/td>
-&lt;td>+2 s / −4 s&lt;/td>
-&lt;td>+4 s / −11 s&lt;/td>
+&lt;td>+2 s / −5 s&lt;/td>
+&lt;td>+4 s / −12 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The engine change moves min DIFF by about 1 s. The release conditions move
-it by about 4 s and bring the two FDS grids into agreement.
+it by about 3 s and bring the two FDS grids into agreement.
 The uncapped two-door run turns negative with the exit-rule change already
-(+1 → −4 s, not robust over seeds: per-seed mean +0.3 s); the release
-conditions deepen it to −11 s, negative in the per-seed mean as well
-(−4.6 [−6.9, −2.5] s).&lt;/p>
+(+1 → −5 s, not robust over seeds: per-seed mean −0.0 [−1.6, 1.5] s); the release
+conditions deepen it to −12 s, negative in the per-seed mean as well
+(−5.5 [−7.8, −2.9] s).&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>The room&lt;span class="hx-absolute -hx-mt-20" id="the-room">&lt;/span>
@@ -699,7 +699,7 @@ therefore run two versions on the same FDS output:&lt;/p>
 the agents in the release&amp;rsquo;s ten runs (0.96–1.05 persons/s);&lt;/li>
 &lt;li>&lt;strong>uncapped:&lt;/strong> the model&amp;rsquo;s own flow, reported as a model difference.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_remaining.png" alt="Two panels of agents in the room against time. Left, one door: the capped runs fall along the release’s ten JuPedSim runs, drawn as a dotted grey band, and through the paper’s Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 52 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 102 to 118 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_remaining.png" alt="Two panels of agents in the room against time. Left, one door: the capped runs fall along the release’s ten JuPedSim runs, drawn as a dotted grey band, and through the paper’s Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 51 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 101 to 118 s." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>n = 10 seeds per version: line median, band minimum to maximum. Dotted
 grey: the release&amp;rsquo;s ten JuPedSim runs (doi:10.5281/zenodo.3875550,
 1 frame/s). Black squares: the paper&amp;rsquo;s Fig. 3, read off (100 at 0 s is N).&lt;/em>&lt;/p>
@@ -821,7 +821,7 @@ cells of map (a) below. Regenerated by &lt;code>scripts/docs/study_animations.py
 every agent still inside does, all of them in the queue at the capped door,
 up to 25 at 74 s. The agents ignore the smoke (arm U), so a cross marks
 where the map fails; nobody walks differently.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_1door.png" alt="Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −27 s, 6.7 m². (b) the same on the 0.1 m grid: −27 s, 6.4 m². (c) pre-movement 10 s: −37 s, 11.7 m². (d) pre-movement 30 s: red spreads along the north wall, the west end and mid-room, −57 s, 82.9 m². (e) pre-movement 60 s: most of the room red, −87 s, 208.8 m². (f) uncapped: all blue, min DIFF &amp;#43;4 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_1door.png" alt="Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −28 s, 6.7 m². (b) the same on the 0.1 m grid: −27 s, 6.4 m². (c) pre-movement 10 s: −38 s, 11.7 m². (d) pre-movement 30 s: red spreads along the north wall, the west end and mid-room, −58 s, 82.9 m². (e) pre-movement 60 s: most of the room red, −88 s, 208.8 m². (f) uncapped: all blue, min DIFF &amp;#43;4 s." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>One door. ASET: K ≥ 0.23 1/m, any node of the cell, z = 2.0 m, about 1 s
 steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;/p>
 &lt;table>
@@ -837,30 +837,30 @@ steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;
 &lt;tbody>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
-&lt;td>−27 s (−27 s)&lt;/td>
+&lt;td>−28 s (−27 s)&lt;/td>
 &lt;td>6.7 m² (6.4)&lt;/td>
 &lt;td>−112 m²s (−107)&lt;/td>
 &lt;td>21 (20)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s&lt;/td>
-&lt;td>−37 s (−37 s)&lt;/td>
+&lt;td>−38 s (−37 s)&lt;/td>
 &lt;td>11.7 m² (10.6)&lt;/td>
 &lt;td>−200 m²s (−191)&lt;/td>
 &lt;td>35 (32)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>−57 s (−57 s)&lt;/td>
+&lt;td>−58 s (−57 s)&lt;/td>
 &lt;td>82.9 m² (68.8)&lt;/td>
-&lt;td>−932 m²s (−742)&lt;/td>
+&lt;td>−933 m²s (−742)&lt;/td>
 &lt;td>233 (194)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
-&lt;td>−87 s (−87 s)&lt;/td>
+&lt;td>−88 s (−87 s)&lt;/td>
 &lt;td>208.8 m² (209.5)&lt;/td>
-&lt;td>−5,833 m²s (−5,406)&lt;/td>
+&lt;td>−5,834 m²s (−5,406)&lt;/td>
 &lt;td>583 (585)&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -877,7 +877,7 @@ steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;
 visited&amp;rdquo; and are outside the five DIFF states.&lt;/em>&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Pre-movement shifts min DIFF one for one.&lt;/strong> It delays everyone by the
-same constant, so −27, −37, −57, −87 s carry no new information. Only the
+same constant, so −28, −38, −58, −88 s carry no new information. Only the
 area and C change shape across the pre-movement versions. A constant
 delay is a simplification: pre-movement is a distribution whose shape
 depends on occupancy, warning and management, and in a dense room the
@@ -891,17 +891,17 @@ the door (&lt;a href="#setup-deviations-and-caveats">Setup&lt;/a>). They take ab
 1.4 m² out of the corner where RSET is highest, so the areas here are up
 to that much smaller than without them.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_measures.png" alt="Two dot plots, one row per version. Left, min DIFF: the capped versions from −27 to −100 s, the uncapped at &amp;#43;4 s for one door and −11 s for two doors, with the paper’s −29 s as a star next to −27. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.4 to 210.3 m² for two doors, the paper’s 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_measures.png" alt="Two dot plots, one row per version. Left, min DIFF: the capped versions from −28 to −100 s, the uncapped at &amp;#43;4 s for one door and −12 s for two doors, with the paper’s −29 s as a star next to −28. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.8 to 210.6 m² for two doors, the paper’s 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Maximum over n = 10 seeds. Filled: 0.2 m FDS grid; open diamonds: 0.1 m
 grid; grey bar: the grid band. Two doors: no 0.1 m run, so no grid band.&lt;/em>&lt;/p>
 &lt;h3>Two doors&lt;span class="hx-absolute -hx-mt-20" id="two-doors">&lt;/span>
-&lt;a href="#two-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_2door.gif" alt="Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 54 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Two doors, capped, pre-movement 0, seed 7 (the seed closest to the median
-of 53.7 s; its room empties at 54.2 s), 8 times real time. Same encoding
+&lt;a href="#two-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_2door.gif" alt="Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 53 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Two doors, capped, pre-movement 0, seed 8 (the seed closest to the median
+of 53.8 s; its room empties at 53.2 s), 8 times real time. Same encoding
 as the one-door animation; the outline is the DIFF &amp;lt; 0 area of map (a)
 below.&lt;/em>&lt;/p>
 &lt;p>From 15 s agents at the west door D2 stand in cells whose ASET has passed,
-up to 25 of them at 30 s, and from 47 s every agent still inside does. No
+up to 18 of them at 30 s, and the last one leaves them at 47 s. No
 agent at the east door D1 does. D2, about 7 m from the burner, sets the
 two-door result.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_2door.png" alt="Six DIFF maps of the two-door room. With the cap, red cells appear at both doors, first and most at the west door D2; with pre-movement 60 s most of the room is red. Uncapped: a few red cells at D2 and along the west wall. N = 200, capped: red blocks at both doors, deepest at the west door." loading="lazy" />&lt;/p>
@@ -920,38 +920,38 @@ band.&lt;/em>&lt;/p>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
 &lt;td>−40 s&lt;/td>
-&lt;td>7.4 m²&lt;/td>
-&lt;td>−174 m²s&lt;/td>
+&lt;td>7.8 m²&lt;/td>
+&lt;td>−171 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s&lt;/td>
 &lt;td>−50 s&lt;/td>
-&lt;td>16.2 m²&lt;/td>
+&lt;td>15.8 m²&lt;/td>
 &lt;td>−277 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>−70 s&lt;/td>
-&lt;td>64.2 m²&lt;/td>
-&lt;td>−1,012 m²s&lt;/td>
+&lt;td>−71 s&lt;/td>
+&lt;td>65.0 m²&lt;/td>
+&lt;td>−1,021 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
 &lt;td>−100 s&lt;/td>
-&lt;td>210.3 m²&lt;/td>
-&lt;td>−4,978 m²s&lt;/td>
+&lt;td>210.6 m²&lt;/td>
+&lt;td>−4,988 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Uncapped, pre-movement 0&lt;/td>
-&lt;td>−11 s&lt;/td>
-&lt;td>2.7 m²&lt;/td>
+&lt;td>−12 s&lt;/td>
+&lt;td>3.8 m²&lt;/td>
 &lt;td>−18 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, N = 200, pre-movement 0&lt;/td>
 &lt;td>−97 s&lt;/td>
-&lt;td>22.9 m²&lt;/td>
-&lt;td>−962 m²s&lt;/td>
+&lt;td>23.5 m²&lt;/td>
+&lt;td>−972 m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -961,12 +961,12 @@ We mirrored D1 onto the west wall, about 7 m from the burner. Smoke
 reaches the cells at D2 at 19–29 s, against 69–70 s at D1, so D2 sets
 every two-door min DIFF.&lt;/li>
 &lt;li>&lt;strong>Here the uncapped crowd fails too.&lt;/strong> Its worst cell, at (0.9, 6.9) m on
-the way to D2, exceeds at 14 s; agents pass it until about 25 s.&lt;/li>
+the way to D2, exceeds at 14 s; agents pass it until about 26 s.&lt;/li>
 &lt;li>&lt;strong>N = 200 tests the paper&amp;rsquo;s thought experiment.&lt;/strong> In §3.1 the paper
 doubles the occupants &lt;em>and&lt;/em> adds a second exit, and states that the
 margin &amp;ldquo;remains more or less unchanged&amp;rdquo;. Here N = 200 with two doors gives
-−97 s against −27 s for one door with N = 100, and the last agent leaves
-at 102–118 s against 100–101 s. We attribute the difference to our D2
+−97 s against −28 s for one door with N = 100, and the last agent leaves
+at 101–118 s against 100–101 s. We attribute the difference to our D2
 position; we did not run another position. The paper does not report a
 simulation of this case (&amp;ldquo;experiment in mind&amp;rdquo;), so the result neither
 confirms nor refutes it.&lt;/li>
@@ -978,7 +978,7 @@ door of its half.&lt;/li>
 distribution with the west share of the floor, 0.49335. Over the ten
 seeds 50.4 % of the agents go west (N = 100) and 51.4 % (N = 200). Seed 10
 of N = 200 puts 118 agents west and sets the maximum; the per-seed mean
-of min DIFF is −82.3 s.&lt;/li>
+of min DIFF is −81.8 s.&lt;/li>
 &lt;/ul>
 &lt;h2>How far to trust the numbers&lt;span class="hx-absolute -hx-mt-20" id="how-far-to-trust-the-numbers">&lt;/span>
 &lt;a href="#how-far-to-trust-the-numbers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Six sources of spread, on min DIFF for one door, capped, pre-movement 0:&lt;/p>
@@ -993,8 +993,8 @@ of min DIFF is −82.3 s.&lt;/li>
 &lt;tbody>
 &lt;tr>
 &lt;td>Seeds&lt;/td>
-&lt;td>±0.5 s&lt;/td>
-&lt;td>95 % bootstrap CI of the per-seed min DIFF, −26.4 [−26.9, −25.9] s&lt;/td>
+&lt;td>±0.3 s&lt;/td>
+&lt;td>95 % bootstrap CI of the per-seed min DIFF, −27.0 [−27.3, −26.7] s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>A tiny change of the fire&lt;/td>
@@ -1004,7 +1004,7 @@ of min DIFF is −82.3 s.&lt;/li>
 &lt;tr>
 &lt;td>FDS grid&lt;/td>
 &lt;td>under 1 s&lt;/td>
-&lt;td>0.2 m against 0.1 m: −27.5 against −26.9 s; area 6.7 against 6.4 m²&lt;/td>
+&lt;td>0.2 m against 0.1 m: −27.9 against −26.9 s; area 6.7 against 6.4 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FDS version against the release&lt;/td>
@@ -1013,13 +1013,13 @@ of min DIFF is −82.3 s.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>Fire and door setup&lt;/td>
-&lt;td>about 4 s&lt;/td>
-&lt;td>release conditions against the paper-only rebuild: −27 against −31 s&lt;/td>
+&lt;td>about 3 s&lt;/td>
+&lt;td>release conditions against the paper-only rebuild: −28 against −31 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Door-flow model&lt;/td>
-&lt;td>about 31 s&lt;/td>
-&lt;td>capped against uncapped: −27 against +4 s&lt;/td>
+&lt;td>about 32 s&lt;/td>
+&lt;td>capped against uncapped: −28 against +4 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1030,7 +1030,7 @@ with a 30 s wait they do not (82.9 against 68.8 m²).&lt;/p>
 &lt;a href="#against-the-paper" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
 &lt;li>&lt;strong>The min DIFF agreement is structural.&lt;/strong> The worst cell is the last cell
 before the door, at (29.7, 8.1) m. Its RSET is about N/1.00 ≈ 100 s
-(measured 101 s), set by the cap; its ASET is 73 s. So −27 s tests when
+(measured 101 s), set by the cap; its ASET is 73 s. So −28 s tests when
 smoke reaches the door, a single cell of the map.&lt;/li>
 &lt;li>&lt;strong>The −29 s is the paper&amp;rsquo;s number.&lt;/strong> It is read off Fig. 5. The release&amp;rsquo;s
 &lt;code>DIFF_map.txt&lt;/code> has a minimum of −29 s, but its shape (18 × 51) differs
@@ -1066,13 +1066,13 @@ context only) matches the 60 kW, N = 100 point of Figs. 5 and 8.&lt;/li>
 &lt;tbody>
 &lt;tr>
 &lt;td>Headline: K ≥ 0.23, ∃ rule, about 1 s&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>K ≥ 0.23 or T ≥ 45 °C&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;/tr>
@@ -1147,28 +1147,28 @@ the tables above. The release code pools by the 95th percentile
 &lt;tbody>
 &lt;tr>
 &lt;td>Maximum over n = 10&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>95th percentile over n = 10&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.4 m²&lt;/td>
 &lt;td>−110 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Per seed, mean [95 % bootstrap CI]&lt;/td>
-&lt;td>−26.4 [−26.9, −25.9] s&lt;/td>
-&lt;td>6.1 [5.9, 6.2] m²&lt;/td>
-&lt;td>−97.4 [−98.7, −96.0] m²s&lt;/td>
+&lt;td>−27.0 [−27.3, −26.7] s&lt;/td>
+&lt;td>6.1 [6.0, 6.3] m²&lt;/td>
+&lt;td>−97.9 [−99.3, −96.5] m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>With 10 seeds the 95th percentile interpolates between the 9th and 10th
 values, so it lies close to the maximum. For two doors the views differ
 more (capped, pre-movement 0): maximum −40 s, 95th percentile −40 s,
-per-seed mean −30.2 [−34.2, −25.9] s, because the binomial split changes
+per-seed mean −30.4 [−34.2, −26.1] s, because the binomial split changes
 how many agents use D2.&lt;/p>
 &lt;/div>
 &lt;/details>
@@ -1211,28 +1211,28 @@ same evacuation versions run on the current engine:&lt;/p>
 &lt;tr>
 &lt;td>Two doors, capped, pre-movement 0&lt;/td>
 &lt;td>−42 s&lt;/td>
-&lt;td>5.8 m²&lt;/td>
-&lt;td>−132 m²s&lt;/td>
+&lt;td>6.2 m²&lt;/td>
+&lt;td>−135 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Two doors, uncapped&lt;/td>
-&lt;td>−4 s&lt;/td>
-&lt;td>0.9 m²&lt;/td>
-&lt;td>−2 m²s&lt;/td>
+&lt;td>−5 s&lt;/td>
+&lt;td>1.3 m²&lt;/td>
+&lt;td>−3 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Two doors, N = 200&lt;/td>
 &lt;td>−103 s&lt;/td>
-&lt;td>21.9 m²&lt;/td>
-&lt;td>−909 m²s&lt;/td>
+&lt;td>22.5 m²&lt;/td>
+&lt;td>−914 m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The capped crowd leaves 62.5 agents at 40 s and 24.3 at 80 s, and the
 last agent leaves at 105–106 s. The door cells exceed at 74–76 s, 2–3 s
 later than under the release conditions, and the slower cap empties the
-room about 5 s later; together they make min DIFF about 3.4 s lower
-(−30.9 against −27.5 s). The
+room about 5 s later; together they make min DIFF about 3 s lower
+(−30.9 against −27.9 s). The
 &lt;code>hrr060&lt;/code> fire grid-converges less well: on the 0.1 m grid a late pocket
 beside the plume first exceeds at up to 203 s, against 88 s on the 0.2 m
 grid, and 6.2 % of cells differ by more than 30 s.&lt;/p>
@@ -1279,12 +1279,12 @@ lies outside this study.&lt;/p>
 &lt;div class="docs-files__head">
 &lt;p class="docs-files__title" id="files-study-schroeder2020">Download the files for this page&lt;/p>
 &lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-study-schroeder2020.zip" download>
-&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-study-schroeder2020.zip &lt;span class="docs-files__size">(235 kB)&lt;/span>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-study-schroeder2020.zip &lt;span class="docs-files__size">(221 kB)&lt;/span>
 &lt;/a>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">addc2c605afb7ba20f472cff2a6371332ff501402657199c7b8cafd54e6fddf9&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2b82aa4b04c61443f0cdcfc7e7823d2cf46ce628df60c6e933d931d6f2ff21b0&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1362,15 +1362,19 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>grid_perturbation.png&lt;/code> comes from the same grid script with
 &lt;code>--family hrr060&lt;/code>.&lt;/p>
-&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page were made at &lt;code>4a7142f&lt;/code>, a
-branch commit that is not on main; its &lt;code>pyfds_evac/&lt;/code> equals main at
-&lt;code>100e91d&lt;/code>. Each run&amp;rsquo;s manifest records that commit with &lt;code>git_dirty: false&lt;/code>
-and &lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. A re-run of all 160 evacuations
-on main at &lt;code>449a755d&lt;/code>, and again at &lt;code>9c820e0f&lt;/code> (Python 3.12.13, through
-the release check, &lt;code>release_check.sh --full --only study-schroeder2020&lt;/code>), prints the
-same values for the headline, so cite &lt;code>9c820e0f&lt;/code>. When the code
-changes, re-run the command into a new &lt;code>RUNS&lt;/code> folder and compare the
-printed tables with this page.&lt;/p>
+&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page were made at &lt;code>b1e1926c&lt;/code> on
+the &lt;code>feat/900-journeys-v2&lt;/code> branch, with the scenarios in &lt;code>journeys_v2&lt;/code>
+(two doors: no journey, the route choice picks each agent&amp;rsquo;s door). Each
+run&amp;rsquo;s manifest records that commit with &lt;code>git_dirty: false&lt;/code> and
+&lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. The one-door runs give the same
+trajectories as with the old journey format. In the two-door runs every
+agent still leaves through the door of its half; the numbers move by how
+agents are steered there. The paper-only rebuild (&lt;code>hrr060&lt;/code>, the
+two-door rows of the sensitivity section and the middle column of the
+comparison above) was rerun the same way, with &lt;code>--family hrr060&lt;/code>, at
+&lt;code>195e5683&lt;/code> (the same engine code). When the code changes, re-run the
+command into a new &lt;code>RUNS&lt;/code> folder and compare the printed tables with this
+page.&lt;/p>
 &lt;h2>Setup, deviations and caveats&lt;span class="hx-absolute -hx-mt-20" id="setup-deviations-and-caveats">&lt;/span>
 &lt;a href="#setup-deviations-and-caveats" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
@@ -2743,7 +2747,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2774,7 +2778,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">be4f88db4c8e2da6fe16e872f16d240c70b34d0790404b314fb3b67bc4f616db&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5c16e802c2253024490b476336fec83f8f24c00ba91e9c4c673de12bb507ba67&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from

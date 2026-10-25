@@ -378,7 +378,12 @@ hand in &lt;code>config.json&lt;/code>:&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>waypoint_routing&lt;/code>&lt;/td>
 &lt;td>top level&lt;/td>
-&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journey-splits-waypoint_routing">Journey splits&lt;/a>&lt;/td>
+&lt;td>Old format, still read; &lt;code>pyfds-evac-convert&lt;/code> rewrites it as &lt;code>journeys_v2&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#old-format-still-read">Old format&lt;/a>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>loop&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journeys-journeys_v2">Journeys&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -431,11 +436,13 @@ bearing (° from north) and the contrast factor &lt;em>c&lt;/em> (Jin), with the
 on exits and checkpoints. &lt;code>alpha&lt;/code> is the bearing the sign faces, clockwise
 from north (+y); the sign is readable only from the side it faces. The app
 does not write &lt;code>max_distance&lt;/code>.&lt;/p>
-&lt;p>&lt;strong>Journeys.&lt;/strong> &lt;code>load_scenario&lt;/code> converts &lt;code>journeys_v2&lt;/code> into &lt;code>journeys&lt;/code> and
-&lt;code>transitions&lt;/code> (&lt;code>_migrate_journeys_v2&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>). It
-does so only when &lt;code>journeys&lt;/code> is empty, and only for a spawn area with exactly
-one &lt;code>journey_weights&lt;/code> entry. A spawn area split over several journeys is not
-converted.&lt;/p>
+&lt;p>&lt;strong>Journeys.&lt;/strong> &lt;code>load_scenario&lt;/code> reads &lt;code>journeys_v2&lt;/code> as it is
+(&lt;code>_migrate_journeys_v2&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>), several journeys per
+spawn area included: the agents of a spawn area are split over its
+&lt;code>journey_weights&lt;/code> at spawn. With rerouting on, the default, the route-cost
+model picks each agent&amp;rsquo;s exit, so the split of the exits taken can differ from
+the weights. It reads &lt;code>journeys_v2&lt;/code> only when &lt;code>journeys&lt;/code> is empty. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journeys-journeys_v2">Journeys: &lt;code>journeys_v2&lt;/code>&lt;/a>.&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
@@ -453,8 +460,10 @@ and 24 of the 55 scenario ZIPs of jupedsim-web-community at commit
 &lt;code>standards/rimea/scenario_files/Rimea-12d-bottleneck.zip&lt;/code> does not and needs
 a re-export or hand-written transitions.&lt;/p>
 &lt;p>If the file also has &lt;code>journeys_v2&lt;/code>, set &lt;code>&amp;quot;journeys&amp;quot;: []&lt;/code> and
-&lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code> so that &lt;code>journeys_v2&lt;/code> is converted. Otherwise export the
-scenario again from the current app, or add the &lt;code>transitions&lt;/code> by hand.&lt;/p>
+&lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code> so that &lt;code>journeys_v2&lt;/code> is read. Otherwise export the
+scenario again from the current app, or add the &lt;code>transitions&lt;/code> by hand;
+&lt;code>pyfds-evac-convert&lt;/code> needs the &lt;code>transitions&lt;/code> too. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#old-format-still-read">Old format&lt;/a>.&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h3>Open a scenario in the app again&lt;span class="hx-absolute -hx-mt-20" id="open-a-scenario-in-the-app-again">&lt;/span>
@@ -492,11 +501,9 @@ files and load the ZIP in the app. The GUI writes the same bundle to
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>&lt;code>_export_app_bundle&lt;/code> in &lt;code>pyfds_evac/core/run_outputs.py&lt;/code> writes the scenario JSON as
 loaded and the walkable area as WKT. The command-line options, such as
-&lt;code>--seed&lt;/code>, are not written. Loading adds two things:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>simulationParams.max_simulation_time&lt;/code> (300 s) when it is missing;&lt;/li>
-&lt;li>&lt;code>journeys&lt;/code> and &lt;code>transitions&lt;/code> built from &lt;code>journeys_v2&lt;/code>.&lt;/li>
-&lt;/ul>
+&lt;code>--seed&lt;/code>, are not written. Loading adds &lt;code>simulationParams.max_simulation_time&lt;/code>
+(300 s) when it is missing. The journeys the loader builds from &lt;code>journeys_v2&lt;/code>
+are internal and not written.&lt;/p>
 &lt;p>&lt;code>journeys_v2&lt;/code>, &lt;code>ui_state&lt;/code> and keys the app does not know are kept. The app
 ignores the unknown keys and drops them on its next export, so apply your
 hand edits again afterwards.&lt;/p>
@@ -910,13 +917,15 @@ checkpoint away from the wall in both cases.&lt;/p>
 &lt;/aside>
 &lt;h2>Wire checkpoints into the route graph&lt;span class="hx-absolute -hx-mt-20" id="wire-checkpoints-into-the-route-graph">&lt;/span>
 &lt;a href="#wire-checkpoints-into-the-route-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>You choose between two ways.&lt;/p>
-&lt;p>&lt;strong>With &lt;code>transitions&lt;/code>.&lt;/strong> The graph has exactly the &lt;code>from → to&lt;/code> pairs you list,
-when both ends exist. Nothing else is added. A checkpoint with more than one
-outgoing transition in a journey needs routing percentages; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journey-splits-waypoint_routing">Journey splits&lt;/a>. A journey
+&lt;p>&lt;strong>With a journey.&lt;/strong> A &lt;code>journeys_v2&lt;/code> sequence gives the &lt;code>from → to&lt;/code> pairs from
+the start area through its checkpoints to the exit (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journeys-journeys_v2">Journeys&lt;/a>).
+The graph has exactly these pairs, when both ends exist. Nothing else is
+added. A route that splits at a checkpoint is two journeys with weights. In
+the old format the pairs are the &lt;code>transitions&lt;/code>, and a split needs routing
+percentages (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#old-format-still-read">Old format&lt;/a>); a journey
 that places agents but that no transition names in its &lt;code>journey_id&lt;/code> is
 refused at load (&lt;code>simulation_init.py&lt;/code>, &lt;code>check_journey_transitions&lt;/code>).&lt;/p>
-&lt;p>&lt;strong>Without &lt;code>transitions&lt;/code>.&lt;/strong> The graph wires itself: spawn areas and checkpoints
+&lt;p>&lt;strong>Without a journey.&lt;/strong> The graph wires itself: spawn areas and checkpoints
 connect to checkpoints and exits, but not to a node when another checkpoint
 lies on the way to it. The rule is on the routing page,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#graph-construction-without-a-journey">Graph construction without a journey&lt;/a>.
@@ -934,7 +943,7 @@ exit, agents who take that exit walk through the checkpoint, in clear air
 too: their path bends to a random point inside it. A &lt;code>waiting_time&lt;/code> or
 &lt;code>max_throughput&lt;/code> set on that checkpoint applies to all of them. If agents
 must not pass through such a checkpoint, move it off the walking line so
-the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li>
+the detour through it exceeds 5 %, or give the start area a journey.&lt;/li>
 &lt;/ul>
 &lt;p>Shipped scenarios use both ways:&lt;/p>
 &lt;table>
@@ -942,7 +951,7 @@ the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li
 &lt;tr>
 &lt;th>Asset&lt;/th>
 &lt;th>Checkpoints&lt;/th>
-&lt;th>&lt;code>transitions&lt;/code>&lt;/th>
+&lt;th>&lt;code>journeys_v2&lt;/code> entries&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
@@ -964,12 +973,12 @@ the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li
 &lt;tr>
 &lt;td>&lt;code>t_junction&lt;/code>&lt;/td>
 &lt;td>one 3 × 3 m box&lt;/td>
-&lt;td>3&lt;/td>
+&lt;td>2&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>schroeder2015_route&lt;/code> (&lt;code>evac/config_*.json&lt;/code>)&lt;/td>
 &lt;td>0.6 × 2 m boxes across the 0.2 m wall at doors A and B&lt;/td>
-&lt;td>6&lt;/td>
+&lt;td>4&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -3630,14 +3639,11 @@ check the result.&lt;/p>
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>{
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;config&amp;#34;: { &amp;#34;simulation_settings&amp;#34;: { &amp;#34;simulationParams&amp;#34;: {…}, &amp;#34;baseSeed&amp;#34;: … } },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;exits&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;distributions&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: { &amp;#34;coordinates&amp;#34;: […], &amp;#34;parameters&amp;#34;: {…} } },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;distributions&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: { &amp;#34;coordinates&amp;#34;: […], &amp;#34;parameters&amp;#34;: {…}, &amp;#34;journey_weights&amp;#34;: […] } },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;checkpoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;zones&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys&amp;#34;: [ { &amp;#34;id&amp;#34;: …, &amp;#34;stages&amp;#34;: […] } ],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;transitions&amp;#34;: [ { &amp;#34;from&amp;#34;: …, &amp;#34;to&amp;#34;: …, &amp;#34;journey_id&amp;#34;: … } ],
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys_v2&amp;#34;: [ { &amp;#34;id&amp;#34;: …, &amp;#34;sequence&amp;#34;: […] } ],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoint_routing&amp;#34;: {…},
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;routing&amp;#34;: {…}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -3649,13 +3655,95 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>journeys&lt;/code> and &lt;code>transitions&lt;/code> are the stage graph that set-up builds on; a
-journey needs its &lt;code>transitions&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).
-&lt;code>journeys_v2&lt;/code>, as JuPedSim Web writes it, is converted into them only when
-&lt;code>journeys&lt;/code> is empty; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/#add-the-pyfds-evac-keys-last">Create a scenario&lt;/a>.
-&lt;code>waypoints&lt;/code> carry signs only.&lt;/p>
+&lt;p>&lt;code>waypoints&lt;/code> carry signs only. The older journey keys (&lt;code>journeys&lt;/code>,
+&lt;code>transitions&lt;/code>, &lt;code>waypoint_routing&lt;/code>) are still read; see
+&lt;a href="#old-format-still-read">Old format (still read)&lt;/a>.&lt;/p>
+&lt;h2>Journeys: &lt;code>journeys_v2&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journeys-journeys_v2">&lt;/span>
+&lt;a href="#journeys-journeys_v2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>journeys_v2&lt;/code> is the journey format of JuPedSim Web and of pyFDS-Evac
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/900" target="_blank" rel="noopener">#900&lt;/a>).
+A scenario written by pyFDS-Evac opens in the app, and a scenario drawn in the
+app runs here with its journeys as the agents&amp;rsquo; starting routes. The file
+format is shared; how the agents walk (route choice, rerouting, smoke, FED) is pyFDS-Evac&amp;rsquo;s own.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;journeys_v2&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {&lt;span style="color:#f92672">&amp;#34;id&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;journey-a&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Via the corridor&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;color&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;#4e79a7&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;sequence&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;jps-checkpoints_0&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;jps-exits_0&amp;#34;&lt;/span>]}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>]&lt;span style="color:#960050;background-color:#1e0010">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;distributions&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;jps-distributions_0&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;coordinates&amp;#34;&lt;/span>: [[&lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>], [&lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>], [&lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>], [&lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>]],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;parameters&amp;#34;&lt;/span>: {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">20&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;journey_weights&amp;#34;&lt;/span>: [{&lt;span style="color:#f92672">&amp;#34;journey_id&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;journey-a&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;weight&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">100&lt;/span>}]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Where&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>id&lt;/code>, &lt;code>name&lt;/code>, &lt;code>color&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;code>id&lt;/code> required&lt;/td>
+&lt;td>&lt;code>id&lt;/code> is what &lt;code>journey_weights&lt;/code> names. &lt;code>name&lt;/code> and &lt;code>color&lt;/code> are for the app.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sequence&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>required&lt;/td>
+&lt;td>Checkpoint and exit ids in walking order, without the start area. An entry without an &lt;code>id&lt;/code> or with an empty &lt;code>sequence&lt;/code> is ignored.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>journey_weights[].journey_id&lt;/code>, &lt;code>.weight&lt;/code>&lt;/td>
+&lt;td>&lt;code>distributions.&amp;lt;id&amp;gt;&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>The journeys a start area uses and their weights. The weights of one start area are normalised to shares.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>loop&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;code>false&lt;/code>&lt;/td>
+&lt;td>pyFDS-Evac key, unknown to the app. With &lt;code>true&lt;/code>, the sequence repeats: after its last stage the agent walks back to the first and goes on. Use it for a patrol that never ends.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>allocation&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>&lt;/td>
+&lt;td>See &lt;a href="#journeys-allocation">&lt;code>allocation&lt;/code>&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>Weights.&lt;/strong> A start area&amp;rsquo;s agents are split over its journeys at spawn by
+exact counts, not by random draws: each journey gets its rounded share and the
+last one takes the rest. A weight that cannot be read as a number, or is 0 or less, is
+skipped. A start area with no usable weight, and a start area without
+&lt;code>journey_weights&lt;/code>, has no journey: at spawn its agents walk to the nearest
+exit by walking distance.&lt;/p>
+&lt;p>The weights set each agent&amp;rsquo;s starting journey and the split of the counts at
+spawn. With rerouting on, the default of &lt;code>run.py&lt;/code>, the route-cost model picks
+each agent&amp;rsquo;s exit, and the shares need not carry over to the exits taken;
+only &lt;code>--no-enable-rerouting&lt;/code> keeps the drawn exits. See
+&lt;a href="#journey-splits-waypoint_routing">Journey splits&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Models › Routing&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Several journeys per start area.&lt;/strong> Give a start area one &lt;code>journey_weights&lt;/code>
+entry for each journey it uses. Two journeys with weights 60 and 40 send 60 %
+of the agents along the first sequence and 40 % along the second. A route that
+splits at a checkpoint is written as two journeys that share their first
+stages.&lt;/p>
 &lt;h3>Journeys: &lt;code>allocation&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journeys-allocation">&lt;/span>
 &lt;a href="#journeys-allocation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
 &lt;thead>
@@ -3668,15 +3756,16 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>&lt;code>journeys[].allocation&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[].allocation&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>, &lt;code>&amp;quot;hard&amp;quot;&lt;/code>&lt;/td>
-&lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>: when the journey&amp;rsquo;s spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than &lt;code>exit_switch_anchor&lt;/code> (0.9) times the allocated route. &lt;code>&amp;quot;hard&amp;quot;&lt;/code>: the agent walks to the journey&amp;rsquo;s exit, as before. Any other value raises &lt;code>ValueError&lt;/code> naming the journey. A &lt;code>journeys_v2&lt;/code> entry may carry the key; the migration copies it.&lt;/td>
+&lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>: when the journey&amp;rsquo;s spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than &lt;code>exit_switch_anchor&lt;/code> (0.9) times the allocated route. &lt;code>&amp;quot;hard&amp;quot;&lt;/code>: the agent walks to the journey&amp;rsquo;s exit, as before. Any other value raises &lt;code>ValueError&lt;/code> naming the journey.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>One &lt;code>hard&lt;/code> journey through a spawn area makes the whole area hard. The rule
-is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#allocated-exit-preference-or-hard">Models › Routing&lt;/a>.&lt;/p>
+is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#allocated-exit-preference-or-hard">Models › Routing&lt;/a>.
+In the old format the key sits on &lt;code>journeys[]&lt;/code>.&lt;/p>
 &lt;h2>Simulation settings&lt;span class="hx-absolute -hx-mt-20" id="simulation-settings">&lt;/span>
 &lt;a href="#simulation-settings" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Under &lt;code>config.simulation_settings&lt;/code>.&lt;/p>
 &lt;table>
@@ -4149,8 +4238,36 @@ spawned; the run warns once per such distribution.&lt;/p>
 &lt;/table>
 &lt;p>Where to draw checkpoints, how large, and how they join the route graph:
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/">How do I place checkpoints?&lt;/a>.&lt;/p>
-&lt;h2>Journey splits: &lt;code>waypoint_routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journey-splits-waypoint_routing">&lt;/span>
-&lt;a href="#journey-splits-waypoint_routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A journey in which a checkpoint has more than one outgoing transition needs
+&lt;h2>Old format (still read)&lt;span class="hx-absolute -hx-mt-20" id="old-format-still-read">&lt;/span>
+&lt;a href="#old-format-still-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Files written before &lt;code>journeys_v2&lt;/code> carry &lt;code>journeys&lt;/code> (the stages of each
+journey), &lt;code>transitions&lt;/code> (the &lt;code>from → to&lt;/code> pairs) and, for a split, a top-level
+&lt;code>waypoint_routing&lt;/code>. They load and run as before. The loader reads
+&lt;code>journeys_v2&lt;/code> only when &lt;code>journeys&lt;/code> is empty: a file that has both runs on
+&lt;code>journeys&lt;/code>. A journey in &lt;code>journeys&lt;/code> needs its &lt;code>transitions&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).&lt;/p>
+&lt;p>&lt;code>pyfds-evac-convert&lt;/code> rewrites such a file as &lt;code>journeys_v2&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac-convert config.json -o config_v2.json&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Each route a start area walks becomes one &lt;code>journeys_v2&lt;/code> entry, listed in that
+start area&amp;rsquo;s &lt;code>journey_weights&lt;/code> with weights scaled to sum to 100 where that keeps the split unchanged. Exit shares at a
+checkpoint become one weighted entry per branch, and a patrol that returns to
+its first checkpoint becomes &lt;code>&amp;quot;loop&amp;quot;: true&lt;/code>. A start area whose journey
+leaves the exit to the route choice gets no journey, and the command prints a
+note for it. The command stops with &lt;code>error: …&lt;/code> and exit code 1 when a loop
+returns to a stage other than the first, when &lt;code>waypoint_routing&lt;/code> cannot be
+written as separate branches, or when the file has both &lt;code>journeys&lt;/code> and
+&lt;code>journeys_v2&lt;/code>.&lt;/p>
+&lt;h3>Journey splits: &lt;code>waypoint_routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journey-splits-waypoint_routing">&lt;/span>
+&lt;a href="#journey-splits-waypoint_routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A journey in which a checkpoint has more than one outgoing transition needs
 the shares of agents that take each branch:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;#34;waypoint_routing&amp;#34;: {
@@ -4195,7 +4312,7 @@ in &lt;code>simulation_init.py&lt;/code>). The shares set the authored journey o
 rerouting on, the default of &lt;code>run.py&lt;/code>, the route-cost model picks each
 agent&amp;rsquo;s exit: in &lt;code>assets/t_junction&lt;/code> with 40 agents, shares of 99/1 and 1/99
 both sent all 40 to the nearer east exit, while with &lt;code>--no-enable-rerouting&lt;/code>
-99/1 sent all 40 west. JuPedSim Web does not write this key.&lt;/p>
+99/1 sent all 40 west. JuPedSim Web does not write this key. In &lt;code>journeys_v2&lt;/code> a split is two journeys with weights.&lt;/p>
 &lt;h2>Route choice: &lt;code>routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-choice-routing">&lt;/span>
 &lt;a href="#route-choice-routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The &lt;code>routing&lt;/code> block sets the route-cost model. Its keys, defaults and the
 constants that no key can set are listed in one place,
@@ -7566,7 +7683,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7590,7 +7707,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">537476bd57622175ce69ab89162cf7162b63849ced2e55be86380ee101367f5d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">488c055881dc60deeda01f03c1da39b5a80965ad1f4e98619acb11c44364a7f8&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

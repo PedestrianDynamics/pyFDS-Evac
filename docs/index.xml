@@ -15,7 +15,7 @@ cell by cell.&lt;/li>
 last person has left, and how the door-flow model, pre-movement and a
 second door move that.&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__jump">&lt;a href="#files-study-schroeder2020">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (235 kB zip)&lt;/a>&lt;/p>
+&lt;p class="docs-files__jump">&lt;a href="#files-study-schroeder2020">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (221 kB zip)&lt;/a>&lt;/p>
 &lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-blue-200 hx-bg-blue-100 hx-text-blue-900 dark:hx-border-blue-200/30 dark:hx-bg-blue-900/30 dark:hx-text-blue-200">
 &lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
 ℹ️
@@ -50,7 +50,7 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:&lt;/p>
 &lt;tbody>
 &lt;tr>
 &lt;td>min DIFF&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>−27 s&lt;/td>
 &lt;td>−40 s&lt;/td>
 &lt;td>about −29 s&lt;/td>
@@ -59,14 +59,14 @@ smoke criterion K ≥ 0.23 1/m at 2.0 m, maximum over n = 10 seeds:&lt;/p>
 &lt;td>Area with DIFF &amp;lt; 0&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>6.4 m²&lt;/td>
-&lt;td>7.4 m²&lt;/td>
+&lt;td>7.8 m²&lt;/td>
 &lt;td>about 20 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>C (bin-free)&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;td>−107 m²s&lt;/td>
-&lt;td>−174 m²s&lt;/td>
+&lt;td>−171 m²s&lt;/td>
 &lt;td>–&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -89,8 +89,8 @@ front of the door, where people wait at the capped exit. Smoke reaches
 those cells at 72–74 s; the last person leaves them at about 100 s.&lt;/li>
 &lt;li>&lt;strong>The door-flow model decides the one-door sign.&lt;/strong> Without the cap, the
 room empties in 42–45 s and no cell has DIFF &amp;lt; 0. With two doors even the
-uncapped crowd fails, by 11 s, beside the west door near the fire.&lt;/li>
-&lt;li>&lt;strong>The grids agree.&lt;/strong> The 0.1 m FDS grid moves min DIFF by less than 1 s
+uncapped crowd fails, by 12 s, beside the west door near the fire.&lt;/li>
+&lt;li>&lt;strong>The grids agree.&lt;/strong> The 0.1 m FDS grid moves min DIFF by about 1 s
 and the negative area by 0.3 m².&lt;/li>
 &lt;li>&lt;strong>The negative area is about a third of the paper&amp;rsquo;s.&lt;/strong> The release&amp;rsquo;s own
 RSET map has a queue about twice as large as ours
@@ -177,7 +177,7 @@ middle column separates that code change from the change of conditions.&lt;/p>
 &lt;td>min DIFF, one door, 0.2 m (0.1 m)&lt;/td>
 &lt;td>−30 s (−25 s)&lt;/td>
 &lt;td>−31 s (−26 s)&lt;/td>
-&lt;td>−27 s (−27 s)&lt;/td>
+&lt;td>−28 s (−27 s)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Area DIFF &amp;lt; 0, one door, 0.2 m (0.1 m)&lt;/td>
@@ -194,29 +194,29 @@ middle column separates that code change from the change of conditions.&lt;/p>
 &lt;tr>
 &lt;td>min DIFF / area, two doors&lt;/td>
 &lt;td>−41 s / 6.2 m²&lt;/td>
-&lt;td>−42 s / 5.8 m²&lt;/td>
-&lt;td>−40 s / 7.4 m²&lt;/td>
+&lt;td>−42 s / 6.2 m²&lt;/td>
+&lt;td>−40 s / 7.8 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>min DIFF / area, two doors, N = 200&lt;/td>
 &lt;td>−103 s / 21.9 m²&lt;/td>
-&lt;td>−103 s / 21.9 m²&lt;/td>
-&lt;td>−97 s / 22.9 m²&lt;/td>
+&lt;td>−103 s / 22.5 m²&lt;/td>
+&lt;td>−97 s / 23.5 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>min DIFF, uncapped, one / two doors&lt;/td>
 &lt;td>+3 s / +1 s&lt;/td>
-&lt;td>+2 s / −4 s&lt;/td>
-&lt;td>+4 s / −11 s&lt;/td>
+&lt;td>+2 s / −5 s&lt;/td>
+&lt;td>+4 s / −12 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The engine change moves min DIFF by about 1 s. The release conditions move
-it by about 4 s and bring the two FDS grids into agreement.
+it by about 3 s and bring the two FDS grids into agreement.
 The uncapped two-door run turns negative with the exit-rule change already
-(+1 → −4 s, not robust over seeds: per-seed mean +0.3 s); the release
-conditions deepen it to −11 s, negative in the per-seed mean as well
-(−4.6 [−6.9, −2.5] s).&lt;/p>
+(+1 → −5 s, not robust over seeds: per-seed mean −0.0 [−1.6, 1.5] s); the release
+conditions deepen it to −12 s, negative in the per-seed mean as well
+(−5.5 [−7.8, −2.9] s).&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>The room&lt;span class="hx-absolute -hx-mt-20" id="the-room">&lt;/span>
@@ -699,7 +699,7 @@ therefore run two versions on the same FDS output:&lt;/p>
 the agents in the release&amp;rsquo;s ten runs (0.96–1.05 persons/s);&lt;/li>
 &lt;li>&lt;strong>uncapped:&lt;/strong> the model&amp;rsquo;s own flow, reported as a model difference.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_remaining.png" alt="Two panels of agents in the room against time. Left, one door: the capped runs fall along the release’s ten JuPedSim runs, drawn as a dotted grey band, and through the paper’s Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 52 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 102 to 118 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_remaining.png" alt="Two panels of agents in the room against time. Left, one door: the capped runs fall along the release’s ten JuPedSim runs, drawn as a dotted grey band, and through the paper’s Fig. 3 points, reaching zero at about 100 s; the uncapped runs reach zero at 42 to 45 s. Right, two doors: capped N = 100 reaches zero at 51 to 63 s, uncapped at 24 to 30 s, capped N = 200 at 101 to 118 s." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>n = 10 seeds per version: line median, band minimum to maximum. Dotted
 grey: the release&amp;rsquo;s ten JuPedSim runs (doi:10.5281/zenodo.3875550,
 1 frame/s). Black squares: the paper&amp;rsquo;s Fig. 3, read off (100 at 0 s is N).&lt;/em>&lt;/p>
@@ -821,7 +821,7 @@ cells of map (a) below. Regenerated by &lt;code>scripts/docs/study_animations.py
 every agent still inside does, all of them in the queue at the capped door,
 up to 25 at 74 s. The agents ignore the smoke (arm U), so a cross marks
 where the map fails; nobody walks differently.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_1door.png" alt="Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −27 s, 6.7 m². (b) the same on the 0.1 m grid: −27 s, 6.4 m². (c) pre-movement 10 s: −37 s, 11.7 m². (d) pre-movement 30 s: red spreads along the north wall, the west end and mid-room, −57 s, 82.9 m². (e) pre-movement 60 s: most of the room red, −87 s, 208.8 m². (f) uncapped: all blue, min DIFF &amp;#43;4 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_1door.png" alt="Six DIFF maps of the one-door room, red and hatched where DIFF is negative, blue where it is positive, grey where no agent went. (a) capped, pre-movement 0, 0.2 m grid: a small red block in the north-east corner in front of the door; min DIFF −28 s, 6.7 m². (b) the same on the 0.1 m grid: −27 s, 6.4 m². (c) pre-movement 10 s: −38 s, 11.7 m². (d) pre-movement 30 s: red spreads along the north wall, the west end and mid-room, −58 s, 82.9 m². (e) pre-movement 60 s: most of the room red, −88 s, 208.8 m². (f) uncapped: all blue, min DIFF &amp;#43;4 s." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>One door. ASET: K ≥ 0.23 1/m, any node of the cell, z = 2.0 m, about 1 s
 steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;/p>
 &lt;table>
@@ -837,30 +837,30 @@ steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;
 &lt;tbody>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
-&lt;td>−27 s (−27 s)&lt;/td>
+&lt;td>−28 s (−27 s)&lt;/td>
 &lt;td>6.7 m² (6.4)&lt;/td>
 &lt;td>−112 m²s (−107)&lt;/td>
 &lt;td>21 (20)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s&lt;/td>
-&lt;td>−37 s (−37 s)&lt;/td>
+&lt;td>−38 s (−37 s)&lt;/td>
 &lt;td>11.7 m² (10.6)&lt;/td>
 &lt;td>−200 m²s (−191)&lt;/td>
 &lt;td>35 (32)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>−57 s (−57 s)&lt;/td>
+&lt;td>−58 s (−57 s)&lt;/td>
 &lt;td>82.9 m² (68.8)&lt;/td>
-&lt;td>−932 m²s (−742)&lt;/td>
+&lt;td>−933 m²s (−742)&lt;/td>
 &lt;td>233 (194)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
-&lt;td>−87 s (−87 s)&lt;/td>
+&lt;td>−88 s (−87 s)&lt;/td>
 &lt;td>208.8 m² (209.5)&lt;/td>
-&lt;td>−5,833 m²s (−5,406)&lt;/td>
+&lt;td>−5,834 m²s (−5,406)&lt;/td>
 &lt;td>583 (585)&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -877,7 +877,7 @@ steps. RSET: maximum over n = 10 seeds. No visited cell is censored.&lt;/em>&lt;
 visited&amp;rdquo; and are outside the five DIFF states.&lt;/em>&lt;/p>
 &lt;ul>
 &lt;li>&lt;strong>Pre-movement shifts min DIFF one for one.&lt;/strong> It delays everyone by the
-same constant, so −27, −37, −57, −87 s carry no new information. Only the
+same constant, so −28, −38, −58, −88 s carry no new information. Only the
 area and C change shape across the pre-movement versions. A constant
 delay is a simplification: pre-movement is a distribution whose shape
 depends on occupancy, warning and management, and in a dense room the
@@ -891,17 +891,17 @@ the door (&lt;a href="#setup-deviations-and-caveats">Setup&lt;/a>). They take ab
 1.4 m² out of the corner where RSET is highest, so the areas here are up
 to that much smaller than without them.&lt;/li>
 &lt;/ul>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_measures.png" alt="Two dot plots, one row per version. Left, min DIFF: the capped versions from −27 to −100 s, the uncapped at &amp;#43;4 s for one door and −11 s for two doors, with the paper’s −29 s as a star next to −27. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.4 to 210.3 m² for two doors, the paper’s 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point." loading="lazy" />&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_measures.png" alt="Two dot plots, one row per version. Left, min DIFF: the capped versions from −28 to −100 s, the uncapped at &amp;#43;4 s for one door and −12 s for two doors, with the paper’s −29 s as a star next to −28. Right, the area with DIFF below zero: 6.7 to 208.8 m² for one door and 7.8 to 210.6 m² for two doors, the paper’s 20 m² as a star to the right of 6.7. Open diamonds show the 0.1 m grid next to each one-door point." loading="lazy" />&lt;/p>
 &lt;p>&lt;em>Maximum over n = 10 seeds. Filled: 0.2 m FDS grid; open diamonds: 0.1 m
 grid; grey bar: the grid band. Two doors: no 0.1 m run, so no grid band.&lt;/em>&lt;/p>
 &lt;h3>Two doors&lt;span class="hx-absolute -hx-mt-20" id="two-doors">&lt;/span>
-&lt;a href="#two-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_2door.gif" alt="Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 54 s." loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Two doors, capped, pre-movement 0, seed 7 (the seed closest to the median
-of 53.7 s; its room empties at 54.2 s), 8 times real time. Same encoding
+&lt;a href="#two-doors" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/agents_smoke_2door.gif" alt="Animation of the two-door room at 8 times real time, capped exits, no pre-movement. The dots split between the west door D2 near the burner and the east door D1. Smoke from the burner rises along the west wall and reaches the D2 queue at about 15 s: those dots turn into red crosses inside a dashed red outline at D2. The D1 queue stays blue until it has left. The room is empty at about 53 s." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Two doors, capped, pre-movement 0, seed 8 (the seed closest to the median
+of 53.8 s; its room empties at 53.2 s), 8 times real time. Same encoding
 as the one-door animation; the outline is the DIFF &amp;lt; 0 area of map (a)
 below.&lt;/em>&lt;/p>
 &lt;p>From 15 s agents at the west door D2 stand in cells whose ASET has passed,
-up to 25 of them at 30 s, and from 47 s every agent still inside does. No
+up to 18 of them at 30 s, and the last one leaves them at 47 s. No
 agent at the east door D1 does. D2, about 7 m from the burner, sets the
 two-door result.&lt;/p>
 &lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/studies/schroeder2020/diff_2door.png" alt="Six DIFF maps of the two-door room. With the cap, red cells appear at both doors, first and most at the west door D2; with pre-movement 60 s most of the room is red. Uncapped: a few red cells at D2 and along the west wall. N = 200, capped: red blocks at both doors, deepest at the west door." loading="lazy" />&lt;/p>
@@ -920,38 +920,38 @@ band.&lt;/em>&lt;/p>
 &lt;tr>
 &lt;td>Capped, pre-movement 0&lt;/td>
 &lt;td>−40 s&lt;/td>
-&lt;td>7.4 m²&lt;/td>
-&lt;td>−174 m²s&lt;/td>
+&lt;td>7.8 m²&lt;/td>
+&lt;td>−171 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 10 s&lt;/td>
 &lt;td>−50 s&lt;/td>
-&lt;td>16.2 m²&lt;/td>
+&lt;td>15.8 m²&lt;/td>
 &lt;td>−277 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 30 s&lt;/td>
-&lt;td>−70 s&lt;/td>
-&lt;td>64.2 m²&lt;/td>
-&lt;td>−1,012 m²s&lt;/td>
+&lt;td>−71 s&lt;/td>
+&lt;td>65.0 m²&lt;/td>
+&lt;td>−1,021 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, pre-movement 60 s&lt;/td>
 &lt;td>−100 s&lt;/td>
-&lt;td>210.3 m²&lt;/td>
-&lt;td>−4,978 m²s&lt;/td>
+&lt;td>210.6 m²&lt;/td>
+&lt;td>−4,988 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Uncapped, pre-movement 0&lt;/td>
-&lt;td>−11 s&lt;/td>
-&lt;td>2.7 m²&lt;/td>
+&lt;td>−12 s&lt;/td>
+&lt;td>3.8 m²&lt;/td>
 &lt;td>−18 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Capped, N = 200, pre-movement 0&lt;/td>
 &lt;td>−97 s&lt;/td>
-&lt;td>22.9 m²&lt;/td>
-&lt;td>−962 m²s&lt;/td>
+&lt;td>23.5 m²&lt;/td>
+&lt;td>−972 m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -961,12 +961,12 @@ We mirrored D1 onto the west wall, about 7 m from the burner. Smoke
 reaches the cells at D2 at 19–29 s, against 69–70 s at D1, so D2 sets
 every two-door min DIFF.&lt;/li>
 &lt;li>&lt;strong>Here the uncapped crowd fails too.&lt;/strong> Its worst cell, at (0.9, 6.9) m on
-the way to D2, exceeds at 14 s; agents pass it until about 25 s.&lt;/li>
+the way to D2, exceeds at 14 s; agents pass it until about 26 s.&lt;/li>
 &lt;li>&lt;strong>N = 200 tests the paper&amp;rsquo;s thought experiment.&lt;/strong> In §3.1 the paper
 doubles the occupants &lt;em>and&lt;/em> adds a second exit, and states that the
 margin &amp;ldquo;remains more or less unchanged&amp;rdquo;. Here N = 200 with two doors gives
-−97 s against −27 s for one door with N = 100, and the last agent leaves
-at 102–118 s against 100–101 s. We attribute the difference to our D2
+−97 s against −28 s for one door with N = 100, and the last agent leaves
+at 101–118 s against 100–101 s. We attribute the difference to our D2
 position; we did not run another position. The paper does not report a
 simulation of this case (&amp;ldquo;experiment in mind&amp;rdquo;), so the result neither
 confirms nor refutes it.&lt;/li>
@@ -978,7 +978,7 @@ door of its half.&lt;/li>
 distribution with the west share of the floor, 0.49335. Over the ten
 seeds 50.4 % of the agents go west (N = 100) and 51.4 % (N = 200). Seed 10
 of N = 200 puts 118 agents west and sets the maximum; the per-seed mean
-of min DIFF is −82.3 s.&lt;/li>
+of min DIFF is −81.8 s.&lt;/li>
 &lt;/ul>
 &lt;h2>How far to trust the numbers&lt;span class="hx-absolute -hx-mt-20" id="how-far-to-trust-the-numbers">&lt;/span>
 &lt;a href="#how-far-to-trust-the-numbers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Six sources of spread, on min DIFF for one door, capped, pre-movement 0:&lt;/p>
@@ -993,8 +993,8 @@ of min DIFF is −82.3 s.&lt;/li>
 &lt;tbody>
 &lt;tr>
 &lt;td>Seeds&lt;/td>
-&lt;td>±0.5 s&lt;/td>
-&lt;td>95 % bootstrap CI of the per-seed min DIFF, −26.4 [−26.9, −25.9] s&lt;/td>
+&lt;td>±0.3 s&lt;/td>
+&lt;td>95 % bootstrap CI of the per-seed min DIFF, −27.0 [−27.3, −26.7] s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>A tiny change of the fire&lt;/td>
@@ -1004,7 +1004,7 @@ of min DIFF is −82.3 s.&lt;/li>
 &lt;tr>
 &lt;td>FDS grid&lt;/td>
 &lt;td>under 1 s&lt;/td>
-&lt;td>0.2 m against 0.1 m: −27.5 against −26.9 s; area 6.7 against 6.4 m²&lt;/td>
+&lt;td>0.2 m against 0.1 m: −27.9 against −26.9 s; area 6.7 against 6.4 m²&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FDS version against the release&lt;/td>
@@ -1013,13 +1013,13 @@ of min DIFF is −82.3 s.&lt;/li>
 &lt;/tr>
 &lt;tr>
 &lt;td>Fire and door setup&lt;/td>
-&lt;td>about 4 s&lt;/td>
-&lt;td>release conditions against the paper-only rebuild: −27 against −31 s&lt;/td>
+&lt;td>about 3 s&lt;/td>
+&lt;td>release conditions against the paper-only rebuild: −28 against −31 s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Door-flow model&lt;/td>
-&lt;td>about 31 s&lt;/td>
-&lt;td>capped against uncapped: −27 against +4 s&lt;/td>
+&lt;td>about 32 s&lt;/td>
+&lt;td>capped against uncapped: −28 against +4 s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -1030,7 +1030,7 @@ with a 30 s wait they do not (82.9 against 68.8 m²).&lt;/p>
 &lt;a href="#against-the-paper" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
 &lt;li>&lt;strong>The min DIFF agreement is structural.&lt;/strong> The worst cell is the last cell
 before the door, at (29.7, 8.1) m. Its RSET is about N/1.00 ≈ 100 s
-(measured 101 s), set by the cap; its ASET is 73 s. So −27 s tests when
+(measured 101 s), set by the cap; its ASET is 73 s. So −28 s tests when
 smoke reaches the door, a single cell of the map.&lt;/li>
 &lt;li>&lt;strong>The −29 s is the paper&amp;rsquo;s number.&lt;/strong> It is read off Fig. 5. The release&amp;rsquo;s
 &lt;code>DIFF_map.txt&lt;/code> has a minimum of −29 s, but its shape (18 × 51) differs
@@ -1066,13 +1066,13 @@ context only) matches the 60 kW, N = 100 point of Figs. 5 and 8.&lt;/li>
 &lt;tbody>
 &lt;tr>
 &lt;td>Headline: K ≥ 0.23, ∃ rule, about 1 s&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>K ≥ 0.23 or T ≥ 45 °C&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;/tr>
@@ -1147,28 +1147,28 @@ the tables above. The release code pools by the 95th percentile
 &lt;tbody>
 &lt;tr>
 &lt;td>Maximum over n = 10&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.7 m²&lt;/td>
 &lt;td>−112 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>95th percentile over n = 10&lt;/td>
-&lt;td>−27 s&lt;/td>
+&lt;td>−28 s&lt;/td>
 &lt;td>6.4 m²&lt;/td>
 &lt;td>−110 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Per seed, mean [95 % bootstrap CI]&lt;/td>
-&lt;td>−26.4 [−26.9, −25.9] s&lt;/td>
-&lt;td>6.1 [5.9, 6.2] m²&lt;/td>
-&lt;td>−97.4 [−98.7, −96.0] m²s&lt;/td>
+&lt;td>−27.0 [−27.3, −26.7] s&lt;/td>
+&lt;td>6.1 [6.0, 6.3] m²&lt;/td>
+&lt;td>−97.9 [−99.3, −96.5] m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>With 10 seeds the 95th percentile interpolates between the 9th and 10th
 values, so it lies close to the maximum. For two doors the views differ
 more (capped, pre-movement 0): maximum −40 s, 95th percentile −40 s,
-per-seed mean −30.2 [−34.2, −25.9] s, because the binomial split changes
+per-seed mean −30.4 [−34.2, −26.1] s, because the binomial split changes
 how many agents use D2.&lt;/p>
 &lt;/div>
 &lt;/details>
@@ -1211,28 +1211,28 @@ same evacuation versions run on the current engine:&lt;/p>
 &lt;tr>
 &lt;td>Two doors, capped, pre-movement 0&lt;/td>
 &lt;td>−42 s&lt;/td>
-&lt;td>5.8 m²&lt;/td>
-&lt;td>−132 m²s&lt;/td>
+&lt;td>6.2 m²&lt;/td>
+&lt;td>−135 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Two doors, uncapped&lt;/td>
-&lt;td>−4 s&lt;/td>
-&lt;td>0.9 m²&lt;/td>
-&lt;td>−2 m²s&lt;/td>
+&lt;td>−5 s&lt;/td>
+&lt;td>1.3 m²&lt;/td>
+&lt;td>−3 m²s&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Two doors, N = 200&lt;/td>
 &lt;td>−103 s&lt;/td>
-&lt;td>21.9 m²&lt;/td>
-&lt;td>−909 m²s&lt;/td>
+&lt;td>22.5 m²&lt;/td>
+&lt;td>−914 m²s&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>The capped crowd leaves 62.5 agents at 40 s and 24.3 at 80 s, and the
 last agent leaves at 105–106 s. The door cells exceed at 74–76 s, 2–3 s
 later than under the release conditions, and the slower cap empties the
-room about 5 s later; together they make min DIFF about 3.4 s lower
-(−30.9 against −27.5 s). The
+room about 5 s later; together they make min DIFF about 3 s lower
+(−30.9 against −27.9 s). The
 &lt;code>hrr060&lt;/code> fire grid-converges less well: on the 0.1 m grid a late pocket
 beside the plume first exceeds at up to 203 s, against 88 s on the 0.2 m
 grid, and 6.2 % of cells differ by more than 30 s.&lt;/p>
@@ -1279,12 +1279,12 @@ lies outside this study.&lt;/p>
 &lt;div class="docs-files__head">
 &lt;p class="docs-files__title" id="files-study-schroeder2020">Download the files for this page&lt;/p>
 &lt;a class="docs-files__download" href="https://pedestriandynamics.org/pyFDS-Evac/downloads/pyfds-evac-study-schroeder2020.zip" download>
-&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-study-schroeder2020.zip &lt;span class="docs-files__size">(235 kB)&lt;/span>
+&lt;span aria-hidden="true">↓&lt;/span> Download pyfds-evac-study-schroeder2020.zip &lt;span class="docs-files__size">(221 kB)&lt;/span>
 &lt;/a>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">addc2c605afb7ba20f472cff2a6371332ff501402657199c7b8cafd54e6fddf9&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2b82aa4b04c61443f0cdcfc7e7823d2cf46ce628df60c6e933d931d6f2ff21b0&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1362,15 +1362,19 @@ title="Copy code"
 &lt;/div>
 &lt;p>&lt;code>grid_perturbation.png&lt;/code> comes from the same grid script with
 &lt;code>--family hrr060&lt;/code>.&lt;/p>
-&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page were made at &lt;code>4a7142f&lt;/code>, a
-branch commit that is not on main; its &lt;code>pyfds_evac/&lt;/code> equals main at
-&lt;code>100e91d&lt;/code>. Each run&amp;rsquo;s manifest records that commit with &lt;code>git_dirty: false&lt;/code>
-and &lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. A re-run of all 160 evacuations
-on main at &lt;code>449a755d&lt;/code>, and again at &lt;code>9c820e0f&lt;/code> (Python 3.12.13, through
-the release check, &lt;code>release_check.sh --full --only study-schroeder2020&lt;/code>), prints the
-same values for the headline, so cite &lt;code>9c820e0f&lt;/code>. When the code
-changes, re-run the command into a new &lt;code>RUNS&lt;/code> folder and compare the
-printed tables with this page.&lt;/p>
+&lt;p>&lt;strong>Provenance.&lt;/strong> The evacuation runs on this page were made at &lt;code>b1e1926c&lt;/code> on
+the &lt;code>feat/900-journeys-v2&lt;/code> branch, with the scenarios in &lt;code>journeys_v2&lt;/code>
+(two doors: no journey, the route choice picks each agent&amp;rsquo;s door). Each
+run&amp;rsquo;s manifest records that commit with &lt;code>git_dirty: false&lt;/code> and
+&lt;code>agent_seeding: spawn-key-blake2b-v2&lt;/code>. The one-door runs give the same
+trajectories as with the old journey format. In the two-door runs every
+agent still leaves through the door of its half; the numbers move by how
+agents are steered there. The paper-only rebuild (&lt;code>hrr060&lt;/code>, the
+two-door rows of the sensitivity section and the middle column of the
+comparison above) was rerun the same way, with &lt;code>--family hrr060&lt;/code>, at
+&lt;code>195e5683&lt;/code> (the same engine code). When the code changes, re-run the
+command into a new &lt;code>RUNS&lt;/code> folder and compare the printed tables with this
+page.&lt;/p>
 &lt;h2>Setup, deviations and caveats&lt;span class="hx-absolute -hx-mt-20" id="setup-deviations-and-caveats">&lt;/span>
 &lt;a href="#setup-deviations-and-caveats" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
 &lt;summary class="hx-flex hx-items-center hx-cursor-pointer hx-select-none hx-list-none hx-p-1 hx-rounded hx-transition-colors hover:hx-bg-gray-100 dark:hover:hx-bg-neutral-800 before:hx-mr-1 before:hx-inline-block before:hx-transition-transform before:hx-content-[''] dark:before:hx-invert rtl:before:hx-rotate-180 group-open:before:hx-rotate-90">
@@ -2049,7 +2053,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2068,7 +2072,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a2daada0688a14b1b0998e8e8ed8b64ff3bc46991ffc426acba7a1e9c5f833a2&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f9dae8bd274b0411d2252d5603ffb234fed6649a2955080d163138fbe7bb2c43&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -3997,7 +4001,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -4022,7 +4026,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">824c37ac4f8b421f6fe786f8483b1ce82966f3485ac780a1c701614e68282eff&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">caa2ba28b63d647db42b43ce3f5bc88c27626ef6d4ca58823c89b9788a5f1909&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5476,7 +5480,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5507,7 +5511,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">be4f88db4c8e2da6fe16e872f16d240c70b34d0790404b314fb3b67bc4f616db&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5c16e802c2253024490b476336fec83f8f24c00ba91e9c4c673de12bb507ba67&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -6929,7 +6933,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -6950,7 +6954,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b030e85f968d60a264485d0bab8e1ce8c6cda802c0c16e04a22122ef3103b99d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3a95007bc8597567c2fe2ea35a07ad0daa48443db8800cb35a46cab98a6f78d3&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -9297,7 +9301,7 @@ speed factors;&lt;/li>
 &lt;/ul>
 &lt;h3>Which agents are steered directly&lt;span class="hx-absolute -hx-mt-20" id="which-agents-are-steered-directly">&lt;/span>
 &lt;a href="#which-agents-are-steered-directly" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
-&lt;li>&lt;strong>Deck without journeys&lt;/strong> (no &lt;code>journeys&lt;/code> and no &lt;code>transitions&lt;/code>, or no
+&lt;li>&lt;strong>Deck without journeys&lt;/strong> (no &lt;code>journeys&lt;/code>, &lt;code>transitions&lt;/code> or &lt;code>journeys_v2&lt;/code>, or no
 &lt;code>distributions&lt;/code>). Every exit gets a direct-steering stage, and all agents
 share one journey made of a single direct-steering stage
 (&lt;code>simulation_init.py&lt;/code>, &lt;code>_initialize_with_fallback&lt;/code>). This is the default
@@ -9695,7 +9699,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -9711,7 +9715,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">43d267388c57ba05f31b6abd9e021ca3951469a84f434f215d067a69e2d341d2&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">19af5cbdcf309198e544efef9f3eaa9c9400e0d7a9536f9c9dafb7dea4d49fc7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -11733,9 +11737,9 @@ default even in clear air, and less off-axis or in smoke. See
 &lt;h2>Where each FDS+Evac input goes&lt;span class="hx-absolute -hx-mt-20" id="where-each-fdsevac-input-goes">&lt;/span>
 &lt;a href="#where-each-fdsevac-input-goes" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Section numbers refer to the FDS+Evac Technical Reference and User&amp;rsquo;s Guide
 (Korhonen 2021). &amp;ldquo;JSON&amp;rdquo; means the scenario JSON. Its stage layout
-(&lt;code>distributions&lt;/code>, &lt;code>exits&lt;/code>, &lt;code>checkpoints&lt;/code>, &lt;code>journeys&lt;/code>) is the one the JuPedSim
-web editor writes, and &lt;code>load_scenario&lt;/code> converts the editor&amp;rsquo;s &lt;code>journeys_v2&lt;/code>
-routes on load. The pyFDS-Evac web GUI (graphical user interface, &lt;code>pyfds-evac-gui&lt;/code>,
+(&lt;code>distributions&lt;/code>, &lt;code>exits&lt;/code>, &lt;code>checkpoints&lt;/code>, &lt;code>journeys_v2&lt;/code>) is the one the JuPedSim
+web editor writes, and &lt;code>load_scenario&lt;/code> reads the editor&amp;rsquo;s &lt;code>journeys_v2&lt;/code>
+routes. The pyFDS-Evac web GUI (graphical user interface, &lt;code>pyfds-evac-gui&lt;/code>,
 or &lt;code>app.py&lt;/code> in a source checkout) runs uploaded scenarios. It does not edit geometry or stages.&lt;/p>
 &lt;table>
 &lt;thead>
@@ -12173,7 +12177,12 @@ hand in &lt;code>config.json&lt;/code>:&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>waypoint_routing&lt;/code>&lt;/td>
 &lt;td>top level&lt;/td>
-&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journey-splits-waypoint_routing">Journey splits&lt;/a>&lt;/td>
+&lt;td>Old format, still read; &lt;code>pyfds-evac-convert&lt;/code> rewrites it as &lt;code>journeys_v2&lt;/code> (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#old-format-still-read">Old format&lt;/a>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>loop&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journeys-journeys_v2">Journeys&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -12226,11 +12235,13 @@ bearing (° from north) and the contrast factor &lt;em>c&lt;/em> (Jin), with the
 on exits and checkpoints. &lt;code>alpha&lt;/code> is the bearing the sign faces, clockwise
 from north (+y); the sign is readable only from the side it faces. The app
 does not write &lt;code>max_distance&lt;/code>.&lt;/p>
-&lt;p>&lt;strong>Journeys.&lt;/strong> &lt;code>load_scenario&lt;/code> converts &lt;code>journeys_v2&lt;/code> into &lt;code>journeys&lt;/code> and
-&lt;code>transitions&lt;/code> (&lt;code>_migrate_journeys_v2&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>). It
-does so only when &lt;code>journeys&lt;/code> is empty, and only for a spawn area with exactly
-one &lt;code>journey_weights&lt;/code> entry. A spawn area split over several journeys is not
-converted.&lt;/p>
+&lt;p>&lt;strong>Journeys.&lt;/strong> &lt;code>load_scenario&lt;/code> reads &lt;code>journeys_v2&lt;/code> as it is
+(&lt;code>_migrate_journeys_v2&lt;/code> in &lt;code>pyfds_evac/core/scenario.py&lt;/code>), several journeys per
+spawn area included: the agents of a spawn area are split over its
+&lt;code>journey_weights&lt;/code> at spawn. With rerouting on, the default, the route-cost
+model picks each agent&amp;rsquo;s exit, so the split of the exits taken can differ from
+the weights. It reads &lt;code>journeys_v2&lt;/code> only when &lt;code>journeys&lt;/code> is empty. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journeys-journeys_v2">Journeys: &lt;code>journeys_v2&lt;/code>&lt;/a>.&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;details class="last-of-type:hx-mb-0 hx-rounded-lg hx-bg-neutral-50 dark:hx-bg-neutral-800 hx-p-2 hx-mt-4 hx-group" >
@@ -12248,8 +12259,10 @@ and 24 of the 55 scenario ZIPs of jupedsim-web-community at commit
 &lt;code>standards/rimea/scenario_files/Rimea-12d-bottleneck.zip&lt;/code> does not and needs
 a re-export or hand-written transitions.&lt;/p>
 &lt;p>If the file also has &lt;code>journeys_v2&lt;/code>, set &lt;code>&amp;quot;journeys&amp;quot;: []&lt;/code> and
-&lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code> so that &lt;code>journeys_v2&lt;/code> is converted. Otherwise export the
-scenario again from the current app, or add the &lt;code>transitions&lt;/code> by hand.&lt;/p>
+&lt;code>&amp;quot;transitions&amp;quot;: []&lt;/code> so that &lt;code>journeys_v2&lt;/code> is read. Otherwise export the
+scenario again from the current app, or add the &lt;code>transitions&lt;/code> by hand;
+&lt;code>pyfds-evac-convert&lt;/code> needs the &lt;code>transitions&lt;/code> too. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#old-format-still-read">Old format&lt;/a>.&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h3>Open a scenario in the app again&lt;span class="hx-absolute -hx-mt-20" id="open-a-scenario-in-the-app-again">&lt;/span>
@@ -12287,11 +12300,9 @@ files and load the ZIP in the app. The GUI writes the same bundle to
 &lt;div class="hx-p-2 hx-overflow-hidden">
 &lt;p>&lt;code>_export_app_bundle&lt;/code> in &lt;code>pyfds_evac/core/run_outputs.py&lt;/code> writes the scenario JSON as
 loaded and the walkable area as WKT. The command-line options, such as
-&lt;code>--seed&lt;/code>, are not written. Loading adds two things:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>simulationParams.max_simulation_time&lt;/code> (300 s) when it is missing;&lt;/li>
-&lt;li>&lt;code>journeys&lt;/code> and &lt;code>transitions&lt;/code> built from &lt;code>journeys_v2&lt;/code>.&lt;/li>
-&lt;/ul>
+&lt;code>--seed&lt;/code>, are not written. Loading adds &lt;code>simulationParams.max_simulation_time&lt;/code>
+(300 s) when it is missing. The journeys the loader builds from &lt;code>journeys_v2&lt;/code>
+are internal and not written.&lt;/p>
 &lt;p>&lt;code>journeys_v2&lt;/code>, &lt;code>ui_state&lt;/code> and keys the app does not know are kept. The app
 ignores the unknown keys and drops them on its next export, so apply your
 hand edits again afterwards.&lt;/p>
@@ -14137,13 +14148,15 @@ checkpoint away from the wall in both cases.&lt;/p>
 &lt;/aside>
 &lt;h2>Wire checkpoints into the route graph&lt;span class="hx-absolute -hx-mt-20" id="wire-checkpoints-into-the-route-graph">&lt;/span>
 &lt;a href="#wire-checkpoints-into-the-route-graph" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>You choose between two ways.&lt;/p>
-&lt;p>&lt;strong>With &lt;code>transitions&lt;/code>.&lt;/strong> The graph has exactly the &lt;code>from → to&lt;/code> pairs you list,
-when both ends exist. Nothing else is added. A checkpoint with more than one
-outgoing transition in a journey needs routing percentages; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journey-splits-waypoint_routing">Journey splits&lt;/a>. A journey
+&lt;p>&lt;strong>With a journey.&lt;/strong> A &lt;code>journeys_v2&lt;/code> sequence gives the &lt;code>from → to&lt;/code> pairs from
+the start area through its checkpoints to the exit (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#journeys-journeys_v2">Journeys&lt;/a>).
+The graph has exactly these pairs, when both ends exist. Nothing else is
+added. A route that splits at a checkpoint is two journeys with weights. In
+the old format the pairs are the &lt;code>transitions&lt;/code>, and a split needs routing
+percentages (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/#old-format-still-read">Old format&lt;/a>); a journey
 that places agents but that no transition names in its &lt;code>journey_id&lt;/code> is
 refused at load (&lt;code>simulation_init.py&lt;/code>, &lt;code>check_journey_transitions&lt;/code>).&lt;/p>
-&lt;p>&lt;strong>Without &lt;code>transitions&lt;/code>.&lt;/strong> The graph wires itself: spawn areas and checkpoints
+&lt;p>&lt;strong>Without a journey.&lt;/strong> The graph wires itself: spawn areas and checkpoints
 connect to checkpoints and exits, but not to a node when another checkpoint
 lies on the way to it. The rule is on the routing page,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#graph-construction-without-a-journey">Graph construction without a journey&lt;/a>.
@@ -14161,7 +14174,7 @@ exit, agents who take that exit walk through the checkpoint, in clear air
 too: their path bends to a random point inside it. A &lt;code>waiting_time&lt;/code> or
 &lt;code>max_throughput&lt;/code> set on that checkpoint applies to all of them. If agents
 must not pass through such a checkpoint, move it off the walking line so
-the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li>
+the detour through it exceeds 5 %, or give the start area a journey.&lt;/li>
 &lt;/ul>
 &lt;p>Shipped scenarios use both ways:&lt;/p>
 &lt;table>
@@ -14169,7 +14182,7 @@ the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li
 &lt;tr>
 &lt;th>Asset&lt;/th>
 &lt;th>Checkpoints&lt;/th>
-&lt;th>&lt;code>transitions&lt;/code>&lt;/th>
+&lt;th>&lt;code>journeys_v2&lt;/code> entries&lt;/th>
 &lt;/tr>
 &lt;/thead>
 &lt;tbody>
@@ -14191,12 +14204,12 @@ the detour through it exceeds 5 %, or use &lt;code>transitions&lt;/code>.&lt;/li
 &lt;tr>
 &lt;td>&lt;code>t_junction&lt;/code>&lt;/td>
 &lt;td>one 3 × 3 m box&lt;/td>
-&lt;td>3&lt;/td>
+&lt;td>2&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>schroeder2015_route&lt;/code> (&lt;code>evac/config_*.json&lt;/code>)&lt;/td>
 &lt;td>0.6 × 2 m boxes across the 0.2 m wall at doors A and B&lt;/td>
-&lt;td>6&lt;/td>
+&lt;td>4&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -18977,14 +18990,11 @@ check the result.&lt;/p>
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>{
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;config&amp;#34;: { &amp;#34;simulation_settings&amp;#34;: { &amp;#34;simulationParams&amp;#34;: {…}, &amp;#34;baseSeed&amp;#34;: … } },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;exits&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;distributions&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: { &amp;#34;coordinates&amp;#34;: […], &amp;#34;parameters&amp;#34;: {…} } },
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;distributions&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: { &amp;#34;coordinates&amp;#34;: […], &amp;#34;parameters&amp;#34;: {…}, &amp;#34;journey_weights&amp;#34;: […] } },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;checkpoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoints&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;zones&amp;#34;: { &amp;#34;&amp;lt;id&amp;gt;&amp;#34;: {…} },
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys&amp;#34;: [ { &amp;#34;id&amp;#34;: …, &amp;#34;stages&amp;#34;: […] } ],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;transitions&amp;#34;: [ { &amp;#34;from&amp;#34;: …, &amp;#34;to&amp;#34;: …, &amp;#34;journey_id&amp;#34;: … } ],
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;journeys_v2&amp;#34;: [ { &amp;#34;id&amp;#34;: …, &amp;#34;sequence&amp;#34;: […] } ],
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;waypoint_routing&amp;#34;: {…},
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &amp;#34;routing&amp;#34;: {…}
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
@@ -18996,13 +19006,95 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>&lt;code>journeys&lt;/code> and &lt;code>transitions&lt;/code> are the stage graph that set-up builds on; a
-journey needs its &lt;code>transitions&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).
-&lt;code>journeys_v2&lt;/code>, as JuPedSim Web writes it, is converted into them only when
-&lt;code>journeys&lt;/code> is empty; see
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-create-scenario/#add-the-pyfds-evac-keys-last">Create a scenario&lt;/a>.
-&lt;code>waypoints&lt;/code> carry signs only.&lt;/p>
+&lt;p>&lt;code>waypoints&lt;/code> carry signs only. The older journey keys (&lt;code>journeys&lt;/code>,
+&lt;code>transitions&lt;/code>, &lt;code>waypoint_routing&lt;/code>) are still read; see
+&lt;a href="#old-format-still-read">Old format (still read)&lt;/a>.&lt;/p>
+&lt;h2>Journeys: &lt;code>journeys_v2&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journeys-journeys_v2">&lt;/span>
+&lt;a href="#journeys-journeys_v2" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>journeys_v2&lt;/code> is the journey format of JuPedSim Web and of pyFDS-Evac
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/900" target="_blank" rel="noopener">#900&lt;/a>).
+A scenario written by pyFDS-Evac opens in the app, and a scenario drawn in the
+app runs here with its journeys as the agents&amp;rsquo; starting routes. The file
+format is shared; how the agents walk (route choice, rerouting, smoke, FED) is pyFDS-Evac&amp;rsquo;s own.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;journeys_v2&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> [
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> {&lt;span style="color:#f92672">&amp;#34;id&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;journey-a&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;name&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;Via the corridor&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;color&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;#4e79a7&amp;#34;&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;sequence&amp;#34;&lt;/span>: [&lt;span style="color:#e6db74">&amp;#34;jps-checkpoints_0&amp;#34;&lt;/span>, &lt;span style="color:#e6db74">&amp;#34;jps-exits_0&amp;#34;&lt;/span>]}
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>]&lt;span style="color:#960050;background-color:#1e0010">,&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#e6db74">&amp;#34;distributions&amp;#34;&lt;/span>&lt;span style="color:#960050;background-color:#1e0010">:&lt;/span> {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;jps-distributions_0&amp;#34;&lt;/span>: {
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;coordinates&amp;#34;&lt;/span>: [[&lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>], [&lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">0&lt;/span>], [&lt;span style="color:#ae81ff">4&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>], [&lt;span style="color:#ae81ff">0&lt;/span>, &lt;span style="color:#ae81ff">4&lt;/span>]],
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;parameters&amp;#34;&lt;/span>: {&lt;span style="color:#f92672">&amp;#34;number&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">20&lt;/span>},
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#f92672">&amp;#34;journey_weights&amp;#34;&lt;/span>: [{&lt;span style="color:#f92672">&amp;#34;journey_id&amp;#34;&lt;/span>: &lt;span style="color:#e6db74">&amp;#34;journey-a&amp;#34;&lt;/span>, &lt;span style="color:#f92672">&amp;#34;weight&amp;#34;&lt;/span>: &lt;span style="color:#ae81ff">100&lt;/span>}]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> }
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Key&lt;/th>
+&lt;th>Where&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Effect&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>id&lt;/code>, &lt;code>name&lt;/code>, &lt;code>color&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;code>id&lt;/code> required&lt;/td>
+&lt;td>&lt;code>id&lt;/code> is what &lt;code>journey_weights&lt;/code> names. &lt;code>name&lt;/code> and &lt;code>color&lt;/code> are for the app.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>sequence&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>required&lt;/td>
+&lt;td>Checkpoint and exit ids in walking order, without the start area. An entry without an &lt;code>id&lt;/code> or with an empty &lt;code>sequence&lt;/code> is ignored.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>journey_weights[].journey_id&lt;/code>, &lt;code>.weight&lt;/code>&lt;/td>
+&lt;td>&lt;code>distributions.&amp;lt;id&amp;gt;&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>The journeys a start area uses and their weights. The weights of one start area are normalised to shares.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>loop&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;code>false&lt;/code>&lt;/td>
+&lt;td>pyFDS-Evac key, unknown to the app. With &lt;code>true&lt;/code>, the sequence repeats: after its last stage the agent walks back to the first and goes on. Use it for a patrol that never ends.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>allocation&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[]&lt;/code>&lt;/td>
+&lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>&lt;/td>
+&lt;td>See &lt;a href="#journeys-allocation">&lt;code>allocation&lt;/code>&lt;/a>.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>&lt;strong>Weights.&lt;/strong> A start area&amp;rsquo;s agents are split over its journeys at spawn by
+exact counts, not by random draws: each journey gets its rounded share and the
+last one takes the rest. A weight that cannot be read as a number, or is 0 or less, is
+skipped. A start area with no usable weight, and a start area without
+&lt;code>journey_weights&lt;/code>, has no journey: at spawn its agents walk to the nearest
+exit by walking distance.&lt;/p>
+&lt;p>The weights set each agent&amp;rsquo;s starting journey and the split of the counts at
+spawn. With rerouting on, the default of &lt;code>run.py&lt;/code>, the route-cost model picks
+each agent&amp;rsquo;s exit, and the shares need not carry over to the exits taken;
+only &lt;code>--no-enable-rerouting&lt;/code> keeps the drawn exits. See
+&lt;a href="#journey-splits-waypoint_routing">Journey splits&lt;/a> and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Models › Routing&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Several journeys per start area.&lt;/strong> Give a start area one &lt;code>journey_weights&lt;/code>
+entry for each journey it uses. Two journeys with weights 60 and 40 send 60 %
+of the agents along the first sequence and 40 % along the second. A route that
+splits at a checkpoint is written as two journeys that share their first
+stages.&lt;/p>
 &lt;h3>Journeys: &lt;code>allocation&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journeys-allocation">&lt;/span>
 &lt;a href="#journeys-allocation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;table>
 &lt;thead>
@@ -19015,15 +19107,16 @@ journey needs its &lt;code>transitions&lt;/code>
 &lt;/thead>
 &lt;tbody>
 &lt;tr>
-&lt;td>&lt;code>journeys[].allocation&lt;/code>&lt;/td>
+&lt;td>&lt;code>journeys_v2[].allocation&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>, &lt;code>&amp;quot;hard&amp;quot;&lt;/code>&lt;/td>
-&lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>: when the journey&amp;rsquo;s spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than &lt;code>exit_switch_anchor&lt;/code> (0.9) times the allocated route. &lt;code>&amp;quot;hard&amp;quot;&lt;/code>: the agent walks to the journey&amp;rsquo;s exit, as before. Any other value raises &lt;code>ValueError&lt;/code> naming the journey. A &lt;code>journeys_v2&lt;/code> entry may carry the key; the migration copies it.&lt;/td>
+&lt;td>&lt;code>&amp;quot;preference&amp;quot;&lt;/code>: when the journey&amp;rsquo;s spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than &lt;code>exit_switch_anchor&lt;/code> (0.9) times the allocated route. &lt;code>&amp;quot;hard&amp;quot;&lt;/code>: the agent walks to the journey&amp;rsquo;s exit, as before. Any other value raises &lt;code>ValueError&lt;/code> naming the journey.&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
 &lt;p>One &lt;code>hard&lt;/code> journey through a spawn area makes the whole area hard. The rule
-is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#allocated-exit-preference-or-hard">Models › Routing&lt;/a>.&lt;/p>
+is on &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#allocated-exit-preference-or-hard">Models › Routing&lt;/a>.
+In the old format the key sits on &lt;code>journeys[]&lt;/code>.&lt;/p>
 &lt;h2>Simulation settings&lt;span class="hx-absolute -hx-mt-20" id="simulation-settings">&lt;/span>
 &lt;a href="#simulation-settings" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Under &lt;code>config.simulation_settings&lt;/code>.&lt;/p>
 &lt;table>
@@ -19496,8 +19589,36 @@ spawned; the run warns once per such distribution.&lt;/p>
 &lt;/table>
 &lt;p>Where to draw checkpoints, how large, and how they join the route graph:
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-place-checkpoints/">How do I place checkpoints?&lt;/a>.&lt;/p>
-&lt;h2>Journey splits: &lt;code>waypoint_routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journey-splits-waypoint_routing">&lt;/span>
-&lt;a href="#journey-splits-waypoint_routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A journey in which a checkpoint has more than one outgoing transition needs
+&lt;h2>Old format (still read)&lt;span class="hx-absolute -hx-mt-20" id="old-format-still-read">&lt;/span>
+&lt;a href="#old-format-still-read" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Files written before &lt;code>journeys_v2&lt;/code> carry &lt;code>journeys&lt;/code> (the stages of each
+journey), &lt;code>transitions&lt;/code> (the &lt;code>from → to&lt;/code> pairs) and, for a split, a top-level
+&lt;code>waypoint_routing&lt;/code>. They load and run as before. The loader reads
+&lt;code>journeys_v2&lt;/code> only when &lt;code>journeys&lt;/code> is empty: a file that has both runs on
+&lt;code>journeys&lt;/code>. A journey in &lt;code>journeys&lt;/code> needs its &lt;code>transitions&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504" target="_blank" rel="noopener">#504&lt;/a>).&lt;/p>
+&lt;p>&lt;code>pyfds-evac-convert&lt;/code> rewrites such a file as &lt;code>journeys_v2&lt;/code>:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>pyfds-evac-convert config.json -o config_v2.json&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Each route a start area walks becomes one &lt;code>journeys_v2&lt;/code> entry, listed in that
+start area&amp;rsquo;s &lt;code>journey_weights&lt;/code> with weights scaled to sum to 100 where that keeps the split unchanged. Exit shares at a
+checkpoint become one weighted entry per branch, and a patrol that returns to
+its first checkpoint becomes &lt;code>&amp;quot;loop&amp;quot;: true&lt;/code>. A start area whose journey
+leaves the exit to the route choice gets no journey, and the command prints a
+note for it. The command stops with &lt;code>error: …&lt;/code> and exit code 1 when a loop
+returns to a stage other than the first, when &lt;code>waypoint_routing&lt;/code> cannot be
+written as separate branches, or when the file has both &lt;code>journeys&lt;/code> and
+&lt;code>journeys_v2&lt;/code>.&lt;/p>
+&lt;h3>Journey splits: &lt;code>waypoint_routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="journey-splits-waypoint_routing">&lt;/span>
+&lt;a href="#journey-splits-waypoint_routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>A journey in which a checkpoint has more than one outgoing transition needs
 the shares of agents that take each branch:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>&amp;#34;waypoint_routing&amp;#34;: {
@@ -19542,7 +19663,7 @@ in &lt;code>simulation_init.py&lt;/code>). The shares set the authored journey o
 rerouting on, the default of &lt;code>run.py&lt;/code>, the route-cost model picks each
 agent&amp;rsquo;s exit: in &lt;code>assets/t_junction&lt;/code> with 40 agents, shares of 99/1 and 1/99
 both sent all 40 to the nearer east exit, while with &lt;code>--no-enable-rerouting&lt;/code>
-99/1 sent all 40 west. JuPedSim Web does not write this key.&lt;/p>
+99/1 sent all 40 west. JuPedSim Web does not write this key. In &lt;code>journeys_v2&lt;/code> a split is two journeys with weights.&lt;/p>
 &lt;h2>Route choice: &lt;code>routing&lt;/code>&lt;span class="hx-absolute -hx-mt-20" id="route-choice-routing">&lt;/span>
 &lt;a href="#route-choice-routing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The &lt;code>routing&lt;/code> block sets the route-cost model. Its keys, defaults and the
 constants that no key can set are listed in one place,
@@ -27131,7 +27252,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -27155,7 +27276,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">537476bd57622175ce69ab89162cf7162b63849ced2e55be86380ee101367f5d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">488c055881dc60deeda01f03c1da39b5a80965ad1f4e98619acb11c44364a7f8&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -28347,7 +28468,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -28365,7 +28486,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b7d3b6ed709291631cbc71fc91b97f7086c3c7cb70249ce9594d5bac928e08d3&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">526a0344afe5702b1d87c32dee1efbef6fde27f2b3999f1fc740a8cd15899995&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -30013,7 +30134,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;/div>
 &lt;p class="docs-files__summary">The two scenarios, the FDS decks, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 45 s for the 16 runs and the figures&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -30037,7 +30158,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;li>&lt;code>assets/iso_table21_coupled/build_geometry.py&lt;/code>: writes the coupled deck, scenario and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table21_coupled/README.md&lt;/code>: what the coupled case is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">82726759691dfa7c181d42fd8a7ac939074cb13e8e44b145d2eb9b5c1d5b8287&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9eb69056f565d2122c377a39051872bb07cbb963dd89d22c1c41dc8807decb5c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The tests of the first two cases run in about 20 s. They are weaker than this page: the
@@ -30470,7 +30591,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The four FDS decks and scenarios, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e8a6026d99c3cf32e1b82eeba1682703aab5f3b0">&lt;code>e8a6026&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3b149b78655496374a3cf9ee692a8bedb685b4aa">&lt;code>3b149b7&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 1 min for the four cases&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -30499,7 +30620,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/geometry.wkt&lt;/code>: the second version of this test, walkable area&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/README.md&lt;/code>: the second version of this test&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">74fed8681042b8fa9bac828cf9a027bad4924f116a55e47f3fbbbb8d43cb4d71&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3078ee18ab12180ce3af0c0381fe59316633846b18b262f5bbd6e0b63e29fce6&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output (slices only, 256 kB) is committed in
@@ -30714,10 +30835,8 @@ doors throughout, generated parametrically by each folder&amp;rsquo;s
 &lt;code>assets/familiarity_test_full/familiarity_test.fds&lt;/code> (real
 combustion via &lt;code>&amp;amp;REAC&lt;/code>, not a prescribed &lt;code>&amp;amp;INIT&lt;/code>; walls mirror the
 walkable geometry exactly so smoke propagates through the same
-doorways agents use). These two configs use the legacy &lt;code>journeys&lt;/code>/
-&lt;code>transitions&lt;/code> shape directly (the web editor&amp;rsquo;s &lt;code>journeys_v2&lt;/code> format is
-auto-migrated to this shape by &lt;code>load_scenario&lt;/code>, but was hand-converted
-here to add the extra edge below). The maze&amp;rsquo;s start room is one open
+doorways agents use). These configs carry no journeys: &lt;code>journeys&lt;/code>,
+&lt;code>transitions&lt;/code> and &lt;code>journeys_v2&lt;/code> are empty. The maze&amp;rsquo;s start room is one open
 box that connects directly to the checkpoint outside the exit door
 (&lt;code>jps-checkpoints_0 → jps-checkpoints_3&lt;/code>), completely bypassing the
 scripted checkpoint tour through the rest of the maze — a real ~39%
