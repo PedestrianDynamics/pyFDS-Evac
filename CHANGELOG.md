@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `pyfds-evac init` imports the FDS+Evac `IMO_*` person types: speed uniform
+  from IMO MSC.1/Circ.1238 Table 3.4, as a Gaussian with the same mean and
+  variance, and the Male or Female body (#712).
 - `"sign": false` on an exit, checkpoint or waypoint: the node has no sign
   and a discovery agent never learns it by sight (#376). Under the default
   `no_known_exit` mode `default_route`, an agent that knows no exit still
@@ -75,6 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `VELOCITY_DIST=-1` on a `&PERS` with a preset keeps the preset speed, as in
+  FDS+Evac (#712).
 - The shipped scenarios with journeys are written in `journeys_v2` (exit
   shares as weighted journeys, the dose-test patrols with `"loop": true`);
   their runs are unchanged (#900).

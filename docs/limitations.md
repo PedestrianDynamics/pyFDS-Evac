@@ -260,10 +260,10 @@ otherwise change the fire. The time resolution of the hazard is that of the
 slice output (`&DUMP DT_SLCF`).
 
 **Body shape.** An agent is one circle. `pyfds-evac init` gives the
-five FDS+Evac Guide agent types the radius of their torso circle
-R<sub>t</sub> (Adult 0.15 m, Male 0.16, Female 0.14, Child 0.12, Elderly
-0.15), the same value for every operational model; the `IMO_*` presets
-keep 0.2 m
+five FDS+Evac Guide agent types and the `IMO_*` presets (Male or Female
+body) the radius of their torso circle R<sub>t</sub> (Adult 0.15 m, Male
+0.16, Female 0.14, Child 0.12, Elderly 0.15), the same value for every
+operational model
 ([#699](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/699)).
 The circle is as deep as the FDS+Evac body (0.30 m for an adult) but
 narrower than its shoulders (0.51 m), so two agents pass side by side
