@@ -7,6 +7,7 @@ without a failed test; that run is invalid, not a kill.
 from __future__ import annotations
 
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
@@ -54,3 +55,17 @@ def test_every_area_snippet_occurs_once(check):
         for m in area.mutants:
             text = (check.REPO / (m.module or area.module)).read_text()
             assert text.count(m.old) == 1, m.name
+
+
+def test_a_timed_out_run_is_a_kill(check):
+    # A mutant that hangs the tests (e.g. a search that never ends) is caught.
+    assert check._outcome(check.TIMED_OUT, []) == "killed"
+
+
+def test_run_tests_turns_a_timeout_into_timed_out(check, monkeypatch):
+    def run(*args, **kwargs):
+        assert kwargs["timeout"] == 7.0
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(check.subprocess, "run", run)
+    assert check._run_tests("python", ("tests/x.py",), 7.0) == (check.TIMED_OUT, [])
