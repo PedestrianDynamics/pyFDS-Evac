@@ -76,14 +76,16 @@ checkpoint away from the wall in both cases.
 
 You choose between two ways.
 
-**With `transitions`.** The graph has exactly the `from → to` pairs you list,
-when both ends exist. Nothing else is added. A checkpoint with more than one
-outgoing transition in a journey needs routing percentages; see
-[Journey splits](scenario-json.md#journey-splits-waypoint_routing). A journey
+**With a journey.** A `journeys_v2` sequence gives the `from → to` pairs from
+the start area through its checkpoints to the exit ([Journeys](scenario-json.md#journeys-journeys_v2)).
+The graph has exactly these pairs, when both ends exist. Nothing else is
+added. A route that splits at a checkpoint is two journeys with weights. In
+the old format the pairs are the `transitions`, and a split needs routing
+percentages ([Old format](scenario-json.md#old-format-still-read)); a journey
 that places agents but that no transition names in its `journey_id` is
 refused at load (`simulation_init.py`, `check_journey_transitions`).
 
-**Without `transitions`.** The graph wires itself: spawn areas and checkpoints
+**Without a journey.** The graph wires itself: spawn areas and checkpoints
 connect to checkpoints and exits, but not to a node when another checkpoint
 lies on the way to it. The rule is on the routing page,
 [Graph construction without a journey](routing.md#graph-construction-without-a-journey).
@@ -101,17 +103,17 @@ For placement it means:
   too: their path bends to a random point inside it. A `waiting_time` or
   `max_throughput` set on that checkpoint applies to all of them. If agents
   must not pass through such a checkpoint, move it off the walking line so
-  the detour through it exceeds 5 %, or use `transitions`.
+  the detour through it exceeds 5 %, or give the start area a journey.
 
 Shipped scenarios use both ways:
 
-| Asset | Checkpoints | `transitions` |
+| Asset | Checkpoints | `journeys_v2` entries |
 |---|---|---|
 | `blind_spawn_discovery` | 2 × 2 m boxes at the doors | none |
 | `familiarity_test_{full,discovery,no_journey}` | boxes 0.55–1.22 m on a side | none |
 | `station_fahy` | circles of radius 0.24–0.36 m | none |
-| `t_junction` | one 3 × 3 m box | 3 |
-| `schroeder2015_route` (`evac/config_*.json`) | 0.6 × 2 m boxes across the 0.2 m wall at doors A and B | 6 |
+| `t_junction` | one 3 × 3 m box | 2 |
+| `schroeder2015_route` (`evac/config_*.json`) | 0.6 × 2 m boxes across the 0.2 m wall at doors A and B | 4 |
 
 ## Keep checkpoints and signs away from walls
 

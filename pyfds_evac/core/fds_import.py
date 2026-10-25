@@ -1491,8 +1491,7 @@ def _raw(deck, report, exits, spawns, height) -> dict[str, Any]:
         "config": {"simulation_settings": {"simulationParams": params}},
         "exits": {e.id: _exit_json(e) for e in exits},
         "distributions": {s.id: _spawn_json(s) for s in spawns},
-        "journeys": [],
-        "transitions": [],
+        "journeys_v2": [],
     }
 
 

@@ -1688,6 +1688,46 @@ def _heads_for_closed_exit(
     return exit_id is not None and not stage_graph.nodes[exit_id].is_open(time_s)
 
 
+def _usable_weight(entry: dict) -> float | None:
+    """The weight of a ``journey_weights`` entry, or None when it places no one."""
+    try:
+        weight = float(entry.get("weight", 0.0))
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(weight) or weight <= 0.0:
+        return None
+    return weight
+
+
+def _legacy_journey(dist_id, entry, sequences, allocations, loops, used_ids):
+    """The internal journey for one ``journey_weights`` entry of *dist_id*, or None."""
+    jid = entry.get("journey_id")
+    sequence = sequences.get(jid)
+    weight = _usable_weight(entry)
+    if not sequence or weight is None:
+        return None
+    legacy_id = jid if jid not in used_ids else f"{jid}::{dist_id}"
+    base_id, repeat = legacy_id, 0
+    while legacy_id in used_ids:
+        repeat += 1
+        legacy_id = f"{base_id}::{repeat}"
+    used_ids.add(legacy_id)
+    stages = [dist_id, *sequence]
+    pairs = list(zip(stages, stages[1:]))
+    if loops.get(jid):
+        pairs.append((stages[-1], stages[1]))
+    transitions = [{"from": a, "to": b, "journey_id": legacy_id} for a, b in pairs]
+    legacy = {
+        "id": legacy_id,
+        "stages": stages,
+        "transitions": transitions,
+        "spawn_weight": weight,
+    }
+    if jid in allocations:
+        legacy["allocation"] = allocations[jid]
+    return legacy
+
+
 def _migrate_journeys_v2(data: dict[str, Any]) -> None:
     """Backfill legacy ``journeys``/``transitions`` from the editor's ``journeys_v2``.
 
@@ -1698,10 +1738,11 @@ def _migrate_journeys_v2(data: dict[str, Any]) -> None:
     ``initialize_simulation_from_json`` decides the config needs fallback
     auto-routing, and the drawn route is silently never used.
 
-    Only distributions with exactly one ``journey_weights`` entry are
-    migrated: the legacy format has no equivalent for splitting a single
-    distribution across multiple whole journeys, so ambiguous cases are left
-    alone (existing fallback behaviour applies to those).
+    Every ``journey_weights`` entry of a distribution becomes one legacy
+    journey whose ``spawn_weight`` is the share of that journey at spawn.
+    ``"loop": true`` on a journey closes its sequence with a transition from
+    the last stage back to the first. A weight that is not a number or is
+    zero or less is skipped.
     """
     journeys_v2 = data.get("journeys_v2")
     if data.get("journeys") or not journeys_v2:
@@ -1723,29 +1764,24 @@ def _migrate_journeys_v2(data: dict[str, Any]) -> None:
         if isinstance(j, dict) and j.get("id") and "allocation" in j
     }
 
+    loops = {
+        j["id"]: j.get("loop") is True
+        for j in journeys_v2
+        if isinstance(j, dict) and j.get("id")
+    }
+
     used_ids: set = set()
     legacy_journeys = []
     legacy_transitions = []
     for dist_id, dist in data.get("distributions", {}).items():
-        weights = dist.get("journey_weights") or []
-        if len(weights) != 1:
-            continue
-        jid = weights[0].get("journey_id")
-        sequence = sequences.get(jid)
-        if not sequence:
-            continue
-        legacy_id = jid if jid not in used_ids else f"{jid}::{dist_id}"
-        used_ids.add(legacy_id)
-        stages = [dist_id, *sequence]
-        transitions = [
-            {"from": stages[i], "to": stages[i + 1], "journey_id": legacy_id}
-            for i in range(len(stages) - 1)
-        ]
-        legacy = {"id": legacy_id, "stages": stages, "transitions": transitions}
-        if jid in allocations:
-            legacy["allocation"] = allocations[jid]
-        legacy_journeys.append(legacy)
-        legacy_transitions.extend(transitions)
+        for entry in dist.get("journey_weights") or []:
+            legacy = _legacy_journey(
+                dist_id, entry, sequences, allocations, loops, used_ids
+            )
+            if legacy is None:
+                continue
+            legacy_journeys.append(legacy)
+            legacy_transitions.extend(legacy["transitions"])
 
     if legacy_journeys:
         data["journeys"] = legacy_journeys

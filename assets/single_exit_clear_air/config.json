@@ -103,7 +103,13 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "to_west_area_a",
+          "weight": 100.0
+        }
+      ]
     },
     "area_b": {
       "type": "polygon",
@@ -138,51 +144,33 @@
         "use_premovement": false,
         "radius_distribution": "constant",
         "v0_distribution": "constant"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "to_west_area_b",
+          "weight": 100.0
+        }
+      ]
     }
   },
   "checkpoints": {},
   "zones": {},
-  "journeys": [
+  "journeys_v2": [
     {
       "id": "to_west_area_a",
-      "stages": [
-        "area_a",
+      "name": "to_west_area_a",
+      "color": "#4e79a7",
+      "sequence": [
         "west"
-      ],
-      "transitions": [
-        {
-          "from": "area_a",
-          "to": "west",
-          "journey_id": "to_west_area_a"
-        }
       ]
     },
     {
       "id": "to_west_area_b",
-      "stages": [
-        "area_b",
+      "name": "to_west_area_b",
+      "color": "#f28e2b",
+      "sequence": [
         "west"
-      ],
-      "transitions": [
-        {
-          "from": "area_b",
-          "to": "west",
-          "journey_id": "to_west_area_b"
-        }
       ]
-    }
-  ],
-  "transitions": [
-    {
-      "from": "area_a",
-      "to": "west",
-      "journey_id": "to_west_area_a"
-    },
-    {
-      "from": "area_b",
-      "to": "west",
-      "journey_id": "to_west_area_b"
     }
   ]
 }

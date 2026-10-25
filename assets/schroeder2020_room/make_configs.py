@@ -109,15 +109,31 @@ def config(
         }
         for e in exit_ids
     }
+    # One door: every agent follows journey_0. Two doors: no journey, the
+    # route choice picks each agent's door.
+    one_door = len(exit_ids) == 1
+    weights = [{"journey_id": "journey_0", "weight": 100.0}] if one_door else None
+    journeys_v2 = (
+        [
+            {
+                "id": "journey_0",
+                "name": "journey_0",
+                "color": "#4e79a7",
+                "sequence": list(exit_ids),
+            }
+        ]
+        if one_door
+        else []
+    )
     dists = {
-        d: {"type": "polygon", "coordinates": poly, "parameters": params(n, pre)}
+        d: {
+            "type": "polygon",
+            "coordinates": poly,
+            "parameters": params(n, pre),
+            **({"journey_weights": weights} if weights else {}),
+        }
         for d, (poly, n) in spawns.items()
     }
-    transitions = [
-        {"from": d, "to": e, "journey_id": "journey_0"}
-        for d in spawns
-        for e in exit_ids
-    ]
     return {
         "project_version": "2.0",
         "config": {
@@ -152,15 +168,7 @@ def config(
         "distributions": dists,
         "checkpoints": {},
         "zones": {},
-        "journeys": [
-            {
-                "id": "journey_0",
-                "stages": list(spawns) + exit_ids,
-                "transitions": transitions,
-            }
-        ],
-        "transitions": transitions,
-        "waypoint_routing": {},
+        "journeys_v2": journeys_v2,
     }
 
 

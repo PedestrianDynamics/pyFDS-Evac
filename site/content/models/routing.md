@@ -381,7 +381,7 @@ pyFDS-Evac, in Python, in the main loop of `run_scenario` (`scenario.py`):
 
 ### Which agents are steered directly
 
-- **Deck without journeys** (no `journeys` and no `transitions`, or no
+- **Deck without journeys** (no `journeys`, `transitions` or `journeys_v2`, or no
   `distributions`). Every exit gets a direct-steering stage, and all agents
   share one journey made of a single direct-steering stage
   (`simulation_init.py`, `_initialize_with_fallback`). This is the default

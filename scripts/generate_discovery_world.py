@@ -295,8 +295,6 @@ def build_config(
         "distributions": {"jps-distributions_0": distribution},
         "checkpoints": checkpoint_entries,
         "zones": {},
-        "journeys": [],
-        "transitions": [],
         "obstacles": {f"jps-obstacles_{i}": {"height": 3} for i in range(n_obstacles)},
         "journeys_v2": [],
     }

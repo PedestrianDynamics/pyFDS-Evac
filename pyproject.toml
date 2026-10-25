@@ -53,6 +53,7 @@ tui = [
 
 [project.scripts]
 pyfds-evac = "pyfds_evac.cli:main"
+pyfds-evac-convert = "pyfds_evac.core.journeys_v2:main"
 # Needs the gui extra; without it, prints how to install it.
 pyfds-evac-gui = "pyfds_evac.webapp.launch:main"
 # Needs the tui extra; without it, prints how to install it.

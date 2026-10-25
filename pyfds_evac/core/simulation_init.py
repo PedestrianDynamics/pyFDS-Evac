@@ -2761,6 +2761,13 @@ def _create_journeys_with_percentages(
         variants = _generate_journey_variants(
             jid, base_stages, waypoint_routing, stage_map, distributions
         )
+        if "spawn_weight" in journey:
+            # A journey from journeys_v2 carries its share of the start area; its
+            # waypoint_routing shares split that weight among the variants.
+            variants = [
+                (stages, journey["spawn_weight"] * pct / 100.0)
+                for stages, pct in variants
+            ]
         journey_variants[jid] = []
 
         for variant_idx, (variant_stages, percentage) in enumerate(variants):

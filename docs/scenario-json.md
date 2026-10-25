@@ -29,34 +29,78 @@ check the result.
 {
   "config": { "simulation_settings": { "simulationParams": {…}, "baseSeed": … } },
   "exits":         { "<id>": {…} },
-  "distributions": { "<id>": { "coordinates": […], "parameters": {…} } },
+  "distributions": { "<id>": { "coordinates": […], "parameters": {…}, "journey_weights": […] } },
   "checkpoints":   { "<id>": {…} },
   "waypoints":     { "<id>": {…} },
   "zones":         { "<id>": {…} },
-  "journeys":      [ { "id": …, "stages": […] } ],
-  "transitions":   [ { "from": …, "to": …, "journey_id": … } ],
   "journeys_v2":   [ { "id": …, "sequence": […] } ],
-  "waypoint_routing": {…},
   "routing":       {…}
 }
 ```
 
-`journeys` and `transitions` are the stage graph that set-up builds on; a
-journey needs its `transitions`
-([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504)).
-`journeys_v2`, as JuPedSim Web writes it, is converted into them only when
-`journeys` is empty; see
-[Create a scenario](howto-create-scenario.md#add-the-pyfds-evac-keys-last).
-`waypoints` carry signs only.
+`waypoints` carry signs only. The older journey keys (`journeys`,
+`transitions`, `waypoint_routing`) are still read; see
+[Old format (still read)](#old-format-still-read).
+
+## Journeys: `journeys_v2`
+
+`journeys_v2` is the journey format of JuPedSim Web and of pyFDS-Evac
+([#900](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/900)).
+A scenario written by pyFDS-Evac opens in the app, and a scenario drawn in the
+app runs here with its journeys as the agents' starting routes. The file
+format is shared; how the agents walk (route choice, rerouting, smoke, FED) is pyFDS-Evac's own.
+
+```json
+"journeys_v2": [
+  {"id": "journey-a", "name": "Via the corridor", "color": "#4e79a7",
+   "sequence": ["jps-checkpoints_0", "jps-exits_0"]}
+],
+"distributions": {
+  "jps-distributions_0": {
+    "coordinates": [[0, 0], [4, 0], [4, 4], [0, 4]],
+    "parameters": {"number": 20},
+    "journey_weights": [{"journey_id": "journey-a", "weight": 100}]
+  }
+}
+```
+
+| Key | Where | Default | Effect |
+|---|---|---|---|
+| `id`, `name`, `color` | `journeys_v2[]` | `id` required | `id` is what `journey_weights` names. `name` and `color` are for the app. |
+| `sequence` | `journeys_v2[]` | required | Checkpoint and exit ids in walking order, without the start area. An entry without an `id` or with an empty `sequence` is ignored. |
+| `journey_weights[].journey_id`, `.weight` | `distributions.<id>` | none | The journeys a start area uses and their weights. The weights of one start area are normalised to shares. |
+| `loop` | `journeys_v2[]` | `false` | pyFDS-Evac key, unknown to the app. With `true`, the sequence repeats: after its last stage the agent walks back to the first and goes on. Use it for a patrol that never ends. |
+| `allocation` | `journeys_v2[]` | `"preference"` | See [`allocation`](#journeys-allocation). |
+
+**Weights.** A start area's agents are split over its journeys at spawn by
+exact counts, not by random draws: each journey gets its rounded share and the
+last one takes the rest. A weight that cannot be read as a number, or is 0 or less, is
+skipped. A start area with no usable weight, and a start area without
+`journey_weights`, has no journey: at spawn its agents walk to the nearest
+exit by walking distance.
+
+The weights set each agent's starting journey and the split of the counts at
+spawn. With rerouting on, the default of `run.py`, the route-cost model picks
+each agent's exit, and the shares need not carry over to the exits taken;
+only `--no-enable-rerouting` keeps the drawn exits. See
+[Journey splits](#journey-splits-waypoint_routing) and
+[Models › Routing](/models/routing.md).
+
+**Several journeys per start area.** Give a start area one `journey_weights`
+entry for each journey it uses. Two journeys with weights 60 and 40 send 60 %
+of the agents along the first sequence and 40 % along the second. A route that
+splits at a checkpoint is written as two journeys that share their first
+stages.
 
 ### Journeys: `allocation`
 
 | Key | Default | Values | Effect |
 |---|---|---|---|
-| `journeys[].allocation` | `"preference"` | `"preference"`, `"hard"` | `"preference"`: when the journey's spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than `exit_switch_anchor` (0.9) times the allocated route. `"hard"`: the agent walks to the journey's exit, as before. Any other value raises `ValueError` naming the journey. A `journeys_v2` entry may carry the key; the migration copies it. |
+| `journeys_v2[].allocation` | `"preference"` | `"preference"`, `"hard"` | `"preference"`: when the journey's spawn area reaches one exit and the deck has at least two, the agent keeps that exit unless another exit with an unobstructed direct route from the spawn area costs less than `exit_switch_anchor` (0.9) times the allocated route. `"hard"`: the agent walks to the journey's exit, as before. Any other value raises `ValueError` naming the journey. |
 
 One `hard` journey through a spawn area makes the whole area hard. The rule
 is on [Models › Routing](/models/routing.md#allocated-exit-preference-or-hard).
+In the old format the key sits on `journeys[]`.
 
 ## Simulation settings
 
@@ -272,7 +316,32 @@ The legibility rule is on [Models › Wayfinding](/models/wayfinding.md).
 Where to draw checkpoints, how large, and how they join the route graph:
 [How do I place checkpoints?](howto-place-checkpoints.md).
 
-## Journey splits: `waypoint_routing`
+## Old format (still read)
+
+Files written before `journeys_v2` carry `journeys` (the stages of each
+journey), `transitions` (the `from → to` pairs) and, for a split, a top-level
+`waypoint_routing`. They load and run as before. The loader reads
+`journeys_v2` only when `journeys` is empty: a file that has both runs on
+`journeys`. A journey in `journeys` needs its `transitions`
+([#504](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/504)).
+
+`pyfds-evac-convert` rewrites such a file as `journeys_v2`:
+
+```bash
+pyfds-evac-convert config.json -o config_v2.json
+```
+
+Each route a start area walks becomes one `journeys_v2` entry, listed in that
+start area's `journey_weights` with weights scaled to sum to 100 where that keeps the split unchanged. Exit shares at a
+checkpoint become one weighted entry per branch, and a patrol that returns to
+its first checkpoint becomes `"loop": true`. A start area whose journey
+leaves the exit to the route choice gets no journey, and the command prints a
+note for it. The command stops with `error: …` and exit code 1 when a loop
+returns to a stage other than the first, when `waypoint_routing` cannot be
+written as separate branches, or when the file has both `journeys` and
+`journeys_v2`.
+
+### Journey splits: `waypoint_routing`
 
 A journey in which a checkpoint has more than one outgoing transition needs
 the shares of agents that take each branch:
@@ -299,7 +368,7 @@ in `simulation_init.py`). The shares set the authored journey only. With
 rerouting on, the default of `run.py`, the route-cost model picks each
 agent's exit: in `assets/t_junction` with 40 agents, shares of 99/1 and 1/99
 both sent all 40 to the nearer east exit, while with `--no-enable-rerouting`
-99/1 sent all 40 west. JuPedSim Web does not write this key.
+99/1 sent all 40 west. JuPedSim Web does not write this key. In `journeys_v2` a split is two journeys with weights.
 
 ## Route choice: `routing`
 

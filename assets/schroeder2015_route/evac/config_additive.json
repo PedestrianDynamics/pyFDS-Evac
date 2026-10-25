@@ -135,7 +135,25 @@
         "v0_distribution": "gaussian",
         "v0_std": 0.2,
         "familiarity": "full"
-      }
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 25.0
+        },
+        {
+          "journey_id": "journey_0_1",
+          "weight": 25.0
+        },
+        {
+          "journey_id": "journey_0_2",
+          "weight": 25.0
+        },
+        {
+          "journey_id": "journey_0_3",
+          "weight": 25.0
+        }
+      ]
     }
   },
   "checkpoints": {
@@ -215,110 +233,42 @@
     }
   },
   "zones": {},
-  "journeys": [
+  "journeys_v2": [
     {
       "id": "journey_0",
-      "stages": [
-        "jps-distributions_0",
+      "name": "journey_0",
+      "color": "#4e79a7",
+      "sequence": [
         "jps-checkpoints_doorA",
-        "jps-checkpoints_doorB",
-        "exit_E",
+        "exit_E"
+      ]
+    },
+    {
+      "id": "journey_0_1",
+      "name": "journey_0_1",
+      "color": "#f28e2b",
+      "sequence": [
+        "jps-checkpoints_doorA",
         "exit_F"
-      ],
-      "transitions": [
-        {
-          "from": "jps-distributions_0",
-          "to": "jps-checkpoints_doorA",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-distributions_0",
-          "to": "jps-checkpoints_doorB",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_doorA",
-          "to": "exit_E",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_doorA",
-          "to": "exit_F",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_doorB",
-          "to": "exit_E",
-          "journey_id": "journey_0"
-        },
-        {
-          "from": "jps-checkpoints_doorB",
-          "to": "exit_F",
-          "journey_id": "journey_0"
-        }
+      ]
+    },
+    {
+      "id": "journey_0_2",
+      "name": "journey_0_2",
+      "color": "#e15759",
+      "sequence": [
+        "jps-checkpoints_doorB",
+        "exit_E"
+      ]
+    },
+    {
+      "id": "journey_0_3",
+      "name": "journey_0_3",
+      "color": "#76b7b2",
+      "sequence": [
+        "jps-checkpoints_doorB",
+        "exit_F"
       ]
     }
-  ],
-  "transitions": [
-    {
-      "from": "jps-distributions_0",
-      "to": "jps-checkpoints_doorA",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-distributions_0",
-      "to": "jps-checkpoints_doorB",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_doorA",
-      "to": "exit_E",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_doorA",
-      "to": "exit_F",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_doorB",
-      "to": "exit_E",
-      "journey_id": "journey_0"
-    },
-    {
-      "from": "jps-checkpoints_doorB",
-      "to": "exit_F",
-      "journey_id": "journey_0"
-    }
-  ],
-  "waypoint_routing": {
-    "jps-checkpoints_doorA": {
-      "journey_0": {
-        "destinations": [
-          {
-            "target": "exit_E",
-            "percentage": 50
-          },
-          {
-            "target": "exit_F",
-            "percentage": 50
-          }
-        ]
-      }
-    },
-    "jps-checkpoints_doorB": {
-      "journey_0": {
-        "destinations": [
-          {
-            "target": "exit_E",
-            "percentage": 50
-          },
-          {
-            "target": "exit_F",
-            "percentage": 50
-          }
-        ]
-      }
-    }
-  }
+  ]
 }

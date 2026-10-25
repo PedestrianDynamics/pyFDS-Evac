@@ -162,8 +162,8 @@ def test_journey_allocation_defaults_to_preference():
 def test_journeys_v2_allocation_reaches_the_legacy_journey():
     data = {
         "distributions": {
-            "D0": {"journey_weights": [{"journey_id": "v"}]},
-            "D1": {"journey_weights": [{"journey_id": "w"}]},
+            "D0": {"journey_weights": [{"journey_id": "v", "weight": 100}]},
+            "D1": {"journey_weights": [{"journey_id": "w", "weight": 100}]},
         },
         "journeys_v2": [
             {"id": "v", "sequence": ["A"], "allocation": "hard"},

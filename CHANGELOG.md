@@ -23,6 +23,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at parse time (#404). Before, such values silently switched the
   irritant slowdown off or sped agents up. Defaults (0.3, 0.7) are
   unchanged.
+- A `journeys_v2` entry in `journey_weights` without a positive numeric
+  `weight` places no agents, as in the app. Before, a start area with a
+  single such entry still got its journey; now its agents go to the
+  nearest exit (#900).
+- The shipped scenarios are now written in `journeys_v2` with several
+  weighted journeys per start area, some with `"loop": true`. pyFDS-Evac
+  0.7.x and earlier migrates only a start area with a single weight and
+  ignores `loop`, so it reads such a file without those journeys and sends
+  the start area to the nearest exit, without a warning. Run these files
+  with this version or later (#900).
 - A run whose crowd jams now stops when every mobile agent has stood still
   for 100 s, with `end_reason` `"deadlock"`, still incomplete (exit 2).
   Before, it ran to `max_simulation_time`. `evacuation_time` of such a run
@@ -54,6 +64,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `metrics["fed_enabled"]`: whether the gas FED ran (#137).
 - The run manifest records, per model, the height at which each FDS slice
   was actually read (`slice_heights_m`) ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+- A `journeys_v2` scenario may split a start area over several journeys by
+  `journey_weights`, and a journey may set `"loop": true` to repeat its
+  sequence; before, such start areas were skipped (#900).
+- `pyfds-evac-convert CONFIG -o OUT` rewrites a scenario's old `journeys` /
+  `transitions` / `waypoint_routing` as `journeys_v2`, the format JuPedSim
+  Web reads; exit shares become weighted journeys, a patrol loop becomes
+  `"loop": true`, and a start area that left the exit to the route choice
+  gets no journey (#900).
+
+### Changed
+
+- The shipped scenarios with journeys are written in `journeys_v2` (exit
+  shares as weighted journeys, the dose-test patrols with `"loop": true`);
+  their runs are unchanged (#900).
+- The schroeder2020 study scenarios are written in `journeys_v2`; in the
+  two-door room the route choice now picks each agent's door instead of a
+  journey that listed both doors. The study page
+  (`docs/study-schroeder2020.md`) shows a rerun (#900).
+- `pyfds-evac init` writes `journeys_v2: []` instead of empty `journeys`
+  and `transitions`; the docs describe `journeys_v2` as the journey format
+  and the old shape as still read (#900).
 
 ### Fixed
 

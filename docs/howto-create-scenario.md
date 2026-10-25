@@ -90,7 +90,8 @@ hand in `config.json`:
 | `open_from_s`, `closed_after_s`, `capacity_agents_per_s` | `exits.<id>` | [Exits](scenario-json.md#exits-exitsid) |
 | `max_distance` | `sign` | [Signs](scenario-json.md#signs-sign) |
 | `familiarity`, `entrance` | `distributions.<id>.parameters` | [Spawn areas](scenario-json.md#spawn-areas-distributionsidparameters) |
-| `waypoint_routing` | top level | [Journey splits](scenario-json.md#journey-splits-waypoint_routing) |
+| `waypoint_routing` | top level | Old format, still read; `pyfds-evac-convert` rewrites it as `journeys_v2` ([Old format](scenario-json.md#old-format-still-read)) |
+| `loop` | `journeys_v2[]` | [Journeys](scenario-json.md#journeys-journeys_v2) |
 
 FDS settings (`--fds-dir`, the slice height and the others) are command-line
 options and never go into the JSON; see [Usage](usage.md).
@@ -133,11 +134,13 @@ on exits and checkpoints. `alpha` is the bearing the sign faces, clockwise
 from north (+y); the sign is readable only from the side it faces. The app
 does not write `max_distance`.
 
-**Journeys.** `load_scenario` converts `journeys_v2` into `journeys` and
-`transitions` (`_migrate_journeys_v2` in `pyfds_evac/core/scenario.py`). It
-does so only when `journeys` is empty, and only for a spawn area with exactly
-one `journey_weights` entry. A spawn area split over several journeys is not
-converted.
+**Journeys.** `load_scenario` reads `journeys_v2` as it is
+(`_migrate_journeys_v2` in `pyfds_evac/core/scenario.py`), several journeys per
+spawn area included: the agents of a spawn area are split over its
+`journey_weights` at spawn. With rerouting on, the default, the route-cost
+model picks each agent's exit, so the split of the exits taken can differ from
+the weights. It reads `journeys_v2` only when `journeys` is empty. See
+[Journeys: `journeys_v2`](scenario-json.md#journeys-journeys_v2).
 {{< /details >}}
 
 {{< details title="Journeys without transitions" closed="true" >}}
@@ -152,8 +155,10 @@ and 24 of the 55 scenario ZIPs of jupedsim-web-community at commit
 a re-export or hand-written transitions.
 
 If the file also has `journeys_v2`, set `"journeys": []` and
-`"transitions": []` so that `journeys_v2` is converted. Otherwise export the
-scenario again from the current app, or add the `transitions` by hand.
+`"transitions": []` so that `journeys_v2` is read. Otherwise export the
+scenario again from the current app, or add the `transitions` by hand;
+`pyfds-evac-convert` needs the `transitions` too. See
+[Old format](scenario-json.md#old-format-still-read).
 {{< /details >}}
 
 ### Open a scenario in the app again
@@ -176,10 +181,9 @@ files and load the ZIP in the app. The GUI writes the same bundle to
 {{< details title="What the bundle holds" closed="true" >}}
 `_export_app_bundle` in `pyfds_evac/core/run_outputs.py` writes the scenario JSON as
 loaded and the walkable area as WKT. The command-line options, such as
-`--seed`, are not written. Loading adds two things:
-
-- `simulationParams.max_simulation_time` (300 s) when it is missing;
-- `journeys` and `transitions` built from `journeys_v2`.
+`--seed`, are not written. Loading adds `simulationParams.max_simulation_time`
+(300 s) when it is missing. The journeys the loader builds from `journeys_v2`
+are internal and not written.
 
 `journeys_v2`, `ui_state` and keys the app does not know are kept. The app
 ignores the unknown keys and drops them on its next export, so apply your
