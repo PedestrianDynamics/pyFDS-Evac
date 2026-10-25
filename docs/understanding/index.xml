@@ -93,10 +93,8 @@ $$&lt;p>The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentr
 lowers the speed further as it rises, down to a floor. \(g = 1\) unless
 &lt;code>--enable-fic-speed&lt;/code> is given: FDS+Evac has no irritant slowdown, so it is
 off by default. FIC is a concentration,
-not a dose, so \(g\) follows the gas where the agent stands. One quirk: when
-FIC drops to exactly zero the factor is not recomputed, so an agent that walks
-out of a plume into clean air keeps its last slowdown
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">#142&lt;/a>).&lt;/p>
+not a dose, so \(g\) follows the gas where the agent stands: an agent that walks
+out of a plume into clean air gets its full speed back.&lt;/p>
 &lt;p>The stop is the fractional effective dose (FED). The toxic-gas dose follows
 the Purser sum as FDS+Evac computes it, which adds irritants into the dose,
 unlike ISO 13571. With &lt;code>--enable-heat-fed&lt;/code>, convective heat from an FDS
@@ -646,12 +644,6 @@ one line per issue, is on
 with the smoke factor multiplicatively, not additively as published
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>;
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#irritant-slowdown-against-the-published-rule">Models › FED&lt;/a>).&lt;/p>
-&lt;p>&lt;strong>Recovery from irritants.&lt;/strong> The irritant slowdown (opt-in with
-&lt;code>--enable-fic-speed&lt;/code>) is recomputed only while
-the sampled fractional irritant concentration (FIC) is positive. When it
-returns to exactly zero, the last slowdown stays in force, so an agent that
-leaves an irritant plume into clean air does not return to full speed
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142" target="_blank" rel="noopener">issue #142&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Pre-movement defaults are office data.&lt;/strong> The gamma, log-normal and Weibull
 presets are fitted to office evacuations, mostly drills (Lovreglio et al. 2019,
 Business Cluster 1). The uniform 0–60 s preset is RiMEA&amp;rsquo;s &amp;ldquo;speedy evacuation&amp;rdquo;

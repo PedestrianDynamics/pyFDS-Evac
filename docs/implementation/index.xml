@@ -1055,8 +1055,12 @@ slice in declaration order. The model factories (&lt;code>ExtinctionField.from_f
 &lt;code>--smoke-slice-height&lt;/code> default to 1.6 m.&lt;/p>
 &lt;p>The rule lives in &lt;code>select_horizontal_slice&lt;/code>: vertical slices are
 skipped, the slice whose z is nearest &lt;code>slice_height_m&lt;/code> wins, and a
-warning is logged when it is more than 0.5 m away. The visibility model
-applies the same function to the extinction slice it hands to fdsvismap.&lt;/p>
+warning is logged when it is more than 0.2 m away. A run logs it once
+per quantity and requested height, however many models read that quantity,
+and &lt;code>--show-config&lt;/code> lists it. The layer heat regime requests a second
+&lt;code>TEMPERATURE&lt;/code> slice at &lt;code>--heat-layer-height&lt;/code>, which warns on its own. The
+visibility model applies the same function to the extinction slice it hands
+to fdsvismap.&lt;/p>
 &lt;p>The height is an absolute z in the FDS domain, so it equals the height
 above the floor where the floor is at z = 0. C/VM2, the Engineers
 Australia note and DIN 18009-2 (§7.2.1) evaluate tenability at 2.0 m
