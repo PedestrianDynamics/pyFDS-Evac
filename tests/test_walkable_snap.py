@@ -132,6 +132,23 @@ def test_walls_on_two_meshes_snap_to_each_grid():
     assert _parts(result) == 2
 
 
+def test_obstruction_touching_a_mesh_face_belongs_to_the_neighbour_mesh():
+    records = (
+        "&MESH IJK=10,20,6, XB=0,5,0,10,0,3 /\n"
+        "&MESH IJK=25,25,6, XB=5,10,0,10,0,3 /\n"
+        "&OBST XB=3,5,0,10,0,3 /"
+    )
+    result = _walk(records)
+    assert result.polygon.area == approx(80.0)
+    assert result.snap["max_shift_m"] == 0
+    assert result.notes == []
+    deck = parse_fds_text("&HEAD CHID='t' /\n" + records)
+    boxes = snap_footprints(
+        deck.group("OBST"), deck.group("MESH"), hole=False, thicken=False
+    )
+    assert [b.box for b in boxes] == [(3, 5, 0, 10)]
+
+
 def test_two_walls_on_one_gridline_merge_and_warn():
     result = _walk(MESH + "&OBST XB=0,10,4.0,4.01,0,3 /\n&OBST XB=0,10,4.11,4.12,0,3 /")
     assert result.polygon.area == approx(99.0)

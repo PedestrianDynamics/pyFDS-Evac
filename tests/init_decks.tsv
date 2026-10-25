@@ -3,61 +3,61 @@ artifacts/fds_from_wkt/HC.fds	3	1449.88	0	0	no exit found; no agents to place	d9
 artifacts/fds_from_wkt/ISO-table21.fds	3	200.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 artifacts/fds_from_wkt/ISO-table22.fds	3	100.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 artifacts/fds_from_wkt/t_junction.fds	3	150.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
-assets/Haspel/haspel.fds	3	1288.15	0	0	no exit found; no agents to place	f6117edd57551135151812459a389a0f025ba8f8cc9d44d25a194bd484a851a2
+assets/Haspel/haspel.fds	3	1273.90	0	0	no exit found; no agents to place	f6117edd57551135151812459a389a0f025ba8f8cc9d44d25a194bd484a851a2
 assets/ISO-table21/ISO-table21.fds	3	200.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 assets/blind_spawn_discovery/blind_spawn_discovery.fds	3	720.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 assets/cognitive_map_memory/cognitive_map_memory.fds	3	130.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 assets/exit_visibility_alpha/exit_visibility_alpha.fds	3	120.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
-assets/familiarity_test_discovery/familiarity_test.fds	3	347.99	0	0	no exit found; no agents to place	a143298eadc197a44e33778484aefc3f379b7e15ad1f800d83d855ef4303618d
-assets/familiarity_test_full/familiarity_test.fds	3	347.99	0	0	no exit found; no agents to place	a143298eadc197a44e33778484aefc3f379b7e15ad1f800d83d855ef4303618d
-assets/familiarity_test_no_journey/familiarity_test.fds	3	347.99	0	0	no exit found; no agents to place	a143298eadc197a44e33778484aefc3f379b7e15ad1f800d83d855ef4303618d
-assets/fds_evac_guide/Examples/Atrium.fds	0	738.32	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
-assets/fds_evac_guide/Examples/Atrium_1.fds	0	738.32	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
-assets/fds_evac_guide/Examples/Atrium_2.fds	0	738.32	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
-assets/fds_evac_guide/Examples/Atrium_3.fds	0	738.32	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
+assets/familiarity_test_discovery/familiarity_test.fds	3	351.62	0	0	no exit found; no agents to place	a143298eadc197a44e33778484aefc3f379b7e15ad1f800d83d855ef4303618d
+assets/familiarity_test_full/familiarity_test.fds	3	351.62	0	0	no exit found; no agents to place	a143298eadc197a44e33778484aefc3f379b7e15ad1f800d83d855ef4303618d
+assets/familiarity_test_no_journey/familiarity_test.fds	3	351.62	0	0	no exit found; no agents to place	a143298eadc197a44e33778484aefc3f379b7e15ad1f800d83d855ef4303618d
+assets/fds_evac_guide/Examples/Atrium.fds	0	738.34	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
+assets/fds_evac_guide/Examples/Atrium_1.fds	0	738.34	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
+assets/fds_evac_guide/Examples/Atrium_2.fds	0	738.34	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
+assets/fds_evac_guide/Examples/Atrium_3.fds	0	738.34	2	70		efe593d75bc23ca280e13b3152f56583fd072a663a7b4863fb6c6c2442e08400
 assets/fds_evac_guide/Examples/CorridorFlowExample.fds	3	96.40	0	192	no exit found (every &EXIT is narrower than the minimum exit width 0.1 m: the deck uses its exits only as flow-field targets, which pyFDS-Evac does not model); dropped &EXIT	fcdc4afc1e9643e6910fc566181a6f46bec4d70e805b893e8a3ea5fa39a86e65
 assets/fds_evac_guide/Examples/CorridorFlowExampleB.fds	3	96.40	0	192	no exit found (every &EXIT is narrower than the minimum exit width 0.1 m: the deck uses its exits only as flow-field targets, which pyFDS-Evac does not model); dropped &EXIT	fcdc4afc1e9643e6910fc566181a6f46bec4d70e805b893e8a3ea5fa39a86e65
 assets/fds_evac_guide/Examples/DoorFlowExample.fds	0	171.22	1	100		13717fdb5dd5d0326eb384febfd533706390cdb42c79caa21458d8a780e3d55e
-assets/fds_evac_guide/Examples/MonStairs.fds	0	1195.56	2	50		04e8f1948a7e5e4b0a15203fd93075df076f7545195fb03b6d40a04cd4bfecc8
-assets/fds_evac_guide/Examples/MonStairsV2.fds	0	1195.56	2	50		04e8f1948a7e5e4b0a15203fd93075df076f7545195fb03b6d40a04cd4bfecc8
-assets/fds_evac_guide/Examples/MonStairsV3.fds	0	1195.56	2	50		04e8f1948a7e5e4b0a15203fd93075df076f7545195fb03b6d40a04cd4bfecc8
-assets/fds_evac_guide/Examples/MonStairsV4.fds	0	1195.56	2	150		fd96b863b91824a47742f5a306770d1c6303f5785ecec5958f9cecec87dbbe84
+assets/fds_evac_guide/Examples/MonStairs.fds	0	1217.61	2	50		b9049af1d84f44a6bdc80ac9a92aba699c73caca43c7907b466c150dbb225f5d
+assets/fds_evac_guide/Examples/MonStairsV2.fds	0	1217.61	2	50		b9049af1d84f44a6bdc80ac9a92aba699c73caca43c7907b466c150dbb225f5d
+assets/fds_evac_guide/Examples/MonStairsV3.fds	0	1217.61	2	50		b9049af1d84f44a6bdc80ac9a92aba699c73caca43c7907b466c150dbb225f5d
+assets/fds_evac_guide/Examples/MonStairsV4.fds	0	1217.61	2	150		55b8d3ebeefc7f30c98de6fc004a19c03e802ea651223b2cb807165c2b6c002f
 assets/fds_evac_guide/Examples/Stairs.fds	3	39.60	2	0	no agents to place	ec5d9eb8b01f21425ad50da31f8e508aa453e241d6f03347b4bc1183869be600
 assets/fds_evac_guide/Examples/StairsSTRS.fds	3	25.00	2	0	no agents to place	0691475c99f328e2d620836e430f5687f0f56060d590dc81b56a7839fd1f48e3
-assets/fds_evac_guide/Examples/evac_example1aA.fds	0	120.37	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example1aB.fds	0	120.37	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example1aC.fds	0	120.37	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example1cA.fds	0	120.37	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example1cC.fds	0	120.37	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example2aA.fds	0	120.61	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example2aB.fds	0	120.61	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example2aC.fds	0	120.61	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example2cA.fds	0	120.61	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/evac_example2cC.fds	0	120.61	2	100		ae06420182963e9e4313a40093f4d069f083880109f96dd875303ff98a1a7aa5
-assets/fds_evac_guide/Examples/stair_example.fds	0	145.00	1	25		9c307ad09a6cdf8ce2359ec4099c32f3449a7b82c5aec3971fc7c03a229ece99
-assets/fds_evac_guide/Examples/stair_exampleSTRS.fds	3	131.71	3	0	no agents to place	c15f926f54ca743c486f2980a77b94ea614e3438f20892fb6a5bde30b10a31b8
-assets/fds_evac_guide/Examples/stair_exampleSTRS2.fds	0	131.71	3	15		a8f9867ad1c62b2e6ce995fb8bacae4000d75e76cb94bd3999828c5f79753ea6
+assets/fds_evac_guide/Examples/evac_example1aA.fds	0	120.36	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example1aB.fds	0	120.36	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example1aC.fds	0	120.36	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example1cA.fds	0	120.36	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example1cC.fds	0	120.36	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example2aA.fds	0	120.60	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example2aB.fds	0	120.60	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example2aC.fds	0	120.60	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example2cA.fds	0	120.60	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/evac_example2cC.fds	0	120.60	2	100		5fe639de14046221c8ae84dd9d89d5e607aadad654f8d5698d1ac3e467141c32
+assets/fds_evac_guide/Examples/stair_example.fds	0	144.88	1	25		38dfe7a17ee29fd5d6de5d0644f9cc4123892970d84cddaf2792267710bdeab7
+assets/fds_evac_guide/Examples/stair_exampleSTRS.fds	3	131.68	3	0	no agents to place	1a06fc351f79167f25dc13480b7c82fc0742207970ba976054d16151ecbb5089
+assets/fds_evac_guide/Examples/stair_exampleSTRS2.fds	0	131.68	3	15		a42390385ba299ac39bc1817f68dcd80db85cb3839a4f391eff853a02ec4f4ff
 assets/fds_evac_guide/Validation/AssemblySpace/bended_corridor.fds	0	3371.52	1	1000		bcf5b9089a6518a117f0394affc94f24e718c88f8a1bc60dba188f82d6ce028d
 assets/fds_evac_guide/Validation/AssemblySpace/bended_corridor2.fds	0	3371.52	1	1000		bcf5b9089a6518a117f0394affc94f24e718c88f8a1bc60dba188f82d6ce028d
 assets/fds_evac_guide/Validation/AssemblySpace/bended_corridor2_A.fds	0	3371.52	1	1000		bcf5b9089a6518a117f0394affc94f24e718c88f8a1bc60dba188f82d6ce028d
 assets/fds_evac_guide/Validation/AssemblySpace/bended_corridor_A.fds	0	3371.52	1	1000		bcf5b9089a6518a117f0394affc94f24e718c88f8a1bc60dba188f82d6ce028d
-assets/fds_evac_guide/Validation/AssemblySpace/door_only.fds	0	3007.20	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
-assets/fds_evac_guide/Validation/AssemblySpace/door_only2.fds	0	3007.20	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
-assets/fds_evac_guide/Validation/AssemblySpace/door_only2_A.fds	0	3007.20	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
-assets/fds_evac_guide/Validation/AssemblySpace/door_only_A.fds	0	3007.20	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K05_L03.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K05_L05.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K06_L03.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K06_L05.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K07_L03.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K07_L05.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K08_L03.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K08_L05.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K09_L03.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K09_L05.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K10_L03.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
-assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K10_L05.fds	0	1364.33	6	120		f09c2b34ebb950466466019179f33e0d4371b066c5360a417e00f746c26a42a9
+assets/fds_evac_guide/Validation/AssemblySpace/door_only.fds	0	3008.64	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
+assets/fds_evac_guide/Validation/AssemblySpace/door_only2.fds	0	3008.64	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
+assets/fds_evac_guide/Validation/AssemblySpace/door_only2_A.fds	0	3008.64	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
+assets/fds_evac_guide/Validation/AssemblySpace/door_only_A.fds	0	3008.64	1	1000		43912c63627a8e3633416582c70cd8ad4b0e454b8d0a27305061e7153ba1e1f5
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K05_L03.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K05_L05.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K06_L03.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K06_L05.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K07_L03.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K07_L05.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K08_L03.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K08_L05.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K09_L03.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K09_L05.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K10_L03.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
+assets/fds_evac_guide/Validation/HUT_Library/HUT_Library_K10_L05.fds	0	1364.50	6	120		e2b2cb2800cd4c8e235ca9689701a37828376263905ff7e234f3bf3ba235d698
 assets/fds_evac_guide/Validation/OfficeStairs/OfficeS_CORR_0p2_L0p5.fds	3	36.12	1	0	no agents to place	0ef3a6f4be20518a56c77723b1c95f6e8d821c4f6b0320301f9a4d71165dd046
 assets/fds_evac_guide/Validation/OfficeStairs/OfficeS_CORR_0p5_L0p5.fds	3	36.12	1	0	no agents to place	0ef3a6f4be20518a56c77723b1c95f6e8d821c4f6b0320301f9a4d71165dd046
 assets/fds_evac_guide/Validation/OfficeStairs/OfficeS_CORR_0p6_L0p5.fds	3	36.12	1	0	no agents to place	0ef3a6f4be20518a56c77723b1c95f6e8d821c4f6b0320301f9a4d71165dd046
@@ -132,15 +132,15 @@ assets/fds_evac_guide/Verification/DistributionVerification/Dist_5.fds	0	608.00	
 assets/fds_evac_guide/Verification/DistributionVerification/Dist_6.fds	0	608.00	1	1000		02ed6484080ef2af1d191691d90e4ba228b0f8d47d1fee728eb4e5ea284321e4
 assets/fds_evac_guide/Verification/DistributionVerification/Dist_7and9.fds	0	608.00	1	1000		7c32941b7dad818136c3c9e2a0d05c1350240f29190e81b650673c0c74ca93fc
 assets/fds_evac_guide/Verification/DistributionVerification/Dist_8.fds	0	608.00	1	1000		75e411fe42e5ed92964f3210e218e10a309c4511f92302cb894bc004fc1b34c6
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo2_A.fds	0	82.02	2	10		60a5e79f026886cbdd8b94606636ba73112b44f78b0595d9422561f78e44cf51
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_A.fds	0	1900.44	4	100		00db2ed27cb5f8e0ed94307c6495ae64ca1b08db944573f6262f334172ce799a
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_B.fds	0	1900.44	4	100		00db2ed27cb5f8e0ed94307c6495ae64ca1b08db944573f6262f334172ce799a
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Ca.fds	0	1900.44	4	100		2b311241c3842a5e5c9b5072ee069af07901e5d411e7ec7b2ddfde2fc67f9e3d
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Cb.fds	0	1900.44	4	100		2b311241c3842a5e5c9b5072ee069af07901e5d411e7ec7b2ddfde2fc67f9e3d
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Cc.fds	0	1900.44	4	100		2b311241c3842a5e5c9b5072ee069af07901e5d411e7ec7b2ddfde2fc67f9e3d
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Da.fds	0	1900.44	4	100		2b311241c3842a5e5c9b5072ee069af07901e5d411e7ec7b2ddfde2fc67f9e3d
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Db.fds	0	1900.44	4	100		2b311241c3842a5e5c9b5072ee069af07901e5d411e7ec7b2ddfde2fc67f9e3d
-assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Dc.fds	0	1900.44	4	100		2b311241c3842a5e5c9b5072ee069af07901e5d411e7ec7b2ddfde2fc67f9e3d
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo2_A.fds	0	82.00	2	10		52544cb16b611d06591fe74f92034875f9500d18172ca0f34d65889be39f8c29
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_A.fds	0	1856.50	4	100		0fc98470c0124ad20da2ae387e53c010901d95e627be5e7d56dab87790d1ba63
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_B.fds	0	1856.50	4	100		0fc98470c0124ad20da2ae387e53c010901d95e627be5e7d56dab87790d1ba63
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Ca.fds	0	1856.50	4	100		88d1f24e0b34aba418b6fcec47c69bfcd31d0a0de18e63295574eb3a2735a9d3
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Cb.fds	0	1856.50	4	100		88d1f24e0b34aba418b6fcec47c69bfcd31d0a0de18e63295574eb3a2735a9d3
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Cc.fds	0	1856.50	4	100		88d1f24e0b34aba418b6fcec47c69bfcd31d0a0de18e63295574eb3a2735a9d3
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Da.fds	0	1856.50	4	100		88d1f24e0b34aba418b6fcec47c69bfcd31d0a0de18e63295574eb3a2735a9d3
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Db.fds	0	1856.50	4	100		88d1f24e0b34aba418b6fcec47c69bfcd31d0a0de18e63295574eb3a2735a9d3
+assets/fds_evac_guide/Verification/DoorAlgorithm/DoorAlgo_Dc.fds	0	1856.50	4	100		88d1f24e0b34aba418b6fcec47c69bfcd31d0a0de18e63295574eb3a2735a9d3
 assets/fds_evac_guide/Verification/FED_Test/fed_CO2_verificationA.fds	0	9.00	1	1		dc438505cf6846fd6193f4458867df9210e017f6e06e468e7964df73106fd781
 assets/fds_evac_guide/Verification/FED_Test/fed_CO2_verificationB.fds	0	9.00	1	1		dc438505cf6846fd6193f4458867df9210e017f6e06e468e7964df73106fd781
 assets/fds_evac_guide/Verification/FED_Test/fed_CO2_verificationC.fds	0	9.00	1	1		dc438505cf6846fd6193f4458867df9210e017f6e06e468e7964df73106fd781
@@ -172,9 +172,9 @@ assets/fds_evac_guide/Verification/SmokeSpeed_Test/soot_vs_speed_500C.fds	0	20.0
 assets/fds_evac_guide/Verification/SmokeSpeed_Test/soot_vs_speed_A.fds	0	20.00	1	1		dddf1b7b1fcb235d2ddc6e2f0cb29db1aa422b1eba157e7ff04b8b2fb11fcfb0
 assets/fds_evac_guide/Verification/imo/CompTest1.fds	0	120.00	1	1		72d270a0b3a73e3d713cbf5c66bc2ad05b0eb71f77b09b0be98de8e1b9f46c9b
 assets/fds_evac_guide/Verification/imo/CompTest10.fds	0	185.95	2	23		457674c42274b64edf80868a67307ce5b2a7f5c80d9ac0fc74b3794d59303418
-assets/fds_evac_guide/Verification/imo/CompTest10B.fds	0	196.33	2	23		5fb541224b485d283bfb14394fe97f6cdca3dd75078d5d2dc29eb7f44d3a8ce1
+assets/fds_evac_guide/Verification/imo/CompTest10B.fds	0	186.05	2	23		67d5aa55c53ec4865d16bbaa00e5abd18d5864ffd37b9be4d7acfc421e33aa8b
 assets/fds_evac_guide/Verification/imo/CompTest11.fds	0	126.50	1	150		4202bfca4310a5a62adf08ce1cd1fdaf2e6331041cc0141178a711a75f12fb01
-assets/fds_evac_guide/Verification/imo/CompTest2.fds	3	76.68	1	1	dropped &DOOR; dropped &EXIT	e5eea8592e914d7762a8f3187f5367efd70ba77de31a63e8881fe16a1630882e
+assets/fds_evac_guide/Verification/imo/CompTest2.fds	3	77.00	1	1	dropped &DOOR; dropped &EXIT	e5eea8592e914d7762a8f3187f5367efd70ba77de31a63e8881fe16a1630882e
 assets/fds_evac_guide/Verification/imo/CompTest2b.fds	0	94.00	1	1		dea6f47054ec23935259668a9c209cd6e96e495821aa0ec9338db5b856f997d8
 assets/fds_evac_guide/Verification/imo/CompTest2c.fds	0	120.00	1	1		72d270a0b3a73e3d713cbf5c66bc2ad05b0eb71f77b09b0be98de8e1b9f46c9b
 assets/fds_evac_guide/Verification/imo/CompTest2c_ESC.fds	0	120.00	1	1		72d270a0b3a73e3d713cbf5c66bc2ad05b0eb71f77b09b0be98de8e1b9f46c9b
@@ -200,7 +200,7 @@ assets/fed_incap_heat_100c/fed_incap_heat_100c.fds	3	900.00	0	0	no exit found; n
 assets/fed_incap_heat_150c/fed_incap_heat_150c.fds	3	900.00	0	0	no exit found; no agents to place	8a6142416114033b569f92ad949a470068f6b0521c72b4a2ba9b1ac5bd7eece5
 assets/fed_incap_heat_200c/fed_incap_heat_200c.fds	3	900.00	0	0	no exit found; no agents to place	8a6142416114033b569f92ad949a470068f6b0521c72b4a2ba9b1ac5bd7eece5
 assets/fed_slice_height/fed_slice_height.fds	3	100.00	0	0	no exit found; no agents to place	6119148a6e1e2f68d474d9bdad9988c3b85115c57a84ad063f78b39cbc51dcbc
-assets/fic_vs_fed_speed/fic_vs_fed_speed.fds	3	200.00	0	0	no exit found; no agents to place	050826c3b0c345a9353b11736e45758232445e985e6013119323132dc0e8980a
+assets/fic_vs_fed_speed/fic_vs_fed_speed.fds	3	196.86	0	0	no exit found; no agents to place	050826c3b0c345a9353b11736e45758232445e985e6013119323132dc0e8980a
 assets/heat_integrated_intensity/heat_integrated_intensity.fds	3	4.00	0	0	no exit found; no agents to place	21ccc17981d324e76a7a00a6bb6e4a7e794b03df6ce94ebc69abdc2752fd42be
 assets/heat_only_no_soot/heat_only_no_soot.fds	3	900.00	0	0	no exit found; no agents to place	04138a46de74e5edad1d8e2e22b2db49061012d3fc0f2aca6fbfc6b1239667f6
 assets/heat_radiometer/heat_radiometer_burner.fds	3	24.00	10	100	spawn area spawn_1 (15.000 m2) holds about 59 agents of radius 0.2 m, but 100 are requested: pass --agents N with a smaller N, or enlarge the walkable area	73c6c3e0b08458769167ff2200067f7c534f6726872ab05e845b8e3bac5c04bf

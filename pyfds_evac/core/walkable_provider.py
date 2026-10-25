@@ -184,6 +184,14 @@ def _thicken_dirs(record: NamelistRecord, axes, thicken: bool) -> list[bool]:
     ]
 
 
+def _touches_face(spans, clipped) -> bool:
+    """The record only touches this mesh's face in x or y: the neighbour owns it."""
+    return any(
+        hi - lo > _GRID_TOL and chi - clo <= _GRID_TOL
+        for (lo, hi), (clo, chi) in zip(spans[:2], clipped[:2])
+    )
+
+
 def _snap_in_mesh(record, axes, *, hole: bool, thicken: bool):
     """``(SnappedBox | None, dropped)`` of *record* on one mesh's grid."""
     box6 = record.box6()
@@ -191,6 +199,8 @@ def _snap_in_mesh(record, axes, *, hole: bool, thicken: bool):
     if any(hi < a.start or lo > a.end for a, (lo, hi) in zip(axes, spans)):
         return None, False
     clipped = [(max(lo, a.start), min(hi, a.end)) for a, (lo, hi) in zip(axes, spans)]
+    if _touches_face(spans, clipped):
+        return None, False
     dirs = [False] * 3 if hole else _thicken_dirs(record, axes, thicken)
     used = 2 if hole else 3
     idx = [_snap_axis(axes[k], *clipped[k], dirs[k]) for k in range(used)]
