@@ -23,6 +23,11 @@ EXTERNAL_DATA = (
             "T_JUNCTION_FDS", SCIEBO / "fds-evac-data" / "t_junction" / "fire_2MW_PVC"
         )
     ),
+    Path(
+        os.environ.get(
+            "ISO_TEST_8_FIRE_FDS", SCIEBO / "fds-evac-data" / "iso_test_8_fire"
+        )
+    ),
 )
 
 
