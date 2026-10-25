@@ -100,3 +100,17 @@ def test_progress_events_report_the_evacuated_share_rounded_down(tmp_path):
     counts = [e.evacuated for e in events]
     assert counts == sorted(counts), "evacuated must not decrease"
     assert counts[-1] <= result.agents_evacuated
+
+
+def test_no_event_is_emitted_after_the_last_agent_leaves():
+    # The run loop stops when the last agent leaves, before the progress
+    # sample: a one-agent run never reports pct > 0 (ScenarioResult has the
+    # final counts).
+    scenario = load_scenario("assets/ISO-table21")
+    events: list[ProgressEvent] = []
+    result = run_scenario(scenario, seed=420, progress_callback=events.append)
+    result.cleanup()
+
+    assert result.success and result.total_agents == 1
+    assert events[-1].evacuated == 0
+    assert events[-1].pct == 0

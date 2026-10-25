@@ -1092,6 +1092,9 @@ class ProgressEvent:
     started, and ``pct`` is the integer evacuation percentage.
     ``incapacitated`` counts agents incapacitated so far and ``not_spawned``
     flow agents still to enter (provisional fields, 0.3.0).
+    Samples are taken while agents remain: the run stops when the last one
+    leaves, so the last event can have ``evacuated < total``. The final
+    counts are in ``ScenarioResult``.
     """
 
     evacuated: int

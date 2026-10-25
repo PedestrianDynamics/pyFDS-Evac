@@ -305,6 +305,13 @@ def test_a_return_counts_in_the_window_up_to_ten_seconds(audit):
     assert metrics["returns_within_window"] == 1
 
 
+def test_a_return_at_exactly_ten_seconds_counts_in_the_window(audit):
+    # The window is inclusive: since_s <= RETURN_WINDOW_S (10.0 s).
+    rows = [_row(0, 1, "A", "B"), _row(10.0, 1, "B", "A")]
+    metrics = audit._route_metrics(rows, n_agents=1)
+    assert metrics["returns_within_window"] == 1
+
+
 def test_override_routing_sets_the_key_and_keeps_the_rest(audit):
     config = {"routing": {"w_smoke": 5.0}, "exits": {}}
     copy = audit.override_routing(config, "tau_deadband", 0.0)
