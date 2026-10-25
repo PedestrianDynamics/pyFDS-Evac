@@ -268,11 +268,17 @@ time of 30 s for standard evacuation strategies (§3.2.2), and detection comes
 before that. Add both through `premovement_offset_s`; a preset alone
 understates RSET.
 
-Two hospital terms are not modelled: the 120 s per patient per 2 staff that
-follows the 60 s staff response, and the "1800 s or as per specific
-requirements, whichever is the greater" for occupants who cannot be moved
-(`cvm2_hospital_remote` uses 1800 s). Early childhood centres are not in
-Table 3.3 and have no preset.
+Three terms of the table are not modelled. The hospital term of 120 s per
+patient per 2 staff that follows the 60 s staff response is left out.
+`cvm2_hospital_remote` is the plain remote row (1800 s). The row for
+occupants who cannot be moved ("1800 s or as per specific requirements,
+whichever is the greater") has no preset: set `premovement_distribution` to
+`"constant"` and `premovement_param_a` to at least 1800 s from the project's
+requirements. The focused-activities row starts travel after detection and
+notification "or when fire in their space reaches 500 kW, whichever occurs
+first"; the 500 kW alternative is not modelled, so a detection and
+notification offset set through `premovement_offset_s` is not cut short. Early childhood centres
+are not in Table 3.3 and have no preset.
 
 ## What is lost
 
@@ -351,3 +357,7 @@ agents walk.
 Korhonen, T. (2021). *Fire Dynamics Simulator with Evacuation: FDS+Evac.
 Technical Reference and User's Guide* (FDS 6.7.6, Evac 2.6.0-draft). VTT Technical
 Research Centre of Finland.
+
+MBIE (2012). *Commentary for Verification Method C/VM2*. Ministry of
+Business, Innovation and Employment, Wellington, December 2012. ISBN
+978-0-478-39942-4.

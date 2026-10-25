@@ -205,10 +205,12 @@ def _apply_premovement_preset(params: dict, dist_id: Any) -> dict:
     The preset names a row of C/VM2 Table 3.3; it cannot be combined with
     the distribution keys or with ``use_premovement: false``.
     """
-    name = params.get("premovement_preset")
-    if name is None:
+    if "premovement_preset" not in params:
         return params
-    if name not in CVM2_PREMOVEMENT_PRESETS:
+    name = params["premovement_preset"]
+    if name is None:
+        return {k: v for k, v in params.items() if k != "premovement_preset"}
+    if not isinstance(name, str) or name not in CVM2_PREMOVEMENT_PRESETS:
         raise ValueError(
             f"Distribution {dist_id!r}: unknown premovement_preset {name!r}; "
             f"one of {sorted(CVM2_PREMOVEMENT_PRESETS)}"
@@ -222,12 +224,13 @@ def _apply_premovement_preset(params: dict, dist_id: Any) -> dict:
             f"with {', '.join(clash)}"
         )
     seconds = CVM2_PREMOVEMENT_PRESETS[name]
-    _logger.info(
-        "Distribution '%s': pre-movement %s, constant %.0f s (C/VM2 Table 3.3)",
-        dist_id,
-        name,
-        seconds,
-    )
+    if not params.get("use_flow_spawning", False):
+        _logger.info(
+            "Distribution '%s': pre-movement %s, constant %.0f s (C/VM2 Table 3.3)",
+            dist_id,
+            name,
+            seconds,
+        )
     rest = {k: v for k, v in params.items() if k != "premovement_preset"}
     return {
         **rest,

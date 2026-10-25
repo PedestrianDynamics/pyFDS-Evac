@@ -66,6 +66,32 @@ def test_preset_conflicts_are_errors(clash):
         _apply_premovement_preset(params, "d0")
 
 
+def test_null_preset_is_dropped_so_the_default_applies():
+    params = {"number": 3, "premovement_preset": None}
+    assert _apply_premovement_preset(params, "d0") == {"number": 3}
+
+
+@pytest.mark.parametrize("name", [["cvm2_office_origin"], {}, 30])
+def test_non_string_preset_is_a_value_error(name):
+    with pytest.raises(ValueError, match="d0.*premovement_preset"):
+        _apply_premovement_preset({"premovement_preset": name}, "d0")
+
+
+def test_preset_is_logged_once(caplog):
+    with caplog.at_level("INFO", logger="pyfds_evac.core.simulation_init"):
+        _apply_premovement_preset({"premovement_preset": "cvm2_office_origin"}, "d0")
+    lines = [r for r in caplog.records if "C/VM2 Table 3.3" in r.getMessage()]
+    assert len(lines) == 1
+    assert "cvm2_office_origin" in lines[0].getMessage()
+
+
+def test_preset_is_not_logged_with_flow_spawning(caplog):
+    params = {"premovement_preset": "cvm2_office_origin", "use_flow_spawning": True}
+    with caplog.at_level("INFO", logger="pyfds_evac.core.simulation_init"):
+        _apply_premovement_preset(params, "d0")
+    assert not [r for r in caplog.records if "C/VM2 Table 3.3" in r.getMessage()]
+
+
 def test_unknown_preset_lists_the_names():
     with pytest.raises(ValueError, match="cvm2_office_origin"):
         _apply_premovement_preset({"premovement_preset": "office"}, "d0")
@@ -84,8 +110,8 @@ def test_offset_and_seed_are_kept():
     assert result["premovement_seed"] == 4
 
 
-def _journey_scenario(params: dict) -> Scenario:
-    """A 10 x 2 m corridor, one agent, a journey to the west exit."""
+def _journey_scenario(params: dict, journeys: bool = True) -> Scenario:
+    """A 10 x 2 m corridor, one agent, optionally a journey to the west exit."""
     raw = {
         "config": {
             "simulation_settings": {
@@ -127,6 +153,8 @@ def _journey_scenario(params: dict) -> Scenario:
             {"from": "jps-distributions_0", "to": "E", "journey_id": "journey_0"}
         ],
     }
+    if not journeys:
+        del raw["journeys"], raw["transitions"]
     sim = raw["config"]["simulation_settings"]["simulationParams"]
     return Scenario(
         raw=raw,
@@ -158,8 +186,9 @@ def _start_and_removal(scenario: Scenario) -> tuple[float, float]:
     return rows[0][1], rows[-1][0] / fps
 
 
-def test_preset_applies_in_a_run():
-    scenario = _journey_scenario({"premovement_preset": "cvm2_office_origin"})
+@pytest.mark.parametrize("journeys", [True, False], ids=["journeys", "no-journeys"])
+def test_preset_applies_in_a_run(journeys):
+    scenario = _journey_scenario({"premovement_preset": "cvm2_office_origin"}, journeys)
     x_start, removed = _start_and_removal(scenario)
     walk = (x_start - EXIT.bounds[2]) / V0
     assert removed == pytest.approx(30.0 + walk, abs=0.15)
