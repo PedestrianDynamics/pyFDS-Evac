@@ -76,6 +76,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   two-door room the route choice now picks each agent's door instead of a
   journey that listed both doors. The study page
   (`docs/study-schroeder2020.md`) shows a rerun (#900).
+- `pyfds-evac init` writes `journeys_v2: []` instead of empty `journeys`
+  and `transitions`; the docs describe `journeys_v2` as the journey format
+  and the old shape as still read (#900).
 
 ### Fixed
 
