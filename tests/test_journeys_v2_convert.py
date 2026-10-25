@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+
 from pyfds_evac.core.journeys_v2 import (
     JourneyConversionError,
     convert_legacy_journeys,
@@ -113,7 +114,7 @@ def test_a_patrol_loop_becomes_loop():
 
 def test_a_loop_into_the_middle_is_an_error():
     pairs = [("d0", "c1"), ("c1", "c2"), ("c2", "c3"), ("c3", "c2")]
-    with pytest.raises(JourneyConversionError, match="j"):
+    with pytest.raises(JourneyConversionError, match="journey j returns to c2"):
         convert_legacy_journeys(_deck(["d0", "c1", "c2", "c3"], pairs))
 
 
@@ -149,3 +150,132 @@ def test_the_command_writes_the_file_and_prints_the_notes(tmp_path, capsys):
     assert main([str(src), "-o", str(dst)]) == 0
     assert json.loads(dst.read_text(encoding="utf-8"))["journeys_v2"] == []
     assert capsys.readouterr().out.startswith("d0:")
+
+
+def _dest(*shares):
+    return {
+        "destinations": [{"target": t, "percentage": p} for t, p in shares],
+    }
+
+
+def _agents_per_route(weights, count):
+    """The split of `_create_journeys_with_percentages`: rounded shares, the
+    last route takes the rest."""
+    total = sum(weights)
+    left, split = count, []
+    for weight in weights[:-1]:
+        taken = min(round(count * weight / total), left)
+        split.append(taken)
+        left -= taken
+    return [*split, left]
+
+
+def _shared_deck(shares, count_of_doors=1):
+    doors = [f"jps-checkpoints_{n}" for n in range(count_of_doors)]
+    routing = {door: {"j": _dest(*shares)} for door in doors}
+    pairs = [("d0", door) for door in doors]
+    pairs += [(door, target) for door in doors for target, _ in shares]
+    stages = ["d0", *doors, *(target for target, _ in shares)]
+    return _deck(stages, pairs, routing)
+
+
+@pytest.mark.parametrize(
+    ("shares", "doors", "count"),
+    [
+        ((("exit_a", 1), ("exit_b", 5)), 1, 15),
+        ((("exit_a", 50), ("exit_b", 50)), 3, 15),
+        ((("exit_a", 1), ("exit_b", 99)), 3, 40),
+    ],
+)
+def test_the_agent_split_is_the_same_after_conversion(shares, doors, count):
+    deck = _shared_deck(shares, doors)
+    old = [pct for _ in range(doors) for _, pct in shares]
+    out, _ = convert_legacy_journeys(deck)
+    new = [weight for _, weight in _routes(out)["d0"]]
+    assert _agents_per_route(new, count) == _agents_per_route(old, count)
+
+
+def test_weights_stay_as_written_when_scaling_is_not_exact():
+    out, _ = convert_legacy_journeys(_shared_deck((("exit_a", 1), ("exit_b", 5))))
+    assert [w for _, w in _routes(out)["d0"]] == [1.0, 5.0]
+
+
+def test_a_start_area_with_a_choice_and_a_route_is_an_error():
+    deck = _deck(["d0", "exit_a", "exit_b"], [("d0", "exit_a"), ("d0", "exit_b")])
+    deck["journeys"].append({"id": "k", "stages": ["d0", "exit_a"]})
+    deck["transitions"].append({"from": "d0", "to": "exit_a", "journey_id": "k"})
+    with pytest.raises(JourneyConversionError, match=r"d0.*\bj\b.*\bk\b"):
+        convert_legacy_journeys(deck)
+
+
+def test_shares_totalling_zero_are_an_error():
+    deck = _shared_deck((("exit_a", 0), ("exit_b", 0)))
+    with pytest.raises(JourneyConversionError, match="d0.*total 0"):
+        convert_legacy_journeys(deck)
+
+
+def test_exit_choice_is_decided_per_start_area():
+    deck = _deck(
+        ["d0", "d1", "c1", "exit_a", "exit_b"],
+        [("d0", "exit_a"), ("d1", "c1"), ("c1", "exit_a"), ("c1", "exit_b")],
+        dists=("d0", "d1"),
+    )
+    out, notes = convert_legacy_journeys(deck)
+    assert _routes(out) == {"d0": [(["exit_a"], 100.0)], "d1": []}
+    assert [n.split(":")[0] for n in notes] == ["d1"]
+
+
+def test_stale_journey_weights_are_dropped():
+    deck = _deck(["d0", "exit_a", "exit_b"], [("d0", "exit_a"), ("d0", "exit_b")])
+    deck["distributions"]["d0"]["journey_weights"] = [{"journey_id": "x", "weight": 1}]
+    out, _ = convert_legacy_journeys(deck)
+    assert "journey_weights" not in out["distributions"]["d0"]
+
+
+def test_a_file_with_both_formats_is_an_error():
+    deck = _deck(["d0", "exit_a"], [("d0", "exit_a")])
+    deck["journeys_v2"] = [{"id": "x", "sequence": ["exit_a"]}]
+    with pytest.raises(JourneyConversionError, match="journeys and journeys_v2"):
+        convert_legacy_journeys(deck)
+
+
+def test_a_loop_over_one_stage_is_an_error():
+    deck = _deck(["d0", "c1"], [("d0", "c1"), ("c1", "c1")])
+    with pytest.raises(JourneyConversionError, match="journey j loops over a single"):
+        convert_legacy_journeys(deck)
+
+
+def test_a_loop_back_from_an_exit_is_an_error():
+    deck = _deck(
+        ["d0", "c1", "exit_a"], [("d0", "c1"), ("c1", "exit_a"), ("exit_a", "c1")]
+    )
+    with pytest.raises(JourneyConversionError, match="journey j loops back from"):
+        convert_legacy_journeys(deck)
+
+
+def test_a_taken_id_is_skipped_for_the_second_route():
+    deck = _shared_deck((("exit_a", 1), ("exit_b", 99)))
+    deck["distributions"]["d1"] = {"parameters": {}}
+    deck["journeys"].insert(0, {"id": "j_1", "stages": ["d1", "exit_a"]})
+    deck["transitions"].append({"from": "d1", "to": "exit_a", "journey_id": "j_1"})
+    out, _ = convert_legacy_journeys(deck)
+    assert [j["id"] for j in out["journeys_v2"]] == ["j_1", "j", "j_2"]
+
+
+def test_the_command_reports_an_error_and_writes_nothing(tmp_path, capsys):
+    src, dst = tmp_path / "old.json", tmp_path / "new.json"
+    deck = _deck(["d0", "c1", "c2"], [("d0", "c1"), ("c1", "c2"), ("c2", "c2")])
+    src.write_text(json.dumps(deck), encoding="utf-8")
+    assert main([str(src), "-o", str(dst)]) == 1
+    assert capsys.readouterr().err.startswith("error: journey j")
+    assert not dst.exists()
+
+
+def test_the_command_reports_a_missing_or_invalid_input(tmp_path, capsys):
+    dst = tmp_path / "new.json"
+    assert main([str(tmp_path / "missing.json"), "-o", str(dst)]) == 1
+    bad = tmp_path / "bad.json"
+    bad.write_text("{", encoding="utf-8")
+    assert main([str(bad), "-o", str(dst)]) == 1
+    assert capsys.readouterr().err.count("error:") == 2
+    assert not dst.exists()

@@ -3,7 +3,7 @@
 The old shape is ``journeys`` / ``transitions`` / ``waypoint_routing``. The
 converter writes one ``journeys_v2`` entry per distinct route a start area
 walks and lists the entries in that start area's ``journey_weights``, weights
-summing to 100. Exit shares at checkpoints become one weighted entry per
+summing to 100 where scaling keeps the agent split unchanged. Exit shares at checkpoints become one weighted entry per
 branch, a patrol that returns to its first checkpoint becomes ``"loop": true``,
 and a start area that left the exit to the route choice gets no journey.
 
@@ -15,6 +15,7 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import math
 import sys
 from collections import defaultdict
 from pathlib import Path
@@ -63,11 +64,13 @@ def convert_legacy_journeys(raw: dict) -> tuple[dict, list[str]]:
         )
     builder = _Builder({journey["id"] for journey in out.get("journeys") or []})
     distributions = out.get("distributions") or {}
+    for distribution in distributions.values():
+        distribution.pop("journey_weights", None)
     for journey in out.get("journeys") or []:
         for start in _start_areas(journey, distributions):
             builder.add(journey, start, _routes_from(journey, start, out))
     for start, pairs in builder.weights.items():
-        distributions[start]["journey_weights"] = _scaled(pairs)
+        distributions[start]["journey_weights"] = _scaled(start, pairs)
     _drop_old_keys(out)
     out["journeys_v2"] = builder.entries
     return out, builder.notes
@@ -201,14 +204,24 @@ class _Builder:
         self.entries: list[dict[str, Any]] = []
         self.notes: list[str] = []
         self.weights: dict[str, list[tuple[str, float]]] = defaultdict(list)
+        self._journey_of: dict[str, str] = {}
+        self._chooser_of: dict[str, str] = {}
         self._taken = taken_ids
         self._ids: dict[tuple, str] = {}
 
     def add(self, journey: dict, start: str, routes: list[_Route] | None) -> None:
         if routes is None:
             self.notes.append(_choice_note(start, journey["id"]))
-            return
-        for sequence, loop, weight in routes:
+            self._chooser_of.setdefault(start, journey["id"])
+        else:
+            self._journey_of.setdefault(start, journey["id"])
+        if start in self._chooser_of and start in self._journey_of:
+            raise JourneyConversionError(
+                f"start area {start}: journey {self._chooser_of[start]} lets the "
+                f"route choice pick the exit, but journey {self._journey_of[start]} "
+                "also starts there; journeys_v2 cannot express both"
+            )
+        for sequence, loop, weight in routes or []:
             self.weights[start].append(
                 (self._entry_id(journey, sequence, loop), weight)
             )
@@ -245,11 +258,22 @@ class _Builder:
         return f"{journey_id}_{number}"
 
 
-def _scaled(pairs: list[tuple[str, float]]) -> list[dict[str, Any]]:
-    """``journey_weights`` entries with the weights scaled to sum to 100."""
+def _scaled(start: str, pairs: list[tuple[str, float]]) -> list[dict[str, Any]]:
+    """``journey_weights`` entries with the weights scaled to sum to 100.
+
+    The weights stay as they are unless the factor is a power of two: only
+    then is the product exact, so the runtime's rounded agent split is the
+    same as before.
+    """
     total = sum(weight for _, weight in pairs)
+    if total <= 0.0:
+        raise JourneyConversionError(
+            f"start area {start}: the shares of its journeys total 0"
+        )
+    factor = 100.0 / total
+    exact = math.frexp(factor)[0] == 0.5 and factor * total == 100.0
     return [
-        {"journey_id": journey_id, "weight": weight * 100.0 / total}
+        {"journey_id": journey_id, "weight": weight * factor if exact else weight}
         for journey_id, weight in pairs
     ]
 
@@ -263,10 +287,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("config", help="scenario JSON with journeys / transitions")
     parser.add_argument("-o", "--output", required=True, help="file to write")
     args = parser.parse_args(argv)
-    raw = json.loads(Path(args.config).read_text(encoding="utf-8"))
     try:
+        raw = json.loads(Path(args.config).read_text(encoding="utf-8"))
         converted, notes = convert_legacy_journeys(raw)
-    except JourneyConversionError as exc:
+    except (OSError, json.JSONDecodeError, JourneyConversionError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     Path(args.output).write_text(
