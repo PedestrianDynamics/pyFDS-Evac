@@ -61,6 +61,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - A `journeys_v2` scenario may split a start area over several journeys by
   `journey_weights`, and a journey may set `"loop": true` to repeat its
   sequence; before, such start areas were skipped (#900).
+- `pyfds-evac-convert CONFIG -o OUT` rewrites a scenario's old `journeys` /
+  `transitions` / `waypoint_routing` as `journeys_v2`, the format JuPedSim
+  Web reads; exit shares become weighted journeys, a patrol loop becomes
+  `"loop": true`, and a start area that left the exit to the route choice
+  gets no journey (#900).
 
 ### Fixed
 
