@@ -186,9 +186,9 @@ def _build_fed_model(opts: Any, log: Logger):
     if not inventory.supports_default_fed():
         # Not an error: plenty of cases legitimately carry no toxic gas data,
         # and the run continues with smoke-speed only. But the result then has
-        # no FED in it at all, and every FED column reads zero, which looks
-        # exactly like a survivable fire. Say so rather than letting the user
-        # infer tenability from a model that never ran.
+        # no FED in it at all, which reads like a survivable fire. Say so
+        # rather than letting the user infer tenability from a model that
+        # never ran.
         present = sorted(inventory.canonical_slice_names())
         missing = sorted(set(GAS_SLICES).difference(present))
         _logger.warning(messages.fed_without_gases(opts.fds_dir, missing))

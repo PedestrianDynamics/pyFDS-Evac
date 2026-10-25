@@ -549,7 +549,7 @@ def _warnings(
     """The setup warnings of the run, in the order the run logs them."""
     fds_dir = option(opts, "fds_dir")
     found: list[str] = []
-    seen: set[str] = set()
+    seen: set[tuple[str, float]] = set()
     overrun = horizon_overrun(opts, max_time, fds)
     if overrun is not None and option(opts, "allow_fds_horizon_hold"):
         found.append(messages.horizon_hold(overrun))
@@ -565,6 +565,7 @@ def _warnings(
     found += _heat_warnings(opts, m)
     if m.heat_fed:
         found += height_warnings(opts, fds, _heat_quantities(opts), seen)
+        found += _heat_layer_warnings(opts, fds, seen)
     if m.signs == 0:
         found.append(messages.NO_SIGNS)
     if m.visibility == "clear-air" and fds_dir and not option(opts, "smoke_blind"):
@@ -591,6 +592,16 @@ def _heat_quantities(opts: Any) -> list[str]:
     if option(opts, "heat_radiant_source") == "integrated-intensity":
         quantities.append(INTENSITY_QUANTITY)
     return quantities
+
+
+def _heat_layer_warnings(
+    opts: Any, fds: Any, seen: set[tuple[str, float]]
+) -> list[str]:
+    """The height warning of the second TEMPERATURE slice of the layer regime."""
+    height = option(opts, "heat_layer_height")
+    if option(opts, "heat_regime") != "layer" or height is None:
+        return []
+    return height_warnings(opts, fds, [TEMPERATURE_QUANTITY], seen, height)
 
 
 def _heat_warnings(opts: Any, m: Mechanisms) -> list[str]:

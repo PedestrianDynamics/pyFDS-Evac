@@ -422,6 +422,20 @@ def heat_scenario():
             "--heat-fed-threshold",
             "0.5",
         ],
+        [
+            "--enable-heat-fed",
+            "--allow-fds-horizon-hold",
+            "--heat-fed-method",
+            "total-flux",
+            "--heat-regime",
+            "layer",
+            "--heat-layer-height",
+            "0.4",
+            "--heat-view-factor",
+            "0.5",
+            "--heat-layer-emissivity",
+            "0.9",
+        ],
     ],
 )
 def test_heat_only_case_warnings_are_predicted(caplog, heat_scenario, argv):

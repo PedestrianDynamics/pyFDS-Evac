@@ -136,8 +136,8 @@ preference, not a filter: a case with one slice of a quantity uses it whatever
 its height, and a mismatch never fails the run. A case you inherit often
 carries a single slice at whatever height its author chose, so you can end up
 sampling floor-level CO for standing agents. A warning fires past 0.2 m, once
-per quantity and run. The common case, a request of 1.6 m on a deck with a
-single slice at 2.0 m, is 0.4 m away and warns: a 2.0 m slice describes a
+per quantity, requested height and run. The common case, a request of 1.6 m
+on a deck with a single slice at 2.0 m, is 0.4 m away and warns: a 2.0 m slice describes a
 different part of the smoke layer than the 1.6 m of FDS+Evac
 ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)). Beyond
 0.2 m you see:

@@ -265,22 +265,28 @@ def gas_quantities() -> tuple[str, ...]:
 
 
 def height_warnings(
-    opts: Any, fds: Any, quantities: Iterable[str], seen: set[str]
+    opts: Any,
+    fds: Any,
+    quantities: Iterable[str],
+    seen: set[tuple[str, float]],
+    requested: float | None = None,
 ) -> list[str]:
-    """The slice-height warnings of *quantities*, each quantity once per run.
+    """The slice-height warnings of *quantities*, each once per requested height.
 
-    *seen* holds the quantities already predicted; the run logs a quantity
-    once however many models read it.
+    *requested* defaults to ``--smoke-slice-height``.  *seen* holds the
+    (quantity, height) pairs already predicted; the run logs a pair once
+    however many models read it.
     """
     fds_dir = option(opts, "fds_dir")
-    requested = option(opts, "smoke_slice_height")
+    if requested is None:
+        requested = option(opts, "smoke_slice_height")
     if not fds_dir or requested is None:
         return []
     found = []
     for quantity in quantities:
-        if quantity in seen:
+        if (quantity, requested) in seen:
             continue
-        seen.add(quantity)
+        seen.add((quantity, requested))
         text = fds.height_mismatch(quantity, requested, fds_dir)
         if text is not None:
             found.append(text)
