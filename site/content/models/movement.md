@@ -115,8 +115,9 @@ every case. A deck that omits `strength_neighbor_repulsion` or
 ([#757](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/757)).
 
 **`SocialForceModel`.** It clears the 50 % counterflow in all 3 seeds
-(mean 86 s) by pushing. The peak speed is 2.65 m/s at a desired speed of
-1.2 m/s, about 2.2 times the desired speed, and 2.41 m/s on Familiarity 20.
+(mean 86 s) by pushing. With hard journeys it clears both counterflow
+cases ([below](#counterflow-with-hard-journeys)). The peak speed is 2.65 m/s
+at a desired speed of 1.2 m/s, about 2.2 times the desired speed, and 2.41 m/s on Familiarity 20.
 The friction is 0 in every run
 ([#635](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/635)). On
 HUT, 4 of 13 runs complete. One meets the deadlock criterion. In the other
@@ -152,6 +153,37 @@ model; its choice is under review in
 pyFDS-Evac
 ([#759](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/759)).
 A deck that names it stops with a `ValueError`.
+
+### Counterflow with hard journeys
+
+Since #504 the counterflow decks keep their counterflow only with their
+two journeys, each given its transition and `"allocation": "hard"`. The
+decks are Iso-06-counterflow-50 (150 agents) and -100 (200 agents) of
+jupedsim-web-community (`82404ee`), clear air, radius 0.15 m, desired
+speed 1.2 m/s, seeds 1–3, run at `7689907e`
+([#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745)). The
+closest pair is the smallest centre distance over all frames, in units
+of 2r; the peak speed is the largest frame-to-frame speed of any agent.
+
+| Model | Case | Result (seeds 1 / 2 / 3) | Closest pair | Peak speed |
+|---|---|---|---|---|
+| CFSM | 50 % | `deadlock` at 189 / 197 / 250 s; 1, 0, 0 of 150 out | 1.00 × 2r | 1.20 m/s |
+| CFSM | 100 % | `deadlock` at 180 / 238 / 194 s; 0 of 200 out | 1.00 × 2r | 1.20 m/s |
+| SFM | 50 % | 150/150 in 82.4 / 92.5 / 82.8 s | 0.96–0.99 × 2r | 2.38–2.65 m/s |
+| SFM | 100 % | 200/200 in 109.0 / 95.3 / 111.2 s | 0.93–0.96 × 2r | 2.25–2.65 m/s |
+| WarpDriver | 50 % | 150/150 in 61.5 / 60.8 / 60.3 s | 0.63–0.70 × 2r | 1.20 m/s |
+| WarpDriver | 100 % | 200/200 in 65.7 / 64.9 / 68.3 s | 0.20–0.60 × 2r | 1.20 m/s |
+
+`SocialForceModel` clears both cases by pushing, at up to 2.2 times the
+desired speed. `WarpDriverModel` keeps to the desired speed but clears
+them by letting agents pass through each other, down to 0.20 × 2r on
+the 100 % case. Neither result shows that a model handles counterflow;
+they are implementation checks of what each model does on two decks.
+`AnticipationVelocityModel` cannot be reproduced from the seed
+([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)),
+`GeneralizedCentrifugalForceModel` fails at spawn on this geometry, and
+`CollisionFreeSpeedModelV2` gives the CFSM numbers, so they are not
+listed.
 
 **At run time.** `pyfds_evac/core/deadlock.py` applies the study's
 definition during a run: the thresholds are the same, 0.03 m of net
