@@ -1,0 +1,30 @@
+&HEAD CHID='iso_test_16_fire_k0p10',
+      TITLE='ISO 20414 Test 16 fire variant, prescribed soot box K = 0.1 1/m' /
+
+! ISO 20414 Test 16 (affiliation to familiar exits), smoke in the east of the
+! room and in the strip of exit 2. No combustion and no obstruction: the soot
+! is prescribed in a box that is there from t = 0, and the walls live in
+! geometry.wkt.
+&MESH IJK=48,60,6, XB=-1.0,11.0,0.0,15.0,0.0,3.0 /
+&TIME T_END=70 /
+&MISC TMPA=20.0 /
+
+&SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN', MASS_FRACTION_0=0.231 /      ! ambient O2 outside the box
+&SPEC ID='SOOT' /
+
+! Target K = 0.1 1/m: soot mass fraction K x 9.5893E-05 (8700 m^2/kg).
+! The box temperature cancels the buoyancy of the soot (W = 12.011 g/mol),
+! so the gas stays still. All species MUST be in this single &INIT.
+&INIT XB=6.0,11.0,0.0,15.0,0.0,3.0, TEMPERATURE=19.9961,
+      SPEC_ID(1)='SOOT', SPEC_ID(2)='OXYGEN',
+      MASS_FRACTION(1)=9.58930E-06,
+      MASS_FRACTION(2)=0.231 /
+
+! SPEC_ID is mandatory on the extinction slice once species are declared.
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
+! The default sampling height of pyFDS-Evac; FDS snaps it to the 1.5 m face.
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
+&DUMP DT_SLCF=5 /
+
+&TAIL /
