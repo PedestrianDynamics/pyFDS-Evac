@@ -71,7 +71,9 @@ def _trajectories(folder: Path, raw: dict, max_time: float):
         result = run_scenario(scenario, seed=1)
     try:
         frame = result.trajectory_dataframe()
-        return frame.sort_values(list(frame.columns[:2])).reset_index(drop=True)
+        # JuPedSim numbers agents from a process-wide counter: count from 0 per run.
+        frame["id"] = frame["id"].rank(method="dense").astype(int) - 1
+        return frame.sort_values(["frame", "id"]).reset_index(drop=True)
     finally:
         result.cleanup()
 

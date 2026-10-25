@@ -234,6 +234,7 @@ def test_load_migrates_editor_journeys(tmp_path):
                 },
                 {"from": "jps-checkpoints_0", "to": "jps-exits_1", "journey_id": "j1"},
             ],
+            "spawn_weight": 100.0,
         }
     ]
 
@@ -296,7 +297,7 @@ def test_migration_gives_a_shared_journey_a_unique_id_per_distribution():
     assert {t["journey_id"] for t in deck["transitions"]} == set(ids)
 
 
-def test_migration_skips_distributions_split_across_journeys():
+def test_migration_splits_a_distribution_over_its_journeys():
     deck = _editor_deck(
         {
             "jps-distributions_0": [
@@ -313,7 +314,13 @@ def test_migration_skips_distributions_split_across_journeys():
 
     _migrate_journeys_v2(deck)
 
-    assert [j["stages"][0] for j in deck["journeys"]] == ["jps-distributions_1"]
+    assert [
+        (j["stages"][0], j["stages"][-1], j["spawn_weight"]) for j in deck["journeys"]
+    ] == [
+        ("jps-distributions_0", "jps-exits_0", 50.0),
+        ("jps-distributions_0", "jps-exits_1", 50.0),
+        ("jps-distributions_1", "jps-exits_1", 100.0),
+    ]
 
 
 def test_migration_is_idempotent():

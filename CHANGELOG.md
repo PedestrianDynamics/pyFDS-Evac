@@ -54,6 +54,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `metrics["fed_enabled"]`: whether the gas FED ran (#137).
 - The run manifest records, per model, the height at which each FDS slice
   was actually read (`slice_heights_m`) ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+- A `journeys_v2` scenario may split a start area over several journeys by
+  `journey_weights`, and a journey may set `"loop": true` to repeat its
+  sequence; before, such start areas were skipped (#900).
 
 ### Fixed
 
