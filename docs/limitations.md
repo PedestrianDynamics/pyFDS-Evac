@@ -400,6 +400,14 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   `&TRNZ` it ranks the deck's z. Where that differs from the run's choice,
   the check names another `&SLCF` line or turns a pass into a warning,
   never into a failure.
+- **Sign visibility ignores obstructions FDS opens or closes**
+  ([#453](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453)). fdsvismap
+  builds its sight-line obstructions once and does not read the
+  `HIDE_OBST`/`SHOW_OBST` times of the `.smv`
+  ([fdsvismap#63](https://github.com/FireDynamics/fdsvismap/issues/63)), so a
+  `DEVC_ID`/`CTRL_ID` obstruction blocks signs for the whole run. Decks
+  with timed door leaves get signs that stay unreadable after the door
+  opens. See [Wayfinding › Limitations](/models/wayfinding.md#limitations).
 
 ## Reproducibility
 
