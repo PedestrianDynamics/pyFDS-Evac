@@ -2,10 +2,12 @@
 
 import contextlib
 import io
+import json
 from types import SimpleNamespace
 
 import pytest
 from shapely.geometry import box
+from test_fds_domain import _iso_opts, _iso_scenario
 from test_run_outcome import ENOUGH_S, SEED, _scenario
 
 from pyfds_evac.core.fds_coverage import route_length_outside
@@ -15,7 +17,8 @@ from pyfds_evac.core.route_graph import (
     StageEdge,
     StageGraph,
 )
-from pyfds_evac.core.scenario import run_scenario
+from pyfds_evac.core.run_config import build_run_kwargs
+from pyfds_evac.core.scenario import load_scenario, run_scenario
 
 DOMAIN = box(0, 0, 10, 10)
 
@@ -70,3 +73,56 @@ def test_rows_without_fds_have_an_empty_length_outside():
         result.cleanup()
     assert rows, "no route was priced"
     assert {row["length_outside_m"] for row in rows} == {""}
+
+
+def _iso_rows(tmp_path, rival):
+    """Route-cost rows and metrics of the coupled ISO run (5.5 m outside).
+
+    With *rival*, a second exit lies wholly outside the mesh and the single
+    exit journey makes the spawn area rank it as a rival, on a graph that
+    holds an edge the allocated stage graph does not.
+    """
+    config_path = _iso_scenario(tmp_path)
+    config = json.loads(config_path.read_text())
+    if rival:
+        config["exits"]["E_far"] = {
+            "type": "polygon",
+            "coordinates": [[58, -0.5], [59, -0.5], [59, 0.5], [58, 0.5], [58, -0.5]],
+            "enable_throughput_throttling": False,
+            "max_throughput": 0,
+        }
+        config["journeys"] = [{"id": "j", "stages": ["jps-distributions_0", "E_end"]}]
+        config["transitions"] = [
+            {"from": "jps-distributions_0", "to": "E_end", "journey_id": "j"}
+        ]
+        config_path.write_text(json.dumps(config))
+    scenario = load_scenario(str(config_path))
+    kwargs = build_run_kwargs(scenario, _iso_opts(enable_rerouting=True))
+    kwargs["collect_route_cost_history"] = True
+    result = run_scenario(scenario, **kwargs)
+    try:
+        return list(result.route_cost_history), result.metrics
+    finally:
+        result.cleanup()
+
+
+def test_rows_with_fds_carry_the_length_outside(tmp_path):
+    rows, metrics = _iso_rows(tmp_path, rival=False)
+    assert rows
+    edge = metrics["fds_coverage"]["edges_outside_m"]["jps-distributions_0 -> E_end"]
+    assert edge == pytest.approx(5.5)
+    assert [row["length_outside_m"] for row in rows] == [pytest.approx(edge)] * len(
+        rows
+    )
+
+
+def test_rival_route_is_measured_on_the_rival_graph(tmp_path):
+    rows, metrics = _iso_rows(tmp_path, rival=True)
+    outside = {row["path"]: row["length_outside_m"] for row in rows}
+    assert outside["jps-distributions_0 > E_end"] == pytest.approx(5.5)
+    assert outside["jps-distributions_0 > E_far"] == pytest.approx(3.0)
+    # The rival edge exists only on the rival graph, so the coverage report
+    # of the allocated stage graph never measured it.
+    assert (
+        "jps-distributions_0 -> E_far" not in metrics["fds_coverage"]["edges_outside_m"]
+    )
