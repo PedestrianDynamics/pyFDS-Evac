@@ -3411,7 +3411,6 @@ def run_scenario(
                             elif (
                                 fed_model is not None
                                 and tenability_config.enable_fic_speed
-                                and fic_value > 0.0
                             ):
                                 fic_speed_factor = max(
                                     float(tenability_config.fic_min_factor),
@@ -3981,6 +3980,7 @@ def run_scenario(
         _warn_unused_replay(replay_exits, {aid: spawn_keys[aid] for aid in agent_exits})
         if smoke_speed_model is not None:
             metrics["smoke_history_samples"] = len(smoke_history)
+        metrics["fed_enabled"] = fed_model is not None
         if fed_model is not None:
             metrics["fed_history_samples"] = len(fed_history)
             metrics["fed_max"] = max(

@@ -110,10 +110,8 @@ The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentration
 lowers the speed further as it rises, down to a floor. \(g = 1\) unless
 `--enable-fic-speed` is given: FDS+Evac has no irritant slowdown, so it is
 off by default. FIC is a concentration,
-not a dose, so \(g\) follows the gas where the agent stands. One quirk: when
-FIC drops to exactly zero the factor is not recomputed, so an agent that walks
-out of a plume into clean air keeps its last slowdown
-([#142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
+not a dose, so \(g\) follows the gas where the agent stands: an agent that walks
+out of a plume into clean air gets its full speed back.
 
 The stop is the fractional effective dose (FED). The toxic-gas dose follows
 the Purser sum as FDS+Evac computes it, which adds irritants into the dose,

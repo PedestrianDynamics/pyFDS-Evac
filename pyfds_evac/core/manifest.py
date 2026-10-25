@@ -157,6 +157,30 @@ def _fed_config(config: Any) -> dict[str, Any]:
     }
 
 
+def _field_heights(field: Any, suffix: str = "") -> dict[str, float]:
+    samplers = getattr(field, "samplers", None)
+    if samplers is None:
+        return {}
+    return {
+        sampler.quantity + suffix: sampler.slice_z_m
+        for sampler in samplers()
+        if hasattr(sampler, "slice_z_m")
+    }
+
+
+def _slice_heights(model: Any) -> dict[str, Any]:
+    """``slice_heights_m`` for the FDS slices *model*'s fields read, else empty.
+
+    Samplers without a slice (constant or synthetic fields) are left out. The
+    heat layer regime's second TEMPERATURE slice is keyed ``TEMPERATURE (layer)``.
+    """
+    heights = {
+        **_field_heights(getattr(model, "field", None)),
+        **_field_heights(getattr(model, "layer_field", None), " (layer)"),
+    }
+    return {"slice_heights_m": heights} if heights else {}
+
+
 def _smoke_settings(model: Any) -> dict[str, Any] | None:
     if model is None:
         return None
@@ -168,6 +192,7 @@ def _smoke_settings(model: Any) -> dict[str, Any] | None:
         "source": "constant" if constant else "fds",
         "extinction_per_m": getattr(field, "extinction_per_m", None),
         **_fed_config(getattr(model, "config", None)),
+        **_slice_heights(model),
     }
 
 
@@ -178,6 +203,7 @@ def _gas_settings(model: Any) -> dict[str, Any] | None:
     return {
         **_fed_config(config),
         "o2_threshold_percent": getattr(config, "o2_threshold_percent", None),
+        **_slice_heights(model),
     }
 
 
@@ -201,7 +227,11 @@ def _heat_settings(model: Any) -> dict[str, Any] | None:
     if model is None:
         return None
     settings = {name: getattr(model, name, None) for name in _HEAT_ATTRIBUTES}
-    return {**settings, **_fed_config(getattr(model, "config", None))}
+    return {
+        **settings,
+        **_fed_config(getattr(model, "config", None)),
+        **_slice_heights(model),
+    }
 
 
 def _reroute_settings(config: Any) -> dict[str, Any] | None:
@@ -219,7 +249,11 @@ def _vis_settings(model: Any) -> dict[str, Any] | None:
         return None
     parameters = getattr(model, "parameters", None)
     if parameters is not None:
-        return dict(parameters)
+        recorded = dict(parameters)
+        heights = getattr(model, "slice_heights_m", None)
+        if heights:
+            recorded["slice_heights_m"] = heights
+        return recorded
     return {"kind": "smoky" if getattr(model, "from_fds", False) else "clear-air"}
 
 

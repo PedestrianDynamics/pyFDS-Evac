@@ -59,7 +59,7 @@ add and the failure modes that stay silent unless you read the warnings.
 | `--fds-dir DIR` | none | FDS output directory. Drives smoke speed, gas FED, heat FED (with `--enable-heat-fed`) and smoke-aware sign legibility. |
 | `--constant-extinction K` | none | Use a constant `K` [1/m] instead of the FDS extinction slice for walking speed and for route pricing (the optical depth `K·L` of the route gate). FED, heat FED and sign legibility still read `--fds-dir` when it is given; without `--fds-dir`, sign legibility stays clear air, so a constant `K` hides no sign. A constant `K` is a controlled setting for verification and speed-law studies, not a stand-in for an FDS smoke field (#500). |
 | `--smoke-update-interval S` | 1.0 s | Seconds between smoke-speed updates. The same interval is the integration step of the gas FED and heat FED, and the row spacing of the smoke and FED histories. |
-| `--smoke-slice-height M` | 1.6 m | Height of the horizontal slices that are read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.5 m away. See [FDS slice sampling](fds-sampling.md). |
+| `--smoke-slice-height M` | 1.6 m | Height of the horizontal slices that are read ([FDS+Evac](https://github.com/firemodels/fds/tree/c9da70d7a/Source) `HUMAN_SMOKE_HEIGHT`; 2.0 was the previous default). One height for speed, gas FED, heat FED and sign legibility: the nearest horizontal slice is used, with a warning only when it is more than 0.2 m away. See [FDS slice sampling](fds-sampling.md). |
 | `--allow-fds-horizon-hold` | off | Let the run outlast the FDS output by holding the last slice frame, with a warning at setup and one per quantity. Without it, a `max_simulation_time` more than one slice output interval past the last FDS frame stops the run at setup, and so does any smoke, FED, heat or sign-visibility sample past it, except route foresight, which reads the last frame (#666). See [FDS slice sampling](fds-sampling.md#past-the-end-of-the-fds-output). |
 | `--require-fds-coverage` | off | Stop the run when part of the scenario lies outside the FDS slices: at setup for the walkable area, an exit, checkpoint, spawn area, sign or route edge, and at any smoke, FED, heat or sign-visibility sample. Without it, those places read ambient air and clear sight, as in FDS+Evac; the run logs what lies outside at setup, with the bounds of the walkable area and of the FDS domain and a hint when swapped x and y or a shift could explain it, flags each history row with `in_fds_domain`, and counts the samples outside at the end. See [Outputs](outputs.md). |
 | `--output-smoke-history CSV` | none | Write the smoke history; columns on [Outputs](outputs.md#smoke-history). |
@@ -168,9 +168,8 @@ by default, as FDS+Evac has none. The equations are on
 ### Heat dose (opt-in)
 
 All flags in this table need `--enable-heat-fed`; without it they have no
-effect. With `--fds-dir`, the run then warns for `--heat-endpoint`,
-`--heat-clothing`, `--heat-fed-method`, `--heat-radiant-source` and
-`--heat-regime`; the other heat flags are ignored silently. The laws, parameters and their
+effect, and the run warns once for each heat flag set away from its default,
+with or without `--fds-dir`. The laws, parameters and their
 sources are on [Models › Heat](/models/heat.md); the table only lists what
 each flag sets.
 
@@ -375,12 +374,11 @@ status 2, before the run starts.
 ## Inspecting an FDS case
 
 `scripts/inspect_fds.py` summarises what quantities FDS wrote and whether
-they are within tenability-relevant ranges. Its `--height` defaults to 2.0 m;
-pass 1.6 to match `run.py`
-([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)).
+they are within tenability-relevant ranges. Its `--height` defaults to 1.6 m,
+the height `run.py` reads.
 
 ```bash
-uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a --height 1.6
+uv run python scripts/inspect_fds.py assets/iso_table22_coupled/fds/a
 ```
 
 ```text
@@ -772,8 +770,8 @@ chosen z, and the fix as a deck line.
 
 | Item | Fails the check (✗) | Reported only |
 |---|---|---|
-| `QUANTITY='EXTINCTION COEFFICIENT'`, no `SPEC_ID` or `SPEC_ID='SOOT'` (smoke speed, sign legibility) | none, or vertical only | nearest z more than 0.5 m away (`!`); `QUANTITY='EXTINCTION'` is a different quantity |
-| `QUANTITY='VOLUME FRACTION'` with `SPEC_ID` `'CARBON MONOXIDE'`, `'CARBON DIOXIDE'`, `'OXYGEN'` (FED needs all three) | any of them none, or vertical only | z more than 0.5 m away |
+| `QUANTITY='EXTINCTION COEFFICIENT'`, no `SPEC_ID` or `SPEC_ID='SOOT'` (smoke speed, sign legibility) | none, or vertical only | nearest z more than 0.2 m away (`!`); `QUANTITY='EXTINCTION'` is a different quantity |
+| `QUANTITY='VOLUME FRACTION'` with `SPEC_ID` `'CARBON MONOXIDE'`, `'CARBON DIOXIDE'`, `'OXYGEN'` (FED needs all three) | any of them none, or vertical only | z more than 0.2 m away |
 | `&TIME T_END` | absent: FDS stops at its default of 1 s while `init` writes `max_simulation_time` 300 s | its value |
 | HCN, NO, NO2, HCl, HBr, HF, SO2, acrolein, formaldehyde | | those present, with z |
 | `TEMPERATURE`, `INTEGRATED INTENSITY` (heat FED, opt-in) | | their z; `!` when an `INTEGRATED INTENSITY` slice has no `TEMPERATURE` slice at its z |
@@ -928,6 +926,5 @@ finished FDS run (the `.smv` file); `$FDS` stands for such a directory, for
 example the output of `assets/t_junction/t_junction.fds`. The script calls
 `run.py` with all diagnostic outputs enabled and then invokes each
 plotting script against the resulting CSVs / SQLite. It writes the vismap
-cache into `<fds-dir>/vismap_cache.npz`, so do not point it at a tracked
-directory under `assets/`
-([#313](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/313)).
+cache into `<results-dir>/vismap_cache.npz`, so the FDS directory is only
+read.

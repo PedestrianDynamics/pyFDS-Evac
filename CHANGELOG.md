@@ -34,6 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Route costs that weigh FED now charge each node-to-node leg the mean FED
   rate along it instead of the rate at its midpoint (#725). Runs with a FED
   field can choose other routes than 0.7.0. No option restores the old rule.
+- The slice-height warning now fires when the slice read lies more than
+  0.2 m from `--smoke-slice-height` (was 0.5 m). A deck with only 2.0 m
+  slices warns at the default 1.6 m, once per quantity and height;
+  `pyfds-evac-init --check` marks those slices `!`. Add slices at 1.6 m or
+  pass `--smoke-slice-height 2.0`
+  ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 
 ### Added
 
@@ -45,12 +51,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `metrics["deadlock"]` and the manifest `outcome["deadlock"]` (`agents`,
   `since_s`, `positions`), and the `deadlock` wording on the CLI line and
   the GUI/TUI label (#760).
+- `metrics["fed_enabled"]`: whether the gas FED ran (#137).
+- The run manifest records, per model, the height at which each FDS slice
+  was actually read (`slice_heights_m`) ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 
 ### Fixed
 
 - `scripts/inspect_fds.py` reports a present, all-zero extinction slice as
   clear air and says the smoke-speed model runs, instead of marking it
   missing (#326).
+- `scripts/inspect_fds.py` defaults to the 1.6 m slice height `run.py`
+  reads, not 2.0 m, and `scripts/run_and_plot.sh` writes its vismap cache
+  into the results directory, not the FDS directory (#313).
+- docs: every heat flag warns when `--enable-heat-fed` is missing, with or
+  without `--fds-dir`; a test pins it (#325).
+- The irritant slowdown (`--enable-fic-speed`) now ends when the sampled
+  FIC falls to zero; before, an agent leaving an irritant plume into clean
+  air kept its last slowdown (#142).
+- The FED-disabled warning no longer promises a zero dose: a run without
+  CO, CO2 or O2 reports no gas FED at all (#137).
 
 ## [0.7.0] - 2026-10-23
 

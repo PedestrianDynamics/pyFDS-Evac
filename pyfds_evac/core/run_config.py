@@ -32,7 +32,7 @@ from pyfds_evac.config.rules import (
 )
 
 from .fds_inventory import inspect_fds_quantities
-from .fds_sampling import fds_output_horizon
+from .fds_sampling import fds_output_horizon, height_warnings_once
 from .fed import (
     DEFAULT_HEAT_CLOTHING,
     DefaultFedConfig,
@@ -186,9 +186,9 @@ def _build_fed_model(opts: Any, log: Logger):
     if not inventory.supports_default_fed():
         # Not an error: plenty of cases legitimately carry no toxic gas data,
         # and the run continues with smoke-speed only. But the result then has
-        # no FED in it at all, and every FED column reads zero, which looks
-        # exactly like a survivable fire. Say so rather than letting the user
-        # infer tenability from a model that never ran.
+        # no FED in it at all, which reads like a survivable fire. Say so
+        # rather than letting the user infer tenability from a model that
+        # never ran.
         present = sorted(inventory.canonical_slice_names())
         missing = sorted(set(GAS_SLICES).difference(present))
         _logger.warning(messages.fed_without_gases(opts.fds_dir, missing))
@@ -578,19 +578,22 @@ def build_run_kwargs(scenario: Any, opts: Any, log: Logger = _noop) -> dict[str,
     """
     validate_opts(opts)
     _warn_slice_height_differs(scenario, opts)
-    _check_fds_horizon(scenario, opts, log)
-    smoke_speed_model = _build_smoke_model(opts, log)
-    fed_model = _build_fed_model(opts, log)
-    heat_fed_model = _build_heat_fed_model(opts, log)
-    reroute_config = _build_reroute_config(scenario, opts, log)
-    vis_model = _build_vis_model(scenario, opts, log)
-    tenability_config = _build_tenability_config(opts, fed_model, heat_fed_model, log)
-    replay_exits = _build_replay_exits(opts, log)
-    _warn_inactive(
-        scenario,
-        opts,
-        _BuiltFacts(opts, smoke_speed_model, fed_model, heat_fed_model),
-    )
+    with height_warnings_once():
+        _check_fds_horizon(scenario, opts, log)
+        smoke_speed_model = _build_smoke_model(opts, log)
+        fed_model = _build_fed_model(opts, log)
+        heat_fed_model = _build_heat_fed_model(opts, log)
+        reroute_config = _build_reroute_config(scenario, opts, log)
+        vis_model = _build_vis_model(scenario, opts, log)
+        tenability_config = _build_tenability_config(
+            opts, fed_model, heat_fed_model, log
+        )
+        replay_exits = _build_replay_exits(opts, log)
+        _warn_inactive(
+            scenario,
+            opts,
+            _BuiltFacts(opts, smoke_speed_model, fed_model, heat_fed_model),
+        )
 
     collect_route_cost_history = bool(
         getattr(opts, "output_route_cost_history", None)

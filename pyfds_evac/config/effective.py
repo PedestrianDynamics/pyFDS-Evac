@@ -39,13 +39,18 @@ from .parameters import (
     parameter,
 )
 from .rules import (
+    EXTINCTION_QUANTITY,
+    INTENSITY_QUANTITY,
+    TEMPERATURE_QUANTITY,
     UNKNOWN_FDS,
     ConfigIssue,
     FdsFacts,
     Inactive,
     Mechanisms,
     check_options,
+    gas_quantities,
     heat_value_issue,
+    height_warnings,
     horizon_overrun,
     inactive_settings,
     integrated_intensity_issue,
@@ -544,19 +549,29 @@ def _warnings(
     """The setup warnings of the run, in the order the run logs them."""
     fds_dir = option(opts, "fds_dir")
     found: list[str] = []
+    seen: set[tuple[str, float]] = set()
     overrun = horizon_overrun(opts, max_time, fds)
     if overrun is not None and option(opts, "allow_fds_horizon_hold"):
         found.append(messages.horizon_hold(overrun))
     if fds_dir and option(opts, "constant_extinction") is None and m.smoke is None:
         found.append(messages.smoke_without_extinction(fds_dir))
+    if m.smoke == "fds":
+        found += height_warnings(opts, fds, [EXTINCTION_QUANTITY], seen)
     if fds_dir and not m.gas_fed:
         missing = [q for q in ("co", "co2", "o2") if not fds.has(q)]
         found.append(messages.fed_without_gases(fds_dir, missing))
+    if m.gas_fed:
+        found += height_warnings(opts, fds, gas_quantities(), seen)
     found += _heat_warnings(opts, m)
+    if m.heat_fed:
+        found += height_warnings(opts, fds, _heat_quantities(opts), seen)
+        found += _heat_layer_warnings(opts, fds, seen)
     if m.signs == 0:
         found.append(messages.NO_SIGNS)
     if m.visibility == "clear-air" and fds_dir and not option(opts, "smoke_blind"):
         found.append(messages.visibility_without_extinction(fds_dir))
+    if m.visibility == "smoky":
+        found += height_warnings(opts, fds, [EXTINCTION_QUANTITY], seen)
     if m.tenability and m.heat_fed and option(opts, "heat_fed_threshold") is not None:
         found.append(
             messages.heat_threshold_departs(option(opts, "heat_fed_threshold"))
@@ -569,6 +584,24 @@ def _warnings(
         found.append(messages.REPLAY_WITH_REROUTING)
     found += [i.message for i in inactive if not i.warned]
     return found
+
+
+def _heat_quantities(opts: Any) -> list[str]:
+    """The slice quantities the heat FED model reads."""
+    quantities = [TEMPERATURE_QUANTITY]
+    if option(opts, "heat_radiant_source") == "integrated-intensity":
+        quantities.append(INTENSITY_QUANTITY)
+    return quantities
+
+
+def _heat_layer_warnings(
+    opts: Any, fds: Any, seen: set[tuple[str, float]]
+) -> list[str]:
+    """The height warning of the second TEMPERATURE slice of the layer regime."""
+    height = option(opts, "heat_layer_height")
+    if option(opts, "heat_regime") != "layer" or height is None:
+        return []
+    return height_warnings(opts, fds, [TEMPERATURE_QUANTITY], seen, height)
 
 
 def _heat_warnings(opts: Any, m: Mechanisms) -> list[str]:
@@ -897,7 +930,12 @@ def run_record(
         return record
     run = _json_safe(dict(used))
     predicted = predicted_run_settings(opts, _raw(scenario), cfg)
-    mismatches = _differences(predicted, used)
+    # The heights are read from the FDS output, which the options do not give.
+    mismatches = [
+        name
+        for name in _differences(predicted, used)
+        if not name.endswith(".slice_heights_m")
+    ]
     if not mismatches:
         record["source"] = "run"
         record["run"] = run

@@ -75,9 +75,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `fds_outside` | with `fds_coverage`: the history rows sampled outside the FDS slices, as `rows`, `agents` and `agent_seconds`, the same as `metrics["fds_outside"]` |
 | `replay_exits` | only with `--replay-exits`: `agents`, the number of replayed spawns, and `sha256`, of the sorted `origin<TAB>spawn_index<TAB>exit_id` lines, one per spawn and joined by newlines, to match the run whose exit history was replayed |
 | `heat_fed_method`, `heat_flux_parameters` | only with `--heat-fed-method total-flux`: ε, h, skin temperature, dose *D*, radiant threshold, the list of assumed parameters, and, per option, the layer parameters or `radiant_source`, `u_factor` and `radiant_flux` |
-
-The manifest does not yet record the slice height that was actually read
-([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+| `slice_heights_m` | in the manifest's `configuration` → `run` record, inside `smoke_speed`, `gas_fed`, `heat_fed` and `visibility`, for each model that reads FDS slices: the FDS quantity name and the height [m] of the slice it read. Compare with `slice_height_m` beside it, the height requested: a deck with only 2.0 m slices, run at the default 1.6 m, shows 2.0 next to 1.6. With `--heat-regime layer`, `heat_fed` also lists the layer's second slice as `TEMPERATURE (layer)`; compare it with `layer_height_m`. Absent for a constant-extinction smoke model and a clear-air visibility model |
 
 Example, from the command above:
 
@@ -226,6 +224,7 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 | `end_reason` | why the run stopped: `"all_evacuated"` for a completed run; `"time_limit"` when `max_simulation_time` stopped it; `"flows_closed"` when the building emptied after the last flow window with agents still to enter had closed, before the time limit; `"all_mobile_left"` when every mobile agent has left, only incapacitated agents remain inside and no flow window is open; `"deadlock"` when every mobile agent inside stood still (net displacement below 0.03 m over the last 100 s) and no agent was in pre-movement, at a waiting stage or still to spawn. The run stops at once, before the time limit. Also in `metrics["end_reason"]` |
 | `success` | `True` only for a completed run; `run.py` then exits with status 0, and with status 2 for an incomplete run |
 | `metrics["route_switches"]` | per agent, each time step whose decision changes the agent's target (`new_exit`), or its path to an exit it holds (a row with an `old_exit`). A time step counts at most once, judged by its last row, the decision the agent acts on. The agent's first step counts only if its row names an old exit, the exit seeded at spawn. Reasons are not read (#733, #744). Each new `explore` or `wander` node counts, also moving on after reaching the previous one, so the count is not a number of reversals. Present when the route history has rows, so it can be 0 |
+| `metrics["fed_enabled"]` | `True` when the gas FED ran, `False` otherwise (CO, CO2 or O2 missing, or no `--fds-dir`). With `False` there is no `fed_max`, and a heat-only run's `fed_cumulative` column is all zero |
 | `metrics["fed_max"]` | highest gas FED of any agent; present only when the gas FED ran. It stops at the collapse row of an incapacitated agent |
 | `metrics["heat_fed_max"]` | highest heat FED; present only when the heat FED ran. It stops at the collapse row of an incapacitated agent |
 
@@ -261,7 +260,7 @@ Four things to keep in mind:
 - **No FED is not zero FED.** If neither FED track ran, `fed_history` is
   `None`, `metrics` has no `fed_max`, and `--output-fed-history` writes no
   file. If only the heat FED ran, the FED history exists and its
-  `fed_cumulative` column is all zero. Check `metrics["fed_max"]`, or the
+  `fed_cumulative` column is all zero. Check `metrics["fed_enabled"]`, or the
   `FED is disabled` warning
   ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)).
 - **The progress line counts planned agents.** With flow spawning it can show

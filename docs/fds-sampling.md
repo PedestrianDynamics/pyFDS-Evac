@@ -228,8 +228,12 @@ slice in declaration order. The model factories (`ExtinctionField.from_fds`,
 
 The rule lives in `select_horizontal_slice`: vertical slices are
 skipped, the slice whose z is nearest `slice_height_m` wins, and a
-warning is logged when it is more than 0.5 m away. The visibility model
-applies the same function to the extinction slice it hands to fdsvismap.
+warning is logged when it is more than 0.2 m away. A run logs it once
+per quantity and requested height, however many models read that quantity,
+and `--show-config` lists it. The layer heat regime requests a second
+`TEMPERATURE` slice at `--heat-layer-height`, which warns on its own. The
+visibility model applies the same function to the extinction slice it hands
+to fdsvismap.
 
 The height is an absolute z in the FDS domain, so it equals the height
 above the floor where the floor is at z = 0. C/VM2, the Engineers

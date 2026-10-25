@@ -121,7 +121,7 @@ class SmokeSpeedConfig:
         ``speed_factor(K) = 1 + beta * K / alpha``, clamped to
         ``[min_speed_factor, 1.0]``.
 
-        ``"fridolf"``: additive Fridolf et al. (2018) law
+        ``"fridolf"``: additive Fridolf et al. (2019, Eq. 7) law
         ``w = min(w_free, max(0.2, w_free - 0.34 (3 - V)))`` where
         ``V = C / K``; the speed factor is ``w / w_free``.
 

@@ -422,6 +422,20 @@ def heat_scenario():
             "--heat-fed-threshold",
             "0.5",
         ],
+        [
+            "--enable-heat-fed",
+            "--allow-fds-horizon-hold",
+            "--heat-fed-method",
+            "total-flux",
+            "--heat-regime",
+            "layer",
+            "--heat-layer-height",
+            "0.4",
+            "--heat-view-factor",
+            "0.5",
+            "--heat-layer-emissivity",
+            "0.9",
+        ],
     ],
 )
 def test_heat_only_case_warnings_are_predicted(caplog, heat_scenario, argv):
@@ -1189,6 +1203,13 @@ def test_predicted_run_settings_match_the_built_models(heat_scenario, argv):
     )
     cfg = effective_configuration(opts, heat_scenario)
     assert used["heat_fed"] is not None and used["visibility"] is not None
+    # The heights are read from the FDS output; the options do not predict them.
+    # Only the heat FED reads a slice here: the deck has no soot.
+    heights = used["heat_fed"].pop("slice_heights_m")
+    assert heights == {"TEMPERATURE": 2.0} | (
+        {"TEMPERATURE (layer)": 2.0} if "layer" in argv else {}
+    )
+    assert all("slice_heights_m" not in v for v in used.values() if isinstance(v, dict))
     assert predicted_run_settings(opts, heat_scenario.raw, cfg) == used
 
 

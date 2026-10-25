@@ -634,8 +634,9 @@ def check_fic_alpha(value: object) -> None:
 def check_fic_min_factor(value: object) -> None:
     """Raise ValueError unless ``fic_min_factor`` is a finite number in (0, 1].
 
-    A floor of 0 lets the irritant factor reach 0, and it then stays there
-    while FIC is 0 (#142); a floor above 1 speeds agents up in irritant smoke.
+    A floor of 0 lets the irritant factor reach 0 and stop an agent without
+    marking it incapacitated; a floor above 1 speeds agents up in irritant
+    smoke.
     """
     if not _is_real(value) or not 0 < value <= 1:  # type: ignore[operator]
         raise ValueError(
@@ -1179,13 +1180,9 @@ class DefaultFedModel:
 class FdsHeatField:
     """Sample gas-phase temperature from FDS slice output via fdsreader.
 
-    Required slice: TEMPERATURE. Unlike ``FdsFedField``, this goes through
-    ``load_slice_sampler`` so a mismatched slice height triggers the same
-    warning the extinction/smoke-speed path already gets -- ``FdsFedField``
-    bypasses that check entirely (raw ``filter_by_quantity(...)[0]``, no
-    height-matching), a known blind spot this project has been bitten by
-    twice before (the O2 hypoxia rate bug, the conflicting ``&INIT`` bug);
-    the new heat sampler should not repeat it.
+    Required slice: TEMPERATURE. Like ``FdsFedField``, this goes through
+    ``load_slice_sampler``, which picks the slice nearest the slice height
+    and warns when it lies too far from it.
     """
 
     def __init__(

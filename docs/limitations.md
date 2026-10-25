@@ -244,13 +244,6 @@ with the smoke factor multiplicatively, not additively as published
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147);
 [Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 
-**Recovery from irritants.** The irritant slowdown (opt-in with
-`--enable-fic-speed`) is recomputed only while
-the sampled fractional irritant concentration (FIC) is positive. When it
-returns to exactly zero, the last slowdown stays in force, so an agent that
-leaves an irritant plume into clean air does not return to full speed
-([issue #142](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/142)).
-
 **Pre-movement defaults are office data.** The gamma, log-normal and Weibull
 presets are fitted to office evacuations, mostly drills (Lovreglio et al. 2019,
 Business Cluster 1). The uniform 0–60 s preset is RiMEA's "speedy evacuation"

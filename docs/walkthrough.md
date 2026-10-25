@@ -310,11 +310,8 @@ incapacitated. But no dose was computed. In step 3, the same occupant in the sam
 path differs):
 
 ```text
-WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp42qhswh0/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will report zero dose and no incapacitation. FDS only writes these species when the &REAC line asks for them (CO needs CO_YIELD); see https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/
+WARNING:pyfds_evac.core.run_config:FED is disabled for /tmp/tmp42qhswh0/a: it has no CO slice, and all three of CO, CO2 and O2 are needed. Results will have no gas FED and no gas-FED incapacitation. FDS only writes these species when the &REAC line asks for them (CO needs CO_YIELD); see https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/
 ```
-
-The warning says "zero dose"; in fact the result has no FED at all, as the
-next check shows ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)).
 
 The heat dose is off unless you ask for it, so no heat warning appears here.
 With `--enable-heat-fed` (`opts.enable_heat_fed=True`) on a case without a
@@ -324,31 +321,34 @@ messages from step 1 appear in the same stream, so search for `FED is disabled`
 rather than for "warning".
 
 **Check before the run** that `build_run_kwargs` returned a FED model, and
-**check after the run** that the metrics hold `fed_max`:
+**check after the run** that `metrics["fed_enabled"]` is `True`:
 
 ```python
 print(f"before: fed_model = {kwargs['fed_model']}")
 print(
     f"after:  fed_history = {silent.fed_history}, "
-    f"'fed_max' in metrics = {'fed_max' in silent.metrics}"
+    f"fed_enabled = {silent.metrics['fed_enabled']}"
 )
 ```
 
 ```text
 before: fed_model = None
-after:  fed_history = None, 'fed_max' in metrics = False
+after:  fed_history = None, fed_enabled = False
 ```
 
 Here FED and heat FED are both off, so the result carries no FED at all:
-`fed_history` is `None` and `metrics` has no `fed_max` key. It does not report
+`fed_history` is `None`, `metrics` has no `fed_max` key and
+`metrics["fed_enabled"]` is `False`. It does not report
 FED = 0 ([#137](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/137)). With `run.py`, `--output-fed-history` writes no file in this case.
 
 `fed_history` alone is not a reliable check. `run_scenario` fills it whenever
 either FED track runs. A case with a `TEMPERATURE` slice but no CO slice, run
 with `--enable-heat-fed`, runs heat FED only: `fed_history` then exists, every `fed_cumulative` in it is 0.0,
 and `metrics` has `heat_fed_max` but no `fed_max`. That zero column looks
-exactly like a case where nobody received a dose. `metrics` holds `fed_max` only when the gas FED
-model ran, so check `fed_max`, and `kwargs["fed_model"]` before the run.
+exactly like a case where nobody received a dose. `metrics["fed_enabled"]` is
+`False` in both the no-FED and the heat-only case, and `fed_max` is present
+only when it is `True`, so check `fed_enabled`, and `kwargs["fed_model"]`
+before the run.
 
 A third check is the inventory from step 1: if any of CO, CO2 and O2 is
 missing from `"slices"`, FED will not run.
