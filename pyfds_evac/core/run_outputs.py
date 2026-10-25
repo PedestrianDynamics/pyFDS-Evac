@@ -16,12 +16,23 @@ from pyfds_evac.core.agent_scalars import write_agent_scalars
 from pyfds_evac.core.manifest import manifest_path_for
 
 
+def _exportable_raw(raw: dict) -> dict:
+    """*raw* without the journeys the loader built from ``journeys_v2``.
+
+    Their ``spawn_weight`` is internal; on reload the loader builds them again.
+    """
+    journeys = raw.get("journeys") or []
+    if not any("spawn_weight" in journey for journey in journeys):
+        return raw
+    return {k: v for k, v in raw.items() if k not in ("journeys", "transitions")}
+
+
 def _export_app_bundle(scenario, output_dir: str) -> None:
     """Write the loaded scenario as `config.json` plus raw `geometry.wkt`."""
     destination = pathlib.Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
     (destination / "config.json").write_text(
-        json.dumps(scenario.raw, indent=2) + "\n",
+        json.dumps(_exportable_raw(scenario.raw), indent=2) + "\n",
         encoding="utf-8",
     )
     (destination / "geometry.wkt").write_text(

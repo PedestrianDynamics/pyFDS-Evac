@@ -1707,6 +1707,10 @@ def _legacy_journey(dist_id, entry, sequences, allocations, loops, used_ids):
     if not sequence or weight is None:
         return None
     legacy_id = jid if jid not in used_ids else f"{jid}::{dist_id}"
+    base_id, repeat = legacy_id, 0
+    while legacy_id in used_ids:
+        repeat += 1
+        legacy_id = f"{base_id}::{repeat}"
     used_ids.add(legacy_id)
     stages = [dist_id, *sequence]
     pairs = list(zip(stages, stages[1:]))
@@ -1761,7 +1765,7 @@ def _migrate_journeys_v2(data: dict[str, Any]) -> None:
     }
 
     loops = {
-        j["id"]: bool(j.get("loop"))
+        j["id"]: j.get("loop") is True
         for j in journeys_v2
         if isinstance(j, dict) and j.get("id")
     }

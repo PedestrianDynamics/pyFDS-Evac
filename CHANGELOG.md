@@ -23,6 +23,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   at parse time (#404). Before, such values silently switched the
   irritant slowdown off or sped agents up. Defaults (0.3, 0.7) are
   unchanged.
+- A `journeys_v2` entry in `journey_weights` without a positive numeric
+  `weight` places no agents, as in the app. Before, a start area with a
+  single such entry still got its journey; now its agents go to the
+  nearest exit (#900).
 - A run whose crowd jams now stops when every mobile agent has stood still
   for 100 s, with `end_reason` `"deadlock"`, still incomplete (exit 2).
   Before, it ran to `max_simulation_time`. `evacuation_time` of such a run
