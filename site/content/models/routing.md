@@ -124,6 +124,17 @@ agent walks (`rank_routes`, `current_path`). Without a position, or when the
 source is an exit, the search starts at the source node
 (`_search_from_position`).
 
+An exit whose measured path the gate refuses is tried on up to two more
+loopless shortest paths to it (Yen, `k_shortest_paths`), on the same edge
+weights and starting walks and measured the same way. The best that passes
+becomes the exit's entry; with none, the exit keeps its refused entry. Where
+the first path passes, no further path is searched
+([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)). On the
+world100 decks, where most exits are refused at most ticks, this adds wall
+time: with history off, the median of three interleaved runs went from 24.2 s
+to 33.3 s (+37 %) on `world100_stream_east` and from 23.2 s to 40.8 s (+76 %)
+on `world100_stream_oval`.
+
 [FDS+Evac](https://github.com/firemodels/fds/blob/c9da70d7a/Source/evac.f90#L16096-L16955)
 (`Change_Target_Door`) also evaluates every door, the current one included,
 from the agent's position (`x1_old = xx`, `:16178`): smoke on the straight
@@ -575,7 +586,8 @@ Exit throughput throttling has no general test yet
 - Routes are priced with smoke the agent cannot perceive, including stretches
   it has never seen
   ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
-- One path is priced per exit
+- An exit is priced on its least-smoky path, and on up to two more only after
+  that one is refused
   ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)).
 - The path to each exit is chosen on the smoke at decision time.
   Anticipation applies only to that path, each sample at the time the agent
