@@ -363,9 +363,7 @@ class TestAlternativePathToRefusedExit:
     def test_both_corridors_hazardous_keeps_the_searched_path_record(self, monkeypatch):
         hazard = _Hazard((_ON_C0_E0, _ON_C1_E0), fed=60.0)
         ranked = _rank(_diamond(), hazard, hazard, _gate())
-        monkeypatch.setattr(
-            "pyfds_evac.core.route_graph._PATHS_PER_EXIT", 1, raising=False
-        )
+        monkeypatch.setattr("pyfds_evac.core.route_graph._PATHS_PER_EXIT", 1)
         one_path = _rank(_diamond(), hazard, hazard, _gate())
         e0 = _entry(ranked)
         assert e0.path == ["D0", "C0", "E0"]
@@ -486,6 +484,19 @@ class TestKShortestPaths:
             banned_nodes=set(),
         )
         assert plain == empty
+
+    @pytest.mark.parametrize("first_hops", [None, {"A": 1.0, "B": 1.0}])
+    def test_nothing_banned_changes_nothing_on_equal_costs(self, first_hops):
+        graph = _line_graph(
+            {"S": "distribution", "A": "checkpoint", "B": "checkpoint", "T": "exit"},
+            {("S", "A"): 1.0, ("S", "B"): 1.0, ("A", "T"): 1.0, ("B", "T"): 1.0},
+        )
+        plain = graph._dijkstra("S", first_hops=first_hops)
+        empty = graph._dijkstra(
+            "S", first_hops=first_hops, banned_edges=set(), banned_nodes=set()
+        )
+        assert plain == empty
+        assert plain[1]["T"] == "A"
 
     def test_nothing_banned_returns_the_search_path_first_on_equal_costs(self):
         from pyfds_evac.core.route_graph import k_shortest_paths

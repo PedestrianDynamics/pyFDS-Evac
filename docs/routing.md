@@ -198,15 +198,17 @@ frame of the extinction and FED slices routing reads is held at that frame,
 with one warning per run: there is no record to foresee beyond it (#666). The decision time itself is
 not held, so the horizon check on the agent's own samples still applies.
 
-An exit whose measured path the gate refuses (FED or τ) is tried on up to two
-more loopless shortest paths to it (Yen, `k_shortest_paths`), searched on the
+An exit whose measured path is refused (FED, or τ under the gate) is tried on
+up to two more loopless shortest paths to it (Yen, `k_shortest_paths`), searched on the
 same edge weights and starting walks and measured the same way. The best that
 passes becomes the exit's record; with none, the exit keeps its refused record
 ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)). Where
 the first path passes, no further path is searched and nothing changes. On the
 world100 decks, where most exits are refused at most ticks, the search adds
 wall time: with history off, the median of three interleaved runs went from 24.2 s to 33.3 s (+37 %) on `world100_stream_east` and from
-23.2 s to 40.8 s (+76 %) on `world100_stream_oval`.
+23.2 s to 40.8 s (+76 %) on `world100_stream_oval`. These are indicative: the
+runs shared the host with other programs, and single runs spread by about a
+quarter.
 
 ### Composite cost
 
