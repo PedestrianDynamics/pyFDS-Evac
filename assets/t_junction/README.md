@@ -106,7 +106,7 @@ Exit A and 128 on Exit B, and four route-history rows: two `smoke_reroute`
 rows (agent 2 at 7 s and agent 3 at 9 s, Exit B to Exit A, when B is refused
 and A is still feasible) and two `fallback` rows (agent 29 at 61 s and
 agent 27 at 62 s, Exit A to Exit B, written when every route is refused).
-Switches on the way happen when the router sees only the present smoke.
+The `smoke_reroute` switches happen because the router sees only the present smoke; the `fallback` switches follow from the margin rule.
 
 Measured at `dc45a496` with the command in step 2 below (`config_full.json`
 and `config_full_no_foresight.json`, default seed) against the FDS output in
