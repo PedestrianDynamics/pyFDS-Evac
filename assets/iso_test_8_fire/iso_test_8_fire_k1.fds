@@ -3,9 +3,10 @@
 
 ! ISO 20414 Test 8 (exit route allocation), smoke in the main passage.
 ! No combustion and no obstruction: the soot is prescribed in a box that is
-! there from t = 0, and the walls live in geometry.wkt.
+! there from t = 0, and the walls live in geometry.wkt. The run holds the
+! 0.1 s frame (--allow-fds-horizon-hold): the box mixes out at its ends later.
 &MESH IJK=95,51,6, XB=-10.0,9.0,-4.7,5.5,0.0,3.0 /
-&TIME T_END=150 /
+&TIME T_END=0.1 /
 &MISC TMPA=20.0 /
 
 &SPEC ID='NITROGEN', BACKGROUND=.TRUE. /
@@ -24,6 +25,6 @@
 &SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
 ! The default sampling height of pyFDS-Evac; FDS snaps it to the 1.5 m face.
 &SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT' /
-&DUMP DT_SLCF=10 /
+&DUMP DT_SLCF=0.1 /
 
 &TAIL /

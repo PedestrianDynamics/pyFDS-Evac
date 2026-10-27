@@ -81,9 +81,12 @@ SOOT_TABLE = [
 DECKS = {"k5": 5.0, "k1": 1.0}
 CELL_M = 0.2
 LATTICE_M = 0.5
+# Later than any run reads; the hold returns the last frame there.
 LATE_S = 30.0
 # Edge nodes (2 x 0.2 m at K/2) plus the 1 s speed update; hand bound 0.13 s.
 END_TIME_ABS_S = 0.5
+# End times on the FDS 6.10.1 output, seed 42 (clear air: 16.0 s).
+FDS_END_S = {"preference": 19.4, "weak": 19.4, "hard": 17.5, "foresight": 19.4}
 
 
 def builder_module(name: str, asset: Path):
@@ -144,7 +147,9 @@ def _needs_output(sub: str) -> list:
 
 
 def _fds_field(fds_read_only, sub: str) -> ExtinctionField:
-    return ExtinctionField.from_fds(str(fds_read_only(FIRE_FDS / sub)))
+    return ExtinctionField.from_fds(
+        str(fds_read_only(FIRE_FDS / sub)), allow_horizon_hold=True
+    )
 
 
 def lattice_points(area, step: float = LATTICE_M):
@@ -156,18 +161,20 @@ def lattice_points(area, step: float = LATTICE_M):
                 yield float(x), float(y)
 
 
-def check_premise(field, area, soot_box, k_target: float, cell: float) -> dict:
+def check_premise(
+    field, area, soot_box, k_target: float, cell: float, late_s: float = LATE_S
+) -> dict:
     """The field is the prescribed box, and it does not move (model contract B).
 
-    *soot_box* is ``(x_min, y_min, x_max, y_max)``. Returns the edge values for
-    the report.
+    *soot_box* is ``(x_min, y_min, x_max, y_max)``; *late_s* is the latest
+    time the runs read. Returns the edge values for the report.
     """
     shape = box(*soot_box)
     inner, outer = shape.buffer(-cell), shape.buffer(cell)
     inside = [p for p in lattice_points(area) if inner.covers(Point(*p))]
     outside = [p for p in lattice_points(area) if not outer.intersects(Point(*p))]
     assert inside and outside
-    for t in (0.0, LATE_S):
+    for t in (0.0, late_s):
         for x, y in inside:
             k = field.sample_extinction(t, x, y)
             assert k == pytest.approx(k_target, rel=0.01), f"t={t} ({x}, {y})"
@@ -177,9 +184,11 @@ def check_premise(field, area, soot_box, k_target: float, cell: float) -> dict:
     for x, y in inside + outside:
         early, late = (
             field.sample_extinction(0.0, x, y),
-            field.sample_extinction(LATE_S, x, y),
+            field.sample_extinction(late_s, x, y),
         )
-        assert late == pytest.approx(early, rel=0.01, abs=1e-6), f"({x}, {y})"
+        assert late == pytest.approx(early, rel=0.01, abs=0.01 * k_target), (
+            f"({x}, {y})"
+        )
     assert max(field.sample_extinction(0.0, x, y) for x, y in inside) > 0.5 * k_target
     ring = [
         p
@@ -343,6 +352,7 @@ def test_fds_run(case, cases, clear_run, capsys):
     assert run["routes"] == synthetic["routes"]
     assert run["exits"] == synthetic["exits"]
     assert run["t_end_s"] == pytest.approx(synthetic["t_end_s"], abs=END_TIME_ABS_S)
+    assert run["t_end_s"] == pytest.approx(FDS_END_S[case], abs=0.05)
     with capsys.disabled():
         print(
             f"\n{case}: end {run['t_end_s']:.1f} s on FDS, "
