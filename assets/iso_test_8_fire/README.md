@@ -53,7 +53,12 @@ output is byte-identical to the committed files.
 - The OXYGEN species carries `MASS_FRACTION_0=0.231`. FDS defaults the ambient
   oxygen to 0, which gives a density contrast outside the box and a gravity
   current within seconds.
-- No obstructions: the walls live in `geometry.wkt`. `T_END=150`, `DT_SLCF=10`.
+- No obstructions: the walls live in `geometry.wkt`.
+- `T_END=0.1`, `DT_SLCF=0.1`: the deck is frozen at t = 0. Nothing in FDS holds
+  the soot in the box, and it mixes out through the two ends that cross the
+  passage (one cell inside them, K is 11 % low at 10 s and 19 % low at 20 s,
+  FDS 6.10.1). The run holds the 0.1 s frame, as the synthetic box holds its
+  value: pass `--allow-fds-horizon-hold` to `run.py`.
 - Two slices of `EXTINCTION COEFFICIENT` with `SPEC_ID='SOOT'` at 2.0 m and
   1.6 m; FDS snaps 1.6 m to the 1.5 m face, which pyFDS-Evac reads by default.
 
@@ -75,8 +80,8 @@ for DECK in "$REPO"/assets/$A/${A}_k*.fds; do
 done
 ```
 
-The subdirectories are `k5` and `k1`. Each deck takes about 3 to 5 minutes and
-writes about 0.6 MB; the output goes to the data store and is never committed.
+The subdirectories are `k5` and `k1`. Each deck takes a few seconds and
+writes well under 1 MB; the output goes to the data store and is never committed.
 Check `<CHID>.out` for the FDS revision (6.10.1) and for SOOT W = 12.011.
 
 The tests read `$ISO_TEST_8_FIRE_FDS`, which defaults to

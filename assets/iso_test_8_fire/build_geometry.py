@@ -29,6 +29,13 @@ Two traps, both caught by the premise test
     2. Soot (W = 12.011 g/mol) is lighter than air, so the box would rise. The
        ``&INIT`` carries the temperature that cancels the buoyancy of the soot.
 
+Frozen at t = 0
+    Nothing in FDS holds the soot in the box, and it mixes out through the two
+    ends that cross the passage: one cell inside them K is 11 % low at 10 s
+    and 19 % low at 20 s, while the run reads up to 19.4 s. The deck therefore
+    stops at 0.1 s, and the run holds the last frame
+    (``--allow-fds-horizon-hold``), as the synthetic box holds its value.
+
 The assets are standalone scripts, so the soot and temperature formulas below
 are repeated in ``assets/iso_test_16_fire``.
 """
@@ -64,8 +71,9 @@ MESH_XB = (-10.0, 9.0, -4.7, 5.5, 0.0, 3.0)
 # thickness so that x is grid-aligned and the edge smear falls outside the
 # 1.1 m passage.
 SOOT_BOX_XB = (-4.0, -2.6, 0.3, 2.3, 0.0, 3.0)
-T_END_S = 150
-DT_SLCF_S = 10
+# FDS writes the frames at 0 and 0.1 s; the run holds the last one.
+T_END_S = 0.1
+DT_SLCF_S = 0.1
 SLICE_HEIGHT = 2.0
 DEFAULT_HEIGHT = 1.6
 
@@ -133,7 +141,8 @@ def deck_text(k: float) -> str:
 
 ! ISO 20414 Test 8 (exit route allocation), smoke in the main passage.
 ! No combustion and no obstruction: the soot is prescribed in a box that is
-! there from t = 0, and the walls live in geometry.wkt.
+! there from t = 0, and the walls live in geometry.wkt. The run holds the
+! 0.1 s frame (--allow-fds-horizon-hold): the box mixes out at its ends later.
 &MESH IJK={i},{j},{n}, XB={mesh} /
 &TIME T_END={T_END_S} /
 &MISC TMPA=20.0 /

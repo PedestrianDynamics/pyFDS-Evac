@@ -62,6 +62,9 @@ FIRE_FDS = Path(
 
 DECKS = {"k0p05": 0.05, "k0p10": 0.10, "k0p20": 0.20, "k0p5": 0.5, "k3": 3.0}
 CELL_M = 0.25
+# The runs end by about 6 s; the 10 s frame covers them. The box mixes out
+# later (2.5 % low at 30 s), which no run reads.
+READ_HORIZON_S = 10.0
 
 
 def _builder():
@@ -160,7 +163,9 @@ def test_premise(sub, fields, capsys):
     k_target = DECKS[sub]
     x0, x1, y0, y1 = _builder().SOOT_BOX_XB[:4]
     area = wkt.loads(_scenario(1, {}).walkable_area_wkt)
-    edge = check_premise(fields(sub), area, (x0, y0, x1, y1), k_target, CELL_M)
+    edge = check_premise(
+        fields(sub), area, (x0, y0, x1, y1), k_target, CELL_M, READ_HORIZON_S
+    )
     out = FIRE_FDS / sub / f"iso_test_16_fire_{sub}.out"
     with capsys.disabled():
         print(f"\n{sub}: edge values (K = {k_target:g} 1/m)")
@@ -217,6 +222,8 @@ def test_affiliated_occupant_on_k3(fields, capsys):
     assert smoky["routes"] == []
     assert smoky["evacuated"] == 1
     assert smoky["exit_time_s"] > clear["exit_time_s"]
+    # On the FDS 6.10.1 output (synthetic box 6.2 s, clear 4.9 s).
+    assert smoky["exit_time_s"] == pytest.approx(6.0, abs=0.05)
     with capsys.disabled():
         print(
             f"\nA on k3: exit at {smoky['exit_time_s']:.1f} s, "
