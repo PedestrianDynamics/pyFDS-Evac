@@ -36,9 +36,9 @@ per-agent or trajectory-level -- the coupled run is not bit-reproducible (see
 project memory). The one exception is the #458 regression test, which names
 four agents by spawn index under seed 42.
 
-Engine note: rerouting only engages on the **flow-spawning** agent-init path;
-``t_junction_scenario`` uses it (a by-number population leaves agents out of
-route evaluation entirely -- a verified limitation worth its own bug report).
+Engine note: ``t_junction_scenario`` uses flow spawning so the population
+enters over a short window before the smoke starts; by-number placement
+reroutes as well (#21).
 """
 
 from __future__ import annotations

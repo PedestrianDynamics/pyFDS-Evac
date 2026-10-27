@@ -294,7 +294,7 @@ def test_a2_examples_list(workdir):
             labels = [e.label for e in app.examples]
             variants = [e for e in app.examples if e.variant_of == "t_junction"]
             assert "t_junction" in labels
-            assert len(variants) == 5
+            assert len(variants) == 6
             assert "heat_radiometer" not in labels
             coupled = next(e for e in app.examples if e.label == "iso_table21_coupled")
             assert coupled.fds_marker == "FDS output found"

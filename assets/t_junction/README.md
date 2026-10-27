@@ -1,10 +1,12 @@
 # T-junction test: smoke-blocked T-corridor
 
 This scenario was built to exercise speed reduction, FED incapacitation and
-dynamic rerouting. In the run at `c619a046` (probabilistic
-incapacitation, no irritant slowdown) speed reduction and FED act; rerouting acts once: one agent
-changes exit on the way. See the results below
-and [#195](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/195).
+dynamic rerouting. In the run at `dc45a496` (probabilistic incapacitation, no
+irritant slowdown) speed reduction and FED act. Rerouting acts at spawn: with
+foresight, 13 of the 150 agents that enter choose Exit A before they move, and
+no agent changes exit on the way. `config_full_no_foresight.json` is the same
+deck without foresight; there agents do switch on the way. See the results
+below and [#195](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/195).
 
 ## Geometry
 
@@ -25,7 +27,8 @@ walk through the fire zone to reach either exit.
 - Vertical branch: 6 m x 10 m (x = 17 to 23, y = 0 to 10)
 - Exit A at x = 0 (20 m from junction)
 - Exit B at x = 30 (10 m from junction)
-- `config.json` and `config_full.json` add 200 agents in the branch over
+- `config.json`, `config_full.json` and `config_full_no_foresight.json` add
+  200 agents in the branch over
   0–400 s (0.5 per second), so 150 have entered at the 300 s limit;
   `config_initial_pre*.json` place 100 agents there at t = 0
 
@@ -72,26 +75,44 @@ Frantzich-Nilsson correlation.
 creating a bottleneck at the junction. Agents queuing in heavy smoke
 accumulate CO and HCl exposure. The high HCl yield from PVC drives the
 irritant term, while CO and O2 depletion contribute to narcosis. Measured
-over 150 agents at 2 MW: largest FED per agent median 0.10 and max 0.24,
-largest FIC per agent median 7.4 (interquartile 5.5-17.1) against a
-threshold of 1.0, no agent incapacitated by the probabilistic per-agent
-thresholds, and 97 of 150 out within 300 s against 145 in clear air. With
-`--enable-fic-speed` 35 of 150 get out and two agents are incapacitated.
+over 150 agents at 2 MW: largest FED per agent median 0.14 and max 0.33,
+largest FIC per agent median 13.65 (quartiles 8.57 and 29.51) against a
+threshold of 1.0, one agent incapacitated by the probabilistic per-agent
+thresholds, and 89 of 150 out within 300 s against 145 in clear air. With
+`--enable-fic-speed` 25 of 150 get out and seven agents are incapacitated.
 
 **Rerouting.** Exit B is initially closer (10 m vs 20 m), and in clear
-air every agent takes it. In the fire, 17 of the first 35 agents, spawned
-in the first 70 s, head for Exit A from spawn and leave by it. Agent 48,
-spawned at 94 s, heads for Exit A and switches to Exit B at 104 s, when
-both routes are refused (`fallback`). Every other agent that gets out
-leaves by Exit B.
+air every agent takes it. In the fire, the agents spawned in the first
+seconds choose Exit A at spawn: 13 of the 150 (the agents spawned every 2 s
+from 0 to 22 s, and one at 40 s) end on Exit A, the other 137 on Exit B. The
+choice follows the smoke the router foresees on B (the default `anticipate`
+with unlimited `foresight_horizon_s`): B is refused or has the higher
+travel-time risk τ, and the router ranks on τ first. That choice writes no
+route-history row, and the run's route history holds only its header. Once
+both routes are refused nobody switches: a rival replaces the
+current exit only if its τ is more than 20 % lower
+(`fallback_switch_margin` 0.2), and it is not.
 
-Measured at `c619a046` with the command in step 2 below (`config_full.json`,
-default seed) against the FDS output in the project's data store
-(`t_junction/fire_2MW_PVC/`); the clear-air run drops `--fds-dir` and the
-FDS history outputs, and the FIC run adds `--enable-fic-speed`.
-The figures of `7a3617d` (90 of 150 out, FED max 0.33, two incapacitated,
-23 of the first 26 agents to Exit A, no exit change) predate the 0.5.0
-routing and sampling changes.
+The two journeys in `config_full.json` (`journey_0` to Exit A with weight 1,
+`journey_0_1` to Exit B with weight 99) both start at the same spawn area and
+both reach both exits. The spawn area is therefore not a preference area, so
+the 1 : 99 weights allocate no one: they only set the exit an agent is
+scripted to before the opening choice, which the ranking then overrides.
+
+**Without foresight.** `config_full_no_foresight.json` is `config_full.json`
+with `routing.anticipate` set to `false`: the router reads only the smoke
+that is present. The same command gives 89 of 150 out, 22 agents ending on
+Exit A and 128 on Exit B, and four route-history rows: two `smoke_reroute`
+rows (agent 2 at 7 s and agent 3 at 9 s, Exit B to Exit A, when B is refused
+and A is still feasible) and two `fallback` rows (agent 29 at 61 s and
+agent 27 at 62 s, Exit A to Exit B, written when every route is refused).
+Switches on the way happen when the router sees only the present smoke.
+
+Measured at `dc45a496` with the command in step 2 below (`config_full.json`
+and `config_full_no_foresight.json`, default seed) against the FDS output in
+the project's data store (`t_junction/fire_2MW_PVC_796/`); the clear-air run
+drops `--fds-dir` and the FDS history outputs, and the FIC run adds
+`--enable-fic-speed`.
 
 `config_initial_pre0.json`, `config_initial_pre30.json` and `config_initial_pre60.json` place 100 agents over the branch at t = 0 with a constant pre-movement of 0, 30 or 60 s and a 270 s limit; see [Evacuation with and without the fire](../../docs/howto-with-without-fire.md).
 
@@ -121,10 +142,15 @@ uv run python run.py \
 
 `--fds-dir` is the folder that holds the FDS output of step 1.
 
+Use `--scenario assets/t_junction/config_full_no_foresight.json` for the
+variant without foresight.
+
 ## Smoke-weight sweep: when does smoke actually change the exit?
 
 `tests/test_rerouting_smoke_sweep.py` drives this asset's geometry through the
-composite cost at a range of `w_smoke`, without needing FDS output.
+composite cost (`cost_model: "additive"`) at a range of `w_smoke`, without
+needing FDS output. `config_full.json` runs the default `gate` model, where its
+`routing` keys `w_smoke` and `w_fed` have no effect.
 
 The T puts exit B 10 m from the junction and exit A 20 m, so **distance alone
 always prefers B**. With heavy extinction on B's arm:

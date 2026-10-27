@@ -497,10 +497,8 @@ def t_junction_scenario(spec: TJunctionSpec) -> Scenario:
                     "number": spec.num_agents,
                     "radius": 0.15,
                     "v0": spec.v0,
-                    # Rerouting engages only on the flow-spawning agent-init path
-                    # (by-number placement leaves agents out of route evaluation
-                    # -- a verified engine limitation, see project memory). A
-                    # short flow window gets the population in quickly.
+                    # A short flow window gets the population in before the
+                    # smoke starts; by-number placement reroutes as well (#21).
                     "use_flow_spawning": True,
                     "flow_start_time": 0,
                     "flow_end_time": spec.flow_end_time_s,
