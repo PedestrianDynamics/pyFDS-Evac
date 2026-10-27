@@ -361,7 +361,7 @@ class TestAlternativePathToRefusedExit:
         assert route_state.current_path == ["D0", "C1", "E0"]
 
     def test_both_corridors_hazardous_keeps_the_searched_path_record(self, monkeypatch):
-        hazard = _Hazard((_ON_C0_E0, _ON_C1_E0), fed=10.0)
+        hazard = _Hazard((_ON_C0_E0, _ON_C1_E0), fed=60.0)
         ranked = _rank(_diamond(), hazard, hazard, _gate())
         monkeypatch.setattr(
             "pyfds_evac.core.route_graph._PATHS_PER_EXIT", 1, raising=False
@@ -373,11 +373,11 @@ class TestAlternativePathToRefusedExit:
         assert ranked == one_path
 
     def test_third_cheapest_corridor_is_found_the_fourth_is_not(self):
-        three = _Hazard((_ON_C0_E0, _ON_C1_E0), fed=10.0)
+        three = _Hazard((_ON_C0_E0, _ON_C1_E0), fed=60.0)
         found = _entry(_rank(_corridors(3), three, three, _gate()))
         assert found.path == ["D0", "C2", "E0"]
         assert found.feasible and not found.rejected
-        four = _Hazard((_ON_C0_E0, _ON_C1_E0, _ON_C2_E0), fed=10.0)
+        four = _Hazard((_ON_C0_E0, _ON_C1_E0, _ON_C2_E0), fed=60.0)
         kept = _entry(_rank(_corridors(4), four, four, _gate()))
         assert kept.path == ["D0", "C0", "E0"]
         assert kept.rejected and kept.rejection_reason.startswith("fallback: FED_max")
@@ -418,7 +418,7 @@ class TestAlternativePathToRefusedExit:
                 ("M", "E0"),
             ),
         )
-        hazard = _Hazard(((12.0, 18.0, -1.0, 1.0),), fed=10.0)
+        hazard = _Hazard(((12.0, 18.0, -1.0, 1.0),), fed=60.0)
         e0 = _entry(_rank(graph, hazard, hazard, _gate()))
         assert e0.path == ["D0", "M", "E0"]
         assert e0.feasible
@@ -550,7 +550,13 @@ class TestKShortestPaths:
         )
         first = graph.shortest_paths_to_exits("S")["T"][1]
         paths = k_shortest_paths(graph, "S", "T", first, {}, None, k=9)
-        assert paths == [["S", "A", "B", "T"], ["S", "B", "T"], ["S", "A", "T"]]
+        # Costs 3, 5, 6 and 10; S > A > B > A > T would loop.
+        assert paths == [
+            ["S", "A", "B", "T"],
+            ["S", "B", "T"],
+            ["S", "A", "T"],
+            ["S", "B", "A", "T"],
+        ]
         assert all(len(set(p)) == len(p) for p in paths)
 
 

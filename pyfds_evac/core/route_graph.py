@@ -283,6 +283,8 @@ class StageGraph:
         source: str,
         dynamic_weights: dict[tuple[str, str], float] | None = None,
         first_hops: dict[str, float] | None = None,
+        banned_edges: set[tuple[str, str]] | None = None,
+        banned_nodes: set[str] | None = None,
     ) -> tuple[dict[str, float], dict[str, str | None]]:
         """Run Dijkstra from *source*.  Returns (dist, prev) dicts.
 
@@ -294,6 +296,11 @@ class StageGraph:
         cost and *source* as its predecessor. *source* stands for the agent's
         position only: no edge into it is relaxed, so it is never reached
         through the graph and appears once, at the start of every path.
+
+        *banned_edges* are ``(source_id, target_id)`` pairs the search does not
+        use, a banned seed edge ``(source, node)`` drops *node* from
+        *first_hops*, and *banned_nodes* are not entered. They serve
+        :func:`k_shortest_paths`; with neither the search is unchanged.
 
         Between paths of equal cost the one whose last predecessor was
         expanded first wins: the heap orders equal costs by node id, and a
@@ -311,6 +318,10 @@ class StageGraph:
             heap.append((0.0, source))
         else:
             for node, cost in first_hops.items():
+                if banned_edges and (source, node) in banned_edges:
+                    continue
+                if banned_nodes and node in banned_nodes:
+                    continue
                 if node in dist and node != source and cost < dist[node]:
                     dist[node] = cost
                     prev[node] = source
@@ -322,6 +333,10 @@ class StageGraph:
                 continue
             for edge in self.edges.get(u, []):
                 if first_hops is not None and edge.target == source:
+                    continue
+                if banned_nodes and edge.target in banned_nodes:
+                    continue
+                if banned_edges and (edge.source, edge.target) in banned_edges:
                     continue
                 if dynamic_weights is not None:
                     w = dynamic_weights.get((edge.source, edge.target), edge.weight)
@@ -349,6 +364,128 @@ class StageGraph:
             cur = prev.get(cur)
         path.reverse()
         return path
+
+
+# Paths tried to an exit whose searched path is refused, that path included.
+# A search bound, not an empirical coefficient: Yen (1971), #185.
+_PATHS_PER_EXIT = 3
+
+
+def _edge_cost(
+    graph: StageGraph,
+    weights: dict[tuple[str, str], float] | None,
+    source: str,
+    target: str,
+) -> float:
+    """The weight ``StageGraph._dijkstra`` charges for the edge *source* > *target*."""
+    return min(
+        (
+            e.weight if weights is None else weights.get((e.source, e.target), e.weight)
+            for e in graph.edges.get(source, [])
+            if e.target == target
+        ),
+        default=math.inf,
+    )
+
+
+def _root_cost(
+    graph: StageGraph,
+    weights: dict[tuple[str, str], float] | None,
+    first_hops: dict[str, float] | None,
+    root: list[str],
+) -> float:
+    """Cost of the path *root* as the search charges it, from its start."""
+    if len(root) < 2:
+        return 0.0
+    if first_hops is None:
+        cost = _edge_cost(graph, weights, root[0], root[1])
+    else:
+        cost = first_hops[root[1]]
+    for src, dst in zip(root[1:], root[2:]):
+        cost += _edge_cost(graph, weights, src, dst)
+    return cost
+
+
+def _spur_candidates(
+    graph: StageGraph,
+    target: str,
+    accepted: list[list[str]],
+    weights: dict[tuple[str, str], float] | None,
+    first_hops: dict[str, float] | None,
+) -> list[tuple[float, int, tuple[str, ...]]]:
+    """Paths that leave the last accepted path at one of its nodes.
+
+    For each node of ``accepted[-1]`` but the exit: the root is the path up to
+    the node, the edges the accepted paths with that root take next are
+    banned, the root's other nodes are banned, and the shortest way on to
+    *target* is searched. The source is in every root, so it is never entered
+    again. At the source, with *first_hops*, the search is seeded again
+    without the banned first hops.
+    """
+    last = accepted[-1]
+    source = last[0]
+    found: list[tuple[float, int, tuple[str, ...]]] = []
+    for idx in range(len(last) - 1):
+        root = last[: idx + 1]
+        banned_edges = {
+            (p[idx], p[idx + 1])
+            for p in accepted
+            if len(p) > idx + 1 and p[: idx + 1] == root
+        }
+        if idx == 0 and first_hops is not None:
+            start = source
+            dist, prev = graph._dijkstra(
+                source,
+                dynamic_weights=weights,
+                first_hops=first_hops,
+                banned_edges=banned_edges,
+            )
+        else:
+            start = root[-1]
+            dist, prev = graph._dijkstra(
+                start,
+                dynamic_weights=weights,
+                banned_edges=banned_edges,
+                banned_nodes=set(root[:-1]),
+            )
+        if not math.isfinite(dist.get(target, math.inf)):
+            continue
+        path = root[:-1] + graph._reconstruct(prev, start, target)
+        cost = _root_cost(graph, weights, first_hops, root) + dist[target]
+        found.append((cost, len(path), tuple(path)))
+    return found
+
+
+def k_shortest_paths(
+    graph: StageGraph,
+    source: str,
+    target: str,
+    first_path: list[str],
+    weights: dict[tuple[str, str], float] | None,
+    first_hops: dict[str, float] | None,
+    k: int = _PATHS_PER_EXIT,
+) -> list[list[str]]:
+    """Up to *k* loopless shortest paths from *source* to *target* (Yen, 1971).
+
+    *first_path* is the shortest path the search found with *weights* and
+    *first_hops*, and is returned first, unchanged. The others come in
+    increasing cost; equal costs are ordered by number of nodes, then by the
+    node ids, so the result does not depend on insertion order. With
+    *first_hops* the search starts off the graph, as in
+    ``StageGraph.shortest_paths_to_exits``, and no path enters *source* again.
+    """
+    accepted = [first_path]
+    queued = {tuple(first_path)}
+    candidates: list[tuple[float, int, tuple[str, ...]]] = []
+    while len(accepted) < k:
+        for cand in _spur_candidates(graph, target, accepted, weights, first_hops):
+            if cand[2] not in queued:
+                queued.add(cand[2])
+                heapq.heappush(candidates, cand)
+        if not candidates:
+            break
+        accepted.append(list(heapq.heappop(candidates)[2]))
+    return accepted
 
 
 def without_closed_stages(graph: StageGraph, time_s: float) -> StageGraph:
@@ -2670,13 +2807,18 @@ def _generate_candidates(
     agent_position: tuple[float, float] | None = None,
     current_target: str | None = None,
     walks: dict[WalkKey, _FirstLeg] | None = None,
-) -> dict[str, tuple[float, list[str]]]:
+) -> tuple[
+    dict[str, tuple[float, list[str]]],
+    dict[tuple[str, str], float],
+    dict[str, float] | None,
+]:
     """The cheapest path from *source* to every reachable exit under *policy*.
 
     Computes dynamic edge weights from current smoke/FED conditions, then runs
     Dijkstra with those weights. *graph* is already restricted to what the
     agent knows. Returns exit_id -> (cost, path), as
-    ``StageGraph.shortest_paths_to_exits``.
+    ``StageGraph.shortest_paths_to_exits``, with the edge weights and the first
+    hops the search used, which :func:`k_shortest_paths` needs.
 
     With *agent_position* the search starts where the agent stands, not at
     *source*: see ``_first_hops``.
@@ -2724,7 +2866,7 @@ def _generate_candidates(
     all_paths = graph.shortest_paths_to_exits(
         source, dynamic_weights=dynamic_weights, first_hops=first_hops
     )
-    return all_paths
+    return all_paths, dynamic_weights, first_hops
 
 
 def _search_from_position(graph: StageGraph, source: str) -> bool:
@@ -2955,7 +3097,7 @@ def rank_routes(
     # The walks from this agent to the nodes it may head for, shared by the
     # search and the measurement below; never by another agent.
     walks: dict[WalkKey, _FirstLeg] = {}
-    all_paths = _generate_candidates(
+    all_paths, weights, first_hops = _generate_candidates(
         graph,
         source,
         time_s,
@@ -2987,11 +3129,20 @@ def rank_routes(
         )
         return _project_route_cost(_assess_measurements(m, config, current_exit))
 
-    # Phase 3: evaluate full routes (reusing cached segments).
-    costs = [measure(path) for _dist, path in all_paths.values()]
-
     def key(rc: RouteCost) -> tuple[int, int, float, float, int]:
         return policy.order_key(rc, config, current_exit)
+
+    # Phase 3: evaluate full routes (reusing cached segments). An exit whose
+    # searched path is refused tries its next shortest paths (#185).
+    costs = []
+    for exit_id, (_dist, path) in all_paths.items():
+        rc = measure(path)
+        if not rc.feasible:
+            alternatives = k_shortest_paths(
+                graph, source, exit_id, path, weights, first_hops, _PATHS_PER_EXIT
+            )[1:]
+            rc = _first_feasible(rc, [measure(p) for p in alternatives], key)
+        costs.append(rc)
 
     if (
         agent_position is not None
@@ -3009,6 +3160,22 @@ def rank_routes(
 
     costs = policy.apply_candidate_set_rules(costs, config)
     return _apply_fallback(_order_routes(costs, key), config, current_exit)
+
+
+def _first_feasible(
+    searched: RouteCost,
+    alternatives: list[RouteCost],
+    key: Callable[[RouteCost], tuple[int, int, float, float, int]],
+) -> RouteCost:
+    """The route that orders first among the feasible *alternatives*.
+
+    Without one, *searched* stays the exit's record: swapping in a less bad
+    refused path would change every tick in which all exits are refused.
+    """
+    feasible = [rc for rc in alternatives if rc.feasible]
+    if not feasible:
+        return searched
+    return _order_routes(feasible, key)[0]
 
 
 def _order_routes(
