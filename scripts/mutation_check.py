@@ -8,13 +8,15 @@ a defect in the code (docs/TESTING_GUIDELINES.md §4, issue #816).
 Run by hand from a clean checkout, never in the shared working tree of a
 running agent::
 
-    python scripts/mutation_check.py fed [--python .venv/bin/python]
+    python scripts/mutation_check.py fed [--python .venv/bin/python] [--timeout 300]
 
 The module is restored from memory after each mutant and checked against
 its original text at the end. A mutant counts as killed only when tests
 fail; a pytest run that errors without a failed test (an import or syntax
-error, a collection error) is reported as invalid. Exit status is 0 if
-every mutant is killed, 1 otherwise.
+error, a collection error) is reported as invalid. A run that exceeds
+``--timeout`` (300 s by default) is stopped and counts as a kill: the
+mutant made the tests hang. Exit status is 0 if every mutant is killed,
+1 otherwise.
 """
 
 from __future__ import annotations
@@ -941,25 +943,35 @@ AREAS: dict[str, Area] = {
 }
 
 
-def _run_tests(python: str, tests: tuple[str, ...]) -> tuple[int, list[str]]:
-    """Run the tests; return (pytest exit code, ids of failed tests)."""
-    proc = subprocess.run(
-        [
-            python,
-            "-m",
-            "pytest",
-            "-q",
-            "-p",
-            "no:cacheprovider",
-            "-rf",
-            "-m",
-            "not external_data",
-            *tests,
-        ],
-        cwd=REPO,
-        capture_output=True,
-        text=True,
-    )
+# The exit code _run_tests reports for a pytest run stopped at the timeout.
+TIMED_OUT = 124
+
+
+def _run_tests(
+    python: str, tests: tuple[str, ...], timeout: float
+) -> tuple[int, list[str]]:
+    """Run the tests; return (pytest exit code or TIMED_OUT, ids of failed tests)."""
+    try:
+        proc = subprocess.run(
+            [
+                python,
+                "-m",
+                "pytest",
+                "-q",
+                "-p",
+                "no:cacheprovider",
+                "-rf",
+                "-m",
+                "not external_data",
+                *tests,
+            ],
+            cwd=REPO,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return TIMED_OUT, []
     failed = [
         line.removeprefix("FAILED ").split(" - ")[0]
         for line in proc.stdout.splitlines()
@@ -969,27 +981,36 @@ def _run_tests(python: str, tests: tuple[str, ...]) -> tuple[int, list[str]]:
 
 
 def _outcome(returncode: int, failed: list[str]) -> str:
-    """Classify a mutant's test run as survived, killed or invalid."""
+    """Classify a mutant's test run as survived, killed (failed or timed out) or invalid."""
     if returncode == 0:
         return "survived"
+    if returncode == TIMED_OUT:
+        return "killed"
     if returncode == 1 and failed:
         return "killed"
     return "invalid"
 
 
 def _check_mutant(
-    m: Mutant, path: Path, original: str, python: str, tests: tuple[str, ...]
+    m: Mutant,
+    path: Path,
+    original: str,
+    python: str,
+    tests: tuple[str, ...],
+    timeout: float,
 ) -> str:
     """Apply one mutant, run the tests, restore; return the outcome."""
     path.write_text(original.replace(m.old, m.new))
     try:
-        returncode, failed = _run_tests(python, tests)
+        returncode, failed = _run_tests(python, tests, timeout)
     finally:
         path.write_text(original)
     outcome = _outcome(returncode, failed)
     status = {
         "survived": "SURVIVED",
-        "killed": f"killed by {len(failed)}",
+        "killed": "killed by timeout"
+        if returncode == TIMED_OUT
+        else f"killed by {len(failed)}",
         "invalid": f"INVALID (pytest exit {returncode})",
     }[outcome]
     print(f"{m.name:32s} {m.kind:20s} {status}")
@@ -1002,6 +1023,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("area", choices=sorted(AREAS))
     parser.add_argument("--python", default=sys.executable)
+    parser.add_argument(
+        "--timeout",
+        type=float,
+        default=300.0,
+        help="seconds per pytest run; a mutant that runs longer is killed",
+    )
     args = parser.parse_args()
 
     area = AREAS[args.area]
@@ -1013,14 +1040,22 @@ def main() -> int:
             print(f"{m.name}: snippet not found exactly once")
             return 2
 
-    returncode, failed = _run_tests(args.python, area.tests)
+    returncode, failed = _run_tests(args.python, area.tests, args.timeout)
+    if returncode == TIMED_OUT:
+        print(f"baseline timed out after {args.timeout:g} s, not mutating")
+        return 2
     if returncode != 0:
         print(f"baseline fails, not mutating: {failed}")
         return 2
 
     outcomes = [
         _check_mutant(
-            m, paths[m.name], originals[paths[m.name]], args.python, area.tests
+            m,
+            paths[m.name],
+            originals[paths[m.name]],
+            args.python,
+            area.tests,
+            args.timeout,
         )
         for m in area.mutants
     ]

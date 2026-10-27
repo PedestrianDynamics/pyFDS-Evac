@@ -369,10 +369,8 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   deadlock when it is incomplete and at least two agents moved less than
   0.03 m over the last 100 s, finds the same for Iso-06-counterflow-50.
   With the same patch, Iso-06-counterflow-0 and -10 finish.
-  `SocialForceModel` clears Iso-06-counterflow-50 in all 3 seeds by pushing, at
-  peak speeds about 2.2 times the desired speed; the 100 % case was not
-  run with it
-  ([Movement models](/models/movement.md#deadlock-behaviour)).
+  Other operational models behave differently on these cases
+  ([Movement models](/models/movement.md#counterflow-with-hard-journeys)).
   The jam is head-on contact in JuPedSim's operational model;
   pyFDS-Evac has no dedicated counterflow algorithm
   ([Model comparison](model-comparison.md#1-movement-model)).
@@ -384,10 +382,15 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in
   `metrics["deadlock"]`, instead of running to `max_simulation_time`. The
   jam itself is not cleared.
-  Iso-06-counterflow-50 so configured ends `deadlock` in seeds 1–3:
-  149 agents stuck since t = 89 s (stopped at 189 s, 1 of 150 evacuated),
-  150 stuck since t = 97 s (197 s, none evacuated) and 150 stuck since
-  t = 150 s (250 s, none evacuated) (`8e513ea1`).
+  So configured, at `7689907e` (seeds 1–3), `CollisionFreeSpeedModel`
+  ends `deadlock` on both cases. On Iso-06-counterflow-50, 149, 150
+  and 150 agents are stuck since t = 89, 97 and 150 s (stopped at 189,
+  197 and 250 s; 1, 0 and 0 of 150 evacuated), as at `8e513ea1`. On
+  Iso-06-counterflow-100 all 200 are stuck since t = 80, 138 and 94 s
+  (stopped at 180, 238 and 194 s; none evacuated).
+  `SocialForceModel` and `WarpDriverModel` finish both cases, the first
+  by pushing and the second by letting agents overlap; neither is a
+  counterflow model, and the default model's jam is not cleared.
 - **Re-evaluation at most once per second** ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
   `run_scenario` runs the reroute pass at most once per simulated second, so
   a `reevaluation_interval_s` (`--reroute-interval`) below 1 s acts as 1 s.
@@ -397,6 +400,14 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   `&TRNZ` it ranks the deck's z. Where that differs from the run's choice,
   the check names another `&SLCF` line or turns a pass into a warning,
   never into a failure.
+- **Sign visibility ignores obstructions FDS opens or closes**
+  ([#453](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453)). fdsvismap
+  builds its sight-line obstructions once and does not read the
+  `HIDE_OBST`/`SHOW_OBST` times of the `.smv`
+  ([fdsvismap#63](https://github.com/FireDynamics/fdsvismap/issues/63)), so a
+  `DEVC_ID`/`CTRL_ID` obstruction blocks signs for the whole run. Decks
+  with timed door leaves get signs that stay unreadable after the door
+  opens. See [Wayfinding › Limitations](/models/wayfinding.md#limitations).
 
 ## Reproducibility
 

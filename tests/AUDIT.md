@@ -352,7 +352,9 @@ fresh one, so no distance or predecessor changes.
 The `<=` mutant is written `alt <= dist[...] and edge.target != u`. Plain
 `<=` never terminates: the zero-weight self-loop of
 `TestEdgeCases::test_self_loop_ignored_in_shortest_path` relaxes forever,
-and `mutation_check.py` has no timeout to report that as a kill. Closed
+and `mutation_check.py` has no timeout to report that as a kill (it has
+one since #876: `--timeout`, default 300 s, counts a hang as a kill).
+Closed
 (#836): the `bounded_search` fixture (`tests/conftest.py`) counts the heap
 pops of the search and fails the test past 10 000, and the area's search
 tests use it (`test_route_graph_hand_values.py` as a module,
@@ -741,9 +743,9 @@ port default come from `docs/usage.md`; smoke bins from the fixed edges).
   `test_a1_help_is_fast_and_imports_no_stack`, `test_a9_no_range_rejection`
   lock-in, and the GUI-versus-API run equivalence beyond one clear-air deck:
   not changed here.
-- The one-agent deck `ISO-table21` emits no progress event with a non-zero
-  `pct` (the last event precedes the final exit); a source question, not
-  changed here.
+- Closed (#876): `ISO-table21` emits no event after its one agent leaves;
+  documented in the `ProgressEvent` docstring and pinned by
+  `test_progress_callback.py::test_no_event_is_emitted_after_the_last_agent_leaves`.
 
 ## Item 1: movement and steering
 
@@ -795,10 +797,8 @@ The run case does not kill the runtime clip mutants (`3.0` to `9.0`,
 - Closed by #868: GCFM `mass` defaults to JuPedSim's 1, and AVM reads the
   deck keys `anticipation_time` and `reaction_time` instead of `T` and
   `s0`; `test_model_agent_defaults.py` pins both.
-- "The other survey rows of area A": the survey rows were not kept in the
-  #836 issue or in PR #867 (the issue has no comments; #867 lists only the
-  per-model defaults), so they cannot be listed here. Rebuild the survey
-  of movement and steering before closing #876's movement item.
+- Closed (#876): the lost survey rows of area A are not rebuilt. Every
+  movement row that was recorded is closed (see Fixed above).
 
 ## Item 1: FDS sampling and visibility cache
 
@@ -977,11 +977,11 @@ status numbers; the flag tests call `cli_init.main`.
 
 ### Open
 
-- The `walk_mean` floor (the larger of 2 % of the base mean and 1 s) is
-  pinned from the code: no page or docstring states it. It needs a
-  documented source.
-- The 10 s return window is documented as a number; whether a return at
-  exactly 10.0 s counts is not, so it is not pinned.
+- Closed (#876): the `walk_mean` floor and the 10 s window (`since_s <= 10.0`
+  on the float difference of the logged times, so a gap of 10 s up to
+  rounding may fall on either side) are stated in the `margin_audit.py`
+  docstring; `test_a_return_at_exactly_ten_seconds_counts_in_the_window` and
+  `test_the_window_edge_is_a_float_comparison` pin the edge.
 - Closed: `--inspect-fds` without `--fds-dir` ended in a raw `ValueError`
   traceback; it now exits with the one-line `pyfds-evac: error:` message,
   pinned by `test_cli_main_output.py::test_inspect_fds_without_fds_dir_is_a_one_line_error`.

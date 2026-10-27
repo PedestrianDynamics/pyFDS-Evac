@@ -211,6 +211,13 @@ assets/iso_table22_coupled/iso_table22_a.fds	3	100.00	0	0	no exit found; no agen
 assets/iso_table22_coupled/iso_table22_b.fds	3	100.00	0	0	no exit found; no agents to place	d325dc32481ad64b05a31ed2cdee8995de2974a2ba0aafb833ad2abb990ae447
 assets/iso_table22_coupled/iso_table22_c.fds	3	100.00	0	0	no exit found; no agents to place	d325dc32481ad64b05a31ed2cdee8995de2974a2ba0aafb833ad2abb990ae447
 assets/iso_table22_coupled/iso_table22_d.fds	3	100.00	0	0	no exit found; no agents to place	8a6142416114033b569f92ad949a470068f6b0521c72b4a2ba9b1ac5bd7eece5
+assets/iso_test_16_fire/iso_test_16_fire_k0p05.fds	3	180.00	0	0	no exit found; no agents to place	39f65f7ce951ae42d45366c43db424eed9977e482726edff53912b35aaefa7fc
+assets/iso_test_16_fire/iso_test_16_fire_k0p10.fds	3	180.00	0	0	no exit found; no agents to place	39f65f7ce951ae42d45366c43db424eed9977e482726edff53912b35aaefa7fc
+assets/iso_test_16_fire/iso_test_16_fire_k0p20.fds	3	180.00	0	0	no exit found; no agents to place	39f65f7ce951ae42d45366c43db424eed9977e482726edff53912b35aaefa7fc
+assets/iso_test_16_fire/iso_test_16_fire_k0p5.fds	3	180.00	0	0	no exit found; no agents to place	39f65f7ce951ae42d45366c43db424eed9977e482726edff53912b35aaefa7fc
+assets/iso_test_16_fire/iso_test_16_fire_k3.fds	3	180.00	0	0	no exit found; no agents to place	39f65f7ce951ae42d45366c43db424eed9977e482726edff53912b35aaefa7fc
+assets/iso_test_8_fire/iso_test_8_fire_k1.fds	3	193.80	0	0	no exit found; no agents to place	181f16afdeda169f06503445cb5c8ff139c2acbfbc0f5fa164ba2aaa57e5a05c
+assets/iso_test_8_fire/iso_test_8_fire_k5.fds	3	193.80	0	0	no exit found; no agents to place	181f16afdeda169f06503445cb5c8ff139c2acbfbc0f5fa164ba2aaa57e5a05c
 assets/l_corridor/l_corridor.fds	0	261.00	2	100		fe5edf562f2a4ca88e7ae14d741895e849dce10323c19bbc4e2572f1de58136b
 assets/schroeder2015_route/a012_pvc_h30/a012_pvc_h30.fds	0	546.92	2	100		ce816e26f8b3d60697898d2ca0f51e60ecf7bdf840a853e74e10d043a175b007
 assets/schroeder2015_route/a047_pvc_h35/a047_pvc_h35.fds	0	546.92	2	100		ce816e26f8b3d60697898d2ca0f51e60ecf7bdf840a853e74e10d043a175b007

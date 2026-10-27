@@ -102,6 +102,12 @@ margin. The outcome text speaks of "remove": for a code audit read it as
 same ``--out`` must use the same arms; it refuses otherwise. In a code
 audit the report words the outcome neutrally ("no distinct effect on the
 primary metric", or the direction of a distinct one) instead of "remove".
+The floors are those of the stage-2 plan (``_floor_rule``); the
+``walk_mean`` floor is the larger of 2 % of the base mean and 1 s. A
+return counts in ``returns_within_window`` when it comes at most
+``RETURN_WINDOW_S`` (10 s) after the switch away. The comparison is on the
+float difference of the logged times, so a gap of 10 s up to rounding may
+fall on either side (6.1 s to 16.1 s is 10.000000000000002 s and is out).
 
 Override keys are checked before the first run starts: a ``routing.*`` key
 must be one the loader reads (a ``RouteCostConfig`` field or
