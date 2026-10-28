@@ -155,9 +155,10 @@ Script: &lt;code>scripts/figures/stage_graph.py&lt;/code>.&lt;/em>&lt;/p>
 &lt;a href="#the-exposure-gate" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Under the default &lt;code>&amp;quot;gate&amp;quot;&lt;/code> cost model, one quantity carries all of the smoke
 reasoning: the optical depth along the walk, \(\tau_k = \bar K_k L_k\), the
 column of smoke the agent would pass through.&lt;/p>
-&lt;p>First, a shortest-path search from the agent&amp;rsquo;s position finds one path to
+&lt;p>First, a shortest-path search from the agent&amp;rsquo;s position finds a path to
 each exit, with every edge weighted by its own optical depth at decision time:
-the least-smoky path, which in clear air is the shortest. The first leg is the
+the least-smoky path, which in clear air is the shortest. If the gate refuses
+that path, up to two more paths to the same exit are tried. The first leg is the
 walk from the agent to the route&amp;rsquo;s first node, charged for the smoke ahead of
 the agent. Second, each candidate is re-evaluated with anticipation, each
 edge sampled at the time the agent would reach it. By default the router sees
@@ -646,7 +647,7 @@ it does not limit the smoke those routes are priced with. The route choice of
 a discovery agent is therefore not limited by what it has perceived.&lt;/p>
 &lt;p>&lt;strong>Route choice.&lt;/strong> Route choice has open limitations: switching can oscillate
 where two routes cross in cost (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124" target="_blank" rel="noopener">#124&lt;/a>), routes are priced with smoke the agent
-cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), one path is priced per exit (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), a real optical-depth
+cannot perceive (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>), an exit is priced on its searched path (the least-smoky one under the gate), and on up to two more only after that one is refused (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>), a real optical-depth
 difference inside the anchor&amp;rsquo;s deadband can keep the current exit ranked first, so the anchor is never asked (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>; round-off is a tie since &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452" target="_blank" rel="noopener">#452&lt;/a>).
 Under either cost model, smoke on the current route never bypasses the
 exit-switch anchor as a lethal FED does: however dense it is, the agent

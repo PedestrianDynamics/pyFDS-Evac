@@ -163,8 +163,8 @@ Eq. 8-9; the Beer-Lambert law itself is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/extinction/">Extinction coefficient&lt;/a>.&lt;/p>
 &lt;h3>Arrival-time pricing&lt;span class="hx-absolute -hx-mt-20" id="arrival-time-pricing">&lt;/span>
 &lt;a href="#arrival-time-pricing" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The path search (&lt;code>_generate_candidates&lt;/code>) weights every edge with the
-smoke at decision time and finds one path to each exit from the agent&amp;rsquo;s
-position. Its first legs are the walks from the agent to each successor of
+smoke at decision time and finds the shortest path to each exit from the
+agent&amp;rsquo;s position. Its first legs are the walks from the agent to each successor of
 its origin node and to its current target, weighted by the smoke on each walk
 (&lt;code>_first_hops&lt;/code>); it never routes back through the origin node. With &lt;code>anticipate&lt;/code> (default &lt;code>true&lt;/code>, and &lt;strong>independent of
 &lt;code>cost_model&lt;/code>&lt;/strong>), every smoke sample on that path is then read at the time
@@ -197,6 +197,19 @@ meet along it
 frame of the extinction and FED slices routing reads is held at that frame,
 with one warning per run: there is no record to foresee beyond it (#666). The decision time itself is
 not held, so the horizon check on the agent&amp;rsquo;s own samples still applies.&lt;/p>
+&lt;p>An exit whose measured path is refused (FED, or τ under the gate) is tried on
+up to two more loopless shortest paths to it (Yen, &lt;code>k_shortest_paths&lt;/code>), searched on the
+same edge weights and starting walks and measured the same way. The best that
+passes becomes the exit&amp;rsquo;s record; with none, the exit keeps its refused record
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>). Where
+the first path passes, no further path is searched and nothing changes. On the
+world100 decks, where most exits are refused at most ticks, the search adds
+wall time: with history off, the median of three interleaved runs on an idle
+machine went from 21.0 s to 28.8 s (+38 %) on &lt;code>world100_stream_east&lt;/code> and from
+23.1 s to 34.9 s (+51 %) on &lt;code>world100_stream_oval&lt;/code>. An alternative that starts
+with a stretch already over the τ limit on a path measured before is not
+measured, since it would be refused whatever follows; this removes about a fifth
+of the alternatives&amp;rsquo; measurements and changes no result.&lt;/p>
 &lt;h3>Composite cost&lt;span class="hx-absolute -hx-mt-20" id="composite-cost">&lt;/span>
 &lt;a href="#composite-cost" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The composite is the additive model&amp;rsquo;s ranking number. It is still
 computed and reported under the gate, where it does not rank:&lt;/p>
@@ -652,8 +665,8 @@ discovery agent with no known exit explores or wanders instead (see below).&lt;/
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Candidates&lt;/strong>&lt;/td>
-&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth at decision time (&lt;code>k_avg&lt;/code> × length + 1e-6 × length), started at the agent&amp;rsquo;s position: the first legs are the walks to the source&amp;rsquo;s successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); one path per exit, alternatives to the same exit are not tried (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>); the current exit&amp;rsquo;s entry is replaced by the walked path when that path orders ahead&lt;/td>
-&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite at decision time (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth), started at the agent&amp;rsquo;s position as for the gate; one path per exit; the walked path as for the gate&lt;/td>
+&lt;td>Dijkstra over the agent&amp;rsquo;s known subgraph on each edge&amp;rsquo;s optical depth at decision time (&lt;code>k_avg&lt;/code> × length + 1e-6 × length), started at the agent&amp;rsquo;s position: the first legs are the walks to the source&amp;rsquo;s successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); the shortest path per exit, and up to two more to an exit whose path is refused, the best that passes kept (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185" target="_blank" rel="noopener">#185&lt;/a>); the current exit&amp;rsquo;s entry is replaced by the walked path when that path orders ahead&lt;/td>
+&lt;td>Dijkstra on each edge&amp;rsquo;s share of the composite at decision time (length × (1 + &lt;code>w_smoke&lt;/code> × &lt;code>k_avg&lt;/code>) + &lt;code>w_fed&lt;/code> × FED growth), started at the agent&amp;rsquo;s position as for the gate; paths per exit as for the gate; the walked path as for the gate&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Rejection&lt;/strong>&lt;/td>
