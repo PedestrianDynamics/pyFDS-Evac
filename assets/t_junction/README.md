@@ -87,7 +87,7 @@ seconds choose Exit A at spawn: 13 of the 150 (the agents spawned every 2 s
 from 0 to 22 s, and one at 40 s) end on Exit A, the other 137 on Exit B. The
 choice follows the smoke the router foresees on B (the default `anticipate`
 with unlimited `foresight_horizon_s`): B is refused or has the higher
-travel-time risk τ, and the router ranks on τ first. That choice writes no
+optical depth τ, and the router ranks on τ first. That choice writes no
 route-history row, and the run's route history holds only its header. Once
 both routes are refused nobody switches: a rival replaces the
 current exit only if its τ is more than 20 % lower

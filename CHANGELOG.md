@@ -50,6 +50,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pyfds-evac-init --check` marks those slices `!`. Add slices at 1.6 m or
   pass `--smoke-slice-height 2.0`
   ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
+- An exit whose searched path is refused (FED, or τ under the gate) is now
+  tried on up to two more loopless shortest paths, and keeps the best that
+  passes (#185). Outcomes change only where such a path is refused:
+  `ft_full_gate_detour` evacuates in 56.77 s (was 53.6 s) and
+  `world100_stream_east` trajectories change. The route-cost CSV of
+  `world100_stream_oval` with history on differs in 31 of 10556 rows
+  (refused exits priced on a feasible path). Where most exits are refused at
+  most ticks the search costs wall time: on an idle machine, with history
+  off, `world100_stream_east` goes from 21.0 s to 28.8 s (+38 %) and
+  `world100_stream_oval` from 23.1 s to 34.9 s (+51 %); with history on,
+  23.3 s to 36.7 s (+58 %) and 25.3 s to 43.3 s (+71 %). No option restores
+  the old rule.
 - `pyfds-evac init` on a deck with `DEFAULT_PROPERTIES='IMO_…'` now sets a
   Gaussian speed with the mean and variance of the IMO range (0.37 to
   1.85 m/s over the ten types) and the Male or Female radius (0.16 or
@@ -97,6 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `since_s`, `positions`), and the `deadlock` wording on the CLI line and
   the GUI/TUI label (#760).
 - `metrics["fed_enabled"]`: whether the gas FED ran (#137).
+- `assets/t_junction/config_full_no_foresight.json`: `config_full.json`
+  with `"anticipate": false`, which routes on present-time smoke (#195).
 - The run manifest records, per model, the height at which each FDS slice
   was actually read (`slice_heights_m`) ([#165](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/165)).
 - A `journeys_v2` scenario may split a start area over several journeys by
