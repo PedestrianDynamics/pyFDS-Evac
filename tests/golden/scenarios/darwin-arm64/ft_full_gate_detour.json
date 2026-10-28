@@ -27,95 +27,88 @@
    1,
    "jps-distributions_0",
    "jps-exits_0",
-   "jps-exits_0:fallback/tau"
+   "jps-exits_0:ok"
   ],
   [
    2.0,
    2,
    "jps-distributions_0",
    "jps-exits_0",
-   "jps-exits_0:fallback/tau"
+   "jps-exits_0:ok"
   ],
   [
    2.0,
    3,
    "jps-distributions_0",
    "jps-exits_0",
-   "jps-exits_0:fallback/tau"
+   "jps-exits_0:ok"
   ],
   [
    2.0,
    4,
    "jps-distributions_0",
    "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   3.0,
-   6,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   3.0,
-   8,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   3.0,
-   10,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   4.0,
-   4,
-   "jps-distributions_0",
-   "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   4.0,
-   12,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   4.0,
-   14,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   4.0,
-   16,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   5.0,
+   3.0,
    1,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   3.0,
+   5,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   5.0,
+   3.0,
+   6,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   3.0,
+   7,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   4.0,
    2,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   4.0,
+   7,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   4.0,
+   9,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   5.0,
-   3,
+   4.0,
+   10,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   4.0,
+   11,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
@@ -123,21 +116,7 @@
   [
    5.0,
    6,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   5.0,
-   8,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   5.0,
-   10,
-   "jps-distributions_0",
+   "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
@@ -150,630 +129,651 @@
   ],
   [
    5.0,
-   14,
+   13,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    5.0,
+   15,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   6.0,
+   3,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   6.0,
    16,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   5.0,
+   6.0,
    18,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   5.0,
+   6.0,
+   19,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   7.0,
+   10,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   7.0,
+   19,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   7.0,
    20,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   5.0,
+   7.0,
+   21,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   7.0,
    22,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   6.0,
+   8.0,
+   12,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   8.0,
    23,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   6.0,
+   8.0,
    25,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   6.0,
-   28,
+   8.0,
+   26,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   7.0,
-   20,
+   9.0,
+   10,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   9.0,
+   15,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   7.0,
-   23,
+   9.0,
+   21,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   7.0,
-   25,
-   "jps-checkpoints_0",
+   9.0,
+   27,
+   "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   7.0,
+   9.0,
+   29,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   9.0,
    31,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   7.0,
+   10.0,
+   18,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   10.0,
+   22,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   10.0,
    32,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   7.0,
+   10.0,
+   33,
+   "jps-distributions_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   10.0,
    34,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   8.0,
-   28,
+   11.0,
+   9,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   8.0,
-   35,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   8.0,
+   11.0,
    36,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   8.0,
+   11.0,
    37,
    "jps-distributions_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   9.0,
+   13.0,
+   5,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   13.0,
    31,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   9.0,
-   32,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   9.0,
-   34,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   9.0,
-   38,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   9.0,
-   40,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   9.0,
-   42,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   10.0,
-   34,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   10.0,
-   43,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   10.0,
-   44,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   10.0,
-   45,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   11.0,
-   4,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   11.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   11.0,
-   47,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   11.0,
-   48,
-   "jps-distributions_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   12.0,
-   8,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   12.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   12.0,
-   38,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   13.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   13.0,
-   43,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    14.0,
-   40,
+   7,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   14.0,
+   10,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   14.0,
+   22,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   14.0,
+   27,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
    15.0,
-   42,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   16.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   16.0,
-   37,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   17.0,
-   10,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   17.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   17.0,
-   36,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   18.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   18.0,
-   20,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   19.0,
-   35,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   19.0,
-   44,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   19.0,
-   47,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   20.0,
-   1,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   20.0,
-   14,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   20.0,
-   45,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   21.0,
-   44,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   22.0,
    6,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   22.0,
-   31,
+   15.0,
+   10,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:fallback/tau"
   ],
   [
-   22.0,
-   44,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   23.0,
-   3,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   23.0,
-   16,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   23.0,
-   31,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   23.0,
-   44,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   24.0,
-   12,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   24.0,
+   15.0,
    22,
-   "jps-checkpoints_3",
+   "jps-checkpoints_0",
    "jps-exits_0",
-   "jps-exits_0:ok"
+   "jps-exits_0:fallback/tau"
   ],
   [
-   24.0,
+   15.0,
    31,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:fallback/tau"
   ],
   [
-   24.0,
-   45,
+   16.0,
+   10,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   16.0,
+   27,
    "jps-checkpoints_0",
    "jps-exits_0",
    "jps-exits_0:fallback/tau"
   ],
   [
-   24.0,
-   47,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   25.0,
-   18,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   25.0,
-   44,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   26.0,
-   3,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:fallback/tau"
-  ],
-  [
-   26.0,
-   31,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   26.0,
-   38,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   26.0,
-   40,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   27.0,
-   3,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   27.0,
-   34,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   27.0,
-   37,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   28.0,
-   42,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   29.0,
-   36,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   30.0,
-   45,
-   "jps-checkpoints_0",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   30.0,
-   47,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   31.0,
-   44,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   32.0,
-   31,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   32.0,
-   43,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   33.0,
-   14,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   34.0,
+   16.0,
    32,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   17.0,
+   11,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   35.0,
+   17.0,
+   33,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   18.0,
    2,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   35.0,
-   45,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   36.0,
-   28,
-   "jps-checkpoints_3",
-   "jps-exits_0",
-   "jps-exits_0:ok"
-  ],
-  [
-   37.0,
+   18.0,
    3,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   38.0,
-   25,
+   18.0,
+   34,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   20.0,
+   12,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
-   39.0,
+   20.0,
+   13,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   20.0,
+   15,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   21.0,
+   25,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   22.0,
+   21,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   22.0,
+   22,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   22.0,
+   31,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   23.0,
+   18,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   23.0,
+   37,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   24.0,
+   4,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   24.0,
+   27,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   24.0,
+   36,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   25.0,
+   22,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   25.0,
+   29,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   26.0,
+   29,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   26.0,
+   31,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   26.0,
+   36,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   27.0,
    23,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
   ],
   [
+   27.0,
+   29,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   28.0,
+   20,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   28.0,
+   29,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   28.0,
+   36,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   29.0,
+   10,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   30.0,
+   1,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   30.0,
+   9,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   30.0,
+   16,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   31.0,
+   16,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   31.0,
+   33,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   31.0,
+   36,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   32.0,
+   1,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   32.0,
+   25,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   32.0,
+   26,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   33.0,
+   16,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   33.0,
+   34,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   34.0,
+   19,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   34.0,
+   29,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   35.0,
+   36,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   36.0,
+   16,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:fallback/tau"
+  ],
+  [
+   36.0,
+   32,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   37.0,
+   16,
+   "jps-checkpoints_0",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   37.0,
+   27,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   38.0,
+   37,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   39.0,
+   1,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
    41.0,
-   48,
+   16,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   42.0,
+   26,
+   "jps-checkpoints_3",
+   "jps-exits_0",
+   "jps-exits_0:ok"
+  ],
+  [
+   44.0,
+   29,
    "jps-checkpoints_3",
    "jps-exits_0",
    "jps-exits_0:ok"
@@ -781,198 +781,63 @@
  ],
  "summary": {
   "agents_evacuated": 30,
-  "evacuation_time": 53.6,
+  "evacuation_time": 56.77,
   "total_agents": 30
  },
  "switches": [
   {
-   "agent_id": 1,
-   "new_cost": 28.038,
+   "agent_id": 5,
+   "new_cost": 22.18,
    "new_exit": "jps-exits_0",
-   "old_cost": 18.287,
+   "old_cost": 23.241,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 5.0
+   "time_s": 3.0
   },
   {
-   "agent_id": 2,
-   "new_cost": 27.794,
+   "agent_id": 11,
+   "new_cost": 21.008,
    "new_exit": "jps-exits_0",
-   "old_cost": 18.994,
+   "old_cost": 24.38,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 5.0
+   "time_s": 8.0
   },
   {
-   "agent_id": 3,
-   "new_cost": 28.52,
+   "agent_id": 13,
+   "new_cost": 22.231,
    "new_exit": "jps-exits_0",
-   "old_cost": 18.088,
+   "old_cost": 23.341,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 5.0
+   "time_s": 9.0
   },
   {
-   "agent_id": 6,
-   "new_cost": 26.986,
+   "agent_id": 4,
+   "new_cost": 20.813,
    "new_exit": "jps-exits_0",
-   "old_cost": 19.189,
+   "old_cost": 24.555,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 25.183,
-   "new_exit": "jps-exits_0",
-   "old_cost": 20.549,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 12,
-   "new_cost": 25.795,
-   "new_exit": "jps-exits_0",
-   "old_cost": 20.355,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 14,
-   "new_cost": 26.248,
-   "new_exit": "jps-exits_0",
-   "old_cost": 22.127,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 16,
-   "new_cost": 25.299,
-   "new_exit": "jps-exits_0",
-   "old_cost": 21.138,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 18,
-   "new_cost": 27.262,
-   "new_exit": "jps-exits_0",
-   "old_cost": 20.573,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
+   "time_s": 10.0
   },
   {
    "agent_id": 20,
-   "new_cost": 24.172,
+   "new_cost": 22.209,
    "new_exit": "jps-exits_0",
-   "old_cost": 22.067,
+   "old_cost": 23.185,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
-   "time_s": 5.0
+   "time_s": 13.0
   },
   {
-   "agent_id": 22,
-   "new_cost": 26.299,
+   "agent_id": 23,
+   "new_cost": 21.07,
    "new_exit": "jps-exits_0",
-   "old_cost": 20.987,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 5.0
-  },
-  {
-   "agent_id": 10,
-   "new_cost": 21.058,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.321,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 8.0
-  },
-  {
-   "agent_id": 35,
-   "new_cost": 22.218,
-   "new_exit": "jps-exits_0",
-   "old_cost": 23.344,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 8.0
-  },
-  {
-   "agent_id": 1,
-   "new_cost": 20.897,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.509,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 10.0
-  },
-  {
-   "agent_id": 16,
-   "new_cost": 22.152,
-   "new_exit": "jps-exits_0",
-   "old_cost": 23.225,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 10.0
-  },
-  {
-   "agent_id": 6,
-   "new_cost": 20.959,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.421,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 12.0
-  },
-  {
-   "agent_id": 12,
-   "new_cost": 20.883,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.508,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 15.0
-  },
-  {
-   "agent_id": 22,
-   "new_cost": 20.985,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.416,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 15.0
-  },
-  {
-   "agent_id": 18,
-   "new_cost": 20.998,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.406,
+   "old_cost": 24.324,
    "old_exit": "jps-exits_0",
    "reason": "better_path",
    "time_s": 16.0
-  },
-  {
-   "agent_id": 48,
-   "new_cost": 20.928,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.452,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 23.0
-  },
-  {
-   "agent_id": 2,
-   "new_cost": 21.05,
-   "new_exit": "jps-exits_0",
-   "old_cost": 24.363,
-   "old_exit": "jps-exits_0",
-   "reason": "better_path",
-   "time_s": 24.0
   }
  ]
 }

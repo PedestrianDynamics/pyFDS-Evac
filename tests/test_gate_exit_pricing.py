@@ -227,13 +227,18 @@ def test_rival_is_searched_for_from_the_agent():
 
 
 class _SmokeShiftsArms:
-    """Smoke on the A arm now and on the B arm later (t >= 3 s), east of x = 10."""
+    """Smoke on the A arm now and on the B arm later (t >= 3 s), east of x = 10.
+
+    The B arm's smoke is lighter, so the path the search finds through it is
+    still feasible on arrival, only with a higher optical depth.
+    """
 
     def sample_extinction(self, time_s: float, x: float, y: float) -> float:
         if x < 10.0:
             return 0.0
-        smoky_arm_is_a = time_s < 3.0
-        return 1.0 if (y > 0.0) == smoky_arm_is_a else 0.0
+        if time_s < 3.0:
+            return 1.0 if y > 0.0 else 0.0
+        return 0.0 if y > 0.0 else 0.4
 
 
 def _two_arm_graph() -> StageGraph:
@@ -287,6 +292,7 @@ def test_current_exit_is_never_priced_above_the_walked_path():
         "E"
     ]
     assert searched.path == ["O", "B", "E"]
+    assert searched.feasible
     assert searched.tau_route > on_walk.tau_route + 1.0
     e = _by_exit(ranked)["E"]
     assert e.tau_route <= on_walk.tau_route + 1e-9

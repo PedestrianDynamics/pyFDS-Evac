@@ -59,7 +59,6 @@ uv run pytest tests/verification
 
 - **Trajectory nondeterminism** — same seed gives different per-agent
   trajectories; only aggregate outcomes are reproducible.
-- **Rerouting bug** ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21))
-  — under by-number placement an agent's route-eval source node is its assigned
-  exit, so rerouting is degenerate; flow spawning works. `t_junction_scenario`
-  uses flow spawning as the workaround.
+- **Flow spawning in `t_junction_scenario`** ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21))
+  — the scenario uses flow spawning so the population enters over a short
+  window before the smoke starts; by-number placement reroutes as well.

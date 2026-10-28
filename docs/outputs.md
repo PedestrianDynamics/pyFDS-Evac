@@ -152,7 +152,7 @@ The equations behind each rate are on [Models › FED](/models/fed.md) and
 | Column | Meaning |
 |---|---|
 | `time_s`, `agent_id` | when, and who |
-| `old_exit`, `new_exit` | exit before and after; `new_exit` is a node for `explore`, `wander`, `return` and `stay`. `old_exit` is empty for the first assignment, for `explore`, `wander`, `return` and `stay`, for an `initial` row, and for a `default_route` row at spawn. An agent that leaves its default route for another exit while the default exit is open has the default exit as `old_exit` |
+| `old_exit`, `new_exit` | exit before and after; `new_exit` is a node for `explore`, `wander`, `return` and `stay`. `old_exit` is empty for `explore`, `wander`, `return` and `stay`, for an `initial` row, and for a `default_route` row at spawn. The first exit an agent takes writes a row only as a `default_route` row at spawn, an `initial` row at a re-evaluation, or an `allocation_preference` row at spawn (the opening choice moves an agent of a preference area off its allocated exit, which is then `old_exit`); any other opening choice, including one that overrides the exit a journey scripts, writes none. The paragraphs below say when each is written. An agent that leaves its default route for another exit while the default exit is open has the default exit as `old_exit` |
 | `old_cost`, `new_cost` | ranking cost of the two routes, rounded to 4 decimals; `old_cost` is empty when there was none |
 | `reason` | `initial`, `default_route`, `allocation_preference`, `fed_reroute`, `smoke_reroute`, `exit_closed`, `exit_opened`, `learned_exit`, `congestion`, `shorter_path`, `exit_unreachable`, `resume`, `fallback`, `better_path`, `explore`, `wander`, `return` or `stay` |
 

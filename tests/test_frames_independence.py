@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import os
 import shlex
 import sqlite3
 import subprocess
@@ -220,6 +221,80 @@ def test_frames_do_not_change_a_multi_agent_run(tmp_path, monkeypatch):
     assert _exits(other_ns) != _exits(reference_ns)
 
     # The CLI writes the same files.
+    from pyfds_evac.config.effective import cli_command
+
+    cli_base = form.run_folder("CLI", tmp_path)
+    cli_ns = argparse.Namespace(**{**vars(reference_ns), **form.output_paths(cli_base)})
+    command = shlex.split(cli_command(cli_ns))
+    exe = Path(sys.executable).with_name("pyfds-evac")
+    done = subprocess.run([str(exe), *command[1:]], capture_output=True, text=True)
+    assert done.returncode == events.EXIT_CODES[result.status], done.stderr
+    _assert_same("CLI", _outputs(cli_ns), reference)
+
+
+T_JUNCTION_FDS = Path(
+    os.environ.get(
+        "T_JUNCTION_FDS",
+        Path.home()
+        / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
+        / "fds-evac-data"
+        / "t_junction"
+        / "fire_2MW_PVC",
+    )
+)
+
+
+@pytest.mark.slow
+@pytest.mark.external_data
+@pytest.mark.skipif(
+    not (T_JUNCTION_FDS / "t_junction.smv").is_file(),
+    reason=f"t_junction FDS output absent under {T_JUNCTION_FDS}; set T_JUNCTION_FDS",
+)
+def test_frames_do_not_change_a_coupled_multi_agent_run(
+    tmp_path, monkeypatch, fds_read_only
+):
+    """The trimmed t_junction on its FDS output, with rerouting on (#613).
+
+    Several agents, two exits and smoke read from FDS: frames must not
+    change the trajectory, the histories or the result, and the CLI must
+    write the same files.
+    """
+    tmp = tmp_path / "tmp"
+    tmp.mkdir()
+    monkeypatch.setenv("TMPDIR", str(tmp))
+    monkeypatch.setattr(tempfile, "tempdir", str(tmp))
+    form = _multi_agent_form(tmp_path)
+    form.text["constant_extinction"] = ""
+    form.fds_dir = str(fds_read_only(T_JUNCTION_FDS))
+    form.switch["enable_rerouting"] = True
+
+    runs = {label: _run(form, label, tmp_path, **kw) for label, kw in VARIANTS.items()}
+    frames = {
+        label: [e for e in run[1] if isinstance(e, events.FrameEvent)]
+        for label, run in runs.items()
+    }
+    assert frames["off"] == []
+    for label in ("5hz", "1hz", "dense"):
+        grids = [f.smoke for f in frames[label] if f.smoke is not None]
+        assert any(g.fds_time_s > 0 for g in grids), label
+
+    reference_ns, reference_events = runs["off"]
+    reference = _outputs(reference_ns)
+    result = reference_events[-1]
+    assert (result.total, result.seed) == (12, int(SEED))
+    assert len({row[1] for row in reference["rows"]}) == 12
+    for dest in (
+        "output_smoke_history",
+        "output_route_history",
+        "output_route_cost_history",
+        "output_exit_history",
+    ):
+        assert reference["csv"][dest] is not None, dest
+    for label, (ns, got) in runs.items():
+        _assert_same(label, _outputs(ns), reference)
+        for name in RESULT_FIELDS:
+            assert getattr(got[-1], name) == getattr(result, name), (label, name)
+
     from pyfds_evac.config.effective import cli_command
 
     cli_base = form.run_folder("CLI", tmp_path)

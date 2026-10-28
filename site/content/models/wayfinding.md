@@ -388,7 +388,7 @@ two differ:
   ranks the routes from the agent's position, as re-evaluation does, and
   without the queue tally (`scenario.py`, `_assign_initial_exit`). The path
   search starts with the walks to the spawn node's successors, and each exit
-  gets one path (#185). Agents of one spawn area can therefore start towards
+  gets its shortest path, with up to two more if it is refused (#185). Agents of one spawn area can therefore start towards
   different exits.
 - **Re-evaluation** (`evaluate_and_reroute`). It ranks from the agent's
   position: the path search starts there and never routes back through the

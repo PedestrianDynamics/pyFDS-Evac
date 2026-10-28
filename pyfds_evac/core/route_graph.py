@@ -283,6 +283,8 @@ class StageGraph:
         source: str,
         dynamic_weights: dict[tuple[str, str], float] | None = None,
         first_hops: dict[str, float] | None = None,
+        banned_edges: set[tuple[str, str]] | None = None,
+        banned_nodes: set[str] | None = None,
     ) -> tuple[dict[str, float], dict[str, str | None]]:
         """Run Dijkstra from *source*.  Returns (dist, prev) dicts.
 
@@ -294,6 +296,11 @@ class StageGraph:
         cost and *source* as its predecessor. *source* stands for the agent's
         position only: no edge into it is relaxed, so it is never reached
         through the graph and appears once, at the start of every path.
+
+        *banned_edges* are ``(source_id, target_id)`` pairs the search does not
+        use, a banned seed edge ``(source, node)`` drops *node* from
+        *first_hops*, and *banned_nodes* are not entered. They serve
+        :func:`k_shortest_paths`; with neither the search is unchanged.
 
         Between paths of equal cost the one whose last predecessor was
         expanded first wins: the heap orders equal costs by node id, and a
@@ -311,6 +318,10 @@ class StageGraph:
             heap.append((0.0, source))
         else:
             for node, cost in first_hops.items():
+                if banned_edges and (source, node) in banned_edges:
+                    continue
+                if banned_nodes and node in banned_nodes:
+                    continue
                 if node in dist and node != source and cost < dist[node]:
                     dist[node] = cost
                     prev[node] = source
@@ -322,6 +333,10 @@ class StageGraph:
                 continue
             for edge in self.edges.get(u, []):
                 if first_hops is not None and edge.target == source:
+                    continue
+                if banned_nodes and edge.target in banned_nodes:
+                    continue
+                if banned_edges and (edge.source, edge.target) in banned_edges:
                     continue
                 if dynamic_weights is not None:
                     w = dynamic_weights.get((edge.source, edge.target), edge.weight)
@@ -349,6 +364,128 @@ class StageGraph:
             cur = prev.get(cur)
         path.reverse()
         return path
+
+
+# Paths tried to an exit whose searched path is refused, that path included.
+# A search bound, not an empirical coefficient: Yen (1971), #185.
+_PATHS_PER_EXIT = 3
+
+
+def _edge_cost(
+    graph: StageGraph,
+    weights: dict[tuple[str, str], float] | None,
+    source: str,
+    target: str,
+) -> float:
+    """The weight ``StageGraph._dijkstra`` charges for the edge *source* > *target*."""
+    return min(
+        (
+            e.weight if weights is None else weights.get((e.source, e.target), e.weight)
+            for e in graph.edges.get(source, [])
+            if e.target == target
+        ),
+        default=math.inf,
+    )
+
+
+def _root_cost(
+    graph: StageGraph,
+    weights: dict[tuple[str, str], float] | None,
+    first_hops: dict[str, float] | None,
+    root: list[str],
+) -> float:
+    """Cost of the path *root* as the search charges it, from its start."""
+    if len(root) < 2:
+        return 0.0
+    if first_hops is None:
+        cost = _edge_cost(graph, weights, root[0], root[1])
+    else:
+        cost = first_hops[root[1]]
+    for src, dst in zip(root[1:], root[2:]):
+        cost += _edge_cost(graph, weights, src, dst)
+    return cost
+
+
+def _spur_candidates(
+    graph: StageGraph,
+    target: str,
+    accepted: list[list[str]],
+    weights: dict[tuple[str, str], float] | None,
+    first_hops: dict[str, float] | None,
+) -> list[tuple[float, int, tuple[str, ...]]]:
+    """Paths that leave the last accepted path at one of its nodes.
+
+    For each node of ``accepted[-1]`` but the exit: the root is the path up to
+    the node, the edges the accepted paths with that root take next are
+    banned, the root's other nodes are banned, and the shortest way on to
+    *target* is searched. The source is in every root, so it is never entered
+    again. At the source, with *first_hops*, the search is seeded again
+    without the banned first hops.
+    """
+    last = accepted[-1]
+    source = last[0]
+    found: list[tuple[float, int, tuple[str, ...]]] = []
+    for idx in range(len(last) - 1):
+        root = last[: idx + 1]
+        banned_edges = {
+            (p[idx], p[idx + 1])
+            for p in accepted
+            if len(p) > idx + 1 and p[: idx + 1] == root
+        }
+        if idx == 0 and first_hops is not None:
+            start = source
+            dist, prev = graph._dijkstra(
+                source,
+                dynamic_weights=weights,
+                first_hops=first_hops,
+                banned_edges=banned_edges,
+            )
+        else:
+            start = root[-1]
+            dist, prev = graph._dijkstra(
+                start,
+                dynamic_weights=weights,
+                banned_edges=banned_edges,
+                banned_nodes=set(root[:-1]),
+            )
+        if not math.isfinite(dist.get(target, math.inf)):
+            continue
+        path = root[:-1] + graph._reconstruct(prev, start, target)
+        cost = _root_cost(graph, weights, first_hops, root) + dist[target]
+        found.append((cost, len(path), tuple(path)))
+    return found
+
+
+def k_shortest_paths(
+    graph: StageGraph,
+    source: str,
+    target: str,
+    first_path: list[str],
+    weights: dict[tuple[str, str], float] | None,
+    first_hops: dict[str, float] | None,
+    k: int = _PATHS_PER_EXIT,
+) -> list[list[str]]:
+    """Up to *k* loopless shortest paths from *source* to *target* (Yen, 1971).
+
+    *first_path* is the shortest path the search found with *weights* and
+    *first_hops*, and is returned first, unchanged. The others come in
+    increasing cost; equal costs are ordered by number of nodes, then by the
+    node ids, so the result does not depend on insertion order. With
+    *first_hops* the search starts off the graph, as in
+    ``StageGraph.shortest_paths_to_exits``, and no path enters *source* again.
+    """
+    accepted = [first_path]
+    queued = {tuple(first_path)}
+    candidates: list[tuple[float, int, tuple[str, ...]]] = []
+    while len(accepted) < k:
+        for cand in _spur_candidates(graph, target, accepted, weights, first_hops):
+            if cand[2] not in queued:
+                queued.add(cand[2])
+                heapq.heappush(candidates, cand)
+        if not candidates:
+            break
+        accepted.append(list(heapq.heappop(candidates)[2]))
+    return accepted
 
 
 def without_closed_stages(graph: StageGraph, time_s: float) -> StageGraph:
@@ -1309,6 +1446,10 @@ class RouteMeasurements:
     k_leg_max: float
     # travel_time_s with every speed factor 1, for the switch label (#92).
     clear_travel_time_s: float | None = None
+    # K_avg x length of each leg, in route order, when tau_route is their sum
+    # (the walk from the agent to path[1] counts as the first leg). Empty when
+    # the first segment is charged pro rata, where tau is not a sum of legs.
+    leg_taus: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -1988,6 +2129,7 @@ def _measure_route(
         ]
         exposure_length = sum(length for _, length in legs)
         total_k_samples = sum(k * length for k, length in legs)
+        leg_taus = tuple(k * length for k, length in legs)
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         walk_time = _leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]
         travel_time = sum([walk_time] + [s.travel_time_s for s in segments[1:]])
@@ -2001,6 +2143,11 @@ def _measure_route(
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)
         total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
+        leg_taus = (
+            tuple(s.k_avg * s.length_m for s in segments)
+            if agent_position is None
+            else ()
+        )
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         travel_time = sum(w * s.travel_time_s for w, s in weighted)
         clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
@@ -2107,6 +2254,7 @@ def _measure_route(
         tau_route=tau_route,
         k_leg_max=k_leg_max,
         clear_travel_time_s=clear_travel_time,
+        leg_taus=leg_taus,
     )
 
 
@@ -2162,6 +2310,8 @@ class RouteModePolicy(Protocol):
     ) -> RouteFeasibility: ...
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float: ...
+
+    def tau_budget(self, config: RouteCostConfig) -> float: ...
 
     def apply_candidate_set_rules(
         self, costs: list[RouteCost], config: RouteCostConfig
@@ -2305,6 +2455,10 @@ class AdditivePolicy(_AnchoredPolicy):
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
         return m.composite_cost
+
+    def tau_budget(self, config: RouteCostConfig) -> float:
+        # Optical depth refuses nothing here.
+        return math.inf
 
     def apply_candidate_set_rules(
         self, costs: list[RouteCost], config: RouteCostConfig
@@ -2483,7 +2637,7 @@ class GatePolicy(_AnchoredPolicy):
         #
         # The gate: refuse a route whose optical depth exceeds the budget.
         # Appended after the dose, so a route over both limits reports tau.
-        budget = config.tau_max
+        budget = self.tau_budget(config)
         tau_route = m.tau_route
         if tau_route > budget:
             feasible = False
@@ -2504,6 +2658,9 @@ class GatePolicy(_AnchoredPolicy):
             rejection_reason=violations[-1].reason if violations else None,
             violations=tuple(violations),
         )
+
+    def tau_budget(self, config: RouteCostConfig) -> float:
+        return config.tau_max
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
         # Queue delay is time, so it belongs beside travel time rather than in
@@ -2670,13 +2827,18 @@ def _generate_candidates(
     agent_position: tuple[float, float] | None = None,
     current_target: str | None = None,
     walks: dict[WalkKey, _FirstLeg] | None = None,
-) -> dict[str, tuple[float, list[str]]]:
+) -> tuple[
+    dict[str, tuple[float, list[str]]],
+    dict[tuple[str, str], float],
+    dict[str, float] | None,
+]:
     """The cheapest path from *source* to every reachable exit under *policy*.
 
     Computes dynamic edge weights from current smoke/FED conditions, then runs
     Dijkstra with those weights. *graph* is already restricted to what the
     agent knows. Returns exit_id -> (cost, path), as
-    ``StageGraph.shortest_paths_to_exits``.
+    ``StageGraph.shortest_paths_to_exits``, with the edge weights and the first
+    hops the search used, which :func:`k_shortest_paths` needs.
 
     With *agent_position* the search starts where the agent stands, not at
     *source*: see ``_first_hops``.
@@ -2724,7 +2886,7 @@ def _generate_candidates(
     all_paths = graph.shortest_paths_to_exits(
         source, dynamic_weights=dynamic_weights, first_hops=first_hops
     )
-    return all_paths
+    return all_paths, dynamic_weights, first_hops
 
 
 def _search_from_position(graph: StageGraph, source: str) -> bool:
@@ -2955,7 +3117,7 @@ def rank_routes(
     # The walks from this agent to the nodes it may head for, shared by the
     # search and the measurement below; never by another agent.
     walks: dict[WalkKey, _FirstLeg] = {}
-    all_paths = _generate_candidates(
+    all_paths, weights, first_hops = _generate_candidates(
         graph,
         source,
         time_s,
@@ -2971,7 +3133,7 @@ def rank_routes(
     if not all_paths:
         return []
 
-    def measure(path: list[str]) -> RouteCost:
+    def measure_with_cost(path: list[str]) -> tuple[RouteMeasurements, RouteCost]:
         m = _measure_route(
             graph,
             path,
@@ -2985,13 +3147,31 @@ def rank_routes(
             agent_position=agent_position,
             walks=walks,
         )
-        return _project_route_cost(_assess_measurements(m, config, current_exit))
+        return m, _project_route_cost(_assess_measurements(m, config, current_exit))
 
-    # Phase 3: evaluate full routes (reusing cached segments).
-    costs = [measure(path) for _dist, path in all_paths.values()]
+    def measure(path: list[str]) -> RouteCost:
+        return measure_with_cost(path)[1]
 
     def key(rc: RouteCost) -> tuple[int, int, float, float, int]:
         return policy.order_key(rc, config, current_exit)
+
+    # Phase 3: evaluate full routes (reusing cached segments). An exit whose
+    # searched path is refused tries its next shortest paths (#185).
+    costs = []
+    for exit_id, (_dist, path) in all_paths.items():
+        m, rc = measure_with_cost(path)
+        if not rc.feasible:
+            alternatives = k_shortest_paths(
+                graph, source, exit_id, path, weights, first_hops, _PATHS_PER_EXIT
+            )[1:]
+            rc = _first_feasible(
+                rc,
+                _measure_alternatives(
+                    alternatives, m, policy.tau_budget(config), measure_with_cost
+                ),
+                key,
+            )
+        costs.append(rc)
 
     if (
         agent_position is not None
@@ -3009,6 +3189,86 @@ def rank_routes(
 
     costs = policy.apply_candidate_set_rules(costs, config)
     return _apply_fallback(_order_routes(costs, key), config, current_exit)
+
+
+# Relative margin on the optical-depth budget before a start counts as over it,
+# above the rounding of the two ways a route's tau is summed.
+_TAU_START_MARGIN = 1e-9
+
+
+def _start_tau(measured: RouteMeasurements, path: list[str]) -> float:
+    """The optical depth of the legs *path* shares with a measured route.
+
+    Zero when the two share no leg or the measurement keeps no legs.
+    """
+    shared = 0
+    for a, b in zip(measured.path, path):
+        if a != b:
+            break
+        shared += 1
+    if len(measured.leg_taus) != len(measured.path) - 1:
+        return 0.0
+    return sum(measured.leg_taus[: shared - 1])
+
+
+def _starts_over_tau(
+    path: list[str], measured: list[RouteMeasurements], budget: float
+) -> bool:
+    """Whether *path* starts with legs, measured on another route, over *budget*.
+
+    The tau a measurement reports is the sum over its legs of K_avg x length
+    (the walk from the agent to the first node counts as a leg), up to
+    rounding, and a leg's K_avg and length depend on the route up to that leg
+    only: the arrival time at it is the walk before it. K_avg is not negative.
+    So a route's tau is at least that of any start it shares with a measured
+    route, and a route whose shared start is over the budget is refused on tau
+    whatever follows. The margin keeps the test on the safe side of rounding.
+    """
+    limit = budget * (1.0 + _TAU_START_MARGIN)
+    for m in measured:
+        start = _start_tau(m, path)
+        if math.isfinite(start) and start > limit:
+            return True
+    return False
+
+
+def _measure_alternatives(
+    paths: list[list[str]],
+    searched: RouteMeasurements,
+    budget: float,
+    measure_with_cost: Callable[[list[str]], tuple[RouteMeasurements, RouteCost]],
+) -> list[RouteCost]:
+    """The costs of the alternative *paths* that can still pass the tau budget.
+
+    A path that starts over *budget* like a route already measured is left
+    out: it would be refused (:func:`_starts_over_tau`), and a refused
+    alternative never reaches :func:`_first_feasible`'s result.
+    """
+    measured = [searched]
+    costs = []
+    for path in paths:
+        if _starts_over_tau(path, measured, budget):
+            continue
+        m, rc = measure_with_cost(path)
+        measured.append(m)
+        costs.append(rc)
+    return costs
+
+
+def _first_feasible(
+    searched: RouteCost,
+    alternatives: list[RouteCost],
+    key: Callable[[RouteCost], tuple[int, int, float, float, int]],
+) -> RouteCost:
+    """The route that orders first among the feasible *alternatives*.
+
+    Without one, *searched* stays the exit's record: swapping in a less bad
+    refused path would change every tick in which all exits are refused.
+    """
+    feasible = [rc for rc in alternatives if rc.feasible]
+    if not feasible:
+        return searched
+    return _order_routes(feasible, key)[0]
 
 
 def _order_routes(

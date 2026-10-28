@@ -53,8 +53,8 @@ conventions; what each one proves, and where that proof is checked, is below.
   that S4 builds its own T-corridor via `harness.t_junction_scenario()` with a
   synthetic smoke field rather than loading this asset, so the mechanism is
   covered but the deck and config here are not exercised by the suite. This
-  config uses flow spawning deliberately: under by-number placement an agent's
-  route-eval source node is its assigned exit, which makes rerouting degenerate
+  config uses flow spawning so the population enters over a short window
+  before the smoke starts; by-number placement reroutes as well
   ([issue #21](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/21)).
 - **fed_incap_co_2000ppm** / **fed_incap_co_4000ppm** / **fed_incap_co_8000ppm**:
   FED accumulation and probabilistic-incapacitation verification against a

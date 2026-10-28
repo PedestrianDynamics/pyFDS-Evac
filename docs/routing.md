@@ -168,8 +168,8 @@ Eq. 8-9; the Beer-Lambert law itself is on
 ### Arrival-time pricing
 
 The path search (`_generate_candidates`) weights every edge with the
-smoke at decision time and finds one path to each exit from the agent's
-position. Its first legs are the walks from the agent to each successor of
+smoke at decision time and finds the shortest path to each exit from the
+agent's position. Its first legs are the walks from the agent to each successor of
 its origin node and to its current target, weighted by the smoke on each walk
 (`_first_hops`); it never routes back through the origin node. With `anticipate` (default `true`, and **independent of
 `cost_model`**), every smoke sample on that path is then read at the time
@@ -197,6 +197,20 @@ The unimpeded `base_speed_m_per_s` is used, not the smoke-reduced speed.
 frame of the extinction and FED slices routing reads is held at that frame,
 with one warning per run: there is no record to foresee beyond it (#666). The decision time itself is
 not held, so the horizon check on the agent's own samples still applies.
+
+An exit whose measured path is refused (FED, or τ under the gate) is tried on
+up to two more loopless shortest paths to it (Yen, `k_shortest_paths`), searched on the
+same edge weights and starting walks and measured the same way. The best that
+passes becomes the exit's record; with none, the exit keeps its refused record
+([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)). Where
+the first path passes, no further path is searched and nothing changes. On the
+world100 decks, where most exits are refused at most ticks, the search adds
+wall time: with history off, the median of three interleaved runs on an idle
+machine went from 21.0 s to 28.8 s (+38 %) on `world100_stream_east` and from
+23.1 s to 34.9 s (+51 %) on `world100_stream_oval`. An alternative that starts
+with a stretch already over the τ limit on a path measured before is not
+measured, since it would be refused whatever follows; this removes about a fifth
+of the alternatives' measurements and changes no result.
 
 ### Composite cost
 
@@ -572,7 +586,7 @@ discovery agent with no known exit explores or wanders instead (see below).
 | Step | Gate (default) | Additive |
 |---|---|---|
 | **Source** | `current_origin`, else `current_target_stage`; a source outside the graph skips the tick | same |
-| **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth at decision time (`k_avg` × length + 1e-6 × length), started at the agent's position: the first legs are the walks to the source's successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); one path per exit, alternatives to the same exit are not tried ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)); the current exit's entry is replaced by the walked path when that path orders ahead | Dijkstra on each edge's share of the composite at decision time (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth), started at the agent's position as for the gate; one path per exit; the walked path as for the gate |
+| **Candidates** | Dijkstra over the agent's known subgraph on each edge's optical depth at decision time (`k_avg` × length + 1e-6 × length), started at the agent's position: the first legs are the walks to the source's successors and to the current target, each weighted on its own smoke, and no edge back into the source is taken (not when the source is an exit or without a position); the shortest path per exit, and up to two more to an exit whose path is refused, the best that passes kept ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)); the current exit's entry is replaced by the walked path when that path orders ahead | Dijkstra on each edge's share of the composite at decision time (length × (1 + `w_smoke` × `k_avg`) + `w_fed` × FED growth), started at the agent's position as for the gate; paths per exit as for the gate; the walked path as for the gate |
 | **Rejection** | FED over the threshold then τ over `tau_max`; both are tested, and a route over both reports the τ reason; must-flee reads `violation_kinds`, not the reason ([#128](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/128)) | FED as for the gate, no τ test; then, when at least one route not yet rejected has a visible segment, every other such route with no visible segment is rejected as `all segments non-visible` while staying feasible |
 | **Ranking** | not rejected first, then tier (clean before smoky, only with `clean_extinction_threshold` > 0; the current exit's limit is divided by `clean_exit_margin`), then τ (× `current_exit_discount` for the current exit), then `rank_cost` (travel time + queue time × `w_queue`), then hops; ties keep candidate order | not rejected first, then `rank_cost` (the composite), then hops; no tier and no τ |
 | **Fallback** | when every route is rejected: re-sorted by must-flee (last), then raw τ, then `rank_cost`; a must-flee current exit never holds against a rival it need not flee, nor a rival to flee displace one it need not; the current exit goes first unless the winner's τ is below the current exit's × (1 − `fallback_switch_margin`) and differs from it by more than 1e-9; the first route is promoted, stays rejected and gets a `fallback: ` reason, its `feasible` unchanged | same |
