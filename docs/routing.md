@@ -205,10 +205,12 @@ passes becomes the exit's record; with none, the exit keeps its refused record
 ([#185](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/185)). Where
 the first path passes, no further path is searched and nothing changes. On the
 world100 decks, where most exits are refused at most ticks, the search adds
-wall time: with history off, the median of three interleaved runs went from 24.2 s to 33.3 s (+37 %) on `world100_stream_east` and from
-23.2 s to 40.8 s (+76 %) on `world100_stream_oval`. These are indicative: the
-runs shared the host with other programs, and single runs spread by about a
-quarter.
+wall time: with history off, the median of three interleaved runs on an idle
+machine went from 21.0 s to 28.8 s (+38 %) on `world100_stream_east` and from
+23.1 s to 34.9 s (+51 %) on `world100_stream_oval`. An alternative that starts
+with a stretch already over the τ limit on a path measured before is not
+measured, since it would be refused whatever follows; this removes about a fifth
+of the measurements and changes no result.
 
 ### Composite cost
 
