@@ -210,7 +210,7 @@ machine went from 21.0 s to 28.8 s (+38 %) on `world100_stream_east` and from
 23.1 s to 34.9 s (+51 %) on `world100_stream_oval`. An alternative that starts
 with a stretch already over the τ limit on a path measured before is not
 measured, since it would be refused whatever follows; this removes about a fifth
-of the measurements and changes no result.
+of the alternatives' measurements and changes no result.
 
 ### Composite cost
 

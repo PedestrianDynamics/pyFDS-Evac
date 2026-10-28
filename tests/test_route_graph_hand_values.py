@@ -537,6 +537,43 @@ class TestAlternativeStartingOverTheBudget:
         full = _rank(_shared_start(), smoke, None, _gate(), **position)
         assert skipped == full
 
+    def test_gate_skips_the_alternative_that_shares_an_earlier_alternatives_start(
+        self, monkeypatch
+    ):
+        # D0-A-E0 (30 m) is refused, then D0-B-X-E0 (42.36 m) is measured and
+        # refused on its first leg. D0-B-Y-E0 (55.8 m) shares only that leg, not
+        # the searched path's start, so only the alternative measured before
+        # it can rule it out.
+        graph = _graph(
+            {
+                "A": (0, 10, "checkpoint"),
+                "B": (0, -10, "checkpoint"),
+                "X": (10, -10, "checkpoint"),
+                "Y": (10, -20, "checkpoint"),
+                "E0": (20, 10, "exit"),
+            },
+            _edges(
+                ("D0", "A"),
+                ("A", "E0"),
+                ("D0", "B"),
+                ("B", "X"),
+                ("X", "E0"),
+                ("B", "Y"),
+                ("Y", "E0"),
+            ),
+        )
+        smoke = _Hazard((_ON_C0_START, (-2.0, 2.0, -9.0, -1.0)), k=5.0, t_on=5.0)
+        measured = _measured_paths(monkeypatch)
+        skipped = _rank(graph, smoke, None, _gate())
+        assert ["D0", "B", "X", "E0"] in measured
+        assert ["D0", "B", "Y", "E0"] not in measured
+        e0 = _entry(skipped)
+        assert e0.path == ["D0", "A", "E0"] and e0.rejected
+        _never_skip(monkeypatch)
+        full = _rank(graph, smoke, None, _gate())
+        assert ["D0", "B", "Y", "E0"] in measured
+        assert skipped == full
+
     def test_additive_measures_every_alternative(self, monkeypatch):
         hazard = _Hazard((_ON_C0_START,), fed=10.0)
         measured = _measured_paths(monkeypatch)
