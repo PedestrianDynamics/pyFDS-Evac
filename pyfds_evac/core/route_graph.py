@@ -1446,6 +1446,10 @@ class RouteMeasurements:
     k_leg_max: float
     # travel_time_s with every speed factor 1, for the switch label (#92).
     clear_travel_time_s: float | None = None
+    # K_avg x length of each leg, in route order, when tau_route is their sum
+    # (the walk from the agent to path[1] counts as the first leg). Empty when
+    # the first segment is charged pro rata, where tau is not a sum of legs.
+    leg_taus: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -2125,6 +2129,7 @@ def _measure_route(
         ]
         exposure_length = sum(length for _, length in legs)
         total_k_samples = sum(k * length for k, length in legs)
+        leg_taus = tuple(k * length for k, length in legs)
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         walk_time = _leg_travel_time(first_leg.length_m, first_leg.k_avg, config)[1]
         travel_time = sum([walk_time] + [s.travel_time_s for s in segments[1:]])
@@ -2138,6 +2143,11 @@ def _measure_route(
     else:
         exposure_length = sum(w * s.length_m for w, s in weighted)
         total_k_samples = sum(w * s.k_avg * s.length_m for w, s in weighted)
+        leg_taus = (
+            tuple(s.k_avg * s.length_m for s in segments)
+            if agent_position is None
+            else ()
+        )
         k_ave = total_k_samples / exposure_length if exposure_length > 1e-9 else 0.0
         travel_time = sum(w * s.travel_time_s for w, s in weighted)
         clear_travel_time = _leg_travel_time(exposure_length, 0.0, config)[1]
@@ -2244,6 +2254,7 @@ def _measure_route(
         tau_route=tau_route,
         k_leg_max=k_leg_max,
         clear_travel_time_s=clear_travel_time,
+        leg_taus=leg_taus,
     )
 
 
@@ -2299,6 +2310,8 @@ class RouteModePolicy(Protocol):
     ) -> RouteFeasibility: ...
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float: ...
+
+    def tau_budget(self, config: RouteCostConfig) -> float: ...
 
     def apply_candidate_set_rules(
         self, costs: list[RouteCost], config: RouteCostConfig
@@ -2442,6 +2455,10 @@ class AdditivePolicy(_AnchoredPolicy):
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
         return m.composite_cost
+
+    def tau_budget(self, config: RouteCostConfig) -> float:
+        # Optical depth refuses nothing here.
+        return math.inf
 
     def apply_candidate_set_rules(
         self, costs: list[RouteCost], config: RouteCostConfig
@@ -2620,7 +2637,7 @@ class GatePolicy(_AnchoredPolicy):
         #
         # The gate: refuse a route whose optical depth exceeds the budget.
         # Appended after the dose, so a route over both limits reports tau.
-        budget = config.tau_max
+        budget = self.tau_budget(config)
         tau_route = m.tau_route
         if tau_route > budget:
             feasible = False
@@ -2641,6 +2658,9 @@ class GatePolicy(_AnchoredPolicy):
             rejection_reason=violations[-1].reason if violations else None,
             violations=tuple(violations),
         )
+
+    def tau_budget(self, config: RouteCostConfig) -> float:
+        return config.tau_max
 
     def rank_cost(self, m: RouteMeasurements, config: RouteCostConfig) -> float:
         # Queue delay is time, so it belongs beside travel time rather than in
@@ -3113,7 +3133,7 @@ def rank_routes(
     if not all_paths:
         return []
 
-    def measure(path: list[str]) -> RouteCost:
+    def measure_with_cost(path: list[str]) -> tuple[RouteMeasurements, RouteCost]:
         m = _measure_route(
             graph,
             path,
@@ -3127,7 +3147,10 @@ def rank_routes(
             agent_position=agent_position,
             walks=walks,
         )
-        return _project_route_cost(_assess_measurements(m, config, current_exit))
+        return m, _project_route_cost(_assess_measurements(m, config, current_exit))
+
+    def measure(path: list[str]) -> RouteCost:
+        return measure_with_cost(path)[1]
 
     def key(rc: RouteCost) -> tuple[int, int, float, float, int]:
         return policy.order_key(rc, config, current_exit)
@@ -3136,12 +3159,18 @@ def rank_routes(
     # searched path is refused tries its next shortest paths (#185).
     costs = []
     for exit_id, (_dist, path) in all_paths.items():
-        rc = measure(path)
+        m, rc = measure_with_cost(path)
         if not rc.feasible:
             alternatives = k_shortest_paths(
                 graph, source, exit_id, path, weights, first_hops, _PATHS_PER_EXIT
             )[1:]
-            rc = _first_feasible(rc, [measure(p) for p in alternatives], key)
+            rc = _first_feasible(
+                rc,
+                _measure_alternatives(
+                    alternatives, m, policy.tau_budget(config), measure_with_cost
+                ),
+                key,
+            )
         costs.append(rc)
 
     if (
@@ -3160,6 +3189,70 @@ def rank_routes(
 
     costs = policy.apply_candidate_set_rules(costs, config)
     return _apply_fallback(_order_routes(costs, key), config, current_exit)
+
+
+# Relative margin on the optical-depth budget before a start counts as over it,
+# above the rounding of the two ways a route's tau is summed.
+_TAU_START_MARGIN = 1e-9
+
+
+def _start_tau(measured: RouteMeasurements, path: list[str]) -> float:
+    """The optical depth of the legs *path* shares with a measured route.
+
+    Zero when the two share no leg or the measurement keeps no legs.
+    """
+    shared = 0
+    for a, b in zip(measured.path, path):
+        if a != b:
+            break
+        shared += 1
+    if len(measured.leg_taus) != len(measured.path) - 1:
+        return 0.0
+    return sum(measured.leg_taus[: shared - 1])
+
+
+def _starts_over_tau(
+    path: list[str], measured: list[RouteMeasurements], budget: float
+) -> bool:
+    """Whether *path* starts with legs, measured on another route, over *budget*.
+
+    The tau a measurement reports is the sum over its legs of K_avg x length
+    (the walk from the agent to the first node counts as a leg), up to
+    rounding, and a leg's K_avg and length depend on the route up to that leg
+    only: the arrival time at it is the walk before it. K_avg is not negative.
+    So a route's tau is at least that of any start it shares with a measured
+    route, and a route whose shared start is over the budget is refused on tau
+    whatever follows. The margin keeps the test on the safe side of rounding.
+    """
+    limit = budget * (1.0 + _TAU_START_MARGIN)
+    for m in measured:
+        start = _start_tau(m, path)
+        if math.isfinite(start) and start > limit:
+            return True
+    return False
+
+
+def _measure_alternatives(
+    paths: list[list[str]],
+    searched: RouteMeasurements,
+    budget: float,
+    measure_with_cost: Callable[[list[str]], tuple[RouteMeasurements, RouteCost]],
+) -> list[RouteCost]:
+    """The costs of the alternative *paths* that can still pass the tau budget.
+
+    A path that starts over *budget* like a route already measured is left
+    out: it would be refused (:func:`_starts_over_tau`), and a refused
+    alternative never reaches :func:`_first_feasible`'s result.
+    """
+    measured = [searched]
+    costs = []
+    for path in paths:
+        if _starts_over_tau(path, measured, budget):
+            continue
+        m, rc = measure_with_cost(path)
+        measured.append(m)
+        costs.append(rc)
+    return costs
 
 
 def _first_feasible(

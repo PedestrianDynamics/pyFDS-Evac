@@ -444,6 +444,124 @@ class TestAlternativePathToRefusedExit:
         assert all(rc.path[-1] == rc.exit_id for rc in ranked)
 
 
+def _shared_start() -> StageGraph:
+    """D0-C0-E0 (30 m), its detour D0-C0-M-E0 (35.62 m) and D0-C1-E0 (94.37 m)."""
+    return _graph(
+        {
+            "C0": (0, 10, "checkpoint"),
+            "M": (10, 18, "checkpoint"),
+            "C1": (-30, -20, "checkpoint"),
+            "E0": (20, 10, "exit"),
+        },
+        _edges(
+            ("D0", "C0"),
+            ("C0", "E0"),
+            ("C0", "M"),
+            ("M", "E0"),
+            ("D0", "C1"),
+            ("C1", "E0"),
+        ),
+    )
+
+
+# Smoke on the first leg D0 > C0 from t = 5 s: the search at t = 0 sees clear
+# air, the agent walks into it and the searched path is refused on tau.
+_ON_C0_START = (-2.0, 2.0, 1.0, 9.0)
+_SHARED_START = ["D0", "C0", "M", "E0"]
+_OTHER_START = ["D0", "C1", "E0"]
+
+
+def _measured_paths(monkeypatch) -> list[list[str]]:
+    from pyfds_evac.core import route_graph
+
+    paths: list[list[str]] = []
+    measure = route_graph._measure_route
+
+    def counting(graph, path, *args, **kwargs):
+        paths.append(list(path))
+        return measure(graph, path, *args, **kwargs)
+
+    monkeypatch.setattr(route_graph, "_measure_route", counting)
+    return paths
+
+
+def _never_skip(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "pyfds_evac.core.route_graph._starts_over_tau", lambda *a, **k: False
+    )
+
+
+class TestAlternativeStartingOverTheBudget:
+    """#185: an alternative that starts like a measured route, over the budget."""
+
+    def test_gate_skips_the_alternative_that_shares_the_refused_start(
+        self, monkeypatch
+    ):
+        smoke = _Hazard((_ON_C0_START,), k=5.0, t_on=5.0)
+        with_skip = _measured_paths(monkeypatch)
+        ranked = _rank(_shared_start(), smoke, None, _gate())
+        e0 = _entry(ranked)
+        assert e0.path == _OTHER_START
+        assert e0.feasible and e0.tau_route == 0.0
+        assert ["D0", "C0", "E0"] in with_skip
+        assert _OTHER_START in with_skip
+        assert _SHARED_START not in with_skip
+
+    def test_gate_result_is_the_one_measured_without_the_skip(self, monkeypatch):
+        smoke = _Hazard((_ON_C0_START,), k=5.0, t_on=5.0)
+        skipped = _rank(_shared_start(), smoke, None, _gate())
+        measured = _measured_paths(monkeypatch)
+        _never_skip(monkeypatch)
+        full = _rank(_shared_start(), smoke, None, _gate())
+        assert _SHARED_START in measured
+        assert skipped == full
+
+    def test_gate_all_refused_keeps_the_searched_path_record(self, monkeypatch):
+        smoke = _Hazard((_ON_C0_START, (-32.0, -28.0, -22.0, -18.0)), k=5.0, t_on=0.0)
+        skipped = _rank(_shared_start(), smoke, None, _gate())
+        _never_skip(monkeypatch)
+        full = _rank(_shared_start(), smoke, None, _gate())
+        e0 = _entry(skipped)
+        assert e0.path == ["D0", "C0", "E0"] and e0.rejected
+        assert skipped == full
+
+    def test_gate_with_the_agent_off_the_graph_gives_the_same_ranking(
+        self, monkeypatch
+    ):
+        smoke = _Hazard((_ON_C0_START,), k=5.0, t_on=5.0)
+        position = {"agent_position": (0.0, 2.0)}
+        measured = _measured_paths(monkeypatch)
+        skipped = _rank(_shared_start(), smoke, None, _gate(), **position)
+        assert _SHARED_START not in measured
+        _never_skip(monkeypatch)
+        full = _rank(_shared_start(), smoke, None, _gate(), **position)
+        assert skipped == full
+
+    def test_additive_measures_every_alternative(self, monkeypatch):
+        hazard = _Hazard((_ON_C0_START,), fed=10.0)
+        measured = _measured_paths(monkeypatch)
+        ranked = _rank(_shared_start(), hazard, hazard, _additive())
+        assert _SHARED_START in measured
+        n = len(measured)
+        _never_skip(monkeypatch)
+        assert _rank(_shared_start(), hazard, hazard, _additive()) == ranked
+        assert len(measured) == 2 * n
+
+    def test_the_legs_of_a_measurement_add_up_to_its_tau(self):
+        from pyfds_evac.core.route_graph import _measure_route
+
+        smoke = _Hazard((_ON_C0_START, (-32.0, -10.0, -22.0, -8.0)), k=0.4)
+        graph = _shared_start()
+        for path in (["D0", "C0", "M", "E0"], ["D0", "C1", "E0"]):
+            for position in (None, (0.0, 2.0), (3.0, -4.0)):
+                m = _measure_route(
+                    graph, path, 0.0, 0.0, smoke, None, _gate(), agent_position=position
+                )
+                assert len(m.leg_taus) == len(path) - 1
+                assert m.tau_route > 0.0
+                assert sum(m.leg_taus) == pytest.approx(m.tau_route, rel=1e-9)
+
+
 class TestKShortestPaths:
     @staticmethod
     def _back_edge_graph() -> StageGraph:
