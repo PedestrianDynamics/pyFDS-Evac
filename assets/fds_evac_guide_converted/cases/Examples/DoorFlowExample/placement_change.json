@@ -1,0 +1,208 @@
+{
+  "source_scenario": "Examples/DoorFlowExample.fds",
+  "source_repository": "https://github.com/tkorhon1/FDS-Evac-Guide",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "original_spawn_bounds_xy": [
+    5,
+    4.8,
+    10,
+    9.8
+  ],
+  "new_spawn_areas": [
+    {
+      "id": "EvacAdult_left",
+      "population": 50,
+      "bounds_xy": [
+        4.6,
+        4.8,
+        7.5,
+        9.8
+      ]
+    },
+    {
+      "id": "EvacAdult_right",
+      "population": 50,
+      "bounds_xy": [
+        7.5,
+        4.8,
+        10.4,
+        9.8
+      ]
+    }
+  ],
+  "original_area_m2": 25,
+  "new_area_m2": 29,
+  "area_increase_percent": 16,
+  "radius_m": 0.2,
+  "estimated_capacity_each": 57,
+  "source_config_sha256": "a97d965fd97e67a6e3ea37316f7be28a928b143f182cf10dbf2750bd69f69be1",
+  "config_sha256": "ff0c8f1a452749bcdf5be50d7ae739b5e0b4f0273cb3843e05393a07655f688a",
+  "geometry_unchanged": true,
+  "placement_probes": [
+    {
+      "extension_each_x_side_m": 0.1,
+      "area_increase_percent": 4.0,
+      "seeds": [
+        {
+          "seed": 42,
+          "passed": true,
+          "minimum_center_distance_m": 0.4007859927526377
+        },
+        {
+          "seed": 0,
+          "passed": false,
+          "error": "Only 48 of 50  could be placed. density: 3.69 p/m\u00b2"
+        }
+      ]
+    },
+    {
+      "extension_each_x_side_m": 0.2,
+      "area_increase_percent": 8.0,
+      "seeds": [
+        {
+          "seed": 42,
+          "passed": true,
+          "minimum_center_distance_m": 0.40009119951926214
+        },
+        {
+          "seed": 0,
+          "passed": true,
+          "minimum_center_distance_m": 0.4024627867921875
+        },
+        {
+          "seed": 1,
+          "passed": true,
+          "minimum_center_distance_m": 0.4003438416463011
+        },
+        {
+          "seed": 2,
+          "passed": true,
+          "minimum_center_distance_m": 0.40131608571912064
+        },
+        {
+          "seed": 3,
+          "passed": false,
+          "error": "Only 49 of 50  could be placed. density: 3.63 p/m\u00b2"
+        }
+      ]
+    },
+    {
+      "extension_each_x_side_m": 0.3,
+      "area_increase_percent": 12.0,
+      "seeds": [
+        {
+          "seed": 42,
+          "passed": true,
+          "minimum_center_distance_m": 0.4026114380205937
+        },
+        {
+          "seed": 0,
+          "passed": true,
+          "minimum_center_distance_m": 0.4000299950592662
+        },
+        {
+          "seed": 1,
+          "passed": true,
+          "minimum_center_distance_m": 0.40067138690362963
+        },
+        {
+          "seed": 2,
+          "passed": true,
+          "minimum_center_distance_m": 0.4018004256245406
+        },
+        {
+          "seed": 3,
+          "passed": true,
+          "minimum_center_distance_m": 0.40122677661427
+        },
+        {
+          "seed": 4,
+          "passed": true,
+          "minimum_center_distance_m": 0.4001631660622661
+        },
+        {
+          "seed": 5,
+          "passed": true,
+          "minimum_center_distance_m": 0.40106449936959354
+        },
+        {
+          "seed": 6,
+          "passed": true,
+          "minimum_center_distance_m": 0.40045403670004964
+        },
+        {
+          "seed": 7,
+          "passed": true,
+          "minimum_center_distance_m": 0.4004830726250497
+        },
+        {
+          "seed": 8,
+          "passed": false,
+          "error": "Only 48 of 50  could be placed. density: 3.43 p/m\u00b2"
+        }
+      ]
+    },
+    {
+      "extension_each_x_side_m": 0.4,
+      "area_increase_percent": 16.0,
+      "seeds": [
+        {
+          "seed": 42,
+          "passed": true,
+          "minimum_center_distance_m": 0.4020873569340818
+        },
+        {
+          "seed": 0,
+          "passed": true,
+          "minimum_center_distance_m": 0.40117530360222386
+        },
+        {
+          "seed": 1,
+          "passed": true,
+          "minimum_center_distance_m": 0.40025108571774026
+        },
+        {
+          "seed": 2,
+          "passed": true,
+          "minimum_center_distance_m": 0.4001489054241102
+        },
+        {
+          "seed": 3,
+          "passed": true,
+          "minimum_center_distance_m": 0.40116921139229095
+        },
+        {
+          "seed": 4,
+          "passed": true,
+          "minimum_center_distance_m": 0.40084284747297444
+        },
+        {
+          "seed": 5,
+          "passed": true,
+          "minimum_center_distance_m": 0.40147686777028235
+        },
+        {
+          "seed": 6,
+          "passed": true,
+          "minimum_center_distance_m": 0.40001437801623807
+        },
+        {
+          "seed": 7,
+          "passed": true,
+          "minimum_center_distance_m": 0.40048872850889067
+        },
+        {
+          "seed": 8,
+          "passed": true,
+          "minimum_center_distance_m": 0.4003708827047854
+        },
+        {
+          "seed": 9,
+          "passed": true,
+          "minimum_center_distance_m": 0.4006480081537242
+        }
+      ]
+    }
+  ],
+  "limitations": "The spawn footprint is enlarged and split; independently sampled groups have an internal body-clearance band. This is an adjusted scenario, not exact preservation of the original placement distribution. Placement was checked for seeds 0 through 9 and 42; other seeds are not guaranteed."
+}

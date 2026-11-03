@@ -1,0 +1,245 @@
+{
+  "chid": "fed_O2_verificationB",
+  "counts": {
+    "EVAC": {
+      "A": 2,
+      "C": 1,
+      "D": 0,
+      "S": 2
+    },
+    "EXIT": {
+      "A": 0,
+      "C": 0,
+      "D": 0,
+      "S": 1
+    },
+    "MISC": {
+      "A": 0,
+      "C": 1,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 1,
+      "C": 4,
+      "D": 7,
+      "S": 1
+    }
+  },
+  "deck": "fed_O2_verificationB.fds",
+  "distributions": [
+    {
+      "area_m2": 0.36,
+      "density_per_m2": 2.777778,
+      "id": "FedAgent",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 1,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_param_a",
+        "use_premovement",
+        "v0",
+        "v0_distribution"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "DummyExit",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        2.0,
+        3.0,
+        2.5,
+        3.0
+      ],
+      "sign": null,
+      "source": "&EXIT",
+      "strip_area_m2": 0.25
+    }
+  ],
+  "floor": {
+    "id": "MainEvacMesh",
+    "meshes": [
+      "MainEvacMesh"
+    ],
+    "z_band": [
+      0.4,
+      1.8
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "DummyExit",
+      "level": "info",
+      "line": 16,
+      "message": "exit strip 0.25 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "TAU_EVAC_DIST has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "TAU_MEAN has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "NOT_RANDOM has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "NOISEME has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "NOISETH has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "NOISECM has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 88,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "info",
+      "line": 88,
+      "message": "constant speed v0=1 m/s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FedAgent",
+      "level": "warning",
+      "line": 103,
+      "message": "no known doors -> familiarity 'discovery'; agents find exits by signs read within 30 m, FDS+Evac by unlimited sight",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "FedAgent",
+      "level": "info",
+      "line": 103,
+      "message": "delay: detection + reaction = constant 200 s",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FedAgent",
+      "level": "info",
+      "line": 103,
+      "message": "1 agents in 1 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "FedAgent",
+      "level": "warning",
+      "line": null,
+      "message": "Point/line spawn expanded to 0.6 m on each zero-width axis: [1.5, 1.5, 1.5, 1.5, 1.1, 1.1] -> [1.2, 1.8, 1.2, 1.8, 1.1, 1.1]; intersected with walkable space; positions sampled within resulting region.",
+      "status": "A"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "exits_outside": [],
+      "fire_meshes": 1,
+      "walkable_outside_m2": 0.0
+    },
+    "fds_dir": null,
+    "fds_meshes": 1,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Verification/FED_Test/fed_O2_verificationB",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.7
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 9.0,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.2 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 0,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}

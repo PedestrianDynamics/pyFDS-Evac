@@ -1,0 +1,256 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 100.0,
+        "smoke_slice_height": 1.6
+      }
+    }
+  },
+  "distributions": {
+    "EvacAdultD": {
+      "coordinates": [
+        [
+          14.0,
+          0.0
+        ],
+        [
+          14.0,
+          2.0
+        ],
+        [
+          0.0,
+          2.0
+        ],
+        [
+          0.0,
+          0.0
+        ],
+        [
+          14.0,
+          0.0
+        ]
+      ],
+      "parameters": {
+        "familiarity": "full",
+        "number": 56,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.1,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EvacAdultL": {
+      "coordinates": [
+        [
+          2.0,
+          2.0
+        ],
+        [
+          2.0,
+          12.0
+        ],
+        [
+          0.0,
+          12.0
+        ],
+        [
+          0.0,
+          2.0
+        ],
+        [
+          2.0,
+          2.0
+        ]
+      ],
+      "parameters": {
+        "familiarity": "full",
+        "number": 40,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.1,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EvacAdultR": {
+      "coordinates": [
+        [
+          14.0,
+          2.0
+        ],
+        [
+          14.0,
+          12.0
+        ],
+        [
+          12.0,
+          12.0
+        ],
+        [
+          12.0,
+          2.0
+        ],
+        [
+          14.0,
+          2.0
+        ]
+      ],
+      "parameters": {
+        "familiarity": "full",
+        "number": 40,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.1,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    },
+    "EvacAdultU": {
+      "coordinates": [
+        [
+          14.0,
+          12.0
+        ],
+        [
+          14.0,
+          14.0
+        ],
+        [
+          0.0,
+          14.0
+        ],
+        [
+          0.0,
+          12.0
+        ],
+        [
+          14.0,
+          12.0
+        ]
+      ],
+      "parameters": {
+        "familiarity": "full",
+        "number": 56,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.1,
+        "use_premovement": true,
+        "v0": 1.25,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.173205081
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "Exit_BottomLeft": {
+      "coordinates": [
+        [
+          7.1,
+          2.5
+        ],
+        [
+          7.0,
+          2.5
+        ],
+        [
+          7.0,
+          3.0
+        ],
+        [
+          7.1,
+          3.0
+        ],
+        [
+          7.1,
+          2.5
+        ]
+      ],
+      "type": "polygon"
+    },
+    "Exit_BottomRight": {
+      "coordinates": [
+        [
+          11.5,
+          7.0
+        ],
+        [
+          11.0,
+          7.0
+        ],
+        [
+          11.0,
+          7.1
+        ],
+        [
+          11.5,
+          7.1
+        ],
+        [
+          11.5,
+          7.0
+        ]
+      ],
+      "type": "polygon"
+    },
+    "Exit_TopLeft": {
+      "coordinates": [
+        [
+          3.0,
+          7.0
+        ],
+        [
+          2.5,
+          7.0
+        ],
+        [
+          2.5,
+          7.1
+        ],
+        [
+          3.0,
+          7.1
+        ],
+        [
+          3.0,
+          7.0
+        ]
+      ],
+      "type": "polygon"
+    },
+    "Exit_TopRight": {
+      "coordinates": [
+        [
+          7.1,
+          11.0
+        ],
+        [
+          7.0,
+          11.0
+        ],
+        [
+          7.0,
+          11.5
+        ],
+        [
+          7.1,
+          11.5
+        ],
+        [
+          7.1,
+          11.0
+        ]
+      ],
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}

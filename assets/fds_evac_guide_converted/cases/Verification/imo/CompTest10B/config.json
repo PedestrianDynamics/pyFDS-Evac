@@ -1,0 +1,508 @@
+{
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 100.0,
+        "smoke_slice_height": 1.6
+      }
+    }
+  },
+  "distributions": {
+    "Cabin_1": {
+      "coordinates": [
+        [
+          2.8,
+          7.0
+        ],
+        [
+          2.8,
+          10.0
+        ],
+        [
+          0.2,
+          10.0
+        ],
+        [
+          0.2,
+          7.0
+        ],
+        [
+          2.8,
+          7.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_10": {
+      "coordinates": [
+        [
+          11.8,
+          1.0
+        ],
+        [
+          11.8,
+          4.0
+        ],
+        [
+          9.2,
+          4.0
+        ],
+        [
+          9.2,
+          1.0
+        ],
+        [
+          11.8,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_11": {
+      "coordinates": [
+        [
+          14.8,
+          1.0
+        ],
+        [
+          14.8,
+          4.0
+        ],
+        [
+          12.2,
+          4.0
+        ],
+        [
+          12.2,
+          1.0
+        ],
+        [
+          14.8,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "SecoExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_12": {
+      "coordinates": [
+        [
+          17.8,
+          1.0
+        ],
+        [
+          17.8,
+          4.0
+        ],
+        [
+          15.2,
+          4.0
+        ],
+        [
+          15.2,
+          1.0
+        ],
+        [
+          17.8,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "SecoExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_2": {
+      "coordinates": [
+        [
+          5.8,
+          7.0
+        ],
+        [
+          5.8,
+          10.0
+        ],
+        [
+          3.2,
+          10.0
+        ],
+        [
+          3.2,
+          7.0
+        ],
+        [
+          5.8,
+          7.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_3": {
+      "coordinates": [
+        [
+          8.8,
+          7.0
+        ],
+        [
+          8.8,
+          10.0
+        ],
+        [
+          7.4,
+          10.0
+        ],
+        [
+          7.4,
+          7.0
+        ],
+        [
+          8.8,
+          7.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 1,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_4": {
+      "coordinates": [
+        [
+          11.8,
+          7.0
+        ],
+        [
+          11.8,
+          10.0
+        ],
+        [
+          9.2,
+          10.0
+        ],
+        [
+          9.2,
+          7.0
+        ],
+        [
+          11.8,
+          7.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_5": {
+      "coordinates": [
+        [
+          14.8,
+          7.0
+        ],
+        [
+          14.8,
+          10.0
+        ],
+        [
+          12.2,
+          10.0
+        ],
+        [
+          12.2,
+          7.0
+        ],
+        [
+          14.8,
+          7.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "SecoExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_6": {
+      "coordinates": [
+        [
+          17.8,
+          7.0
+        ],
+        [
+          17.8,
+          10.0
+        ],
+        [
+          15.2,
+          10.0
+        ],
+        [
+          15.2,
+          7.0
+        ],
+        [
+          17.8,
+          7.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "SecoExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_7": {
+      "coordinates": [
+        [
+          2.8,
+          1.0
+        ],
+        [
+          2.8,
+          4.0
+        ],
+        [
+          0.2,
+          4.0
+        ],
+        [
+          0.2,
+          1.0
+        ],
+        [
+          2.8,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_8": {
+      "coordinates": [
+        [
+          5.8,
+          1.0
+        ],
+        [
+          5.8,
+          4.0
+        ],
+        [
+          3.2,
+          4.0
+        ],
+        [
+          3.2,
+          1.0
+        ],
+        [
+          5.8,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    },
+    "Cabin_9": {
+      "coordinates": [
+        [
+          8.8,
+          1.0
+        ],
+        [
+          8.8,
+          4.0
+        ],
+        [
+          6.2,
+          4.0
+        ],
+        [
+          6.2,
+          1.0
+        ],
+        [
+          8.8,
+          1.0
+        ]
+      ],
+      "parameters": {
+        "entrance": "MainExit",
+        "familiarity": "discovery",
+        "number": 2,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 0.0,
+        "use_premovement": true,
+        "v0": 1.295,
+        "v0_distribution": "gaussian",
+        "v0_std": 0.187638837
+      },
+      "type": "polygon"
+    }
+  },
+  "exits": {
+    "MainExit": {
+      "coordinates": [
+        [
+          7.2,
+          10.4
+        ],
+        [
+          6.01,
+          10.4
+        ],
+        [
+          6.01,
+          10.9
+        ],
+        [
+          7.2,
+          10.9
+        ],
+        [
+          7.2,
+          10.4
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 6.5,
+        "y": 10.7
+      },
+      "type": "polygon"
+    },
+    "SecoExit": {
+      "coordinates": [
+        [
+          17.8,
+          5.0
+        ],
+        [
+          17.3,
+          5.0
+        ],
+        [
+          17.3,
+          5.9
+        ],
+        [
+          17.8,
+          5.9
+        ],
+        [
+          17.8,
+          5.0
+        ]
+      ],
+      "sign": {
+        "c": 3,
+        "x": 17.6,
+        "y": 5.5
+      },
+      "type": "polygon"
+    }
+  },
+  "journeys": [],
+  "transitions": []
+}
