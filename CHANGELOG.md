@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Verification: the `constant` pre-movement preset is checked to give
+  every agent exactly 10 s (FDS+Evac `PRE_MEAN`) and to follow
+  `premovement_param_a` (A6.5 in `test_premovement_verif.py`, #309).
+
 ### Fixed
 
 - `assets/station_fahy`: the rear bar / dart room spawn area reaches
