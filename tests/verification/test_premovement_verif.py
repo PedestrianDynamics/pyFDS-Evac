@@ -197,3 +197,28 @@ def test_a6_4_factory_matches_direct_construction():
 def test_a6_4_factory_unknown_type_raises_value_error():
     with pytest.raises(ValueError):
         create_premovement_distribution("not_a_distribution", {}, seed=1)
+
+
+# --- A6.5: the constant preset, FDS+Evac's PRE_MEAN default (#309) ----------
+
+CONSTANT_PRE_MEAN = 10.0  # s, FDS+Evac PRE_MEAN (evac.f90)
+
+
+@pytest.mark.iso20414
+@pytest.mark.parametrize("seed", [0, 1, MOMENT_SEED])
+@pytest.mark.parametrize("n", [1, 7, 1000])
+def test_a6_5_constant_preset_gives_every_agent_pre_mean(seed, n):
+    samples = create_premovement_distribution(
+        "constant", PREMOVEMENT_PRESETS["constant"], seed=seed
+    ).sample(n)
+
+    assert np.array_equal(samples, np.full(n, CONSTANT_PRE_MEAN))
+
+
+@pytest.mark.iso20414
+def test_a6_5_constant_param_a_overrides_pre_mean():
+    samples = create_premovement_distribution(
+        "constant", {"a": 42.5, "b": None}, seed=1
+    ).sample(5)
+
+    assert np.array_equal(samples, np.full(5, 42.5))
