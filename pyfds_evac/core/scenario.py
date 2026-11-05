@@ -1108,6 +1108,25 @@ class ProgressEvent:
     not_spawned: int = 0
 
 
+def pre_evacuation_rows(
+    premovement_times: Mapping[int, dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """One row per agent with a pre-movement time, in agent id order.
+
+    ``movement_start_s`` is the simulation time the agent was released, or
+    None if it never was (incapacitated first, or still held at the end).
+    """
+    return [
+        {
+            "agent_id": agent_id,
+            "distribution": record["distribution"],
+            "premovement_time_s": record["premovement_time"],
+            "movement_start_s": record.get("movement_start_s"),
+        }
+        for agent_id, record in sorted(premovement_times.items())
+    ]
+
+
 # Called for each progress sample when supplied to ``run_scenario``.
 ProgressCallback = Callable[[ProgressEvent], None]
 
@@ -1125,6 +1144,8 @@ class ScenarioResult:
     cognitive_map_history: list[dict[str, Any]] | None = None
     manifest_file: str | None = None
     exit_history: list[dict[str, Any]] | None = None
+    # One row per agent with a pre-movement time; see pre_evacuation_rows.
+    pre_evacuation_times: list[dict[str, Any]] | None = None
     # What the run used (seed, models built); provisional, see
     # manifest.run_settings.
     run_settings: dict[str, Any] | None = None
@@ -3233,6 +3254,9 @@ def run_scenario(
                             speed_state["original_speed"] = float(desired_speed)
                             speed_state["active_checkpoint"] = None
                             premovement_times[agent_id]["activated"] = True
+                            premovement_times[agent_id]["movement_start_s"] = float(
+                                current_time
+                            )
 
             if smoke_speed_model is not None:
                 current_time = simulation.elapsed_time()
@@ -4141,6 +4165,7 @@ def run_scenario(
             cognitive_map_history=(
                 cognitive_map_history if collect_cognitive_map_history else None
             ),
+            pre_evacuation_times=pre_evacuation_rows(premovement_times),
             exit_history=[
                 {
                     "agent_id": agent_id,
