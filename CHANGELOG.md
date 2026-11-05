@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `assets/station_fahy`: the rear bar / dart room spawn area reaches
+  x −6.0 instead of −8.0 (17.2 m² instead of 13.2 m² for its 28 agents),
+  so every registered seed 4–23 of the Station study places all 333
+  agents; seeds 18, 20 and 22 stopped in placement before (#380). Start
+  positions of the other 305 agents are unchanged.
+
 ## [0.8.0] - 2026-10-28
 
 ### Upgrading
