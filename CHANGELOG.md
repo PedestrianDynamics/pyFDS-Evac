@@ -13,7 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   x −6.0 instead of −8.0 (17.2 m² instead of 13.2 m² for its 28 agents),
   so every registered seed 4–23 of the Station study places all 333
   agents; seeds 18, 20 and 22 stopped in placement before (#380). Start
-  positions of the other 305 agents are unchanged.
+  positions of the other 305 agents are unchanged. The 28 dart-room
+  agents start in the wider area, so Station results for every seed
+  differ from 0.8.0.
 
 ## [0.8.0] - 2026-10-28
 
