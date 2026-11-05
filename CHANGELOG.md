@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `--output-pre-evacuation-times CSV` writes one row per agent with a
+  pre-movement time: `agent_id`, `distribution`, `premovement_time_s`
+  and `movement_start_s` (empty if never released); from Python,
+  `ScenarioResult.pre_evacuation_times` (#120). Command line only.
 - Verification: the `constant` pre-movement preset is checked to give
   every agent exactly 10 s (FDS+Evac `PRE_MEAN`) and to follow
   `premovement_param_a` (A6.5 in `test_premovement_verif.py`, #309).
