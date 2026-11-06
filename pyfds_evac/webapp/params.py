@@ -862,7 +862,8 @@ def form_to_opts(
     # A stale form can still post a removed option; the loop below would
     # drop it as unknown, so reject it here as validate_opts does.
     for name, message in REMOVED_FIC_OPTIONS.items():
-        if str(form.get(name) or "").strip():
+        value = form.get(name)
+        if value is not None and str(value).strip():
             raise ValueError(message)
     parser = _load_parser()
     opts: dict[str, Any] = {}

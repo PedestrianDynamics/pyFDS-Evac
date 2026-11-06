@@ -215,9 +215,10 @@ def test_removed_fic_option_on_opts_is_rejected(name):
         validate_opts(SimpleNamespace(**{name: 0.0}))
 
 
+@pytest.mark.parametrize("value", ["0.7", "0", 0.0])
 @pytest.mark.parametrize("name", ["fic_alpha", "fic_min_factor"])
-def test_removed_fic_option_on_a_gui_form_is_rejected(name):
+def test_removed_fic_option_on_a_gui_form_is_rejected(name, value):
     from pyfds_evac.webapp.params import form_to_opts
 
     with pytest.raises(ValueError, match=f"{name} was removed in #147"):
-        form_to_opts({"scenario": "t_junction", name: "0.7"}, stamp="S")
+        form_to_opts({"scenario": "t_junction", name: value}, stamp="S")
