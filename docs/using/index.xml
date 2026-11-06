@@ -1352,6 +1352,11 @@ the fully coupled default
 &lt;td>Write each path agent&amp;rsquo;s exit; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#exit-history">Outputs&lt;/a>.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--output-pre-evacuation-times CSV&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Write each held agent&amp;rsquo;s distribution, drawn pre-movement time and release time; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#pre-evacuation-times">Outputs&lt;/a>. Command line only.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--replay-exits CSV&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>Send each agent to the exit its counterpart took in an earlier run, read from that run&amp;rsquo;s &lt;code>--output-exit-history&lt;/code> file. Agents are paired by origin and spawn order within it (&lt;code>origin&lt;/code>, &lt;code>spawn_index&lt;/code>), not by JuPedSim id. The route to that exit is the one clear-air costs rank best on the agent&amp;rsquo;s map. Not allowed with an exit that has &lt;code>open_from_s&lt;/code> or &lt;code>closed_after_s&lt;/code>.&lt;/td>
@@ -3102,8 +3107,8 @@ cache into &lt;code>&amp;lt;results-dir&amp;gt;/vismap_cache.npz&lt;/code>, so t
 read.&lt;/p></description></item><item><title>Outputs</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/</guid><description>
 &lt;p>What a run writes, when each file is missing, and how to read the results
 without being misled. Every file below is written by &lt;code>run.py&lt;/code> only when you
-ask for it with its flag. The web GUI and the terminal UI ask for all of them,
-in the run&amp;rsquo;s folder. From Python, the same data are
+ask for it with its flag. The web GUI and the terminal UI ask for all of them
+except the pre-evacuation times, in the run&amp;rsquo;s folder. From Python, the same data are
 fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;/code> returns.&lt;/p>
 &lt;table>
 &lt;thead>
@@ -3162,6 +3167,12 @@ fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;
 &lt;td>&lt;code>--output-exit-history CSV&lt;/code>&lt;/td>
 &lt;td>always&lt;/td>
 &lt;td>one per agent that walks the stage graph&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Pre-evacuation times&lt;/td>
+&lt;td>&lt;code>--output-pre-evacuation-times CSV&lt;/code>&lt;/td>
+&lt;td>always; header only when no agent has a pre-movement time&lt;/td>
+&lt;td>one per agent with a pre-movement time&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -3608,6 +3619,39 @@ is &lt;code>result.exit_history&lt;/code>. &lt;code>--replay-exits&lt;/code> rea
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
+&lt;h2>Pre-evacuation times&lt;span class="hx-absolute -hx-mt-20" id="pre-evacuation-times">&lt;/span>
+&lt;a href="#pre-evacuation-times" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One row per agent that has a pre-movement time, in agent id order. From
+Python it is &lt;code>result.pre_evacuation_times&lt;/code>. Flow-spawned agents have no
+pre-movement and no row. The web GUI and the terminal UI do not write
+this file.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>agent_id&lt;/code>&lt;/td>
+&lt;td>JuPedSim agent id, as in the trajectory SQLite&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>distribution&lt;/code>&lt;/td>
+&lt;td>the key of the distribution the agent was placed from, e.g. &lt;code>jps-distributions_0&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>premovement_time_s&lt;/code>&lt;/td>
+&lt;td>the drawn pre-movement time [s], &lt;code>premovement_offset_s&lt;/code> included&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>movement_start_s&lt;/code>&lt;/td>
+&lt;td>the simulation time [s] the agent was released, at the first step at or after &lt;code>premovement_time_s&lt;/code>; empty if it never was (incapacitated first, or still held at the end)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Detection and reaction times are not split out; see
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/113" target="_blank" rel="noopener">#113&lt;/a>.&lt;/p>
 &lt;h2>Reading the results&lt;span class="hx-absolute -hx-mt-20" id="reading-the-results">&lt;/span>
 &lt;a href="#reading-the-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>ScenarioResult&lt;/code> (and the summary line of &lt;code>run.py&lt;/code>) reports:&lt;/p>
 &lt;table>
@@ -7778,7 +7822,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/e0de87dc0ffe17313adb71c38168ebeb7c79c0a8">&lt;code>e0de87d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5b8af637592205b3d455bc9623451c3d16ca9bb6">&lt;code>5b8af63&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7802,7 +7846,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">71913aaabdf03c2664c40f56ae1f1d0d1999e088996d5bf8d863eec6c9173c23&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b71300e68961fa0cd5649786434da0c898aa6e459ac8a5dad6f736b7e302c344&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
