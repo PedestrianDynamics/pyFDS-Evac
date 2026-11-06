@@ -16,6 +16,7 @@ from pyfds_evac.core.fed import (
     DefaultFedInputs,
     TenabilityConfig,
     accumulate_default_fed,
+    default_fed_components,
     default_fed_rate_per_minute,
     default_fic,
     sample_incapacitation_threshold,
@@ -218,3 +219,106 @@ def test_a2_8_fds_fed_fic_asphyxiants_zone_at_100_s():
     got = accumulate_default_fed(inputs, duration_s=100.0)
 
     assert got == pytest.approx(0.97403, abs=5e-5)
+
+
+# --- A2.9: HCN term with NO and NO2 subtracted, clamped at zero -------------
+#
+# The FDS form (func.f90, function FED): C_CN = HCN - (NO + NO2) and
+# rate = (exp(C_CN/43) - 1)/220. Reference values are rebuilt here from that
+# form, not read from the module.
+
+
+def test_a2_9_hcn_subtracts_no_and_no2():
+    inputs = DefaultFedInputs(hcn_ppm=150.0, no_ppm=20.0, no2_ppm=10.0)
+    ref_cn = (math.exp(120.0 / 43.0) - 1.0) / 220.0
+    assert ref_cn == pytest.approx(0.06951, abs=1e-5)
+    got = default_fed_components(inputs).cn_rate_per_min
+    assert got == pytest.approx(ref_cn, rel=1e-9)
+
+
+def test_a2_9_hcn_term_is_zero_when_nox_exceeds_hcn():
+    inputs = DefaultFedInputs(hcn_ppm=20.0, no_ppm=30.0)
+    parts = default_fed_components(inputs)
+    assert parts.cn_rate_per_min == 0.0
+    # NOx still enters its own term: 30 ppm / 1500 ppm.min.
+    assert parts.nox_rate_per_min == pytest.approx(30.0 / 1500.0, rel=1e-12)
+
+
+# --- A2.10: CO2 factor is exactly 1 at zero CO2, Eq. 70.34 above it ---------
+
+
+def test_a2_10_co2_factor_one_at_zero_and_offset_above():
+    assert default_fed_components(DefaultFedInputs()).hv_co2 == 1.0
+    tiny = default_fed_components(
+        DefaultFedInputs(co2_volume_fraction_percent=1e-9)
+    ).hv_co2
+    assert tiny == pytest.approx(math.exp(2.0004) / 7.1, rel=1e-6)
+    assert tiny == pytest.approx(1.0411, abs=1e-4)
+    six = default_fed_components(
+        DefaultFedInputs(co2_volume_fraction_percent=6.0)
+    ).hv_co2
+    assert six == pytest.approx(math.exp(0.1903 * 6.0 + 2.0004) / 7.1, rel=1e-12)
+    # No 70 L/min cap: at 25 L/min the cap would hold the factor at 2.8,
+    # which Eq. 70.34 passes at about 5.2 % CO2.
+    assert six > 2.8
+
+
+# --- A2.11: O2 gate follows o2_threshold_percent ----------------------------
+
+
+def test_a2_11_o2_gate_moves_with_threshold():
+    just_below = DefaultFedInputs(o2_volume_fraction_percent=19.999)
+    ref = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 19.999))
+    assert default_fed_rate_per_minute(just_below) == pytest.approx(ref, rel=1e-9)
+    between = DefaultFedInputs(o2_volume_fraction_percent=19.7)
+    assert default_fed_rate_per_minute(between) > 0.0
+    assert default_fed_rate_per_minute(between, o2_threshold_percent=19.5) == 0.0
+    assert (
+        default_fed_rate_per_minute(
+            DefaultFedInputs(o2_volume_fraction_percent=19.5), o2_threshold_percent=19.5
+        )
+        == 0.0
+    )
+
+
+# --- A2.12: mixed gases, CO2 multiplies every term except O2 ----------------
+
+
+def test_a2_12_mixed_gas_co2_multiplies_all_but_o2():
+    inputs = DefaultFedInputs(
+        co_volume_fraction_percent=0.05,
+        co2_volume_fraction_percent=3.0,
+        o2_volume_fraction_percent=15.0,
+        hcn_ppm=100.0,
+        no_ppm=10.0,
+        no2_ppm=20.0,
+        hcl_ppm=500.0,
+    )
+    co = 2.764e-5 * 500.0**1.036
+    cn = (math.exp(70.0 / 43.0) - 1.0) / 220.0
+    nox = 30.0 / 1500.0
+    fld = 500.0 / 114000.0 + 20.0 / 1900.0
+    hv = math.exp(0.1903 * 3.0 + 2.0004) / 7.1
+    o2 = 1.0 / math.exp(8.13 - 0.54 * (20.9 - 15.0))
+    expected = (co + cn + nox + fld) * hv + o2
+    got = default_fed_rate_per_minute(inputs)
+    assert got == pytest.approx(expected, rel=1e-9)
+    # Multiplying the O2 term too would give a different rate.
+    assert got != pytest.approx((co + cn + nox + fld + o2) * hv, rel=1e-6)
+
+
+# --- A2.13: seconds are converted to minutes once ---------------------------
+
+
+def test_a2_13_accumulation_converts_seconds_to_minutes_once():
+    inputs = DefaultFedInputs(co_volume_fraction_percent=0.1)  # 1000 ppm CO
+    rate_per_min = 2.764e-5 * 1000.0**1.036
+    assert accumulate_default_fed(inputs, duration_s=60.0) == pytest.approx(
+        rate_per_min, rel=1e-9
+    )
+    stepped = 0.0
+    for _ in range(60):
+        stepped = accumulate_default_fed(inputs, duration_s=1.0, initial_fed=stepped)
+    assert stepped == pytest.approx(rate_per_min, rel=1e-9)
+    # The guide's extra factor 60 would give a dose 60 times smaller.
+    assert stepped > 30.0 * rate_per_min / 60.0
