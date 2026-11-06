@@ -37,6 +37,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   output column is the raw irritant fraction. The `fic_vs_fed_speed`
   asset uses 2 ppm acrolein so that its factor (0.714) stays off the
   floor (#147, #153).
+- Docs: the irritant slowdown pages, figures and the `fic_vs_fed_speed`
+  asset describe Purser's curve as an estimated concept curve, the
+  additive combination with its 0.1 floor, that FIC does not
+  incapacitate, and that the default smoke law's own irritancy is still
+  partly counted twice (#147, #153).
 
 ## [0.8.0] - 2026-10-28
 

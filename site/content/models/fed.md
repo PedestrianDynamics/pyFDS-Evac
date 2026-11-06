@@ -82,12 +82,13 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   [Irritant gases](/fundamentals/irritants.md#which-endpoint-goes-in-the-denominator)).
   At each FED update the agent's irritant speed fraction is
   \(F_{\mathrm{irr}} = \bigl(e^{-(1000\,\mathrm{FIC}/160)^2} + 0.2 - 0.2\,\mathrm{FIC}\bigr)/1.2\)
-  for 0 < FIC < 1 (Purser's Eq. 70.11, `irritant_speed_fraction`), 0 for
-  FIC ≥ 1 and 1 for FIC = 0. It is added to the smoke loss as in Eq. 70.12,
-  \(v/v_0 = f + F_{\mathrm{irr}} - 1\), with a floor of 0.1
-  (`combined_speed_factor`); a speed zone then multiplies the result. Each
-  update starts from the stored baseline speed, so the reduction does not
-  compound, and FIC = 0 gives \(F_{\mathrm{irr}} = 1\), which leaves the
+  for 0 < FIC < 1 (Purser's Eq. 70.11; `fed.py`, `irritant_speed_fraction`),
+  0 for FIC ≥ 1 and 1 for FIC = 0. It is added to the smoke loss as in
+  Eq. 70.12, \(v/v_0 = f + F_{\mathrm{irr}} - 1\), with a floor of 0.1
+  (`direct_steering_runtime.py`, `combined_speed_factor`,
+  `set_agent_fic_factor`); a speed zone then multiplies the result. Each
+  update in `run_scenario` (`scenario.py`, `run_scenario`) starts from the
+  stored baseline speed, so the reduction does not compound, and FIC = 0 gives \(F_{\mathrm{irr}} = 1\), which leaves the
   smoke speed unchanged. FIC reduces speed but does not independently
   incapacitate agents; the combined environmental factor has a minimum of 0.1.
   How the rule compares with the published one is

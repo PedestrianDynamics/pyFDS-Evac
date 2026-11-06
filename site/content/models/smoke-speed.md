@@ -90,7 +90,7 @@ Every `update_interval_s` (`--smoke-update-interval` in `run.py`),
 `run_scenario` samples *K* at each agent's position and stores *f* as the
 agent's smoke factor. The agent's desired speed is then
 \(v_0 \cdot \max(\min(0.1, f),\ f + F_{\mathrm{irr}} - 1)\) with
-`--enable-fic-speed` (`direct_steering_runtime.py`, `combined_speed_factor`),
+`--enable-fic-speed` (`direct_steering_runtime.py`, `combined_speed_factor`, `set_agent_fic_factor`),
 where \(F_{\mathrm{irr}}\) is the irritant speed fraction of the
 [FED model](/models/fed.md), and \(v_0 \cdot f\) without it. The irritant
 slowdown is off by default, as FDS+Evac has none.

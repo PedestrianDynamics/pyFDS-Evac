@@ -148,9 +148,8 @@ The two dose tracks are independent:
   `TEMPERATURE` slice. It is off by default, as FDS+Evac has no heat dose.
 
 Incapacitation applies to whichever track runs. Without `--fds-dir` neither
-runs and the flags below have no effect. The FIC slowdown (a pyFDS-Evac
-assumption, source unknown;
-[#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)) is off
+runs and the flags below have no effect. The FIC slowdown (Purser's Eq. 70.11,
+added to the smoke loss as Eq. 70.12 does, with a floor of 0.1) is off
 by default, as FDS+Evac has none. The equations are on
 [Models › FED](/models/fed.md) and [Models › Heat](/models/heat.md).
 

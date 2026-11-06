@@ -99,7 +99,7 @@ conventions; what each one proves, and where that proof is checked, is below.
   Separates the two rules by timescale: **FED is a cumulative dose with a
   threshold and does nothing below it** (0.079 /min here, so 13 minutes to reach
   FED = 1, against a ~33 s egress), while **FIC responds instantaneously**
-  (`FIC = 0.5`, speed factor 0.65, so ~51 s). The prediction is stated in the
+  (`FIC = 0.1`, speed factor 0.714, so ~47 s). The prediction is stated in the
   asset README before running and is falsifiable: if FED materially slows an
   agent over a minute of exposure, the model or the reasoning is wrong. A
   control test records that acrolein is *not* only an irritant — it also sits in

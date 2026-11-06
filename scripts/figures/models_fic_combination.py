@@ -1,20 +1,20 @@
 """Coded irritant slowdown against Purser's curve and additive combination.
 
-Panel (a): the speed factor against FIC. SFPE Handbook Ch. 63, Eq. 63.13
-(Purser and McAllister 2016, p. 2344),
+Panel (a): the irritant speed fraction against FIC. SFPE Handbook 6th ed.,
+Ch. 70, Eq. 70.11 (Purser 2003, p. 94; an estimated concept curve),
 
-    F_wvirr = (exp(-(1000 x / b)^2) + (-0.2 x + 0.2)) / 1.2,
+    F_irr = (exp(-(1000 x / b)^2) + (-0.2 x + 0.2)) / 1.2,
     b = 160, x = FIC,
 
-drawn thin (a concept curve, no walking data) and dotted beyond FIC = 1,
-where it is outside its range and turns negative. Against it, the coded
-factor g = irritant_speed_fraction(FIC), dashed.
+solid over 0 <= FIC <= 1 and dotted beyond, where the formula turns
+negative. Against it, the coded F_irr = irritant_speed_fraction(FIC),
+dashed, which is exactly 0 above FIC = 1.
 
 Panel (b): the walking-speed fraction for smoke fractions F_s = 1, 0.75
-and 0.5. Published: Eq. 63.14, F_wv = 1 - (1 - F_s) - (1 - F_wvirr), with
-Eq. 63.13, solid. Coded: combined_speed_factor(F_s, g) (``set_agent_fic_factor``), dashed. The
-region where the additive sum is at most 0, which neither source clips, is
-shaded.
+and 0.5. Published: Eq. 70.12, F_wv = F_s + F_irr - 1 with Eq. 70.11,
+solid and unclipped. Coded: combined_speed_factor(F_s, F_irr), dashed,
+floored at 0.1 (a departure from the source). The region where the
+additive sum is at most 0, which the source does not clip, is shaded.
 
 Run from the repository root::
 
@@ -35,7 +35,7 @@ from pyfds_evac.core.fed import irritant_speed_fraction
 
 
 def main():
-    """Plot the coded irritant factor against Eqs. 63.13 and 63.14.
+    """Plot the coded irritant factor against Eqs. 70.11 and 70.12.
 
     Parameters
     ----------
@@ -56,10 +56,10 @@ def main():
     smoke_colors = {1.0: "#1b9e77", 0.75: "#7570b3", 0.5: "#e7298a"}
 
     # --- Data ---
-    def eq_63_13(fic, b=160.0):
+    def eq_70_11(fic, b=160.0):
         return (np.exp(-((1000.0 * fic / b) ** 2)) + (-0.2 * fic + 0.2)) / 1.2
 
-    def coded_g(fic):
+    def coded_f_irr(fic):
         return np.vectorize(irritant_speed_fraction)(fic)
 
     fic = np.linspace(0.0, 1.0, 801)
@@ -68,11 +68,11 @@ def main():
     fig, (ax_a, ax_b) = plt.subplots(1, 2, figsize=(12.0, 4.6), dpi=150)
 
     # --- Plot (a) ---
-    ax_a.plot(fic, eq_63_13(fic), color=c_purser, lw=1.4)
-    ax_a.plot(fic_out, eq_63_13(fic_out), color=c_purser, lw=1.4, ls=":")
+    ax_a.plot(fic, eq_70_11(fic), color=c_purser, lw=1.4)
+    ax_a.plot(fic_out, eq_70_11(fic_out), color=c_purser, lw=1.4, ls=":")
     ax_a.plot(
         np.concatenate([fic, fic_out]),
-        coded_g(np.concatenate([fic, fic_out])),
+        coded_f_irr(np.concatenate([fic, fic_out])),
         color=c_code,
         lw=2.0,
         ls="--",
@@ -81,29 +81,21 @@ def main():
     ax_a.text(
         0.24,
         0.40,
-        "Eq. 63.13 (Purser)",
+        "Eq. 70.11 (Purser)",
         fontsize=9,
         color=c_purser,
     )
     ax_a.text(
         0.42,
         0.78,
-        "pyFDS-Evac g\nirritant_speed_fraction(FIC)",
+        "pyFDS-Evac $F_{irr}$\nirritant_speed_fraction(FIC)",
         fontsize=9,
         color=c_code,
     )
     ax_a.annotate(
-        "0 at FIC = 1: incapacitation in the sources",
+        "0 at FIC = 1: incapacitation in the sources;\nthe code sets 0 above FIC = 1",
         xy=(1.0, 0.0),
         xytext=(0.36, -0.105),
-        fontsize=8,
-        color="dimgrey",
-        arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
-    )
-    ax_a.annotate(
-        "code: floor of the\ncombined factor 0.1",
-        xy=(1.06, 0.0),
-        xytext=(0.86, 0.46),
         fontsize=8,
         color="dimgrey",
         arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
@@ -111,39 +103,41 @@ def main():
     ax_a.set_xlim(0.0, 1.21)
     ax_a.set_ylim(-0.13, 1.05)
     ax_a.set_xlabel("fractional irritant concentration FIC [-]", color="dimgrey")
-    ax_a.set_ylabel("irritant speed factor [-]", color="dimgrey")
+    ax_a.set_ylabel("irritant speed fraction $F_{irr}$ [-]", color="dimgrey")
     ax_a.set_title(r"$\bf{(a)}$" + " the curve", loc="left", fontsize=12)
 
     # --- Plot (b) ---
     for fs, color in smoke_colors.items():
-        additive = 1.0 - (1.0 - fs) - (1.0 - eq_63_13(fic))
-        product = np.vectorize(combined_speed_factor)(fs, coded_g(fic))
+        additive = 1.0 - (1.0 - fs) - (1.0 - eq_70_11(fic))
+        product = np.vectorize(combined_speed_factor)(fs, coded_f_irr(fic))
         ax_b.plot(fic, additive, color=color, lw=1.4)
         ax_b.plot(fic, product, color=color, lw=2.0, ls="--")
         ax_b.text(
-            1.02,
-            product[-1],
+            0.02,
+            fs + 0.06,
             f"$F_s$ = {fs:g}",
             fontsize=8.5,
             color=color,
-            va="center",
+            va="bottom",
         )
+    ax_b.axhline(0.1, color="grey", lw=0.8, ls=":", zorder=1)
+    ax_b.text(1.0, 0.13, "floor 0.1", fontsize=8.5, color="dimgrey", ha="right")
     ax_b.axhspan(-0.6, 0.0, color="lightgrey", alpha=0.35, lw=0, zorder=0)
     ax_b.axhline(0.0, color="grey", lw=0.8, zorder=1)
     ax_b.text(
         0.34,
         -0.56,
-        "additive sum ≤ 0:\nunclipped in source",
+        "additive sum ≤ 0:\nnot clipped in the source",
         fontsize=8.5,
         color="dimgrey",
     )
-    ax_b.set_xlim(0.0, 1.12)
-    ax_b.set_ylim(-0.6, 1.05)
+    ax_b.set_xlim(0.0, 1.02)
+    ax_b.set_ylim(-0.6, 1.15)
     ax_b.set_xlabel("fractional irritant concentration FIC [-]", color="dimgrey")
     ax_b.set_ylabel("walking-speed fraction $F_{wv}$ [-]", color="dimgrey")
     ax_b.set_title(r"$\bf{(b)}$" + " combined with smoke", loc="left", fontsize=12)
     handles = [
-        Line2D([], [], color="grey", lw=1.4, label="Eq. 63.14 + Eq. 63.13 (additive)"),
+        Line2D([], [], color="grey", lw=1.4, label="Eq. 70.12 + Eq. 70.11 (additive)"),
         Line2D(
             [],
             [],

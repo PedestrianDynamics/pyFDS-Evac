@@ -100,17 +100,20 @@ accumulate into a dose. pyFDS-Evac keeps them apart: speed follows what the
 agent meets at the moment, and a dose acts only as a switch:
 
 $$
-v_i = v_{0,i}\; f(K)\; g(\mathrm{FIC})\;
+v_i = v_{0,i}\; \max\!\bigl(\min(0.1, f(K)),\; f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1\bigr)\;
 \mathbb{1}\!\left[\mathrm{FED}_i < D_i\right]\;
 \mathbb{1}\!\left[\mathrm{FED}_{\mathrm{heat},i} < D_{\mathrm{heat},i}\right].
 $$
 
-The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentration
-(FIC) sums the irritant gases, each over a reference concentration, and \(g\)
-lowers the speed further as it rises, down to a floor. \(g = 1\) unless
+The brake is \(\max(\min(0.1, f(K)),\, f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1)\).
+The fractional irritant concentration (FIC) sums the irritant gases, each over
+a reference concentration, and the irritant speed fraction \(F_{\mathrm{irr}}\)
+(Purser's Eq. 70.11) lowers the speed further as it rises: its loss is added to
+the smoke loss, with a floor of 0.1. \(F_{\mathrm{irr}} = 1\) unless
 `--enable-fic-speed` is given: FDS+Evac has no irritant slowdown, so it is
-off by default. FIC is a concentration,
-not a dose, so \(g\) follows the gas where the agent stands: an agent that walks
+off by default. FIC reduces speed but does not independently incapacitate
+agents; the combined environmental factor has a minimum of 0.1. FIC is a
+concentration, not a dose, so \(F_{\mathrm{irr}}\) follows the gas where the agent stands: an agent that walks
 out of a plume into clean air gets its full speed back.
 
 The stop is the fractional effective dose (FED). The toxic-gas dose follows
@@ -141,11 +144,11 @@ hot surfaces only with the latter, with a user factor. The published dose laws a
 and [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md).
 The coded forms are on the [FED model](/models/fed.md) page.
 
-![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
+![Three panels: f(K) against K, F_irr(FIC) against FIC, and the combined factor as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
 
-*Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
-contours of equal speed factor. The irritant factor g has no known source
-and is off by default; the published relation is Eq. 63.13 on
+*Figure 2. The brake: (a) f(K), (b) the irritant speed fraction F_irr(FIC)
+from Eq. 70.11 and (c) the combined factor, with contours of equal speed
+factor. F_irr is an estimated concept curve and off by default; see
 [Irritant gases](/fundamentals/irritants.md#irritants-and-walking-speed-fic).
 FED does not appear on
 these axes; it only sets the speed to zero at the agent's threshold.

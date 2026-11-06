@@ -34,11 +34,12 @@ Concentration is not a variable. The technique and its pitfall (a second
 | species | level | drives | effect |
 |---|---|---|---|
 | CO | 2000 ppm | FED | rate 0.079 /min → **13 min** to reach FED = 1 |
-| acrolein | 10 ppm | FIC | `FIC = 10/20 = 0.5` → speed factor `max(0.3, 1 − 0.7·0.5)` = **0.65** |
+| acrolein | 2 ppm | FIC | `FIC = 2/20 = 0.1` → irritant speed fraction F_irr = **0.714** (Purser's Eq. 70.11), about 1.40× slower |
 
-Acrolein sits deliberately off the 0.3 floor: a saturated factor would hide any
-error in `fic_alpha`. The builder asserts the factor is neither pinned at the
-floor nor within 5 % of 1.
+Acrolein sits deliberately off the 0.1 floor: a saturated factor would hide any
+error in the irritant curve. At 10 ppm (FIC 0.5, F_irr 0.083) agents would sit on
+the floor, and the slower walk would let FED reach about 0.4. The builder
+asserts the factor is neither pinned at the floor nor within 5 % of 1.
 
 ## The three runs
 
@@ -56,11 +57,15 @@ run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --enabl
 The FIC slowdown is off by default, as in FDS+Evac, so the third run needs
 `--enable-fic-speed`; without it the second and third runs are the same.
 
+Measured times below come from the earlier 10 ppm deck and the rule before
+0.9.0 (`max(0.3, 1 − 0.7·FIC)`); they are to be rerun with FDS and do not
+describe the current 2 ppm deck.
+
 | run | egress | |
 |---|---|---|
 | neither | 44.76 s | |
 | FED only | 44.76 s | **identical**, to the millisecond |
-| FED + FIC | 64.63 s | 1.44x slower |
+| FED + FIC | 64.63 s | 1.44x slower (10 ppm, old rule) |
 
 Measured at `32d48dd`; the FDS output and the runs are in the project's data
 store under `fic_vs_fed_speed/`.
@@ -69,10 +74,10 @@ The first two being indistinguishable is the headline: over a 44 s egress the
 CO dose reaches about 0.05 of the incapacitation threshold, so FED is inert and
 a model carrying only FED would call this fire harmless.
 
-The measured ratio is 1.44 rather than the 1/0.65 = 1.54 the speed factor
-implies, because the tail of the crowd is queueing at the exit rather than
+The measured ratio (10 ppm, old rule) is 1.44 rather than the 1/0.65 = 1.54
+the speed factor then implied, because the tail of the crowd is queueing at the exit rather than
 walking, and a queue is not slowed by an irritant. The absolute times likewise
-exceed the builder's free-walk estimates (33 s / 51 s) for the same reason.
+exceed the builder's free-walk estimates of that deck (33 s / 51 s) for the same reason.
 
 ## What running this asset found
 

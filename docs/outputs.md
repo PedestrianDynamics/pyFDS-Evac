@@ -130,7 +130,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 | `heat_fed_rate_per_min`, `heat_fed_cumulative` | 1/min, — | heat FED rate and running total, a separate track |
 | `incapacitation_cause` | — | empty, `gas`, `heat` or `gas+heat` on the agent's last row, the update at which the threshold was crossed |
 | `fic` | — | fractional irritant concentration |
-| `fic_speed_factor` | — | irritant slowdown factor, 1 unless `--enable-fic-speed` |
+| `fic_speed_factor` | — | irritant speed fraction F_irr (Eq. 70.11), 1 unless `--enable-fic-speed` |
 | `incapacitated` | — | `True` on the agent's last row, the update at which a threshold is crossed; the record ends there |
 | `base_speed`, `desired_speed`, `speed_factor` | m/s, m/s, — | speed as the agent is moving at this update, all slowdowns combined |
 
