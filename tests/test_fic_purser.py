@@ -213,3 +213,11 @@ class TestBehaviourThroughTheSpeedUpdates:
 def test_removed_fic_option_on_opts_is_rejected(name):
     with pytest.raises(ValueError, match=f"{name} was removed in #147"):
         validate_opts(SimpleNamespace(**{name: 0.0}))
+
+
+@pytest.mark.parametrize("name", ["fic_alpha", "fic_min_factor"])
+def test_removed_fic_option_on_a_gui_form_is_rejected(name):
+    from pyfds_evac.webapp.params import form_to_opts
+
+    with pytest.raises(ValueError, match=f"{name} was removed in #147"):
+        form_to_opts({"scenario": "t_junction", name: "0.7"}, stamp="S")

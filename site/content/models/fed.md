@@ -355,7 +355,8 @@ background).
 The default smoke law (Frantzich–Nilsson) already contains mild irritancy, from
 the acetic acid in its tunnel smoke, so adding the irritant loss still counts
 some irritancy twice. The additive rule does not remove this double counting;
-it slows agents at least as much as multiplying the two factors would
+it slows agents at least as much as multiplying the two factors would,
+except where that product is below the 0.1 floor
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
 ![Two panels. (a) Irritant speed fraction against FIC from 0 to 1.2: Eq. 70.11 falls from 1 to 0 at FIC 1 and is dotted beyond it, where it turns negative, while the coded F_irr drops to 0 at FIC 1 and stays there. (b) Combined walking-speed fraction against FIC for smoke fractions 1, 0.75 and 0.5: the published additive sum is unclipped, the coded value is floored at 0.1](/images/models/fic_combination.png)

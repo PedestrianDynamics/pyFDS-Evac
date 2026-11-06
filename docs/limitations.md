@@ -264,7 +264,8 @@ does, with a floor of 0.1 that the source does not have. The default smoke law
 (Frantzich–Nilsson) already contains mild irritancy, from the acetic acid in
 its tunnel smoke, so adding the irritant loss still counts some irritancy
 twice. The additive rule does not remove this; it slows agents at least as much
-as multiplying the two factors would
+as multiplying the two factors would, except where that product is below the
+0.1 floor
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153);
 [Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 
