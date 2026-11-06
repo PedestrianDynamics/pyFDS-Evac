@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Verification: A2.9–A2.13 check the gas FED term by term against
+  the FDS forms it implements: HCN minus NO and NO2 with its clamp at
+  zero, the CO2 factor at and above zero, the O2 gate following
+  `o2_threshold_percent`, CO2 multiplying every term except O2, and
+  seconds converted to minutes once (#149).
+
 ## [0.8.0] - 2026-10-28
 
 ### Upgrading
