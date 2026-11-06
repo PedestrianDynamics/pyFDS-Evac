@@ -485,6 +485,14 @@ PARAMETERS: tuple[Parameter, ...] = (
         python="ScenarioResult.exit_history",
     ),
     Parameter(
+        "output_pre_evacuation_times",
+        ("--output-pre-evacuation-times",),
+        GROUP_OUTPUTS,
+        "Write each held agent's pre-movement (agent_id, distribution, "
+        "premovement_time_s, movement_start_s) to CSV",
+        python="ScenarioResult.pre_evacuation_times",
+    ),
+    Parameter(
         "smoke_blind",
         ("--smoke-blind",),
         GROUP_ASET,
@@ -1023,7 +1031,14 @@ _COMMON: frozenset[str] = frozenset(
 
 #: Flags the GUI form does not show.
 GUI_HIDDEN: frozenset[str] = frozenset(
-    {"help", "print_summary", "export_only", "inspect_fds", "cleanup"}
+    {
+        "help",
+        "print_summary",
+        "export_only",
+        "inspect_fds",
+        "cleanup",
+        "output_pre_evacuation_times",
+    }
     | {p.dest for p in PARAMETERS if not p.run_option}
 )
 

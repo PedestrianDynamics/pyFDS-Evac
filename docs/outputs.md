@@ -5,8 +5,8 @@ weight: 7
 
 What a run writes, when each file is missing, and how to read the results
 without being misled. Every file below is written by `run.py` only when you
-ask for it with its flag. The web GUI and the terminal UI ask for all of them,
-in the run's folder. From Python, the same data are
+ask for it with its flag. The web GUI and the terminal UI ask for all of them
+except the pre-evacuation times, in the run's folder. From Python, the same data are
 fields of the `ScenarioResult` that `run_scenario()` returns.
 
 | File | Flag | Written when | Rows |
@@ -19,6 +19,7 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | Route history | `--output-route-history CSV` | rerouting is on (the default), or an exit has `open_from_s` or `closed_after_s`; without rerouting it then holds only the rows of agents whose exit is closed: `exit_closed`, `initial` (exit not open yet) or `default_route` ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
 | Route cost history | `--output-route-cost-history CSV` | rerouting is on | one per candidate route per agent per evaluation |
 | Exit history | `--output-exit-history CSV` | always | one per agent that walks the stage graph |
+| Pre-evacuation times | `--output-pre-evacuation-times CSV` | always; header only when no agent has a pre-movement time | one per agent with a pre-movement time |
 
 A run of the terminal UI also leaves `child.log` (the run's own messages) in
 its folder, and `command.sh` and `run.py` when you save them. They are not
@@ -209,6 +210,23 @@ is `result.exit_history`. `--replay-exits` reads its `origin`,
 | `origin` | where the agent was spawned: `initial` for the agents placed at t = 0, `flow:<distribution>` for a flow source |
 | `spawn_index` | order in which the agent was spawned from its origin in this run, from 0 |
 | `exit_id` | the exit the agent left through; for an agent still inside at the end, the exit it was heading for |
+
+## Pre-evacuation times
+
+One row per agent that has a pre-movement time, in agent id order. From
+Python it is `result.pre_evacuation_times`. Flow-spawned agents have no
+pre-movement and no row. The web GUI and the terminal UI do not write
+this file.
+
+| Column | Meaning |
+|---|---|
+| `agent_id` | JuPedSim agent id, as in the trajectory SQLite |
+| `distribution` | the key of the distribution the agent was placed from, e.g. `jps-distributions_0` |
+| `premovement_time_s` | the drawn pre-movement time [s], `premovement_offset_s` included |
+| `movement_start_s` | the simulation time [s] the agent was released, at the first step at or after `premovement_time_s`; empty if it never was (incapacitated first, or still held at the end) |
+
+Detection and reaction times are not split out; see
+[#113](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/113).
 
 ## Reading the results
 

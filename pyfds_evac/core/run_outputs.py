@@ -154,6 +154,29 @@ def _write_exit_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
+def _write_pre_evacuation_times_csv(rows, output_path: str) -> None:
+    """Write one pre-movement row per held agent to a CSV file.
+
+    An agent never released has an empty ``movement_start_s``.
+    """
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "agent_id",
+                "distribution",
+                "premovement_time_s",
+                "movement_start_s",
+            ],
+            extrasaction="ignore",
+        )
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
 def _write_route_cost_history_csv(rows, output_path: str) -> None:
     """Write ranked route cost snapshots to a CSV file."""
     destination = pathlib.Path(output_path).resolve()
@@ -374,6 +397,12 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
     if output_exit_history and result.exit_history is not None:
         _write_exit_history_csv(result.exit_history, output_exit_history)
         artifacts.append(f"Exit history CSV: {output_exit_history}")
+    output_pre_evacuation = getattr(opts, "output_pre_evacuation_times", None)
+    if output_pre_evacuation and result.pre_evacuation_times is not None:
+        _write_pre_evacuation_times_csv(
+            result.pre_evacuation_times, output_pre_evacuation
+        )
+        artifacts.append(f"Pre-evacuation times CSV: {output_pre_evacuation}")
 
     if opts.output_sqlite and result.sqlite_file:
         output_path = pathlib.Path(opts.output_sqlite).resolve()

@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `--output-pre-evacuation-times CSV` writes one row per agent with a
+  pre-movement time: `agent_id`, `distribution`, `premovement_time_s`
+  and `movement_start_s` (empty if never released); from Python,
+  `ScenarioResult.pre_evacuation_times` (#120). Command line only.
+- Verification: the `constant` pre-movement preset is checked to give
+  every agent exactly 10 s (FDS+Evac `PRE_MEAN`) and to follow
+  `premovement_param_a` (A6.5 in `test_premovement_verif.py`, #309).
+
+### Fixed
+
+- `assets/station_fahy`: the rear bar / dart room spawn area reaches
+  x −6.0 instead of −8.0 (17.2 m² instead of 13.2 m² for its 28 agents),
+  so every registered seed 4–23 of the Station study places all 333
+  agents; seeds 18, 20 and 22 stopped in placement before (#380). Start
+  positions of the other 305 agents are unchanged. The 28 dart-room
+  agents start in the wider area, so Station results for every seed
+  differ from 0.8.0.
+
 ## [0.8.0] - 2026-10-28
 
 ### Upgrading

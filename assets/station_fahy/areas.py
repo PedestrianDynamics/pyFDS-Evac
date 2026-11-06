@@ -46,8 +46,11 @@ RECTS: dict[str, tuple[float, float, float, float]] = {
     "Main bar": (-9.9, -8.8, -1.5, -1.0),
     "Between bars": (-9.9, 1.5, -2.0, 5.3),
     # the west wing, split front-to-back: the dart room end abuts the club, the
-    # hallway runs behind it to the storage rooms
-    "Rear bar / dart room": (-13.5, 0.5, -8.0, 7.5),
+    # hallway runs behind it to the storage rooms. The east edge at x -6.0 is
+    # not a Fahy-plan anchor: clipped to the building, x -8.0 left 13.2 m2 for
+    # the room's 28 agents and three registered seeds could not place them
+    # (#380). Widening east takes in unclaimed floor north of the bars, 17.2 m2.
+    "Rear bar / dart room": (-13.5, 0.5, -6.0, 7.5),
     "Back hallway": (-13.5, 7.5, -8.0, 9.5),
     # --- the front of house ---
     # the entryway is the vestibule plus the ticket area beside it: 17 people
