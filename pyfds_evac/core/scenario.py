@@ -1144,13 +1144,13 @@ class ScenarioResult:
     cognitive_map_history: list[dict[str, Any]] | None = None
     manifest_file: str | None = None
     exit_history: list[dict[str, Any]] | None = None
-    # One row per agent with a pre-movement time; see pre_evacuation_rows.
-    pre_evacuation_times: list[dict[str, Any]] | None = None
     # What the run used (seed, models built); provisional, see
     # manifest.run_settings.
     run_settings: dict[str, Any] | None = None
     # Agents incapacitated during the run (gas or heat); provisional.
     agents_incapacitated: int = 0
+    # One row per agent with a pre-movement time; see pre_evacuation_rows.
+    pre_evacuation_times: list[dict[str, Any]] | None = None
 
     @property
     def success(self) -> bool:
