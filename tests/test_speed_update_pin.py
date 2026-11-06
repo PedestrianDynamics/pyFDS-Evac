@@ -381,10 +381,10 @@ class TestFactorChanges:
         _assert_speed(agent, state, 0.8, "slow")
         for _ in range(3):
             set_agent_fic_factor(state, 1, agent, 0.6)
-            assert agent.speed == pytest.approx(2.0 * 0.8 * 0.6)
+            assert agent.speed == pytest.approx(2.0 * 0.4)  # 0.8 + 0.6 - 1
             _update(state, info, agent, INSIDE)
-            _assert_speed(agent, state, 2.0 * 0.5 * 0.8 * 0.6, "slow")
-            assert agent.writes[-1] == pytest.approx(2.0 * 0.5 * 0.8 * 0.6)
+            _assert_speed(agent, state, 2.0 * 0.5 * 0.4, "slow")
+            assert agent.writes[-1] == pytest.approx(2.0 * 0.5 * 0.4)
 
     def test_fic_change_takes_effect_on_next_call_outside_zone(self):
         agent = RecordingAgent(2.0)
@@ -393,10 +393,11 @@ class TestFactorChanges:
         _update(state, {}, agent, OUTSIDE)
         set_agent_fic_factor(state, 1, agent, 0.6)
         _update(state, {}, agent, OUTSIDE)
-        _assert_speed(agent, state, 0.6, None)
+        # 0.5 + 0.6 - 1 = 0.1, the floor.
+        _assert_speed(agent, state, 0.2, None)
         set_agent_fic_factor(state, 1, agent, 0.9)
         _update(state, {}, agent, OUTSIDE)
-        _assert_speed(agent, state, 0.9, None)
+        _assert_speed(agent, state, 0.8, None)  # 0.5 + 0.9 - 1 = 0.4
 
     def test_checkpoint_combines_all_factors(self):
         agent = RecordingAgent(2.0)
@@ -404,7 +405,7 @@ class TestFactorChanges:
         set_agent_smoke_factor(state, 1, agent, 0.8)
         set_agent_fic_factor(state, 1, agent, 0.6)
         _update(state, {"z": _zone(0.1)}, agent, INSIDE, "cp", _zone(0.5))
-        _assert_speed(agent, state, 2.0 * 0.5 * 0.8 * 0.6, "cp")
+        _assert_speed(agent, state, 2.0 * 0.5 * 0.4, "cp")  # 0.8 + 0.6 - 1
 
     def test_raw_factor_in_state_is_normalised_when_applied(self):
         agent = RecordingAgent(2.0)
@@ -416,7 +417,8 @@ class TestFactorChanges:
         assert agent.writes == [2.0]
         state[1]["fic_factor"] = 7.0
         _update(state, {"slow": _zone(0.5)}, agent, INSIDE)
-        _assert_speed(agent, state, 3.0, "slow")
+        # An irritant factor above 1 never speeds the agent up.
+        _assert_speed(agent, state, 1.0, "slow")
 
     def test_original_speed_change_with_smoke(self):
         """Premovement activation: new baseline, active zone cleared."""
@@ -605,4 +607,6 @@ def test_many_steps_match_closed_form():
         zone = 0.5 if 4.0 <= x <= 8.0 else (0.7 if 6.0 <= x <= 12.0 else 1.0)
         smoke = 1.0 if t < 0.5 else 0.9 - 0.1 * (math.floor(step / 10) / 10)
         fic = 0.7 if t >= 1.0 else 1.0
-        assert agent.speed == pytest.approx(1.5 * zone * smoke * fic, rel=1e-12), step
+        assert agent.speed == pytest.approx(
+            1.5 * zone * max(0.1, smoke + fic - 1.0), rel=1e-12
+        ), step

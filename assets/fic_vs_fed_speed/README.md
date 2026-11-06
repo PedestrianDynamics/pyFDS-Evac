@@ -49,7 +49,7 @@ mkdir -p /tmp/fvf && cd /tmp/fvf \
   && fds /path/to/assets/fic_vs_fed_speed/fic_vs_fed_speed.fds && cd -
 
 run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --disable-tenability
-run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --fic-alpha 0
+run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf
 run.py --scenario assets/fic_vs_fed_speed/config.json --fds-dir /tmp/fvf --enable-fic-speed
 ```
 

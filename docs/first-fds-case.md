@@ -167,7 +167,7 @@ Configuring FED calculation.
 Heat FED is off; pass --enable-heat-fed to accumulate it.
 Configuring rerouting.
 Configuring visibility model (3 signs).
-Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
+Configuring tenability (FIC slowdown=off, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 Initialization finished.
 Simulation started.
 …
@@ -245,8 +245,6 @@ opts = SimpleNamespace(
     smoke_slice_height=1.6,
     disable_tenability=False,
     fed_threshold=1.0,
-    fic_alpha=0.7,
-    fic_min_factor=0.3,
     enable_rerouting=True,
     reroute_interval=1.0,
     vis_cache=None,

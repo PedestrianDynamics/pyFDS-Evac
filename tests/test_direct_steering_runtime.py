@@ -94,14 +94,15 @@ class TestFicDoesNotCompound:
         agent = _FakeAgent(2.0)
         state = {}
         set_agent_smoke_factor(state, 1, agent, 0.5)
-        set_agent_fic_factor(state, 1, agent, 0.6)
-        assert agent.model.desired_speed == pytest.approx(2.0 * 0.5 * 0.6)
+        set_agent_fic_factor(state, 1, agent, 0.8)
+        # Additive: the smoke loss 0.5 plus the irritant loss 0.2 leaves 0.3.
+        assert agent.model.desired_speed == pytest.approx(2.0 * 0.3)
 
-    def test_a_checkpoint_zone_multiplies_all_three(self):
+    def test_a_checkpoint_zone_multiplies_the_combined_factor(self):
         agent = _FakeAgent(2.0)
         state = {}
         set_agent_smoke_factor(state, 1, agent, 0.5)
-        set_agent_fic_factor(state, 1, agent, 0.6)
+        set_agent_fic_factor(state, 1, agent, 0.8)
         update_checkpoint_speed(
             state,
             {},
@@ -112,7 +113,7 @@ class TestFicDoesNotCompound:
             1.0,
             1.0,
         )
-        assert agent.model.desired_speed == pytest.approx(2.0 * 0.5 * 0.6 * 0.5)
+        assert agent.model.desired_speed == pytest.approx(2.0 * 0.3 * 0.5)
 
     def test_restoring_outside_a_checkpoint_keeps_the_irritant_penalty(self):
         """Leaving a slow zone must not also clear an irritant still present."""

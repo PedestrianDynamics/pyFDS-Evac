@@ -115,8 +115,6 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | Field | Default | CLI flag |
 |---|---|---|
 | `enable_fic_speed` | `False` | `--enable-fic-speed` |
-| `fic_alpha` | `0.7` | `--fic-alpha` |
-| `fic_min_factor` | `0.3` | `--fic-min-factor` |
 | `fed_threshold` | `1.0` | `--fed-threshold` |
 | `incapacitation_mode` | `"deterministic"` | `--incapacitation-mode` |
 | `susceptibility_sigma` | `0.94` | `--susceptibility-sigma` |
@@ -325,7 +323,7 @@ correction of the default.
 
 ### Irritant slowdown against the published rule
 
-The irritant slowdown \(g\), when enabled (`fed.py`, `TenabilityConfig.fic_alpha`, `TenabilityConfig.fic_min_factor`), is multiplied with the smoke
+The irritant slowdown \(g\), when enabled (`fed.py`, `irritant_speed_fraction`), is multiplied with the smoke
 factor (`direct_steering_runtime.py`, `set_agent_fic_factor`). Its constants were not found
 in the Handbook, the FDS+Evac guide or `evac.f90`
 ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The

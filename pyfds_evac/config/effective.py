@@ -812,8 +812,6 @@ def _predicted_heat(opts: Any, sampling: dict[str, Any]) -> dict[str, Any]:
 def _predicted_tenability(opts: Any, m: Mechanisms) -> dict[str, Any]:
     return {
         "enable_fic_speed": m.fic,
-        "fic_alpha": option(opts, "fic_alpha"),
-        "fic_min_factor": option(opts, "fic_min_factor"),
         "enable_incapacitation": m.gas_fed,
         "fed_threshold": option(opts, "fed_threshold"),
         "incapacitation_mode": option(opts, "incapacitation_mode"),
@@ -882,7 +880,7 @@ def _predicted_wall_check(
 
 
 def _differences(predicted: Any, used: Any, path: str = "") -> list[str]:
-    """Dotted names of the settings that differ (``tenability.fic_alpha``)."""
+    """Dotted names of the settings that differ (``tenability.fed_threshold``)."""
     if isinstance(predicted, Mapping) and isinstance(used, Mapping):
         found: list[str] = []
         for key in list(predicted) + [k for k in used if k not in predicted]:

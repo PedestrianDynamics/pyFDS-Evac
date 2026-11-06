@@ -456,7 +456,6 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     log(
         "Configuring tenability "
         f"(FIC slowdown={'on' if fic_speed else 'off'}, "
-        f"FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
         f"FED median={opts.fed_threshold}, incapacitation={mode}, "
         "heat FED median="
         f"{opts.fed_threshold if heat_threshold is None else heat_threshold}, "
@@ -464,8 +463,6 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     )
     return TenabilityConfig(
         enable_fic_speed=fic_speed,
-        fic_alpha=opts.fic_alpha,
-        fic_min_factor=opts.fic_min_factor,
         enable_incapacitation=fed_model is not None,
         fed_threshold=opts.fed_threshold,
         incapacitation_mode=mode,

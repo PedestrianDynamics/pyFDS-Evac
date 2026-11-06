@@ -208,8 +208,6 @@ def _iso_opts(**overrides):
         smoke_slice_height=2.0,
         disable_tenability=True,
         fed_threshold=1.0,
-        fic_alpha=0.7,
-        fic_min_factor=0.3,
         enable_rerouting=False,
         reroute_interval=1.0,
         vis_cache=None,

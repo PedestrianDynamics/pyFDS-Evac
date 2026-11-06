@@ -91,10 +91,10 @@ conventions; what each one proves, and where that proof is checked, is below.
   switches once, `E_end → E_side` at t = 5–20 s, and egress takes 22.3 s.
   Checked by `tests/test_cognitive_map_memory.py`, which pins the probe outcomes.
 - **FIC vs FED Speed**: 4x50 m sealed corridor, 30 agents, one exit. The gas is
-  *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 10 ppm) rather
+  *prescribed* by a single `&INIT` (CO at 2000 ppm, acrolein at 2 ppm) rather
   than burned, so concentration is constant in space and time and the only
   variable across runs is which tenability rules are enabled — set from the
-  command line (`--disable-tenability`, `--fic-alpha 0`, or `--enable-fic-speed`;
+  command line (`--disable-tenability`, none, or `--enable-fic-speed`;
   the FIC slowdown is off by default, as in FDS+Evac).
   Separates the two rules by timescale: **FED is a cumulative dose with a
   threshold and does nothing below it** (0.079 /min here, so 13 minutes to reach

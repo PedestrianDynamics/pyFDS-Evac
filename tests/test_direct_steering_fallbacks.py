@@ -388,7 +388,8 @@ class TestFicFactorFallbacks:
         state = {}
         set_agent_smoke_factor(state, 1, agent, 0.5)
         set_agent_fic_factor(state, 1, agent, 0.5)
-        assert agent.model.desired_speed == pytest.approx(0.5)
+        # Additive rule, floored: max(min(0.1, 0.5), 0.5 + 0.5 - 1) = 0.1.
+        assert agent.model.desired_speed == pytest.approx(0.2)
 
     @pytest.mark.parametrize(
         ("factor", "cached", "speed"),
@@ -396,8 +397,8 @@ class TestFicFactorFallbacks:
             (float("nan"), 1.0, 2.0),
             (-1.0, 1.0, 2.0),
             ("bad", 1.0, 2.0),
-            (10.0, 3.0, 6.0),
-            (0.0, 0.0, 0.0),
+            (10.0, 3.0, 2.0),  # no speed-up above the smoke speed
+            (0.0, 0.0, 0.2),  # irritant fraction 0 walks at the 0.1 floor
         ],
     )
     def test_factor_is_normalised(self, factor, cached, speed):

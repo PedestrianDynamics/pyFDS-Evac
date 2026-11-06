@@ -27,6 +27,26 @@ def normalize_speed_factor(value: Any) -> float:
     return min(speed_factor, 3.0)
 
 
+# Lowest speed fraction the irritant term can push an agent to, FDS+Evac's
+# smoke floor.
+FIC_SPEED_FLOOR = 0.1
+
+
+def combined_speed_factor(smoke_factor: float, fic_speed_fraction: float) -> float:
+    """Combine the smoke and irritant speed fractions additively.
+
+    ``fic_speed_fraction`` is the irritant speed fraction F_irr of
+    ``fed.irritant_speed_fraction``, not the FIC itself. SFPE Handbook 6th ed.
+    Eq. 70.12 adds the irritant loss to the smoke loss: ``smoke + F_irr - 1``.
+    The result is floored at ``FIC_SPEED_FLOOR`` but never raised above
+    ``smoke_factor``, so ``fic_speed_fraction == 1`` returns the smoke factor
+    unchanged.
+    """
+    # A subtraction, so that F_irr == 1 returns smoke_factor bit for bit.
+    irritant_loss = max(0.0, 1.0 - fic_speed_fraction)
+    return max(min(FIC_SPEED_FLOOR, smoke_factor), smoke_factor - irritant_loss)
+
+
 def random_point_in_polygon(polygon, rng, min_clearance: float = 0.2):
     """Sample a random point inside a polygon with a clearance margin."""
     return simulation_init_module()._random_point_in_polygon(
@@ -316,7 +336,9 @@ def set_agent_fic_factor(
     if original_speed is None:
         return
     smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
-    combined = float(original_speed) * smoke_factor * state["fic_factor"]
+    combined = float(original_speed) * combined_speed_factor(
+        smoke_factor, state["fic_factor"]
+    )
     if set_agent_desired_speed(agent, max(0.0, combined)):
         state[_APPLIED_FACTORS_KEY] = (smoke_factor, state["fic_factor"])
 
@@ -362,7 +384,8 @@ def restore_agent_speed(
     smoke_factor = normalize_speed_factor(smoke_factor)
     fic_factor = normalize_speed_factor(fic_factor)
     if set_agent_desired_speed(
-        agent, float(original_speed) * smoke_factor * fic_factor
+        agent,
+        float(original_speed) * combined_speed_factor(smoke_factor, fic_factor),
     ):
         state["active_checkpoint"] = None
         state[_APPLIED_FACTORS_KEY] = (smoke_factor, fic_factor)
@@ -487,7 +510,10 @@ def update_checkpoint_speed(
     smoke_factor = normalize_speed_factor(state.get("smoke_factor", 1.0))
     fic_factor = normalize_speed_factor(state.get("fic_factor", 1.0))
     slowed_speed = max(
-        0.0, float(original_speed) * active_speed_factor * smoke_factor * fic_factor
+        0.0,
+        float(original_speed)
+        * active_speed_factor
+        * combined_speed_factor(smoke_factor, fic_factor),
     )
     if set_agent_desired_speed(agent, slowed_speed):
         state["active_checkpoint"] = active_zone_key

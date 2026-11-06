@@ -158,8 +158,6 @@ by default, as FDS+Evac has none. The equations are on
 |------|---------|---------|
 | `--disable-tenability` | off | Turn off the FIC slowdown and both incapacitation checks. FED and heat FED are still accumulated and written. |
 | `--enable-fic-speed` | off | Turn the FIC slowdown on. |
-| `--fic-alpha F` | 0.7 | Slope of `v/v₀ = max(μ, 1 − α·FIC)`; finite, ≥ 0; needs `--enable-fic-speed`. |
-| `--fic-min-factor F` | 0.3 | Floor `μ`, in (0, 1]; needs `--enable-fic-speed`. |
 | `--fed-threshold F` | 1.0 | FED at which agents are incapacitated, as FDS+Evac; in probabilistic mode the median of the per-agent threshold. |
 | `--o2-threshold-percent P` | 20.0 % | O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default. |
 | `--incapacitation-mode MODE` | `deterministic` | `deterministic` or `probabilistic`. `deterministic`: every agent stops at `--fed-threshold`, as FDS+Evac. `probabilistic`: each agent draws a log-normal threshold with median `--fed-threshold`. |
@@ -305,7 +303,7 @@ When `run_scenario` was given other models or parameters than the options
 imply, `source` is `run, options differ`: only the run's settings (`run`)
 are recorded as facts, and the configuration of the options is kept apart
 under `predicted_from_options`, with the differing settings in
-`mismatches` (e.g. `tenability.fic_alpha`).
+`mismatches` (e.g. `tenability.fed_threshold`).
 From Python, `pyfds_evac.config.effective_configuration(opts, scenario)`
 returns it; `pyfds_evac.config` is provisional public API in 0.3.0 and can
 change in 0.3.x.
@@ -344,7 +342,7 @@ Configuring smoke calculation.
 Configuring FED calculation.
 Heat FED is off; pass --enable-heat-fed to accumulate it.
 Configuring rerouting.
-Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
+Configuring tenability (FIC slowdown=off, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 …
 Simulation incomplete: all mobile agents left after 982.01 s (0/1 evacuated, 1 remaining).
 Route history rows: 0

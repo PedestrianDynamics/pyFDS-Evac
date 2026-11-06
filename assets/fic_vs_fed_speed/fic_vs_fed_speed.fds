@@ -20,7 +20,7 @@
 &SPEC ID='SOOT'                               /
 
 ! Target volume fractions: CO = 2000 ppm (drives FED),
-! acrolein = 10 ppm (drives FIC), O2 = 20.9 %, CO2 = 500 ppm.
+! acrolein = 2 ppm (drives FIC), O2 = 20.9 %, CO2 = 500 ppm.
 !
 ! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB
 ! resets the whole domain, overwriting the first and leaving everything at 0.
@@ -28,10 +28,10 @@
       SPEC_ID(2)='CARBON DIOXIDE',
       SPEC_ID(3)='OXYGEN',
       SPEC_ID(4)='ACROLEIN',
-      MASS_FRACTION(1)=1.94148E-03,
-      MASS_FRACTION(2)=7.62606E-04,
-      MASS_FRACTION(3)=2.31778E-01,
-      MASS_FRACTION(4)=1.94300E-05 /
+      MASS_FRACTION(1)=1.94149E-03,
+      MASS_FRACTION(2)=7.62612E-04,
+      MASS_FRACTION(3)=2.31779E-01,
+      MASS_FRACTION(4)=3.88603E-06 /
 
 ! Walls: the corridor is a sealed box.
 &OBST XB=-0.25,4.25,-0.25,0.00,0.0,3.0 /

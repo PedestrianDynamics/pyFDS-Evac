@@ -28,18 +28,19 @@ Gas, prescribed rather than burned
       ``2.764e-5 * 2000^1.036 ~ 0.067 /min``, so reaching FED = 1 takes about
       15 minutes -- far longer than this egress.  FED stays near 0.05 and the
       incapacitation gate never opens.  That is the point, not a limitation.
-    * **Acrolein at 10 ppm** drives FIC.  Its incapacitating concentration is
-      20 ppm, so ``FIC = 10/20 = 0.5`` and the speed factor is
-      ``max(0.3, 1 - 0.7 * 0.5) = 0.65``.  Chosen deliberately off the 0.3
-      floor: a saturated factor would hide any error in ``fic_alpha``.
+    * **Acrolein at 2 ppm** drives FIC.  Its incapacitating concentration is
+      20 ppm, so ``FIC = 2/20 = 0.1`` and the speed factor is Purser's
+      Eq. 70.11, ``F_irr(0.1) = 0.714``.  Chosen deliberately off the 0.1
+      floor of the combined factor: a saturated factor would hide any error
+      in the irritant curve (10 ppm gives ``F_irr(0.5) = 0.083``, below it).
 
 The three runs differ only in the tenability rules, set from the command line:
 
     neither     run.py --disable-tenability
-    FED only    run.py --fic-alpha 0        (incapacitation on, no speed penalty)
-    FED + FIC   run.py                      (both, the default)
+    FED only    run.py                      (incapacitation on, no speed penalty)
+    FED + FIC   run.py --enable-fic-speed   (both)
 
-Expected: the first two are indistinguishable; the third is ~1/0.65 = 1.54x
+Expected: the first two are indistinguishable; the third is ~1/0.714 = 1.40x
 slower.
 """
 
@@ -47,6 +48,9 @@ import json
 from pathlib import Path
 
 from shapely.geometry import box
+
+from pyfds_evac.core.direct_steering_runtime import FIC_SPEED_FLOOR
+from pyfds_evac.core.fed import irritant_speed_fraction
 
 HERE = Path(__file__).parent
 
@@ -60,10 +64,8 @@ V0 = 1.3
 
 # Prescribed gas. See the module docstring for why these two values.
 CO_PPM = 2000.0
-ACROLEIN_PPM = 10.0
+ACROLEIN_PPM = 2.0
 ACROLEIN_FIC_PPM = 20.0  # incapacitating concentration, Purser via Korhonen Table 2
-FIC_ALPHA = 0.7
-FIC_MIN_FACTOR = 0.3
 
 
 def expected_fic() -> float:
@@ -71,7 +73,7 @@ def expected_fic() -> float:
 
 
 def expected_speed_factor() -> float:
-    return max(FIC_MIN_FACTOR, 1.0 - FIC_ALPHA * expected_fic())
+    return irritant_speed_fraction(expected_fic())
 
 
 def _coords(bounds):
@@ -239,10 +241,10 @@ def build():
         raise SystemExit(f"{N_AGENTS} agents exceeds the ~{capacity:.0f} that fit")
 
     factor = expected_speed_factor()
-    if factor <= FIC_MIN_FACTOR + 1e-9:
+    if factor <= FIC_SPEED_FLOOR + 1e-9:
         raise SystemExit(
-            f"the FIC speed factor is pinned at its {FIC_MIN_FACTOR} floor, which "
-            "would hide any error in fic_alpha; lower the acrolein concentration"
+            f"the FIC speed factor is pinned at its {FIC_SPEED_FLOOR} floor, which "
+            "would hide any error in the irritant curve; lower the acrolein concentration"
         )
     if factor >= 0.95:
         raise SystemExit(

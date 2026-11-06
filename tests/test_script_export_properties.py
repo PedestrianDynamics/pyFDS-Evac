@@ -33,7 +33,7 @@ _ints = st.integers(min_value=-(10**30), max_value=10**30)
 # One option of each kind: float, int, text, switch, unset.
 _values = st.fixed_dictionaries(
     {
-        "fic_alpha": _floats,
+        "fed_threshold": _floats,
         "heat_skin_temperature": st.one_of(_floats, st.just(-0.0)),
         "seed": st.one_of(st.none(), _ints),
         "reroute_interval": st.one_of(_floats, _ints),
@@ -61,5 +61,5 @@ def test_options_round_trip_through_the_script(values):
 
 @pytest.mark.parametrize("value", [math.inf, -math.inf, math.nan])
 def test_non_finite_numbers_are_refused(value):
-    with pytest.raises(ExportError, match="fic_alpha"):
-        python_script(_namespace({"fic_alpha": value}))
+    with pytest.raises(ExportError, match="fed_threshold"):
+        python_script(_namespace({"fed_threshold": value}))

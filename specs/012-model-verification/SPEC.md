@@ -107,9 +107,10 @@ any CO₂ > 0 it is ≥ 1.041 and cannot be omitted from a reference value.
   boundary and assert both branches.
 - **A2.4** FIC (`default_fic`): constant irritant mix ⇒
   `FIC = Σ C_i/F_FIC,i` exactly (instantaneous, not integrated).
-- **A2.5** FIC speed reduction: `v_final = v_frantzich · max(fic_min_factor,
-  1 − fic_alpha·FIC)` (α=0.7, floor=0.3). Assert the closed form and the
-  clamp at high FIC.
+- **A2.5** Irritant speed fraction (`irritant_speed_fraction`): Purser,
+  SFPE Handbook 6th ed. Eq. 70.11,
+  `(exp(−(1000·FIC/160)²) + 0.2 − 0.2·FIC)/1.2` for FIC ≤ 1 and 0 above.
+  Assert the closed form and the zero beyond FIC = 1.
 - **A2.6 (ensemble, anti-FEMTC)** Probabilistic incapacitation threshold
   `D = fed_threshold·exp(σ·Z), Z~N(0,1)`, σ=0.94: draw a large population
   and assert the median ≈ `fed_threshold` and the cumulative fraction

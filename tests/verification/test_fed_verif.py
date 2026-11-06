@@ -19,6 +19,7 @@ from pyfds_evac.core.fed import (
     default_fed_components,
     default_fed_rate_per_minute,
     default_fic,
+    irritant_speed_fraction,
     sample_incapacitation_threshold,
 )
 
@@ -118,29 +119,24 @@ def test_a2_4_fic_sums_concentration_over_coefficients():
     assert default_fic(inputs) == pytest.approx(ref_fic, rel=1e-9)
 
 
-# --- A2.5: FIC-driven walking-speed reduction (closed form) -----------------
+# --- A2.5: irritant walking-speed fraction, Purser Eq. 70.11 ---------------
 
 
-def test_a2_5_fic_speed_reduction_closed_form_and_clamp():
-    alpha = 0.7
-    floor = 0.3
+def test_a2_5_irritant_speed_fraction_closed_form():
+    """SFPE 6th ed. Eq. 70.11 for 0 <= FIC <= 1, zero above 1."""
 
-    def speed_factor(fic: float) -> float:
-        """Documented FIC speed factor: max(floor, 1 - alpha * FIC)."""
-        return max(floor, 1.0 - alpha * fic)
+    def eq_70_11(x: float) -> float:
+        return (math.exp(-((1000.0 * x / 160.0) ** 2)) + 0.2 - 0.2 * x) / 1.2
 
-    # The defaults the model applies (TenabilityConfig fic_alpha/fic_min_factor).
-    cfg = TenabilityConfig()
-    assert cfg.fic_alpha == alpha
-    assert cfg.fic_min_factor == floor
-
-    assert speed_factor(0.0) == pytest.approx(1.0)
-    assert speed_factor(0.5) == pytest.approx(0.65)
-    # Large FIC clamps to the floor rather than going negative.
-    assert speed_factor(5.0) == pytest.approx(floor)
-
-    v_frantzich = 1.2
-    assert v_frantzich * speed_factor(0.5) == pytest.approx(0.78)
+    for fic in (0.0, 0.01, 0.05, 0.1, 0.2, 0.3, 0.5, 0.9, 1.0):
+        assert irritant_speed_fraction(fic) == pytest.approx(eq_70_11(fic), rel=1e-12)
+    assert irritant_speed_fraction(0.0) == pytest.approx(1.0)
+    # Beyond FIC = 1 the agent is incapacitated by irritants: fraction 0.
+    assert irritant_speed_fraction(1.0 + 1e-9) == 0.0
+    assert irritant_speed_fraction(5.0) == 0.0
+    # No irritant, or no usable FIC: no slowdown.
+    assert irritant_speed_fraction(-0.5) == 1.0
+    assert irritant_speed_fraction(math.nan) == 1.0
 
 
 # --- A2.6: probabilistic incapacitation ensemble (anti-FEMTC) ---------------

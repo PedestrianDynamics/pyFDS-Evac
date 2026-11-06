@@ -8,16 +8,13 @@ Panel (a): the speed factor against FIC. SFPE Handbook Ch. 63, Eq. 63.13
 
 drawn thin (a concept curve, no walking data) and dotted beyond FIC = 1,
 where it is outside its range and turns negative. Against it, the coded
-factor g = max(fic_min_factor, 1 - fic_alpha * FIC), dashed.
+factor g = irritant_speed_fraction(FIC), dashed.
 
 Panel (b): the walking-speed fraction for smoke fractions F_s = 1, 0.75
 and 0.5. Published: Eq. 63.14, F_wv = 1 - (1 - F_s) - (1 - F_wvirr), with
-Eq. 63.13, solid. Coded: F_s * g (``set_agent_fic_factor``), dashed. The
+Eq. 63.13, solid. Coded: combined_speed_factor(F_s, g) (``set_agent_fic_factor``), dashed. The
 region where the additive sum is at most 0, which neither source clips, is
 shaded.
-
-The coded constants are read from ``TenabilityConfig()``, so the figure
-follows the code's defaults.
 
 Run from the repository root::
 
@@ -33,7 +30,8 @@ import numpy as np
 import seaborn as sns
 from matplotlib.lines import Line2D
 
-from pyfds_evac.core.fed import TenabilityConfig
+from pyfds_evac.core.direct_steering_runtime import combined_speed_factor
+from pyfds_evac.core.fed import irritant_speed_fraction
 
 
 def main():
@@ -58,15 +56,11 @@ def main():
     smoke_colors = {1.0: "#1b9e77", 0.75: "#7570b3", 0.5: "#e7298a"}
 
     # --- Data ---
-    cfg = TenabilityConfig()
-    alpha = float(cfg.fic_alpha)
-    floor = float(cfg.fic_min_factor)
-
     def eq_63_13(fic, b=160.0):
         return (np.exp(-((1000.0 * fic / b) ** 2)) + (-0.2 * fic + 0.2)) / 1.2
 
     def coded_g(fic):
-        return np.maximum(floor, 1.0 - alpha * fic)
+        return np.vectorize(irritant_speed_fraction)(fic)
 
     fic = np.linspace(0.0, 1.0, 801)
     fic_out = np.linspace(1.0, 1.2, 101)
@@ -94,7 +88,7 @@ def main():
     ax_a.text(
         0.42,
         0.78,
-        f"pyFDS-Evac g, no source\nmax({floor:g}, 1 − {alpha:g}·FIC)",
+        "pyFDS-Evac g\nirritant_speed_fraction(FIC)",
         fontsize=9,
         color=c_code,
     )
@@ -107,8 +101,8 @@ def main():
         arrowprops=dict(arrowstyle="-", color="lightgrey", lw=0.8),
     )
     ax_a.annotate(
-        f"code: floor {floor:g},\nagent keeps walking",
-        xy=(1.06, floor),
+        "code: floor of the\ncombined factor 0.1",
+        xy=(1.06, 0.0),
         xytext=(0.86, 0.46),
         fontsize=8,
         color="dimgrey",
@@ -123,7 +117,7 @@ def main():
     # --- Plot (b) ---
     for fs, color in smoke_colors.items():
         additive = 1.0 - (1.0 - fs) - (1.0 - eq_63_13(fic))
-        product = fs * coded_g(fic)
+        product = np.vectorize(combined_speed_factor)(fs, coded_g(fic))
         ax_b.plot(fic, additive, color=color, lw=1.4)
         ax_b.plot(fic, product, color=color, lw=2.0, ls="--")
         ax_b.text(
@@ -150,7 +144,14 @@ def main():
     ax_b.set_title(r"$\bf{(b)}$" + " combined with smoke", loc="left", fontsize=12)
     handles = [
         Line2D([], [], color="grey", lw=1.4, label="Eq. 63.14 + Eq. 63.13 (additive)"),
-        Line2D([], [], color="grey", lw=2.0, ls="--", label="pyFDS-Evac, $F_s$·g"),
+        Line2D(
+            [],
+            [],
+            color="grey",
+            lw=2.0,
+            ls="--",
+            label="pyFDS-Evac, combined_speed_factor",
+        ),
     ]
     ax_b.legend(
         handles=handles,

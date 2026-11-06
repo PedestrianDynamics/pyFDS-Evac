@@ -74,8 +74,6 @@ def _run(case: str):
         smoke_slice_height=1.6,
         disable_tenability=False,
         fed_threshold=1.0,
-        fic_alpha=0.7,
-        fic_min_factor=0.3,
         enable_rerouting=False,
         reroute_interval=1.0,
         vis_cache=None,

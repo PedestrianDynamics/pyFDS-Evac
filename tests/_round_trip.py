@@ -37,8 +37,6 @@ PROFILE_A = {
     "fed_threshold": "0.3",
     "o2_threshold_percent": "15.0",
     "enable_fic_speed": "on",
-    "fic_alpha": "0.5",
-    "fic_min_factor": "0.2",
 }
 PROFILE_B = {
     "smoke_blind": "on",
