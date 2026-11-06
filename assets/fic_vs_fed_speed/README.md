@@ -107,7 +107,8 @@ t=2.0  fic=0.5000  fic_factor=0.6500  applied=0.2746
 Agents ground to a halt: **0 of 30 evacuated in 400 s.** FIC has therefore been
 "stop everyone" in every simulation since it was written, and nothing caught it
 because no test ran a simulation with an irritant present. `set_agent_fic_factor`
-now caches the factor and recomposes `original_speed x smoke x fic x checkpoint`,
+now caches the factor and recomposes the speed from `original_speed` with
+`combined_speed_factor(smoke, F_irr)` and the zone factor,
 pinned by `TestFicDoesNotCompound`.
 
 ## A subtlety worth knowing

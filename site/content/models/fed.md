@@ -87,9 +87,9 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   Eq. 70.12, \(v/v_0 = f + F_{\mathrm{irr}} - 1\), with a floor of 0.1
   (`direct_steering_runtime.py`, `combined_speed_factor`,
   `set_agent_fic_factor`); a speed zone then multiplies the result. Each
-  update in `run_scenario` (`scenario.py`, `run_scenario`) starts from the
-  stored baseline speed, so the reduction does not compound, and FIC = 0 gives \(F_{\mathrm{irr}} = 1\), which leaves the
-  smoke speed unchanged. FIC reduces speed but does not independently
+  update in `run_scenario` (`scenario.py`) starts from the stored baseline
+  speed, so the reduction does not compound, and FIC = 0 gives
+  \(F_{\mathrm{irr}} = 1\), which leaves the smoke speed unchanged. FIC reduces speed but does not independently
   incapacitate agents; the combined environmental factor has a minimum of 0.1.
   How the rule compares with the published one is
   [below](#irritant-slowdown-against-the-published-rule).
@@ -346,7 +346,7 @@ the source, each one deliberate:
 
 FIC reduces speed but does not independently incapacitate agents; the combined
 environmental factor has a minimum of 0.1. The sources predict incapacitation
-at FIC = 1 (Purser 2003, p. 99; Ch. 63, p. 2344); in the code the agent walks
+at FIC = 1 (Purser 2003, p. 99; Ch. 70, p. 2289); in the code the agent walks
 on at 0.1 of its free speed. Irritants count toward incapacitation only
 through \(FLD_{irr}\) inside the gas FED
 ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398) for the

@@ -57,8 +57,8 @@ into a speed factor *f* [-], selected by `SmokeSpeedConfig.speed_law`
   remarks). The measured speeds are averages that include pauses, so an
   agent that also pauses or detours in the model may count that time twice
   (our inference). The data come from non-irritant or semi-irritant smoke;
-  multiplying by \(g(\mathrm{FIC})\) on top is a pyFDS-Evac choice, not
-  part of the source.
+  adding the irritant loss \(1 - F_{\mathrm{irr}}\) on top
+  (`--enable-fic-speed`) is a pyFDS-Evac choice, not part of the source.
 
 ## Parameters
 

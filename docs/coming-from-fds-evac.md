@@ -85,7 +85,7 @@ used other defaults for eight mechanisms
 | Mechanism | Default now (= FDS+Evac) | Previous pyFDS-Evac default | To get the previous behaviour |
 |---|---|---|---|
 | Sampling height | 1.6 m, `HUMAN_SMOKE_HEIGHT` (`evac.f90:1138`; Guide §8.7) | 2.0 m | `--smoke-slice-height 2.0`; `opts.smoke_slice_height = 2.0`, or `slice_height_m=2.0` in `SmokeSpeedConfig` and `DefaultFedConfig` |
-| Irritant (FIC) slowdown | None; `evac.f90` imports only `FED` (`evac.f90:65`) | Off by default; with `--enable-fic-speed`, Purser's Eq. 70.11 added to the smoke loss (Eq. 70.12), floor 0.1 | `--enable-fic-speed`; `opts.enable_fic_speed = True`, or `TenabilityConfig(enable_fic_speed=True)` |
+| Irritant (FIC) slowdown | None; `evac.f90` imports only `FED` (`evac.f90:65`) | On whenever the gas FED was computed, with `max(0.3, 1 − 0.7·FIC)` multiplied with the smoke factor | `--enable-fic-speed` turns the slowdown on, now with Purser's Eq. 70.11 added to the smoke loss (floor 0.1); the old rule is not available |
 | HCN term of the FED | *C*HCN − (*C*NO + *C*NO2), offset 1/220 (function `FED` in FDS `func.f90`) | *C*HCN − *C*NO2, offset 0.0045 (Guide Eq. 14–15) | Not available; see the note below |
 | O2 term of the FED | Applied only below 20 % O2 (function `FED` in FDS `func.f90`) | Applied below 19.5 % | `--o2-threshold-percent 19.5`; `opts.o2_threshold_percent = 19.5`, or `DefaultFedConfig(o2_threshold_percent=19.5)` |
 | Pre-movement, when a spawn area sets none | Constant 10 s, `PRE_MEAN` (`evac.f90:1672`), with a warning in the log | 0 s | `"use_premovement": false` in the spawn area's `parameters` |
