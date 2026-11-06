@@ -625,23 +625,25 @@ def _is_real(value: object) -> bool:
     return math.isfinite(value)
 
 
-def check_fic_alpha(value: object) -> None:
-    """Raise ValueError unless ``fic_alpha`` is a finite number >= 0."""
-    if not _is_real(value) or value < 0:  # type: ignore[operator]
-        raise ValueError(f"fic_alpha must be a finite number >= 0, got {value!r}")
+def irritant_speed_fraction(fic: float) -> float:
+    """Return Purser's irritant walking-speed fraction F_irr(FIC).
 
+    SFPE Handbook 6th ed., Ch. 70, Eq. 70.11, with ``x`` the Fractional
+    Irritant Concentration::
 
-def check_fic_min_factor(value: object) -> None:
-    """Raise ValueError unless ``fic_min_factor`` is a finite number in (0, 1].
+        F_irr = (exp(-(1000 x / 160)**2) + 0.2 - 0.2 x) / 1.2   for 0 <= x < 1
+        F_irr = 0                                               for x >= 1
 
-    A floor of 0 lets the irritant factor reach 0 and stop an agent without
-    marking it incapacitated; a floor above 1 speeds agents up in irritant
-    smoke.
+    The formula itself gives about 9.5e-18 at x = 1; the endpoint is set to
+    exactly 0, where the source predicts incapacitation.
+
+    A non-positive or non-finite FIC means no irritant effect (1.0).
     """
-    if not _is_real(value) or not 0 < value <= 1:  # type: ignore[operator]
-        raise ValueError(
-            f"fic_min_factor must be a finite number in (0, 1], got {value!r}"
-        )
+    if not math.isfinite(fic) or fic <= 0.0:
+        return 1.0
+    if fic >= 1.0:
+        return 0.0
+    return (math.exp(-((1000.0 * fic / 160.0) ** 2)) + 0.2 - 0.2 * fic) / 1.2
 
 
 @dataclass(frozen=True)
@@ -653,12 +655,10 @@ class TenabilityConfig:
     of it:
 
     - FIC-driven speed reduction, off by default (``enable_fic_speed``):
-      ``v_final = v_frantzich * max(fic_min_factor, 1 - fic_alpha * FIC)``.
-      A pyFDS-Evac assumption, source unknown (#147): FDS+Evac has no
-      irritant slowdown, so it is opt-in, and Purser's own curve is SFPE
-      Handbook Eq. 63.13.  Irritant gases are assumed to slow evacuees
-      beyond what pure visibility loss predicts, bounded so no agent falls
-      below ``fic_min_factor`` of its Frantzich speed.
+      the irritant fraction ``irritant_speed_fraction(FIC)`` (Purser, SFPE
+      Handbook 6th ed. Eq. 70.11) is added to the smoke factor as in
+      Eq. 70.12, with a floor (see ``combined_speed_factor``).  FDS+Evac has
+      no irritant slowdown, so it is opt-in.
     - Binary incapacitation when ``FED_cumulative`` reaches the agent's
       threshold: a per-agent log-normal draw with median
       ``fed_threshold`` in ``probabilistic`` mode, ``fed_threshold``
@@ -678,16 +678,17 @@ class TenabilityConfig:
     """
 
     enable_fic_speed: bool = False
-    fic_alpha: float = 0.7
-    fic_min_factor: float = 0.3
     enable_incapacitation: bool = True
     fed_threshold: float = 1.0
     # In "deterministic" mode (default) every agent uses fed_threshold, the
     # FDS+Evac rule (Korhonen 2021 §3.4). The opt-in "probabilistic" mode
     # treats incapacitation as a population endpoint: each agent draws
     #   D_incap = fed_threshold * exp(susceptibility_sigma * Z), Z ~ N(0, 1),
-    # a log-normal with median fed_threshold. sigma = 0.94 fits the NIST TN
-    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3).
+    # a log-normal with median fed_threshold. sigma = 0.94 is a compromise
+    # between two bin edges of NIST TN 1797 (Averill et al. 2013), which has
+    # no population data of its own: it puts ~10 % below FED 0.3 and ~88 %
+    # below 3, against TN 1797's 11 % and 89 %. ISO 13571:2012 A.5.2 matches
+    # sigma 1.0; SFPE Ch. 70's "about 1 % below 0.3" implies ~0.52 (#148).
     incapacitation_mode: str = "deterministic"
     susceptibility_sigma: float = 0.94
     enable_heat_incapacitation: bool = True
@@ -701,10 +702,6 @@ class TenabilityConfig:
     # value.
     heat_incapacitation_mode: str = "deterministic"
     heat_susceptibility_sigma: float = 0.94
-
-    def __post_init__(self) -> None:
-        check_fic_alpha(self.fic_alpha)
-        check_fic_min_factor(self.fic_min_factor)
 
     @property
     def resolved_heat_fed_threshold(self) -> float:

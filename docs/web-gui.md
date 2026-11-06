@@ -219,7 +219,7 @@ means clothed, ISO 13571 Eq. (9), and a blank `heat_fed_threshold` follows
 |---|---|
 | Core | scenario (pick or upload), seed; a blank seed uses the scenario's `baseSeed`, as `run.py` does, and 42 if the scenario sets none ([Usage](usage.md)) |
 | Smoke | `fds_dir` (with a folder browser), `constant_extinction`, `smoke_update_interval`, `smoke_slice_height` |
-| FED & Tenability | `disable_tenability`, `incapacitation_mode`, `susceptibility_sigma`, `enable_fic_speed`, `fic_alpha`, `fic_min_factor`, `fed_threshold`, `o2_threshold_percent`, `enable_heat_fed`, `heat_incapacitation_mode`, `heat_susceptibility_sigma`, `heat_clothing`, `heat_fed_threshold` |
+| FED & Tenability | `disable_tenability`, `incapacitation_mode`, `susceptibility_sigma`, `enable_fic_speed`, `fed_threshold`, `o2_threshold_percent`, `enable_heat_fed`, `heat_incapacitation_mode`, `heat_susceptibility_sigma`, `heat_clothing`, `heat_fed_threshold` |
 | Rerouting | `enable_rerouting`, `reroute_interval` |
 | Visibility | `vis_cache`; blank means no cache |
 | Output files | **Output folder**; the SQLite with its run manifest, the five CSVs and the scenario bundle (`<run folder>/bundle`) are written to the run's folder (see [Output folders](#output-folders)) |

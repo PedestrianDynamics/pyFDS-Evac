@@ -199,8 +199,6 @@ def test_second_run_rejected_while_active(client):
         reroute_interval=1.0,
         vis_cache=None,
         disable_tenability=False,
-        fic_alpha=1.2,
-        fic_min_factor=0.1,
         fed_threshold=1.0,
         output_route_cost_history=None,
         collect_route_cost_history=True,

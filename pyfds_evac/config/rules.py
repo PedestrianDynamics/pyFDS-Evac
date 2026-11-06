@@ -473,14 +473,6 @@ def _fic_reason(opts: Any, m: Mechanisms) -> _Reason:
     return _gas_reason(opts, m, "D8")
 
 
-def _fic_param_reason(opts: Any, m: Mechanisms) -> _Reason:
-    if m.fic:
-        return None
-    if not option(opts, "enable_fic_speed"):
-        return ("D9", "without --enable-fic-speed", False)
-    return _gas_reason(opts, m, "D8")
-
-
 def _reroute_interval_reason(opts: Any, m: Mechanisms) -> _Reason:
     """D23, D24: also the time step of the smoke-aware vismap."""
     if m.rerouting or m.visibility == "smoky":
@@ -540,8 +532,6 @@ _RULES: dict[str, Callable[[Any, Mechanisms], _Reason]] = {
     "max_sign_distance": _vis_model_reason,
     "disable_tenability": _disable_tenability_reason,
     "enable_fic_speed": _fic_reason,
-    "fic_alpha": _fic_param_reason,
-    "fic_min_factor": _fic_param_reason,
     "fed_threshold": _fed_threshold_reason,
     "o2_threshold_percent": _o2_reason,
     "incapacitation_mode": _gas_tenability_reason,

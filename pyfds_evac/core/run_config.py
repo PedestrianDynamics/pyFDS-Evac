@@ -356,6 +356,18 @@ def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     )
 
 
+# FIC curve options removed with the Purser irritant rule (#147). An opts
+# namespace is not checked against the parser, so a stale attribute would
+# silently do nothing; validate_opts rejects it, as removed routing keys are.
+REMOVED_FIC_OPTIONS: dict[str, str] = {
+    name: (
+        f"{name} was removed in #147: FIC slowdown follows Purser's irritant "
+        "curve (SFPE Eq. 70.11) with no tuning parameter; delete the option"
+    )
+    for name in ("fic_alpha", "fic_min_factor")
+}
+
+
 def validate_opts(opts: Any) -> None:
     """Reject invalid option combinations before any expensive FDS reads.
 
@@ -364,6 +376,9 @@ def validate_opts(opts: Any) -> None:
     attribute comparisons, and reporting them from a background thread would
     bury a plain user mistake in a run log instead of answering the request.
     """
+    for name, message in REMOVED_FIC_OPTIONS.items():
+        if getattr(opts, name, None) is not None:
+            raise ValueError(message)
     issues = check_options(opts)
     if issues:
         raise ValueError(issues[0].message)
@@ -456,7 +471,6 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     log(
         "Configuring tenability "
         f"(FIC slowdown={'on' if fic_speed else 'off'}, "
-        f"FIC alpha={opts.fic_alpha}, min={opts.fic_min_factor}, "
         f"FED median={opts.fed_threshold}, incapacitation={mode}, "
         "heat FED median="
         f"{opts.fed_threshold if heat_threshold is None else heat_threshold}, "
@@ -464,8 +478,6 @@ def _build_tenability_config(opts: Any, fed_model, heat_fed_model, log: Logger):
     )
     return TenabilityConfig(
         enable_fic_speed=fic_speed,
-        fic_alpha=opts.fic_alpha,
-        fic_min_factor=opts.fic_min_factor,
         enable_incapacitation=fed_model is not None,
         fed_threshold=opts.fed_threshold,
         incapacitation_mode=mode,

@@ -596,6 +596,10 @@ dose differences above.
 | R-prob | R-det with `--incapacitation-mode probabilistic` | Identical to R at 0 and 30 s: nobody is incapacitated. At 60 s, 8 agents are incapacitated in 6 of 10 seeds and 9 are inside at 270 s; RSET is censored (> 270 s) in 6 seeds. The median last exit among the rest is 162.4 s, as in R. Their dose counts only until incapacitation. |
 | R+FIC | R-det with `--enable-fic-speed` | No pre-movement: RSET 98.5 s [83.9, 118.3], with 14.5 [8, 24] agents at the 0.3 speed floor. At 30 s: median RSET 225.8 s, censored in 1 of 10 seeds, 1 of 1,000 agents inside at 270 s. At 60 s: censored in 10 of 10 seeds, 397 of 1,000 inside, and 22 agents per seed (median) reach FED 0.3. Max FED reaches 0.48 at 30 and at 60 s. |
 
+The R+FIC row was measured with the irritant rule before 0.9.0
+(`max(0.3, 1 − 0.7·FIC)`, multiplied with the smoke factor) and has not been
+rerun.
+
 To build R-na, add the key to a copy of the scenario and save the copy
 next to a copy of `geometry.wkt`, which the scenario needs beside it:
 

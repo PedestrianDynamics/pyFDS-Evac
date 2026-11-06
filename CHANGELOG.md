@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Upgrading
+
+- The opt-in irritant slowdown (`--enable-fic-speed`) no longer takes
+  `--fic-alpha` or `--fic-min-factor`, and `TenabilityConfig` no longer
+  has `fic_alpha` or `fic_min_factor`. Drop them from command lines and
+  scripts: the CLI rejects them and the config raises `TypeError`.
+
 ### Added
 
 - `--output-pre-evacuation-times CSV` writes one row per agent with a
@@ -16,6 +23,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Verification: the `constant` pre-movement preset is checked to give
   every agent exactly 10 s (FDS+Evac `PRE_MEAN`) and to follow
   `premovement_param_a` (A6.5 in `test_premovement_verif.py`, #309).
+- Verification: A2.9–A2.13 check the gas FED term by term against
+  the FDS forms it implements: HCN minus NO and NO2 with its clamp at
+  zero, the CO2 factor at and above zero, the O2 gate following
+  `o2_threshold_percent`, CO2 multiplying every term except O2, and
+  seconds converted to minutes once (#149).
+
+### Changed
+
+- Docs: the log-normal σ = 0.94 of the probabilistic gas threshold is
+  described as a compromise between two NIST TN 1797 bin edges, not a
+  fit to Purser's bands. Models › FED shows what σ = 0.35, 0.52, 0.94
+  and 1.0 mean below FED 0.3 and notes that σ has no effect in the
+  default deterministic mode (#148).
+- The opt-in irritant slowdown uses Purser's curve (SFPE Handbook 6th
+  ed., Eq. 70.11) instead of the unsourced `max(0.3, 1 − 0.7·FIC)`, and
+  adds its loss to the smoke loss (Eq. 70.12) instead of multiplying,
+  with a floor of 0.1 of the free speed. FIC does not incapacitate
+  agents. With the option off nothing changes. The `fic_speed_factor`
+  output column is the raw irritant fraction. The `fic_vs_fed_speed`
+  asset uses 2 ppm acrolein so that its factor (0.714) stays off the
+  floor (#147, #153).
+- Docs: the irritant slowdown pages, figures and the `fic_vs_fed_speed`
+  asset describe Purser's curve as an estimated concept curve, the
+  additive combination with its 0.1 floor, that FIC does not
+  incapacitate, and that the default smoke law's own irritancy is still
+  partly counted twice (#147, #153).
 
 ### Fixed
 

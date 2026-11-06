@@ -96,8 +96,6 @@ def test_python_defaults_of_the_model_match_the_code():
     assert DEFAULT_MAX_SIGN_DISTANCE_M == parameter("max_sign_distance").default
     tenability = TenabilityConfig()
     for dest in (
-        "fic_alpha",
-        "fic_min_factor",
         "fed_threshold",
         "incapacitation_mode",
         "susceptibility_sigma",
@@ -267,7 +265,6 @@ def test_r3_settings_without_fire_data_have_no_effect():
             "smoke_update_interval",
             "without --fds-dir or --constant-extinction",
         ),
-        (["--fic-alpha", "0.5"], "fic_alpha", "without --enable-fic-speed"),
         (
             ["--fds-dir", "c", "--susceptibility-sigma", "0.5"],
             "susceptibility_sigma",
@@ -369,7 +366,7 @@ def iso22_scenario():
         ["--seed", "7", "--enable-fic-speed", "--incapacitation-mode", "probabilistic"],
         ["--seed", "7", "--enable-heat-fed"],
         ["--heat-clothing", "unclothed", "--heat-endpoint", "fatal"],
-        ["--enable-heat-fed", "--heat-u-factor", "0.5", "--fic-alpha", "0.1"],
+        ["--enable-heat-fed", "--heat-u-factor", "0.5"],
         ["--disable-tenability", "--o2-threshold-percent", "19.5"],
         ["--smoke-blind", "--enable-fic-speed"],
     ],
@@ -1059,7 +1056,7 @@ def test_manifest_of_a_cli_run_is_the_run(tmp_path):
 
 
 def test_manifest_compares_model_parameters(tmp_path, iso22_scenario):
-    """I4: same models, other parameters: FIC alpha 0.2 and FED threshold 0.3."""
+    """I4: same models, other parameters: susceptibility sigma 0.2 and FED threshold 0.3."""
     import dataclasses
 
     from pyfds_evac.core import run_scenario
@@ -1077,16 +1074,19 @@ def test_manifest_compares_model_parameters(tmp_path, iso22_scenario):
     )
     kwargs = build_run_kwargs(iso22_scenario, opts)
     kwargs["tenability_config"] = dataclasses.replace(
-        kwargs["tenability_config"], fic_alpha=0.2, fed_threshold=0.3
+        kwargs["tenability_config"], susceptibility_sigma=0.2, fed_threshold=0.3
     )
     result = run_scenario(iso22_scenario, **kwargs)
     _, section = _copied_configuration(tmp_path, iso22_scenario, result, opts)
     assert section["source"] == "run, options differ"
-    assert section["mismatches"] == ["tenability.fic_alpha", "tenability.fed_threshold"]
-    assert section["run"]["tenability"]["fic_alpha"] == 0.2
+    assert section["mismatches"] == [
+        "tenability.fed_threshold",
+        "tenability.susceptibility_sigma",
+    ]
+    assert section["run"]["tenability"]["susceptibility_sigma"] == 0.2
     assert section["run"]["tenability"]["fed_threshold"] == 0.3
     predicted = section["predicted_from_options"]["options"]
-    assert predicted["fic_alpha"]["value"] == 0.7
+    assert predicted["susceptibility_sigma"]["value"] == 0.94
 
 
 def test_manifest_compares_the_reroute_interval(tmp_path):

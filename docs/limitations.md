@@ -112,10 +112,10 @@ unless `--heat-fed-threshold` sets another, a departure from ISO 13571:2012
 §5.4. Its `probabilistic` mode reuses the
 gas spread without a data basis of its own.
 
-The fractional irritant concentration (FIC) never incapacitates. The
-published sources predict incapacitation at FIC = 1, but the opt-in irritant
-slowdown, with its default floor `--fic-min-factor` 0.3, only lowers the
-speed to 0.3 of its smoke-reduced value
+FIC reduces speed but does not independently incapacitate agents; the
+combined environmental factor has a minimum of 0.1. The sources predict
+incapacitation at FIC = 1; pyFDS-Evac lets the agent walk on at 0.1 of its
+free speed
 ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398)).
 Irritants reach incapacitation only through their lung dose
 \(FLD_{irr}\), which is summed into the gas FED.
@@ -257,9 +257,16 @@ one line per issue, is on
 [Models › Routing › Limitations](/models/routing.md#limitations).
 
 **Irritant slowdown.** The opt-in irritant slowdown
-(`--enable-fic-speed`) uses a curve with no known source and is combined
-with the smoke factor multiplicatively, not additively as published
-([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147);
+(`--enable-fic-speed`) uses Eq. 70.11, which is an estimated concept curve
+(Purser 2003, p. 94; SFPE Handbook 6th ed., Ch. 70, p. 2289), not a law fitted
+to walking data. It is combined additively with the smoke factor as Eq. 70.12
+does, with a floor of 0.1 that the source does not have. The default smoke law
+(Frantzich–Nilsson) already contains mild irritancy, from the acetic acid in
+its tunnel smoke, so adding the irritant loss still counts some irritancy
+twice. The additive rule does not remove this; it slows agents at least as much
+as multiplying the two factors would, except where that product is below the
+0.1 floor
+([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153);
 [Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 
 **Pre-movement defaults are office data.** The gamma, log-normal and Weibull

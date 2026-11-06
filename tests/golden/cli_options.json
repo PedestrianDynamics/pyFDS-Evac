@@ -129,26 +129,6 @@
   "required": false,
   "type": "float"
  },
- "--fic-alpha": {
-  "action": "_StoreAction",
-  "choices": null,
-  "const": null,
-  "default": 0.7,
-  "dest": "fic_alpha",
-  "nargs": null,
-  "required": false,
-  "type": "_fic_alpha"
- },
- "--fic-min-factor": {
-  "action": "_StoreAction",
-  "choices": null,
-  "const": null,
-  "default": 0.3,
-  "dest": "fic_min_factor",
-  "nargs": null,
-  "required": false,
-  "type": "_fic_min_factor"
- },
  "--heat-clothing": {
   "action": "_StoreAction",
   "choices": [

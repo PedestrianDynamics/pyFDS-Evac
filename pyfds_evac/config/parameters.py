@@ -32,8 +32,6 @@ from pyfds_evac.core.fed import (
     HEAT_FLUX_REGIMES,
     HEAT_RADIANT_SOURCES,
     HEAT_U_FACTOR_RANGE,
-    check_fic_alpha,
-    check_fic_min_factor,
 )
 
 
@@ -67,25 +65,6 @@ def _u_factor(text: str) -> float:
     if not low <= value <= high:  # also rejects nan
         raise argparse.ArgumentTypeError(f"must be in [{low}, {high}], got {text}")
     return value
-
-
-def _fic_option(check: Callable[[object], None]) -> Callable[[str], float]:
-    """Build an argparse type: a float that *check* accepts."""
-
-    def parse(text: str) -> float:
-        try:
-            value = float(text)
-        except ValueError as exc:
-            raise argparse.ArgumentTypeError(f"not a number: {text!r}") from exc
-        try:
-            check(value)
-        except ValueError as exc:
-            raise argparse.ArgumentTypeError(str(exc)) from None
-        return value
-
-    # Named like the sibling ``_u_factor`` (the CLI option table records it).
-    parse.__name__ = "_" + check.__name__.removeprefix("check_")
-    return parse
 
 
 @dataclass(frozen=True)
@@ -216,8 +195,6 @@ SMOKE_SLICE_HEIGHT_M = 1.6
 REROUTE_INTERVAL_S = 1.0
 VIS_CELL_SIZE_M = 0.25
 MAX_SIGN_DISTANCE_M = 30.0
-FIC_ALPHA = 0.7
-FIC_MIN_FACTOR = 0.3
 FED_THRESHOLD = 1.0
 O2_THRESHOLD_PERCENT = 20.0
 INCAPACITATION_MODES = ("probabilistic", "deterministic")
@@ -600,41 +577,15 @@ PARAMETERS: tuple[Parameter, ...] = (
         "enable_fic_speed",
         ("--enable-fic-speed",),
         GROUP_GAS,
-        "Slow agents by the irritant (FIC) rule max(fic-min-factor, "
-        "1 - fic-alpha * FIC) on top of the smoke-speed law. Off by default, "
-        "as FDS+Evac has no irritant slowdown; before this became opt-in it "
-        "was on whenever a FED model was loaded",
+        "Slow agents by Purser's irritant rule (SFPE Handbook 6th ed. "
+        "Eq. 70.11) on top of the smoke-speed law. Off by default, as "
+        "FDS+Evac has no irritant slowdown",
         action="store_true",
         default=False,
         python=f"{_TENABILITY}.enable_fic_speed",
         fds_evac=False,
         gui_help="Let irritant gases slow agents on top of smoke. Off by "
         "default, as in FDS+Evac, which has no irritant slowdown.",
-    ),
-    Parameter(
-        "fic_alpha",
-        ("--fic-alpha",),
-        GROUP_GAS,
-        "Slope of the FIC speed-reduction rule (>= 0), a pyFDS-Evac "
-        "assumption, source unknown (#147); needs --enable-fic-speed "
-        f"(default: {FIC_ALPHA})",
-        type=_fic_option(check_fic_alpha),
-        default=FIC_ALPHA,
-        python=f"{_TENABILITY}.fic_alpha",
-        gui_help="How strongly irritant gases slow an agent. Higher = agents "
-        "slow down more in irritating smoke.",
-    ),
-    Parameter(
-        "fic_min_factor",
-        ("--fic-min-factor",),
-        GROUP_GAS,
-        "Lower bound on the FIC speed factor, in (0, 1]; needs --enable-fic-speed "
-        f"(default: {FIC_MIN_FACTOR})",
-        type=_fic_option(check_fic_min_factor),
-        default=FIC_MIN_FACTOR,
-        python=f"{_TENABILITY}.fic_min_factor",
-        gui_help="Floor on irritant slowdown — an agent never drops below this "
-        "fraction of its speed from irritants alone.",
     ),
     Parameter(
         "fed_threshold",
@@ -993,8 +944,6 @@ GUI_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "incapacitation_mode",
             "susceptibility_sigma",
             "enable_fic_speed",
-            "fic_alpha",
-            "fic_min_factor",
             "fed_threshold",
             "o2_threshold_percent",
             "enable_heat_fed",

@@ -6,8 +6,9 @@ The unit tests in ``tests/test_speed_update_pin.py`` pin
 
 ``jps.Simulation.iterate`` is wrapped to record every agent's position and
 ``desired_speed`` just before each step. At that point the speed must equal
-the closed form ``v0 * zone(x, y) * smoke(t) * fic(t)``, where ``smoke`` and
-``fic`` are the factors last logged for that agent. The check is exact per
+the closed form ``v0 * zone(x, y) * max(0.1, smoke(t) + fic(t) - 1)``, where
+``smoke`` and ``fic`` are the factors last logged for that agent (Purser's
+additive rule with the 0.1 floor). The check is exact per
 step and position, so it does not depend on trajectory noise.
 """
 
@@ -129,7 +130,8 @@ def _assert_closed_form(rows, with_zones, smoke, fic, *, min_zone_rows=0, start_
         zone = _zone_factor(x, y, with_zones)
         in_zone += zone != 1.0
         v0 = V0 if t >= start_s - 1e-9 else 0.0
-        expected = v0 * zone * smoke(agent_id, t) * fic(agent_id, t)
+        s, f = smoke(agent_id, t), fic(agent_id, t)
+        expected = v0 * zone * max(min(0.1, s), s + f - 1.0)
         assert speed == pytest.approx(expected, rel=1e-9, abs=1e-12), (
             f"t={t} agent={agent_id} x={x:.3f} zone={zone}"
         )
@@ -188,12 +190,12 @@ def test_fic_inside_zones_keeps_the_zone_factor(recorder):
     unchanged inputs would leave agents in a zone at the wrong speed.
     """
     spec, scenario = _scenario(True)
-    # 450 ppm HCl gives FIC 0.5, so the FIC speed factor is 1 - 0.7 * 0.5.
+    # 90 ppm HCl gives FIC 0.1, so the FIC speed factor is Eq. 70.11: 0.714.
     fed = make_fed_model(
         co_volume_fraction=uniform(0.0),
         co2_volume_fraction=uniform(0.0),
         o2_volume_fraction=uniform(0.209),
-        hcl=uniform(450e-6),
+        hcl=uniform(90e-6),
     )
     tenability = TenabilityConfig(enable_fic_speed=True, enable_incapacitation=False)
     result = run_scenario(
@@ -206,7 +208,7 @@ def test_fic_inside_zones_keeps_the_zone_factor(recorder):
     try:
         fic_rows = [r for r in result.fed_history if r["fic_speed_factor"] != 1.0]
         assert fic_rows
-        assert fic_rows[0]["fic_speed_factor"] == pytest.approx(0.65)
+        assert fic_rows[0]["fic_speed_factor"] == pytest.approx(0.7138, abs=1e-4)
         _assert_closed_form(
             recorder.rows,
             True,

@@ -150,7 +150,7 @@ _SETTINGS = [
     ["--smoke-slice-height", "2.0"],
     ["--smoke-update-interval", "2"],
     ["--allow-fds-horizon-hold", "--require-fds-coverage"],
-    ["--enable-fic-speed", "--fic-alpha", "0.5", "--fic-min-factor", "0.2"],
+    ["--enable-fic-speed"],
     ["--incapacitation-mode", "probabilistic", "--susceptibility-sigma", "0.5"],
     ["--o2-threshold-percent", "19.5", "--fed-threshold", "0.3"],
     ["--enable-heat-fed", "--heat-emissivity", "0.9", "--heat-u-factor", "0.5"],

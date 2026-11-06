@@ -279,21 +279,21 @@ def model_docs() -> Any:
             [
                 _p(
                     "Optional. The instantaneous Fractional Irritant Concentration "
-                    "slows the agent on top of the smoke factor. FDS+Evac has no "
-                    "irritant slowdown; the rule is a pyFDS-Evac assumption with "
-                    "no known source (#147)."
+                    "slows the agent on top of the smoke factor (Purser, SFPE "
+                    "Handbook 6th ed. Eq. 70.11 and 70.12). FDS+Evac has no "
+                    "irritant slowdown. It does not incapacitate agents; the "
+                    "combined factor has a minimum of 0.1, unless the smoke "
+                    "factor alone is already lower."
                 ),
             ],
             "Off",
             _controls(
                 ("Enable fic speed", "--enable-fic-speed"),
-                ("Fic alpha", "--fic-alpha"),
-                ("Fic min factor", "--fic-min-factor"),
             ),
             _eq(
                 r"$$ \mathrm{FIC} = \sum_i \frac{C_i}{F_{\mathrm{FIC},i}}, "
-                r"\qquad v = v_0\, f(K)\, "
-                r"\max\!\left(\mu,\; 1 - \alpha_{\mathrm{FIC}}\,\mathrm{FIC}\right) $$"
+                r"\qquad v = v_0 \max\!\left(\min(0.1, f(K)),\; "
+                r"f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1\right) $$"
             ),
             _link(
                 "Tenability: irritant slowdown and incapacitation",

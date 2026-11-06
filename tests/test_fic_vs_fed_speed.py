@@ -24,10 +24,12 @@ from pathlib import Path
 
 import pytest
 
+from pyfds_evac.core.direct_steering_runtime import FIC_SPEED_FLOOR
 from pyfds_evac.core.fed import (
     DefaultFedInputs,
     default_fed_rate_per_minute,
     default_fic,
+    irritant_speed_fraction,
 )
 
 ASSET = Path("assets/fic_vs_fed_speed")
@@ -54,17 +56,17 @@ def _mixture(builder) -> DefaultFedInputs:
 
 
 def _fic_speed_factor(builder, fic: float) -> float:
-    return max(builder.FIC_MIN_FACTOR, 1.0 - builder.FIC_ALPHA * fic)
+    return irritant_speed_fraction(fic)
 
 
 class TestScenarioPremises:
     """The comparison is meaningless if these drift."""
 
     def test_fic_is_off_its_floor_and_off_unity(self):
-        """Pinned at the floor would hide an fic_alpha error; near 1 is unmeasurable."""
+        """Pinned at the floor would hide a curve error; near 1 is unmeasurable."""
         builder = _builder()
         factor = _fic_speed_factor(builder, default_fic(_mixture(builder)))
-        assert builder.FIC_MIN_FACTOR < factor < 0.95
+        assert FIC_SPEED_FLOOR < factor < 0.95
 
     def test_the_deck_and_the_model_agree_on_the_mixture(self):
         """The builder's arithmetic must match what the model computes."""
@@ -81,8 +83,8 @@ class TestFedIsSlowAndFicIsFast:
     def test_fic_cuts_speed_immediately(self):
         builder = _builder()
         fic = default_fic(_mixture(builder))
-        assert fic == pytest.approx(0.5, abs=1e-9)
-        assert _fic_speed_factor(builder, fic) == pytest.approx(0.65, abs=1e-9)
+        assert fic == pytest.approx(0.1, abs=1e-9)
+        assert _fic_speed_factor(builder, fic) == pytest.approx(0.714, abs=5e-4)
 
     def test_fed_does_not_reach_the_threshold_during_the_egress(self):
         """The load-bearing claim: FED alone is inert on this timescale."""

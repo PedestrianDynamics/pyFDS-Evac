@@ -112,6 +112,7 @@ from .fed import (
     default_fic,
     heat_endpoint_row_fields,
     heat_flux_row_fields,
+    irritant_speed_fraction,
     sample_heat_incapacitation_threshold,
     sample_incapacitation_threshold,
 )
@@ -3485,11 +3486,7 @@ def run_scenario(
                                 fed_model is not None
                                 and tenability_config.enable_fic_speed
                             ):
-                                fic_speed_factor = max(
-                                    float(tenability_config.fic_min_factor),
-                                    1.0
-                                    - float(tenability_config.fic_alpha) * fic_value,
-                                )
+                                fic_speed_factor = irritant_speed_fraction(fic_value)
                                 set_agent_fic_factor(
                                     agent_speed_state,
                                     agent_id,

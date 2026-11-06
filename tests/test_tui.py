@@ -523,7 +523,7 @@ def test_a10_review_is_the_model(workdir):
         app = make_app(workdir)
         async with app.run_test(size=(120, 35)) as pilot:
             await to_configure(pilot, app, scenario, scenario / "fds")
-            app.form.text["fic_alpha"] = "0.5"  # inert without --enable-fic-speed
+            app.form.text["susceptibility_sigma"] = "0.5"  # inert in deterministic mode
             app.form.text["seed"] = "7"
             app.form_changed()
             await settle(pilot, app)
@@ -2195,7 +2195,7 @@ def test_rt_run_snapshot_keeps_every_option(workdir, index, confirmed):
             values = copy.deepcopy(dict(snap.values))
             assert runner.started[0][0] == values
             # A later edit never reaches the snapshot.
-            app.form.text["fic_alpha"] = "0.9"
+            app.form.text["fed_threshold"] = "0.9"
             app.form.switch["smoke_blind"] = not app.form.switch["smoke_blind"]
             app.form_changed()
             await settle(pilot, app)

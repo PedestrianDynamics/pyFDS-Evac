@@ -1,12 +1,15 @@
 """Generate the tenability reference figure for the paper.
 
 Three panels:
-1. Frantzich-Nilsson speed factor vs extinction coefficient K
-2. FIC speed factor vs FIC
-3. Combined product f(K) * g(FIC) as a 2-D heatmap on (K, FIC)
+1. Frantzich-Nilsson speed factor f(K) vs extinction coefficient K
+2. Irritant speed fraction F_irr(FIC) vs FIC, Purser's Eq. 70.11 (SFPE
+   Handbook 6th ed., Ch. 70), with the 0.1 floor of the combined factor
+3. Combined factor ``combined_speed_factor(f(K), F_irr(FIC))``, i.e.
+   f + F_irr - 1 (Eq. 70.12) with a floor of 0.1, as a 2-D heatmap on
+   (K, FIC)
 
-The constants match the defaults of :mod:`pyfds_evac.core.fed.TenabilityConfig`
-and :mod:`pyfds_evac.core.smoke_speed.SmokeSpeedConfig`.
+The Frantzich-Nilsson constants match the defaults of
+:mod:`pyfds_evac.core.smoke_speed.SmokeSpeedConfig`.
 """
 
 from __future__ import annotations
@@ -18,14 +21,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
+from pyfds_evac.core.direct_steering_runtime import (
+    FIC_SPEED_FLOOR,
+    combined_speed_factor,
+)
+from pyfds_evac.core.fed import irritant_speed_fraction
+
 # Frantzich-Nilsson defaults (Ronchi 2013 interpretation A3)
 ALPHA_K = 0.706
 BETA_K = -0.057
 F_MIN = 0.1
-
-# Purser FIC defaults (TenabilityConfig)
-ALPHA_FIC = 0.7
-MU = 0.3
 
 
 def frantzich_factor(k: np.ndarray | float) -> np.ndarray:
@@ -35,11 +40,16 @@ def frantzich_factor(k: np.ndarray | float) -> np.ndarray:
     return np.maximum(F_MIN, raw)
 
 
-def fic_factor(fic: np.ndarray | float) -> np.ndarray:
-    """FIC speed factor g(FIC) clamped to the irritant minimum floor."""
-    fic = np.asarray(fic, dtype=float)
-    raw = 1.0 - ALPHA_FIC * fic
-    return np.maximum(MU, raw)
+def irritant_fraction(fic: np.ndarray | float) -> np.ndarray:
+    """Irritant speed fraction F_irr(FIC), Eq. 70.11."""
+    return np.vectorize(irritant_speed_fraction)(np.asarray(fic, dtype=float))
+
+
+def combined_factor(k: np.ndarray, fic: np.ndarray) -> np.ndarray:
+    """Combined speed factor over broadcast ``k`` and ``fic`` arrays."""
+    smoke = frantzich_factor(k)
+    f_irr = irritant_fraction(fic)
+    return np.vectorize(combined_speed_factor)(smoke, f_irr)
 
 
 def _build_figure() -> plt.Figure:
@@ -79,25 +89,22 @@ def _build_figure() -> plt.Figure:
     )
     ax_k.set_ylim(0, 1.05)
 
-    # Panel 2: FIC
-    gf = fic_factor(fic_vals)
+    # Panel 2: Eq. 70.11
+    gf = irritant_fraction(fic_vals)
     ax_fic.plot(fic_vals, gf, color=line, linewidth=2.0)
-    ax_fic.axhline(MU, color="grey", linestyle=":", linewidth=0.8)
-    fic_knee = (1.0 - MU) / ALPHA_FIC
-    ax_fic.axvline(fic_knee, color="grey", linestyle=":", linewidth=0.8)
+    ax_fic.axhline(FIC_SPEED_FLOOR, color="grey", linestyle=":", linewidth=0.8)
     ax_fic.text(
-        fic_knee - 0.03,
-        MU - 0.03,
-        rf"floor $\mu={MU}$",
+        fic_vals[-1],
+        FIC_SPEED_FLOOR + 0.03,
+        rf"floor of the combined factor $={FIC_SPEED_FLOOR}$",
         color="dimgrey",
         fontsize=9,
         ha="right",
-        va="top",
+        va="bottom",
     )
     ax_fic.set_xlabel(r"FIC", color="dimgrey")
     ax_fic.set_title(
-        r"$\bf{(b)}$ "
-        + rf"$v/v_0 = \max({MU},\, 1 - \alpha_{{\mathrm{{FIC}}}}\cdot \mathrm{{FIC}})$",
+        r"$\bf{(b)}$ " + r"$F_{\mathrm{irr}}(\mathrm{FIC})$, Eq. 70.11",
         loc="left",
         fontsize=11,
     )
@@ -107,7 +114,7 @@ def _build_figure() -> plt.Figure:
     k_grid = np.linspace(0.0, 15.0, 200)
     fic_grid = np.linspace(0.0, 1.5, 200)
     K2d, F2d = np.meshgrid(k_grid, fic_grid)
-    combined = frantzich_factor(K2d) * fic_factor(F2d)
+    combined = combined_factor(K2d, F2d)
     im = ax_hm.pcolormesh(
         k_grid,
         fic_grid,
@@ -121,7 +128,7 @@ def _build_figure() -> plt.Figure:
     ax_hm.set_xlabel(r"Extinction $K$  [m$^{-1}$]", color="dimgrey")
     ax_hm.set_ylabel(r"FIC", color="dimgrey")
     ax_hm.set_title(
-        r"$\bf{(c)}$ " + r"$v/v_0 = f(K)\,\cdot\,g(\mathrm{FIC})$",
+        r"$\bf{(c)}$ " + r"$v/v_0 = f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1$",
         loc="left",
         fontsize=11,
     )
@@ -130,26 +137,25 @@ def _build_figure() -> plt.Figure:
     cbar.outline.set_visible(False)
     cbar.ax.tick_params(length=0, labelcolor="dimgrey")
 
-    # Overlay floor product dashed contour
-    floor = F_MIN * MU
+    # Contours of equal speed factor
     cs = ax_hm.contour(
         k_grid,
         fic_grid,
         combined,
-        levels=[floor, 0.25, 0.5, 0.75],
+        levels=[0.25, 0.5, 0.75],
         colors="white",
         linewidths=0.8,
         alpha=0.8,
     )
-    ax_hm.clabel(cs, levels=cs.levels[1:], fmt="%.2g", fontsize=8)
+    ax_hm.clabel(cs, fmt="%.2g", fontsize=8)
     ax_hm.text(
-        (k_knee + k_grid[-1]) / 2,
-        (fic_knee + fic_grid[-1]) / 2,
-        f"both floors\n{F_MIN} × {MU}\n= {floor:.2g}",
+        k_grid[-1] - 0.5,
+        fic_grid[-1] - 0.05,
+        f"floor {FIC_SPEED_FLOOR}",
         color="white",
         fontsize=8.5,
-        ha="center",
-        va="center",
+        ha="right",
+        va="top",
     )
     ax_hm.set_xticks([0, 5, 10, 15])
 

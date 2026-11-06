@@ -47,6 +47,7 @@ from pyfds_evac.config.parameters import (
     parameter,
 )
 from pyfds_evac.core.manifest import find_project_root
+from pyfds_evac.core.run_config import REMOVED_FIC_OPTIONS
 
 # Root of the GUI's scenario, upload and result folders: the source checkout
 # the package runs from, else the directory the server started in. An
@@ -858,6 +859,11 @@ def form_to_opts(
     back to; it names the derived output folder. ``stamp`` is the run's start
     time (see ``runner.run_stamp``); it defaults to now.
     """
+    # A stale form can still post a removed option; the loop below would
+    # drop it as unknown, so reject it here as validate_opts does.
+    for name, message in REMOVED_FIC_OPTIONS.items():
+        if str(form.get(name) or "").strip():
+            raise ValueError(message)
     parser = _load_parser()
     opts: dict[str, Any] = {}
     for action in parser._actions:

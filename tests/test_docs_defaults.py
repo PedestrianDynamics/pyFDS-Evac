@@ -135,10 +135,6 @@ DEFAULTS = [
     (SMOKE, "| `slice_height_m` | `1.6` |", lambda: DefaultFedConfig().slice_height_m),
     (SMOKE, "| `slice_height_m` | `1.6` |", lambda: _cli().smoke_slice_height),
     # fed: TenabilityConfig fields and the run.py flags that set them
-    (FED, "| `fic_alpha` | `0.7` |", lambda: TenabilityConfig().fic_alpha),
-    (FED, "| `fic_alpha` | `0.7` |", lambda: _cli().fic_alpha),
-    (FED, "| `fic_min_factor` | `0.3` |", lambda: TenabilityConfig().fic_min_factor),
-    (FED, "| `fic_min_factor` | `0.3` |", lambda: _cli().fic_min_factor),
     (FED, "| `fed_threshold` | `1.0` |", lambda: TenabilityConfig().fed_threshold),
     (FED, "| `fed_threshold` | `1.0` |", lambda: _cli().fed_threshold),
     (

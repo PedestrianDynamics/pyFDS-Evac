@@ -2,8 +2,8 @@
 
 By default every agent stops at ``fed_threshold`` (the FDS+Evac rule). The
 opt-in probabilistic mode treats incapacitation as a population endpoint: each
-agent draws its own threshold from a log-normal calibrated to the NIST TN 1797
-/ Purser bands (~11/50/89 % incapacitated at FED 0.3/1/3).
+agent draws its own threshold from a log-normal that compromises between two
+NIST TN 1797 bin edges (~11/50/89 % incapacitated at FED 0.3/1/3).
 """
 
 import random
