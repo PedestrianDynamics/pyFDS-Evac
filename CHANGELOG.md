@@ -15,6 +15,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `o2_threshold_percent`, CO2 multiplying every term except O2, and
   seconds converted to minutes once (#149).
 
+### Changed
+
+- Docs: the log-normal σ = 0.94 of the probabilistic gas threshold is
+  described as a compromise between two NIST TN 1797 bin edges, not a
+  fit to Purser's bands. Models › FED shows what σ = 0.35, 0.52, 0.94
+  and 1.0 mean below FED 0.3 and notes that σ has no effect in the
+  default deterministic mode (#148).
+
 ## [0.8.0] - 2026-10-28
 
 ### Upgrading

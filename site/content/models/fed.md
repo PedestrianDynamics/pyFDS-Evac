@@ -297,11 +297,31 @@ and sources: [Asphyxiant FED](/fundamentals/asphyxiant-fed.md). Script:
 The heat laws and their deviations are on [Models › Heat](/models/heat.md).
 The log-normal σ of both
 thresholds (`fed.py`, `TenabilityConfig.susceptibility_sigma`, `TenabilityConfig.heat_susceptibility_sigma`) is, for the gas dose, a compromise between
-two bin edges of NIST TN 1797: it puts 10 % of agents below FED 0.3 and 88 %
-below 3 (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)
-and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). The
-heat dose is deterministic by default; in `probabilistic` mode it reuses the
-same σ without a data basis.
+two bin edges of NIST TN 1797, a report with no population data of its own:
+it puts 10 % of agents below FED 0.3 and 88 % below 3, against the report's
+11 % and 89 % (see [Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)
+and [#148](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/148)). σ
+acts only in `probabilistic` mode: in the default `deterministic` mode every
+agent uses `fed_threshold`, and σ has no effect. The heat dose is
+deterministic by default; in `probabilistic` mode it reuses the same σ
+without a data basis.
+
+What σ means, as the share of agents whose threshold lies below FED 0.3, for
+a log-normal with median `fed_threshold` = 1 and σ on the natural-log scale,
+\(P = \Phi(\ln 0.3/\sigma)\) (our arithmetic):
+
+| σ | Below FED 0.3 | Where the value comes from |
+|---|---|---|
+| 0.35 | 0.029 % | Ch. 70's HCN probit, 1 % at FICN 0.44 (p. 2302) |
+| 0.52 | 1.0 % | Ch. 70's "approximately 1 %" below 0.3 (p. 2282) |
+| 0.94 | 10.0 % | the default, the TN 1797 compromise |
+| 1.00 | 11.4 % | ISO 13571:2012 A.5.2 |
+
+The sources conflict. Ch. 70's 1 % (6th edition) and ISO's 11.4 % cannot
+both hold for one log-normal with median 1, and the same Ch. 70 paragraph
+puts 90 % below FED 1.3, which implies σ ≈ 0.2. The 5th edition gave
+11.3 %. The 1 % is therefore one reading next to the others, not a
+correction of the default.
 
 ### Irritant slowdown against the published rule
 
