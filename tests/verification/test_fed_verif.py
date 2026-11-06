@@ -146,7 +146,7 @@ def test_a2_5_fic_speed_reduction_closed_form_and_clamp():
 # --- A2.6: probabilistic incapacitation ensemble (anti-FEMTC) ---------------
 
 
-def test_a2_6_probabilistic_incapacitation_reproduces_purser_bands():
+def test_a2_6_probabilistic_incapacitation_reproduces_lognormal_bands():
     cfg = TenabilityConfig(incapacitation_mode="probabilistic")  # sigma 0.94
     rng = random.Random(12345)
     sigma = cfg.susceptibility_sigma

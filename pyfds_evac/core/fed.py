@@ -686,8 +686,11 @@ class TenabilityConfig:
     # FDS+Evac rule (Korhonen 2021 §3.4). The opt-in "probabilistic" mode
     # treats incapacitation as a population endpoint: each agent draws
     #   D_incap = fed_threshold * exp(susceptibility_sigma * Z), Z ~ N(0, 1),
-    # a log-normal with median fed_threshold. sigma = 0.94 fits the NIST TN
-    # 1797 / Purser bands (~10/50/88 % incapacitated at FED 0.3/1/3).
+    # a log-normal with median fed_threshold. sigma = 0.94 is a compromise
+    # between two bin edges of NIST TN 1797 (Averill et al. 2013), which has
+    # no population data of its own: it puts ~10 % below FED 0.3 and ~88 %
+    # below 3, against TN 1797's 11 % and 89 %. ISO 13571:2012 A.5.2 matches
+    # sigma 1.0; SFPE Ch. 70's "about 1 % below 0.3" implies ~0.52 (#148).
     incapacitation_mode: str = "deterministic"
     susceptibility_sigma: float = 0.94
     enable_heat_incapacitation: bool = True
