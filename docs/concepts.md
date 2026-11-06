@@ -359,7 +359,7 @@ pages. Defaults are on the Models pages.
 | \(\alpha\), \(\beta\) | Frantzich–Nilsson coefficients | m/s, m²/s | `alpha`, `beta` |
 | \(f_{\min}\) | Floor of the smoke speed factor | - | `min_speed_factor` |
 | FIC | Fractional irritant concentration (Purser; related to, but not the same as, ISO 13571 FEC) | - | `fic` |
-| *g*(FIC) | Irritant speed factor | - | `irritant_speed_fraction` |
+| \(F_{\mathrm{irr}}\)(FIC) | Irritant speed fraction | - | `irritant_speed_fraction` |
 | FED | Fractional effective dose, toxic gases | - | `fed` |
 | \(\mathrm{FED}_{\mathrm{heat}}\) | Fractional effective dose, convective heat | - | heat FED |
 | \(D_i\), \(D_{\mathrm{heat},i}\) | Incapacitation threshold of agent *i*; log-normal in probabilistic mode | - | `fed_threshold` for both; `heat_fed_threshold` overrides the heat one |
