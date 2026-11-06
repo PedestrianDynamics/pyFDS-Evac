@@ -371,6 +371,16 @@
   "required": false,
   "type": null
  },
+ "--output-pre-evacuation-times": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_pre_evacuation_times",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
  "--output-route-cost-history": {
   "action": "_StoreAction",
   "choices": null,

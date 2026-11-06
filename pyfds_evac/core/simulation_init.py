@@ -2321,6 +2321,7 @@ def _initialize_with_fallback(
                     "position": pos,
                     "desired_speed": agent_v0,
                     "activated": False,
+                    "distribution": spawn_data["dist_key"],
                 }
 
             agent_counter += 1
@@ -3548,6 +3549,7 @@ def _add_agents(
                                         "position": pos,
                                         "desired_speed": agent_v0,
                                         "activated": False,
+                                        "distribution": dist_key,
                                     }
 
                                 # Record path-based direct steering state,
@@ -3639,6 +3641,7 @@ def _add_agents(
                             "position": pos,
                             "desired_speed": agent_v0,
                             "activated": False,
+                            "distribution": dist_key,
                         }
                     current_agent_id += 1
 
