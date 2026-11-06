@@ -263,7 +263,8 @@ to walking data. It is combined additively with the smoke factor as Eq. 70.12
 does, with a floor of 0.1 that the source does not have. The default smoke law
 (Frantzich–Nilsson) already contains mild irritancy, from the acetic acid in
 its tunnel smoke, so adding the irritant loss still counts some irritancy
-twice. The additive rule reduces the double counting; it does not remove it
+twice. The additive rule does not remove this; it slows agents at least as much
+as multiplying the two factors would
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153);
 [Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 

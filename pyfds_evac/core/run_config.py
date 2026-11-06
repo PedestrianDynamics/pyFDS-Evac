@@ -356,6 +356,18 @@ def _build_reroute_config(scenario: Any, opts: Any, log: Logger):
     )
 
 
+# FIC curve options removed with the Purser irritant rule (#147). An opts
+# namespace is not checked against the parser, so a stale attribute would
+# silently do nothing; validate_opts rejects it, as removed routing keys are.
+REMOVED_FIC_OPTIONS: dict[str, str] = {
+    name: (
+        f"{name} was removed in #147: FIC slowdown follows Purser's irritant "
+        "curve (SFPE Eq. 70.11) with no tuning parameter; delete the option"
+    )
+    for name in ("fic_alpha", "fic_min_factor")
+}
+
+
 def validate_opts(opts: Any) -> None:
     """Reject invalid option combinations before any expensive FDS reads.
 
@@ -364,6 +376,9 @@ def validate_opts(opts: Any) -> None:
     attribute comparisons, and reporting them from a background thread would
     bury a plain user mistake in a run log instead of answering the request.
     """
+    for name, message in REMOVED_FIC_OPTIONS.items():
+        if getattr(opts, name, None) is not None:
+            raise ValueError(message)
     issues = check_options(opts)
     if issues:
         raise ValueError(issues[0].message)

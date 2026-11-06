@@ -282,7 +282,8 @@ def model_docs() -> Any:
                     "slows the agent on top of the smoke factor (Purser, SFPE "
                     "Handbook 6th ed. Eq. 70.11 and 70.12). FDS+Evac has no "
                     "irritant slowdown. It does not incapacitate agents; the "
-                    "combined factor has a minimum of 0.1."
+                    "combined factor has a minimum of 0.1, unless the smoke "
+                    "factor alone is already lower."
                 ),
             ],
             "Off",

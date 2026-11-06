@@ -174,7 +174,8 @@ The code departs from them as follows.
 - **Irritancy counted twice** (with `--enable-fic-speed`). The default smoke
   law (Frantzich–Nilsson) already contains mild irritancy, from the acetic acid
   in its tunnel smoke, so adding the irritant loss still counts some irritancy
-  twice. The additive rule reduces the double counting; it does not remove it
+  twice. The additive rule does not remove this; it slows agents at least as
+  much as multiplying the two factors would
   ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153); see
   [Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 

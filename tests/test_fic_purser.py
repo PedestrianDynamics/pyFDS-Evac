@@ -9,6 +9,7 @@ recomposition from ``original_speed`` on every tick (no compounding).
 from __future__ import annotations
 
 import math
+from types import SimpleNamespace
 
 import pytest
 from shapely.geometry import Polygon
@@ -23,6 +24,7 @@ from pyfds_evac.core.direct_steering_runtime import (
     update_checkpoint_speed,
 )
 from pyfds_evac.core.fed import TenabilityConfig, irritant_speed_fraction
+from pyfds_evac.core.run_config import validate_opts
 
 
 def _eq_70_11(x: float) -> float:
@@ -205,3 +207,9 @@ class TestBehaviourThroughTheSpeedUpdates:
             set_agent_fic_factor(state, 1, agent, fic)
             update_checkpoint_speed(state, {}, 1, agent, "wait", stage, *IN)
             assert agent.speed == 0.0
+
+
+@pytest.mark.parametrize("name", ["fic_alpha", "fic_min_factor"])
+def test_removed_fic_option_on_opts_is_rejected(name):
+    with pytest.raises(ValueError, match=f"{name} was removed in #147"):
+        validate_opts(SimpleNamespace(**{name: 0.0}))
