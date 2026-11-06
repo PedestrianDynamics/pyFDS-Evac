@@ -281,7 +281,8 @@ def model_docs() -> Any:
                     "Optional. The instantaneous Fractional Irritant Concentration "
                     "slows the agent on top of the smoke factor (Purser, SFPE "
                     "Handbook 6th ed. Eq. 70.11 and 70.12). FDS+Evac has no "
-                    "irritant slowdown."
+                    "irritant slowdown. It does not incapacitate agents; the "
+                    "combined factor has a minimum of 0.1."
                 ),
             ],
             "Off",
@@ -290,7 +291,7 @@ def model_docs() -> Any:
             ),
             _eq(
                 r"$$ \mathrm{FIC} = \sum_i \frac{C_i}{F_{\mathrm{FIC},i}}, "
-                r"\qquad v = v_0 \max\!\left(0.1 f(K),\; "
+                r"\qquad v = v_0 \max\!\left(\min(0.1, f(K)),\; "
                 r"f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1\right) $$"
             ),
             _link(

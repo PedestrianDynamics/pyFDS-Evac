@@ -80,17 +80,18 @@ stop need the gas FED model; the heat stop needs only the heat FED model
   to FDS User's Guide Table 22.3 and FDS+Evac guide Table 2, so this FIC is
   neither the ISO 13571 FEC nor the escape-impairment FIC (see
   [Irritant gases](/fundamentals/irritants.md#which-endpoint-goes-in-the-denominator)).
-  At each FED update where FIC > 0, the agent's irritant factor is set
-  to \(g = \max(\texttt{fic\_min\_factor},\ 1 - \texttt{fic\_alpha}\cdot\mathrm{FIC})\)
-  (`scenario.py`, `run_scenario`) and multiplies the smoke factor. The rule is a
-  pyFDS-Evac assumption with no known source
-  ([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147));
-  how it compares with the published rule is
+  At each FED update the agent's irritant speed fraction is
+  \(F_{\mathrm{irr}} = \bigl(e^{-(1000\,\mathrm{FIC}/160)^2} + 0.2 - 0.2\,\mathrm{FIC}\bigr)/1.2\)
+  for 0 < FIC < 1 (Purser's Eq. 70.11, `irritant_speed_fraction`), 0 for
+  FIC ≥ 1 and 1 for FIC = 0. It is added to the smoke loss as in Eq. 70.12,
+  \(v/v_0 = f + F_{\mathrm{irr}} - 1\), with a floor of 0.1
+  (`combined_speed_factor`); a speed zone then multiplies the result. Each
+  update starts from the stored baseline speed, so the reduction does not
+  compound, and FIC = 0 gives \(F_{\mathrm{irr}} = 1\), which leaves the
+  smoke speed unchanged. FIC reduces speed but does not independently
+  incapacitate agents; the combined environmental factor has a minimum of 0.1.
+  How the rule compares with the published one is
   [below](#irritant-slowdown-against-the-published-rule).
-  `fic_alpha` must be finite and at least 0, and `fic_min_factor` finite and in
-  (0, 1]; `TenabilityConfig` and the CLI reject other values
-  ([#404](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/404)).
-  When FIC falls to exactly 0 the factor returns to 1.
 - **Incapacitation.** Once the cumulative gas FED or heat FED reaches the
   agent's threshold for that dose, its desired speed is set to zero and it
   remains as a static obstacle. The speed is never restored (pre-movement,
@@ -129,14 +130,15 @@ turns off the slowdown and both stops; the doses are still computed. The FED
 history CSV (`--output-fed-history`) carries the columns `fic`,
 `fic_speed_factor` and `incapacitated`.
 
-![Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
+![Three panels: f(K) against K, F_irr(FIC) against FIC, and the combined factor as a heat map over K and FIC](/images/concepts/tenability_speed_curves.png)
 
 *(a) Frantzich–Nilsson factor f(K) [-] against K [1/m], floor 0.1.
-(b) Irritant factor g(FIC) [-] against FIC [-], floor 0.3; g has no known
-source and is off by default. (c) The product
-f(K)·g(FIC) [-], with contours at 0.25, 0.5 and 0.75; where both floors apply
-it is 0.1 × 0.3 = 0.03. FED does not appear on these axes; it only sets the speed to
-zero at the agent's threshold. Script: `scripts/generate_tenability_curves.py`.*
+(b) Irritant speed fraction F_irr(FIC) [-] against FIC [-], Purser's Eq. 70.11
+(an estimated concept curve), 0 from FIC = 1; off by default. (c) The combined
+factor [-] over K and FIC, f(K) + F_irr(FIC) − 1 with a floor of 0.1, with
+contours at 0.25, 0.5 and 0.75. FED does not appear on these axes; it only sets
+the speed to zero at the agent's threshold. Script:
+`scripts/generate_tenability_curves.py`.*
 
 ## FDS input pitfalls
 
@@ -323,56 +325,44 @@ correction of the default.
 
 ### Irritant slowdown against the published rule
 
-The irritant slowdown \(g\), when enabled (`fed.py`, `irritant_speed_fraction`), is multiplied with the smoke
-factor (`direct_steering_runtime.py`, `set_agent_fic_factor`). Its constants were not found
-in the Handbook, the FDS+Evac guide or `evac.f90`
-([#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)). The
-Handbook uses a different curve, Eq. 63.13, and adds the smoke and irritant
-losses instead of multiplying them (Eq. 63.14; see
+The irritant speed fraction \(F_{\mathrm{irr}}\), when enabled (`fed.py`,
+`irritant_speed_fraction`), is Eq. 70.11 as published. Eq. 70.11 is an
+estimated concept curve (Purser 2003, p. 94; SFPE Handbook 6th ed., Ch. 70,
+p. 2289), not a law fitted to walking data. Its denominators are the SFPE
+incapacitation column, the ones Eq. 70.11 takes (see
 [Irritant gases](/fundamentals/irritants.md#irritants-and-walking-speed-fic)).
-Both differences make the coded rule milder, except at very low FIC:
 
-| FIC | coded \(g\) | Eq. 63.13 |
-|---|---|---|
-| 0.1 | 0.93 | 0.71 |
-| 0.2 | 0.86 | 0.31 |
-| 0.5 | 0.65 | 0.08 |
-| 1 | 0.30 | 0 |
+The combination is Eq. 70.12 as published: the irritant loss
+\(1 - F_{\mathrm{irr}}\) is added to the smoke loss
+(`direct_steering_runtime.py`, `combined_speed_factor`). Two departures from
+the source, each one deliberate:
 
-- **The curve.** With the defaults `fic_alpha` = 0.7 and
-  `fic_min_factor` = 0.3, \(g\) is above Eq. 63.13 for FIC from about
-  0.017 to 1. Below about 0.017 it is lower, by at most 0.002 (our
-  arithmetic).
-- **The combination.** For the same smoke fraction \(F_s\) and irritant
-  fraction \(F_i\), the product exceeds the additive rule by
-  \(F_s F_i - (F_s + F_i - 1) = (1 - F_s)(1 - F_i) \ge 0\) (our identity).
-  For the same \(F_i\), multiplying is therefore never more severe than
-  adding.
-- **FIC ≥ 1 stops no agent.** The sources predict incapacitation at FIC = 1
-  (Purser 2003, p. 99; Ch. 63, p. 2344). In the code, with the default
-  `fic_min_factor` of 0.3, \(g\) floors at 0.3, so the agent walks on at 0.3
-  of its smoke-reduced speed. FIC never marks an agent incapacitated;
-  irritants count toward incapacitation only through \(FLD_{irr}\) inside
-  the gas FED ([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398)).
-  A floor of 0, which would let \(g\) reach 0 and stop an agent without
-  marking it incapacitated, is rejected
-  ([#404](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/404)).
-  \(g\) is recomputed at every FED update, so when FIC returns to exactly 0
-  the factor returns to 1.
+- **The floor at 0.1.** The sources do not clip the sum. The code floors the
+  combined factor at 0.1, the floor FDS+Evac uses for its smoke law. The floor
+  never raises a speed above the smoke-only speed.
+- **\(F_{\mathrm{irr}} = 0\) above FIC = 1.** The formula would turn
+  negative there.
 
-Because the Frantzich–Nilsson smoke contained
-acetic acid, \(f(K)\) already includes irritant slowing, so multiplying it by
-\(g\) partly counts irritancy twice
+FIC reduces speed but does not independently incapacitate agents; the combined
+environmental factor has a minimum of 0.1. The sources predict incapacitation
+at FIC = 1 (Purser 2003, p. 99; Ch. 63, p. 2344); in the code the agent walks
+on at 0.1 of its free speed. Irritants count toward incapacitation only
+through \(FLD_{irr}\) inside the gas FED
+([#398](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398) for the
+background).
+
+The default smoke law (Frantzich–Nilsson) already contains mild irritancy, from
+the acetic acid in its tunnel smoke, so adding the irritant loss still counts
+some irritancy twice. The additive rule reduces the double counting; it does
+not remove it
 ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153)).
 
-![Two panels. (a) Speed factor against FIC from 0 to 1.2: Eq. 63.13 falls from 1 to 0 at FIC 1 and goes negative beyond it, while the coded g falls linearly from 1 to its floor of 0.3 at FIC 1. (b) Combined walking-speed fraction against FIC for smoke fractions 1, 0.75 and 0.5: the published additive rule reaches zero and goes negative, while the coded product stays at or above 0.15](/images/models/fic_combination.png)
+![Two panels. (a) Irritant speed fraction against FIC from 0 to 1.2: Eq. 70.11 falls from 1 to 0 at FIC 1 and is dotted beyond it, where it turns negative, while the coded F_irr drops to 0 at FIC 1 and stays there. (b) Combined walking-speed fraction against FIC for smoke fractions 1, 0.75 and 0.5: the published additive sum is unclipped, the coded value is floored at 0.1](/images/models/fic_combination.png)
 
-*(a) Speed factor [-] against FIC [-]: Eq. 63.13 (thin solid, a concept
-curve; dotted beyond FIC = 1, outside its range) and the coded \(g\) with
-its defaults (dashed, no source). (b) Walking-speed fraction [-] combining
-smoke fraction \(F_s\) = 1, 0.75 and 0.5 with the irritant effect: Eq. 63.14
-with Eq. 63.13 (solid) against the code's \(F_s \cdot g\) (dashed), one colour
-per \(F_s\). The gap between a solid and a dashed line of the same colour is
-the effect of both the curve and the combination; the identity above covers
-the combination alone. Grey: where the published sum is at most 0, which
-neither source clips. Script: `scripts/figures/models_fic_combination.py`.*
+*(a) Irritant speed fraction [-] against FIC [-]: Eq. 70.11 (solid over
+0 ≤ FIC ≤ 1, dotted beyond, where the formula is negative) and the coded
+\(F_{\mathrm{irr}}\) (dashed), which is 0 above FIC = 1. (b) Walking-speed
+fraction [-] for smoke fractions \(F_s\) = 1, 0.75 and 0.5: the published
+additive sum (solid, unclipped) against `combined_speed_factor` (dashed,
+floored at 0.1), one colour per \(F_s\). Script:
+`scripts/figures/models_fic_combination.py`.*

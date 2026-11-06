@@ -323,8 +323,8 @@ curve without fitted data and is defined only for FIC from 0 to 1.
   Secondary source.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md).
-Its opt-in irritant slowdown uses a different curve and multiplies it with
-the smoke factor
+Its opt-in irritant slowdown uses Eq. 70.11 and adds its loss to the smoke
+loss as Eq. 70.12 does, with a floor of 0.1
 ([Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 
 How it is verified: the FED and FIC rows of the [Verification](/verification/_index.md) index; the HCN, NOₓ and irritant terms are not yet verified end to end ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)).

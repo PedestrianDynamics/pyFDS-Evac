@@ -89,10 +89,11 @@ used only to price routes; see the [routing model](/models/routing.md#parameters
 Every `update_interval_s` (`--smoke-update-interval` in `run.py`),
 `run_scenario` samples *K* at each agent's position and stores *f* as the
 agent's smoke factor. The agent's desired speed is then
-\(v_0 \cdot f \cdot g(\mathrm{FIC})\) (`direct_steering_runtime.py`, `set_agent_fic_factor`),
-where \(g\) is the irritant factor of the [FED model](/models/fed.md).
-\(g = 1\) unless `--enable-fic-speed` is given: it is off by default, as
-FDS+Evac has no irritant slowdown.
+\(v_0 \cdot \max(\min(0.1, f),\ f + F_{\mathrm{irr}} - 1)\) with
+`--enable-fic-speed` (`direct_steering_runtime.py`, `combined_speed_factor`),
+where \(F_{\mathrm{irr}}\) is the irritant speed fraction of the
+[FED model](/models/fed.md), and \(v_0 \cdot f\) without it. The irritant
+slowdown is off by default, as FDS+Evac has none.
 
 An extinction sample outside the FDS domain reads *K* = 0 (clear air), so
 the agent walks at full speed there, as in FDS+Evac (`smoke_speed.py`,
@@ -170,16 +171,12 @@ The code departs from them as follows.
   agent's own free speed, as in their method 3, not the truncated normal
   distribution (mean 1.35 m/s, SD 0.25 m/s, 0.85–1.85 m/s) that method 3
   draws it from.
-- **Irritancy counted twice** (with `--enable-fic-speed`). Frantzich and
-  Nilsson's smoke contained acetic acid, so \(f(K)\) already includes irritant
-  slowing, and multiplying by
-  \(g(\mathrm{FIC})\) partly counts irritancy twice. SFPE Eq. 63.14 adds the
-  two losses instead
-  ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153),
-  [#147](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147)).
-- **Combination with irritants.** With `--enable-fic-speed`,
-  \(g(\mathrm{FIC})\) multiplies \(f\); see the
-  [FED page](/models/fed.md#deviations-from-the-literature).
+- **Irritancy counted twice** (with `--enable-fic-speed`). The default smoke
+  law (Frantzich–Nilsson) already contains mild irritancy, from the acetic acid
+  in its tunnel smoke, so adding the irritant loss still counts some irritancy
+  twice. The additive rule reduces the double counting; it does not remove it
+  ([#153](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153); see
+  [Models › FED](/models/fed.md#irritant-slowdown-against-the-published-rule)).
 
 ## Verification
 
