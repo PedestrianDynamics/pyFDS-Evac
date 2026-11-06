@@ -30,7 +30,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5b8af637592205b3d455bc9623451c3d16ca9bb6">&lt;code>5b8af63&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/78b8d044dea586578a32d35a5481b616f5589132">&lt;code>78b8d04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -49,7 +49,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5d37e55ee7c93b9bad02c1784e0d5cd852cd69f701aebb809bd2eb83ce8b52c6&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">79cda148f7100eebcab4771e02a5a31f59a8f67458a503c4c42040c94b4edf67&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -515,7 +515,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5b8af637592205b3d455bc9623451c3d16ca9bb6">&lt;code>5b8af63&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/78b8d044dea586578a32d35a5481b616f5589132">&lt;code>78b8d04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -540,7 +540,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">add31b062607ef37a1b52aeb33fcc8e3da078348247d0276a8c9c36f4800d99c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">274a9be8ccd9f593c2a8c090c54018d2d7f378e2c2fac2e3479323acbf44305d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -857,8 +857,6 @@ options into &lt;code>run_scenario&lt;/code> keywords:&lt;/p>
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> smoke_slice_height&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.6&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> disable_tenability&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">False&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fed_threshold&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fic_alpha&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.7&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fic_min_factor&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.3&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> incapacitation_mode&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#34;deterministic&amp;#34;&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> enable_rerouting&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">False&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> reroute_interval&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>,
@@ -988,7 +986,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5b8af637592205b3d455bc9623451c3d16ca9bb6">&lt;code>5b8af63&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/78b8d044dea586578a32d35a5481b616f5589132">&lt;code>78b8d04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1009,7 +1007,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5c46f5c6c324842f6a30b1620dd3020aaee5c5ffd0c407587a76ef6a9c80f1c5&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">25ee1aa2ee40be83fafbbeff09c1fc0b3219fc2b1de3419cffef952baa2c47f5&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -1215,7 +1213,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Heat FED is off; pass --enable-heat-fed to accumulate it.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring rerouting.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring visibility model (3 signs).
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring tenability (FIC slowdown=off, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Initialization finished.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation started.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
@@ -1334,8 +1332,6 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> smoke_slice_height&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.6&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> disable_tenability&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">False&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fed_threshold&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fic_alpha&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.7&lt;/span>,
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> fic_min_factor&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.3&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> enable_rerouting&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">True&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> reroute_interval&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.0&lt;/span>,
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> vis_cache&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">None&lt;/span>,
@@ -1927,7 +1923,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5b8af637592205b3d455bc9623451c3d16ca9bb6">&lt;code>5b8af63&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/78b8d044dea586578a32d35a5481b616f5589132">&lt;code>78b8d04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1943,7 +1939,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">69aaaf44a7f9deb721e70fee890c940a0a87d0ee593c6a3871b5772ff5d690a0&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b55728d90776ef2a5913a1ea12f19beba66b5fc82a319299c91b3fbb402c0dc2&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -2734,8 +2730,8 @@ used other defaults for eight mechanisms
 &lt;tr>
 &lt;td>Irritant (FIC) slowdown&lt;/td>
 &lt;td>None; &lt;code>evac.f90&lt;/code> imports only &lt;code>FED&lt;/code> (&lt;code>evac.f90:65&lt;/code>)&lt;/td>
-&lt;td>On whenever the gas FED is computed&lt;/td>
-&lt;td>&lt;code>--enable-fic-speed&lt;/code>; &lt;code>opts.enable_fic_speed = True&lt;/code>, or &lt;code>TenabilityConfig(enable_fic_speed=True)&lt;/code>&lt;/td>
+&lt;td>On whenever the gas FED was computed, with &lt;code>max(0.3, 1 − 0.7·FIC)&lt;/code> multiplied with the smoke factor&lt;/td>
+&lt;td>&lt;code>--enable-fic-speed&lt;/code> turns the slowdown on, now with Purser&amp;rsquo;s Eq. 70.11 added to the smoke loss (floor 0.1); the old rule is not available&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>HCN term of the FED&lt;/td>
@@ -2908,7 +2904,7 @@ or &lt;code>app.py&lt;/code> in a source checkout) runs uploaded scenarios. It d
 &lt;tr>
 &lt;td>Irritant slowdown (FIC)&lt;/td>
 &lt;td>None: no FIC acts on the agents, since &lt;code>evac.f90&lt;/code> imports only &lt;code>FED&lt;/code> from FDS (&lt;code>evac.f90:65&lt;/code>). Irritants enter only the FED sum. FDS can write FIC as an output quantity, and the guide tabulates &lt;em>F&lt;/em>FIC (Table 2), but neither feeds the agents&amp;rsquo; speed&lt;/td>
-&lt;td>Off by default, as in FDS+Evac. &lt;code>--enable-fic-speed&lt;/code> (&lt;code>opts.enable_fic_speed&lt;/code>) turns on speed × max(0.3, 1 − 0.7 · FIC) whenever the gas FED is computed; before, it was on by default. The rule is a pyFDS-Evac assumption with no known source (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>).&lt;/td>
+&lt;td>Off by default, as in FDS+Evac. &lt;code>--enable-fic-speed&lt;/code> (&lt;code>opts.enable_fic_speed&lt;/code>) turns on Purser&amp;rsquo;s Eq. 70.11 (an estimated concept curve), added to the smoke loss as Eq. 70.12 does, with a floor of 0.1; before, it was on by default. FIC reduces speed but does not independently incapacitate agents (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED activity level&lt;/td>

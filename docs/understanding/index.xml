@@ -85,15 +85,18 @@ for A = 8. The arrow marks the largest gap between Frantzich–Nilsson and A = 2
 accumulate into a dose. pyFDS-Evac keeps them apart: speed follows what the
 agent meets at the moment, and a dose acts only as a switch:&lt;/p>
 $$
-v_i = v_{0,i}\; f(K)\; g(\mathrm{FIC})\;
+v_i = v_{0,i}\; \max\!\bigl(\min(0.1, f(K)),\; f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1\bigr)\;
 \mathbb{1}\!\left[\mathrm{FED}_i &lt; D_i\right]\;
 \mathbb{1}\!\left[\mathrm{FED}_{\mathrm{heat},i} &lt; D_{\mathrm{heat},i}\right].
-$$&lt;p>The brake is \(f(K)\,g(\mathrm{FIC})\). The fractional irritant concentration
-(FIC) sums the irritant gases, each over a reference concentration, and \(g\)
-lowers the speed further as it rises, down to a floor. \(g = 1\) unless
+$$&lt;p>The brake is \(\max(\min(0.1, f(K)),\, f(K) + F_{\mathrm{irr}}(\mathrm{FIC}) - 1)\).
+The fractional irritant concentration (FIC) sums the irritant gases, each over
+a reference concentration, and the irritant speed fraction \(F_{\mathrm{irr}}\)
+(Purser&amp;rsquo;s Eq. 70.11) lowers the speed further as it rises: its loss is added to
+the smoke loss, with a floor of 0.1. \(F_{\mathrm{irr}} = 1\) unless
 &lt;code>--enable-fic-speed&lt;/code> is given: FDS+Evac has no irritant slowdown, so it is
-off by default. FIC is a concentration,
-not a dose, so \(g\) follows the gas where the agent stands: an agent that walks
+off by default. FIC reduces speed but does not independently incapacitate
+agents; the combined environmental factor has a minimum of 0.1. FIC is a
+concentration, not a dose, so \(F_{\mathrm{irr}}\) follows the gas where the agent stands: an agent that walks
 out of a plume into clean air gets its full speed back.&lt;/p>
 &lt;p>The stop is the fractional effective dose (FED). The toxic-gas dose follows
 the Purser sum as FDS+Evac computes it, which adds irritants into the dose,
@@ -120,10 +123,10 @@ hot surfaces only with the latter, with a user factor. The published dose laws a
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.
 The coded forms are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">FED model&lt;/a> page.&lt;/p>
-&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, g(FIC) against FIC, and their product as a heat map over K and FIC" loading="lazy" />&lt;/p>
-&lt;p>&lt;em>Figure 2. The brake: (a) f(K), (b) g(FIC) and (c) their product, with
-contours of equal speed factor. The irritant factor g has no known source
-and is off by default; the published relation is Eq. 63.13 on
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/concepts/tenability_speed_curves.png" alt="Three panels: f(K) against K, F_irr(FIC) against FIC, and the combined factor as a heat map over K and FIC" loading="lazy" />&lt;/p>
+&lt;p>&lt;em>Figure 2. The brake: (a) f(K), (b) the irritant speed fraction F_irr(FIC)
+from Eq. 70.11 and (c) the combined factor, with contours of equal speed
+factor. F_irr is an estimated concept curve and off by default; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/#irritants-and-walking-speed-fic">Irritant gases&lt;/a>.
 FED does not appear on
 these axes; it only sets the speed to zero at the agent&amp;rsquo;s threshold.
@@ -353,10 +356,10 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;td>&lt;code>fic&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;em>g&lt;/em>(FIC)&lt;/td>
-&lt;td>Irritant speed factor&lt;/td>
+&lt;td>\(F_{\mathrm{irr}}\)(FIC)&lt;/td>
+&lt;td>Irritant speed fraction&lt;/td>
 &lt;td>-&lt;/td>
-&lt;td>&lt;code>fic_min_factor&lt;/code>, &lt;code>fic_alpha&lt;/code>&lt;/td>
+&lt;td>&lt;code>irritant_speed_fraction&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>FED&lt;/td>
@@ -414,8 +417,8 @@ pages. Defaults are on the Models pages.&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>The same code name &lt;code>alpha&lt;/code> is used for the Frantzich–Nilsson coefficient, for
-the irritant slope &lt;code>fic_alpha&lt;/code> and for the sign bearing; the table keeps them
+&lt;p>The same code name &lt;code>alpha&lt;/code> is used for the Frantzich–Nilsson coefficient and
+for the sign bearing; the table keeps them
 apart. In FDS+Evac, \(\tau\) is the relaxation time of the movement model. On
 these pages \(\tau\) is always the dimensionless optical depth. &amp;ldquo;Gate&amp;rdquo; is used
 in two senses only: the exposure gate (the route-cost gate) that refuses a
@@ -528,10 +531,10 @@ population spread for heat is published. Its threshold is &lt;code>--fed-thresho
 unless &lt;code>--heat-fed-threshold&lt;/code> sets another, a departure from ISO 13571:2012
 §5.4. Its &lt;code>probabilistic&lt;/code> mode reuses the
 gas spread without a data basis of its own.&lt;/p>
-&lt;p>The fractional irritant concentration (FIC) never incapacitates. The
-published sources predict incapacitation at FIC = 1, but the opt-in irritant
-slowdown, with its default floor &lt;code>--fic-min-factor&lt;/code> 0.3, only lowers the
-speed to 0.3 of its smoke-reduced value
+&lt;p>FIC reduces speed but does not independently incapacitate agents; the
+combined environmental factor has a minimum of 0.1. The sources predict
+incapacitation at FIC = 1; pyFDS-Evac lets the agent walk on at 0.1 of its
+free speed
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/398" target="_blank" rel="noopener">#398&lt;/a>).
 Irritants reach incapacitation only through their lung dose
 \(FLD_{irr}\), which is summed into the gas FED.&lt;/p>
@@ -658,9 +661,16 @@ comparator is researched in &lt;a href="https://github.com/PedestrianDynamics/py
 one line per issue, is on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#limitations">Models › Routing › Limitations&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Irritant slowdown.&lt;/strong> The opt-in irritant slowdown
-(&lt;code>--enable-fic-speed&lt;/code>) uses a curve with no known source and is combined
-with the smoke factor multiplicatively, not additively as published
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>;
+(&lt;code>--enable-fic-speed&lt;/code>) uses Eq. 70.11, which is an estimated concept curve
+(Purser 2003, p. 94; SFPE Handbook 6th ed., Ch. 70, p. 2289), not a law fitted
+to walking data. It is combined additively with the smoke factor as Eq. 70.12
+does, with a floor of 0.1 that the source does not have. The default smoke law
+(Frantzich–Nilsson) already contains mild irritancy, from the acetic acid in
+its tunnel smoke, so adding the irritant loss still counts some irritancy
+twice. The additive rule does not remove this; it slows agents at least as much
+as multiplying the two factors would, except where that product is below the
+0.1 floor
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/153" target="_blank" rel="noopener">#153&lt;/a>;
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#irritant-slowdown-against-the-published-rule">Models › FED&lt;/a>).&lt;/p>
 &lt;p>&lt;strong>Pre-movement defaults are office data.&lt;/strong> The gamma, log-normal and Weibull
 presets are fitted to office evacuations, mostly drills (Lovreglio et al. 2019,

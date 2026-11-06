@@ -1413,9 +1413,8 @@ those slices exist.&lt;/li>
 &lt;code>TEMPERATURE&lt;/code> slice. It is off by default, as FDS+Evac has no heat dose.&lt;/li>
 &lt;/ul>
 &lt;p>Incapacitation applies to whichever track runs. Without &lt;code>--fds-dir&lt;/code> neither
-runs and the flags below have no effect. The FIC slowdown (a pyFDS-Evac
-assumption, source unknown;
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/147" target="_blank" rel="noopener">#147&lt;/a>) is off
+runs and the flags below have no effect. The FIC slowdown (Purser&amp;rsquo;s Eq. 70.11,
+added to the smoke loss as Eq. 70.12 does, with a floor of 0.1) is off
 by default, as FDS+Evac has none. The equations are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Models › FED&lt;/a> and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Models › Heat&lt;/a>.&lt;/p>
 &lt;table>
@@ -1436,16 +1435,6 @@ by default, as FDS+Evac has none. The equations are on
 &lt;td>&lt;code>--enable-fic-speed&lt;/code>&lt;/td>
 &lt;td>off&lt;/td>
 &lt;td>Turn the FIC slowdown on.&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--fic-alpha F&lt;/code>&lt;/td>
-&lt;td>0.7&lt;/td>
-&lt;td>Slope of &lt;code>v/v₀ = max(μ, 1 − α·FIC)&lt;/code>; finite, ≥ 0; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
-&lt;/tr>
-&lt;tr>
-&lt;td>&lt;code>--fic-min-factor F&lt;/code>&lt;/td>
-&lt;td>0.3&lt;/td>
-&lt;td>Floor &lt;code>μ&lt;/code>, in (0, 1]; needs &lt;code>--enable-fic-speed&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--fed-threshold F&lt;/code>&lt;/td>
@@ -1753,7 +1742,7 @@ When &lt;code>run_scenario&lt;/code> was given other models or parameters than t
 imply, &lt;code>source&lt;/code> is &lt;code>run, options differ&lt;/code>: only the run&amp;rsquo;s settings (&lt;code>run&lt;/code>)
 are recorded as facts, and the configuration of the options is kept apart
 under &lt;code>predicted_from_options&lt;/code>, with the differing settings in
-&lt;code>mismatches&lt;/code> (e.g. &lt;code>tenability.fic_alpha&lt;/code>).
+&lt;code>mismatches&lt;/code> (e.g. &lt;code>tenability.fed_threshold&lt;/code>).
 From Python, &lt;code>pyfds_evac.config.effective_configuration(opts, scenario)&lt;/code>
 returns it; &lt;code>pyfds_evac.config&lt;/code> is provisional public API in 0.3.0 and can
 change in 0.3.x.&lt;/p>
@@ -1809,7 +1798,7 @@ title="Copy code"
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring FED calculation.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Heat FED is off; pass --enable-heat-fed to accumulate it.
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring rerouting.
-&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring tenability (FIC slowdown=off, FIC alpha=0.7, min=0.3, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Configuring tenability (FIC slowdown=off, FED median=1.0, incapacitation=deterministic, heat FED median=1.0, heat incapacitation=deterministic).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>…
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Simulation incomplete: all mobile agents left after 982.01 s (0/1 evacuated, 1 remaining).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Route history rows: 0
@@ -3448,7 +3437,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tr>
 &lt;td>&lt;code>fic_speed_factor&lt;/code>&lt;/td>
 &lt;td>—&lt;/td>
-&lt;td>irritant slowdown factor, 1 unless &lt;code>--enable-fic-speed&lt;/code>&lt;/td>
+&lt;td>irritant speed fraction F_irr (Eq. 70.11), 1 unless &lt;code>--enable-fic-speed&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>incapacitated&lt;/code>&lt;/td>
@@ -4778,7 +4767,7 @@ means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/co
 &lt;/tr>
 &lt;tr>
 &lt;td>FED &amp;amp; Tenability&lt;/td>
-&lt;td>&lt;code>disable_tenability&lt;/code>, &lt;code>incapacitation_mode&lt;/code>, &lt;code>susceptibility_sigma&lt;/code>, &lt;code>enable_fic_speed&lt;/code>, &lt;code>fic_alpha&lt;/code>, &lt;code>fic_min_factor&lt;/code>, &lt;code>fed_threshold&lt;/code>, &lt;code>o2_threshold_percent&lt;/code>, &lt;code>enable_heat_fed&lt;/code>, &lt;code>heat_incapacitation_mode&lt;/code>, &lt;code>heat_susceptibility_sigma&lt;/code>, &lt;code>heat_clothing&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>disable_tenability&lt;/code>, &lt;code>incapacitation_mode&lt;/code>, &lt;code>susceptibility_sigma&lt;/code>, &lt;code>enable_fic_speed&lt;/code>, &lt;code>fed_threshold&lt;/code>, &lt;code>o2_threshold_percent&lt;/code>, &lt;code>enable_heat_fed&lt;/code>, &lt;code>heat_incapacitation_mode&lt;/code>, &lt;code>heat_susceptibility_sigma&lt;/code>, &lt;code>heat_clothing&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Rerouting&lt;/td>
@@ -7822,7 +7811,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5b8af637592205b3d455bc9623451c3d16ca9bb6">&lt;code>5b8af63&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/78b8d044dea586578a32d35a5481b616f5589132">&lt;code>78b8d04&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7846,7 +7835,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b71300e68961fa0cd5649786434da0c898aa6e459ac8a5dad6f736b7e302c344&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f9dcba33bf1b6523f549f3ca61a56c5aec2a62d7a532b776d3a2b9705cd7ef2e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
