@@ -14,6 +14,7 @@ hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 ```bash
 .venv/bin/python assets/station_nist/build_scenario.py            # config.json, geometry.wkt
 .venv/bin/python assets/station_nist/build_scenario.py --tables   # the tables below
+.venv/bin/python assets/station_nist/build_scenario.py --full     # + config_full.json
 .venv/bin/python assets/station_nist/plot_overlay.py              # overlay.png
 .venv/bin/python run.py --scenario assets/station_nist --seed 4
 ```
@@ -220,6 +221,36 @@ Recorded choices:
 - Under the 2x gate of the contract (2 x n x 0.314 m2) four areas fall short
   (Near stage or on dance floor, Rear bar / dart room, Back hallway, Entryway);
   the maintainer chose the 1x rule.
+
+## Full population (`config_full.json`)
+
+`--full` also writes `config_full.json` (`config.json` is unchanged): every
+distribution carries `parameters.population`, which `station_fahy/validate.py`
+reads. It holds the 333 placed survivors, 22 unplaced survivors (Fahy's 355
+less the 333 with a location) and 100 victims, 455 agents. Unplaced and victims
+are spread over the 12 areas in proportion to the placed survivors, by
+largest-remainder apportionment, with the same familiarity classes and agent
+parameters as the area's placed agents (decision M3). The counts are the same
+on both Station decks:
+
+| area | placed | unplaced | victim |
+|---|---|---|---|
+| Stage | 4 | 0 | 1 |
+| Near stage door | 17 | 1 | 5 |
+| Near stage or on dance floor | 75 | 5 | 23 |
+| Back wall platform | 15 | 1 | 5 |
+| Sunroom | 16 | 1 | 5 |
+| Behind dance floor | 74 | 5 | 22 |
+| Back hallway | 14 | 1 | 4 |
+| Between bars | 29 | 2 | 9 |
+| Rear bar / dart room | 28 | 2 | 8 |
+| Entryway | 17 | 1 | 5 |
+| Main bar | 37 | 2 | 11 |
+| Center stage-side | 7 | 1 | 2 |
+| **Total** | **333** | **22** | **100** |
+
+Seeds 4-23 place all 455 on this deck and on `station_fahy` (`tests/test_station_placement.py`).
+Run it with `run.py --scenario assets/station_nist/config_full.json --output-sqlite OUT`.
 
 ## Exits and checkpoints
 
