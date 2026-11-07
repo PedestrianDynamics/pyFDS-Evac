@@ -2155,6 +2155,7 @@ def _initialize_with_fallback(
     # every per-agent draw can be seeded from it.
     spawn_keys: dict[int, SpawnKey] = {}
     origin_counts: dict[str, int] = {}
+    agent_distributions: dict[int, str] = {}
 
     for spawn_data in immediate_spawn_distributions:
         try:
@@ -2280,6 +2281,7 @@ def _initialize_with_fallback(
             except RuntimeError as error:
                 raise _insertion_error(spawn_data["dist_key"], error) from error
             key = assign_spawn_key(spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN)
+            agent_distributions[agent_id] = spawn_data["dist_key"]
             all_positions.append(pos)
             agent_radii[agent_id] = agent_radius
 
@@ -2347,6 +2349,7 @@ def _initialize_with_fallback(
         "agent_wait_info": fallback_agent_wait_info,
         "spawn_keys": spawn_keys,
         "origin_counts": origin_counts,
+        "agent_distributions": agent_distributions,
         "direct_steering_info": direct_steering_info,
         "global_ds_journey_id": global_ds_journey_id,
         "global_ds_stage_id": global_ds_stage_id,
@@ -3391,6 +3394,7 @@ def _add_agents(
 
     # Initialize premovement tracking
     premovement_times = {}
+    agent_distributions: dict[int, str] = {}
     has_premovement = False
 
     # Handle immediate spawning distributions (existing logic)
@@ -3535,6 +3539,7 @@ def _add_agents(
                                 key = assign_spawn_key(
                                     spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
                                 )
+                                agent_distributions[agent_id] = dist_key
                                 agent_radii[agent_id] = agent_radius
 
                                 # Store premovement time if enabled
@@ -3622,6 +3627,7 @@ def _add_agents(
                     key = assign_spawn_key(
                         spawn_keys, origin_counts, agent_id, INITIAL_ORIGIN
                     )
+                    agent_distributions[agent_id] = dist_key
                     agent_radii[agent_id] = agent_radius
                     if throttled_exit is not None:
                         agent_wait_info[agent_id] = build_exit_path_state(
@@ -3666,6 +3672,7 @@ def _add_agents(
         "agent_wait_info": agent_wait_info,
         "spawn_keys": spawn_keys,
         "origin_counts": origin_counts,
+        "agent_distributions": agent_distributions,
         "transitions": data.get("transitions", []),
         "waypoint_routing": journey_data.get("waypoint_routing", {}),
         "global_ds_journey_id": global_ds_journey_id,

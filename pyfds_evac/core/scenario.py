@@ -1152,6 +1152,9 @@ class ScenarioResult:
     agents_incapacitated: int = 0
     # One row per agent with a pre-movement time; see pre_evacuation_rows.
     pre_evacuation_times: list[dict[str, Any]] | None = None
+    # Distribution key of every agent placed at the start (flow-spawned agents
+    # are not listed); provisional.
+    agent_distributions: dict[int, str] | None = None
 
     @property
     def success(self) -> bool:
@@ -4163,6 +4166,7 @@ def run_scenario(
                 cognitive_map_history if collect_cognitive_map_history else None
             ),
             pre_evacuation_times=pre_evacuation_rows(premovement_times),
+            agent_distributions=dict(spawning_info.get("agent_distributions", {})),
             exit_history=[
                 {
                     "agent_id": agent_id,

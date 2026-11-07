@@ -8,7 +8,8 @@ Usage:
 
 Each agent is attributed to the spawn area whose polygon contains its **first**
 recorded position, and to the door whose polygon it finished nearest (within
-``--reach``). That gives an observed origin->exit matrix directly comparable to
+``--reach``). If the config labels its distributions, the agent's distribution
+comes from the run instead (see below). That gives an observed origin->exit matrix directly comparable to
 the paper's, with two rules that keep the comparison honest:
 
 * Rows are renormalised over the four modelled doors, **per row** -- see
@@ -16,6 +17,17 @@ the paper's, with two rules that keep the comparison honest:
   people by the stage; comparing raw counts would make that row unmatchable.
 * Agents that never reach a door are reported separately and excluded from the
   shares, rather than being silently dropped or counted against a door.
+* Distributions may carry ``parameters.population`` in {"placed", "unplaced",
+  "victim"}; absent means "placed", so a config without labels scores exactly
+  as before. Agents of "unplaced" survivors and of "victim" distributions are
+  excluded from the door matrix, the same-agent set, T1, W and the censored
+  count; the statistics print how many of each label were excluded. (The noise
+  floor resamples Fahy's table, not agents, so it has no agent input.) Because
+  such agents start inside Fahy areas too, a labelled config needs the run's
+  ``agent_distributions`` table, which ``pyfds-evac`` writes into the copied
+  sqlite of a run whose scenario carries a label; a labelled config with a run
+  that lacks it is rejected. Agents the table does not list (flow-spawned)
+  take their area from the polygon and count as placed.
 * Agents still on the grid at the horizon are **censored**: excluded from the
   registered statistics and the same-agent set even when they stand within
   ``--reach`` of a door, and counted beside T1 and W. An agent is censored when
@@ -37,6 +49,13 @@ the table, over the agents of every run given, pooled:
   rows is printed on every line that reports W.
 * The **noise floor** of W: Fahy resampled multinomially against itself, each
   scored row as one multinomial (the pooled small row as one pooled row).
+* Beside T1 and W, over the placed agents that started in a Fahy area: the
+  share **incapacitated** (recorded FED >= 1 at any time, from the run's
+  ``agent_scalars`` table; "n/a" when the run recorded no FED, as in clear air)
+  and the share **censored** at the horizon. This is the dose rule FED >= 1 of
+  the study plan, not the threshold each agent drew in the run, and it
+  counts gas FED only. An incapacitated agent stays on the grid, so it is
+  usually also censored; the overlap is printed.
 * With several runs (one per seed), the per-run spread of T1 and W.
 * With ``--t-jam``, T1 and W for agents whose exit time (their last recorded
   frame) is before t_jam and for those at or after it. The split is
@@ -73,6 +92,9 @@ DOOR_BY_EXIT_ID = {
 # Rows with fewer Fahy door users than this are pooled into POOLED_ROW.
 MIN_DOOR_USERS = 10
 POOLED_ROW = "Pooled small rows"
+PLACED = "placed"
+POPULATIONS = (PLACED, "unplaced", "victim")
+FED_INCAPACITATED = 1.0
 NOISE_DRAWS = 20_000
 
 
@@ -86,6 +108,13 @@ class AgentExit:
     exit_time: float
     start: tuple[float, float]
     censored: bool = False
+    population: str = "placed"
+    incapacitated: bool | None = None
+
+    @property
+    def placed(self) -> bool:
+        """Whether the agent is a placed survivor, scored in the statistics."""
+        return self.population == PLACED
 
 
 def _load(config_path: Path):
@@ -100,6 +129,28 @@ def _load(config_path: Path):
         for k, v in cfg["distributions"].items()
     }
     return exits, areas
+
+
+def config_populations(config_path: Path) -> dict[str, str] | None:
+    """Distribution key -> population label, or None if no distribution has one.
+
+    A distribution without ``parameters.population`` is "placed". An unknown
+    label raises ValueError rather than scoring its agents as placed.
+    """
+    import json
+
+    cfg = json.loads(config_path.read_text())
+    params = {k: v.get("parameters", {}) for k, v in cfg["distributions"].items()}
+    if not any("population" in p for p in params.values()):
+        return None
+    labels = {k: p.get("population", PLACED) for k, p in params.items()}
+    for key, label in labels.items():
+        if label not in POPULATIONS:
+            raise ValueError(
+                f"{config_path}: distribution {key!r} has population {label!r}, "
+                f"expected one of {', '.join(POPULATIONS)}"
+            )
+    return labels
 
 
 def config_horizon(config_path: Path) -> float | None:
@@ -130,8 +181,60 @@ def _fps(con: sqlite3.Connection) -> float:
     return float(row[0])
 
 
+def _area_key(point, areas) -> str | None:
+    return next((key for key, (poly, _) in areas.items() if poly.contains(point)), None)
+
+
 def _origin(point, areas) -> str | None:
-    return next((label for poly, label in areas.values() if poly.contains(point)), None)
+    key = _area_key(point, areas)
+    return None if key is None else areas[key][1]
+
+
+def _has_table(con: sqlite3.Connection, name: str) -> bool:
+    row = con.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = ?", (name,)
+    ).fetchone()
+    return row is not None
+
+
+def _distribution_map(con, sqlite_path: Path, config_path: Path) -> dict[int, str]:
+    """Agent id -> distribution key from the run; error if a labelled config has none."""
+    if not _has_table(con, "agent_distributions"):
+        raise ValueError(
+            f"{config_path} labels its distributions with parameters.population, "
+            f"but {sqlite_path} has no agent_distributions table; rerun it with "
+            "a pyfds-evac that writes one (--output-sqlite)"
+        )
+    rows = con.execute("SELECT id, distribution FROM agent_distributions").fetchall()
+    return {int(aid): dist for aid, dist in rows}
+
+
+def _incapacitated_ids(con: sqlite3.Connection) -> set[int] | None:
+    """Ids whose recorded FED reached 1, or None if the run recorded no FED."""
+    if not _has_table(con, "agent_scalars"):
+        return None
+    rows = con.execute(
+        "SELECT DISTINCT id FROM agent_scalars WHERE fed >= ?", (FED_INCAPACITATED,)
+    ).fetchall()
+    return {int(aid) for (aid,) in rows}
+
+
+def _attribute(aid, start, areas, populations, mapping) -> tuple[str | None, str]:
+    """(origin row, population) of an agent.
+
+    A listed agent takes its origin and population from its distribution. An
+    agent the run does not list (flow-spawned) takes its origin from the
+    polygon it starts in and counts as placed.
+    """
+    from shapely.geometry import Point
+
+    dist = mapping.get(aid) if mapping else None
+    if dist is None:
+        key = _area_key(Point(*start), areas)
+        return (None if key is None else areas[key][1]), PLACED
+    if dist not in areas:
+        raise ValueError(f"agent {aid} starts in distribution {dist!r}, not in config")
+    return areas[dist][1], (populations or {}).get(dist, PLACED)
 
 
 def _door(point, exits, reach: float) -> str | None:
@@ -153,12 +256,19 @@ def observed_agents(
     from shapely.geometry import Point
 
     exits, areas = _load(config_path)
+    populations = config_populations(config_path)
     con = sqlite3.connect(sqlite_path)
-    fps = _fps(con)
-    rows = con.execute(
-        "SELECT id, frame, pos_x, pos_y FROM trajectory_data ORDER BY id, frame"
-    ).fetchall()
-    con.close()
+    try:
+        fps = _fps(con)
+        rows = con.execute(
+            "SELECT id, frame, pos_x, pos_y FROM trajectory_data ORDER BY id, frame"
+        ).fetchall()
+        mapping = (
+            _distribution_map(con, sqlite_path, config_path) if populations else None
+        )
+        incapacitated = _incapacitated_ids(con)
+    finally:
+        con.close()
 
     first: dict[int, tuple[float, float]] = {}
     last: dict[int, tuple[int, float, float]] = {}
@@ -166,21 +276,28 @@ def observed_agents(
         first.setdefault(aid, (x, y))
         last[aid] = (frame, x, y)
     end = _horizon_frame(max((f for f, _, _ in last.values()), default=0), horizon, fps)
-    return [
-        AgentExit(
-            agent_id=aid,
-            origin=_origin(Point(*start), areas),
-            door=_door(Point(*last[aid][1:]), exits, reach),
-            exit_time=last[aid][0] / fps,
-            start=start,
-            censored=last[aid][0] == end,
+    agents = []
+    for aid, start in first.items():
+        origin, population = _attribute(aid, start, areas, populations, mapping)
+        agents.append(
+            AgentExit(
+                agent_id=aid,
+                origin=origin,
+                door=_door(Point(*last[aid][1:]), exits, reach),
+                exit_time=last[aid][0] / fps,
+                start=start,
+                censored=last[aid][0] == end,
+                population=population,
+                incapacitated=None if incapacitated is None else aid in incapacitated,
+            )
         )
-        for aid, start in first.items()
-    ]
+    return agents
 
 
 def _scored(agent: AgentExit, ids, t_from: float, t_to: float) -> bool:
-    if agent.origin is None or agent.door is None or agent.censored:
+    if not agent.placed or agent.origin is None or agent.door is None:
+        return False
+    if agent.censored:
         return False
     if ids is not None and agent.agent_id not in ids:
         return False
@@ -204,13 +321,43 @@ def door_matrix(
 
 def stuck_counts(agents) -> dict[str, int]:
     """Placed agents per origin that never reached a door."""
-    stuck = Counter(a.origin for a in agents if a.origin and a.door is None)
+    stuck = Counter(
+        a.origin for a in agents if a.placed and a.origin and a.door is None
+    )
     return dict(stuck)
 
 
 def censored_count(agents) -> int:
     """Placed agents still on the grid at the horizon."""
-    return sum(1 for a in agents if a.origin and a.censored)
+    return sum(1 for a in agents if a.placed and a.origin and a.censored)
+
+
+def excluded_counts(agents) -> dict[str, int]:
+    """Agents per population label that the statistics leave out."""
+    return dict(Counter(a.population for a in agents if not a.placed))
+
+
+def survivor_outcomes(agents) -> dict[str, int | None]:
+    """Placed survivors in a Fahy area, how many incapacitated or censored.
+
+    ``incapacitated`` is None unless every such agent comes from a run that
+    recorded FED; ``both`` counts agents that are incapacitated and censored.
+    """
+    placed = [a for a in agents if a.placed and a.origin]
+    recorded = all(a.incapacitated is not None for a in placed)
+    incapacitated = [a for a in placed if a.incapacitated]
+    return {
+        "placed": len(placed),
+        "incapacitated": len(incapacitated) if recorded else None,
+        "censored": sum(a.censored for a in placed),
+        "both": sum(a.censored for a in incapacitated) if recorded else None,
+    }
+
+
+def _share(count: int | None, total: int) -> str:
+    if count is None:
+        return "n/a (no FED recorded)"
+    return f"{count / total:.1%} ({count}/{total})" if total else "n/a"
 
 
 def observed_matrix(sqlite_path: Path, config_path: Path, reach: float):
@@ -311,12 +458,17 @@ def noise_floor(
 def _check_same_spawn(a: AgentExit, b: AgentExit | None) -> None:
     if b is None:
         raise ValueError(f"agent {a.agent_id} is missing from the other run")
-    if a.origin != b.origin or math.dist(a.start, b.start) > 1e-6:
+    same_population = a.population == b.population
+    if (
+        not same_population
+        or a.origin != b.origin
+        or math.dist(a.start, b.start) > 1e-6
+    ):
         raise ValueError(f"agent {a.agent_id} spawns differently in the two runs")
 
 
 def _exited(agent: AgentExit) -> bool:
-    return bool(agent.origin and agent.door) and not agent.censored
+    return agent.placed and bool(agent.origin and agent.door) and not agent.censored
 
 
 def same_agents(agents_a, agents_b) -> set[int]:
@@ -448,11 +600,30 @@ def report_statistic(
         f"p95 {floor[int(0.95 * (len(floor) - 1))]:.3f}"
     )
     censored = sum(censored_count(a) for a in runs)
-    placed = sum(1 for a in runs for x in a if x.origin)
+    placed = sum(1 for a in runs for x in a if x.placed and x.origin)
     print(
         f"censored: {censored} of {placed} placed agents still on the grid at the "
         "horizon, excluded from T1 and W"
     )
+    excluded = Counter()
+    for agents in runs:
+        excluded.update(excluded_counts(agents))
+    if excluded:
+        listed = ", ".join(f"{label} {n}" for label, n in sorted(excluded.items()))
+        print(
+            f"excluded by label: {listed}; not in the door matrix, T1, W, the "
+            "same-agent set or the censored count"
+        )
+    flat = [a for agents in runs for a in agents]
+    outcome = survivor_outcomes(flat)
+    total = outcome["placed"]
+    print(
+        f"placed survivors incapacitated (FED >= 1): "
+        f"{_share(outcome['incapacitated'], total)}; "
+        f"censored at the horizon: {_share(outcome['censored'], total)}"
+    )
+    if outcome["both"]:
+        print(f"    {outcome['both']} of them are both (an incapacitated agent stays)")
     missing = empty_rows(pooled, targets)
     if missing:
         print(f"    rows without a model door user (distance 1): {', '.join(missing)}")

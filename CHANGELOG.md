@@ -16,6 +16,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- A distribution may carry `parameters.population` in `placed`,
+  `unplaced` or `victim` (absent means `placed`). For a scenario with such
+  a label, `--output-sqlite` adds an `agent_distributions(id,
+  distribution)` table to the trajectory file, and
+  `assets/station_fahy/validate.py` leaves `unplaced` and `victim` agents
+  out of T1, W, the same-agent set and the censored count, prints how many
+  it excluded, and reports the shares of placed survivors incapacitated
+  (recorded FED >= 1) and censored at the horizon. Runs without a label
+  are scored and written as before (#383).
 - `--output-pre-evacuation-times CSV` writes one row per agent with a
   pre-movement time: `agent_id`, `distribution`, `premovement_time_s`
   and `movement_start_s` (empty if never released); from Python,
