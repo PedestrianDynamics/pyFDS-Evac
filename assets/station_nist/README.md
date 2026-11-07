@@ -22,11 +22,31 @@ hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 
 ## Status
 
-Clear-air runs on seeds 4-23 place all 333 agents but **none ends by
-evacuation**: 15 stop in a deadlock report (3-6 agents left), 3 reach the 600 s
-cap (6-7 left) and 2 (seeds 7 and 23) stop with JuPedSim's "outside of
-accessible area" at (16.03, -13.52) and (-5.14, -6.53). Acceptance item 2 is
-not met; see "Open: stalls at narrow passages".
+Clear-air runs on seeds 4-23 (WarpDriver, `w_queue = 0`, radius unchanged)
+place all 333 agents. **19 of 20 end by evacuation** (96.7-121.8 s, median
+106.0 s); none deadlocks and none reaches the 600 s cap. Seed 14 stops with
+JuPedSim's "Point (16.955, -13.426) is outside of accessible area" at a notch
+of the platform-door recess, 0.2 mm from the wall: the known upstream defect
+(jupedsim#1720), not patched around. No Fahy outcome was used to choose any of
+this (no T1, T2 or W).
+
+## Clearance floor and disclosure
+
+Every opening agents use is at least **0.90 m**, and the front interior door is
+0.91 m. The NCSTAR door widths are 0.81-0.91 m. WarpDriver (JuPedSim 1.4.2) does
+not pass agents of radius up to 0.23 m through narrower openings
+(jupedsim#1719), so a narrower real door cannot be modelled as it is. `station_fahy`
+has the same 0.9 m floor (`simplify_doors.py`).
+
+> Openings narrower than 0.9 m in the NIST-derived deck are widened to 0.9 m
+> (NCSTAR door widths are 0.81-0.91 m) because WarpDriver (JuPedSim 1.4.2) does
+> not pass agents with radius up to 0.23 m through narrower openings
+> (jupedsim#1719); bar service wells hold no agents. Egress times through these
+> openings are therefore not limited by their real width.
+
+Fixture passages under 0.9 m that are not the only access are sealed; bar
+service wells (the main-bar well behind the horseshoe counter and the rear-bar
+well behind the L-shaped counter, x 1.75-4.85, y -4.0...-1.5) hold no agents.
 
 ## Frame
 
@@ -62,49 +82,80 @@ Gate: each at most 0.5 m or listed with a reason.
 
 ## Gap table
 
-Every opening under 0.9 m in the extraction (24 of them), classified once from
-the extraction, before any run. `extracted` is the chord found by
-`simplify_doors.find_passages`; the extractor widens the thin jamb markers by
-0.05 m per side, so a doorway loses 0.10 m.
+Every opening under 0.90 m on the extracted floor, classified once and then
+settled. The floor is the extraction with baseboards (`A-WDWK-BAY`) and toe
+kicks (`A-CASE-TOEA`) left out (`extract_walkable.py --ignore-layer`; they
+are 0.1 m proud of walls and counters, and narrowed every doorway they border),
+regularised (below). `geometry.wkt` of `assets/station` is not touched.
 
-- **door**: a deck door leaf (`A-DOOR-STND-1`, `door 5i`) within 0.5 m, or the
-  trimmed doorway at (2.32, -13.27). Restored to the extracted chord plus 0.10 m
-  (the deck's clear width). The front interior door is set to **0.91 m**
-  (NCSTAR 914 mm; deck leaves at x 2.97 and 3.88).
-- **fixture**: casework or a wall opening without a leaf. Left as extracted.
-- **sealed**: narrower than the cap diameter, 0.46 m (radius 0.20 + 3 x 0.01,
-  times two). M2 sealed only slits under 0.2 m; the first ten-seed run on that
-  rule left agents stuck at the 0.27, 0.30 and 0.39 m openings, so the
-  threshold is the diameter an agent needs. This is a deviation from M2.
+- **door**: a deck door leaf (`A-DOOR-STND-1`, `door 5i`) within 0.5 m, or
+  door trim (`A-WDWK-TRIM`) on both jambs with no leaf. The geometric test
+  finds the trim-framed openings at (-5.6, -6.6), (-3.4, 1.9) and (2.3, -13.3)
+  without a coordinate list. Set to 0.90 m; the front interior door to 0.91 m
+  (NCSTAR 914 mm, between its leaves at x 2.97 and 3.88).
+- **sealed, slit**: a chord under the cap diameter, 0.46 m (radius 0.20 + 3 x
+  0.01, times two), that is not a door. M2 sealed under 0.2 m; the first ten-seed
+  run on that rule left agents stuck at 0.27, 0.30 and 0.39 m openings.
+- **fixture**: casework, a speaker or a wall end, 0.46 m or wider and under
+  0.90 m. Sealed unless sealing cuts off floor in use (an area, an exit strip or
+  a checkpoint, at least 0.314 m2); then it is the only access and is widened to
+  0.90 m (`only access`). The sealed ones cut off the main-bar and rear-bar
+  service wells and a few notches.
 
-`simplify_doors.py` is not run on this geometry.
+The gap finder (`simplify_doors.find_passages`) keeps one chord per 1.2 m, so a
+narrow opening hides a wider one next to it, and a cut across a diagonal door
+leaves a narrower chord beside it. Each pass settles what the finder shows and
+looks again; passes 2-4 are those residual chords. The build stops with an
+error if any opening is still under 0.899 m after eight passes.
 
-| x | y | extracted | class | final | deck door leaf |
-|---|---|---|---|---|---|
-| -11.18 | -4.37 | 0.71 | door | 0.81 | A-DOOR-STND-1 |
-| -9.93 | -1.20 | 0.71 | door | 0.81 | A-DOOR-STND-1 |
-| -5.81 | -1.91 | 0.70 | door | 0.80 | door 5i |
-| -5.62 | -6.64 | 0.49 | fixture | 0.49 |  |
-| -4.96 | 1.63 | 0.53 | door | 0.63 | A-DOOR-STND-1 |
-| -3.41 | 1.85 | 0.71 | fixture | 0.71 |  |
-| -2.20 | -0.47 | 0.58 | door | 0.68 | A-DOOR-STND-1 |
-| -0.40 | -0.61 | 0.61 | fixture | 0.61 |  |
-| 0.74 | -10.37 | 0.39 | sealed | sealed |  |
-| 0.94 | -7.56 | 0.52 | fixture | 0.52 |  |
-| 2.09 | -2.69 | 0.60 | fixture | 0.60 |  |
-| 2.32 | -13.27 | 0.71 | door | 0.81 |  |
-| 2.49 | -4.43 | 0.52 | fixture | 0.52 |  |
-| 3.44 | -14.38 | 0.85 | door | 0.91 | A-DOOR-STND-1 |
-| 3.44 | -11.71 | 0.30 | sealed | sealed |  |
-| 4.88 | -0.70 | 0.68 | door | 0.78 | A-DOOR-STND-1 |
-| 4.92 | 1.50 | 0.71 | door | 0.81 | A-DOOR-STND-1 |
-| 6.73 | -4.82 | 0.03 | sealed | sealed |  |
-| 14.36 | -4.79 | 0.05 | sealed | sealed |  |
-| 14.38 | -3.07 | 0.61 | fixture | 0.61 |  |
-| 14.79 | -12.04 | 0.69 | fixture | 0.69 |  |
-| 14.92 | -10.27 | 0.27 | sealed | sealed |  |
-| 16.04 | -12.98 | 0.66 | door | 0.76 | A-DOOR-STND-1 |
-| 17.31 | -12.98 | 0.44 | door | 0.54 | A-DOOR-STND-1 |
+`measured` is `find_passages` on the final floor within 0.7 m of the row (the
+narrowest chord there; the front interior door is the cut along its line,
+y -14.36). It is not the cut width. `over 1.6` means the cut opened a recess
+wider than the finder's 1.6 m limit. Verified: `find_passages(final, 0.899)`
+returns nothing, apart from the front interior door that is checked along its
+line at 0.91 m (`tests/test_station_nist.py`).
+
+| pass | x | y | extracted | class | basis | final | measured |
+|---|---|---|---|---|---|---|---|
+| 0 | 3.42 | -14.36 | 0.81 | door | A-DOOR-STND-1 | 0.91 | 0.910 |
+| 1 | -11.18 | -4.39 | 0.84 | door | A-DOOR-STND-1 | 0.90 | 0.901 |
+| 1 | -9.90 | -1.21 | 0.80 | door | A-DOOR-STND-1 | 0.90 | 0.900 |
+| 1 | -5.82 | -1.91 | 0.69 | door | door 5i | 0.90 | 1.005 |
+| 1 | -5.59 | -6.56 | 0.54 | door | trim | 0.90 | over 1.6 |
+| 1 | -5.01 | 1.64 | 0.55 | door | A-DOOR-STND-1 | 0.90 | 0.950 |
+| 1 | -3.38 | 1.85 | 0.84 | door | trim | 0.90 | 0.900 |
+| 1 | -2.29 | -0.46 | 0.69 | door | A-DOOR-STND-1 | 0.90 | 0.900 |
+| 1 | -0.32 | -0.61 | 0.53 | sealed | fixture | sealed | sealed |
+| 1 | 0.68 | -10.37 | 0.39 | sealed | slit | sealed | sealed |
+| 1 | 0.94 | -7.56 | 0.53 | sealed | fixture | sealed | sealed |
+| 1 | 2.09 | -2.65 | 0.60 | sealed | fixture | sealed | sealed |
+| 1 | 2.34 | -13.27 | 0.72 | door | trim | 0.90 | 0.900 |
+| 1 | 2.49 | -4.59 | 0.52 | sealed | fixture | sealed | sealed |
+| 1 | 3.39 | -11.74 | 0.35 | sealed | slit | sealed | sealed |
+| 1 | 4.88 | 1.52 | 0.76 | door | A-DOOR-STND-1 | 0.90 | 0.900 |
+| 1 | 4.93 | -0.72 | 0.73 | door | A-DOOR-STND-1 | 0.90 | 0.900 |
+| 1 | 6.73 | -4.81 | 0.04 | sealed | slit | sealed | sealed |
+| 1 | 14.36 | -4.79 | 0.05 | sealed | slit | sealed | sealed |
+| 1 | 14.38 | -3.07 | 0.62 | fixture | only access | 0.90 | 0.957 |
+| 1 | 14.85 | -12.04 | 0.69 | sealed | fixture | sealed | sealed |
+| 1 | 14.92 | -10.27 | 0.27 | sealed | slit | sealed | sealed |
+| 1 | 16.00 | -12.97 | 0.68 | door | A-DOOR-STND-1 | 0.90 | 0.909 |
+| 1 | 17.21 | -13.04 | 0.57 | door | A-DOOR-STND-1 | 0.90 | 0.979 |
+| 2 | -5.81 | -1.94 | 0.76 | door | door 5i | 0.90 | 1.005 |
+| 2 | -5.63 | -6.94 | 0.65 | fixture | only access | 0.90 | 0.959 |
+| 2 | -5.03 | 1.63 | 0.66 | door | A-DOOR-STND-1 | 0.90 | 0.950 |
+| 2 | 3.87 | -12.47 | 0.85 | sealed | fixture | sealed | sealed |
+| 2 | 14.68 | -3.07 | 0.62 | fixture | only access | 0.90 | 0.957 |
+| 2 | 15.50 | -13.00 | 0.73 | fixture | only access | 0.90 | 0.909 |
+| 2 | 17.07 | -12.96 | 0.79 | door | A-DOOR-STND-1 | 0.90 | 0.979 |
+| 3 | -5.57 | -7.41 | 0.78 | fixture | only access | 0.90 | 0.959 |
+| 3 | -4.95 | 2.61 | 0.81 | door | A-DOOR-STND-1 | 0.90 | 1.058 |
+| 3 | 4.08 | -11.94 | 0.84 | fixture | only access | 0.90 | 0.900 |
+| 3 | 14.23 | -3.14 | 0.80 | fixture | only access | 0.90 | 1.361 |
+| 3 | 15.09 | -13.04 | 0.85 | fixture | only access | 0.90 | 0.909 |
+| 3 | 16.46 | -13.44 | 0.78 | door | A-DOOR-STND-1 | 0.90 | over 1.6 |
+| 4 | -5.52 | -6.45 | 0.84 | fixture | only access | 0.90 | over 1.6 |
+| 4 | 15.07 | -3.17 | 0.87 | fixture | only access | 0.90 | 0.957 |
 
 ## Areas
 
@@ -114,28 +165,31 @@ pi x r^2 per agent at r = 0.20 m. Headroom is area over need.
 
 | area | n | m2 | need 1x | headroom |
 |---|---|---|---|---|
-| Near stage or on dance floor | 75 | 43.3 | 23.6 | 1.84 |
-| Behind dance floor | 74 | 46.6 | 23.2 | 2.01 |
-| Center stage-side | 7 | 9.1 | 2.2 | 4.14 |
-| Stage | 4 | 15.2 | 1.3 | 12.06 |
+| Near stage or on dance floor | 75 | 41.9 | 23.6 | 1.78 |
+| Behind dance floor | 74 | 46.5 | 23.2 | 2.00 |
+| Center stage-side | 7 | 6.0 | 2.2 | 2.72 |
+| Stage | 4 | 15.3 | 1.3 | 12.18 |
 | Back wall platform | 15 | 9.5 | 4.7 | 2.01 |
-| Main bar | 37 | 39.7 | 11.6 | 3.41 |
-| Between bars | 29 | 27.7 | 9.1 | 3.04 |
-| Rear bar / dart room | 28 | 12.8 | 8.8 | 1.46 |
-| Back hallway | 14 | 8.2 | 4.4 | 1.86 |
-| Entryway | 17 | 9.6 | 5.3 | 1.79 |
-| Sunroom | 16 | 37.7 | 5.0 | 7.51 |
-| Near stage door | 17 | 12.5 | 5.3 | 2.35 |
+| Main bar | 37 | 40.0 | 11.6 | 3.44 |
+| Between bars | 29 | 27.9 | 9.1 | 3.06 |
+| Rear bar / dart room | 28 | 13.1 | 8.8 | 1.49 |
+| Back hallway | 14 | 8.4 | 4.4 | 1.90 |
+| Entryway | 17 | 9.6 | 5.3 | 1.80 |
+| Sunroom | 16 | 37.8 | 5.0 | 7.51 |
+| Near stage door | 17 | 13.3 | 5.3 | 2.49 |
 
 
 Recorded choices:
 
+- **Center stage-side**: the rear-bar well overlapped it by 2.7 m2; the well is
+  cut off by sealing its 0.60 m and 0.52 m gates and is also subtracted from every
+  area (`SERVICE_WELLS`), leaving 6.0 m2 for 7 agents.
 - **Main bar**: the extra 11.2 m2 the NIST clip adds over the hand clip is the
   bartender well inside the horseshoe counter (`A-CASE-CNTR-1`, `A-CASE-CABN-1`
   and the full-height wall at y -9.51), reached only through a 0.39 m opening.
   It is not bar floor. The opening is sealed, so the well is not walkable.
 - **Rear bar / dart room**: east edge -8.0 (the Fahy plan), not the -6.0 of the
-  hand deck (#380). The largest part is 12.8 m2 (13.9 m2 over three parts).
+  hand deck (#380). The largest part is 13.1 m2 (14.5 m2 over two parts).
 - **Entryway**: the ticket-area part, x 4.5-6.8, unclipped. The vestibule part
   (x 2.1-4.3, 8.1 m2) is the alternative. Agents in the ticket area reach the
   front exit only through the 0.91 m interior door at y -14.36
@@ -187,18 +241,37 @@ with mitred corners before the gap table is applied.
   and JuPedSim stops with "Point (...) is outside of accessible area". On the
   unmodified extraction that ended 12 of 20 runs within two minutes, most at the front
   interior door.
+- **Effect on doors**: it also widens openings framed by 0.1 m thick trim; the
+  front interior door goes from 0.814 m to 0.935 m. The build sets that door
+  back to 0.91 m between its leaves, and the gap table is classified after
+  this step, so its widths are those of the regularised floor.
 - **Affected versions**: jupedsim 1.4.2 with WarpDriverModel.
-- **Upstream issue**: none yet.
+- **Upstream issue**: jupedsim#1720 (a centre crossing a wall at a notch); no
+  separate issue for the regularisation.
 - **Regression test**: `tests/test_station_nist.py::test_the_files_are_what_the_build_script_writes`
   pins the regularised file; the ten-seed run is the behavioural check.
 - **Removal condition**: JuPedSim tolerates agents against sub-centimetre
   corners, or the extractor stops emitting the trim.
 
-## Open: stalls at narrow passages
+## Open
 
-With the gap table above, seeds 4-23 leave 1-7 agents at four passages that
-are narrower than 0.65 m and were classified `fixture`: the casework at
-(2.49, -4.43) and (2.09, -2.69), and the wall openings at (-5.62, -6.64) and
-(0.94, -7.56) in front of the kitchen door. Opening those four and two more to
-0.9 m as a diagnostic still leaves 1-5 agents stuck at (2.3, -3.5), (3.1, -3.5)
-and near the platform door. Radius and `w_queue` were not touched.
+- **jupedsim#1720** ends seed 14 (1 of 20): a centre crosses the wall at a
+  notch of the platform-door recess at (16.955, -13.426), the openings there
+  measure 0.91 m ((16.0, -12.97)) and 0.98 m ((17.2, -13.04)). Recorded, not
+  patched.
+- **jupedsim#1719**: the 0.9 m floor exists because of it. Egress times through
+  the widened doors and the passages sealed or widened as "only access" are
+  therefore not limited by the real width; remove the floor when upstream passes
+  these agents through the real 0.52-0.77 m openings.
+- An earlier version of this README said that opening six passages to 0.9 m
+  still left stalls. That was false: the openings it called 0.9 m measured
+  0.52-0.68 m at their narrowest, because the cutter's target was taken for the
+  measured width. Widths in the gap table are measured on the final floor with
+  `find_passages`.
+- Passes 2-4 of the gap table list chords the finder showed only after an
+  earlier cut (a diagonal door, a speaker corner). Several are
+  `only access` widenings at the speaker next to the stage-right room
+  ((14.4, -3.1)) and the platform-door recess; the floor there is cut wider than
+  the deck. No seed deadlocks at any of them.
+- Docs: the plan's "0.81 m gap" wording and Placement row; the walkable README
+  (extraction narrows doorways; confirm "Kitchen Exit Door" coordinates).
