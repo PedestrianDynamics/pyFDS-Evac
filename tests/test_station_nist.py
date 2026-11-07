@@ -247,7 +247,7 @@ DROPPED = {  # m2 of each translated rectangle that no area keeps (README, Areas
     "Back wall platform": 2.5,
     "Main bar": 0.3,
     "Between bars": 0.0,
-    "Rear bar / dart room": 1.4,
+    "Rear bar / dart room": 2.6,
     "Back hallway": 0.1,
     "Entryway": 8.3,
     "Sunroom": 0.0,

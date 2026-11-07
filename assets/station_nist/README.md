@@ -182,7 +182,7 @@ fails there.
 | Back wall platform | 15 | 9.5 | 4.7 | 2.01 | 2.5 |
 | Main bar | 37 | 40.0 | 11.6 | 3.44 | 0.3 |
 | Between bars | 29 | 27.9 | 9.1 | 3.06 | 0.0 |
-| Rear bar / dart room | 28 | 13.1 | 8.8 | 1.49 | 1.4 |
+| Rear bar / dart room | 28 | 17.2 | 8.8 | 1.95 | 2.6 |
 | Back hallway | 14 | 8.4 | 4.4 | 1.90 | 0.1 |
 | Entryway | 17 | 9.6 | 5.3 | 1.80 | 8.3 |
 | Sunroom | 16 | 37.8 | 5.0 | 7.51 | 0.0 |
@@ -198,8 +198,10 @@ Recorded choices:
   bartender well inside the horseshoe counter (`A-CASE-CNTR-1`, `A-CASE-CABN-1`
   and the full-height wall at y -9.51), reached only through a 0.39 m opening.
   It is not bar floor. The opening is sealed, so the well is not walkable.
-- **Rear bar / dart room**: east edge -8.0 (the Fahy plan), not the -6.0 of the
-  hand deck (#380). The largest part is 13.1 m2 (14.5 m2 over two parts).
+- **Rear bar / dart room**: east edge -6.0, the hand deck's value (#380), so both
+  decks use the same rectangle (maintainer decision 2026-11-07). The earlier -8.0
+  left 13.1 m2, which held 28 agents but not the 38 of `config_full.json`
+  (13 of 20 seeds failed to place them). The largest part is 17.2 m2.
 - **Entryway**: the ticket-area part, x 4.5-6.8, unclipped. The vestibule part
   (x 2.1-4.3, 8.1 m2) is the alternative. Agents in the ticket area reach the
   front exit only through the 0.91 m interior door at y -14.36
@@ -212,7 +214,7 @@ Recorded choices:
   is cut off by the sealed slit at (6.73, -4.81) and dropped.
 - **Isolated floor**: the extraction keeps the largest enclosed region. Two
   regions it leaves out overlap rectangles and are recorded in `ISOLATED`: a
-  closed 3.0 m2 room west of the dart room (1.4 m2 of it inside the Rear bar /
+  closed 3.0 m2 room west of the dart room (0.9 m2 of it inside the Rear bar /
   dart room rectangle) and an enclosed 0.36 m2 pocket in the Main bar rectangle.
   Any other isolated floor in use stops the build.
 - Under the 2x gate of the contract (2 x n x 0.314 m2) four areas fall short
