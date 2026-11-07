@@ -16,7 +16,9 @@ shrink -- :func:`build` refuses to continue when an area cannot hold its
 occupants.
 
 Frame note: the exits were deliberately pushed outside the building so agents
-keep walking after leaving, which makes the outdoor apron walkable too. Areas
+keep walking after leaving, which makes the outdoor apron walkable too (the
+front exit is the exception: it sits on the doorway line, see
+``build_scenario.FRONT_EXIT_POLYGON``). Areas
 are therefore clipped to :func:`building_interior` and not to the walkable area:
 clipped to the latter, six of these twelve rectangles reached past a wall and
 started about a quarter of the crowd in the open air.

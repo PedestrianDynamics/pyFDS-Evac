@@ -3,10 +3,14 @@
 
     .venv/bin/python scripts/sweep_queue_weight.py
 
-The Station asset ships ``routing.w_queue = 0.024`` -- its own calibration,
-since the library default is 0. This script overrides that value per variant:
-it writes one scenario bundle per (w_queue, seed) into the
-output directory -- the committed asset is never edited -- runs each with
+The Station assets ship ``routing.w_queue = 0``, the library default; 0.024
+is the hand deck's earlier calibration and its labelled sensitivity
+(``build_scenario.py --w-queue 0.024 --out DIR``). This script overrides the
+shipped value per variant. It starts from ``config.json``, so since the V0
+settings every variant also carries the front-door closure at 86 s, the
+pre-movement bands and the 250 s horizon, and its shares are not comparable
+with those of earlier runs. It writes one scenario bundle per (w_queue, seed)
+into the output directory -- the committed asset is never edited -- runs each with
 ``run.py``, and scores it with ``assets/station_fahy/validate.py``'s own
 ``observed_matrix``, so the curve is directly comparable to the shares reported
 in the validation table.

@@ -445,9 +445,14 @@ library ships no congestion weight at all, and the calibrated value lives with
 the deck it was calibrated on. Issue #89 tracks replacing the global `N` with a
 queue the agent can perceive, which would remove the scale dependence.
 
-**`assets/station_fahy` ships `w_queue = 0.024`, fitted under the additive
-model on an older geometry; at 0.5.0 it gives a front-door share of 34.8 %
-against Fahy's 52.9 %, so it no longer reproduces Fahy's split.** The 0.03
+**`assets/station_fahy` and `assets/station_nist` ship `w_queue = 0` (the
+Station V0 configs). 0.024, the value this section is about, is the labelled
+sensitivity `build_scenario.py --w-queue 0.024 --out DIR`. It was fitted under
+the additive model on an older geometry; at 0.5.0 it gives a front-door share
+of 34.8 % against Fahy's 52.9 %, so it no longer reproduces Fahy's split.**
+Since the V0 configs, a rerun of the sweep below also carries the front-door
+closure at 86 s, the pre-movement bands and the 250 s horizon, so it is not
+comparable with the numbers in this section. The 0.03
 below was swept against a geometry whose doorways were narrower than the
 building's; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy's 52.9 %.
@@ -478,8 +483,9 @@ re-fitted there.
 #### Provenance of the Station's queue weight
 
 Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck now ships 0.024 and why
-neither value has been re-fitted under the gate cost model.
+selected 0.03; see the caveats above for why the deck shipped 0.024 and why
+neither value has been re-fitted under the gate cost model. The sweep
+overrides whatever `w_queue` the deck ships.
 `scripts/sweep_queue_weight.py` sweeps the
 weight on `assets/station_fahy` with rerouting on, three seeds per
 point, and scores each run with that asset's own `validate.py`. The
