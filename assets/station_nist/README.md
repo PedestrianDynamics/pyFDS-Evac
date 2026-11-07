@@ -98,8 +98,9 @@ regularised (below). `geometry.wkt` of `assets/station` is not touched.
   run on that rule left agents stuck at 0.27, 0.30 and 0.39 m openings. A slit
   gets no only-access check, so the build stops if sealing one cuts off more
   than 0.314 m2 of floor in use, unless that floor is recorded in `CUT_OFF`: the
-  main-bar service well (behind the 0.39 m gap at (0.68, -10.37)) and a 0.5 m2
-  niche behind the 0.30 m gap at (3.39, -11.74).
+  main-bar service well (behind the 0.39 m gap at (0.68, -10.37), at most
+  12 m2) and a 0.5 m2 niche behind the 0.30 m gap at (3.39, -11.74), at most
+  0.6 m2.
 - **fixture**: casework, a speaker or a wall end, 0.46 m or wider and under
   0.90 m. Sealed unless sealing cuts off floor in use (an area, an exit strip or
   a checkpoint, at least 0.314 m2); then it is the only access and is widened to
@@ -237,8 +238,9 @@ deck: `cfg["routing"] = {"w_queue": 0.024}`.
 
 ## Geometry regularisation (workaround record)
 
-`build_scenario.regularise` closes and opens the extracted polygon by 0.045 m
-with mitred corners before the gap table is applied.
+`build_scenario.regularise` closes the extracted polygon by 0.045 m and then
+opens it by 0.015 m, with mitred corners, before the gap table is applied. It
+keeps the largest part; the build stops if that drops floor in use.
 
 - **Reason**: the CAD trim around door jambs and wall ends leaves teeth and
   floor slivers 5 mm to 5 cm wide. An agent pushed against one lands inside it

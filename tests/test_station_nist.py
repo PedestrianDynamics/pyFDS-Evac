@@ -217,3 +217,23 @@ def test_sealing_a_slit_that_cuts_off_floor_in_use_stops_the_build(nist, monkeyp
     row = {"x": 4.3, "y": 1.0, "class": "sealed"}
     with pytest.raises(SystemExit, match="cuts off floor in use"):
         nist.apply_gap_table(walkable, [row])
+
+
+def test_regularising_that_drops_floor_in_use_stops_the_build(nist, monkeypatch):
+    """Two rooms behind a 0.2 m wall, joined by a 2 cm sliver: regularising keeps
+    only one of them."""
+    west, east = box(0, 0, 4, 2), box(4.2, 0, 8.2, 2)
+    walkable = unary_union([west, east, box(4, 0.99, 4.2, 1.01)])
+    monkeypatch.setattr(nist, "_used_floor", lambda: unary_union([west, east]))
+    with pytest.raises(SystemExit, match="cuts off floor in use"):
+        nist.regularise(walkable)
+
+
+def test_a_recorded_cut_off_point_does_not_exempt_a_larger_part(nist, monkeypatch):
+    """The main-bar well point inside a 25 m2 lost part is not an exemption."""
+    (x, y), _ = next(iter(nist.CUT_OFF.items()))
+    room = box(x - 2.5, y - 2.5, x + 2.5, y + 2.5)
+    kept = box(x + 3.1, y - 2.5, x + 13.1, y + 2.5)
+    monkeypatch.setattr(nist, "_used_floor", lambda: room)
+    with pytest.raises(SystemExit, match="cuts off floor in use"):
+        nist._check_cut_off(unary_union([room, kept]), kept)

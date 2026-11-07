@@ -97,11 +97,15 @@ FRONT_DOOR_LINE_Y = -14.36
 # Bar service wells hold no agents. The main-bar well is cut off by its sealed
 # slits; the rear-bar well behind the L-shaped counter is named here.
 SERVICE_WELLS = (box(1.75, -4.0, 4.85, -1.5),)
-# Floor in use that sealing cuts off on purpose, by a point inside it. Any other
-# cut-off floor in use stops the build (:func:`_check_cut_off`).
+# Floor in use that the build cuts off on purpose: a point inside it, the largest
+# area it may have (m2) and why. Any other cut-off floor in use, or a larger part
+# around one of these points, stops the build (:func:`_check_cut_off`).
 CUT_OFF = {
-    (-1.84, -11.54): "main-bar service well, behind the 0.39 m gap at (0.68, -10.37)",
-    (2.83, -11.98): "0.5 m2 niche behind the 0.30 m gap at (3.39, -11.74)",
+    (-1.84, -11.54): (
+        12.0,
+        "main-bar service well, behind the 0.39 m gap at (0.68, -10.37)",
+    ),
+    (2.83, -11.98): (0.6, "0.5 m2 niche behind the 0.30 m gap at (3.39, -11.74)"),
 }
 
 # The Rear bar / dart room east edge is the Fahy plan's -8.0, not the -6.0 of
@@ -309,10 +313,11 @@ def apply_gap_table(walkable: Polygon, rows: list[dict], reach: float = 0.25):
 
 
 def _check_cut_off(before: Polygon, kept: Polygon) -> None:
-    """Stop if sealing cut off more than one agent's floor in use, unless recorded.
+    """Stop if a step cut off more than one agent's floor in use, unless recorded.
 
-    A slit is sealed without the only-access check of a fixture clearance, so
-    floor an area relies on could otherwise vanish with the smaller parts.
+    Regularising and sealing a slit keep the largest part without the
+    only-access check of a fixture clearance, so floor an area relies on could
+    otherwise vanish with the smaller parts.
     """
     used = _used_floor()
     lost = before.difference(kept)
@@ -320,7 +325,10 @@ def _check_cut_off(before: Polygon, kept: Polygon) -> None:
     for part in getattr(lost, "geoms", [lost]):
         if part.intersection(used).area <= USED_FLOOR_MIN:
             continue
-        if any(part.buffer(1e-6).contains(Point(p)) for p in CUT_OFF):
+        if any(
+            part.area <= most and part.buffer(1e-6).contains(Point(p))
+            for p, (most, _) in CUT_OFF.items()
+        ):
             continue
         c = part.representative_point()
         unrecorded.append((round(c.x, 2), round(c.y, 2), round(part.area, 2)))
@@ -432,7 +440,9 @@ def regularise(walkable: Polygon, reach: float = THIN_FEATURE / 2) -> Polygon:
     """
     closed = walkable.buffer(reach, join_style=2).buffer(-reach, join_style=2)
     opened = closed.buffer(-reach / 3, join_style=2).buffer(reach / 3, join_style=2)
-    return largest(opened)
+    kept = largest(opened)
+    _check_cut_off(opened, kept)
+    return kept
 
 
 def final_walkable() -> tuple[Polygon, list[dict]]:
@@ -453,7 +463,9 @@ def final_walkable() -> tuple[Polygon, list[dict]]:
             return floor, rows
         for row in new:
             row["pass"] = round_ + 1
-        floor = largest(apply_gap_table(floor, new, reach=0.25 * (round_ + 1)))
+        settled = apply_gap_table(floor, new, reach=0.25 * (round_ + 1))
+        floor = largest(settled)
+        _check_cut_off(settled, floor)
         rows += new
     left = [
         (round(m.x, 2), round(m.y, 2), round(w, 3))
