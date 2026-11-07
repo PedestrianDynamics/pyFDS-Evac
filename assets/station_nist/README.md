@@ -1,9 +1,8 @@
 # Station, Fahy Table 2 on the NIST-derived geometry
 
-**Station-derived geometry (provenance unverified).** The walkable area comes
-from `assets/station/Station210_clean.fds`; where that deck came from, and what
-was dropped or changed relative to NCSTAR Appendix L2.2, is not documented yet
-(#377).
+**NCSTAR 2 App. L.2.2 deck (FDS 4.0), transcribed; transcriber undocumented.** The walkable area comes from
+`assets/station/Station210_clean.fds`; its provenance is in
+[`assets/station/README.md`](../station/README.md#provenance) (#377).
 
 The same 333 survivors, familiarity classes and agent parameters as
 [`station_fahy`](../station_fahy/), on the NIST geometry instead of the

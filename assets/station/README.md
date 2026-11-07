@@ -1,8 +1,6 @@
 # The Station nightclub — walkable area
 
-**Station-derived geometry (provenance unverified).** Where
-`Station210_clean.fds` came from, and what was dropped or changed relative to
-NCSTAR Appendix L2.2, is not documented yet (#377).
+**NCSTAR 2 App. L.2.2 deck (FDS 4.0), transcribed; transcriber undocumented.** See [Provenance](#provenance) (#377).
 
 `geometry.wkt` is **derived from `Station210_clean.fds`**, the NIST model, not
 reconstructed by hand:
@@ -50,7 +48,10 @@ Useful when placing exit stages by hand — this is transcription, not guesswork
 | `FRONT DOOR` | x 2.44–4.34, y ≈ −17.3 | Front Entrance Doors |
 | `SIDE DOOR` | x ≈ −6.0, y −8.6…−7.6 | Kitchen Exit Door |
 | `SIDE DOOR` | x ≈ −6.0, y −13.5…−12.5 | Main Bar Side Exit Door |
-| `back door qqq` / `www` | x ≈ 17.7, y −11.4 / −12.4 | Platform Exit Door |
+| `BACK` | x ≈ 17.7, y −12.38…−11.39 (`T_REMOVE=29`, `SURF_ID='FOAM'`) | Platform Exit Door |
+
+`back door qqq` and `back door www` are the 0.1 m jambs either side of `BACK`
+(y −11.39…−11.29 and −12.48…−12.38), not the door.
 
 Windows are **not** exits here, though 27.9 % of survivors left by one. That
 limitation is discussed in the validation spec, not worked around.
@@ -110,13 +111,53 @@ woodwork are obstacles; floors, ceilings, carpet, stair treads and risers are
 not. `--report` prints the per-layer footprint and verdict so the classification
 can be audited rather than trusted.
 
-## What is not settled
+## The 412 m² figure
 
-The area is **412.8 m²**. Do not read the coincidence with the "412 m² footprint"
-figure quoted in the validation spec as confirmation: a *walkable* area must be
-smaller than a *gross* footprint once walls and casework are removed, so the two
-cannot both be right about the same thing. Either that figure covers something
-else, or it needs rechecking against NCSTAR directly. It has not been.
+The area is **412.8 m²**. The "412 m²" quoted in the validation spec is the
+gross footprint of NCSTAR 2 Vol. I §1.2 (p. 1-1), "about 412 m² (4484 ft²)",
+whose own conversion is inconsistent (4484 ft² is 416.6 m²); Vol. I Table 7-4
+(p. 7-16) totals 406 m² of use areas. Neither is a walkable area, so the match
+with 412.8 m² confirms nothing.
+
+## Provenance
+
+What is established, from published sources:
+
+- `Station210_clean.fds` is the listing in NIST NCSTAR 2 Vol. II, Appendix L.2.2,
+  "Full Nightclub, Un-sprinklered" (pp. L-17 to L-59, `CHID='Station210'`,
+  FDS 4.0; [doi:10.6028/NIST.NCSTAR.2v2](https://doi.org/10.6028/NIST.NCSTAR.2v2)).
+  Header, the 8 meshes, `REAC`, the 6 `SURF`, 15 `RAMP`, 10 `VENT`, 48 `SLCF`
+  and every `T_REMOVE` match the print in order. Only `CHID` was renamed.
+  `T_REMOVE` matches Vol. I Table 5-6.
+- It is still FDS 4 syntax (`&GRID`/`&PDIM`, `TWFIN`) and does not run in FDS 6.
+- The print repeats many `OBST` lines verbatim, up to 17 times. The appendix has
+  about 3,030 `OBST` lines and the deck 2,239: the exact repeats (about 740) were
+  removed and nothing else was found missing. Coincident objects with a different
+  layer or `SURF_ID` are kept. A repeat fills the same cells, so neither the
+  evacuation geometry nor the fire changed. This was checked by matching against
+  the OCR text of the PDF, not line by line.
+- The deck reproduces a line wrap of the printed page (a lone `DOOR` line after
+  `BACK`) and stray `1` lines where the OCR layer loses digits. So it was most
+  likely transcribed from the PDF, not from an electronic NIST file.
+
+What it is not:
+
+- It is not the geometry FDS 4 computed: FDS snaps obstructions to the 0.1 m grid
+  (Vol. I §5.1.1, p. 5-3).
+- Exterior door widths are fire openings: front 1.90 m, side doors 1.00 m,
+  platform door (`BACK`) 0.99 m. Vol. I Table 7-6 gives 1829 mm (1727 mm clear)
+  and 914 mm. The interior front door (0.914 m) matches Table 7-6, but both come
+  from photographs and CAD at nominal 36 in, so they are not independent
+  ([doi:10.6028/NIST.NCSTAR.2v1](https://doi.org/10.6028/NIST.NCSTAR.2v1)).
+- It writes no soot, visibility or CO output (its slices are temperature, oxygen
+  and gauge heat flux), so extinction-based coupling needs a ported deck and a
+  new run.
+
+Not known: who transcribed and corrected the listing, and whether the printed
+deck is the one NIST ran. Vol. I §5.3.2 gives a 35 s burner and §5.3.1 gives mesh
+lengths up to 21.6 m; the listing has no burner cut-off and meshes of 22.6 m.
+NIST's electronic FDS 4 input would settle both. This study uses published
+sources only and has not requested it.
 
 ## Related
 

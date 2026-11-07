@@ -1,6 +1,6 @@
 """Acceptance checks of ``assets/station_nist`` (#375).
 
-Station-derived geometry (provenance unverified, #377). The deck puts the Fahy
+NCSTAR 2 App. L.2.2 deck (FDS 4.0), transcribed (#377). The deck puts the Fahy
 Table 2 areas on the NIST-derived walkable area. These tests pin what the build
 script claims: it regenerates the files on disk, every area is one polygon
 inside the walkable area with room for its agents, every area reaches all four
