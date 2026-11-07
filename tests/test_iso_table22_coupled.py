@@ -29,6 +29,7 @@ as untested as it was before.
 from __future__ import annotations
 
 import importlib.util
+import math
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -99,6 +100,42 @@ def results():
     finally:
         for outcome in outcomes.values():
             outcome.cleanup()
+
+
+def _hand_rate_per_min(co2: float, co: float, o2: float) -> float:
+    """ISO's Step 2, written out with literal constants (FDS form, t in min).
+
+    Nothing here comes from pyFDS-Evac, so a wrong constant or gate in
+    ``pyfds_evac.core.fed`` cannot move the expectation along with the result.
+    ``co`` and ``co2`` are volume fractions in %, ``o2`` likewise.
+
+        r_CO = 2.764e-5 C_CO^1.036            C_CO in ppm
+        HV   = exp(0.1903 C_CO2 + 2.0004)/7.1 if C_CO2 > 0, else 1
+        r_O2 = 1/exp(8.13 - 0.54 (20.9 - C_O2)) if C_O2 < 20 %, else 0
+    """
+    ppm = co * 1.0e4
+    r_co = 2.764e-5 * ppm**1.036 if ppm > 0.0 else 0.0
+    hv = math.exp(0.1903 * co2 + 2.0004) / 7.1 if co2 > 0.0 else 1.0
+    r_o2 = 1.0 / math.exp(8.13 - 0.54 * (20.9 - o2)) if o2 < 20.0 else 0.0
+    return r_co * hv + r_o2
+
+
+# t* = 60 / rate [s] for the prescribed mixtures of build_geometry.CASES,
+# evaluated with the formula above (no pyFDS-Evac code):
+#
+#     a  CO2 2 %,    CO 0.1 %, O2 15 %    981.70 s
+#     b  CO2 0,      CO 0,     O2 12 %   1666.27 s
+#     c  CO2 0,      CO 0.1 %, O2 21 %   1692.83 s
+#     d  CO2 3.43 %, CO 0.1 %, O2 21 %    846.51 s
+#
+# Independent references for the same crossing:
+#   * scripts/verification/iso_test19_figures.py reads the concentrations back
+#     from the FDS slices and gets 981.71 / 1666.49 / 1692.82 / 846.50 s; case
+#     b differs by 0.22 s because its slice O2 is not exactly 12 %.
+#   * the FDS 6.10.1 FED device at the occupant crosses 1 at
+#     981.65 / 1666.49 / 1692.72 / 846.45 s; it differs from the hand values
+#     only by FDS's CO coefficient (2.7641667e-5 against 2.764e-5).
+HAND_CROSSING_S = {"a": 981.70, "b": 1666.27, "c": 1692.83, "d": 846.51}
 
 
 def _history_interval(history) -> float:
@@ -185,16 +222,22 @@ class TestTheDoseMatchesTheHandCalculation:
 
     @pytest.mark.parametrize("case", CASES)
     def test_the_rate_matches(self, results, case):
-        builder = _builder()
-        expected = default_fed_rate_per_minute(builder.inputs_for(case))
+        spec = _builder().CASES[case]
+        expected = _hand_rate_per_min(spec["co2"], spec["co"], spec["o2"])
         assert float(results[case].fed_history[0]["fed_rate_per_min"]) == pytest.approx(
             expected, rel=2e-3
         )
 
     @pytest.mark.parametrize("case", CASES)
+    def test_the_hand_calculation_reproduces_the_recorded_times(self, case):
+        """Guards the inline formula itself against a transcription slip."""
+        spec = _builder().CASES[case]
+        rate = _hand_rate_per_min(spec["co2"], spec["co"], spec["o2"])
+        assert 60.0 / rate == pytest.approx(HAND_CROSSING_S[case], abs=0.01)
+
+    @pytest.mark.parametrize("case", CASES)
     def test_the_threshold_is_crossed_at_the_hand_calculated_time(self, results, case):
-        builder = _builder()
-        analytic = builder.threshold_time_s(case)
+        t_star = HAND_CROSSING_S[case]
         history = results[case].fed_history
         crossing = next(
             (
@@ -205,11 +248,11 @@ class TestTheDoseMatchesTheHandCalculation:
             None,
         )
         assert crossing is not None, f"case {case}: FED never reached 1.0"
-        # The history is sampled at the FED update interval, so the observed
-        # crossing can only be located to within one row.
-        tolerance = 2 * _history_interval(history)
-        assert abs(crossing - analytic) <= tolerance, (
-            f"case {case}: crossed at {crossing} s, hand calculation {analytic:.1f} s"
+        # The observed crossing is the first FED-history update at or after t*.
+        interval = _history_interval(history)
+        assert t_star <= crossing < t_star + interval, (
+            f"case {case}: crossed at {crossing} s, hand calculation {t_star:.2f} s "
+            f"(expected [{t_star:.2f}, {t_star + interval:.2f}) s)"
         )
 
     def test_the_four_cases_separate_the_terms(self):
