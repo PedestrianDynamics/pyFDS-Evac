@@ -24,12 +24,15 @@ hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 ## Status
 
 Clear-air runs on seeds 4-23 (WarpDriver, `w_queue = 0`, radius unchanged)
-place all 333 agents. **19 of 20 end by evacuation** (96.7-121.8 s, median
-106.0 s); none deadlocks and none reaches the 600 s cap. Seed 14 stops with
-JuPedSim's "Point (16.955, -13.426) is outside of accessible area" at a notch
-of the platform-door recess, 0.2 mm from the wall: the known upstream defect
-(jupedsim#1720), not patched around. No Fahy outcome was used to choose any of
-this (no T1, T2 or W).
+place all 333 agents. **All 20 end by evacuation** (96.6-126.0 s, median
+107.1 s); none deadlocks and none reaches the 600 s cap. With the full
+population (`config_full.json`, 455 agents) every seed places all agents. No
+Fahy outcome was used to choose any of this (no T1, T2 or W).
+
+Before the dart room took the hand deck's east edge (-6.0), seed 14 stopped
+with JuPedSim's "Point (16.955, -13.426) is outside of accessible area" at a
+notch of the platform-door recess: the upstream defect jupedsim#1720. The
+notch is unchanged, so the defect can still end a run.
 
 ## Clearance floor and disclosure
 
@@ -308,10 +311,10 @@ keeps the largest part; the build stops if that drops floor in use.
 
 ## Open
 
-- **jupedsim#1720** ends seed 14 (1 of 20): a centre crosses the wall at a
-  notch of the platform-door recess at (16.955, -13.426), the openings there
-  measure 0.91 m ((16.0, -12.97)) and 0.98 m ((17.2, -13.04)). Recorded, not
-  patched.
+- **jupedsim#1720**: a centre can cross the wall at the notch of the
+  platform-door recess at (16.955, -13.426) (it ended seed 14 before the dart
+  room changed); the openings there measure 0.91 m ((16.0, -12.97)) and 0.98 m
+  ((17.2, -13.04)). Recorded, not patched.
 - **jupedsim#1719**: the 0.9 m floor exists because of it. Egress times through
   the widened doors and the passages sealed or widened as "only access" are
   therefore not limited by the real width; remove the floor when upstream passes
