@@ -441,12 +441,16 @@ def v0_options(args: argparse.Namespace, ap: argparse.ArgumentParser) -> V0Optio
     return options
 
 
+# The committed Station decks; ``--out`` writes into none of them.
+COMMITTED_DECKS = (HERE, HERE.parent / "station_nist")
+
+
 def output_directory(out: Path | None, here: Path, ap: argparse.ArgumentParser) -> Path:
-    """*out* if given, else *here*; never *here* by way of ``--out``."""
+    """*out* if given, else *here*; never a committed deck by way of ``--out``."""
     if out is None:
         return here
-    if out.resolve() == here.resolve():
-        ap.error("--out must not be the deck directory")
+    if any(out.resolve().is_relative_to(d.resolve()) for d in COMMITTED_DECKS):
+        ap.error("--out must not be in a committed Station deck directory")
     out.mkdir(parents=True, exist_ok=True)
     return out
 
