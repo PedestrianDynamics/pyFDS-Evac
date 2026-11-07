@@ -411,8 +411,9 @@ def test_unmapped_agents_fall_back_to_the_polygon_as_placed(tmp_path):
     db = _sqlite(tmp_path, [(0, 1, 1.0, 1.0), (125, 1, 10.5, 19.5)])
     _add_tables(db, mapping={})
     (agent,) = V.observed_agents(db, cfg, reach=2.0)
-    # The first polygon containing the start decides: here the victim one.
-    assert (agent.origin, agent.population) == ("A", "victim")
+    # The origin comes from the polygon; an unlisted agent counts as placed
+    # even where the polygon belongs to a victim distribution.
+    assert (agent.origin, agent.population) == ("A", "placed")
 
 
 def test_labelled_config_without_a_mapping_is_rejected(tmp_path):
@@ -476,3 +477,42 @@ def test_incapacitated_share_is_not_available_without_recorded_fed(tmp_path, cap
     assert V.survivor_outcomes(agents)["incapacitated"] is None
     V.report_statistic([agents], None, draws=10)
     assert "incapacitated (FED >= 1): n/a (no FED recorded)" in capsys.readouterr().out
+
+
+def test_unlabelled_scores_are_those_of_the_polygon_attribution(tmp_path, capsys):
+    """Scores of an unlabelled config, pinned by hand; only the share lines are new."""
+    row = "Near stage or on dance floor"
+    cfg = json.loads(_config(tmp_path, horizon=250.0).read_text())
+    cfg["distributions"]["d0"]["parameters"]["fahy_row"] = row
+    path = tmp_path / "plain.json"
+    path.write_text(json.dumps(cfg))
+    rows = [
+        (0, 1, 1.0, 1.0),
+        (125, 1, 10.5, 19.5),  # bar door
+        (0, 2, 1.1, 1.0),
+        (126, 2, 10.5, 19.5),  # bar door
+        (0, 3, 1.2, 1.0),
+        (127, 3, 0.5, 19.5),  # front
+        (0, 4, 1.3, 1.0),
+        (2500, 4, 0.5, 18.5),  # on the grid at the horizon
+        (0, 5, 1.4, 1.0),
+        (300, 5, 1.4, 1.0),  # never reached a door
+        (0, 6, 50.0, 50.0),  # outside every area
+    ]
+    db = _sqlite(tmp_path, rows)
+    agents = V.observed_agents(db, path, reach=2.0, horizon=250.0)
+    matrix = V.door_matrix(agents)
+    assert matrix == {row: {"bar_door": 2, "front": 1}}
+    assert V.stuck_counts(agents) == {row: 1}
+    assert V.censored_count(agents) == 1
+    assert V.t1(matrix) == pytest.approx(1 / 3)
+    assert all(a.placed and a.incapacitated is None for a in agents)
+
+    V.report_statistic([agents], None, draws=10)
+    out = capsys.readouterr().out
+    assert "censored: 1 of 5 placed agents" in out
+    assert "T1  front share of door users, placed rows: 33.3%" in out
+    # The registered shares are printed for every run, labelled or not.
+    assert "placed survivors incapacitated (FED >= 1): n/a (no FED recorded)" in out
+    assert "censored at the horizon: 20.0% (1/5)" in out
+    assert "excluded by label" not in out

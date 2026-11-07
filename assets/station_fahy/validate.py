@@ -27,7 +27,7 @@ the paper's, with two rules that keep the comparison honest:
   ``agent_distributions`` table, which ``pyfds-evac`` writes into the copied
   sqlite of a run whose scenario carries a label; a labelled config with a run
   that lacks it is rejected. Agents the table does not list (flow-spawned)
-  fall back to the polygon attribution and count as placed.
+  take their area from the polygon and count as placed.
 * Agents still on the grid at the horizon are **censored**: excluded from the
   registered statistics and the same-agent set even when they stand within
   ``--reach`` of a door, and counted beside T1 and W. An agent is censored when
@@ -220,16 +220,21 @@ def _incapacitated_ids(con: sqlite3.Connection) -> set[int] | None:
 
 
 def _attribute(aid, start, areas, populations, mapping) -> tuple[str | None, str]:
-    """(origin row, population) of an agent, by the run's mapping if it lists it."""
+    """(origin row, population) of an agent.
+
+    A listed agent takes its origin and population from its distribution. An
+    agent the run does not list (flow-spawned) takes its origin from the
+    polygon it starts in and counts as placed.
+    """
     from shapely.geometry import Point
 
     dist = mapping.get(aid) if mapping else None
     if dist is None:
-        dist = _area_key(Point(*start), areas)
-    if dist is not None and dist not in areas:
+        key = _area_key(Point(*start), areas)
+        return (None if key is None else areas[key][1]), PLACED
+    if dist not in areas:
         raise ValueError(f"agent {aid} starts in distribution {dist!r}, not in config")
-    origin = None if dist is None else areas[dist][1]
-    return origin, (populations or {}).get(dist, PLACED)
+    return areas[dist][1], (populations or {}).get(dist, PLACED)
 
 
 def _door(point, exits, reach: float) -> str | None:

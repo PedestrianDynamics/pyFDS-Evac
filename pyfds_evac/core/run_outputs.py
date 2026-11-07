@@ -229,17 +229,19 @@ def _population_labelled(scenario) -> bool:
     return any("population" in d.get("parameters", {}) for d in distributions.values())
 
 
-def _maybe_write_agent_distributions(output_path, scenario, result) -> None:
+def write_agent_distributions(output_path, scenario, result) -> None:
     """Write agent_distributions(id, distribution) into the copied sqlite.
 
     Only for a scenario whose distributions carry a ``population`` label, so
     that the trajectory files of every other run stay as they were. The
+    table is written even when no agent is listed, so that a reader can tell
+    a run without a mapping from one with an empty mapping. The
     table is what ``assets/station_fahy/validate.py`` reads to attribute each
     agent to its distribution.
     """
-    mapping = getattr(result, "agent_distributions", None)
-    if not mapping or not _population_labelled(scenario):
+    if not _population_labelled(scenario):
         return
+    mapping = getattr(result, "agent_distributions", None) or {}
     con = sqlite3.connect(str(pathlib.Path(output_path).resolve()))
     try:
         con.execute("DROP TABLE IF EXISTS agent_distributions")
@@ -449,7 +451,7 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         if manifest_path is not None:
             artifacts.append(f"Run manifest: {manifest_path}")
         _maybe_write_agent_scalars(output_path, result.fed_history)
-        _maybe_write_agent_distributions(output_path, scenario, result)
+        write_agent_distributions(output_path, scenario, result)
 
     if getattr(opts, "cleanup", False):
         result.cleanup()
