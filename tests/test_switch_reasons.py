@@ -414,15 +414,6 @@ def test_additive_dose_is_credited_on_its_growth():
     assert reason == "fed_reroute"
 
 
-HAND_FRONT_EXIT = [
-    [-1.544, -11.951],
-    [1.311, -11.951],
-    [1.311, -13.717],
-    [-1.544, -13.717],
-    [-1.544, -11.951],
-]
-
-
 def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
     monkeypatch, tmp_path
 ):
@@ -434,19 +425,17 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
 
     The test pins a mechanism, not the deck: ``short`` sets the inputs the
     counts depend on, the hand deck's queue weight 0.024 (``congestion``
-    needs the queue term), no pre-movement (agents must be walking at
-    t = 1 s) and the front exit where the hand drawing put it, about 3 m
-    outside the front wall, whatever the committed config carries. With the
-    exit on the doorway line, and nothing else changed, the counts are 13
-    and 11: the exit polygon alone moves the congestion count (checked by
-    restoring each input in turn; the sign position does not matter).
+    needs the queue term) and no pre-movement (agents must be walking at
+    t = 1 s), whatever the committed config carries. The front exit is the
+    committed one on the doorway line; the exit polygon alone moves the
+    congestion count (13 and 9 with the hand drawing's exit, about 3 m
+    outside the front wall).
     """
     load = cli.load_scenario
 
     def short(path):
         scenario = load(path)
         scenario.raw["routing"] = {**scenario.raw.get("routing", {}), "w_queue": 0.024}
-        scenario.raw["exits"]["jps-exits_0"]["coordinates"] = HAND_FRONT_EXIT
         for dist in scenario.raw["distributions"].values():
             params = dist["parameters"]
             for key in [k for k in params if k.startswith("premovement_")]:
@@ -474,7 +463,7 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
     with out.open(encoding="utf-8") as f:
         rows = [r for r in csv.DictReader(f) if float(r["time_s"]) == 1.0]
     reasons = collections.Counter(r["reason"] for r in rows)
-    assert reasons == {"learned_exit": 13, "congestion": 9}
+    assert reasons == {"learned_exit": 13, "congestion": 11}
 
 
 # ── Which rows the route_switches metric counts (#733) ──
