@@ -55,6 +55,17 @@ Useful when placing exit stages by hand — this is transcription, not guesswork
 Windows are **not** exits here, though 27.9 % of survivors left by one. That
 limitation is discussed in the validation spec, not worked around.
 
+## Ignoring baseboards and toe kicks
+
+`--ignore-layer PREFIX` (repeatable) leaves out the obstructions of a layer. The
+default ignores nothing, so `geometry.wkt` is what the command above writes. The
+deck draws baseboards (`A-WDWK-BAY`, z 0-0.111 m, some at z 0.15-0.26 m) and toe
+kicks (`A-CASE-TOEA`, z 0-0.10 m) as obstructions; they are 0.1 m proud of a
+wall or counter and narrow a doorway or a casework gap that a person walks
+through. A z-band floor cannot drop them, because the baseboard under the speaker
+at (14.38, -3.07) sits at z 0.15-0.26 m. `assets/station_nist` extracts with both
+layers ignored.
+
 ## Extraction narrows doorways
 
 Thin (zero-thickness) obstructions are widened by `--half-cell` (0.05 m) on

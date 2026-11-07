@@ -30,7 +30,8 @@ stages placed later, not by the geometry.
 
 Usage:
     .venv/bin/python assets/station/extract_walkable.py DECK.fds -o out.wkt \
-        [--z-band 0.1 1.8] [--min-hole 0.25] [--plot out.png]
+        [--z-band 0.1 1.8] [--min-hole 0.25] [--ignore-layer PREFIX ...] \
+        [--plot out.png]
 """
 
 from __future__ import annotations
@@ -183,8 +184,19 @@ def exterior_doors(domain, walls, doors, tolerance: float = 0.15) -> set[int]:
     }
 
 
-def extract(deck: Path, z_lo: float, z_hi: float, half_cell: float, min_hole: float):
+def extract(
+    deck: Path,
+    z_lo: float,
+    z_hi: float,
+    half_cell: float,
+    min_hole: float,
+    ignore: tuple[str, ...] = (),
+):
+    """Walkable interior of *deck*; obstructions whose layer starts with a
+    prefix in *ignore* are left out (baseboards and toe kicks, which are not
+    obstacles to an upright occupant). The default ignores nothing."""
     meshes, obstructions = parse_deck(deck)
+    obstructions = [o for o in obstructions if not o[0].startswith(ignore)]
     if not meshes:
         raise SystemExit(f"{deck}: no &PDIM or &MESH found; is this an FDS deck?")
 
@@ -271,6 +283,13 @@ def main() -> None:
         default=0.25,
         help="interior rings smaller than this (m2) are grid noise and are filled",
     )
+    parser.add_argument(
+        "--ignore-layer",
+        action="append",
+        default=[],
+        metavar="PREFIX",
+        help="leave out obstructions whose layer starts with PREFIX (repeatable)",
+    )
     parser.add_argument("--plot", type=Path, default=None)
     parser.add_argument(
         "--report",
@@ -280,7 +299,12 @@ def main() -> None:
     args = parser.parse_args()
 
     walkable, parts, n_solids, domain, doors = extract(
-        args.deck, args.z_band[0], args.z_band[1], args.half_cell, args.min_hole
+        args.deck,
+        args.z_band[0],
+        args.z_band[1],
+        args.half_cell,
+        args.min_hole,
+        tuple(args.ignore_layer),
     )
 
     print(
