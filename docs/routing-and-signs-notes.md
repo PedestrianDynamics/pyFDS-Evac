@@ -77,9 +77,8 @@ Symbols used below:
    `w_queue = 0.0`. `w_smoke` and `w_fed` are hand-picked and NOT calibrated.
    The queue term is **off by default**: it scales with a global `N`, so the
    weight expressing a given preference depends on the population and no
-   constant suits every deck. `assets/station_fahy` opts in at `w_queue = 0.03`,
-   calibrated against Fahy Table 2 at that deck's crowd of 333
-   (`scripts/sweep_queue_weight.py`).
+   constant suits every deck. Both Station decks keep `w_queue = 0.0`; 0.024
+   is a sensitivity value from `scripts/sweep_queue_weight.py`.
 
 5. **Pathfinding uses live edge weights, not raw geometry.**
    `rank_routes()` (`route_graph.py`) runs in three phases:
