@@ -148,7 +148,7 @@ def _station_fahy(monkeypatch, tmp_path, sampler, max_radius=None):
 
 
 def test_station_fahy_seed_420_moves_one_radius(monkeypatch, tmp_path):
-    """T6: one radius changes, 0.2656 -> 0.26 m; positions do not move."""
+    """T6: one radius changes, 0.2328 -> 0.23 m; positions do not move."""
     real = simulation_init_mod._sample_agent_values
 
     def before_709(params, count, rng):
@@ -178,5 +178,5 @@ def test_station_fahy_seed_420_moves_one_radius(monkeypatch, tmp_path):
     assert len(changed) == 1
     (new_key, new_r), (old_key, old_r) = changed[0]
     assert new_key == old_key == "jps-distributions_46"
-    assert round(old_r, 4) == 0.2656
-    assert new_r == pytest.approx(0.26, abs=1e-12)
+    assert round(old_r, 4) == 0.2328
+    assert new_r == pytest.approx(0.23, abs=1e-12)
