@@ -150,14 +150,60 @@ def test_the_front_interior_door_is_0_91_m(deck):
     assert opening[0].length == pytest.approx(0.91, abs=0.01)
 
 
-def test_the_gap_table_classifies_every_opening_under_0_9_m(nist):
-    extracted = wkt.loads((ROOT / "assets/station/geometry.wkt").read_text())
-    rows = nist.classify_gaps(extracted)
-    assert len(rows) == 24
-    assert {r["class"] for r in rows} == {"door", "fixture", "sealed"}
-    assert [r["class"] for r in rows].count("sealed") == 5
-    assert all(r["extracted"] < 0.46 for r in rows if r["class"] == "sealed")
-    front = [r for r in rows if r["final"] == 0.91]
-    assert len(front) == 1 and front[0]["leaf"]
-    _, rows_after = nist.final_walkable()
-    assert rows_after == rows
+def _exempt_front_door(nist, passages):
+    """The gap finder samples the boundary and can read the 0.91 m front door
+    short; that door is checked along its line instead."""
+    return [p for p in passages if not nist._is_front_door(p[3])]
+
+
+def test_no_walkable_opening_is_under_0_90_m_apart_from_the_front_door(nist, deck):
+    """The clearance floor: measured on the final floor, not assumed from the cut."""
+    _, walkable = deck
+    narrow = _exempt_front_door(nist, nist.find_passages(walkable, nist.CLEAR_CHECK))
+    assert [(round(p[3].x, 2), round(p[3].y, 2), round(p[0], 3)) for p in narrow] == []
+    assert nist.front_door_width(walkable) == pytest.approx(0.91, abs=0.01)
+
+
+def test_the_default_extraction_is_the_committed_geometry(nist):
+    """Acceptance 8, geometry side: ``--ignore-layer`` is opt-in."""
+    plain, *_ = nist.EX.extract(
+        nist.NIST / "Station210_clean.fds", 0.1, 1.8, 0.05, 0.25
+    )
+    assert plain.wkt + "\n" == (nist.NIST / "geometry.wkt").read_text()
+    ignored = nist.extracted_floor()
+    assert ignored.area > plain.area  # baseboards and toe kicks no longer narrow it
+
+
+def test_trim_framed_openings_are_doors_and_baseboards_do_not_narrow_them(nist):
+    floor = nist.regularise(nist.extracted_floor())
+    rows = nist.classify_gaps(floor)
+    trim = [r for r in rows if r["basis"] == "trim"]
+    assert sorted((round(r["x"]), round(r["y"])) for r in trim) == [
+        (-6, -7),
+        (-3, 2),
+        (2, -13),
+    ]
+    assert all(r["class"] == "door" and r["final"] == 0.90 for r in trim)
+    classes = [r["class"] for r in rows]
+    assert (classes.count("door"), classes.count("sealed")) == (12, 5)
+    assert classes.count("fixture") == 6  # settled by apply_gap_table
+
+
+def test_every_sealed_fixture_is_not_the_only_access_to_floor_in_use(nist, built):
+    """A fixture passage under 0.9 m is sealed unless it is the only access."""
+    _, walkable, info = built
+    rows = info["rows"]
+    fixtures = [r for r in rows if r["basis"] in ("fixture", "only access")]
+    assert fixtures
+    assert all(r["final"] == 0.90 for r in fixtures if r["class"] == "fixture")
+    assert all(r["final"] == 0.0 for r in fixtures if r["class"] == "sealed")
+    assert nist.trapped_pockets(walkable) is None
+
+
+def test_no_agent_is_placed_in_a_bar_service_well(nist, deck):
+    config, walkable = deck
+    for well in nist.SERVICE_WELLS:
+        for name, poly in _areas(config).items():
+            inside = poly.intersection(walkable).intersection(well)
+            assert inside.area < 1e-6, name
+    assert not walkable.contains(Point(3.3, -2.7))  # rear-bar well

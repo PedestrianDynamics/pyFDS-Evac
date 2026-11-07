@@ -6,23 +6,28 @@
 
 Station-derived geometry (provenance unverified, #377).
 
-The walkable area is ``assets/station/geometry.wkt``, extracted from the NIST
-deck by ``assets/station/extract_walkable.py``. The areas, the Fahy table, the
+The walkable area is extracted from the NIST deck by
+``assets/station/extract_walkable.py``, as ``assets/station/geometry.wkt`` is but
+without the baseboards and toe kicks. The areas, the Fahy table, the
 familiarity classes and every agent parameter are *imported* from
 ``assets/station_fahy`` -- nothing is copied -- so the two decks differ only in
 the geometry, the exits and the checkpoints.
 
 What this script adds to the extraction, each recorded in the README:
 
+* the extraction itself leaves out baseboards and toe kicks (``IGNORED_LAYERS``);
 * a translation hand frame -> NIST frame (:data:`TRANSLATION`);
-* the gap table: every opening under 0.9 m in the extraction is classified once
-  (deck door, trimmed doorway, fixture or sealed) and the doors are restored to
-  the deck's clear width, the openings no agent fits through sealed (:func:`classify_gaps`);
-* the areas, clipped to the walkable area in ``PRIORITY`` order;
+* the gap table: every opening under 0.9 m is classified (deck door, trim-framed
+  doorway, fixture clearance or slit); doors and fixtures that are the only
+  access are set to the 0.9 m clearance floor, the rest is sealed
+  (:func:`classify_gaps`, :func:`apply_gap_table`);
+* the areas, clipped to the walkable area in ``PRIORITY`` order, without the
+  bar service wells;
 * exits just inside each deck door, and checkpoints at the doorways.
 
-``simplify_doors.py`` is deliberately not run on this geometry: it would raise
-every opening to 0.9 m, including the fixtures.
+``simplify_doors.py`` is deliberately not run on this geometry: it would widen
+the fixture passages that are only closed here, and cut the front door to its
+own rule. Its gap finder is reused.
 """
 
 from __future__ import annotations
@@ -35,7 +40,6 @@ from pathlib import Path
 
 import shapely
 from shapely import affinity
-from shapely import wkt as W
 from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import unary_union
 
@@ -67,18 +71,32 @@ EX = _load("station_extract_walkable", NIST / "extract_walkable.py")
 # A similarity fit (rotation -0.21 deg, scale 0.992) is a reported sensitivity.
 TRANSLATION = (3.635, -8.366)
 
-# An opening narrower than the largest agent (radius cap 0.23 m) is not a
+# Baseboards (A-WDWK-BAY, z <= 0.111 m, some at z 0.15-0.26 m) and toe kicks
+# (A-CASE-TOEA, z <= 0.10 m) are 0.1 m proud of a wall or counter. They are
+# left out of the extraction: they narrowed doorways and casework gaps that a
+# person walks through (README, "Gap table").
+IGNORED_LAYERS = ("A-WDWK-BAY", "A-CASE-TOEA")
+# Every opening agents use is at least this wide (README, "Clearance floor").
+# WarpDriver (JuPedSim 1.4.2) does not pass agents of radius up to 0.23 m
+# through narrower openings (jupedsim#1719).
+CLEAR_FLOOR = 0.90
+CLEAR_CHECK = CLEAR_FLOOR - 0.001  # the gap finder samples the boundary at 7 cm
+SLIT = 0.20  # m, a chord below this is a tracing slit, never a door
+# A non-door narrower than the largest agent (radius cap 0.23 m) is not a
 # passage for this population: the navigation mesh routes through it and the
-# agents jam. M2 seals only the slits under 0.2 m; the first ten-seed run on
-# that rule left agents stuck at the 0.27, 0.30 and 0.39 m openings, so the
-# threshold is the cap diameter (README, "Gap table").
+# agents jam, so it is sealed (README, "Gap table").
 IMPASSABLE_BELOW = 0.46
-CLEAR_BELOW = 0.90  # m, the gap table covers every opening under this
-HALF_CELL_LOSS = 0.10  # m, two jambs widened by the extractor's 0.05 m each
 DOOR_LEAF_REACH = 0.5  # m, a deck door leaf this close makes the gap a door
+TRIM_REACH = 0.03  # m, a chord end this close to door trim is on a jamb
 THIN_FEATURE = 0.09  # m, CAD debris: obstacle teeth and floor slivers below this
+MAX_ROUNDS = 8
+USED_FLOOR_MIN = 0.314  # m2, one agent's floor (2.5 pi r^2 at r = 0.20 m)
 FRONT_INTERIOR_DOOR = (3.44, -14.38)
 FRONT_INTERIOR_CLEAR = 0.91  # m, NCSTAR 914 mm; leaves at x 2.97 and 3.88
+FRONT_DOOR_LINE_Y = -14.36
+# Bar service wells hold no agents. The main-bar well is cut off by its sealed
+# slits; the rear-bar well behind the L-shaped counter is named here.
+SERVICE_WELLS = (box(1.75, -4.0, 4.85, -1.5),)
 
 # The Rear bar / dart room east edge is the Fahy plan's -8.0, not the -6.0 of
 # the hand deck (#380): on the NIST geometry -8.0 holds 28 agents (README).
@@ -120,6 +138,36 @@ def largest(geom):
 # ---- the gap table --------------------------------------------------------
 
 
+class _Floor:
+    """A walkable polygon that buffers itself once.
+
+    ``simplify_doors.find_passages`` buffers the polygon by 1e-9 m for every
+    candidate pair, which takes minutes on a regularised floor. The proxy hands
+    back one buffered copy.
+    """
+
+    def __init__(self, polygon: Polygon):
+        self.exterior = polygon.exterior
+        self.interiors = polygon.interiors
+        self._buffered = polygon.buffer(1e-9)
+
+    def buffer(self, distance: float):
+        return self._buffered
+
+
+def find_passages(walkable: Polygon, max_width: float) -> list[tuple]:
+    """``simplify_doors.find_passages`` on a floor buffered once."""
+    return SD.find_passages(_Floor(walkable), max_width)
+
+
+def extracted_floor() -> Polygon:
+    """The NIST extraction without baseboards and toe kicks (:data:`IGNORED_LAYERS`)."""
+    walkable, *_ = EX.extract(
+        NIST / "Station210_clean.fds", 0.1, 1.8, 0.05, 0.25, IGNORED_LAYERS
+    )
+    return walkable
+
+
 def _door_leaves() -> list[tuple[str, float, float]]:
     _, obstructions = EX.parse_deck(NIST / "Station210_clean.fds")
     return [
@@ -129,45 +177,62 @@ def _door_leaves() -> list[tuple[str, float, float]]:
     ]
 
 
-def classify_gaps(walkable: Polygon) -> list[dict]:
-    """Every opening narrower than 0.9 m, classified once (M2).
+def _trim_footprint():
+    """The door and window trim (``A-WDWK-TRIM``) as one footprint."""
+    _, obstructions = EX.parse_deck(NIST / "Station210_clean.fds")
+    return unary_union(
+        [
+            EX.footprint(x0, x1, y0, y1, 0.05)
+            for name, x0, x1, y0, y1, z0, z1 in obstructions
+            if name.startswith("A-WDWK-TRIM") and z1 >= 0.1 and z0 <= 1.8
+        ]
+    )
 
-    ``door``     a deck door leaf within 0.5 m: restored to the deck clear width
-                 (the extracted chord plus the 0.10 m the extractor took, and
-                 the NCSTAR 0.91 m at the front interior door);
-    ``fixture``  furniture or fixture clearance: left as extracted;
-    ``sealed``   narrower than the cap diameter: closed (a slit under 0.2 m in M2).
+
+def classify_gaps(walkable: Polygon) -> list[dict]:
+    """Every opening narrower than :data:`CLEAR_CHECK`, classified once.
+
+    ``door``     a deck door leaf within 0.5 m, or trim (``A-WDWK-TRIM``) on both
+                 jambs: set to :data:`CLEAR_FLOOR` (NCSTAR door widths are
+                 0.81-0.91 m); the front interior door is 0.91 m (NCSTAR 914 mm);
+    ``sealed``   narrower than the cap diameter and not a door: closed;
+    ``fixture``  furniture or casework clearance, 0.46 m or wider. Whether it is
+                 sealed or widened depends on the floor around it and is decided
+                 by :func:`apply_gap_table`. A chord under 0.2 m is never a door.
     """
     leaves = _door_leaves()
+    trim = _trim_footprint()
     rows = []
     for width, a, b, mid in sorted(
-        SD.find_passages(walkable, CLEAR_BELOW), key=lambda p: (p[3].x, p[3].y)
+        find_passages(walkable, CLEAR_CHECK), key=lambda p: (p[3].x, p[3].y)
     ):
+        if _is_front_door(mid) and front_door_width(walkable) >= CLEAR_FLOOR:
+            continue
         distance, name = min(
             (math.hypot(mid.x - x, mid.y - y), n) for n, x, y in leaves
         )
-        if distance <= DOOR_LEAF_REACH or _is_trimmed_doorway(mid):
-            cls = "door"
-            final = round(width + HALF_CELL_LOSS, 2)
-            if (
-                math.hypot(
-                    mid.x - FRONT_INTERIOR_DOOR[0], mid.y - FRONT_INTERIOR_DOOR[1]
-                )
-                < 0.5
-            ):
-                final = FRONT_INTERIOR_CLEAR
+        basis = ""
+        if distance <= DOOR_LEAF_REACH:
+            basis = "leaf"
+        elif a.distance(trim) <= TRIM_REACH and b.distance(trim) <= TRIM_REACH:
+            basis = "trim"
+        if width < SLIT:
+            cls, final, basis = "sealed", 0.0, "slit"
+        elif basis:
+            cls, final = "door", _door_clear_width(mid)
         elif width < IMPASSABLE_BELOW:
-            cls, final = "sealed", 0.0
+            cls, final, basis = "sealed", 0.0, "slit"
         else:
-            cls, final = "fixture", round(width, 2)
+            cls, final = "fixture", 0.0
         rows.append(
             {
                 "x": round(mid.x, 2),
                 "y": round(mid.y, 2),
                 "extracted": round(width, 2),
                 "class": cls,
+                "basis": basis,
                 "final": final,
-                "leaf": name if distance <= DOOR_LEAF_REACH else "",
+                "leaf": name if basis == "leaf" else "",
                 "a": a,
                 "b": b,
             }
@@ -175,26 +240,105 @@ def classify_gaps(walkable: Polygon) -> list[dict]:
     return rows
 
 
-def _is_trimmed_doorway(mid: Point) -> bool:
-    """The x 2.3 opening between the main bar and the front of house.
+def _is_front_door(mid: Point) -> bool:
+    x, y = FRONT_INTERIOR_DOOR
+    return math.hypot(mid.x - x, mid.y - y) < 0.5
 
-    The deck frames it with trim at y -13.67 and -12.86 and draws no leaf.
+
+def front_door_width(walkable: Polygon) -> float:
+    """The front interior door measured along its line, y -14.36, between the leaves.
+
+    The gap finder samples the boundary and can read this door a few
+    millimetres short; the cut along the door line is the width that counts.
     """
-    return abs(mid.x - 2.32) < 0.2 and abs(mid.y + 13.27) < 0.2
+    cut = LineString([(2.0, FRONT_DOOR_LINE_Y), (5.0, FRONT_DOOR_LINE_Y)])
+    runs = walkable.intersection(cut)
+    inside = [r for r in getattr(runs, "geoms", [runs]) if 2.5 < r.centroid.x < 4.3]
+    return inside[0].length if len(inside) == 1 else 0.0
 
 
-def apply_gap_table(walkable: Polygon, rows: list[dict]) -> Polygon:
-    """Set each door to its clear width and seal what no agent fits through."""
+def _door_clear_width(mid: Point) -> float:
+    return FRONT_INTERIOR_CLEAR if _is_front_door(mid) else CLEAR_FLOOR
+
+
+def _front_door_row() -> dict:
+    """The front interior door between its leaves, x 2.97 and 3.88."""
+    a, b = Point(2.97, FRONT_DOOR_LINE_Y), Point(3.88, FRONT_DOOR_LINE_Y)
+    return {
+        "pass": 0,
+        "x": round((a.x + b.x) / 2, 2),
+        "y": FRONT_DOOR_LINE_Y,
+        "extracted": round(front_door_width(extracted_floor()), 2),
+        "class": "door",
+        "basis": "leaf",
+        "final": FRONT_INTERIOR_CLEAR,
+        "leaf": "A-DOOR-STND-1",
+        "a": a,
+        "b": b,
+    }
+
+
+def apply_gap_table(walkable: Polygon, rows: list[dict], reach: float = 0.25):
+    """Widen the doors, seal the slits, and settle each fixture clearance.
+
+    A fixture clearance under :data:`CLEAR_FLOOR` is sealed unless that cuts off
+    floor an agent uses (:func:`_used_floor`); then it is the only access, so it
+    is widened to :data:`CLEAR_FLOOR` and counts as a door. *reach* is the depth
+    of the cut across a wall; :func:`final_walkable` raises it when a door
+    stays narrow.
+    """
     for row in rows:
         if row["class"] == "door":
-            walkable = _set_door_width(walkable, row)
+            walkable = _set_door_width(walkable, row, reach)
     for row in rows:
         if row["class"] == "sealed":
             walkable = _seal(walkable, Point(row["x"], row["y"]))
+    walkable = largest(walkable)  # sealing leaves the cut-off floor as other parts
+    for row in rows:
+        if row["class"] == "fixture":
+            walkable = _settle_fixture(walkable, row, reach)
     return walkable
 
 
-def _set_door_width(walkable: Polygon, row: dict) -> Polygon:
+def _settle_fixture(walkable: Polygon, row: dict, reach: float) -> Polygon:
+    closed = _close(walkable, row)
+    cut = walkable.difference(closed).difference(_patch_of(row))
+    if cut.intersection(_used_floor()).area <= USED_FLOOR_MIN:
+        row["class"], row["basis"], row["final"] = "sealed", "fixture", 0.0
+        return closed
+    row["class"], row["basis"], row["final"] = "fixture", "only access", CLEAR_FLOOR
+    return _set_door_width(walkable, row, reach)
+
+
+def _patch_of(row: dict) -> Polygon:
+    a, b = row["a"], row["b"]
+    mid = Point((a.x + b.x) / 2, (a.y + b.y) / 2)
+    return SD._patch(mid, a, b, a.distance(b) + 0.20, 0.30)
+
+
+def _close(walkable: Polygon, row: dict) -> Polygon:
+    """Wall in the opening across its chord, keeping the larger floor."""
+    return largest(walkable.difference(_patch_of(row)))
+
+
+def _used_floor():
+    """Floor an agent stands on or walks to: areas, exit strips, checkpoints.
+
+    The service wells (:data:`SERVICE_WELLS`) hold no agents and are not used.
+    """
+    base = json.loads((FAHY / "source" / "config.json").read_text())
+    parts = [translate(box(*r)) for r in RECTS.values()]
+    parts = [unary_union(parts).difference(unary_union(SERVICE_WELLS))]
+    for axis, line, (lo, hi), side in EXIT_DOORS.values():
+        a, b = sorted((line, line + side * EXIT_DEPTH))
+        parts.append(box(lo, a, hi, b) if axis == "y" else box(a, lo, b, hi))
+    for cp_id, cp in base["checkpoints"].items():
+        x, y, radius = _checkpoint_at(cp_id, cp)
+        parts.append(Point(x, y).buffer(radius))
+    return unary_union(parts)
+
+
+def _set_door_width(walkable: Polygon, row: dict, reach: float = 0.25) -> Polygon:
     """Cut the opening to the clear width, or wall it in down to that width."""
     a, b = row["a"], row["b"]
     mx, my = (a.x + b.x) / 2, (a.y + b.y) / 2
@@ -204,21 +348,23 @@ def _set_door_width(walkable: Polygon, row: dict) -> Polygon:
     half = row["final"] / 2
     if not along_x:
         flipped = affinity.affine_transform(walkable, [0, -1, 1, 0, 0, 0])
-        fixed = _set_door_width_x(flipped, (-my, mx), half)
+        fixed = _set_door_width_x(flipped, (-my, mx), half, reach)
         return affinity.affine_transform(fixed, [0, 1, -1, 0, 0, 0])
-    return _set_door_width_x(walkable, (mx, my), half)
+    return _set_door_width_x(walkable, (mx, my), half, reach)
 
 
-def _set_door_width_x(walkable: Polygon, mid: tuple[float, float], half: float):
+def _set_door_width_x(
+    walkable: Polygon, mid: tuple[float, float], half: float, reach: float
+):
     mx, my = mid
-    walkable = walkable.union(box(mx - half, my - 0.25, mx + half, my + 0.25))
+    walkable = walkable.union(box(mx - half, my - reach, mx + half, my + reach))
     for side in (-1, 1):
         plane = mx + side * half
-        for reach in (0.14, 0.11, 0.08, 0.05, 0.02):
-            run = _wall_run(walkable, plane + side * reach, my)
+        for jamb in (0.14, 0.11, 0.08, 0.05, 0.02):
+            run = _wall_run(walkable, plane + side * jamb, my)
             if run is None:
                 continue
-            x0, x1 = sorted((plane, plane + side * reach))
+            x0, x1 = sorted((plane, plane + side * jamb))
             walkable = walkable.difference(box(x0, run[0], x1, run[1]))
             break
     return walkable
@@ -259,9 +405,32 @@ def regularise(walkable: Polygon, reach: float = THIN_FEATURE / 2) -> Polygon:
 
 
 def final_walkable() -> tuple[Polygon, list[dict]]:
-    extracted = W.loads((NIST / "geometry.wkt").read_text())
-    rows = classify_gaps(extracted)
-    return largest(apply_gap_table(regularise(extracted), rows)), rows
+    """The extraction with every opening classified and settled.
+
+    The gap finder keeps one chord per 1.2 m, so a narrow opening can hide a
+    wider one next to it. Each round settles what the finder shows and looks
+    again, until no opening is under :data:`CLEAR_CHECK`.
+    """
+    # Regularising widens the doors that the trim leaves 0.1 m thick; the front
+    # interior door is set back to its deck width, between its leaves.
+    front = _front_door_row()
+    floor = _set_door_width(regularise(extracted_floor()), front)
+    rows: list[dict] = [front]
+    for round_ in range(MAX_ROUNDS):
+        new = classify_gaps(floor)
+        if not new:
+            return floor, rows
+        for row in new:
+            row["pass"] = round_ + 1
+        floor = largest(apply_gap_table(floor, new, reach=0.25 * (round_ + 1)))
+        rows += new
+    left = [
+        (round(m.x, 2), round(m.y, 2), round(w, 3))
+        for w, _, _, m in find_passages(floor, CLEAR_CHECK)
+    ]
+    raise SystemExit(
+        f"openings still under {CLEAR_CHECK} m after {MAX_ROUNDS} rounds: {left}"
+    )
 
 
 # ---- areas ----------------------------------------------------------------
@@ -285,6 +454,7 @@ def clip_areas(walkable: Polygon) -> dict[str, Polygon]:
     """Each Fahy rectangle, translated, clipped, one polygon, no overlaps."""
     pockets = trapped_pockets(walkable)
     floor = walkable if pockets is None else walkable.difference(pockets)
+    floor = floor.difference(unary_union(SERVICE_WELLS))
     order = list(areas.PRIORITY) + [n for n in RECTS if n not in areas.PRIORITY]
     out: dict[str, Polygon] = {}
     claimed = None
@@ -325,16 +495,19 @@ def exit_polygons(walkable: Polygon) -> dict[str, Polygon]:
     return out
 
 
+def _checkpoint_at(cp_id: str, cp: dict) -> tuple[float, float, float]:
+    if cp_id in CHECKPOINT_AT:
+        return CHECKPOINT_AT[cp_id]
+    x, y = cp["center"]
+    return x + TRANSLATION[0], y + TRANSLATION[1], cp["radius"]
+
+
 def checkpoints(base: dict, walkable: Polygon) -> dict[str, dict]:
     """Fahy's seven checkpoints, translated or placed at their doorway."""
     out = {}
     for cp_id, cp in base["checkpoints"].items():
         x, y = cp["center"]
-        radius = cp["radius"]
-        if cp_id in CHECKPOINT_AT:
-            nx, ny, radius = CHECKPOINT_AT[cp_id]
-        else:
-            nx, ny = x + TRANSLATION[0], y + TRANSLATION[1]
+        nx, ny, radius = _checkpoint_at(cp_id, cp)
         if not Point(nx, ny).buffer(radius).within(walkable):
             raise SystemExit(f"{cp_id} at ({nx:.2f}, {ny:.2f}) is not inside the floor")
         new = FB._checkpoint((round(nx, 3), round(ny, 3)), radius)
@@ -429,16 +602,47 @@ def build() -> tuple[dict, Polygon, dict]:
     return cfg, walkable, {"rows": rows, "polys": polys}
 
 
-def tables(rows: list[dict], polys: dict[str, Polygon]) -> str:
+def measured_widths(walkable: Polygon, rows: list[dict]) -> list[float | None]:
+    """The narrowest chord of the final floor within 0.7 m of each table row.
+
+    The front interior door is the cut along its line (:func:`front_door_width`).
+    None for a closed opening, or one wider than 1.6 m.
+    """
+    passages = find_passages(walkable, 1.6)
+    out: list[float | None] = []
+    for row in rows:
+        if row["class"] == "sealed":
+            out.append(None)
+        elif _is_front_door(Point(row["x"], row["y"])):
+            out.append(front_door_width(walkable))
+        else:
+            near = [
+                w
+                for w, _, _, m in passages
+                if math.hypot(m.x - row["x"], m.y - row["y"]) < 0.7
+            ]
+            out.append(min(near) if near else None)
+    return out
+
+
+def tables(rows: list[dict], polys: dict[str, Polygon], walkable: Polygon) -> str:
     lines = [
-        "| x | y | extracted | class | final | deck door leaf |",
-        "|---|---|---|---|---|---|",
+        "| pass | x | y | extracted | class | basis | final | measured |",
+        "|---|---|---|---|---|---|---|---|",
     ]
-    for r in rows:
+    for r, got in zip(rows, measured_widths(walkable, rows)):
         final = "sealed" if r["class"] == "sealed" else f"{r['final']:.2f}"
+        shown = (
+            "sealed"
+            if r["class"] == "sealed"
+            else "over 1.6"
+            if got is None
+            else f"{got:.3f}"
+        )
+        basis = r["leaf"] or r["basis"]
         lines.append(
-            f"| {r['x']:.2f} | {r['y']:.2f} | {r['extracted']:.2f} | {r['class']} "
-            f"| {final} | {r['leaf']} |"
+            f"| {r['pass']} | {r['x']:.2f} | {r['y']:.2f} | {r['extracted']:.2f} | {r['class']} "
+            f"| {basis} | {final} | {shown} |"
         )
     lines += ["", "| area | n | m2 | need 1x | headroom |", "|---|---|---|---|---|"]
     for name, n, area, need, head in capacity_rows(polys):
@@ -449,7 +653,7 @@ def tables(rows: list[dict], polys: dict[str, Polygon]) -> str:
 def main(argv: list[str]) -> int:
     cfg, walkable, info = build()
     if "--tables" in argv:
-        print(tables(info["rows"], info["polys"]))
+        print(tables(info["rows"], info["polys"], walkable))
         return 0
     total = sum(d["parameters"]["number"] for d in cfg["distributions"].values())
     (HERE / "config.json").write_text(json.dumps(cfg, indent=2))
