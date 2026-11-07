@@ -5,7 +5,8 @@
     .venv/bin/python assets/station_nist/build_scenario.py --tables # print
     .venv/bin/python assets/station_nist/build_scenario.py --full   # + config_full.json
 
-Station-derived geometry (provenance unverified, #377).
+NCSTAR 2 App. L.2.2 deck (FDS 4.0), transcribed; transcriber undocumented
+(#377).
 
 The walkable area is extracted from the NIST deck by
 ``assets/station/extract_walkable.py``, as ``assets/station/geometry.wkt`` is but

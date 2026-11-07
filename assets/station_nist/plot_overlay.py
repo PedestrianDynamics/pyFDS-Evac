@@ -27,7 +27,7 @@ from shapely.geometry import Polygon  # noqa: E402
 HERE = Path(__file__).parent
 FAHY = HERE.parent / "station_fahy"
 TRANSLATION = (3.635, -8.366)
-LABEL = "Station-derived geometry (provenance unverified)"
+LABEL = "NCSTAR 2 App. L.2.2 deck (FDS 4.0), transcribed; transcriber undocumented"
 
 
 def _rings(ax, geom, label=None, **style):
