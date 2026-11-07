@@ -95,7 +95,11 @@ regularised (below). `geometry.wkt` of `assets/station` is not touched.
   (NCSTAR 914 mm, between its leaves at x 2.97 and 3.88).
 - **sealed, slit**: a chord under the cap diameter, 0.46 m (radius 0.20 + 3 x
   0.01, times two), that is not a door. M2 sealed under 0.2 m; the first ten-seed
-  run on that rule left agents stuck at 0.27, 0.30 and 0.39 m openings.
+  run on that rule left agents stuck at 0.27, 0.30 and 0.39 m openings. A slit
+  gets no only-access check, so the build stops if sealing one cuts off more
+  than 0.314 m2 of floor in use, unless that floor is recorded in `CUT_OFF`: the
+  main-bar service well (behind the 0.39 m gap at (0.68, -10.37)) and a 0.5 m2
+  niche behind the 0.30 m gap at (3.39, -11.74).
 - **fixture**: casework, a speaker or a wall end, 0.46 m or wider and under
   0.90 m. Sealed unless sealing cuts off floor in use (an area, an exit strip or
   a checkpoint, at least 0.314 m2); then it is the only access and is widened to

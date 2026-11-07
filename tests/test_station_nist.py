@@ -18,7 +18,7 @@ import jupedsim as jps
 import pedpy
 import pytest
 from shapely import wkt
-from shapely.geometry import LineString, Point, Polygon
+from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import unary_union
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -207,3 +207,13 @@ def test_no_agent_is_placed_in_a_bar_service_well(nist, deck):
             inside = poly.intersection(walkable).intersection(well)
             assert inside.area < 1e-6, name
     assert not walkable.contains(Point(3.3, -2.7))  # rear-bar well
+
+
+def test_sealing_a_slit_that_cuts_off_floor_in_use_stops_the_build(nist, monkeypatch):
+    """Two rooms joined only by a 0.40 m passage: sealing it would drop a room."""
+    west, east = box(0, 0, 4, 2), box(4.6, 0, 8.6, 2)
+    walkable = unary_union([west, east, box(4, 0.8, 4.6, 1.2)])
+    monkeypatch.setattr(nist, "_used_floor", lambda: unary_union([west, east]))
+    row = {"x": 4.3, "y": 1.0, "class": "sealed"}
+    with pytest.raises(SystemExit, match="cuts off floor in use"):
+        nist.apply_gap_table(walkable, [row])

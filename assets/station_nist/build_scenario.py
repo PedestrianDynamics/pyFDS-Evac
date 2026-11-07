@@ -97,6 +97,12 @@ FRONT_DOOR_LINE_Y = -14.36
 # Bar service wells hold no agents. The main-bar well is cut off by its sealed
 # slits; the rear-bar well behind the L-shaped counter is named here.
 SERVICE_WELLS = (box(1.75, -4.0, 4.85, -1.5),)
+# Floor in use that sealing cuts off on purpose, by a point inside it. Any other
+# cut-off floor in use stops the build (:func:`_check_cut_off`).
+CUT_OFF = {
+    (-1.84, -11.54): "main-bar service well, behind the 0.39 m gap at (0.68, -10.37)",
+    (2.83, -11.98): "0.5 m2 niche behind the 0.30 m gap at (3.39, -11.74)",
+}
 
 # The Rear bar / dart room east edge is the Fahy plan's -8.0, not the -6.0 of
 # the hand deck (#380): on the NIST geometry -8.0 holds 28 agents (README).
@@ -290,14 +296,39 @@ def apply_gap_table(walkable: Polygon, rows: list[dict], reach: float = 0.25):
     for row in rows:
         if row["class"] == "door":
             walkable = _set_door_width(walkable, row, reach)
+    before = walkable
     for row in rows:
         if row["class"] == "sealed":
             walkable = _seal(walkable, Point(row["x"], row["y"]))
     walkable = largest(walkable)  # sealing leaves the cut-off floor as other parts
+    _check_cut_off(before, walkable)
     for row in rows:
         if row["class"] == "fixture":
             walkable = _settle_fixture(walkable, row, reach)
     return walkable
+
+
+def _check_cut_off(before: Polygon, kept: Polygon) -> None:
+    """Stop if sealing cut off more than one agent's floor in use, unless recorded.
+
+    A slit is sealed without the only-access check of a fixture clearance, so
+    floor an area relies on could otherwise vanish with the smaller parts.
+    """
+    used = _used_floor()
+    lost = before.difference(kept)
+    unrecorded = []
+    for part in getattr(lost, "geoms", [lost]):
+        if part.intersection(used).area <= USED_FLOOR_MIN:
+            continue
+        if any(part.buffer(1e-6).contains(Point(p)) for p in CUT_OFF):
+            continue
+        c = part.representative_point()
+        unrecorded.append((round(c.x, 2), round(c.y, 2), round(part.area, 2)))
+    if unrecorded:
+        raise SystemExit(
+            f"sealing cuts off floor in use at {unrecorded}: make the gap a door "
+            "or record the floor in CUT_OFF"
+        )
 
 
 def _settle_fixture(walkable: Polygon, row: dict, reach: float) -> Polygon:
