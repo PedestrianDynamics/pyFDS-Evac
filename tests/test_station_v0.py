@@ -17,7 +17,9 @@ import csv
 import importlib.util
 import io
 import json
+import os
 import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 
@@ -27,6 +29,8 @@ import pytest
 from shapely.geometry import Point, Polygon, box
 
 from pyfds_evac import cli
+from pyfds_evac.core import scenario as scenario_module
+from pyfds_evac.core import simulation_init
 from pyfds_evac.core.scenario import _build_model, load_scenario
 from pyfds_evac.core.simulation_init import initialize_simulation_from_json
 
@@ -210,8 +214,9 @@ def test_station_fahy_front_exit_is_on_the_doorway_line(fahy):
     front = Polygon(config["exits"][FRONT_EXIT]["coordinates"])
     assert front.within(walkable)
     # outside the exterior doors' jambs (y -9.10), between them (x -1.108 .. 0.619)
-    assert front.bounds[3] <= -9.10 + 1e-9
-    assert front.bounds[0] > -1.11 and front.bounds[2] < 0.62
+    assert front.bounds == pytest.approx((-1.108, -9.50, 0.619, -9.10), abs=1e-9)
+    sign = config["exits"][FRONT_EXIT]["sign"]
+    assert (sign["x"], sign["y"]) == pytest.approx((-0.2445, -9.300), abs=1e-9)
     for dist in config["distributions"].values():
         assert not Polygon(dist["coordinates"]).intersects(front)
 
@@ -303,12 +308,29 @@ def test_a_non_default_option_needs_out_and_never_writes_the_deck(mods, deck, tm
     assert out["routing"]["w_queue"] == 0.024
 
 
+@pytest.mark.parametrize("deck", DECKS)
+def test_out_refuses_every_committed_deck_directory(mods, deck):
+    """Neither build writes into either committed deck, nor into its source."""
+    main = mods[deck].main
+    targets = [ROOT / "assets" / d for d in DECKS]
+    targets.append(ROOT / "assets/station_fahy/source")
+    watched = [p for t in targets for p in sorted(t.iterdir()) if p.is_file()]
+    before = {p: p.read_bytes() for p in watched}
+    for target in targets:
+        with pytest.raises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            main(["--t-jam", "71", "--out", str(target)])
+    assert {p: p.read_bytes() for p in watched} == before
+
+
 # ---- initialisation at seed 4 -----------------------------------------------
 
 
-def _init(deck: str, config: dict, seed: int, tmp_path: Path):
-    """Draws by agent id (position, radius, v0, familiarity) and pre-movement times."""
-    scenario = load_scenario(str(ROOT / "assets" / deck / "config.json"))
+def _init(deck: str, config: dict, seed: int, tmp_path: Path, root: Path = ROOT):
+    """Draws by agent id (position, radius, v0, familiarity) and pre-movement times.
+
+    The walkable area and model come from *deck*'s ``config.json`` under *root*.
+    """
+    scenario = load_scenario(str(root / "assets" / deck / "config.json"))
     path = tmp_path / "c.json"
     path.write_text(json.dumps(config))
     walkable = pedpy.WalkableArea(scenario.walkable_area_wkt)
@@ -337,37 +359,62 @@ def _init(deck: str, config: dict, seed: int, tmp_path: Path):
     return agents, {i - first: h["premovement_time"] for i, h in held.items()}
 
 
-def _before_v0(config: dict) -> dict:
-    """*config* with the V0 keys reverted: hand front exit, no pre-movement, no closure."""
-    old = json.loads(json.dumps(config))
-    for exit_cfg in old["exits"].values():
-        exit_cfg.pop("closed_after_s", None)
-    for dist in old["distributions"].values():
-        params = dist["parameters"]
-        for key in [k for k in params if k.startswith("premovement_")]:
-            del params[key]
-        params["use_premovement"] = False
-    return old
+# The draws of the configs before the V0 settings, at the merge base of the
+# V0 branch with main. Regenerate (needs that commit in the clone) with
+#   PYFDS_EVAC_REGEN_GOLDEN=1 .venv/bin/python -m pytest tests/test_station_v0.py \
+#       -k move_no_position
+BASE_COMMIT = "45572c433cd150052c13453e98e2819d63018c7d"
+BASE_DRAWS = ROOT / "tests/golden/station_v0/base_seed4_draws.json"
+DRAW_KEYS = ("position", "radius", "v0", "familiarity")
+
+
+def _draws(agents: dict) -> list[list]:
+    """[x, y, radius, v0, familiarity] by agent id."""
+    return [
+        [*agents[i]["position"], *(agents[i][k] for k in DRAW_KEYS[1:])]
+        for i in sorted(agents)
+    ]
+
+
+def _base_draws(deck: str, tmp_path: Path) -> list[list]:
+    """The draws of *deck* at :data:`BASE_COMMIT`, from ``git show``."""
+    base = tmp_path / "base"
+    for name in ("config.json", "config_full.json", "geometry.wkt"):
+        target = base / "assets" / deck / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shown = subprocess.run(
+            ["git", "show", f"{BASE_COMMIT}:assets/{deck}/{name}"],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+        )
+        target.write_bytes(shown.stdout)
+    config = json.loads((base / "assets" / deck / "config_full.json").read_text())
+    agents, _ = _init(deck, config, SEED, tmp_path, root=base)
+    return _draws(agents)
 
 
 @pytest.mark.parametrize("deck", DECKS)
-def test_the_v0_keys_move_no_position_radius_v0_or_familiarity(
-    deck, full_configs, tmp_path
-):
-    """Pre-movement has its own stream; the closure touches no draw.
+def test_the_v0_keys_move_no_position_radius_v0_or_familiarity(deck, tmp_path):
+    """At seed 4 the draws equal those of main's configs before V0.
 
-    On station_fahy the front exit (reverted here to the hand drawing's) moves
-    no spawn either.
+    Pre-movement has its own stream, the closure touches no draw, and on
+    station_fahy the front exit moved to the doorway moves no spawn either.
     """
-    config = full_configs[deck]
-    now, times = _init(deck, config, SEED, tmp_path)
-    reverted = _before_v0(config)
-    if deck == "station_fahy":
-        reverted["exits"][FRONT_EXIT]["coordinates"] = HAND_FRONT_EXIT
-    before, no_times = _init(deck, reverted, SEED, tmp_path)
-    assert not no_times
-    assert len(times) == len(now) == len(before) == 455
-    assert now == before
+    if os.environ.get("PYFDS_EVAC_REGEN_GOLDEN") == "1":
+        stored = json.loads(BASE_DRAWS.read_text()) if BASE_DRAWS.exists() else {}
+        stored[deck] = _base_draws(deck, tmp_path)
+        stored["base_commit"] = BASE_COMMIT
+        BASE_DRAWS.parent.mkdir(parents=True, exist_ok=True)
+        BASE_DRAWS.write_text(json.dumps(stored, indent=1, sort_keys=True) + "\n")
+    base = json.loads(BASE_DRAWS.read_text())
+    assert base["base_commit"] == BASE_COMMIT
+    agents, times = _init(deck, _file(deck, "config_full.json"), SEED, tmp_path)
+    now = _draws(agents)
+    assert len(times) == len(now) == len(base[deck]) == 455
+    for agent_id, (got, want) in enumerate(zip(now, base[deck])):
+        assert got[:4] == pytest.approx(want[:4], abs=1e-9), agent_id
+        assert got[4] == want[4], agent_id
 
 
 @pytest.mark.parametrize("deck", DECKS)
@@ -458,6 +505,26 @@ def run(request, tmp_path_factory):
         captured.append(result)
         return result
 
+    # Test-only patches of two private names: the agents' wait info as the
+    # run holds it, and every closure check with the agent it was made for.
+    wait_info: dict = {}
+    heading_closed: dict[float, set[int]] = collections.defaultdict(set)
+    original_init = simulation_init.initialize_simulation_from_json
+    original_heads = scenario_module._heads_for_closed_exit
+
+    def init(*args, **kwargs):
+        out = original_init(*args, **kwargs)
+        wait_info.update(out[3].get("agent_wait_info", {}))
+        return out
+
+    def heads(info, graph, time_s):
+        closed = original_heads(info, graph, time_s)
+        if closed and time_s >= T_JAM:
+            ids = [i for i, w in wait_info.items() if w is info]
+            assert len(ids) == 1, "a closure check for an unknown agent"
+            heading_closed[time_s].add(ids[0])
+        return closed
+
     argv = [
         "pyfds-evac",
         "--scenario",
@@ -475,13 +542,20 @@ def run(request, tmp_path_factory):
     ]
     mp = pytest.MonkeyPatch()
     mp.setattr(cli, "_run_or_exit", capture)
+    mp.setattr(simulation_init, "initialize_simulation_from_json", init)
+    mp.setattr(scenario_module, "_heads_for_closed_exit", heads)
     mp.setattr(sys, "argv", argv)
     try:
         with contextlib.redirect_stdout(io.StringIO()):
             cli.main()
     finally:
         mp.undo()
-    yield {"deck": deck, "files": files, "result": captured[0]}
+    yield {
+        "deck": deck,
+        "files": files,
+        "result": captured[0],
+        "heading_closed": dict(heading_closed),
+    }
     captured[0].cleanup()
 
 
@@ -519,17 +593,17 @@ def test_run_exits_at_the_front_occur_before_the_jam_only(run, record_property):
     assert closure_rows
     assert all(T_JAM <= float(r["time_s"]) <= T_JAM + 1 + 1 / FPS for r in closure_rows)
     # Every agent re-routed this way was still inside at the jam.
-    rerouted = {int(r["agent_id"]) for r in closure_rows}
+    rerouted = [int(r["agent_id"]) for r in closure_rows]
     assert all(last[i] >= T_JAM * FPS for i in rerouted)
-    # Every agent still inside whose last route before the jam ended at the
-    # front is among them. An agent that never changed route has no row, so this
-    # is a lower bound on the agents bound for the front.
-    target = {}
-    for r in routes:
-        if float(r["time_s"]) < T_JAM and r["new_exit"].startswith("jps-exits"):
-            target[int(r["agent_id"])] = r["new_exit"]
-    inside = {i for i, f in last.items() if f >= T_JAM * FPS}
-    assert {i for i in inside if target.get(i) == FRONT_EXIT} <= rerouted
+    # Exactly the agents whose path ended at the front at the first closure
+    # check (run state, not route history), one row each.
+    first_check = min(run["heading_closed"])
+    assert T_JAM <= first_check <= T_JAM + 1 + 1 / FPS
+    bound = run["heading_closed"][first_check]
+    assert bound
+    assert len(rerouted) == len(set(rerouted)) == len(bound)
+    assert set(rerouted) == bound
+    record_property("bound_for_front_at_86s", len(bound))
     record_property("vestibule_at_86s", _vestibule_count(files["sqlite"], run["deck"]))
 
 
