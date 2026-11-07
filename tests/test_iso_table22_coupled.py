@@ -133,8 +133,10 @@ def _hand_rate_per_min(co2: float, co: float, o2: float) -> float:
 #     from the FDS slices and gets 981.71 / 1666.49 / 1692.82 / 846.50 s; case
 #     b differs by 0.22 s because its slice O2 is not exactly 12 %.
 #   * the FDS 6.10.1 FED device at the occupant crosses 1 at
-#     981.65 / 1666.49 / 1692.72 / 846.45 s; it differs from the hand values
-#     only by FDS's CO coefficient (2.7641667e-5 against 2.764e-5).
+#     981.65 / 1666.49 / 1692.72 / 846.45 s. Cases a, c and d differ from the
+#     hand values by FDS's CO coefficient (2.7641667e-5 against 2.764e-5);
+#     case b has no CO and differs, as the slice read-back does, because its
+#     slice O2 is not exactly 12 %.
 HAND_CROSSING_S = {"a": 981.70, "b": 1666.27, "c": 1692.83, "d": 846.51}
 
 
