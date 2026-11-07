@@ -491,9 +491,14 @@ Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
 library ships no congestion weight at all, and the calibrated value lives with
 the deck it was calibrated on. Issue #89 tracks replacing the global &lt;code>N&lt;/code> with a
 queue the agent can perceive, which would remove the scale dependence.&lt;/p>
-&lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> ships &lt;code>w_queue = 0.024&lt;/code>, fitted under the additive
-model on an older geometry; at 0.5.0 it gives a front-door share of 34.8 %
-against Fahy&amp;rsquo;s 52.9 %, so it no longer reproduces Fahy&amp;rsquo;s split.&lt;/strong> The 0.03
+&lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> and &lt;code>assets/station_nist&lt;/code> ship &lt;code>w_queue = 0&lt;/code> (the
+Station V0 configs). 0.024, the value this section is about, is the labelled
+sensitivity &lt;code>build_scenario.py --w-queue 0.024 --out DIR&lt;/code>. It was fitted under
+the additive model on an older geometry; at 0.5.0 it gives a front-door share
+of 34.8 % against Fahy&amp;rsquo;s 52.9 %, so it no longer reproduces Fahy&amp;rsquo;s split.&lt;/strong>
+Since the V0 configs, a rerun of the sweep below also carries the front-door
+closure at 86 s, the pre-movement bands and the 250 s horizon, so it is not
+comparable with the numbers in this section. The 0.03
 below was swept against a geometry whose doorways were narrower than the
 building&amp;rsquo;s; when the doorways were opened to their clear width the same sweep
 scored 0.03 at 50.2 % and 0.024 at 53.0 % (seeds 420–422) against Fahy&amp;rsquo;s 52.9 %.
@@ -521,8 +526,9 @@ under the gate with a weight fitted under the additive model. It has not been
 re-fitted there.&lt;/p>
 &lt;h4>Provenance of the Station&amp;rsquo;s queue weight&lt;span class="hx-absolute -hx-mt-20" id="provenance-of-the-stations-queue-weight">&lt;/span>
 &lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck now ships 0.024 and why
-neither value has been re-fitted under the gate cost model.
+selected 0.03; see the caveats above for why the deck shipped 0.024 and why
+neither value has been re-fitted under the gate cost model. The sweep
+overrides whatever &lt;code>w_queue&lt;/code> the deck ships.
 &lt;code>scripts/sweep_queue_weight.py&lt;/code> sweeps the
 weight on &lt;code>assets/station_fahy&lt;/code> with rerouting on, three seeds per
 point, and scores each run with that asset&amp;rsquo;s own &lt;code>validate.py&lt;/code>. The
