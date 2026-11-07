@@ -96,9 +96,10 @@ and the `speed_factor` derived from it.
 `.gitignore` so the test runs in CI. A test that skipped when output was missing
 would leave the path as untested as it was before.
 
-The slices are at 2.0 m, which the test reads, and at 1.6 m, the default
-sampling height of `run.py`. FDS snaps 1.6 m to the nearest cell face, 1.5 m on
-this 0.5 m grid.
+The slices are at 2.0 m and at 1.6 m, the default sampling height of `run.py`,
+which the test reads. FDS snaps 1.6 m to the nearest cell face, 1.5 m on this
+0.5 m grid; K there differs from the 2.0 m slice by ~6e-5 /m, and the test
+asserts the 1.5 m value.
 
 `DT_SLCF` is 100 s because the field is constant by construction; the test
 asserts that constancy rather than assuming it.

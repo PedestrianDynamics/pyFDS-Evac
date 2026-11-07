@@ -2,6 +2,7 @@ import math
 from pathlib import Path
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pytest
 
 from pyfds_evac.core import (
@@ -17,6 +18,62 @@ from pyfds_evac.core.smoke_speed import (
     speed_factor_from_extinction,
     speed_factor_from_extinction_fridolf,
 )
+
+# f(K) = 1 - (0.057 / 0.706) K, evaluated by hand to six places. Hard-coded so
+# a wrong alpha or beta in the code under test cannot move the expectation too.
+LUND_FACTOR = {
+    0.5: 0.959632,
+    1.0: 0.919263,
+    3.0: 0.757790,
+    7.5: 0.394476,
+    10.0: 0.192635,
+}
+
+# The simulation time step; ``run_scenario`` fixes it at 0.01 s.
+DT = 0.01
+
+# The unimpeded walking speeds of the clear sweep, ISO 20414 Table 21.
+CLEAR_SWEEP_V0 = (1.25, 1.0, 0.75, 0.5, 0.25)
+
+
+def _run_iso_clear(v0: float):
+    scenario = load_scenario("assets/ISO-table21")
+    for distribution in scenario.raw["distributions"].values():
+        distribution["parameters"]["v0"] = v0
+    scenario.set_max_time(450.0 * 1.25 / v0)
+    return run_scenario(scenario, seed=420)
+
+
+@pytest.fixture(scope="module")
+def clear_fit():
+    """Predict a smoky egress time from clear runs alone.
+
+    A smoky run at speed f v0 is a clear run at desired speed f v0, so with
+    t = L / v0 + a fitted to the clear v0 sweep, t_pred = L / (f v0) + a. The
+    tolerance is the fit's largest residual plus two time steps; the movement
+    model's start-up (a) is the only time that does not scale with 1 / f.
+    """
+    times = []
+    for v0 in CLEAR_SWEEP_V0:
+        outcome = _run_iso_clear(v0)
+        try:
+            assert outcome.success
+            times.append(outcome.evacuation_time)
+        finally:
+            outcome.cleanup()
+    v0s = np.array(CLEAR_SWEEP_V0)
+    t = np.array(times)
+    length, start_up = np.polyfit(1.0 / v0s, t, 1)
+    residual = float(np.abs(t - (length / v0s + start_up)).max())
+    return {
+        "L": float(length),
+        "a": float(start_up),
+        "tolerance": residual + 2 * DT,
+    }
+
+
+def _predicted_time(fit, factor: float, v0: float) -> float:
+    return fit["L"] / (factor * v0) + fit["a"]
 
 
 def _run_iso_constant_extinction(extinction_per_m: float, v0: float | None = None):
@@ -264,6 +321,12 @@ def test_speed_factor_reduces_with_extinction():
     assert speed_factor_from_extinction(3.0) == pytest.approx(1.0 - 0.057 * 3 / 0.706)
 
 
+@pytest.mark.parametrize("extinction_per_m", sorted(LUND_FACTOR))
+def test_speed_factor_matches_the_hand_calculated_table(extinction_per_m):
+    factor = speed_factor_from_extinction(extinction_per_m)
+    assert factor == pytest.approx(LUND_FACTOR[extinction_per_m], abs=5e-7)
+
+
 def test_speed_factor_clamps_to_minimum():
     assert speed_factor_from_extinction(100.0, min_speed_factor=0.2) == 0.2
 
@@ -276,7 +339,9 @@ def test_soot_density_conversion_matches_fds_evac_default():
 
 @pytest.mark.iso20414
 @pytest.mark.parametrize("extinction_per_m", [0.5, 1.0, 3.0, 7.5, 10.0])
-def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_per_m):
+def test_iso_table21_constant_extinction_matches_expected_time_ratio(
+    extinction_per_m, clear_fit
+):
     baseline, smoke = _run_iso_constant_extinction(extinction_per_m)
 
     try:
@@ -285,11 +350,10 @@ def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_
         assert smoke.agents_remaining == 0
         assert smoke.smoke_history
 
-        expected_factor = speed_factor_from_extinction(extinction_per_m)
-        observed_ratio = smoke.evacuation_time / baseline.evacuation_time
-        expected_ratio = 1.0 / expected_factor
+        expected_factor = LUND_FACTOR[extinction_per_m]
+        t_pred = _predicted_time(clear_fit, expected_factor, 1.25)
 
-        assert observed_ratio == pytest.approx(expected_ratio, rel=0.08)
+        assert abs(smoke.evacuation_time - t_pred) <= clear_fit["tolerance"]
         observed_factors = {
             round(row["speed_factor"], 6) for row in smoke.smoke_history
         }
@@ -301,7 +365,7 @@ def test_iso_table21_constant_extinction_matches_expected_time_ratio(extinction_
 
 @pytest.mark.iso20414
 @pytest.mark.parametrize("v0", [1.0, 0.75, 0.5, 0.25])
-def test_iso_table21_holds_across_unimpeded_walking_speeds(v0):
+def test_iso_table21_holds_across_unimpeded_walking_speeds(v0, clear_fit):
     """ISO 20414 Table 21 asks for both axes, not just extinction.
 
     "different combinations of unimpeded walking speeds ... and constant
@@ -320,9 +384,9 @@ def test_iso_table21_holds_across_unimpeded_walking_speeds(v0):
         assert baseline.success and smoke.success
         assert smoke.agents_remaining == 0
 
-        expected_factor = speed_factor_from_extinction(1.0)
-        observed_ratio = smoke.evacuation_time / baseline.evacuation_time
-        assert observed_ratio == pytest.approx(1.0 / expected_factor, rel=0.08)
+        expected_factor = LUND_FACTOR[1.0]
+        t_pred = _predicted_time(clear_fit, expected_factor, v0)
+        assert abs(smoke.evacuation_time - t_pred) <= clear_fit["tolerance"]
         observed = {round(row["speed_factor"], 6) for row in smoke.smoke_history}
         assert observed == {round(expected_factor, 6)}, (
             "the factor must not depend on the unimpeded speed"
@@ -340,7 +404,7 @@ def test_iso_table21_extinction_sweep_produces_plot(tmp_path: Path):
     for extinction_per_m in extinctions:
         baseline, smoke = _run_iso_constant_extinction(extinction_per_m)
         try:
-            expected_factor = speed_factor_from_extinction(extinction_per_m)
+            expected_factor = LUND_FACTOR[extinction_per_m]
             results.append(
                 {
                     "extinction_per_m": extinction_per_m,
