@@ -319,6 +319,31 @@ def apply_gap_table(walkable: Polygon, rows: list[dict], reach: float = 0.25):
     return walkable
 
 
+def _unrecorded(parts, recorded: dict) -> list[tuple]:
+    """Parts overlapping floor in use that no *recorded* entry covers.
+
+    A part counts when it overlaps more than one agent's floor; smaller parts
+    count together once their sum does, so many small losses cannot pass.
+    """
+    used = _used_floor()
+    found, small = [], 0.0
+    for part in parts:
+        overlap = part.intersection(used).area
+        if overlap <= USED_FLOOR_MIN:
+            small += overlap
+            continue
+        if any(
+            part.area <= most and part.buffer(1e-6).contains(Point(p))
+            for p, (most, _) in recorded.items()
+        ):
+            continue
+        c = part.representative_point()
+        found.append((round(c.x, 2), round(c.y, 2), round(part.area, 2)))
+    if small > USED_FLOOR_MIN:
+        found.append(("small parts", round(small, 2)))
+    return found
+
+
 def _check_cut_off(before: Polygon, kept: Polygon) -> None:
     """Stop if a step cut off more than one agent's floor in use, unless recorded.
 
@@ -326,19 +351,8 @@ def _check_cut_off(before: Polygon, kept: Polygon) -> None:
     only-access check of a fixture clearance, so floor an area relies on could
     otherwise vanish with the smaller parts.
     """
-    used = _used_floor()
     lost = before.difference(kept)
-    unrecorded = []
-    for part in getattr(lost, "geoms", [lost]):
-        if part.intersection(used).area <= USED_FLOOR_MIN:
-            continue
-        if any(
-            part.area <= most and part.buffer(1e-6).contains(Point(p))
-            for p, (most, _) in CUT_OFF.items()
-        ):
-            continue
-        c = part.representative_point()
-        unrecorded.append((round(c.x, 2), round(c.y, 2), round(part.area, 2)))
+    unrecorded = _unrecorded(getattr(lost, "geoms", [lost]), CUT_OFF)
     if unrecorded:
         raise SystemExit(
             f"sealing cuts off floor in use at {unrecorded}: make the gap a door "
@@ -515,18 +529,7 @@ def _check_isolated() -> None:
         (p for p in parts if not p.exterior.intersects(domain.boundary)),
         key=lambda p: -p.area,
     )
-    used = _used_floor()
-    unrecorded = []
-    for part in interior[1:]:
-        if part.intersection(used).area <= USED_FLOOR_MIN:
-            continue
-        if any(
-            part.area <= most and part.buffer(1e-6).contains(Point(p))
-            for p, (most, _) in ISOLATED.items()
-        ):
-            continue
-        c = part.representative_point()
-        unrecorded.append((round(c.x, 2), round(c.y, 2), round(part.area, 2)))
+    unrecorded = _unrecorded(interior[1:], ISOLATED)
     if unrecorded:
         raise SystemExit(
             f"isolated floor in use at {unrecorded}: open it or record it in ISOLATED"
@@ -636,10 +639,10 @@ def build() -> tuple[dict, Polygon, dict]:
     for row, poly in polys.items():
         # set_precision keeps the ring valid where plain rounding to 1 mm
         # would pinch it into a bow tie
-        coords = [
-            [round(x, 3), round(y, 3)]
-            for x, y in largest(shapely.set_precision(poly, 1e-3)).exterior.coords
-        ]
+        snapped = largest(shapely.set_precision(poly, 1e-3))
+        if abs(poly.area - snapped.area) > 0.01 or snapped.interiors:
+            raise SystemExit(f"area {row!r} changes when written to 1 mm")
+        coords = [[round(x, 3), round(y, 3)] for x, y in snapped.exterior.coords]
         for (label, share, familiarity), n in zip(
             FB.CLASSES, FB.apportion(counts[row], [c[1] for c in FB.CLASSES])
         ):

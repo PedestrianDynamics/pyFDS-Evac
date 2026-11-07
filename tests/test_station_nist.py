@@ -276,3 +276,12 @@ def test_a_split_exit_strip_stops_the_build(nist, monkeypatch):
     monkeypatch.setattr(nist, "EXIT_DOORS", {exit_id: nist.EXIT_DOORS[exit_id]})
     with pytest.raises(SystemExit, match="split"):
         nist.exit_polygons(walkable)
+
+
+def test_many_small_cut_off_parts_count_together(nist, monkeypatch):
+    """Eight 0.30 m2 losses, each under one agent's floor, 2.4 m2 in all."""
+    kept = box(0, 0, 10, 10)
+    pieces = [box(20 + 2 * i, 0, 20.3 + 2 * i, 1) for i in range(8)]
+    monkeypatch.setattr(nist, "_used_floor", lambda: unary_union([kept, *pieces]))
+    with pytest.raises(SystemExit, match="cuts off floor in use"):
+        nist._check_cut_off(unary_union([kept, *pieces]), kept)

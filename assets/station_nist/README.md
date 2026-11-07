@@ -97,7 +97,8 @@ regularised (below). `geometry.wkt` of `assets/station` is not touched.
   0.01, times two), that is not a door. M2 sealed under 0.2 m; the first ten-seed
   run on that rule left agents stuck at 0.27, 0.30 and 0.39 m openings. A slit
   gets no only-access check, so the build stops if sealing one cuts off more
-  than 0.314 m2 of floor in use, unless that floor is recorded in `CUT_OFF`: the
+  than 0.314 m2 of floor in use (in one part, or summed over smaller parts),
+  unless that floor is recorded in `CUT_OFF`: the
   main-bar service well (behind the 0.39 m gap at (0.68, -10.37), at most
   12 m2) and a 0.5 m2 niche behind the 0.30 m gap at (3.39, -11.74), at most
   0.6 m2.
