@@ -414,6 +414,15 @@ def test_additive_dose_is_credited_on_its_growth():
     assert reason == "fed_reroute"
 
 
+HAND_FRONT_EXIT = [
+    [-1.544, -11.951],
+    [1.311, -11.951],
+    [1.311, -13.717],
+    [-1.544, -13.717],
+    [-1.544, -11.951],
+]
+
+
 def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
     monkeypatch, tmp_path
 ):
@@ -422,11 +431,27 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
     At its first re-evaluation (t = 1 s) a Station agent that has seen more
     exits since spawn switches to one of them. Without the spawn snapshot
     those switches read as shorter_path.
+
+    The test pins a mechanism, not the deck: ``short`` sets the inputs the
+    counts depend on, the hand deck's queue weight 0.024 (``congestion``
+    needs the queue term), no pre-movement (agents must be walking at
+    t = 1 s) and the front exit where the hand drawing put it, about 3 m
+    outside the front wall, whatever the committed config carries. With the
+    exit on the doorway line, and nothing else changed, the counts are 13
+    and 11: the exit polygon alone moves the congestion count (checked by
+    restoring each input in turn; the sign position does not matter).
     """
     load = cli.load_scenario
 
     def short(path):
         scenario = load(path)
+        scenario.raw["routing"] = {**scenario.raw.get("routing", {}), "w_queue": 0.024}
+        scenario.raw["exits"]["jps-exits_0"]["coordinates"] = HAND_FRONT_EXIT
+        for dist in scenario.raw["distributions"].values():
+            params = dist["parameters"]
+            for key in [k for k in params if k.startswith("premovement_")]:
+                del params[key]
+            params["use_premovement"] = False
         scenario.set_max_time(1.5)
         return scenario
 

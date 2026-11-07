@@ -61,6 +61,14 @@ the areas in proportion to the placed survivors (largest remainder, as
     Center stage-side                   7        1       2
     Total                             333       22     100
 
+The front exit moved to the doorway. The hand-drawn polygon lay about 3 m
+outside the front wall, so agents already outdoors at 86 s would have been
+re-routed back in. Exit 0 only; no other exit, spawn, wall or radius changed.
+Old polygon (``source/config.json``): x -1.544 .. 1.311, y -13.717 .. -11.951.
+New polygon (:data:`FRONT_EXIT_POLYGON`): x -1.108 .. 0.619, y -9.50 .. -9.10
+(outside face of the exterior double doors, 1.73 m clear). The sign, placed at
+the exit centroid, moved with it from (-0.116, -12.834) to (-0.245, -9.300).
+
 ``source/geometry.wkt`` carries the drawing with its doorways already opened by
 ``simplify_doors.py``; re-trace the drawing and that script has to run again.
 """
@@ -73,7 +81,7 @@ import sys
 from pathlib import Path
 
 from shapely import wkt as W
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, box
 
 HERE = Path(__file__).parent
 sys.path.insert(0, str(HERE))
@@ -130,6 +138,17 @@ VICTIM_TOTAL = 100
 # calibrated with it (w_queue below).
 VESTIBULE_CHECKPOINT = ("jps-checkpoints_6", (-0.25, -6.6), 0.35)
 
+# The front exit sits on the outside face of the exterior double doors: x is the
+# clear opening between the jambs (1.73 m, NCSTAR 2 Table 7-6: 1727 mm), y runs
+# from the jamb ends (-9.10) 0.4 m outward. Agents leave the building at the
+# doorway, so the exit is the doorway line, as the NIST deck has it. The strip
+# touches no spawn area (areas are clipped to the building interior).
+# Before, the polygon lay about 3 m outside the front wall:
+#   x -1.544 .. 1.311, y -13.717 .. -11.951
+# and the exit's sign (at the polygon centroid) moves with it, from
+# (-0.116, -12.834) to (-0.245, -9.300).
+FRONT_EXIT_POLYGON = box(-1.108, -9.50, 0.619, -9.10)
+
 
 def largest_part(poly):
     # Clipping an area against the building can leave a collection whose stray
@@ -139,6 +158,15 @@ def largest_part(poly):
         return poly
     parts = [p for p in poly.geoms if p.geom_type == "Polygon"]
     return max(parts, key=lambda p: p.area) if parts else poly
+
+
+def _check_front_exit(walkable, polys) -> None:
+    """The front exit must be floor and clear of every spawn area."""
+    if not FRONT_EXIT_POLYGON.within(walkable):
+        raise SystemExit("front exit polygon is not inside the walkable area")
+    for row, poly in polys.items():
+        if poly.intersects(FRONT_EXIT_POLYGON):
+            raise SystemExit(f"front exit polygon overlaps the spawn area {row!r}")
 
 
 def _checkpoint(center: tuple[float, float], radius: float) -> dict:
@@ -274,6 +302,10 @@ def build() -> tuple[dict, Polygon]:
     cfg = json.loads(json.dumps(base))
     cfg["distributions"] = distributions
     cfg["checkpoints"][VESTIBULE_CHECKPOINT[0]] = _checkpoint(*VESTIBULE_CHECKPOINT[1:])
+    _check_front_exit(walkable, polys)
+    cfg["exits"][FRONT_DOOR]["coordinates"] = [
+        [round(x, 3), round(y, 3)] for x, y in FRONT_EXIT_POLYGON.exterior.coords
+    ]
     for exit_id, exit_cfg in cfg["exits"].items():
         c = Polygon(exit_cfg["coordinates"]).centroid
         exit_cfg["sign"] = {"x": c.x, "y": c.y, "alpha": None, "c": SIGN_C[exit_id]}

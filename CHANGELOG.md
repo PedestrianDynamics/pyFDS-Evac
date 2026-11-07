@@ -53,6 +53,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `assets/station_fahy`: the front exit (`jps-exits_0`) moved from about 3 m
+  outside the front wall to the doorway line, so a front-door closure does
+  not re-route agents already outdoors. Old polygon x -1.544 .. 1.311,
+  y -13.717 .. -11.951; new polygon x -1.108 .. 0.619, y -9.50 .. -9.10,
+  outside the exterior doors' jambs. No other exit, spawn area, wall or
+  radius moved; the exit's sign moved with it, from (-0.116, -12.834) to
+  (-0.245, -9.300). Station results change.
 - `assets/station_nist`: the Rear bar / dart room east edge is -6.0, the
   hand deck's value, instead of -8.0, so both Station decks use the same
   rectangle. Its area grows from 13.1 to 17.2 m2, which the 38 agents of
