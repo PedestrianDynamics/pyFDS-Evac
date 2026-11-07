@@ -3,6 +3,7 @@
 
     .venv/bin/python assets/station_nist/build_scenario.py          # write
     .venv/bin/python assets/station_nist/build_scenario.py --tables # print
+    .venv/bin/python assets/station_nist/build_scenario.py --full   # + config_full.json
 
 Station-derived geometry (provenance unverified, #377).
 
@@ -115,9 +116,8 @@ ISOLATED = {
     (-6.07, -15.32): (0.4, "enclosed 0.36 m2 pocket in the main-bar rectangle"),
 }
 
-# The Rear bar / dart room east edge is the Fahy plan's -8.0, not the -6.0 of
-# the hand deck (#380): on the NIST geometry -8.0 holds 28 agents (README).
-RECTS = {**areas.RECTS, "Rear bar / dart room": (-13.5, 0.5, -8.0, 7.5)}
+# The same rectangles as the hand deck, Rear bar / dart room included (#380).
+RECTS = areas.RECTS
 
 # The deck's exterior doors, which the extraction keeps shut: (exit id, x or y
 # of the door line, span along it, which wall). Each exit is a strip just inside.
@@ -768,6 +768,8 @@ def main(argv: list[str]) -> int:
     total = sum(d["parameters"]["number"] for d in cfg["distributions"].values())
     (HERE / "config.json").write_text(json.dumps(cfg, indent=2))
     (HERE / "geometry.wkt").write_text(walkable.wkt + "\n")
+    if "--full" in argv:
+        FB.write_full(cfg, HERE)
     print(
         f"{len(cfg['distributions'])} distributions, {total} agents "
         f"(Fahy placeable: {F.total_agents()}), walkable {walkable.area:.1f} m2"
