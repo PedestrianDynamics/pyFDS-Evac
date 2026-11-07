@@ -81,11 +81,17 @@ CLASSES = (
 # Spreads are ordinary adult figures, not fitted to anything this deck scores.
 V0 = 1.3
 V0_STD = 0.2
-# Half a 0.40 m body: at the 0.15 m this deck used, three agents fit abreast in
-# the 0.914 m interior door and the front entrance passed nearly 7 persons per
-# metre-second, several times any measured door flow.
+# 0.20 m is an effective contact disc, not half a body width: adult shoulder
+# breadth is 0.46-0.51 m (Weidmann 1993 sec. 2.32.1; Korhonen & Hostikka 2009,
+# VTT WP 119, Table 1; ANSUR II via Dufour et al., arXiv:2508.19865). At the
+# 0.15 m this deck used, three agents fit abreast in the 0.914 m interior door
+# and the front entrance passed nearly 7 persons per metre-second, several
+# times any measured door flow. The spread was narrowed from 0.02 m after the
+# pilot: agents with r >= 0.24 m stalled alone at the ~0.9 m doors under
+# WarpDriverModel (#908, jupedsim#1719). Chosen on run completion, not on any
+# scored target. The cap is the mean + 3 sigma = 0.23 m.
 RADIUS = 0.20
-RADIUS_STD = 0.02
+RADIUS_STD = 0.01
 
 # A checkpoint inside the vestibule, between the last node before the front
 # door and the exit. Agents do not need it to find the doorway: JuPedSim

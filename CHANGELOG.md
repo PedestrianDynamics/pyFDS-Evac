@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Station deck radius: Gaussian σ 0.02 → 0.01 m (mean 0.20 m, cap
+  0.23 m instead of 0.26 m). Agents with r ≥ 0.24 m stalled alone at the
+  ~0.9 m doors under `WarpDriverModel` (#908; upstream
+  [jupedsim#1719](https://github.com/PedestrianDynamics/jupedsim/issues/1719)),
+  although the doors are wide enough. Chosen on run completion, not on
+  any scored target. `assets/station_fahy` results differ from 0.8.0
+  and 0.9.0-dev.
 - Docs: the log-normal σ = 0.94 of the probabilistic gas threshold is
   described as a compromise between two NIST TN 1797 bin edges, not a
   fit to Purser's bands. Models › FED shows what σ = 0.35, 0.52, 0.94

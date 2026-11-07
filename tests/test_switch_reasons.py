@@ -449,7 +449,7 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
     with out.open(encoding="utf-8") as f:
         rows = [r for r in csv.DictReader(f) if float(r["time_s"]) == 1.0]
     reasons = collections.Counter(r["reason"] for r in rows)
-    assert reasons == {"learned_exit": 10, "congestion": 13}
+    assert reasons == {"learned_exit": 13, "congestion": 9}
 
 
 # ── Which rows the route_switches metric counts (#733) ──
