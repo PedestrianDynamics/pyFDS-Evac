@@ -126,6 +126,38 @@ def test_full_config_areas_are_proportional_to_placed_survivors(asset, fahy_buil
     assert {r: c["placed"] for r, c in per_area.items()} == placed
 
 
+# Largest remainder by hand from the placed counts: victims 100 n / 333 floor to
+# 96, the four largest remainders (sunroom .80, between bars .71, dance floor
+# .52, platform .50) get one more; unplaced 22 n / 333 floor to 15, the seven
+# largest (platform .99, dance floor .95, back hallway .92, between bars .92,
+# behind dance floor .89, dart room .85, center stage-side .46) get one more.
+EXTRA = {  # area: (unplaced, victim)
+    "Stage": (0, 1),
+    "Near stage door": (1, 5),
+    "Near stage or on dance floor": (5, 23),
+    "Back wall platform": (1, 5),
+    "Sunroom": (1, 5),
+    "Behind dance floor": (5, 22),
+    "Back hallway": (1, 4),
+    "Between bars": (2, 9),
+    "Rear bar / dart room": (2, 8),
+    "Entryway": (1, 5),
+    "Main bar": (2, 11),
+    "Center stage-side": (1, 2),
+}
+
+
+@pytest.mark.parametrize("asset", ASSETS)
+def test_full_config_extra_agents_per_area_are_the_hand_apportionment(asset):
+    full = _load_json(asset, "config_full.json")
+    per_area: dict[str, Counter] = {row: Counter() for row in EXTRA}
+    for d in full["distributions"].values():
+        p = d["parameters"]
+        per_area[p["fahy_row"]][p["population"]] += p["number"]
+    got = {r: (c["unplaced"], c["victim"]) for r, c in per_area.items()}
+    assert got == EXTRA
+
+
 @pytest.mark.parametrize("asset", ASSETS)
 def test_extra_agents_share_the_area_polygon_and_parameters(asset):
     full = _load_json(asset, "config_full.json")
