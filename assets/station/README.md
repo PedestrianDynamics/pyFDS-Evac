@@ -19,7 +19,7 @@ reconstructed by hand:
 |---|---|
 | walkable | **412.8 m²**, 6 obstacles |
 | extent | 30.0 m (x) × 21.1 m (y), L-shaped |
-| vertices | 705, on the deck's 0.1 m grid |
+| vertices | 705 on the exterior ring and 130 on the 6 holes, in deck coordinates (not on a 0.1 m grid) |
 | `jps.RoutingEngine` | accepts it |
 
 ## Checked against the dimensioned plan
