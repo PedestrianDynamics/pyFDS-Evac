@@ -43,7 +43,8 @@ could be determined.
 Exit usage was determined for 347 of 355 survivors; 127 left by the front door.
 At least another 62 *attempted* the front door and failed — 34 of those went out
 a window, 25 through another door. So **at least 50 % of survivors tried or
-succeeded in using the front door**, out of four available doors.
+succeeded in using the front door**, out of four available doors. The 53 % used
+elsewhere is derived here, not stated by Fahy: (127 + 62)/355 from p. 12.
 
 ### Exit choice by starting location (Table 2)
 
@@ -117,10 +118,12 @@ alternative exit**.
 ### Timing and victims
 
 Untenable on the dance floor in **under 90 s**, and in the dart room and sunroom
-ten seconds later. Of the 96 who died at the scene, **31 were in the entranceway
+ten seconds later (NCSTAR 2, p. 5-43; not from Fahy). Of the 96 who died at the scene, **31 were in the entranceway
 pile-up** and 18 in the sunroom along the wall adjoining it.
 
 ## Scenario definition
+
+**Time zero** is first flame (NCSTAR 2, Table 2-2), known to ±2 s.
 
 **Geometry** from NCSTAR Fig. 1-5 as before: 412 m² footprint, four doors, clear
 widths from Table 7-6 (all side doors 914 mm; the front entrance limited by its
