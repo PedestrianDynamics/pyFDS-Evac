@@ -10,6 +10,7 @@ import json
 import logging
 import pathlib
 import shutil
+import sqlite3
 import sys
 
 from pyfds_evac.core.agent_scalars import write_agent_scalars
@@ -222,6 +223,39 @@ def _maybe_write_agent_scalars(output_path, fed_history) -> None:
     write_agent_scalars(pathlib.Path(output_path).resolve(), fed_history)
 
 
+def _population_labelled(scenario) -> bool:
+    """Whether any distribution of *scenario* carries a ``population`` label."""
+    distributions = (getattr(scenario, "raw", None) or {}).get("distributions") or {}
+    return any("population" in d.get("parameters", {}) for d in distributions.values())
+
+
+def _maybe_write_agent_distributions(output_path, scenario, result) -> None:
+    """Write agent_distributions(id, distribution) into the copied sqlite.
+
+    Only for a scenario whose distributions carry a ``population`` label, so
+    that the trajectory files of every other run stay as they were. The
+    table is what ``assets/station_fahy/validate.py`` reads to attribute each
+    agent to its distribution.
+    """
+    mapping = getattr(result, "agent_distributions", None)
+    if not mapping or not _population_labelled(scenario):
+        return
+    con = sqlite3.connect(str(pathlib.Path(output_path).resolve()))
+    try:
+        con.execute("DROP TABLE IF EXISTS agent_distributions")
+        con.execute(
+            "CREATE TABLE agent_distributions("
+            "id INTEGER PRIMARY KEY, distribution TEXT NOT NULL)"
+        )
+        con.executemany(
+            "INSERT INTO agent_distributions(id, distribution) VALUES (?, ?)",
+            sorted(mapping.items()),
+        )
+        con.commit()
+    finally:
+        con.close()
+
+
 def _copy_manifest(
     result, output_path: pathlib.Path, configuration: dict | None = None
 ) -> pathlib.Path | None:
@@ -415,6 +449,7 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         if manifest_path is not None:
             artifacts.append(f"Run manifest: {manifest_path}")
         _maybe_write_agent_scalars(output_path, result.fed_history)
+        _maybe_write_agent_distributions(output_path, scenario, result)
 
     if getattr(opts, "cleanup", False):
         result.cleanup()

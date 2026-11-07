@@ -271,3 +271,208 @@ def test_fahy_noise_floor():
     assert len(floor) == V.NOISE_DRAWS
     assert statistics.median(floor) == pytest.approx(0.079, abs=0.003)
     assert floor[int(0.95 * (len(floor) - 1))] == pytest.approx(0.109, abs=0.003)
+
+
+# Population labels (#383): victims and unplaced survivors start inside Fahy
+# areas too, and are left out of every statistic.
+
+
+def _labelled_config(tmp_path, labels, horizon=None):
+    """Four distributions in the area A box (so polygons cannot tell them apart)."""
+    cfg = json.loads(_config(tmp_path, horizon=horizon).read_text())
+    square = cfg["distributions"]["d0"]["coordinates"]
+    cfg["distributions"] = {
+        key: {
+            "type": "polygon",
+            "coordinates": square,
+            "parameters": {"fahy_row": "A"}
+            | ({} if label is None else {"population": label}),
+        }
+        for key, label in labels.items()
+    }
+    path = tmp_path / "labelled.json"
+    path.write_text(json.dumps(cfg))
+    return path
+
+
+LABELS = {
+    "d_none": None,
+    "d_placed": "placed",
+    "d_unplaced": "unplaced",
+    "d_victim": "victim",
+}
+# agent id -> distribution, two agents each; ids 1-2 unlabelled ... 7-8 victims.
+MAPPING = {
+    1: "d_none",
+    2: "d_none",
+    3: "d_placed",
+    4: "d_placed",
+    5: "d_unplaced",
+    6: "d_unplaced",
+    7: "d_victim",
+    8: "d_victim",
+}
+
+
+def _run_rows(exits, still=(), horizon_frame=None):
+    """Trajectory rows: agents in *exits* leave by the bar door, *still* stay."""
+    rows = []
+    for aid in MAPPING:
+        rows.append((0, aid, 1.0 + 0.1 * aid, 1.0))
+        if aid in exits:
+            rows.append((100 + aid, aid, 10.5, 19.5))
+        if aid in still:
+            rows.append((horizon_frame, aid, 0.5, 18.5))
+    return rows
+
+
+def _add_tables(db, mapping=MAPPING, fed=None):
+    con = sqlite3.connect(db)
+    if mapping is not None:
+        con.execute("CREATE TABLE agent_distributions(id INT, distribution TEXT)")
+        con.executemany(
+            "INSERT INTO agent_distributions VALUES (?, ?)", mapping.items()
+        )
+    if fed is not None:
+        con.execute("CREATE TABLE agent_scalars(frame INT, id INT, fed REAL)")
+        con.executemany("INSERT INTO agent_scalars VALUES (?, ?, ?)", fed)
+    con.commit()
+    con.close()
+
+
+def test_labelled_run_excludes_unplaced_and_victims_from_every_statistic(tmp_path):
+    cfg = _labelled_config(tmp_path, LABELS, horizon=250.0)
+    # 1-4 exit; 5, 7 exit too; 2 and 6 and 8 are still on the grid at the horizon.
+    db = _sqlite(
+        tmp_path, _run_rows({1, 3, 4, 5, 7}, still={2, 6, 8}, horizon_frame=2500)
+    )
+    _add_tables(db)
+    agents = V.observed_agents(db, cfg, reach=2.0, horizon=250.0)
+    by_id = {a.agent_id: a.population for a in agents}
+    assert by_id == {
+        1: "placed",
+        2: "placed",
+        3: "placed",
+        4: "placed",
+        5: "unplaced",
+        6: "unplaced",
+        7: "victim",
+        8: "victim",
+    }
+    assert V.door_matrix(agents) == {"A": {"bar_door": 3}}
+    assert V.censored_count(agents) == 1  # agent 2 only; 6 and 8 are excluded
+    assert V.excluded_counts(agents) == {"unplaced": 2, "victim": 2}
+    assert V.stuck_counts(agents) == {}
+
+
+def test_exclusion_leaves_the_scores_of_the_placed_agents_unchanged(tmp_path):
+    exits = {1, 2, 3, 4, 5, 6, 7, 8}
+    labelled = _labelled_config(tmp_path, LABELS)
+    db = _sqlite(tmp_path, _run_rows(exits))
+    _add_tables(db)
+    both = V.observed_agents(db, labelled, reach=2.0)
+
+    # The same run with only the four placed agents in it, and no labels.
+    only = {k: v for k, v in MAPPING.items() if k <= 4}
+    solo_dir = tmp_path / "solo"
+    solo_dir.mkdir()
+    plain = _config(solo_dir)
+    solo_db = _sqlite(solo_dir, [r for r in _run_rows(exits) if r[1] in only])
+    solo = V.observed_agents(solo_db, plain, reach=2.0)
+
+    assert V.door_matrix(both) == V.door_matrix(solo)
+    targets = V.fahy_targets()
+    assert V.w_statistic(V.door_matrix(both), targets) == V.w_statistic(
+        V.door_matrix(solo), targets
+    )
+    assert V.t1(V.door_matrix(both), rows=["A"]) == V.t1(
+        V.door_matrix(solo), rows=["A"]
+    )
+    assert V.survivor_outcomes(both)["placed"] == 4
+
+
+def test_same_agents_leave_out_the_excluded_agents(tmp_path):
+    cfg = _labelled_config(tmp_path, LABELS)
+    db = _sqlite(tmp_path, _run_rows(set(MAPPING)))
+    _add_tables(db)
+    agents = V.observed_agents(db, cfg, reach=2.0)
+    assert V.same_agents(agents, agents) == {1, 2, 3, 4}
+
+
+def test_same_agents_rejects_a_changed_label(tmp_path):
+    a = _agent(1)
+    b = V.AgentExit(1, "A", "front", 10.0, (0.0, 0.0), population="victim")
+    with pytest.raises(ValueError, match="spawns differently"):
+        V.same_agents([a], [b])
+
+
+def test_unmapped_agents_fall_back_to_the_polygon_as_placed(tmp_path):
+    cfg = _labelled_config(tmp_path, {"d_victim": "victim", "d_placed": "placed"})
+    db = _sqlite(tmp_path, [(0, 1, 1.0, 1.0), (125, 1, 10.5, 19.5)])
+    _add_tables(db, mapping={})
+    (agent,) = V.observed_agents(db, cfg, reach=2.0)
+    # The first polygon containing the start decides: here the victim one.
+    assert (agent.origin, agent.population) == ("A", "victim")
+
+
+def test_labelled_config_without_a_mapping_is_rejected(tmp_path):
+    cfg = _labelled_config(tmp_path, LABELS)
+    db = _sqlite(tmp_path, _run_rows({1}))
+    with pytest.raises(ValueError, match="no agent_distributions table"):
+        V.observed_agents(db, cfg, reach=2.0)
+
+
+def test_unknown_population_label_is_rejected(tmp_path):
+    cfg = _labelled_config(tmp_path, {"d": "survivor"})
+    with pytest.raises(ValueError, match="population 'survivor'"):
+        V.config_populations(cfg)
+
+
+def test_unlabelled_config_ignores_a_mapping_and_scores_as_before(tmp_path, capsys):
+    cfg = _config(tmp_path, horizon=250.0)
+    db = _sqlite(tmp_path, [*CENSORED_RUN, (2500, 2, 0.5, 18.5)])
+    before = V.observed_agents(db, cfg, reach=2.0, horizon=250.0)
+    _add_tables(db, mapping={1: "nowhere", 2: "nowhere"})
+    after = V.observed_agents(db, cfg, reach=2.0, horizon=250.0)
+    assert before == after
+    assert all(a.placed and a.incapacitated is None for a in after)
+    V.report_statistic([after], None, draws=10)
+    out = capsys.readouterr().out
+    assert "excluded by label" not in out
+
+
+def test_shares_of_incapacitated_and_censored_placed_survivors(tmp_path, capsys):
+    cfg = _labelled_config(tmp_path, LABELS, horizon=250.0)
+    # Placed 1-4: agent 1 exits, 2 and 3 stay (censored), 4 exits.
+    # Agent 3 reached FED 1.2 and agent 4 0.9 (not incapacitated); the victim 7
+    # reached 2.0 but is excluded.
+    db = _sqlite(
+        tmp_path, _run_rows({1, 4, 5, 7}, still={2, 3, 6, 8}, horizon_frame=2500)
+    )
+    fed = [(10, 3, 0.5), (20, 3, 1.2), (10, 4, 0.9), (10, 7, 2.0), (10, 1, 0.0)]
+    _add_tables(db, fed=fed)
+    agents = V.observed_agents(db, cfg, reach=2.0, horizon=250.0)
+    assert V.survivor_outcomes(agents) == {
+        "placed": 4,
+        "incapacitated": 1,
+        "censored": 2,
+        "both": 1,
+    }
+    V.report_statistic([agents], None, draws=10)
+    out = capsys.readouterr().out
+    assert "excluded by label: unplaced 2, victim 2" in out
+    assert (
+        "incapacitated (FED >= 1): 25.0% (1/4); censored at the horizon: 50.0% (2/4)"
+        in out
+    )
+    assert "1 of them are both" in out
+
+
+def test_incapacitated_share_is_not_available_without_recorded_fed(tmp_path, capsys):
+    cfg = _labelled_config(tmp_path, LABELS)
+    db = _sqlite(tmp_path, _run_rows({1, 2, 3, 4}))
+    _add_tables(db)
+    agents = V.observed_agents(db, cfg, reach=2.0)
+    assert V.survivor_outcomes(agents)["incapacitated"] is None
+    V.report_statistic([agents], None, draws=10)
+    assert "incapacitated (FED >= 1): n/a (no FED recorded)" in capsys.readouterr().out
