@@ -124,9 +124,9 @@ Only `.sf`, `.sf.bnd` and `.smv` are kept. The `_hrr.csv` FDS also writes is
 Each deck also has a `FED` device at the occupant (`FED_occupant`); its
 `_devc.csv` is not kept here but in the project data folder
 (`fds-evac-data/iso_table22_coupled/`), where the verification page reads it.
-Case e keeps the 15 rows of it around the crossing
-(`fds/e/iso_table22_e_devc_extract.csv`, 0.5 kB), so its test reads FDS's
-crossing from the repository.
+Case e keeps the 15 rows of it around the crossing in
+`reference/iso_table22_e_fed_device.csv` (0.5 kB; outside `fds/`, which holds
+only what FDS writes), so its test reads FDS's crossing from the repository.
 
 ## What this catches that the stubbed test cannot
 

@@ -17,7 +17,7 @@ pyfds_evac: ISO's Step 2 is a hand calculation, and the expected value of a
 test must not come from the code it checks.
 
 The FDS ``FED`` device at the occupant (FDS 6.10.1, ``iso_table22_e.fds``) is
-read from ``fds/e/iso_table22_e_devc_extract.csv``: the rows of its
+read from ``reference/iso_table22_e_fed_device.csv``: the rows of its
 ``_devc.csv`` between 190 s and 197 s, which bracket the crossing. The full
 file (17 kB) is in the project data folder.
 """
@@ -48,7 +48,7 @@ NO2_PPM = 50.0
 CO2_PERCENT = 2.0
 O2_PERCENT = 21.0
 
-DEVC_EXTRACT = ASSET / "fds" / "e" / "iso_table22_e_devc_extract.csv"
+DEVC_EXTRACT = ASSET / "reference" / "iso_table22_e_fed_device.csv"
 
 
 def hand_rates() -> dict[str, float]:
