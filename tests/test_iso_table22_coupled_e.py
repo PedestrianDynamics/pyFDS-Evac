@@ -16,17 +16,20 @@ below are written out with literal constants and import nothing from
 pyfds_evac: ISO's Step 2 is a hand calculation, and the expected value of a
 test must not come from the code it checks.
 
-The FDS ``FED`` device at the occupant crossed 1 at 193.1835 s (FDS 6.10.1,
-``assets/iso_table22_coupled/iso_table22_e.fds``; its ``_devc.csv`` is kept in
-the project data folder, not in the repository).
+The FDS ``FED`` device at the occupant (FDS 6.10.1, ``iso_table22_e.fds``) is
+read from ``fds/e/iso_table22_e_devc_extract.csv``: the rows of its
+``_devc.csv`` between 190 s and 197 s, which bracket the crossing. The full
+file (17 kB) is in the project data folder.
 """
 
 from __future__ import annotations
 
+import csv
 import math
 from pathlib import Path
 from types import SimpleNamespace
 
+import numpy as np
 import pytest
 
 from pyfds_evac.core.run_config import build_run_kwargs
@@ -45,8 +48,7 @@ NO2_PPM = 50.0
 CO2_PERCENT = 2.0
 O2_PERCENT = 21.0
 
-# FDS 6.10.1 FED device at (5, 5, 1.6) m, first time at or above 1.
-FDS_DEVICE_CROSSING_S = 193.1835
+DEVC_EXTRACT = ASSET / "fds" / "e" / "iso_table22_e_devc_extract.csv"
 
 
 def hand_rates() -> dict[str, float]:
@@ -67,6 +69,21 @@ def hand_rates() -> dict[str, float]:
 
 def hand_crossing_s() -> float:
     return 60.0 / hand_rates()["total"]
+
+
+def fds_device_crossing_s() -> float:
+    """Time at which FDS's FED device reaches 1, linear between rows.
+
+    The first line of the file holds the units, the second the names.
+    """
+    with open(DEVC_EXTRACT, newline="", encoding="utf-8") as handle:
+        rows = list(csv.reader(handle))
+    names = [name.strip() for name in rows[1]]
+    column = names.index("FED_occupant")
+    times = [float(row[0]) for row in rows[2:]]
+    fed = [float(row[column]) for row in rows[2:]]
+    assert fed[0] < 1.0 <= fed[-1], "the extract must bracket the crossing"
+    return float(np.interp(1.0, fed, times))
 
 
 @pytest.fixture(scope="module")
@@ -104,12 +121,14 @@ def test_the_hand_values_are_the_ones_in_the_documentation():
 
 
 def test_fds_own_fed_device_agrees_with_the_hand_calculation():
-    """The gap is the slice rounding of the deck's mass fractions (6 digits).
+    """FDS integrates the gas it holds, which is not exactly the prescribed one.
 
-    FDS integrates the field it holds, whose HCN, NO2 and CO2 differ from the
-    prescribed values by up to 2e-5 relative, which moves the rate by 1.8e-5.
+    The slices show 199.9997 ppm HCN, 50.0011 ppm NO2 and 1.999994 % CO2 where
+    the deck's mass fractions give 200.0002, 50.00002 and 1.999997; the offset
+    comes from FDS's internal conversion (cause not established). It moves the
+    rate by 1.8e-5 relative and the crossing by 0.0035 s.
     """
-    assert abs(FDS_DEVICE_CROSSING_S - hand_crossing_s()) <= 0.01
+    assert abs(fds_device_crossing_s() - hand_crossing_s()) <= 0.01
 
 
 def test_the_gas_arrives_at_the_occupant_unaltered(case_e):
@@ -158,3 +177,23 @@ def test_the_occupant_stays_put_and_is_incapacitated(case_e):
     assert case_e.metrics["agents_remaining"] == 1
     assert case_e.metrics["all_evacuated"] is False
     assert case_e.metrics["fed_max"] >= 1.0
+
+
+def test_gas_incapacitation_starts_at_the_crossing(case_e):
+    """Premovement already holds the occupant, so only this checks the stop."""
+    history = case_e.fed_history
+    crossed = next(
+        i for i, r in enumerate(history) if float(r["fed_cumulative"]) >= 1.0
+    )
+    stopped = next((i for i, r in enumerate(history) if r["incapacitated"]), None)
+    assert stopped == crossed, "incapacitation must start in the crossing row"
+    t_star = hand_crossing_s()
+    t_stop = float(history[stopped]["time_s"])
+    assert t_star <= t_stop < t_star + 1.0
+    assert history[stopped]["incapacitation_cause"] == "gas"
+    assert all(not r["incapacitated"] for r in history[:stopped])
+    for row in history[stopped:]:
+        assert row["incapacitated"]
+        assert float(row["desired_speed"]) == 0.0
+        assert float(row["base_speed"]) == 0.0
+    assert float(history[0]["base_speed"]) > 0.0

@@ -107,7 +107,7 @@ done
 
 ## The FDS output is committed
 
-`fds/{a,b,c,d}/` holds **256 kB total** (case e adds 29 kB: six slices) — four slices per case on a 20 × 20 × 6
+`fds/{a,b,c,d}/` holds **256 kB total** (case e adds 29 kB: six slices, and a 0.5 kB extract of its `_devc.csv` around the crossing) — four slices per case on a 20 × 20 × 6
 mesh at PBZ = 1.6 m, which FDS places on the cell face at 1.5 m, the
 height nearest pyFDS-Evac's default sampling height — forced past `.gitignore`, **so the test runs in CI**. A test that skipped
 when output was missing would leave this path exactly as untested as it was
@@ -124,6 +124,9 @@ Only `.sf`, `.sf.bnd` and `.smv` are kept. The `_hrr.csv` FDS also writes is
 Each deck also has a `FED` device at the occupant (`FED_occupant`); its
 `_devc.csv` is not kept here but in the project data folder
 (`fds-evac-data/iso_table22_coupled/`), where the verification page reads it.
+Case e keeps the 15 rows of it around the crossing
+(`fds/e/iso_table22_e_devc_extract.csv`, 0.5 kB), so its test reads FDS's
+crossing from the repository.
 
 ## What this catches that the stubbed test cannot
 
@@ -142,6 +145,6 @@ the crossing time.
 ## Tests
 
 `tests/test_iso_table22_coupled.py`, 37 tests over the four cases, ~26 s.
-`tests/test_iso_table22_coupled_e.py`, 6 tests over case e, ~2 s: the
+`tests/test_iso_table22_coupled_e.py`, 7 tests over case e, ~2 s: the
 expected values are literal constants, and the crossing is checked to lie in
 [t*, t* + one FED interval).

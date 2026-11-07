@@ -153,12 +153,14 @@ a difference of 3 × 10⁻⁸ of the term.
 | pyFDS-Evac: first update with FED ≥ 1, and the stop | 194.0 (+0.82 s) |
 
 The FDS device is 0.0035 s (1.8 × 10⁻⁵ of *t*\*) later than the hand
-calculation on the prescribed gas. The cause is the deck: it writes mass
-fractions to 6 significant digits, so the slices hold 199.9997 ppm HCN,
-50.0011 ppm NO₂ and 1.999994 % CO₂, and the rate computed from those values
-gives 193.183 s. FDS and the hand calculation agree to 10⁻⁷ once the same gas
-is used. The simulated stop lies in [*t*\*, *t*\* + 1 s), as in the four other
-cases. The automated test (`tests/test_iso_table22_coupled_e.py`) holds the
+calculation on the prescribed gas. The slices do not hold exactly the
+prescribed gas: they show 199.9997 ppm HCN, 50.0011 ppm NO₂ and 1.999994 %
+CO₂, where the deck's mass fractions with its declared molar masses give
+200.0002, 50.00002 and 1.999997. Rounding the mass fractions to 6 digits does
+not explain this; the offset comes from FDS's internal conversion, and the
+cause is not established. The rate computed from the slice values gives
+193.183 s, and FDS and the hand calculation then agree to 10⁻⁷. The simulated stop lies in
+[*t*\*, *t*\* + 1 s), as in the four other cases. The automated test (`tests/test_iso_table22_coupled_e.py`) holds the
 hand calculation as literal constants and imports nothing from pyFDS-Evac. It
 fails if the correction is dropped (crossing at 74 s) or if HV_CO₂ does not
 multiply the HCN term (255 s, beyond the end of the deck). Case e is not in the
