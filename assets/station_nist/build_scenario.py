@@ -3,6 +3,7 @@
 
     .venv/bin/python assets/station_nist/build_scenario.py          # write
     .venv/bin/python assets/station_nist/build_scenario.py --tables # print
+    .venv/bin/python assets/station_nist/build_scenario.py --full   # + config_full.json
 
 Station-derived geometry (provenance unverified, #377).
 
@@ -767,6 +768,8 @@ def main(argv: list[str]) -> int:
     total = sum(d["parameters"]["number"] for d in cfg["distributions"].values())
     (HERE / "config.json").write_text(json.dumps(cfg, indent=2))
     (HERE / "geometry.wkt").write_text(walkable.wkt + "\n")
+    if "--full" in argv:
+        FB.write_full(cfg, HERE)
     print(
         f"{len(cfg['distributions'])} distributions, {total} agents "
         f"(Fahy placeable: {F.total_agents()}), walkable {walkable.area:.1f} m2"
