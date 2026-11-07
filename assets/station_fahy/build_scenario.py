@@ -12,9 +12,12 @@ What Stage 1 can and cannot show
 --------------------------------
 In clear air a familiarity model and a nearest-exit model agree on the
 dance-floor row -- that row only separates them once the fire intervenes, which
-is Stage 2. Stage 1's discriminator is the aggregate front-door share: Fahy
-found at least 53 % of survivors tried or used the front door out of four
-available, which a nearest-exit model has no reason to produce.
+is Stage 2. Stage 1's discriminator is the aggregate front-door share: at least
+53 % of survivors tried or used the front door out of four available, which a
+nearest-exit model has no reason to produce. The 53 % is derived, not stated
+by Fahy, who writes "at least 50 percent": (127 used + 62 attempted)/355,
+from "Exit Choice and Travel Paths". Time zero is first flame (NCSTAR 2,
+Table 2-2), known to +-2 s.
 
 Familiarity, from the paper rather than tuned
 ---------------------------------------------
