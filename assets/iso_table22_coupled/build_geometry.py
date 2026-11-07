@@ -76,9 +76,32 @@ CASES = {
     "b": {"co2": 0.00, "co": 0.00, "o2": 12.0, "isolates": "O2 hypoxia alone"},
     "c": {"co2": 0.00, "co": 0.10, "o2": 21.0, "isolates": "CO alone"},
     "d": {"co2": 3.43, "co": 0.10, "o2": 21.0, "isolates": "CO + CO2 factor"},
+    # Not in the guide's Figure 8 (#257). CO is zero so that every term of the
+    # dose comes from HCN, NO2 and the CO2 factor; O2 is above the 20 % gate.
+    "e": {
+        "co2": 2.00,
+        "co": 0.00,
+        "o2": 21.0,
+        "hcn_ppm": 200.0,
+        "no2_ppm": 50.0,
+        "isolates": "HCN - NOx correction, NOx, NO2 irritant, CO2 factor on all",
+    },
 }
 
-MOLAR_MASS = {"N2": 28.013, "O2": 31.999, "CO": 28.010, "CO2": 44.009}
+# Optional species a case may add, as (case key, FDS species, molar-mass key).
+OPTIONAL_GASES = (
+    ("hcn_ppm", "HYDROGEN CYANIDE", "HCN"),
+    ("no2_ppm", "NITROGEN DIOXIDE", "NO2"),
+)
+
+MOLAR_MASS = {
+    "N2": 28.013,
+    "O2": 31.999,
+    "CO": 28.010,
+    "CO2": 44.009,
+    "HCN": 27.025,
+    "NO2": 46.006,
+}
 
 
 def inputs_for(case: str):
@@ -90,6 +113,8 @@ def inputs_for(case: str):
         co_volume_fraction_percent=spec["co"],
         co2_volume_fraction_percent=spec["co2"],
         o2_volume_fraction_percent=spec["o2"],
+        hcn_ppm=spec.get("hcn_ppm", 0.0),
+        no2_ppm=spec.get("no2_ppm", 0.0),
     )
 
 
@@ -128,11 +153,14 @@ def mass_fractions(case: str) -> dict:
         "CO2": spec["co2"] / 100.0,
         "O2": spec["o2"] / 100.0,
     }
+    for key, _, gas in OPTIONAL_GASES:
+        if key in spec:
+            x[gas] = spec[key] * 1.0e-6
     x_n2 = 1.0 - sum(x.values())
     m_mix = x_n2 * MOLAR_MASS["N2"] + sum(
-        x[k] * MOLAR_MASS[k] for k in ("CO", "CO2", "O2")
+        value * MOLAR_MASS[gas] for gas, value in x.items()
     )
-    return {k: x[k] * MOLAR_MASS[k] / m_mix for k in ("CO", "CO2", "O2")}
+    return {gas: value * MOLAR_MASS[gas] / m_mix for gas, value in x.items()}
 
 
 def build_config(case: str) -> dict:
@@ -202,8 +230,23 @@ def build_deck(case: str) -> str:
     x0, y0, x1, y1 = ROOM
     i, j, k = int((x1 - x0) / CELL), int((y1 - y0) / CELL), int(CEILING / CELL)
 
+    extra = [(k, f, g) for k, f, g in OPTIONAL_GASES if k in spec]
+    title = f"CO2 {spec['co2']}%, CO {spec['co']}%, O2 {spec['o2']}%"
+    title += "".join(f", {g} {spec[k]:g} ppm" for k, _, g in extra)
+    species = "".join(f"&SPEC ID='{f}'{' ' * (30 - len(f))}/\n" for _, f, _ in extra)
+    gases = [("CARBON MONOXIDE", "CO"), ("CARBON DIOXIDE", "CO2"), ("OXYGEN", "O2")]
+    gases += [(f, g) for _, f, g in extra]
+    init = ",\n      ".join(f"SPEC_ID({n})='{f}'" for n, (f, _) in enumerate(gases, 1))
+    fractions = ",\n      ".join(
+        f"MASS_FRACTION({n})={y[g]:.5E}" for n, (_, g) in enumerate(gases, 1)
+    )
+    slices = "".join(
+        f"&SLCF PBZ={SLICE_HEIGHT}, QUANTITY='VOLUME FRACTION', SPEC_ID='{f}' /\n"
+        for _, f, _ in extra
+    )
+
     return f"""&HEAD CHID='iso_table22_{case}',
-      TITLE='ISO 20414 Table 22 room, case {case}: CO2 {spec["co2"]}%, CO {spec["co"]}%, O2 {spec["o2"]}%' /
+      TITLE='ISO 20414 Table 22 room, case {case}: {title}' /
 
 ! ISO 20414 Table 22: "A room with no fire source (10 m x 10 m x 3 m)."
 ! The gas is prescribed, not burned, so it is uniform in space and constant in
@@ -217,7 +260,7 @@ def build_deck(case: str) -> str:
 &SPEC ID='OXYGEN'                             /
 &SPEC ID='CARBON MONOXIDE'                    /
 &SPEC ID='CARBON DIOXIDE'                     /
-! Declared only so the extinction slice has a species to report on; SPEC_ID is
+{species}! Declared only so the extinction slice has a species to report on; SPEC_ID is
 ! mandatory once species are declared explicitly, or FDS raises ERROR 1004.
 ! With no combustion its mass fraction stays 0, so the room is optically clear.
 &SPEC ID='SOOT'                               /
@@ -225,18 +268,14 @@ def build_deck(case: str) -> str:
 ! Case {case} -- {spec["isolates"]}.
 ! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB resets
 ! the whole domain, overwriting the first and leaving everything at 0.
-&INIT SPEC_ID(1)='CARBON MONOXIDE',
-      SPEC_ID(2)='CARBON DIOXIDE',
-      SPEC_ID(3)='OXYGEN',
-      MASS_FRACTION(1)={y["CO"]:.5E},
-      MASS_FRACTION(2)={y["CO2"]:.5E},
-      MASS_FRACTION(3)={y["O2"]:.5E} /
+&INIT {init},
+      {fractions} /
 
 &SLCF PBZ={SLICE_HEIGHT}, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
 &SLCF PBZ={SLICE_HEIGHT}, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
 &SLCF PBZ={SLICE_HEIGHT}, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
-&SLCF PBZ={SLICE_HEIGHT}, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
-&DUMP DT_SLCF=500.0 /
+{slices}&SLCF PBZ={SLICE_HEIGHT}, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
+&DUMP DT_SLCF={min(500.0, end_time_s(case)):.1f} /
 
 ! FDS's own FED at the occupant: an independent reference for the crossing.
 &DEVC ID='FED_occupant', XYZ=5.0,5.0,{SLICE_HEIGHT}, QUANTITY='FED' /

@@ -10,9 +10,9 @@ aliases: [/models/verification/iso-test-19/]
 |---|---|
 | **Component** | Gas FED and incapacitation ([Models › FED](/models/fed.md)) |
 | **Level** | FDS case: a full run on FDS output |
-| **Asset** | `assets/iso_table22_coupled` (four cases, a–d) |
+| **Asset** | `assets/iso_table22_coupled` (five cases, a–e) |
 | **Expected value from** | hand calculation, and FDS's own `FED` device |
-| **Status** | passes for CO, CO₂ and O₂; HCN, NOₓ and irritants not yet tested ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)) |
+| **Status** | passes for CO, CO₂, O₂, HCN, NOₓ and the NO₂ irritant term; NO and the other six irritants not yet tested ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)) |
 
 ![Four rooms side by side, one occupant each, coloured by its dose; a cross marks the moment the dose reaches 1](/images/verification/iso_test19.gif)
 
@@ -23,8 +23,9 @@ aliases: [/models/verification/iso-test-19/]
 ISO 20414:2020, Test 19 (Table 22): an occupant stands still in gas, and
 the time at which its dose reaches FED = 1 must equal a hand calculation.
 The standard asks for the test to be repeated for each hazardous condition
-the model has; here that is done for CO, CO₂ and O₂. Four gas mixtures
-switch these terms on one at a time. A wrong unit (ppm against %), a
+the model has; here that is done for CO, CO₂ and O₂ (cases a–d) and, in
+case e, for HCN, NO₂ and the CO₂ factor on those terms. Four gas mixtures
+switch the first three on one at a time. A wrong unit (ppm against %), a
 missing species read as zero, a dropped CO₂ factor or a missing O₂ gate
 (case c would cross 13 s early, case d 3 s) each moves the crossing in at
 least one case.
@@ -52,7 +53,8 @@ HV_CO₂ = 1 at *C*<sub>CO₂</sub> = 0 is FDS's convention, not Purser's law:
 Purser's expression gives exp(2.0004)/7.1 = 1.041 there, so FDS's factor
 jumps at zero. Only case c tests that branch; in air with 0.04 % CO₂,
 HV_CO₂ = 1.049. With the optional gases the sum is
-r = (r_CO + r_CN + r_NOx + r_irr) × HV_CO₂ + r_O₂; they are zero here.
+r = (r_CO + r_CN + r_NOx + r_irr) × HV_CO₂ + r_O₂; they are zero in
+cases a–d and switched on in [case e](#case-e-hcn-and-nitrogen-dioxide).
 
 The gas is constant, so FED grows linearly, FED(*t*) = *r t* / 60, and
 reaches 1 at
@@ -82,6 +84,8 @@ $$
   | b | 0 | 0 | 12 % | O₂ only |
   | c | 0 | 0.1 % | 21 % | CO only |
   | d | 3.43 % | 0.1 % | 21 % | CO and CO₂ factor |
+
+  Case e (HCN, NO₂) is described [below](#case-e-hcn-and-nitrogen-dioxide).
 
 - **Occupant:** one, near the centre (spawn box 4.4–5.6 m; it lands at
   (4.92, 4.68) m), held in place by a pre-evacuation time
@@ -115,6 +119,52 @@ Before [#194](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/194),
 pyFDS-Evac applied Purser's expression at zero CO₂ as well, HV_CO₂ = 1.041,
 which gave 1626 s for case c. It now follows FDS's convention, HV_CO₂ = 1
 without CO₂; FDS's device gives 1692.7 s, as the hand calculation does.
+
+## Case e: HCN and nitrogen dioxide
+
+ISO asks for the test to be repeated for each hazardous condition. Case e
+does this for the optional gases that FDS's `FED` function sums: 200 ppm HCN
+and 50 ppm NO₂ with 2 % CO₂ and 21 % O₂, and no CO. These values are not
+from the guide's Fig. 8. CO is zero, not 0.1 %, so the whole dose comes from
+the terms under test; O₂ is above the 20 % gate. The deck adds the two
+species, their slices at 1.6 m and the same `FED` device. The rate in the
+FDS form, with *C*<sub>CN</sub> = *C*<sub>HCN</sub> − (*C*<sub>NO</sub> + *C*<sub>NO₂</sub>)
+= 150 ppm (*C*<sub>NO</sub> = 0):
+
+```
+r_CN  = (exp(C_CN/43) - 1) / 220     = 0.14424 /min
+r_NOx = (C_NO + C_NO2) / 1500        = 0.03333 /min
+r_irr = C_NO2 / 1900                 = 0.02632 /min
+HV    = exp(0.1903 x 2 + 2.0004)/7.1 = 1.52334
+r     = (r_CN + r_NOx + r_irr) x HV  = 0.31059 /min      t* = 60/r = 193.18 s
+```
+
+FDS adds NO₂ twice, as NOₓ and as an irritant (its built-in lethal exposure
+dose for NITROGEN DIOXIDE is 1900 ppm·min), and applies HV_CO₂ to the whole
+narcotic and irritant sum; pyFDS-Evac does the same. The two codes agree in
+form. FDS writes the HCN offset as 0.00454545 where pyFDS-Evac uses 1/220,
+a difference of 3 × 10⁻⁸ of the term.
+
+| | *t*\* [s] |
+|---|---|
+| hand calculation, prescribed gas | 193.180 |
+| hand calculation, gas as the FDS slices hold it | 193.183 |
+| FDS `FED` device | 193.1835 |
+| pyFDS-Evac: first update with FED ≥ 1, and the stop | 194.0 (+0.82 s) |
+
+The FDS device is 0.0035 s (1.8 × 10⁻⁵ of *t*\*) later than the hand
+calculation on the prescribed gas. The slices do not hold exactly the
+prescribed gas: they show 199.9997 ppm HCN, 50.0011 ppm NO₂ and 1.999994 %
+CO₂, where the deck's mass fractions with its declared molar masses give
+200.0002, 50.00002 and 1.999997. Rounding the mass fractions to 6 digits does
+not explain this; the offset comes from FDS's internal conversion, and the
+cause is not established. The rate computed from the slice values gives
+193.183 s, and FDS and the hand calculation then agree to 10⁻⁷. The simulated stop lies in
+[*t*\*, *t*\* + 1 s), as in the four other cases. The automated test (`tests/test_iso_table22_coupled_e.py`) holds the
+hand calculation as literal constants and imports nothing from pyFDS-Evac. It
+fails if the correction is dropped (crossing at 74 s) or if HV_CO₂ does not
+multiply the HCN term (255 s, beyond the end of the deck). Case e is not in the
+figures below.
 
 ## Result
 
@@ -165,15 +215,15 @@ and it is incapacitated at the first FED update after *t*\*.
 
 {{< example-files "iso-test-19" >}}
 
-The FDS output (slices only, 256 kB) is committed in
+The FDS output (slices only, 256 kB for a–d and 29 kB for e) is committed in
 `assets/iso_table22_coupled/fds/`, and `tests/test_iso_table22_coupled.py`
-runs on it in CI. For the figures you also need FDS's `_devc.csv`, which is
+and `tests/test_iso_table22_coupled_e.py` run on it in CI. For the figures you also need FDS's `_devc.csv`, which is
 in the project's data folder (`fds-evac-data/iso_table22_coupled/`), or
 rerun FDS, about 40 s per case:
 
 ```bash
 uv run python assets/iso_table22_coupled/build_geometry.py   # writes decks and configs
-for c in a b c d; do
+for c in a b c d e; do
   mkdir -p <out>/fds/$c && cp assets/iso_table22_coupled/iso_table22_$c.fds <out>/fds/$c/
   (cd <out>/fds/$c && fds iso_table22_$c.fds)
 done
@@ -198,8 +248,10 @@ fails.
 
 ## Limits
 
-- CO, CO₂ and O₂ only. The optional gases (HCN, NOx, irritants), the HCN
-  − NOx correction and HV_CO₂ on the non-CO terms are not run in this layout
+- Of the optional gases, only HCN and NO₂ are run (case e). NO is not used, so
+  the NO half of the HCN − NOₓ correction and of the NOₓ sum is untested; the
+  irritants HCl, HBr, HF, SO₂, acrolein and formaldehyde are untested too, though
+  FDS sums them
   ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)).
   The convective heat dose is checked in
   [Heat dose in a uniform room](/verification/testing-heat.md).

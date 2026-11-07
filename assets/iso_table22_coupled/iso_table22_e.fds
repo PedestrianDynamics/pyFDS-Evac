@@ -1,0 +1,48 @@
+&HEAD CHID='iso_table22_e',
+      TITLE='ISO 20414 Table 22 room, case e: CO2 2.0%, CO 0.0%, O2 21.0%, HCN 200 ppm, NO2 50 ppm' /
+
+! ISO 20414 Table 22: "A room with no fire source (10 m x 10 m x 3 m)."
+! The gas is prescribed, not burned, so it is uniform in space and constant in
+! time and the hand calculation of ISO's Step 2 is exact.
+&MESH IJK=20,20,6, XB=0.00,10.00,0.00,10.00,0.0,3.00 /
+&TIME T_END=250 /
+&MISC TMPA=20.0 /
+
+! Nitrogen background so O2 is not double-counted.
+&SPEC ID='NITROGEN',        BACKGROUND=.TRUE. /
+&SPEC ID='OXYGEN'                             /
+&SPEC ID='CARBON MONOXIDE'                    /
+&SPEC ID='CARBON DIOXIDE'                     /
+&SPEC ID='HYDROGEN CYANIDE'              /
+&SPEC ID='NITROGEN DIOXIDE'              /
+! Declared only so the extinction slice has a species to report on; SPEC_ID is
+! mandatory once species are declared explicitly, or FDS raises ERROR 1004.
+! With no combustion its mass fraction stays 0, so the room is optically clear.
+&SPEC ID='SOOT'                               /
+
+! Case e -- HCN - NOx correction, NOx, NO2 irritant, CO2 factor on all.
+! NOTE: all species MUST be in a single &INIT. A second &INIT with no XB resets
+! the whole domain, overwriting the first and leaving everything at 0.
+&INIT SPEC_ID(1)='CARBON MONOXIDE',
+      SPEC_ID(2)='CARBON DIOXIDE',
+      SPEC_ID(3)='OXYGEN',
+      SPEC_ID(4)='HYDROGEN CYANIDE',
+      SPEC_ID(5)='NITROGEN DIOXIDE',
+      MASS_FRACTION(1)=0.00000E+00,
+      MASS_FRACTION(2)=3.01734E-02,
+      MASS_FRACTION(3)=2.30361E-01,
+      MASS_FRACTION(4)=1.85289E-04,
+      MASS_FRACTION(5)=7.88566E-05 /
+
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='HYDROGEN CYANIDE' /
+&SLCF PBZ=1.6, QUANTITY='VOLUME FRACTION', SPEC_ID='NITROGEN DIOXIDE' /
+&SLCF PBZ=1.6, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
+&DUMP DT_SLCF=250.0 /
+
+! FDS's own FED at the occupant: an independent reference for the crossing.
+&DEVC ID='FED_occupant', XYZ=5.0,5.0,1.6, QUANTITY='FED' /
+
+&TAIL /

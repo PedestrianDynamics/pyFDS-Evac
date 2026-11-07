@@ -32,7 +32,7 @@ their test file.
 | Gas FED | [CO dose in a uniform room](/verification/testing-homogeneous.md) | FDS case | FED reaches 1 at the hand-calculated time; the fraction of agents incapacitated follows the log-normal threshold (opt-in probabilistic mode) | passes: dose and deterministic stop; the probabilistic stop pooled over 10 seeds (1000 agents) stays in the 95 % band (D = 0.023 against 0.043) |
 | Gas FED | [FDS `FED_FIC` case](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_fed_fic_all_zones.py) | Equation | FED and FIC in the four zones of FDS's own verification case | passes |
 | Gas FED | [S1 corridor](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s1_corridor_fed.py) | Coupled | an agent in constant CO stops within one FED update of t\* | passes |
-| Gas FED | [ISO 20414 Test 19: incapacitation by toxic gases](/verification/iso-test-19.md) | FDS case | four gas mixtures separating the CO, CO₂ and O₂ terms: each occupant stops at the next update after the hand-calculated time, as FDS's own FED device does | passes for CO, CO₂, O₂; HCN, NOₓ, irritants not yet ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)) |
+| Gas FED | [ISO 20414 Test 19: incapacitation by toxic gases](/verification/iso-test-19.md) | FDS case | five gas mixtures separating the CO, CO₂, O₂, HCN and NO₂ terms: each occupant stops at the next update after the hand-calculated time, as FDS's own FED device does | passes for CO, CO₂, O₂, HCN, NOₓ, NO₂; NO and the other irritants not yet ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)) |
 | Heat FED | [Heat dose in a uniform room](/verification/testing-heat.md) | FDS case | heat FED at 100, 150 and 200 °C: every agent stops at the update where the hand sum on the FDS temperature reaches 1 | passes with `--heat-clothing unclothed`; checks the pipeline, not Eq. 63.44 itself; the default ISO Eq. (9) is an expected row only ([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)) |
 | Heat FED | [S6 heat](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_s6_heat_fed.py) | Coupled | heat incapacitation at t\*, cause recorded as `heat` | passes; checks the wiring of the default ISO Eq. (9), not the law itself |
 | Heat FED | [SFPE tables](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/tests/verification/test_heat_fed_verif.py) | Equation | Eq. 63.44 against Table 63.20 (convective rows): within the assumed ±0.5 min rounding of each whole-minute entry, shorter at 100–140 °C; never longer than Table 63.17's reported dry-air times; the default ISO Eq. (9) recorded at 1.8–3.0 times Table 63.20 | passes ([#219](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219)) |
@@ -85,7 +85,8 @@ the CI tests behind ISO Tests 18 and 19. Run them with:
 uv run pytest tests/test_heat_radiant_threshold.py tests/test_fic_vs_fed_speed.py \
     tests/test_slice_node_index.py tests/test_visibility.py \
     tests/test_rerouting_golden.py tests/test_smoke_speed.py \
-    tests/test_iso_table21_coupled.py tests/test_iso_table22_coupled.py
+    tests/test_iso_table21_coupled.py tests/test_iso_table22_coupled.py \
+    tests/test_iso_table22_coupled_e.py
 ```
 
 `uv run pytest` runs everything. Tests that need the external data store
