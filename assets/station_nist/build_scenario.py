@@ -4,6 +4,7 @@
     .venv/bin/python assets/station_nist/build_scenario.py          # write
     .venv/bin/python assets/station_nist/build_scenario.py --tables # print
     .venv/bin/python assets/station_nist/build_scenario.py --full   # + config_full.json
+    .venv/bin/python assets/station_nist/build_scenario.py --t-jam 71 --out DIR   # sensitivity
 
 NCSTAR 2 App. L.2.2 deck (FDS 4.0), transcribed; transcriber undocumented
 (#377).
@@ -34,6 +35,7 @@ own rule. Its gap finder is reused.
 
 from __future__ import annotations
 
+import argparse
 import importlib.util
 import json
 import math
@@ -628,7 +630,7 @@ def checkpoints(base: dict, walkable: Polygon) -> dict[str, dict]:
 # ---- the scenario -----------------------------------------------------------
 
 
-def build() -> tuple[dict, Polygon, dict]:
+def build(options: FB.V0Options = FB.V0Options()) -> tuple[dict, Polygon, dict]:
     walkable, rows = final_walkable()
     base = json.loads((FAHY / "source" / "config.json").read_text())
     _check_isolated()
@@ -658,7 +660,7 @@ def build() -> tuple[dict, Polygon, dict]:
                     "v0": FB.V0,
                     "distribution_mode": "by_number",
                     "use_flow_spawning": False,
-                    "use_premovement": False,
+                    "use_premovement": False,  # set by FB.apply_v0
                     "radius_distribution": "gaussian",
                     "radius_std": FB.RADIUS_STD,
                     "v0_distribution": "gaussian",
@@ -698,11 +700,12 @@ def build() -> tuple[dict, Polygon, dict]:
     }
     sim = cfg["config"]["simulation_settings"]["simulationParams"]
     sim["model_type"] = "WarpDriverModel"
-    sim["max_simulation_time"] = 600.0
-    # The library default, stated: this deck's primary run has no congestion
-    # term. 0.024 is the hand-deck Fahy fit (station_fahy) and is the labelled
-    # sensitivity here, not the primary setting (M4).
-    cfg["routing"] = {"w_queue": 0.0}
+    # w_queue is the library default, stated: this deck's primary run has no
+    # congestion term. 0.024 is the hand-deck Fahy fit (station_fahy) and is the
+    # labelled sensitivity here (``--w-queue 0.024``), not the primary setting.
+    # The horizon, the front-door closure and the pre-movement bands are the
+    # same V0 settings as station_fahy (FB.apply_v0).
+    FB.apply_v0(cfg, options)
     return cfg, walkable, {"rows": rows, "polys": polys}
 
 
@@ -761,16 +764,29 @@ def tables(rows: list[dict], polys: dict[str, Polygon], walkable: Polygon) -> st
     return "\n".join(lines)
 
 
-def main(argv: list[str]) -> int:
-    cfg, walkable, info = build()
-    if "--tables" in argv:
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--tables", action="store_true", help="print the tables and exit")
+    ap.add_argument(
+        "--full",
+        action="store_true",
+        help="also write config_full.json: 22 unplaced survivors and 100 victims",
+    )
+    FB.add_v0_arguments(ap)
+    args = ap.parse_args(argv)
+    options = FB.v0_options(args, ap)
+    directory = FB.output_directory(args.out, HERE, ap)
+    cfg, walkable, info = build(options)
+    if args.tables:
         print(tables(info["rows"], info["polys"], walkable))
         return 0
     total = sum(d["parameters"]["number"] for d in cfg["distributions"].values())
-    (HERE / "config.json").write_text(json.dumps(cfg, indent=2))
-    (HERE / "geometry.wkt").write_text(walkable.wkt + "\n")
-    if "--full" in argv:
-        FB.write_full(cfg, HERE)
+    (directory / "config.json").write_text(json.dumps(cfg, indent=2))
+    (directory / "geometry.wkt").write_text(walkable.wkt + "\n")
+    if args.full or args.out is not None:
+        FB.write_full(cfg, directory)
+    if args.out is not None:
+        FB.write_options(directory, "station_nist", options)
     print(
         f"{len(cfg['distributions'])} distributions, {total} agents "
         f"(Fahy placeable: {F.total_agents()}), walkable {walkable.area:.1f} m2"

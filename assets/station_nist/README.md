@@ -8,12 +8,14 @@ The same 333 survivors, familiarity classes and agent parameters as
 [`station_fahy`](../station_fahy/), on the NIST geometry instead of the
 hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 (`areas.RECTS`, `PRIORITY`), the Fahy table and the classes from `station_fahy`.
-`station_fahy` is unchanged.
+`station_fahy` carries the same V0 settings; its front exit moved to the
+doorway line (CHANGELOG, [Unreleased]).
 
 ```bash
 .venv/bin/python assets/station_nist/build_scenario.py            # config.json, geometry.wkt
 .venv/bin/python assets/station_nist/build_scenario.py --tables   # the tables below
 .venv/bin/python assets/station_nist/build_scenario.py --full     # + config_full.json
+.venv/bin/python assets/station_nist/build_scenario.py --t-jam 71 --out DIR  # sensitivity, see Routing
 .venv/bin/python assets/station_nist/plot_overlay.py              # overlay.png
 .venv/bin/python run.py --scenario assets/station_nist --seed 4
 ```
@@ -22,11 +24,17 @@ hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 
 ## Status
 
-Clear-air runs on seeds 4-23 (WarpDriver, `w_queue = 0`, radius unchanged)
-place all 333 agents. **All 20 end by evacuation** (96.6-126.0 s, median
-107.1 s); none deadlocks and none reaches the 600 s cap. With the full
-population (`config_full.json`, 455 agents) every seed places all agents. No
-Fahy outcome was used to choose any of this (no T1, T2 or W).
+The committed configs carry the Station V0 settings (time zero is first flame):
+the front exit closes at 86 s, pre-movement is uniform per Galea et al. 2008
+(main hall 25-30 s, front of house 30-35 s, back hallway 35-41 s), the horizon
+is 250 s and `w_queue = 0`. Clear-air runs on seeds 4-23 of `config_full.json`
+(WarpDriver, 455 agents, radius unchanged) place every agent and **all 20 end
+by evacuation** (134.1-179.6 s, median 150.0 s); none deadlocks and none
+reaches the 250 s horizon. At 86 s, 4-8 agents (median 6) stand in the
+vestibule; they are re-routed, not trapped. Before the V0 settings, runs
+without pre-movement or the jam, under a 600 s cap, ended at 96.6-126.0 s
+(median 107.1 s). No Fahy outcome was used to choose any of this (no T1, T2
+or W).
 
 Before the dart room took the hand deck's east edge (-6.0), seed 14 stopped
 with JuPedSim's "Point (16.955, -13.426) is outside of accessible area" at a
@@ -283,7 +291,11 @@ them would change routing, so all seven stay, with Fahy's roles and signs:
 `w_queue = 0`, the library default, is primary here. 0.024 is the hand-deck
 fit of `station_fahy` (53 % front-door share over three seeds, fitted before
 the additive model; not re-fitted) and is the labelled sensitivity on this
-deck: `cfg["routing"] = {"w_queue": 0.024}`.
+deck: `build_scenario.py --w-queue 0.024 --out DIR`. The other sensitivities
+are `--t-jam 71|102|none` (the front exit's `closed_after_s`; none removes the
+closure) and `--premovement zero|tracked`. A non-default option needs `--out
+DIR`, which gets the configs, `geometry.wkt` and a `build_options.json` record;
+the committed files are never overwritten.
 
 ## Geometry regularisation (workaround record)
 

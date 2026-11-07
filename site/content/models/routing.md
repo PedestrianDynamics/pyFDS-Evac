@@ -207,8 +207,8 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
   decks drive the invariant tests in `tests/test_generated_worlds.py`
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`), **off
   by default** — it scales with a global agent count, so no constant suits every
-  scenario. `assets/station_fahy` opts in at 0.024, calibrated against Fahy
-  Table 2 — see [docs/routing.md](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)
+  scenario. `assets/station_fahy` and `assets/station_nist` ship it at 0; 0.024,
+  calibrated against Fahy Table 2, is their labelled sensitivity — see [docs/routing.md](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)
   and `scripts/sweep_queue_weight.py`
 - **Throughput throttling**: Optional exit flux limiting via
   `enable_throughput_throttling` and `max_throughput` in scenario config
@@ -281,7 +281,7 @@ listed in [Python API and command line](/docs/usage.md#python-api-and-command-li
 | `exit_switch_anchor` = 0.9 | value of FDS+Evac `FAC_DOOR_WAIT`, applied to a different cost; not calibrated |
 | `visibility_extinction_threshold` = 0.5 | Jin's allowable smoke density for occupants familiar with the building (Jin 1997, Table 1, p. 11), applied to every agent; see [Limitations](#limitations) |
 | `tau_deadband`, `fallback_switch_margin`, `w_smoke`, `w_fed` | pyFDS-Evac assumptions, not calibrated |
-| `w_queue` = 0 | off; `assets/station_fahy` sets 0.024, calibrated against Fahy Table 2 ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
+| `w_queue` = 0 | off, as in `assets/station_fahy` and `assets/station_nist`; 0.024, calibrated against Fahy Table 2, is their sensitivity ([routing in practice](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)) |
 | `base_speed_m_per_s` = 1.3, `default_exit_capacity` = 1.3 | pyFDS-Evac assumptions |
 
 `evac.f90` line numbers on this page refer to the copy in `materials/evac.f90`,

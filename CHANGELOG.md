@@ -53,6 +53,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Station V0 configs (`assets/station_fahy` and `assets/station_nist`,
+  `config.json` and `config_full.json`). **Station results change.** Time
+  zero is first flame. The front exit `jps-exits_0` closes at 86 s
+  (`closed_after_s`); agents still inside are re-routed, and the vestibule
+  is not trapped. Pre-movement is uniform per Galea et al. 2008 (main hall
+  25-30 s, front of house 30-35 s, back hallway 35-41 s), with both params
+  set and no seed. `max_simulation_time` is 250 s (was 600 s) and
+  `routing.w_queue` is 0 on both decks (`station_fahy` was 0.024).
+  Sensitivities are build options, written with `--out DIR` and a
+  `build_options.json` record, never committed: `--w-queue 0.024`,
+  `--t-jam 71|102|none`, `--premovement zero|tracked`.
+- `assets/station_fahy`: the front exit (`jps-exits_0`) moved from about 3 m
+  outside the front wall to the doorway line, so a front-door closure does
+  not re-route agents already outdoors. Old polygon x -1.544 .. 1.311,
+  y -13.717 .. -11.951; new polygon x -1.108 .. 0.619, y -9.50 .. -9.10,
+  outside the exterior doors' jambs. No other exit, spawn area, wall or
+  radius moved; the exit's sign moved with it, from (-0.116, -12.834) to
+  (-0.245, -9.300). Station results change.
 - `assets/station_nist`: the Rear bar / dart room east edge is -6.0, the
   hand deck's value, instead of -8.0, so both Station decks use the same
   rectangle. Its area grows from 13.1 to 17.2 m2, which the 38 agents of

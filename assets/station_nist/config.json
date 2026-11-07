@@ -3,7 +3,7 @@
   "config": {
     "simulation_settings": {
       "simulationParams": {
-        "max_simulation_time": 600.0,
+        "max_simulation_time": 250.0,
         "dt": 0.05,
         "model_type": "WarpDriverModel",
         "strength_neighbor_repulsion": 2.6,
@@ -81,7 +81,8 @@
         "y": -16.909856618318845,
         "alpha": null,
         "c": 8.0
-      }
+      },
+      "closed_after_s": 86.0
     },
     "jps-exits_1": {
       "type": "polygon",
@@ -294,7 +295,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -302,7 +303,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_1": {
@@ -407,7 +411,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -415,7 +419,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_2": {
@@ -520,7 +527,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -528,7 +535,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_3": {
@@ -633,7 +643,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -641,7 +651,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage or on dance floor",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_4": {
@@ -802,7 +815,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -810,7 +823,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_5": {
@@ -971,7 +987,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -979,7 +995,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_6": {
@@ -1140,7 +1159,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1148,7 +1167,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_7": {
@@ -1309,7 +1331,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1317,7 +1339,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Behind dance floor",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_8": {
@@ -1402,7 +1427,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1410,7 +1435,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_9": {
@@ -1495,7 +1523,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1503,7 +1531,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_10": {
@@ -1588,7 +1619,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1596,7 +1627,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_11": {
@@ -1681,7 +1715,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1689,7 +1723,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Center stage-side",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_12": {
@@ -1778,7 +1815,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1786,7 +1823,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Stage",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_13": {
@@ -1875,7 +1915,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1883,7 +1923,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Stage",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_14": {
@@ -1972,7 +2015,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -1980,7 +2023,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Stage",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_15": {
@@ -2017,7 +2063,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -2025,7 +2071,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_16": {
@@ -2062,7 +2111,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -2070,7 +2119,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_17": {
@@ -2107,7 +2159,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -2115,7 +2167,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_18": {
@@ -2152,7 +2207,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -2160,7 +2215,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Back wall platform",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_19": {
@@ -2437,7 +2495,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -2445,7 +2503,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_20": {
@@ -2722,7 +2783,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -2730,7 +2791,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_21": {
@@ -3007,7 +3071,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3015,7 +3079,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_22": {
@@ -3292,7 +3359,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3300,7 +3367,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Main bar",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_23": {
@@ -3393,7 +3463,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3401,7 +3471,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_24": {
@@ -3494,7 +3567,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3502,7 +3575,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_25": {
@@ -3595,7 +3671,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3603,7 +3679,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_26": {
@@ -3696,7 +3775,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3704,7 +3783,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Between bars",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_27": {
@@ -3781,7 +3863,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3789,7 +3871,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_28": {
@@ -3866,7 +3951,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3874,7 +3959,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_29": {
@@ -3951,7 +4039,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -3959,7 +4047,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_30": {
@@ -4036,7 +4127,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4044,7 +4135,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Rear bar / dart room",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_31": {
@@ -4105,7 +4199,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4113,7 +4207,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 35.0,
+        "premovement_param_b": 41.0
       }
     },
     "jps-distributions_32": {
@@ -4174,7 +4271,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4182,7 +4279,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 35.0,
+        "premovement_param_b": 41.0
       }
     },
     "jps-distributions_33": {
@@ -4243,7 +4343,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4251,7 +4351,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 35.0,
+        "premovement_param_b": 41.0
       }
     },
     "jps-distributions_34": {
@@ -4312,7 +4415,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4320,7 +4423,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Back hallway",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 35.0,
+        "premovement_param_b": 41.0
       }
     },
     "jps-distributions_35": {
@@ -4377,7 +4483,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4385,7 +4491,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_36": {
@@ -4442,7 +4551,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4450,7 +4559,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_37": {
@@ -4507,7 +4619,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4515,7 +4627,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_38": {
@@ -4572,7 +4687,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4580,7 +4695,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Entryway",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_39": {
@@ -4641,7 +4759,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4649,7 +4767,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_40": {
@@ -4710,7 +4831,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4718,7 +4839,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_41": {
@@ -4779,7 +4903,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4787,7 +4911,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_42": {
@@ -4848,7 +4975,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -4856,7 +4983,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Sunroom",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 30.0,
+        "premovement_param_b": 35.0
       }
     },
     "jps-distributions_43": {
@@ -5033,7 +5163,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -5041,7 +5171,10 @@
         "familiarity": 0.0,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
-        "fahy_class": "first_visit"
+        "fahy_class": "first_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_44": {
@@ -5218,7 +5351,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -5226,7 +5359,10 @@
         "familiarity": 0.1,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
-        "fahy_class": "second_visit"
+        "fahy_class": "second_visit",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_45": {
@@ -5403,7 +5539,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -5411,7 +5547,10 @@
         "familiarity": 0.33,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
-        "fahy_class": "visits_3_to_5"
+        "fahy_class": "visits_3_to_5",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     },
     "jps-distributions_46": {
@@ -5588,7 +5727,7 @@
         "v0": 1.3,
         "distribution_mode": "by_number",
         "use_flow_spawning": false,
-        "use_premovement": false,
+        "use_premovement": true,
         "radius_distribution": "gaussian",
         "radius_std": 0.01,
         "v0_distribution": "gaussian",
@@ -5596,7 +5735,10 @@
         "familiarity": 0.85,
         "entrance": "jps-exits_0",
         "fahy_row": "Near stage door",
-        "fahy_class": "regular"
+        "fahy_class": "regular",
+        "premovement_distribution": "uniform",
+        "premovement_param_a": 25.0,
+        "premovement_param_b": 30.0
       }
     }
   },
