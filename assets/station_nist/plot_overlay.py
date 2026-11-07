@@ -11,7 +11,9 @@ the checkpoints, and a detail of the front door.
 
 from __future__ import annotations
 
+import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import matplotlib
@@ -37,9 +39,30 @@ def _rings(ax, geom, label=None, **style):
             ax.plot(*ring.xy, **style)
 
 
-def _draw(ax, walkable, hand, config):
+def _removed_floor(walkable):
+    """Extracted floor the build closed: service wells and sealed passages."""
+    spec = importlib.util.spec_from_file_location(
+        "station_nist_build", HERE / "build_scenario.py"
+    )
+    build = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = build
+    spec.loader.exec_module(build)
+    gone = build.regularise(build.extracted_floor()).difference(walkable)
+    return [g for g in getattr(gone, "geoms", [gone]) if g.area > 0.05]
+
+
+def _draw(ax, walkable, hand, config, removed):
     _rings(ax, hand, "hand-drawn (station_fahy), translated", color="#9aa0a6", lw=0.6)
     _rings(ax, walkable, "NIST-derived walkable area", color="black", lw=0.8)
+    for part in removed:
+        ax.fill(*part.exterior.xy, facecolor="#bbbbbb", hatch="////", lw=0, alpha=0.8)
+    ax.fill(
+        [],
+        [],
+        facecolor="#bbbbbb",
+        hatch="////",
+        label="closed: service wells, sealed passages",
+    )
     cmap = plt.get_cmap("tab20")
     seen: dict[str, int] = {}
     for dist in config["distributions"].values():
@@ -47,9 +70,18 @@ def _draw(ax, walkable, hand, config):
         if row in seen:
             continue
         seen[row] = len(seen)
-        poly = Polygon(dist["coordinates"])
-        ax.fill(*poly.exterior.xy, color=cmap(seen[row]), alpha=0.45, lw=0)
-        ax.text(poly.centroid.x, poly.centroid.y, row, ha="center", fontsize=6)
+        # the config keeps the outer ring; the engine clips obstacles at spawn
+        poly = Polygon(dist["coordinates"]).intersection(walkable)
+        parts = [g for g in getattr(poly, "geoms", [poly]) if g.geom_type == "Polygon"]
+        for part in parts:
+            ax.fill(*part.exterior.xy, color=cmap(seen[row]), alpha=0.45, lw=0)
+            for ring in part.interiors:
+                ax.fill(*ring.xy, color="white")
+        big = max(parts, key=lambda g: g.area)
+        point = (
+            big.centroid if big.contains(big.centroid) else big.representative_point()
+        )
+        ax.text(point.x, point.y, row, ha="center", fontsize=6, clip_on=True)
     for exit_id, ex in config["exits"].items():
         poly = Polygon(ex["coordinates"])
         ax.fill(*poly.exterior.xy, color="#d62728")
@@ -58,6 +90,7 @@ def _draw(ax, walkable, hand, config):
             poly.centroid.coords[0],
             fontsize=7,
             color="#d62728",
+            annotation_clip=True,
         )
     for cp in config["checkpoints"].values():
         ax.plot(*cp["center"], "o", ms=4, mfc="none", color="#1f77b4")
@@ -74,13 +107,14 @@ def main() -> None:
     fig, (ax, det) = plt.subplots(
         1, 2, figsize=(15, 6.5), gridspec_kw={"width_ratios": [2.2, 1]}
     )
-    _draw(ax, walkable, hand, config)
+    removed = _removed_floor(walkable)
+    _draw(ax, walkable, hand, config, removed)
     ax.set_xlim(-13, 19)
     ax.set_ylim(-19, 4)
     ax.set_xlabel("x in the NIST frame (m)")
     ax.set_ylabel("y (m)")
     ax.legend(loc="lower left", fontsize=7)
-    _draw(det, walkable, hand, config)
+    _draw(det, walkable, hand, config, removed)
     det.set_xlim(1.5, 7.5)
     det.set_ylim(-18, -12)
     det.set_title(
