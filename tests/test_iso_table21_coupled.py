@@ -36,20 +36,35 @@ import pytest
 
 from pyfds_evac.core.run_config import build_run_kwargs
 from pyfds_evac.core.scenario import load_scenario, run_scenario
-from pyfds_evac.core.smoke_speed import (
-    ExtinctionField,
-    speed_factor_from_extinction,
-)
+from pyfds_evac.core.smoke_speed import ExtinctionField
 
 pytestmark = [pytest.mark.iso20414, pytest.mark.nist_tn1822]
 
 ASSET = Path("assets/iso_table21_coupled")
 FDS_DIR = ASSET / "fds"
 
-# ISO's expected result is a hand calculation, so the tolerance only has to
-# absorb discretisation: a spawn box of finite width, an exit of finite depth,
-# and a 0,1 s update interval.
-TOLERANCE = 0.08
+# The sampling height of ``run.py`` (#164). FDS snaps PBZ=1.6 to the cell face
+# at 1.5 m, so this reads the 1.5 m slice, not the 2.0 m one also committed.
+SLICE_HEIGHT = 1.6
+
+# K read from the committed slices. They differ by ~6e-5 /m (hydrostatic
+# density), so the value tells which slice was read:
+#   1.5 m slice  0.9955004 .. 0.9955090
+#   2.0 m slice  0.9954433 .. 0.9954541
+K_AT_1_5_M = 0.995505
+K_SLICE_TOLERANCE = 1e-5
+
+# The simulation time step; ``run_scenario`` fixes it at 0.01 s.
+DT = 0.01
+
+
+def _lund_factor(k: float) -> float:
+    """f(K) = 1 + (beta/alpha) K with beta = -0.057, alpha = 0.706, as literals.
+
+    Written out here so the expectation does not come from the function under
+    test: a wrong alpha or beta would otherwise move both sides together.
+    """
+    return 1.0 - (0.057 / 0.706) * k
 
 
 def _builder():
@@ -68,7 +83,7 @@ def _opts(**overrides):
         fds_dir=None,
         constant_extinction=None,
         smoke_update_interval=0.1,
-        smoke_slice_height=2.0,
+        smoke_slice_height=SLICE_HEIGHT,
         disable_tenability=True,
         fed_threshold=1.0,
         enable_rerouting=False,
@@ -103,7 +118,7 @@ def smoke_run():
 @pytest.fixture(scope="module")
 def observed_k():
     """K as the sampler reads it out of the committed slice."""
-    field = ExtinctionField.from_fds(str(FDS_DIR), slice_height_m=2.0)
+    field = ExtinctionField.from_fds(str(FDS_DIR), slice_height_m=SLICE_HEIGHT)
     return field.sample_extinction(0.0, 0.0, 0.0)
 
 
@@ -139,11 +154,11 @@ class TestTheExtinctionArrivesFromFds:
 
         Not bit-identical, though. FDS still solves the flow, so density varies
         by a few parts per million across the mesh and K varies with it; the
-        committed slice spans 0.9954427..0.9954541. The tolerance is 1e-4 —
-        about nine times that spread, and two decades below the 1 % the
+        committed 1.5 m slice spans 0.9955004..0.9955090. The tolerance is 1e-4
+        — about twelve times that spread, and two decades below the 1 % the
         cross-check asserts, so it still fails on any real gradient.
         """
-        field = ExtinctionField.from_fds(str(FDS_DIR), slice_height_m=2.0)
+        field = ExtinctionField.from_fds(str(FDS_DIR), slice_height_m=SLICE_HEIGHT)
         samples = [
             field.sample_extinction(time_s, x, y)
             for time_s in (0.0, 50.0, 100.0)
@@ -152,6 +167,18 @@ class TestTheExtinctionArrivesFromFds:
         ]
         assert min(samples) == pytest.approx(max(samples), rel=1e-4)
         assert min(samples) == pytest.approx(observed_k, rel=1e-4)
+
+    def test_the_default_height_reads_the_1_5_m_slice(self, observed_k):
+        """Tells the 1.5 m slice from the 2.0 m one, which lies 5.6e-5 /m below.
+
+        PBZ=1.6 is written at 1.5 m; a sampler that read the 2.0 m slice, or a
+        height option that no longer reaches it, would land outside this band.
+        """
+        assert abs(observed_k - K_AT_1_5_M) < K_SLICE_TOLERANCE
+
+    def test_the_run_samples_the_same_slice(self, smoke_run):
+        recorded = [row["extinction_per_m"] for row in smoke_run.smoke_history]
+        assert all(abs(k - K_AT_1_5_M) < K_SLICE_TOLERANCE for k in recorded)
 
     def test_it_is_not_zero(self, observed_k):
         """A missing or misnamed slice would read as clear air and pass silently
@@ -162,17 +189,30 @@ class TestTheExtinctionArrivesFromFds:
 class TestTheEgressMatchesTheHandCalculation:
     """ISO's expected result, with K sourced from the slice."""
 
-    def test_the_recorded_factor_matches_the_observed_coefficient(
-        self, smoke_run, observed_k
-    ):
-        expected = speed_factor_from_extinction(observed_k)
-        recorded = {round(row["speed_factor"], 6) for row in smoke_run.smoke_history}
-        assert recorded == {round(expected, 6)}
+    def test_the_recorded_factor_matches_the_sampled_coefficient(self, smoke_run):
+        """Row by row: K varies by ~1e-5 /m along the corridor, f by ~1e-6."""
+        history = smoke_run.smoke_history
+        for row in history:
+            expected = _lund_factor(row["extinction_per_m"])
+            assert row["speed_factor"] == pytest.approx(expected, abs=1e-9)
+        # f(0.99550) by hand, to six places.
+        factors = [row["speed_factor"] for row in history]
+        assert min(factors) == pytest.approx(0.919626, abs=2e-6)
+        assert max(factors) == pytest.approx(0.919626, abs=2e-6)
 
-    def test_the_time_ratio_matches(self, clear_run, smoke_run, observed_k):
-        expected_ratio = 1.0 / speed_factor_from_extinction(observed_k)
-        observed_ratio = smoke_run.evacuation_time / clear_run.evacuation_time
-        assert observed_ratio == pytest.approx(expected_ratio, rel=TOLERANCE)
+    def test_the_egress_time_is_the_clear_time_over_the_factor(
+        self, clear_run, smoke_run, observed_k
+    ):
+        """The collision-free model has no inertia, so t_smoke = t_clear / f.
+
+        The two times are each located to one time step, hence (1 + 1/f) dt:
+        dt on the clear run and dt / f on the slowed one.
+        """
+        factor = _lund_factor(observed_k)
+        assert smoke_run.dt == DT
+        expected = clear_run.evacuation_time / factor
+        tolerance = (1.0 + 1.0 / factor) * DT
+        assert abs(smoke_run.evacuation_time - expected) <= tolerance
 
     def test_smoke_actually_slows_the_occupant(self, clear_run, smoke_run):
         """The control. Without it, a coupling that silently did nothing would
