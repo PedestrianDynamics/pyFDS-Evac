@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `assets/station_fahy/build_scenario.py --full` and
+  `assets/station_nist/build_scenario.py --full` also write
+  `config_full.json`: the 333 placed survivors labelled `placed`, plus 22
+  `unplaced` survivors and 100 `victim` agents spread over the 12 areas in
+  proportion to the placed survivors. `config.json` is unchanged on the
+  hand deck (#375).
 - A distribution may carry `parameters.population` in `placed`,
   `unplaced` or `victim` (absent means `placed`). For a scenario with such
   a label, `--output-sqlite` adds an `agent_distributions(id,
@@ -40,6 +46,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `assets/station_nist`: the Rear bar / dart room east edge is -6.0, the
+  hand deck's value, instead of -8.0, so both Station decks use the same
+  rectangle. Its area grows from 13.1 to 17.2 m2, which the 38 agents of
+  `config_full.json` need; `config.json` changes accordingly (#375).
 - Station deck radius: Gaussian σ 0.02 → 0.01 m (mean 0.20 m, cap
   0.23 m instead of 0.26 m). Agents with r ≥ 0.24 m stalled alone at the
   ~0.9 m doors under `WarpDriverModel` (#908; upstream

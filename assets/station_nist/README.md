@@ -14,6 +14,7 @@ hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 ```bash
 .venv/bin/python assets/station_nist/build_scenario.py            # config.json, geometry.wkt
 .venv/bin/python assets/station_nist/build_scenario.py --tables   # the tables below
+.venv/bin/python assets/station_nist/build_scenario.py --full     # + config_full.json
 .venv/bin/python assets/station_nist/plot_overlay.py              # overlay.png
 .venv/bin/python run.py --scenario assets/station_nist --seed 4
 ```
@@ -23,12 +24,15 @@ hand-drawn one. Nothing is copied: `build_scenario.py` imports the areas
 ## Status
 
 Clear-air runs on seeds 4-23 (WarpDriver, `w_queue = 0`, radius unchanged)
-place all 333 agents. **19 of 20 end by evacuation** (96.7-121.8 s, median
-106.0 s); none deadlocks and none reaches the 600 s cap. Seed 14 stops with
-JuPedSim's "Point (16.955, -13.426) is outside of accessible area" at a notch
-of the platform-door recess, 0.2 mm from the wall: the known upstream defect
-(jupedsim#1720), not patched around. No Fahy outcome was used to choose any of
-this (no T1, T2 or W).
+place all 333 agents. **All 20 end by evacuation** (96.6-126.0 s, median
+107.1 s); none deadlocks and none reaches the 600 s cap. With the full
+population (`config_full.json`, 455 agents) every seed places all agents. No
+Fahy outcome was used to choose any of this (no T1, T2 or W).
+
+Before the dart room took the hand deck's east edge (-6.0), seed 14 stopped
+with JuPedSim's "Point (16.955, -13.426) is outside of accessible area" at a
+notch of the platform-door recess: the upstream defect jupedsim#1720. The
+notch is unchanged, so the defect can still end a run.
 
 ## Clearance floor and disclosure
 
@@ -182,7 +186,7 @@ fails there.
 | Back wall platform | 15 | 9.5 | 4.7 | 2.01 | 2.5 |
 | Main bar | 37 | 40.0 | 11.6 | 3.44 | 0.3 |
 | Between bars | 29 | 27.9 | 9.1 | 3.06 | 0.0 |
-| Rear bar / dart room | 28 | 13.1 | 8.8 | 1.49 | 1.4 |
+| Rear bar / dart room | 28 | 17.2 | 8.8 | 1.95 | 2.6 |
 | Back hallway | 14 | 8.4 | 4.4 | 1.90 | 0.1 |
 | Entryway | 17 | 9.6 | 5.3 | 1.80 | 8.3 |
 | Sunroom | 16 | 37.8 | 5.0 | 7.51 | 0.0 |
@@ -198,8 +202,10 @@ Recorded choices:
   bartender well inside the horseshoe counter (`A-CASE-CNTR-1`, `A-CASE-CABN-1`
   and the full-height wall at y -9.51), reached only through a 0.39 m opening.
   It is not bar floor. The opening is sealed, so the well is not walkable.
-- **Rear bar / dart room**: east edge -8.0 (the Fahy plan), not the -6.0 of the
-  hand deck (#380). The largest part is 13.1 m2 (14.5 m2 over two parts).
+- **Rear bar / dart room**: east edge -6.0, the hand deck's value (#380), so both
+  decks use the same rectangle (maintainer decision 2026-11-07). The earlier -8.0
+  left 13.1 m2, which held 28 agents but not the 38 of `config_full.json`
+  (13 of 20 seeds failed to place them). The largest part is 17.2 m2.
 - **Entryway**: the ticket-area part, x 4.5-6.8, unclipped. The vestibule part
   (x 2.1-4.3, 8.1 m2) is the alternative. Agents in the ticket area reach the
   front exit only through the 0.91 m interior door at y -14.36
@@ -212,12 +218,42 @@ Recorded choices:
   is cut off by the sealed slit at (6.73, -4.81) and dropped.
 - **Isolated floor**: the extraction keeps the largest enclosed region. Two
   regions it leaves out overlap rectangles and are recorded in `ISOLATED`: a
-  closed 3.0 m2 room west of the dart room (1.4 m2 of it inside the Rear bar /
+  closed 3.0 m2 room west of the dart room (0.9 m2 of it inside the Rear bar /
   dart room rectangle) and an enclosed 0.36 m2 pocket in the Main bar rectangle.
   Any other isolated floor in use stops the build.
 - Under the 2x gate of the contract (2 x n x 0.314 m2) four areas fall short
   (Near stage or on dance floor, Rear bar / dart room, Back hallway, Entryway);
   the maintainer chose the 1x rule.
+
+## Full population (`config_full.json`)
+
+`--full` also writes `config_full.json` (`config.json` is unchanged): every
+distribution carries `parameters.population`, which `station_fahy/validate.py`
+reads. It holds the 333 placed survivors, 22 unplaced survivors (Fahy's 355
+less the 333 with a location) and 100 victims, 455 agents. Unplaced and victims
+are spread over the 12 areas in proportion to the placed survivors, by
+largest-remainder apportionment, with the same familiarity classes and agent
+parameters as the area's placed agents (decision M3). The counts are the same
+on both Station decks:
+
+| area | placed | unplaced | victim |
+|---|---|---|---|
+| Stage | 4 | 0 | 1 |
+| Near stage door | 17 | 1 | 5 |
+| Near stage or on dance floor | 75 | 5 | 23 |
+| Back wall platform | 15 | 1 | 5 |
+| Sunroom | 16 | 1 | 5 |
+| Behind dance floor | 74 | 5 | 22 |
+| Back hallway | 14 | 1 | 4 |
+| Between bars | 29 | 2 | 9 |
+| Rear bar / dart room | 28 | 2 | 8 |
+| Entryway | 17 | 1 | 5 |
+| Main bar | 37 | 2 | 11 |
+| Center stage-side | 7 | 1 | 2 |
+| **Total** | **333** | **22** | **100** |
+
+Seeds 4-23 place all 455 on this deck and on `station_fahy` (`tests/test_station_placement.py`).
+Run it with `run.py --scenario assets/station_nist/config_full.json --output-sqlite OUT`.
 
 ## Exits and checkpoints
 
@@ -275,10 +311,10 @@ keeps the largest part; the build stops if that drops floor in use.
 
 ## Open
 
-- **jupedsim#1720** ends seed 14 (1 of 20): a centre crosses the wall at a
-  notch of the platform-door recess at (16.955, -13.426), the openings there
-  measure 0.91 m ((16.0, -12.97)) and 0.98 m ((17.2, -13.04)). Recorded, not
-  patched.
+- **jupedsim#1720**: a centre can cross the wall at the notch of the
+  platform-door recess at (16.955, -13.426) (it ended seed 14 before the dart
+  room changed); the openings there measure 0.91 m ((16.0, -12.97)) and 0.98 m
+  ((17.2, -13.04)). Recorded, not patched.
 - **jupedsim#1719**: the 0.9 m floor exists because of it. Egress times through
   the widened doors and the passages sealed or widened as "only access" are
   therefore not limited by the real width; remove the floor when upstream passes

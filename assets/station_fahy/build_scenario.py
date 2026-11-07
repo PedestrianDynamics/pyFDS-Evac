@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Build the Fahy Table 2 scenario on the hand-drawn Station geometry.
 
-    .venv/bin/python assets/station_fahy/build_scenario.py
+    .venv/bin/python assets/station_fahy/build_scenario.py          # config.json
+    .venv/bin/python assets/station_fahy/build_scenario.py --full   # + config_full.json
 
 Stage 1 of the validation in
 ``docs/archive/superpowers/specs/2026-08-05-station-validation-design.md``: clear air,
@@ -39,12 +40,34 @@ Every agent knows the front door regardless of class, via ``entrance``: every
 patron entered that way, tickets collected and hands stamped. That single
 empirically-grounded rule is the mechanism behind the crush.
 
+``--full`` also writes ``config_full.json``: every distribution labelled by
+``parameters.population`` (read by ``validate.py``), the 333 placed survivors
+plus 22 unplaced survivors and 100 victims. Both extra groups are spread over
+the areas in proportion to the placed survivors (largest remainder, as
+:func:`apportion`), with the same familiarity classes and agent parameters:
+
+    area                           placed unplaced  victim
+    Stage                               4        0       1
+    Near stage door                    17        1       5
+    Near stage or on dance floor       75        5      23
+    Back wall platform                 15        1       5
+    Sunroom                            16        1       5
+    Behind dance floor                 74        5      22
+    Back hallway                       14        1       4
+    Between bars                       29        2       9
+    Rear bar / dart room               28        2       8
+    Entryway                           17        1       5
+    Main bar                           37        2      11
+    Center stage-side                   7        1       2
+    Total                             333       22     100
+
 ``source/geometry.wkt`` carries the drawing with its doorways already opened by
 ``simplify_doors.py``; re-trace the drawing and that script has to run again.
 """
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -96,6 +119,10 @@ V0_STD = 0.2
 RADIUS = 0.20
 RADIUS_STD = 0.01
 
+# config_full.json: Fahy's 355 survivors less the 333 placed, and the dead.
+UNPLACED_TOTAL = 22
+VICTIM_TOTAL = 100
+
 # A checkpoint inside the vestibule, between the last node before the front
 # door and the exit. Agents do not need it to find the doorway: JuPedSim
 # (>= 1.4.2) walks them along the navigation mesh to their target, round
@@ -141,6 +168,66 @@ def apportion(total: int, shares: list[float]) -> list[int]:
             break
         out[i] += 1
     return out
+
+
+def population_counts() -> dict[str, dict[str, int]]:
+    """Per area, the agents of each population label in ``config_full.json``.
+
+    The 22 survivors Fahy et al. could not place and the 100 victims are spread
+    over the areas in proportion to the placed survivors (Spearpoint's rule for
+    the unplaced), by largest-remainder apportionment.
+    """
+    placed = F.agents_per_row()
+    shares = [n / sum(placed.values()) for n in placed.values()]
+    unplaced = apportion(UNPLACED_TOTAL, shares)
+    victim = apportion(VICTIM_TOTAL, shares)
+    return {
+        row: {"placed": placed[row], "unplaced": u, "victim": v}
+        for row, u, v in zip(placed, unplaced, victim)
+    }
+
+
+def with_populations(cfg: dict) -> dict:
+    """A copy of *cfg* with every distribution labelled by population.
+
+    The unplaced and victim agents reuse the area polygon and the agent
+    parameters of the area's placed distributions, and the same familiarity
+    classes in the same shares.
+    """
+    full = json.loads(json.dumps(cfg))
+    dists = full["distributions"]
+    template: dict[str, dict] = {}
+    for dist in dists.values():
+        dist["parameters"]["population"] = "placed"
+        template.setdefault(dist["parameters"]["fahy_row"], dist)
+    index = len(dists)
+    for row, counts in population_counts().items():
+        for population in ("unplaced", "victim"):
+            class_counts = apportion(counts[population], [c[1] for c in CLASSES])
+            for (label, _, familiarity), n in zip(CLASSES, class_counts):
+                if n == 0:
+                    continue
+                dist = json.loads(json.dumps(template[row]))
+                dist["parameters"].update(
+                    number=n,
+                    familiarity=familiarity,
+                    fahy_class=label,
+                    population=population,
+                )
+                dists[f"jps-distributions_{index}"] = dist
+                index += 1
+    return full
+
+
+def write_full(cfg: dict, directory: Path) -> None:
+    """Write ``config_full.json`` next to ``config.json`` and print the counts."""
+    full = with_populations(cfg)
+    (directory / "config_full.json").write_text(json.dumps(full, indent=2))
+    total = sum(d["parameters"]["number"] for d in full["distributions"].values())
+    print(f"config_full.json: {total} agents")
+    print(f"  {'area':30s} placed unplaced victim")
+    for row, c in population_counts().items():
+        print(f"  {row:30s} {c['placed']:6d} {c['unplaced']:8d} {c['victim']:6d}")
 
 
 def build() -> tuple[dict, Polygon]:
@@ -210,11 +297,20 @@ def build() -> tuple[dict, Polygon]:
     return cfg, walkable
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--full",
+        action="store_true",
+        help="also write config_full.json: 22 unplaced survivors and 100 victims",
+    )
+    args = ap.parse_args(argv)
     cfg, walkable = build()
     total = sum(d["parameters"]["number"] for d in cfg["distributions"].values())
     (HERE / "config.json").write_text(json.dumps(cfg, indent=2))
     (HERE / "geometry.wkt").write_text(walkable.wkt + "\n")
+    if args.full:
+        write_full(cfg, HERE)
 
     print(
         f"{len(cfg['distributions'])} distributions, {total} agents "
