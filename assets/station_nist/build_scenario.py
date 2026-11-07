@@ -107,6 +107,13 @@ CUT_OFF = {
     ),
     (2.83, -11.98): (0.6, "0.5 m2 niche behind the 0.30 m gap at (3.39, -11.74)"),
 }
+# Extracted floor with no opening to the main floor that overlaps floor in use:
+# a point inside it, its largest area (m2) and what it is. Any other such floor
+# stops the build (:func:`_check_isolated`).
+ISOLATED = {
+    (-12.38, -1.41): (3.1, "closed room west of the dart room"),
+    (-6.07, -15.32): (0.4, "enclosed 0.36 m2 pocket in the main-bar rectangle"),
+}
 
 # The Rear bar / dart room east edge is the Fahy plan's -8.0, not the -6.0 of
 # the hand deck (#380): on the NIST geometry -8.0 holds 28 agents (README).
@@ -435,13 +442,14 @@ def regularise(walkable: Polygon, reach: float = THIN_FEATURE / 2) -> Polygon:
     The CAD trim around doors and wall ends leaves teeth a few millimetres to
     a few centimetres thick, and slits of floor between them. An agent pushed
     against such a corner lands inside it and JuPedSim stops the run with
-    "outside of accessible area". Closing then opening by half the feature
-    size, with mitred corners, removes both and moves no wall that is thicker.
+    "outside of accessible area". Closing by half the feature size and then
+    opening by a third of that, with mitred corners, removes both and moves no
+    wall that is thicker.
     """
     closed = walkable.buffer(reach, join_style=2).buffer(-reach, join_style=2)
     opened = closed.buffer(-reach / 3, join_style=2).buffer(reach / 3, join_style=2)
     kept = largest(opened)
-    _check_cut_off(opened, kept)
+    _check_cut_off(walkable, kept)
     return kept
 
 
@@ -493,6 +501,51 @@ def trapped_pockets(walkable: Polygon, radius: float = 0.23) -> Polygon | None:
     return unary_union(pockets).buffer(radius).intersection(walkable)
 
 
+def _check_isolated() -> None:
+    """Stop if extracted floor with no opening to the main floor is in use.
+
+    The extraction keeps the largest enclosed region; a room it leaves out
+    must not hold an area, an exit strip or a checkpoint, unless recorded in
+    :data:`ISOLATED`.
+    """
+    _, parts, _, domain, _ = EX.extract(
+        NIST / "Station210_clean.fds", 0.1, 1.8, 0.05, 0.25, IGNORED_LAYERS
+    )
+    interior = sorted(
+        (p for p in parts if not p.exterior.intersects(domain.boundary)),
+        key=lambda p: -p.area,
+    )
+    used = _used_floor()
+    unrecorded = []
+    for part in interior[1:]:
+        if part.intersection(used).area <= USED_FLOOR_MIN:
+            continue
+        if any(
+            part.area <= most and part.buffer(1e-6).contains(Point(p))
+            for p, (most, _) in ISOLATED.items()
+        ):
+            continue
+        c = part.representative_point()
+        unrecorded.append((round(c.x, 2), round(c.y, 2), round(part.area, 2)))
+    if unrecorded:
+        raise SystemExit(
+            f"isolated floor in use at {unrecorded}: open it or record it in ISOLATED"
+        )
+
+
+def dropped_floor(walkable: Polygon, polys: dict[str, Polygon]) -> dict[str, float]:
+    """Floor of each translated rectangle that no area keeps (m2).
+
+    Service wells, trapped pockets and the smaller parts of a split rectangle;
+    the README lists them and a test pins them, so a change shows.
+    """
+    kept = unary_union(list(polys.values()))
+    return {
+        name: translate(box(*RECTS[name])).intersection(walkable).difference(kept).area
+        for name in polys
+    }
+
+
 def clip_areas(walkable: Polygon) -> dict[str, Polygon]:
     """Each Fahy rectangle, translated, clipped, one polygon, no overlaps."""
     pockets = trapped_pockets(walkable)
@@ -531,9 +584,12 @@ def exit_polygons(walkable: Polygon) -> dict[str, Polygon]:
     for exit_id, (axis, line, (lo, hi), side) in EXIT_DOORS.items():
         a, b = sorted((line, line + side * EXIT_DEPTH))
         strip = box(lo, a, hi, b) if axis == "y" else box(a, lo, b, hi)
-        poly = largest(strip.intersection(walkable))
+        floor = strip.intersection(walkable)
+        poly = largest(floor)
         if poly is None or poly.area < 0.5 * strip.area:
             raise SystemExit(f"{exit_id}: the strip at the door is not walkable")
+        if floor.area - poly.area > 0.01:
+            raise SystemExit(f"{exit_id}: the strip at the door is split")
         out[exit_id] = poly
     return out
 
@@ -571,6 +627,7 @@ def checkpoints(base: dict, walkable: Polygon) -> dict[str, dict]:
 def build() -> tuple[dict, Polygon, dict]:
     walkable, rows = final_walkable()
     base = json.loads((FAHY / "source" / "config.json").read_text())
+    _check_isolated()
     polys = clip_areas(walkable)
     counts = F.agents_per_row()
 
@@ -687,9 +744,16 @@ def tables(rows: list[dict], polys: dict[str, Polygon], walkable: Polygon) -> st
             f"| {r['pass']} | {r['x']:.2f} | {r['y']:.2f} | {r['extracted']:.2f} | {r['class']} "
             f"| {basis} | {final} | {shown} |"
         )
-    lines += ["", "| area | n | m2 | need 1x | headroom |", "|---|---|---|---|---|"]
+    lines += [
+        "",
+        "| area | n | m2 | need 1x | headroom | dropped m2 |",
+        "|---|---|---|---|---|---|",
+    ]
+    dropped = dropped_floor(walkable, polys)
     for name, n, area, need, head in capacity_rows(polys):
-        lines.append(f"| {name} | {n} | {area:.1f} | {need:.1f} | {head:.2f} |")
+        lines.append(
+            f"| {name} | {n} | {area:.1f} | {need:.1f} | {head:.2f} | {dropped[name]:.1f} |"
+        )
     return "\n".join(lines)
 
 

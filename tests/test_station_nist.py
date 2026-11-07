@@ -237,3 +237,42 @@ def test_a_recorded_cut_off_point_does_not_exempt_a_larger_part(nist, monkeypatc
     monkeypatch.setattr(nist, "_used_floor", lambda: room)
     with pytest.raises(SystemExit, match="cuts off floor in use"):
         nist._check_cut_off(unary_union([room, kept]), kept)
+
+
+DROPPED = {  # m2 of each translated rectangle that no area keeps (README, Areas)
+    "Near stage or on dance floor": 6.4,
+    "Behind dance floor": 0.2,
+    "Center stage-side": 3.6,
+    "Stage": 0.0,
+    "Back wall platform": 2.5,
+    "Main bar": 0.3,
+    "Between bars": 0.0,
+    "Rear bar / dart room": 1.4,
+    "Back hallway": 0.1,
+    "Entryway": 8.3,
+    "Sunroom": 0.0,
+    "Near stage door": 0.0,
+}
+
+
+def test_the_floor_each_area_drops_is_the_recorded_one(nist, built):
+    """Wells, pockets and split parts: any change in what an area loses shows."""
+    _, walkable, info = built
+    dropped = nist.dropped_floor(walkable, info["polys"])
+    assert {n: round(a, 1) for n, a in dropped.items()} == DROPPED
+
+
+def test_a_split_exit_strip_stops_the_build(nist, monkeypatch):
+    """An exit keeps its whole strip, not the larger of two pieces."""
+    exit_id, (axis, line, (lo, hi), side) = next(iter(nist.EXIT_DOORS.items()))
+    a, b = sorted((line, line + side * nist.EXIT_DEPTH))
+    strip = box(lo, a, hi, b) if axis == "y" else box(a, lo, b, hi)
+    cut = lo + 0.25 * (hi - lo)  # a wall across the strip, off centre
+    if axis == "y":
+        wall = box(cut - 0.05, a - 5, cut + 0.05, b + 5)
+    else:
+        wall = box(a - 5, cut - 0.05, b + 5, cut + 0.05)
+    walkable = strip.buffer(2.0).difference(wall)
+    monkeypatch.setattr(nist, "EXIT_DOORS", {exit_id: nist.EXIT_DOORS[exit_id]})
+    with pytest.raises(SystemExit, match="split"):
+        nist.exit_polygons(walkable)

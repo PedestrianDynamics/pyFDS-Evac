@@ -166,22 +166,26 @@ line at 0.91 m (`tests/test_station_nist.py`).
 
 Each `RECTS` box translated, clipped to the walkable area in `PRIORITY` order,
 largest part kept. Capacity is the repo's `areas.capacity_report` rule: 2.5 x
-pi x r^2 per agent at r = 0.20 m. Headroom is area over need.
+pi x r^2 per agent at r = 0.20 m. Headroom is area over need. "Dropped" is the
+floor of the translated rectangle that no area keeps (service wells, trapped
+pockets, the smaller parts of a split rectangle); `build_scenario.py --tables`
+prints it and `tests/test_station_nist.py` pins it, so a change in any of them
+fails there.
 
-| area | n | m2 | need 1x | headroom |
-|---|---|---|---|---|
-| Near stage or on dance floor | 75 | 41.9 | 23.6 | 1.78 |
-| Behind dance floor | 74 | 46.5 | 23.2 | 2.00 |
-| Center stage-side | 7 | 6.0 | 2.2 | 2.72 |
-| Stage | 4 | 15.3 | 1.3 | 12.18 |
-| Back wall platform | 15 | 9.5 | 4.7 | 2.01 |
-| Main bar | 37 | 40.0 | 11.6 | 3.44 |
-| Between bars | 29 | 27.9 | 9.1 | 3.06 |
-| Rear bar / dart room | 28 | 13.1 | 8.8 | 1.49 |
-| Back hallway | 14 | 8.4 | 4.4 | 1.90 |
-| Entryway | 17 | 9.6 | 5.3 | 1.80 |
-| Sunroom | 16 | 37.8 | 5.0 | 7.51 |
-| Near stage door | 17 | 13.3 | 5.3 | 2.49 |
+| area | n | m2 | need 1x | headroom | dropped m2 |
+|---|---|---|---|---|---|
+| Near stage or on dance floor | 75 | 41.9 | 23.6 | 1.78 | 6.4 |
+| Behind dance floor | 74 | 46.5 | 23.2 | 2.00 | 0.2 |
+| Center stage-side | 7 | 6.0 | 2.2 | 2.72 | 3.6 |
+| Stage | 4 | 15.3 | 1.3 | 12.18 | 0.0 |
+| Back wall platform | 15 | 9.5 | 4.7 | 2.01 | 2.5 |
+| Main bar | 37 | 40.0 | 11.6 | 3.44 | 0.3 |
+| Between bars | 29 | 27.9 | 9.1 | 3.06 | 0.0 |
+| Rear bar / dart room | 28 | 13.1 | 8.8 | 1.49 | 1.4 |
+| Back hallway | 14 | 8.4 | 4.4 | 1.90 | 0.1 |
+| Entryway | 17 | 9.6 | 5.3 | 1.80 | 8.3 |
+| Sunroom | 16 | 37.8 | 5.0 | 7.51 | 0.0 |
+| Near stage door | 17 | 13.3 | 5.3 | 2.49 | 0.0 |
 
 
 Recorded choices:
@@ -201,6 +205,15 @@ Recorded choices:
   (`tests/test_station_nist.py`).
 - **Near stage strip** at x 14.5-15.6 is dropped (a second part of 5.2 m2); the
   back-wall platform handrail is passable (`assets/station/README.md`).
+- **Back wall platform**: 2.5 m2 of the rectangle south of the platform, near
+  (17.1, -10.6), is a second part and is dropped.
+- **Center stage-side**: besides the well, its east part (3.6 m2, near (7.7, -3.8))
+  is cut off by the sealed slit at (6.73, -4.81) and dropped.
+- **Isolated floor**: the extraction keeps the largest enclosed region. Two
+  regions it leaves out overlap rectangles and are recorded in `ISOLATED`: a
+  closed 3.0 m2 room west of the dart room (1.4 m2 of it inside the Rear bar /
+  dart room rectangle) and an enclosed 0.36 m2 pocket in the Main bar rectangle.
+  Any other isolated floor in use stops the build.
 - Under the 2x gate of the contract (2 x n x 0.314 m2) four areas fall short
   (Near stage or on dance floor, Rear bar / dart room, Back hallway, Entryway);
   the maintainer chose the 1x rule.
