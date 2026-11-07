@@ -157,9 +157,9 @@ the speed to zero at the agent's threshold. Script:
 
 ## Verification
 
-- [ISO 20414 Test 19](/verification/iso-test-19.md): passes for CO, CO₂ and
-  O₂. The HCN, NOₓ and irritant terms are not verified end to end
-  ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)), and
+- [ISO 20414 Test 19](/verification/iso-test-19.md): passes for CO, CO₂, O₂,
+  HCN, NOₓ and the NO₂ irritant term. NO and the other six irritants are not
+  verified end to end ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)), and
   the coupled check compares against the code's own formula
   ([#249](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/249)).
 - [CO dose in a sealed room](/verification/testing-homogeneous.md): FDS cases

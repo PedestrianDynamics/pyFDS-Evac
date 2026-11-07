@@ -31,11 +31,31 @@ supplies exactly the concrete sets ISO leaves to the tester:
 | b | 0.00 | 0.00 | 12.0 | O₂ hypoxia alone | 1666 s |
 | c | 0.00 | 0.10 | 21.0 | CO alone | 1693 s |
 | d | 3.43 | 0.10 | 21.0 | CO + CO₂ factor | 847 s |
+| e | 2.00 | 0 | 21.0 | HCN − NOx, NOx, NO₂ irritant, CO₂ factor on all (200 ppm HCN, 50 ppm NO₂) | 193 s |
 
 Cases c and d share the same CO and differ only in CO₂, so d must be strictly
 faster — that pair is what makes the hyperventilation factor observable. Case b
 has no CO at all, and c and d sit above the 20.0 % O₂ gate so the hypoxia term
 is switched off in them. A single case could not separate any of this.
+
+Case e is not in the guide's Figure 8 (#257). It adds the optional gases:
+200 ppm HCN and 50 ppm NO₂ with 2 % CO₂ and 21 % O₂. CO is zero, not the
+0.1 % of the other cases, so the whole dose comes from the terms under test and
+a CO term cannot mask a wrong one (at 0.1 % CO it would be 15 % of the undamped sum).
+O₂ is above the 20 % gate. The rate, in the FDS form, is
+
+```
+r = ( (exp(C_CN/43) - 1)/220  +  C_NOx/1500  +  C_NO2/1900 ) x HV_CO2
+C_CN = C_HCN - C_NOx = 200 - 50 = 150 ppm,   C_NOx = C_NO + C_NO2
+```
+
+0.14424 + 0.03333 + 0.02632 = 0.20389 per minute, times HV = 1.52334, gives
+0.31059 per minute and t* = 193.18 s. FDS's `FED` function adds NO₂ twice, as
+NOx and as an irritant (NITROGEN DIOXIDE has a lethal exposure dose of
+1900 ppm·min built in), and multiplies the whole narcotic and irritant sum by
+HV_CO2; the case fails if the HCN correction, the NOx or irritant term, or HV
+on any of them is dropped. NO is not used, so the NO half of the correction
+and of the NOx sum is untested, as are the six other irritants.
 
 The FED = 1 column is the hand calculation in the FDS form, where the CO₂
 factor is 1 when there is no CO₂. Before #194 pyFDS-Evac used 1.041 there,
@@ -76,7 +96,7 @@ comparison would mean nothing.
 ```bash
 .venv/bin/python assets/iso_table22_coupled/build_geometry.py
 
-for c in a b c d; do
+for c in a b c d e; do
   mkdir -p /tmp/t22/$c && cp assets/iso_table22_coupled/iso_table22_$c.fds /tmp/t22/$c/
   (cd /tmp/t22/$c && fds iso_table22_$c.fds)        # ~40 s each
   .venv/bin/python run.py \
@@ -87,14 +107,16 @@ done
 
 ## The FDS output is committed
 
-`fds/{a,b,c,d}/` holds **256 kB total** — four slices per case on a 20 × 20 × 6
+`fds/{a,b,c,d}/` holds **256 kB total** (case e adds 29 kB: six slices) — four slices per case on a 20 × 20 × 6
 mesh at PBZ = 1.6 m, which FDS places on the cell face at 1.5 m, the
 height nearest pyFDS-Evac's default sampling height — forced past `.gitignore`, **so the test runs in CI**. A test that skipped
 when output was missing would leave this path exactly as untested as it was
 before, which is how the FIC speed factor came to compound to zero unnoticed.
 
-`DT_SLCF` is 500 s, not the usual few seconds: the field is constant by
-construction, so temporal resolution buys nothing and costs bytes. The test
+`DT_SLCF` is 500 s (250 s in case e, whose deck ends at 250 s: FDS writes no
+slice frame at all when `DT_SLCF` exceeds `T_END`), not the usual few seconds:
+the field is constant by construction, so temporal resolution buys nothing and
+costs bytes. The test
 asserts the constancy rather than assuming it.
 
 Only `.sf`, `.sf.bnd` and `.smv` are kept. The `_hrr.csv` FDS also writes is
@@ -120,3 +142,6 @@ the crossing time.
 ## Tests
 
 `tests/test_iso_table22_coupled.py`, 37 tests over the four cases, ~26 s.
+`tests/test_iso_table22_coupled_e.py`, 6 tests over case e, ~2 s: the
+expected values are literal constants, and the crossing is checked to lie in
+[t*, t* + one FED interval).

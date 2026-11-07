@@ -16,6 +16,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Verification: case e of `assets/iso_table22_coupled` (ISO 20414 Test 19)
+  runs 200 ppm HCN and 50 ppm NO2 with 2 % CO2 and 21 % O2 through FDS
+  and the occupant, covering the HCN - NOx correction, the NOx and NO2
+  irritant terms and HV_CO2 on every term. The crossing (hand 193.18 s,
+  FDS `FED` device 193.18 s, simulated stop 194.0 s) is tested in
+  `tests/test_iso_table22_coupled_e.py`; NO and the other six irritants
+  stay untested (#257).
 - A distribution may carry `parameters.population` in `placed`,
   `unplaced` or `victim` (absent means `placed`). For a scenario with such
   a label, `--output-sqlite` adds an `agent_distributions(id,

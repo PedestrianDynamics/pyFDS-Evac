@@ -94,7 +94,7 @@ measured 11.62 s).
 | Verif.2.3 | Movement around a corner | Inherited | Movement is JuPedSim's. |
 | Verif.2.4 | Assigned occupant demographics | Not yet run | Speed distributions (`v0_distribution`) are set in pyFDS-Evac; their assignment has not been tested in NIST's setup. |
 | Verif.2.5 | Reduced visibility vs walking speed | Run, passes | Both smoke-speed laws at K = 1.0 1/m and 1.25 m/s in NIST's corridor (`test_nist_verif_2_5_reduced_visibility.py`), plus the ISO 18 grid and the FDS-sourced K (`test_iso_test_18_speed_laws.py`, `test_iso_table21_coupled.py`). Details above. |
-| Verif.2.6 | Occupant incapacitation | Run for CO, CO2, O2 | Same room and method as ISO 19 (`test_iso_table22_coupled.py`, and the stubbed-field test in `test_fed.py`). NIST asks to repeat the test for each hazard in the sub-model; heat, HCN, irritants and the optional gases are not run ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)). |
+| Verif.2.6 | Occupant incapacitation | Run for CO, CO2, O2, HCN, NO2 | Same room and method as ISO 19 (`test_iso_table22_coupled.py`, `test_iso_table22_coupled_e.py`, and the stubbed-field test in `test_fed.py`). NIST asks to repeat the test for each hazard in the sub-model; heat, NO and the irritants other than NO2 are not run ([#257](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/257)). |
 | Verif.2.7 | Elevator usage | Out of scope | Elevators are not modelled. |
 | Verif.2.8 | Horizontal counter-flows (rooms) | Inherited | Movement is JuPedSim's. |
 | Verif.2.9 | Group behaviours | Out of scope | Groups are not modelled. |

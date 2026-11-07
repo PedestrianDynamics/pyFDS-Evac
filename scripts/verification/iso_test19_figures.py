@@ -21,6 +21,10 @@ from Fig. 8 of the FDS+Evac guide, separate the three terms:
     c  CO2 0,      CO 0.1 %, O2 21 %   CO alone
     d  CO2 3.43 %, CO 0.1 %, O2 21 %   CO with the CO2 factor
 
+Case e (HCN 200 ppm, NO2 50 ppm, CO2 2 %, O2 21 %, no CO; #257) is checked by
+``tests/test_iso_table22_coupled_e.py`` and is not drawn here: the hand
+calculation below has no HCN, NOx or irritant term.
+
 The hand calculation uses no pyFDS-Evac code (FDS form, t in minutes):
 
     r_CO  = 2.764e-5 C_CO^1.036           C_CO in ppm
