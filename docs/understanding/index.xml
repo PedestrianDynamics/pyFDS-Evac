@@ -804,14 +804,14 @@ moves each slice to the uniform &lt;code>&amp;amp;MESH&lt;/code> grid as FDS doe
 &lt;code>&amp;amp;TRNZ&lt;/code> it ranks the deck&amp;rsquo;s z. Where that differs from the run&amp;rsquo;s choice,
 the check names another &lt;code>&amp;amp;SLCF&lt;/code> line or turns a pass into a warning,
 never into a failure.&lt;/li>
-&lt;li>&lt;strong>Sign visibility ignores obstructions FDS opens or closes&lt;/strong>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453" target="_blank" rel="noopener">#453&lt;/a>). fdsvismap
-builds its sight-line obstructions once and does not read the
-&lt;code>HIDE_OBST&lt;/code>/&lt;code>SHOW_OBST&lt;/code> times of the &lt;code>.smv&lt;/code>
-(&lt;a href="https://github.com/FireDynamics/fdsvismap/issues/63" target="_blank" rel="noopener">fdsvismap#63&lt;/a>), so a
-&lt;code>DEVC_ID&lt;/code>/&lt;code>CTRL_ID&lt;/code> obstruction blocks signs for the whole run. Decks
-with timed door leaves get signs that stay unreadable after the door
-opens. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>.&lt;/li>
+&lt;li>&lt;strong>Timed obstructions switch up to half a vismap step early or late&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453" target="_blank" rel="noopener">#453&lt;/a>). Sign
+visibility follows the obstructions FDS creates or removes (&lt;code>DEVC_ID&lt;/code>,
+&lt;code>CTRL_ID&lt;/code>), read from the &lt;code>.smv&lt;/code>, but agents read the vismap point nearest
+the time: 0.5 s at the default &lt;code>reroute_interval&lt;/code>. Per the FDS+Evac 2.6.0
+guide (&amp;ldquo;Features of Limited Functionality&amp;rdquo;), FDS+Evac keeps the geometry
+of t = 0 for the whole run, so the two differ here. See
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>.&lt;/li>
 &lt;/ul>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
