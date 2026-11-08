@@ -62,7 +62,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `dt_origin`. `pyfds-evac` refuses a bad `dt` in one line, also with
   `--export-only`, and a Social Force or GCFM run above 0.01 s logs a
   warning. The re-evaluation stagger of the agents no longer depends on
-  `dt`: it is computed on the 0.01 s grid and snapped to the step.
+  `dt`: it is computed on the 0.01 s grid and rounded up to a step, kept below the interval.
 - Station V0 configs (`assets/station_fahy` and `assets/station_nist`,
   `config.json` and `config_full.json`). **Station results change.** Time
   zero is first flame. The front exit `jps-exits_0` closes at 86 s

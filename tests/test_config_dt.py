@@ -316,8 +316,6 @@ def test_the_reevaluation_stagger_does_not_depend_on_the_step(agent, interval):
     coarse = compute_eval_offset(agent, interval, 0.05)
     assert abs(fine - coarse) < 0.05
     assert coarse < interval
-    # On the default step the offset is the 0.01 s grid value, unchanged.
-    assert fine == (agent % round(interval / 0.01)) * 0.01
 
 
 def _exit_opened_times(dt):
@@ -350,3 +348,51 @@ def test_exit_opened_switches_fall_at_the_same_times_at_both_steps():
     assert (
         max(abs(a - b) for a, b in zip(sorted(set(fine)), sorted(set(coarse)))) < 0.05
     )
+
+
+def _origin_main_eval_offset(agent_id, interval_s, dt_s=0.01):
+    """``compute_eval_offset`` of origin/main (14fd1134), copied verbatim."""
+    if interval_s <= 0 or dt_s <= 0:
+        return 0.0
+    steps_per_interval = max(1, int(interval_s / dt_s))
+    return (agent_id % steps_per_interval) * dt_s
+
+
+def test_the_stagger_at_the_default_step_is_that_of_origin_main():
+    intervals = [0.12, 0.29, 0.58, 1.17, 2.1, 0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0]
+    for interval in intervals:
+        for agent in range(3000):
+            assert compute_eval_offset(agent, interval, 0.01) == (
+                _origin_main_eval_offset(agent, interval, 0.01)
+            ), (agent, interval)
+
+
+def test_the_stagger_stays_below_the_interval_when_rounding_up_would_reach_it():
+    # Agent 10 of a 0.12 s interval is at 0.10 s on the 0.01 s grid, which is
+    # two steps of 0.05 s: rounding up does not reach the interval.
+    assert compute_eval_offset(10, 0.12, 0.05) == pytest.approx(0.10)
+    # Agent 11 is at 0.11 s, which rounds up to 0.15 s, past the interval: the
+    # largest step below 0.12 s is 0.10 s, not 0.05 s.
+    assert compute_eval_offset(11, 0.12, 0.05) == pytest.approx(0.10)
+    # A step that lands on the interval is not allowed either.
+    assert compute_eval_offset(14, 0.15, 0.05) == pytest.approx(0.10)
+    for agent in range(500):
+        for interval in (0.12, 0.15, 0.29, 1.0, 2.1):
+            assert compute_eval_offset(agent, interval, 0.05) < interval
+
+
+@pytest.mark.parametrize("dt", [0.1, 1e-6])
+def test_the_rules_pass_the_ends_of_the_allowed_range(dt):
+    assert scenario_issue(_scenario_dt(dt).raw) is None
+
+
+@pytest.mark.parametrize("dt", [0.1 + 1e-12, 0.1 + 1e-9, 1e8, 1e-320, 0.2, 1.0])
+def test_a_dt_outside_the_range_is_refused_by_name(dt):
+    raw = _scenario_dt(dt).raw
+    issue = scenario_issue(raw)
+    assert issue is not None
+    assert "simulationParams.dt" in issue.message
+    scenario = _scenario(ENOUGH_S)
+    scenario.sim_params["dt"] = dt
+    with pytest.raises(ValueError, match=r"simulationParams\.dt"):
+        _run(scenario)

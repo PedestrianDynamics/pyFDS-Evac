@@ -35,9 +35,13 @@ def dt_from_params(sim_params: Mapping[str, Any]) -> float:
 
 
 def check_output_divisor(dt: float) -> None:
-    """Raise unless ``OUTPUT_INTERVAL_S`` is a whole number of steps of *dt*."""
-    steps = OUTPUT_INTERVAL_S / dt
-    if abs(steps - round(steps)) > _DIVISOR_TOL:
+    """Raise unless ``OUTPUT_INTERVAL_S`` is a whole number of steps of *dt*.
+
+    That is ``0 < dt <= OUTPUT_INTERVAL_S`` with a finite ratio that is a
+    positive integer.
+    """
+    steps = OUTPUT_INTERVAL_S / dt if 0 < dt <= OUTPUT_INTERVAL_S else math.inf
+    if not math.isfinite(steps) or abs(steps - round(steps)) > _DIVISOR_TOL:
         raise ValueError(
             f"{_KEY}={dt!r} does not divide the {OUTPUT_INTERVAL_S:g} s "
             "trajectory interval; use for example 0.1, 0.05, 0.025, 0.02, "

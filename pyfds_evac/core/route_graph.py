@@ -3567,17 +3567,20 @@ def compute_eval_offset(
     (``agent_seed.stagger_index``), not its JuPedSim id.
 
     The offset does not depend on the time step: it is taken on the 0.01 s
-    grid, ``(agent_id % round(interval_s / 0.01)) * 0.01``, then rounded up to
-    a step of *dt_s* (below one interval), so the agent's first evaluation
-    falls on the same check as at 0.01 s. At ``dt_s`` 0.01 it is
-    that value unchanged (#922).
+    grid, ``(agent_id % max(1, int(interval_s / 0.01))) * 0.01``, then rounded
+    up to a step of *dt_s*, so the agent's first evaluation falls on the same
+    check as at 0.01 s. If that step would reach the interval, the offset is
+    the largest step below it. At ``dt_s`` 0.01 it is the grid value
+    unchanged (#922).
     """
     if interval_s <= 0 or dt_s <= 0:
         return 0.0
     grid_s = 0.01
-    offset_s = (agent_id % max(1, round(interval_s / grid_s))) * grid_s
-    last_step = max(1, round(interval_s / dt_s)) - 1
-    return min(math.ceil(offset_s / dt_s - 1e-9), last_step) * dt_s
+    offset_s = (agent_id % max(1, int(interval_s / grid_s))) * grid_s
+    step = math.ceil(offset_s / dt_s - 1e-9)
+    if step * dt_s >= interval_s - 1e-9:
+        step = max(0, math.ceil(interval_s / dt_s - 1e-9) - 1)
+    return step * dt_s
 
 
 def should_reevaluate(
