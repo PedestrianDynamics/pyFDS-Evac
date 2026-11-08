@@ -53,6 +53,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `simulationParams.dt` is honoured (#922). It was ignored before: every run
+  stepped at 0.01 s. It now sets the JuPedSim step and `Result.dt`; it
+  must divide 0.1 s, and the trajectory stays at 10 frames/s. The asset
+  decks that said 0.05 were set to 0.01, the step they always ran at, so
+  their results do not change. Decks without `dt` run as before.
 - Station V0 configs (`assets/station_fahy` and `assets/station_nist`,
   `config.json` and `config_full.json`). **Station results change.** Time
   zero is first flame. The front exit `jps-exits_0` closes at 86 s

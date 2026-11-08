@@ -114,8 +114,15 @@ Under `config.simulation_settings`.
 | `simulationParams.smoke_slice_height` | none (`--smoke-slice-height`, 1.6 m) | Absolute FDS slice height [m] for smoke, gases and sign legibility. It is not relative to the floor, so sloped floors and stages are sampled at the wrong height above the feet ([Limitations](limitations.md#what-is-not-modelled)). `pyfds-evac --smoke-slice-height` overrides it; the run prints the value when it comes from here. `pyfds-evac init` writes the floor level plus `HUMAN_SMOKE_HEIGHT`. The GUI and TUI do not read it yet. |
 | `baseSeed` | 42 | Random seed; `run.py --seed` overrides it. |
 
-`simulationParams.dt` is not read: the JuPedSim step is 0.01 s, and the
-trajectory is written every tenth step (10 frames/s).
+`simulationParams.dt` is the JuPedSim time step in seconds (default 0.01).
+It must divide 0.1 s (for example 0.1, 0.05, 0.025, 0.02, 0.01 or 0.005);
+0, a negative value, NaN, infinity and a value that is not a number are
+rejected with an error that names `simulationParams.dt`. The trajectory
+keeps 10 frames/s whatever `dt` is, and `Result.dt` and the run manifest
+report the step. Exit times and other schedules take effect at the first
+step at or after their time, so up to one `dt` late. The Social Force and
+generalized centrifugal force models are untested above 0.01 s and log a
+warning there.
 
 ### Social force model
 
