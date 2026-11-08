@@ -51,6 +51,7 @@ from .premovement_distributions import (
     PREMOVEMENT_PRESETS,
     create_premovement_distribution,
 )
+from .time_step import DEFAULT_DT_S, dt_from_params
 
 _logger = logging.getLogger(__name__)
 
@@ -1158,8 +1159,19 @@ def _check_flow_rate(dist_key, n_agents, duration, capacity) -> None:
         )
 
 
-RUN_TIME_STEP_S = 0.01
-"""JuPedSim's time step, which the run keeps; ``simulationParams.dt`` is not read."""
+RUN_TIME_STEP_S = DEFAULT_DT_S
+"""The time step of a deck that sets no ``simulationParams.dt``."""
+
+
+def _deck_dt(global_parameters) -> float:
+    """The deck's ``dt`` for the flow-window check, or the default.
+
+    A bad ``dt`` is reported by its own rule (``dt_issue``), not here.
+    """
+    try:
+        return dt_from_params(vars(global_parameters))
+    except (TypeError, ValueError):
+        return RUN_TIME_STEP_S
 
 
 def _flows(params) -> bool:
@@ -1261,7 +1273,7 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
                 continue
             if area.is_empty:
                 continue
-            _check_flows(key, params[key], area)
+            _check_flows(key, params[key], area, _deck_dt(global_parameters))
             if _places_at_start(params[key]):
                 _checked_shared_area(
                     [{"area": area, "params": params[key], "dist_key": key}]
@@ -1278,7 +1290,7 @@ def _check_spawn_capacity(data, walkable_polygon, global_parameters=None) -> Non
         clipped = _clip_spawn_area(area, walkable_polygon)
         if clipped.is_empty:
             continue
-        _check_flows(k, p, clipped)
+        _check_flows(k, p, clipped, _deck_dt(global_parameters))
         if _places_at_start(p):
             spawns.append({"area": clipped, "params": p, "dist_key": k})
     for members in _shared_areas(spawns):

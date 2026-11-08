@@ -112,7 +112,11 @@ can apply them again after the next export
 - `project_version`.
 - `config.simulation_settings`: `simulationParams` (the `model_type`, the
   model constants, `max_simulation_time`, `dt`), `numberOfSimulations` and
-  `baseSeed`. pyFDS-Evac reads neither `dt` nor `numberOfSimulations`.
+  `baseSeed`. pyFDS-Evac reads `dt` (the time step in seconds, default 0.01;
+  it must divide 0.1 s, and 0, negative, NaN and infinite values are
+  rejected; the output stays at 10 frames/s; the Social Force and
+  generalized centrifugal force models warn above 0.01 s) but not
+  `numberOfSimulations`.
 - `config.ui_state` (`useShortestPaths`, `boundaries`): layout data for the
   app. The run does not read it.
 - `exits.<id>`: `coordinates`, `enable_throughput_throttling`,

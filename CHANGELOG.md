@@ -53,6 +53,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `simulationParams.dt` is honoured (#922). It was ignored before: every run
+  stepped at 0.01 s. It now sets the JuPedSim step and `Result.dt`; it
+  must divide 0.1 s, and the trajectory stays at 10 frames/s. The asset
+  decks that said 0.05 were set to 0.01, the step they always ran at, so
+  their results do not change. Decks without `dt` run as before. The run
+  manifest records `dt`, and the effective inputs show `dt_s` and
+  `dt_origin`. `pyfds-evac` refuses a bad `dt` in one line, also with
+  `--export-only`, and a Social Force or GCFM run above 0.01 s logs a
+  warning. The re-evaluation stagger of the agents no longer depends on
+  `dt`: it is computed on the 0.01 s grid and rounded up to a step, kept below the interval.
 - Sign legibility from an FDS run follows the obstructions FDS creates or
   removes (`DEVC_ID`, `CTRL_ID`, controlled `&HOLE`): a door leaf blocks
   sight lines only while FDS has it. Before, every timed obstruction blocked

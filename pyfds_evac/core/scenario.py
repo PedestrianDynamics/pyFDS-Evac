@@ -148,6 +148,7 @@ from .route_graph import (
     with_rival_edges,
 )
 from .smoke_speed import ConstantExtinctionField, sample_accepts_free_speed
+from .time_step import checked_dt, large_step_warning, output_stride
 
 _logger = logging.getLogger(__name__)
 _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
@@ -1218,7 +1219,7 @@ class ScenarioResult:
 
     @property
     def frame_rate(self) -> float:
-        """Trajectory frame rate in frames per second (dt=0.01, every_nth_frame=10 → 10 fps)."""
+        """Trajectory frame rate in frames per second (a frame every 0.1 s, whatever dt)."""
         return self.metrics.get("frame_rate", 10.0)
 
     @property
@@ -2013,6 +2014,10 @@ def run_scenario(
             ),
         )
 
+    dt = checked_dt(scenario.sim_params)
+    step_warning = large_step_warning(scenario.model_type, dt)
+    if step_warning is not None:
+        _logger.warning(step_warning)
     model = _build_model(scenario.model_type, scenario.sim_params)
 
     sqlite_tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
@@ -2027,13 +2032,15 @@ def run_scenario(
 
         writer = jps.SqliteTrajectoryWriter(
             output_file=pathlib.Path(output_file),
-            every_nth_frame=10,
+            every_nth_frame=output_stride(dt),
         )
         simulation = jps.Simulation(
             model=model,
             geometry=scenario.walkable_polygon,
             trajectory_writer=writer,
+            dt=dt,
         )
+        step_s = simulation.delta_time()
 
         config_tmp = tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False)
         json.dump(scenario.raw, config_tmp, indent=2)
@@ -2316,7 +2323,9 @@ def run_scenario(
                     current_exit=chosen,
                     last_eval_time_s=spawn_time,
                     eval_offset_s=compute_eval_offset(
-                        stagger_index(key), reroute_config.reevaluation_interval_s
+                        stagger_index(key),
+                        reroute_config.reevaluation_interval_s,
+                        step_s,
                     ),
                 )
             return chosen
@@ -2468,7 +2477,9 @@ def run_scenario(
             else:
                 rs = AgentRouteState(
                     eval_offset_s=compute_eval_offset(
-                        stagger_index(key), reroute_config.reevaluation_interval_s
+                        stagger_index(key),
+                        reroute_config.reevaluation_interval_s,
+                        step_s,
                     ),
                 )
                 agent_route_state[agent_id] = rs
@@ -2500,6 +2511,7 @@ def run_scenario(
                     eval_offset_s=compute_eval_offset(
                         stagger_index(lookup_spawn_key(spawn_keys, agent_id)),
                         config.reevaluation_interval_s,
+                        step_s,
                     ),
                 )
             # Initialize cognitive map on first encounter.
@@ -4036,8 +4048,8 @@ def run_scenario(
             "agents_not_spawned": not_spawned,
             "flow_spawns_deferred": sum(c for c, _, _ in deferred_spawns.values()),
             "all_evacuated": remaining == 0,
-            "frame_rate": 10.0,
-            "dt": 0.01,
+            "frame_rate": 1.0 / (step_s * output_stride(dt)),
+            "dt": step_s,
             "seed": seed,
             "walkable_polygon": scenario.walkable_polygon,
         }
@@ -4096,6 +4108,7 @@ def run_scenario(
                 seed=seed,
                 agent_seeding=SEEDING_SCHEME,
                 scenario_path=scenario.source_path,
+                dt=step_s,
                 fds_dir=fds_dir_from_models(
                     smoke_speed_model, fed_model, heat_fed_model
                 ),

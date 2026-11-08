@@ -104,7 +104,7 @@ def build_config() -> dict:
             "simulation_settings": {
                 "simulationParams": {
                     "max_simulation_time": end_time_s(),
-                    "dt": 0.05,
+                    "dt": 0.01,
                     "model_type": "CollisionFreeSpeedModel",
                 },
                 "numberOfSimulations": 1,

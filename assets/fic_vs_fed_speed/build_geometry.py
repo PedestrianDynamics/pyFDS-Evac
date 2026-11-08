@@ -87,7 +87,7 @@ def build_config():
             "simulation_settings": {
                 "simulationParams": {
                     "max_simulation_time": 400,
-                    "dt": 0.05,
+                    "dt": 0.01,
                     "model_type": "CollisionFreeSpeedModel",
                 },
                 "numberOfSimulations": 1,

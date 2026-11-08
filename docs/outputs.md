@@ -39,7 +39,8 @@ uv run python run.py --scenario assets/iso_table22_coupled/config_a.json \
 ## Trajectory SQLite
 
 The JuPedSim trajectory file, unchanged in schema: agent positions every 0.1 s
-(simulation step 0.01 s, every tenth frame written). Load it with
+(10 frames per second whatever the simulation step, which is the deck's
+`simulationParams.dt`, 0.01 s by default). Load it with
 [PedPy](https://pedpy.readthedocs.io), `scripts/plot_trajectories.py`,
 `scripts/vis.py`, or [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer).
 
@@ -64,6 +65,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `git_commit`, `git_dirty` | commit of the checkout, and whether tracked files had uncommitted changes; both `null` for an installed wheel |
 | `seed` | the seed of the run |
 | `agent_seeding` | how per-agent and per-distribution draws are derived from the seed, `spawn-key-blake2b-v2`; runs of another scheme, or without the key, draw differently under the same seed (`v1` runs place agents from `seed + index`, #360) |
+| `dt` | the simulation time step [s] the run used (`simulationParams.dt`) |
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
@@ -89,6 +91,7 @@ Example, from the command above:
   "git_dirty": false,
   "seed": 420,
   "agent_seeding": "spawn-key-blake2b-v2",
+  "dt": 0.01,
   "scenario_path": "/…/assets/iso_table22_coupled/config_a.json",
   "fds_dir": "/…/assets/iso_table22_coupled/fds/a",
   "fds_version": "FDS-6.10.1-0-g12efa16-release",

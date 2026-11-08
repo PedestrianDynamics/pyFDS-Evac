@@ -100,7 +100,7 @@ def build_config(alpha_near):
             "simulation_settings": {
                 "simulationParams": {
                     "max_simulation_time": 300,
-                    "dt": 0.05,
+                    "dt": 0.01,
                     "model_type": "CollisionFreeSpeedModel",
                 },
                 "numberOfSimulations": 1,

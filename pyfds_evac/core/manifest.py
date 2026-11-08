@@ -324,6 +324,7 @@ def build_manifest(
     fds_outside: dict[str, Any] | None = None,
     outcome: dict[str, Any] | None = None,
     sfm: dict[str, Any] | None = None,
+    dt: float | None = None,
 ) -> dict[str, Any]:
     """Collect the provenance fields for one run.
 
@@ -350,6 +351,7 @@ def build_manifest(
     ``sfm`` is what a SocialForceModel run gave JuPedSim: ``body_force``,
     ``friction``, ``friction_requested`` and ``friction_clamped``
     (``scenario.sfm_model_settings``), recorded for that model only.
+    ``dt`` is the simulation time step [s] the run used (#922).
     """
     root = project_root if project_root is not None else find_project_root()
     lock = uv_lock if uv_lock is not None else find_uv_lock(root)
@@ -361,6 +363,7 @@ def build_manifest(
         "git_dirty": dirty,
         "seed": seed,
         "agent_seeding": agent_seeding,
+        "dt": dt,
         "scenario_path": scenario_path,
         "fds_dir": fds_dir,
         "fds_version": fds_version(fds_dir),

@@ -35,7 +35,7 @@ _CARD = (
 # 120 samples a 600 s run was sampled every 5 s (6.5 m of travel), which drew
 # agents straight through walls and vanished whole cohorts between frames.
 #
-# 0.1 s is the rate the trajectory is recorded at (dt=0.01 s, every 10th frame),
+# 0.1 s is the rate the trajectory is recorded at (a frame every 0.1 s, whatever dt),
 # so the browser is given the simulation's own positions and interpolates
 # nothing that was not measured.
 _SAMPLE_INTERVAL_S = 0.1

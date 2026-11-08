@@ -54,8 +54,8 @@ SLICE_HEIGHT = 1.6
 K_AT_1_5_M = 0.995505
 K_SLICE_TOLERANCE = 1e-5
 
-# The simulation time step; ``run_scenario`` fixes it at 0.01 s.
-DT = 0.01
+# The simulation time step: the deck's ``simulationParams.dt`` (#922).
+DT = load_scenario(str(ASSET / "config.json")).sim_params["dt"]
 
 
 def _lund_factor(k: float) -> float:

@@ -29,6 +29,12 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any
 
+from pyfds_evac.core.time_step import (
+    DEFAULT_DT_S,
+    dt_from_params,
+    large_step_warning,
+)
+
 from . import messages
 from .parameters import (
     NO_COUNTERPART,
@@ -48,6 +54,7 @@ from .rules import (
     Inactive,
     Mechanisms,
     check_options,
+    dt_issue,
     gas_quantities,
     heat_value_issue,
     height_warnings,
@@ -234,6 +241,9 @@ def effective_configuration(
     wall_record, wall_warning = _predicted_wall_check(opts, mech, scenario)
     if wall_warning is not None:
         warnings.append(wall_warning)
+    step_warning = _step_warning(raw)
+    if step_warning is not None:
+        warnings.append(step_warning)
     return EffectiveConfiguration(
         level=level,
         inputs=_inputs(opts, scenario, raw, max_time, known),
@@ -301,10 +311,34 @@ def _scenario_kind(path: Any) -> str | None:
     return "json"
 
 
+def _time_step(raw: Mapping[str, Any]) -> tuple[float | None, str]:
+    """The scenario's ``dt`` [s] and where it comes from.
+
+    A ``dt`` that is not a number is None (the rule that rejects it reports
+    it); no key is the default.
+    """
+    params = _sim_settings(raw).get("simulationParams", {}) or {}
+    if "dt" not in params:
+        return DEFAULT_DT_S, "default"
+    try:
+        return dt_from_params(params), "scenario"
+    except ValueError:
+        return None, "scenario"
+
+
+def _step_warning(raw: Mapping[str, Any]) -> str | None:
+    """The run's warning for a force-based model above the default step."""
+    dt, _ = _time_step(raw)
+    params = _sim_settings(raw).get("simulationParams", {}) or {}
+    model_type = params.get("model_type", "CollisionFreeSpeedModel")
+    return None if dt is None else large_step_warning(model_type, dt)
+
+
 def _inputs(
     opts: Any, scenario: Any, raw: Mapping[str, Any], max_time: float, fds: Any
 ) -> dict[str, Any]:
     seed, origin = _seed(opts, scenario, raw)
+    dt, dt_origin = _time_step(raw)
     path = _scenario_path(opts, scenario)
     horizon = getattr(fds, "horizon", None)
     outputs = {
@@ -320,6 +354,8 @@ def _inputs(
         "seed": seed,
         "seed_origin": origin,
         "max_simulation_time_s": max_time,
+        "dt_s": dt,
+        "dt_origin": dt_origin,
         "outputs": outputs,
     }
 
@@ -524,6 +560,9 @@ def _errors(
     issue = visibility_value_issue(opts, raw, m)
     if issue is not None:
         errors.append(issue)
+    issue = dt_issue(raw)
+    if issue is not None:
+        errors.append(issue)
     issue = speed_alias_issue(raw)
     if issue is not None:
         errors.append(issue)
@@ -713,6 +752,9 @@ def _format_text(cfg: EffectiveConfiguration) -> str:
     )
     lines.append(
         f"  max_simulation_time     {inputs['max_simulation_time_s']} s (scenario)"
+    )
+    lines.append(
+        f"  dt                      {inputs['dt_s']} s ({inputs['dt_origin']})"
     )
     for dest, path in inputs["outputs"].items():
         lines.append(f"  {parameter(dest).flag:<24}{path}")
