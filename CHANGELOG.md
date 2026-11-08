@@ -57,7 +57,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   removes (`DEVC_ID`, `CTRL_ID`, controlled `&HOLE`): a door leaf blocks
   sight lines only while FDS has it. Before, every timed obstruction blocked
   at every time. This is the default, with no option, and differs from
-  FDS+Evac, which keeps the geometry of t = 0. The switch happens at the
+  FDS+Evac, which keeps the geometry of t = 0 for evacuation (per the
+  FDS+Evac 2.6.0 guide, "Features of Limited Functionality"). The switch happens at the
   vismap point nearest the FDS toggle (up to half a `reroute_interval`
   early or late). The vismap cache format is 7, so existing caches rebuild
   once; runs without timed obstructions give the same arrays (#453).

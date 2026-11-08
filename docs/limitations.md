@@ -411,8 +411,9 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   ([#453](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453)). Sign
   visibility follows the obstructions FDS creates or removes (`DEVC_ID`,
   `CTRL_ID`), read from the `.smv`, but agents read the vismap point nearest
-  the time: 0.5 s at the default `reroute_interval`. FDS+Evac keeps the
-  geometry of t = 0 for the whole run, so the two differ here. See
+  the time: 0.5 s at the default `reroute_interval`. Per the FDS+Evac 2.6.0
+  guide ("Features of Limited Functionality"), FDS+Evac keeps the geometry
+  of t = 0 for the whole run, so the two differ here. See
   [Wayfinding › Limitations](/models/wayfinding.md#limitations).
 
 ## Reproducibility

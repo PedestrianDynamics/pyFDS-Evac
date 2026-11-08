@@ -706,8 +706,9 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   time, so a door changes up to half a vismap step (0.5 s at the default
   `reroute_interval` of 1 s) before or after the point that follows the FDS
   toggle, and FDS writes the toggle at the end of its time step, about
-  0.05 s after the setpoint. FDS+Evac does not do this: it keeps the geometry
-  of t = 0 for the whole run ([Relation to FDS+Evac](#relation-to-fdsevac)),
+  0.05 s after the setpoint. FDS+Evac does not do this: per the FDS+Evac 2.6.0 guide
+  ("Features of Limited Functionality"; not checked in `evac.f90`), it keeps
+  the geometry of t = 0 for the whole run,
   so pyFDS-Evac deliberately differs here. Static obstructions and the
   clear-air model are unchanged, which also means the clear-air model has no
   closed leaf behind which a sign could hide.

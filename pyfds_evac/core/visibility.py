@@ -222,9 +222,10 @@ def _compute_by_period(vis) -> None:
     harvested per period, because ``_vis_metre_array`` reads the per-sign
     concealment masks that only the last period leaves behind, and joined
     along time. ``vis`` ends with the full obstruction collection and time
-    points, the joined boolean maps, and the harvest in ``pyfds_harvest``;
-    its ray caches are those of the last period, so ask the harvest rather
-    than ``get_visibility_to_sign`` for earlier times. Without timed
+    points, the joined boolean maps, and the harvest in ``pyfds_harvest``.
+    With more than one period, ``set_time_points`` has invalidated the ray
+    caches, so ``get_visibility_to_sign`` and the other accessors that need
+    them raise ``RuntimeError``; read the harvest instead. Without timed
     obstructions this is one ``compute_all`` on the unchanged map.
     """
     all_points = [float(t) for t in vis.vismap_time_points]
