@@ -1,0 +1,3 @@
+Time (s),Type,ID,State,Value,Units
+ 5.01717E+00,DEVC,open_A                                                      ,F, 5.01717E+00,s
+ 5.01717E+00,DEVC,close_B                                                     ,T, 5.01717E+00,s

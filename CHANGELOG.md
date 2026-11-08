@@ -53,6 +53,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Sign legibility from an FDS run follows the obstructions FDS creates or
+  removes (`DEVC_ID`, `CTRL_ID`, controlled `&HOLE`): a door leaf blocks
+  sight lines only while FDS has it. Before, every timed obstruction blocked
+  at every time. This is the default, with no option, and differs from
+  FDS+Evac, which keeps the geometry of t = 0. The switch happens at the
+  vismap point nearest the FDS toggle (up to half a `reroute_interval`
+  early or late). The vismap cache format is 7, so existing caches rebuild
+  once; runs without timed obstructions give the same arrays (#453).
 - Station V0 configs (`assets/station_fahy` and `assets/station_nist`,
   `config.json` and `config_full.json`). **Station results change.** Time
   zero is first flame. The front exit `jps-exits_0` closes at 86 s
