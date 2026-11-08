@@ -57,7 +57,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   stepped at 0.01 s. It now sets the JuPedSim step and `Result.dt`; it
   must divide 0.1 s, and the trajectory stays at 10 frames/s. The asset
   decks that said 0.05 were set to 0.01, the step they always ran at, so
-  their results do not change. Decks without `dt` run as before.
+  their results do not change. Decks without `dt` run as before. The run
+  manifest records `dt`, and the effective inputs show `dt_s` and
+  `dt_origin`. `pyfds-evac` refuses a bad `dt` in one line, also with
+  `--export-only`, and a Social Force or GCFM run above 0.01 s logs a
+  warning. The re-evaluation stagger of the agents no longer depends on
+  `dt`: it is computed on the 0.01 s grid and snapped to the step.
 - Station V0 configs (`assets/station_fahy` and `assets/station_nist`,
   `config.json` and `config_full.json`). **Station results change.** Time
   zero is first flame. The front exit `jps-exits_0` closes at 86 s

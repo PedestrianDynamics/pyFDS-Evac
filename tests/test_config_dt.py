@@ -307,3 +307,46 @@ def test_the_command_refuses_a_dt_that_does_not_divide_the_output_interval(
 def test_the_command_passes_a_dt_that_divides_it(monkeypatch):
     scenario = _scenario_dt(0.05)
     assert _main(monkeypatch, scenario, "--print-summary", "--export-only") == 0
+
+
+@pytest.mark.parametrize("agent", [1, 7, 20, 99, 150])
+@pytest.mark.parametrize("interval", [1.0, 2.0, 10.0])
+def test_the_reevaluation_stagger_does_not_depend_on_the_step(agent, interval):
+    fine = compute_eval_offset(agent, interval, 0.01)
+    coarse = compute_eval_offset(agent, interval, 0.05)
+    assert abs(fine - coarse) < 0.05
+    assert coarse < interval
+    # On the default step the offset is the 0.01 s grid value, unchanged.
+    assert fine == (agent % round(interval / 0.01)) * 0.01
+
+
+def _exit_opened_times(dt):
+    """Times of the ``exit_opened`` switches of the 40-agent scheduled room."""
+    from shapely.geometry import box
+    from test_scheduled_exits import REROUTE_OFTEN, T_OPEN_S, _coords, _scenario
+
+    scenario = _scenario({"east": {"open_from_s": T_OPEN_S}})
+    near_east = box(22.0, 0.3, 29.7, 9.7)
+    scenario.raw["distributions"]["room"]["coordinates"] = _coords(near_east)
+    scenario.set_model_params(dt=dt)
+    result = _run(scenario, reroute_config=REROUTE_OFTEN)
+    try:
+        return sorted(
+            r["time_s"]
+            for r in result.route_history or []
+            if r.get("reason") == "exit_opened"
+        )
+    finally:
+        result.cleanup()
+
+
+def test_exit_opened_switches_fall_at_the_same_times_at_both_steps():
+    fine = _exit_opened_times(0.01)
+    coarse = _exit_opened_times(0.05)
+    # The agents that switch differ with the step (positions differ), the
+    # times at which switches happen do not.
+    assert fine and coarse
+    assert len(set(fine)) == len(set(coarse))
+    assert (
+        max(abs(a - b) for a, b in zip(sorted(set(fine)), sorted(set(coarse)))) < 0.05
+    )
