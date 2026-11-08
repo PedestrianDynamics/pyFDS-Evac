@@ -228,6 +228,16 @@ def _summary_or_exit(scenario) -> str:
         raise SystemExit(f"pyfds-evac: error: {exc}") from None
 
 
+def _check_dt_or_exit(scenario):
+    """Report a ``simulationParams.dt`` the run refuses as one line (#922)."""
+    from pyfds_evac.core.time_step import checked_dt
+
+    try:
+        checked_dt(scenario.sim_params)
+    except ValueError as exc:
+        raise SystemExit(f"pyfds-evac: error: {exc}") from None
+
+
 def _check_capacity_or_exit(scenario):
     """Report an over-full spawn area as the run does, without running (#508)."""
     from pyfds_evac.core.simulation_init import (
@@ -271,6 +281,7 @@ def main() -> int:
         _export_app_bundle(scenario, args.export_app_bundle)
 
     if args.export_only:
+        _check_dt_or_exit(scenario)
         _check_capacity_or_exit(scenario)
         return 0
 
@@ -284,6 +295,7 @@ def main() -> int:
     if args.show_config:
         return _show_config(scenario, args)
 
+    _check_dt_or_exit(scenario)
     run_kwargs = build_run_kwargs(scenario, args, log=print)
 
     print("Initialization finished.")

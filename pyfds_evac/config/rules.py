@@ -709,6 +709,23 @@ def spawn_issue(scenario: Any) -> ConfigIssue | None:
     return None
 
 
+def dt_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """A ``simulationParams.dt`` the run cannot use (#922).
+
+    Not a finite number above 0, or a step that does not divide the 0.1 s
+    trajectory interval. ``run_scenario`` rejects the first kind too, for a
+    script that does not come through the config rules.
+    """
+    from pyfds_evac.core.time_step import checked_dt
+
+    params = raw.get("config", {}).get("simulation_settings", {}) or {}
+    try:
+        checked_dt(params.get("simulationParams", {}) or {})
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
 def speed_alias_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     """A ``desired_speed*`` alias that differs from its ``v0*`` key (#612).
 
@@ -764,7 +781,10 @@ def no_known_exit_issue(opts: Any, raw: Mapping[str, Any]) -> ConfigIssue | None
 def scenario_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     """The first scenario error a run stops on, in the run's order."""
     return (
-        speed_alias_issue(raw) or routing_issue(raw) or no_known_exit_value_issue(raw)
+        dt_issue(raw)
+        or speed_alias_issue(raw)
+        or routing_issue(raw)
+        or no_known_exit_value_issue(raw)
     )
 
 
