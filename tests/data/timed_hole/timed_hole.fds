@@ -1,0 +1,29 @@
+&HEAD CHID='timed_hole', TITLE='pyFDS-Evac#453: controlled HOLE and a HOLE through a timed OBST' /
+
+&MESH ID='M1', IJK=20,20,12, XB=0,4,0,4,0,2.4 /
+&MESH ID='M2', IJK=20,20,12, XB=4,8,0,4,0,2.4 /
+&TIME T_END=10.0 /
+&DUMP DT_SLCF=1.0, DT_DEVC=1.0, DT_HRR=1.0, DT_BNDF=1000., SMOKE3D=F, WRITE_XYZ=F /
+
+&REAC FUEL='PROPANE', SOOT_YIELD=0.02 /
+&SURF ID='BURNER', HRRPUA=500.0 /
+&VENT XB=1.4,1.8,1.8,2.2,0,0, SURF_ID='BURNER' /
+
+&OBST XB=3.8,4.0,0,4,0,2.4, COLOR='GRAY' /  wall
+
+! Doorway A: a controlled HOLE, closed at t = 0, opened at 5 s.
+&HOLE XB=3.7,4.1,0.6,1.6,0,2.2, DEVC_ID='hole_A' /
+&DEVC ID='hole_A', QUANTITY='TIME', XYZ=2,2,1, SETPOINT=5.0, INITIAL_STATE=F /
+
+! Doorway B: a static HOLE through a timed panel that allows holes (PERMIT_HOLE=T, default).
+! The panel is wider than the hole and stands in front of the wall (x = 3.4-3.6 m);
+! it is present at t = 0 and removed at 5 s.
+&HOLE XB=3.3,4.1,2.4,3.4,0,2.2 /  doorway B, also cuts the panel
+&OBST XB=3.4,3.6,2.0,3.8,0,2.4, DEVC_ID='panel_B', COLOR='BROWN' /
+&DEVC ID='panel_B', QUANTITY='TIME', XYZ=2,2,1, SETPOINT=5.0, INITIAL_STATE=T /
+
+&VENT MB='XMAX', SURF_ID='OPEN' /
+
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT', ID='ext_2m' /
+
+&TAIL /

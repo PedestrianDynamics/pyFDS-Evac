@@ -695,18 +695,23 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   crosses a cell outside every FDS mesh gets a NaN extinction, and the sign
   is unreadable from that cell. Here pyFDS-Evac is stricter than FDS+Evac
   ([Limitations › Outside the FDS domain](/docs/limitations.md#outside-the-fds-domain-the-air-is-clear)).
-- **Timed obstructions block sight lines for the whole run**
-  ([#453](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453), open; upstream
-  [fdsvismap#63](https://github.com/FireDynamics/fdsvismap/issues/63)). An `&OBST`
-  that FDS removes or creates during the run (`DEVC_ID=` or `CTRL_ID=`, for
-  example a door leaf that opens at a set time) is treated as present at
-  every time. A sign seen through a door that opens is never legible, and a
-  sign behind an obstruction that appears later is not legible before it
-  appears either. In a two-room fixture run in FDS, a sign behind a leaf
-  removed at 3.1 s is not legible at any time (it should be legible from
-  4 s, once the leaf is gone), and a sign behind a leaf created at 6.1 s
-  is not legible at 0–6 s either (fdsvismap 0.3.3). Static obstructions
-  and the clear-air model are not affected.
+- **Timed obstructions switch at the vismap point nearest the FDS toggle**
+  ([#453](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/453)). An
+  `&OBST` that FDS removes or creates during the run (`DEVC_ID=` or
+  `CTRL_ID=`, for example a door leaf that opens at a set time) blocks sight
+  lines only while FDS has it, read from the `HIDE_OBST` and `SHOW_OBST`
+  records in the `.smv`. The vismap is built once per period in which the
+  obstructions do not change, so a run with timed doors costs one build per
+  period. The switch is not exact: agents query the vismap point nearest the
+  time, so a door changes up to half a vismap step (0.5 s at the default
+  `reroute_interval` of 1 s) before or after the point that follows the FDS
+  toggle, and FDS writes the toggle at the end of its time step, about
+  0.05 s after the setpoint. FDS+Evac does not do this: per the FDS+Evac 2.6.0 guide
+  ("Features of Limited Functionality"; not checked in `evac.f90`), it keeps
+  the geometry of t = 0 for the whole run,
+  so pyFDS-Evac deliberately differs here. Static obstructions and the
+  clear-air model are unchanged, which also means the clear-air model has no
+  closed leaf behind which a sign could hide.
 - **Learning is limited to neighbours**, spawn perception is per spawn area,
   and periodic learning uses the previous step's position (§2.1–2.2).
 - **The patrol can stall**
