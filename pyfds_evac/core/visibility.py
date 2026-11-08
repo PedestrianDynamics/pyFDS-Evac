@@ -6,6 +6,7 @@ import hashlib
 import json
 import logging
 import math
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -14,6 +15,7 @@ from shapely.geometry import Polygon
 
 from . import fds_sampling
 from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
+from .fdsvismap_adapter import obstruction_periods, toggle_times
 from .geometry import node_position
 
 
@@ -208,8 +210,70 @@ def _build_vismap(
     # fdsvismap clips visibility inside the array build, so the caps have to
     # be in place before compute_all.
     _apply_distance_caps(vis, sign_descriptors, max_sign_distance_m)
-    vis.compute_all(view_angle=True, obstructions=True, aa=True)
+    _compute_by_period(vis)
     return vis
+
+
+def _compute_by_period(vis) -> None:
+    """Run ``compute_all`` once per period of constant obstructions (#453).
+
+    fdsvismap builds its ray-casting cache for one obstruction map, so each
+    period gets its own map, cache and ``compute_all``. The arrays are
+    harvested per period, because ``_vis_metre_array`` reads the per-sign
+    concealment masks that only the last period leaves behind, and joined
+    along time. ``vis`` ends with the full obstruction collection and time
+    points, the joined boolean maps, and the harvest in ``pyfds_harvest``.
+    With more than one period, ``set_time_points`` has invalidated the ray
+    caches, so ``get_visibility_to_sign`` and the other accessors that need
+    them raise ``RuntimeError``; read the harvest instead. Without timed
+    obstructions this is one ``compute_all`` on the unchanged map.
+    """
+    all_points = [float(t) for t in vis.vismap_time_points]
+    collection = vis.obstructions_collection
+    periods = obstruction_periods(collection, vis.fds_slc_height, all_points)
+    if not periods:
+        # No time points: fdsvismap raises its own error.
+        vis.compute_all(view_angle=True, obstructions=True, aa=True)
+        return
+    toggles = toggle_times(collection, vis.fds_slc_height, all_points[-1])
+    bools, metres = [], []
+    try:
+        for period in periods:
+            vis.obstructions_collection = period.obstructions
+            vis.build_obstructions_array()
+            vis.set_time_points(period.time_points)
+            vis.compute_all(view_angle=True, obstructions=True, aa=True)
+            bools.append(_vis_bool_array(vis))
+            metres.append(_vis_metre_array(vis))
+    finally:
+        vis.obstructions_collection = collection
+    if len(periods) > 1:
+        vis.set_time_points(all_points)
+        vis.all_time_all_sign_vismap_list = [
+            list(frame) for part in bools for frame in part
+        ]
+    vis.pyfds_harvest = _Harvest(
+        np.concatenate(bools), np.concatenate(metres), np.array(toggles, dtype=float)
+    )
+
+
+@dataclass(frozen=True)
+class _Harvest:
+    """Arrays of one vismap build, joined over its obstruction periods."""
+
+    vis: np.ndarray
+    metres: np.ndarray
+    obstruction_toggles_s: np.ndarray
+
+
+def _harvest(vis) -> _Harvest:
+    """The arrays of *vis*, from ``_compute_by_period`` or read off directly."""
+    built = getattr(vis, "pyfds_harvest", None)
+    if isinstance(built, _Harvest):
+        return built
+    return _Harvest(
+        _vis_bool_array(vis), _vis_metre_array(vis), np.zeros((0,), dtype=float)
+    )
 
 
 def _make_meta(
@@ -251,7 +315,9 @@ def _make_meta(
         # Format 6 ends the time points at the last FDS frame and stores the
         # extinction slice's output interval; earlier caches may hold a point
         # past it.
-        "format": 6,
+        # Format 7 follows FDS's HIDE_OBST/SHOW_OBST per time point (#453);
+        # earlier caches keep timed obstructions present at every time.
+        "format": 7,
     }
 
 
@@ -577,8 +643,14 @@ def _save_vismap_cache(
     meta: dict,
     metres: np.ndarray | None = None,
     output_interval_s: float | None = None,
+    obstruction_toggles_s: np.ndarray | None = None,
 ) -> None:
-    """Serialise VisMap arrays to an npz file (no pickle, safe to load)."""
+    """Serialise VisMap arrays to an npz file (no pickle, safe to load).
+
+    ``obstruction_toggles_s`` is provenance for inspection: the times at which
+    FDS changed the obstructions at the slice height. It is not part of the
+    cache key, so it never invalidates a cache.
+    """
     npz_path = path.with_suffix(".npz")
     if path.suffix and path.suffix != ".npz":
         _logger.warning(
@@ -598,6 +670,11 @@ def _save_vismap_cache(
         # NaN for clear air, which has no FDS output.
         output_interval_s=np.array(
             np.nan if output_interval_s is None else output_interval_s
+        ),
+        obstruction_toggles_s=(
+            np.zeros((0,), dtype=float)
+            if obstruction_toggles_s is None
+            else obstruction_toggles_s
         ),
         meta=np.array(json.dumps(meta)),
     )
@@ -642,8 +719,8 @@ def _build_cache_from_fds(
     vis_obj = _build_vismap(
         fds_dir, sign_descriptors, time_step_s, slice_height_m, max_sign_distance_m
     )
-    arrays = _vis_bool_array(vis_obj)
-    metres = _vis_metre_array(vis_obj)
+    harvest = _harvest(vis_obj)
+    arrays, metres = harvest.vis, harvest.metres
     # The extinction slice's own spacing, not the vismap step: the horizon
     # window has to match the one the preflight and the slice samplers use.
     interval = fds_sampling._output_interval(vis_obj.fds_time_points)
@@ -663,6 +740,7 @@ def _build_cache_from_fds(
             expected_meta,
             metres=metres,
             output_interval_s=interval,
+            obstruction_toggles_s=harvest.obstruction_toggles_s,
         )
     return result
 

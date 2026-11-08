@@ -136,6 +136,8 @@ def main():
     )
     walls = wkt.loads((ASSET / "geometry.wkt").read_text())
     fire = fire_box(ASSET / "t_junction.fds")
+    # Single-period decks only: with timed obstructions the build leaves no
+    # ray caches for get_sign_vismap (see _compute_by_period, #453).
     vis = _build_vismap(str(args.fds_dir), signs, TIME_STEP_S, SLICE_HEIGHT_M)
     wp = list(signs).index(NODE)
     sign = signs[NODE]

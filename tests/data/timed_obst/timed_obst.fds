@@ -1,0 +1,30 @@
+&HEAD CHID='timed_obst', TITLE='pyFDS-Evac#453: leaf A removed at 5 s, leaf B created at 5 s (DEVC TIME)' /
+
+! Two rooms 4 x 4 m, wall at x = 3.8-4.0 m with two 1.0 m doorways (static HOLEs).
+! Two meshes on one MPI process; the mesh boundary at x = 4.0 m is the wall face.
+&MESH ID='M1', IJK=20,20,12, XB=0,4,0,4,0,2.4 /
+&MESH ID='M2', IJK=20,20,12, XB=4,8,0,4,0,2.4 /
+&TIME T_END=10.0 /
+&DUMP DT_SLCF=1.0, DT_DEVC=1.0, DT_HRR=1.0, DT_BNDF=1000., SMOKE3D=F, WRITE_XYZ=F /
+
+&REAC FUEL='PROPANE', SOOT_YIELD=0.02 /
+&SURF ID='BURNER', HRRPUA=500.0 /
+&VENT XB=1.4,1.8,1.8,2.2,0,0, SURF_ID='BURNER' /
+
+&OBST XB=3.8,4.0,0,4,0,2.4, COLOR='GRAY' /  wall
+&HOLE XB=3.7,4.1,0.6,1.6,0,2.2 /  doorway A
+&HOLE XB=3.7,4.1,2.4,3.4,0,2.2 /  doorway B
+
+! Leaf A: present at t = 0, removed at 5 s (INITIAL_STATE=T, the FDS+Evac door idiom).
+&OBST XB=3.8,4.0,0.6,1.6,0,2.2, PERMIT_HOLE=F, DEVC_ID='open_A', COLOR='BROWN' /
+&DEVC ID='open_A', QUANTITY='TIME', XYZ=2,2,1, SETPOINT=5.0, INITIAL_STATE=T /
+
+! Leaf B: absent at t = 0, created at 5 s (INITIAL_STATE=F, the form of the Station T_REMOVE timers).
+&OBST XB=3.8,4.0,2.4,3.4,0,2.2, PERMIT_HOLE=F, DEVC_ID='close_B', COLOR='BROWN' /
+&DEVC ID='close_B', QUANTITY='TIME', XYZ=2,2,1, SETPOINT=5.0, INITIAL_STATE=F /
+
+&VENT MB='XMAX', SURF_ID='OPEN' /
+
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT', ID='ext_2m' /
+
+&TAIL /
