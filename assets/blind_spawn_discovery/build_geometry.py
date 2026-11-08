@@ -171,7 +171,7 @@ def build_config(variant: str) -> dict:
             "simulation_settings": {
                 "simulationParams": {
                     "max_simulation_time": 300,
-                    "dt": 0.05,
+                    "dt": 0.01,
                     "model_type": "CollisionFreeSpeedModel",
                 },
                 "numberOfSimulations": 1,

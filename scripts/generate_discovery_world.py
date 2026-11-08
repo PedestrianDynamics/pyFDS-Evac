@@ -35,7 +35,7 @@ CHECKPOINT_RADIUS = 0.5
 # Defaults copied verbatim from the cognitive_map_test.zip reference project.
 SIMULATION_PARAMS = {
     "max_simulation_time": 600,
-    "dt": 0.05,
+    "dt": 0.01,
     "model_type": "WarpDriverModel",
     "strength_neighbor_repulsion": 2.6,
     "range_neighbor_repulsion": 0.1,
