@@ -561,8 +561,8 @@ then fires again every `reevaluation_interval_s` thereafter. With a
 10-second interval and 100 agents the load is spread uniformly across
 the interval.
 
-Interval updates (re-evaluation, smoke, FED) are checked once per time step
-and can run up to one step late (#927).
+Interval updates (re-evaluation, smoke, FED) are checked once per time step,
+so each interval can stretch by up to one step (#927).
 
 ### Rerouting decision flow
 
