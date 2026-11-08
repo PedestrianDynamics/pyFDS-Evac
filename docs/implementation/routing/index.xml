@@ -634,6 +634,8 @@ spread evenly. Agents of different origins can share an offset.&lt;/p>
 then fires again every &lt;code>reevaluation_interval_s&lt;/code> thereafter. With a
 10-second interval and 100 agents the load is spread uniformly across
 the interval.&lt;/p>
+&lt;p>Interval updates (re-evaluation, smoke, FED) are checked once per time step,
+so each interval can stretch by up to one step (#927).&lt;/p>
 &lt;h3>Rerouting decision flow&lt;span class="hx-absolute -hx-mt-20" id="rerouting-decision-flow">&lt;/span>
 &lt;a href="#rerouting-decision-flow" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>evaluate_and_reroute&lt;/code> runs once per agent per reevaluation tick. It
 answers three questions in turn: which routes are available, which one is
