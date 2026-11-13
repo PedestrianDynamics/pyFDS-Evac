@@ -86,7 +86,9 @@ study (time zero is first flame):
   0.
 
 Sensitivities are build options, never committed configs: ``--w-queue 0.024``,
-``--t-jam 71|102|none`` and ``--premovement zero|tracked``. A non-default option
+``--t-jam 71|102|none``, ``--premovement zero|tracked``, ``--horizon S`` (an FDS
+deck that ends before 250 s) and ``--no-anticipate`` (``routing.anticipate``
+false). A non-default option
 needs ``--out DIR``, which gets the configs, ``geometry.wkt`` and a
 ``build_options.json`` record; the committed files are not touched.
 
@@ -226,6 +228,8 @@ class V0Options:
     w_queue: float = W_QUEUE
     t_jam_s: float | None = T_JAM_S
     premovement: str = "galea"
+    horizon_s: float = HORIZON_S
+    anticipate: bool = True
 
     def __post_init__(self) -> None:
         if self.w_queue < 0:
@@ -237,6 +241,10 @@ class V0Options:
             )
         if self.t_jam_s is not None and self.t_jam_s <= 0:
             raise ValueError(f"t_jam_s must be > 0 or None, got {self.t_jam_s}")
+        if not 0 < self.horizon_s <= HORIZON_S:
+            raise ValueError(
+                f"horizon_s must be in (0, {HORIZON_S}], got {self.horizon_s}"
+            )
 
     @property
     def is_default(self) -> bool:
@@ -386,8 +394,10 @@ def apply_premovement(cfg: dict, mode: str = "galea") -> None:
 def apply_v0(cfg: dict, options: V0Options) -> None:
     """Apply the V0 settings to *cfg*: horizon, w_queue, front-door closure, pre-movement."""
     sim = cfg["config"]["simulation_settings"]["simulationParams"]
-    sim["max_simulation_time"] = HORIZON_S
+    sim["max_simulation_time"] = options.horizon_s
     cfg["routing"] = dict(cfg.get("routing") or {}, w_queue=options.w_queue)
+    if not options.anticipate:
+        cfg["routing"]["anticipate"] = False
     front = cfg["exits"][FRONT_DOOR]
     front.pop("open_from_s", None)
     front.pop("closed_after_s", None)
@@ -419,6 +429,17 @@ def add_v0_arguments(ap: argparse.ArgumentParser) -> None:
         default="galea",
         help="galea: uniform bands (default); zero: none; tracked: 18 s / 29 s",
     )
+    ap.add_argument(
+        "--horizon",
+        type=float,
+        default=HORIZON_S,
+        help="max_simulation_time in seconds, at most 250 (default 250)",
+    )
+    ap.add_argument(
+        "--no-anticipate",
+        action="store_true",
+        help="set routing.anticipate to false (default: the library's true)",
+    )
 
 
 def v0_options(args: argparse.Namespace, ap: argparse.ArgumentParser) -> V0Options:
@@ -431,7 +452,9 @@ def v0_options(args: argparse.Namespace, ap: argparse.ArgumentParser) -> V0Optio
         else float(args.t_jam)
     )
     try:
-        options = V0Options(args.w_queue, t_jam, args.premovement)
+        options = V0Options(
+            args.w_queue, t_jam, args.premovement, args.horizon, not args.no_anticipate
+        )
     except ValueError as exc:
         ap.error(str(exc))
     if not options.is_default and args.out is None:

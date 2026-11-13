@@ -293,8 +293,9 @@ fit of `station_fahy` (53 % front-door share over three seeds, fitted before
 the additive model; not re-fitted) and is the labelled sensitivity on this
 deck: `build_scenario.py --w-queue 0.024 --out DIR`. The other sensitivities
 are `--t-jam 71|102|none` (the front exit's `closed_after_s`; none removes the
-closure) and `--premovement zero|tracked`. A non-default option needs `--out
-DIR`, which gets the configs, `geometry.wkt` and a `build_options.json` record;
+closure), `--premovement zero|tracked`, `--horizon S` (`max_simulation_time`,
+at most 250 s, for an FDS deck that ends earlier) and `--no-anticipate`
+(`routing.anticipate` false). A non-default option needs `--out DIR`, which gets the configs, `geometry.wkt` and a `build_options.json` record;
 the committed files are never overwritten.
 
 ## Geometry regularisation (workaround record)

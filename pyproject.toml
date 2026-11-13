@@ -81,6 +81,7 @@ exclude = [
     "/.specify",
     "/artifacts",
     "/assets/fds_evac_guide",
+    "/assets/station_prereg",
     "/materials",
     "/site",
     "/specs",
@@ -128,3 +129,7 @@ skip_covered = false
 # it, so a misplaced import passed `ruff check` while being wrong -- which is
 # exactly what happened in #74 and was caught by a reviewer rather than by CI.
 extend-select = ["I"]
+
+[tool.ruff]
+# The frozen Station deck generator is kept byte for byte (SHA256SUMS).
+extend-exclude = ["assets/station_prereg/fds"]
