@@ -1,0 +1,644 @@
+{
+  "chid": "evac_example1cA",
+  "counts": {
+    "EVAC": {
+      "A": 5,
+      "C": 4,
+      "D": 5,
+      "S": 7
+    },
+    "EVHO": {
+      "A": 4,
+      "C": 1,
+      "D": 0,
+      "S": 0
+    },
+    "EXIT": {
+      "A": 2,
+      "C": 5,
+      "D": 1,
+      "S": 2
+    },
+    "MISC": {
+      "A": 0,
+      "C": 2,
+      "D": 0,
+      "S": 0
+    },
+    "PERS": {
+      "A": 10,
+      "C": 8,
+      "D": 3,
+      "S": 0
+    }
+  },
+  "deck": "evac_example1cA.fds",
+  "distributions": [
+    {
+      "area_m2": 15.5,
+      "density_per_m2": 0.451613,
+      "id": "HumanLeftDoorKnown_1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 7,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 39.5,
+      "density_per_m2": 0.455696,
+      "id": "HumanLeftDoorKnown_2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 15.5,
+      "density_per_m2": 0.451613,
+      "id": "HumanRightDoorKnown_1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 7,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 39.5,
+      "density_per_m2": 0.455696,
+      "id": "HumanRightDoorKnown_2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "entrance",
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 15.5,
+      "density_per_m2": 0.451613,
+      "id": "HumanBothDoorsKnown_1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 7,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 39.5,
+      "density_per_m2": 0.455696,
+      "id": "HumanBothDoorsKnown_2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 15.5,
+      "density_per_m2": 0.451613,
+      "id": "HumanNoDoorKnown_1",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 7,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    },
+    {
+      "area_m2": 39.5,
+      "density_per_m2": 0.455696,
+      "id": "HumanNoDoorKnown_2",
+      "loader_defaults": {
+        "radius": "0.2 m"
+      },
+      "number": 18,
+      "parameters_written": [
+        "familiarity",
+        "number",
+        "premovement_distribution",
+        "premovement_offset_s",
+        "premovement_param_a",
+        "premovement_param_b",
+        "use_premovement",
+        "v0",
+        "v0_distribution",
+        "v0_std"
+      ],
+      "placeholder": false,
+      "source": "&EVAC"
+    }
+  ],
+  "exits": [
+    {
+      "closed_after_s": null,
+      "id": "LeftExit",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        -0.2,
+        4.4,
+        -0.2,
+        5.6
+      ],
+      "sign": {
+        "c": 3,
+        "x": 0.2,
+        "y": 5.0
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.6
+    },
+    {
+      "closed_after_s": null,
+      "id": "RightExit",
+      "open_from_s": null,
+      "role": null,
+      "segment": [
+        11.6,
+        4.4,
+        11.6,
+        5.6
+      ],
+      "sign": {
+        "c": 3,
+        "x": 11.4,
+        "y": 5.0
+      },
+      "source": "&EXIT",
+      "strip_area_m2": 0.6
+    }
+  ],
+  "floor": {
+    "id": "MainEvacGrid",
+    "meshes": [
+      "MainEvacGrid"
+    ],
+    "z_band": [
+      0.4,
+      1.6
+    ],
+    "z_floor": 0.0
+  },
+  "floors_not_imported": [],
+  "items": [
+    {
+      "group": "EXIT",
+      "id": "LeftExit",
+      "level": "info",
+      "line": 109,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "LeftExit",
+      "level": "info",
+      "line": 109,
+      "message": "exit strip 0.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "RightExit",
+      "level": "info",
+      "line": 115,
+      "message": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor)",
+      "status": "A"
+    },
+    {
+      "group": "EXIT",
+      "id": "RightExit",
+      "level": "info",
+      "line": 115,
+      "message": "exit strip 0.6 m2 (depth 0.5 m on the room side)",
+      "status": "S"
+    },
+    {
+      "group": "EXIT",
+      "id": "RightCounter",
+      "level": "warning",
+      "line": 123,
+      "message": "COUNT_ONLY counter: no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 140,
+      "message": "TDET_SMOKE_DENS has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 140,
+      "message": "DENS_INIT has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 140,
+      "message": "I_HERDING_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 140,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Adult",
+      "level": "warning",
+      "line": 140,
+      "message": "DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 152,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Male",
+      "level": "warning",
+      "line": 152,
+      "message": "DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 158,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Female",
+      "level": "warning",
+      "line": 158,
+      "message": "DEFAULT_PROPERTIES='Female': speed uniform 0.95..1.35 m/s -> Gaussian v0=1.15, v0_std=0.11547 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 164,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Child",
+      "level": "warning",
+      "line": 164,
+      "message": "DEFAULT_PROPERTIES='Child': speed uniform 0.6..1.2 m/s -> Gaussian v0=0.9, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Elderly",
+      "level": "warning",
+      "line": 170,
+      "message": "body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m",
+      "status": "A"
+    },
+    {
+      "group": "PERS",
+      "id": "Elderly",
+      "level": "warning",
+      "line": 170,
+      "message": "DEFAULT_PROPERTIES='Elderly': speed uniform 0.5..1.1 m/s -> Gaussian v0=0.8, v0_std=0.173205 (same mean and variance)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanLeftDoorKnown",
+      "level": "warning",
+      "line": 179,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanLeftDoorKnown",
+      "level": "info",
+      "line": 179,
+      "message": "one known exit -> 'discovery', entrance 'LeftExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanLeftDoorKnown",
+      "level": "warning",
+      "line": 179,
+      "message": "delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction",
+      "status": "A"
+    },
+    {
+      "group": "EVHO",
+      "id": "Evho_Fire",
+      "level": "info",
+      "line": 223,
+      "message": "subtracted from &EVAC 'HumanLeftDoorKnown'; spawn area split into 2 hole-free piece(s)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanLeftDoorKnown",
+      "level": "info",
+      "line": 179,
+      "message": "25 agents in 2 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanRightDoorKnown",
+      "level": "warning",
+      "line": 188,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanRightDoorKnown",
+      "level": "info",
+      "line": 188,
+      "message": "one known exit -> 'discovery', entrance 'RightExit'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanRightDoorKnown",
+      "level": "warning",
+      "line": 188,
+      "message": "delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction",
+      "status": "A"
+    },
+    {
+      "group": "EVHO",
+      "id": "Evho_Fire",
+      "level": "info",
+      "line": 223,
+      "message": "subtracted from &EVAC 'HumanRightDoorKnown'; spawn area split into 2 hole-free piece(s)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanRightDoorKnown",
+      "level": "info",
+      "line": 188,
+      "message": "25 agents in 2 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanBothDoorsKnown",
+      "level": "warning",
+      "line": 199,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanBothDoorsKnown",
+      "level": "info",
+      "line": 199,
+      "message": "every exit known -> familiarity 'full'",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanBothDoorsKnown",
+      "level": "warning",
+      "line": 199,
+      "message": "delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction",
+      "status": "A"
+    },
+    {
+      "group": "EVHO",
+      "id": "Evho_Fire",
+      "level": "info",
+      "line": 223,
+      "message": "subtracted from &EVAC 'HumanBothDoorsKnown'; spawn area split into 2 hole-free piece(s)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanBothDoorsKnown",
+      "level": "info",
+      "line": 199,
+      "message": "25 agents in 2 area(s)",
+      "status": "S"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanNoDoorKnown",
+      "level": "warning",
+      "line": 212,
+      "message": "FLOW_FIELD_ID has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanNoDoorKnown",
+      "level": "warning",
+      "line": 212,
+      "message": "AGENT_TYPE has no counterpart",
+      "status": "D"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanNoDoorKnown",
+      "level": "warning",
+      "line": 212,
+      "message": "no known doors -> familiarity 'discovery'; agents find exits by signs read within 30 m, FDS+Evac by unlimited sight",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanNoDoorKnown",
+      "level": "warning",
+      "line": 212,
+      "message": "delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction",
+      "status": "A"
+    },
+    {
+      "group": "EVHO",
+      "id": "Evho_Fire",
+      "level": "info",
+      "line": 223,
+      "message": "subtracted from &EVAC 'HumanNoDoorKnown'; spawn area split into 2 hole-free piece(s)",
+      "status": "A"
+    },
+    {
+      "group": "EVAC",
+      "id": "HumanNoDoorKnown",
+      "level": "info",
+      "line": 212,
+      "message": "25 agents in 2 area(s)",
+      "status": "S"
+    }
+  ],
+  "kind": "legacy",
+  "not_runnable_reasons": [],
+  "recommendations": {
+    "coverage": {
+      "exits_outside": [
+        "RightExit"
+      ],
+      "fire_meshes": 1,
+      "walkable_outside_m2": 17.04
+    },
+    "fds_dir": null,
+    "fds_meshes": 1,
+    "fds_output_found": null,
+    "run_command": "pyfds-evac --scenario migration/exit_fixed/converted/Examples/evac_example1cA",
+    "slices": {
+      "EXTINCTION COEFFICIENT": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "TEMPERATURE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON DIOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION CARBON MONOXIDE": {
+        "nearest_pbz": null,
+        "ok": false
+      },
+      "VOLUME FRACTION OXYGEN": {
+        "nearest_pbz": null,
+        "ok": false
+      }
+    },
+    "smoke_slice_height": 1.6
+  },
+  "runnable": true,
+  "walkable": {
+    "area_m2": 120.3682,
+    "components": 1,
+    "diagnostics": [
+      "Domain: union of selected evacuation mesh footprints.",
+      "OBST minus HOLE at evacuation mesh slab; MULT expanded by upstream parser.",
+      "Thin obstructions widened to one minimum mesh cell (0.2 m).",
+      "No floor flattening, CAD-comment rules or small-hole filtering.",
+      "Disconnected regions without occupant sources omitted."
+    ],
+    "holes": 1,
+    "source": "batch:mesh-slab-obst-minus-hole"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Examples/evac_example1cC.fds",
+  "source_sha256": "5fd0077d6da682c09e31fb1a7154c3ac66821bee38edf52a6a0cf55a5547d012",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); COUNT_ONLY counter: no counterpart; TDET_SMOKE_DENS has no counterpart; DENS_INIT has no counterpart; I_HERDING_TYPE has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance); body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance); body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Female': speed uniform 0.95..1.35 m/s -> Gaussian v0=1.15, v0_std=0.11547 (same mean and variance); body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Child': speed uniform 0.6..1.2 m/s -> Gaussian v0=0.9, v0_std=0.173205 (same mean and variance); body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Elderly': speed uniform 0.5..1.1 m/s -> Gaussian v0=0.8, v0_std=0.173205 (same mean and variance); AGENT_TYPE has no counterpart; delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction; subtracted from &EVAC 'HumanLeftDoorKnown'; spawn area split into 2 hole-free piece(s); AGENT_TYPE has no counterpart; delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction; subtracted from &EVAC 'HumanRightDoorKnown'; spawn area split into 2 hole-free piece(s); AGENT_TYPE has no counterpart; delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction; subtracted from &EVAC 'HumanBothDoorsKnown'; spawn area split into 2 hole-free piece(s); FLOW_FIELD_ID has no counterpart; AGENT_TYPE has no counterpart; no known doors -> familiarity 'discovery'; agents find exits by signs read within 30 m, FDS+Evac by unlimited sight; delay: detection + reaction = 10 s + gamma(k=6, theta=1.66667), mean 20 s; variance 16.6667 s2 kept; uniform + uniform, the offset is min detection + min reaction; subtracted from &EVAC 'HumanNoDoorKnown'; spawn area split into 2 hole-free piece(s)",
+  "sampling_height_adjustment": null,
+  "fire_changes": [
+    "Removed legacy evacuation namelists, evacuation-only meshes/objects, and EVAC* parameters.",
+    "Added horizontal coupling slices at z=1.6 m; DT_SLCF capped at 1 s."
+  ],
+  "files_sha256": {
+    "config.json": "66028ebef248ad9adace253446364a7f5619d68451760c0de260483d7a31594e",
+    "geometry.wkt": "774a7929d1e629f43f31f2b9782dbfcf9a06f0fb50a03b59c91cd8874095fb41",
+    "fire.fds": "53638d567847e5860400c781e4ac052bda2f7cef8fd746aad917cfe1e0745f98"
+  }
+}

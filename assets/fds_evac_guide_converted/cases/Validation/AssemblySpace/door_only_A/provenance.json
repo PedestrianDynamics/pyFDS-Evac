@@ -1,0 +1,14 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Validation/AssemblySpace/door_only_A.fds",
+  "source_sha256": "ecc875bc50ff230f6204d828a1b838e70c36e0608c3a0733402a22f722fe2dbe",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); TDET_SMOKE_DENS has no counterpart; L_NON_SP has no counterpart; DENS_INIT has no counterpart; I_HERDING_TYPE has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Adult': speed uniform 0.95..1.55 m/s -> Gaussian v0=1.25, v0_std=0.173205 (same mean and variance); L_NON_SP has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Male': speed uniform 1.15..1.55 m/s -> Gaussian v0=1.35, v0_std=0.11547 (same mean and variance); L_NON_SP has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Female': speed uniform 0.95..1.35 m/s -> Gaussian v0=1.15, v0_std=0.11547 (same mean and variance); L_NON_SP has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Elderly': speed uniform 0.5..1.1 m/s -> Gaussian v0=0.8, v0_std=0.173205 (same mean and variance); L_NON_SP has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; DEFAULT_PROPERTIES='Child': speed uniform 0.6..1.2 m/s -> Gaussian v0=0.9, v0_std=0.173205 (same mean and variance); AGENT_TYPE has no counterpart; AGENT_TYPE has no counterpart; AGENT_TYPE has no counterpart; AGENT_TYPE has no counterpart",
+  "sampling_height_adjustment": null,
+  "fire_changes": [],
+  "files_sha256": {
+    "config.json": "08a461abb49623c2d8db16f6492a85a18ca7ac5d60c25529f03f26573f47f8d6",
+    "geometry.wkt": "6eb2dc3aa81d2a021e96564e0c5a398a2685320a2ef45dfb9533799404d431d0"
+  }
+}

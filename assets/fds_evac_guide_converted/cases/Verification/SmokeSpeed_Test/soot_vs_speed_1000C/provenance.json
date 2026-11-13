@@ -1,0 +1,19 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Verification/SmokeSpeed_Test/soot_vs_speed_1000C.fds",
+  "source_sha256": "7405854fcf5122982a7b916e5f4e677a5a68b145e61150a9a54dc907f3217670",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "XYZ -> omni-directional sign, c = 3 (FDS+Evac has no viewing-angle factor); COUNT_ONLY counter: no counterpart; TAU_EVAC_DIST has no counterpart; TAU_MEAN has no counterpart; TDET_SMOKE_DENS has no counterpart; DENS_INIT has no counterpart; NOT_RANDOM has no counterpart; NOISEME has no counterpart; NOISETH has no counterpart; NOISECM has no counterpart; I_HERDING_TYPE has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; Point/line spawn expanded to 0.6 m on each zero-width axis: [1.0, 1.0, 1.0, 1.0, 1.4, 1.6] -> [0.7, 1.3, 0.7, 1.3, 1.4, 1.6]; intersected with walkable space; positions sampled within resulting region.",
+  "sampling_height_adjustment": null,
+  "fire_changes": [
+    "Removed legacy evacuation namelists, evacuation-only meshes/objects, and EVAC* parameters.",
+    "Added horizontal coupling slices at z=1.5 m; DT_SLCF capped at 1 s.",
+    "Declared CARBON MONOXIDE with zero initial mass fraction for coupling output; reaction yields unchanged."
+  ],
+  "files_sha256": {
+    "config.json": "8d492c29d7a597d8104640ba3fe5d96b945e611e4a2c73523e95e0a8435823b7",
+    "geometry.wkt": "c209ee660360e62977c14129841ca98c7e7f9eec15357605af6e4a37afcc47e0",
+    "fire.fds": "336fe427cfe7824a716761bcd3a5867f9dd991e50b40de158567368591a32f20"
+  }
+}

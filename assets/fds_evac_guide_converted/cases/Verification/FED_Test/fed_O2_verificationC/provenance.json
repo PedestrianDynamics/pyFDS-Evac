@@ -1,0 +1,19 @@
+{
+  "source_url": "https://github.com/tkorhon1/FDS-Evac-Guide/blob/10eb1a4448ae771ad2187a238a8330c819550008/InputFiles/Verification/FED_Test/fed_O2_verificationC.fds",
+  "source_sha256": "b5e2ac57e776cbab235e105ff55811c316a40a8f1ef27efdafc5490d9d8e6aed",
+  "source_commit": "10eb1a4448ae771ad2187a238a8330c819550008",
+  "pyfds_commit": "3435dc440fe89740690aed62ba9e6e144ec3475f",
+  "modified_date": "2026-10-08",
+  "conversion_notes": "TAU_EVAC_DIST has no counterpart; TAU_MEAN has no counterpart; DENS_INIT has no counterpart; NOT_RANDOM has no counterpart; NOISEME has no counterpart; NOISETH has no counterpart; NOISECM has no counterpart; body size not mapped: FDS+Evac's body is three circles with no single-radius equivalent; the JuPedSim radius stays 0.2 m; no known doors -> familiarity 'discovery'; agents find exits by signs read within 30 m, FDS+Evac by unlimited sight; Point/line spawn expanded to 0.6 m on each zero-width axis: [1.5, 1.5, 1.5, 1.5, 1.1, 1.1] -> [1.2, 1.8, 1.2, 1.8, 1.1, 1.1]; intersected with walkable space; positions sampled within resulting region.",
+  "sampling_height_adjustment": null,
+  "fire_changes": [
+    "Removed legacy evacuation namelists, evacuation-only meshes/objects, and EVAC* parameters.",
+    "Added horizontal coupling slices at z=1.7 m; DT_SLCF capped at 1 s.",
+    "Declared SOOT with zero initial mass fraction for coupling output; reaction yields unchanged."
+  ],
+  "files_sha256": {
+    "config.json": "95a54be20a2982b883eba27d46232553d2e7059485bf24fb1c3b1354b784e1de",
+    "geometry.wkt": "6ea4b40c2b480f8fff106e0683c8b44eefc490fb3b77fe242e69ccd6e3f3f46b",
+    "fire.fds": "70df1c71101a7667cf08836ac13a1c1022c27bb31c15d43960d77cad531b6939"
+  }
+}
