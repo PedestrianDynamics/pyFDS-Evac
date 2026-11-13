@@ -731,8 +731,26 @@ def _is_horizontal(slice_obj) -> bool:
 
 
 def _slice_z_mid(slice_obj) -> float:
-    """Return the mid-height of a slice's z-extent."""
+    """Return the height [m] of a slice's values: the mid z of its extent.
+
+    For a horizontal ``CELL_CENTERED`` slice fdsreader reports the upper
+    face of the cells it holds (#942); the values sit at the cell centres,
+    so the lowest centre across its meshes is returned.
+    """
+    if getattr(slice_obj, "cell_centered", False) and _is_horizontal(slice_obj):
+        centres = [_cell_centre_z(sub) for sub in slice_obj.subslices]
+        return min(centres)
     return (slice_obj.extent.z_start + slice_obj.extent.z_end) / 2
+
+
+def _cell_centre_z(subslice) -> float:
+    """z [m] of the cell centre below the face a cell-centred subslice reports."""
+    face = float(subslice.extent.z_start)
+    nodes = np.asarray(subslice.mesh.coordinates["z"], dtype=float)
+    k = int(np.argmin(np.abs(nodes - face)))
+    if k == 0:
+        return face
+    return float(0.5 * (nodes[k - 1] + nodes[k]))
 
 
 def nearest_height_index(heights: list[float], requested_m: float) -> int:

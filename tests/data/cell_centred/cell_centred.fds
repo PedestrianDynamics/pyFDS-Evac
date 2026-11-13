@@ -1,0 +1,18 @@
+&HEAD CHID='cell_centred', TITLE='pyFDS-Evac#942: cell-centred and node slices on a 0.5 m mesh' /
+
+! One mesh, 0.5 m cells: z cells 0.0-0.5, ..., 1.5-2.0.
+! The cell-centred slice holds the cell 1.5-2.0 m, centred at 1.75 m;
+! the node slice lies on the face z = 2.0 m.
+&MESH IJK=4,4,4, XB=0,2,0,2,0,2 /
+&TIME T_END=2.0 /
+&DUMP DT_SLCF=1.0, DT_DEVC=1.0, DT_HRR=1.0, DT_BNDF=1000., SMOKE3D=F, WRITE_XYZ=F /
+
+&REAC FUEL='PROPANE', SOOT_YIELD=0.02 /
+&SURF ID='BURNER', HRRPUA=500.0 /
+&VENT XB=0.5,1.0,0.5,1.0,0,0, SURF_ID='BURNER' /
+&VENT MB='XMAX', SURF_ID='OPEN' /
+
+&SLCF PBZ=1.75, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT', CELL_CENTERED=.TRUE., ID='ext_cc' /
+&SLCF PBZ=2.0, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT', ID='ext_node' /
+
+&TAIL /

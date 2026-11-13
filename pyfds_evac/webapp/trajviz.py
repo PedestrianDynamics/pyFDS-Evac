@@ -106,7 +106,10 @@ def _smoke_payload(
     try:
         import numpy as np
 
-        from pyfds_evac.core.fds_sampling import select_horizontal_slice
+        from pyfds_evac.core.fds_sampling import (
+            _slice_z_mid,
+            select_horizontal_slice,
+        )
         from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
         sim = open_fds_simulation(fds_dir)
@@ -124,7 +127,7 @@ def _smoke_payload(
             )
         except IndexError:
             return {"missing": SMOKE_NO_HORIZONTAL}
-        z_mid = (sl.extent.z_start + sl.extent.z_end) / 2.0
+        z_mid = _slice_z_mid(sl)
         grid, coords = sl.to_global(masked=True, return_coordinates=True)
         grid = np.nan_to_num(np.asarray(grid, dtype=float), nan=0.0)  # (T, X, Y)
         slice_times = np.asarray(sl.times, dtype=float)

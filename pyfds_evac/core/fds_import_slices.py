@@ -403,7 +403,7 @@ def _node_z(mesh: NamelistRecord, z: float, centred: bool) -> float | None:
     *mesh* holds the slice (:func:`_holds`); None when it has no readable
     ``IJK``. Uniform grid of ``IJK``/``XB``. A node slice:
     K = NINT((z - ZS)/DZ), halves up. A cell-centred one: the last cell K
-    whose centre is within DZ/2 + 1e-10 m of z, written as its upper node.
+    whose centre is within DZ/2 + 1e-10 m of z, at that centre (#942).
     """
     ijk = mesh.values("IJK")
     xb = _safe(mesh.fds_xb)
@@ -418,7 +418,7 @@ def _node_z(mesh: NamelistRecord, z: float, centred: bool) -> float | None:
         for k in range(1, ijk[2] + 1)
         if abs(z - (z0 + (k - 0.5) * dz)) < 0.5 * dz + _FDS_CELL_TOL_M
     ]
-    return float(z0 + cells[-1] * dz) if cells else None
+    return float(z0 + (cells[-1] - 0.5) * dz) if cells else None
 
 
 def _dropped(item: _Slice) -> dict[str, Any]:
