@@ -231,6 +231,12 @@ assets/schroeder2020_room/rel_1door/rel_1door.fds	0	300.00	1	100		fa946eaf3505d7
 assets/schroeder2020_room/rel_1door_dx010/rel_1door_dx010.fds	0	300.00	1	100		fa946eaf3505d72b9591a56d71f8f1e05a78c65ab645b99992bc6addff2e1410
 assets/schroeder2020_room/rel_2door/rel_2door.fds	0	300.00	2	100		1265281f324a17320aab50225d95a37cd2590db2d801887e1082eb06169f489e
 assets/station/Station210_clean.fds	1				the deck has no &MESH with XB; nothing to import	
+assets/station_prereg/fds/station_dx010_central.fds	0	533.12	39	100		271fdddbb0de050fad5bfb49f3e57f647b3253d115a8db92c797e720f4a9aa8a
+assets/station_prereg/fds/station_dx020_central.fds	0	534.65	27	100		f1d8a6c9fab1fa58911455f8c7c3b8f27bc99cfa71db9171e4607f55aef18eaf
+assets/station_prereg/fds/station_dx020_central_m15.fds	0	534.65	27	100		4cdbce72edb8fabc515bd0eda3728a55c42a84fd6cb233944e3471e7ae9bfcd8
+assets/station_prereg/fds/station_dx020_central_p15.fds	0	534.65	27	100		f1d8a6c9fab1fa58911455f8c7c3b8f27bc99cfa71db9171e4607f55aef18eaf
+assets/station_prereg/fds/station_dx020_high.fds	0	534.65	27	100		f1d8a6c9fab1fa58911455f8c7c3b8f27bc99cfa71db9171e4607f55aef18eaf
+assets/station_prereg/fds/station_dx020_low.fds	0	534.65	27	100		f1d8a6c9fab1fa58911455f8c7c3b8f27bc99cfa71db9171e4607f55aef18eaf
 assets/t_junction/t_junction.fds	0	150.00	2	100		9e0b7380090ddb87517a88252e3939496d415f9d159368d2e1e115d616a2efdd
 assets/vis_slice_height/vis_slice_height.fds	3	100.00	0	0	no exit found; no agents to place	6119148a6e1e2f68d474d9bdad9988c3b85115c57a84ad063f78b39cbc51dcbc
 assets/world_100/world_100_fire.fds	3	3626.82	0	0	no exit found; no agents to place	33c9045ff3a3c736bcf14bc3af9b0063a91a5f0e7ffe7c16717d9b1264b5bda1

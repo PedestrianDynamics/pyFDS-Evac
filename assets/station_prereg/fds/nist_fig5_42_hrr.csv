@@ -1,0 +1,99 @@
+# NIST NCSTAR 2 Vol. I (Grosshandler et al. 2005, doi:10.6028/NIST.NCSTAR.2v1), Fig. 5-42,
+# "Total Heat Released in Building Fire Simulation as a Function of Time", report p. 5-34 (PDF p. 150).
+# Quantity: total HRR of NIST's FDS 4 full-club simulation (Station210), t = 0 at gerb ignition (p. 5-34).
+# Method: not raster digitising. The figure is vector graphics; the curve is 83 filled stroke polygons.
+#   Vertices = centre of the overlap of consecutive stroke polygons (half-stroke correction at extrema),
+#   axes calibrated on the 5 x-ticks and 7 y-gridlines (fit residual <= 0.03 s, <= 0.03 MW).
+#   Script: digitise_hrr.py in this folder (PyMuPDF). Overlay checked against the rendered page.
+# Estimated error: stroke width 1.56 pt = 1.4 s or 0.41 MW; centre-line error <= half stroke,
+#   i.e. +-0.7 s and +-0.2 MW on flat parts; on the 75-88 s rise (about 2.7 MW/s) the same +-0.7 s
+#   is up to +-2 MW at fixed t. Vertex spacing ~3 s, probably NIST's FDS 4 output interval (inference).
+# Coverage: first vertex 1.6 s (not extrapolated to t = 0), last vertex 249.8 s = end of the drawn curve.
+#   NIST ran to 300 s (p. 5-33) but plotted only to ~250 s. Do not extrapolate.
+# Checks: peak 56.7 MW at 91.0 s (the text on p. 5-33 says "54 MW"; Galea et al. 2008 p. 470 says 56.5);
+#   mean 100-250 s = 44.5 MW (text: "approximately 45 MW"); energy 1.6-249.8 s = 7.96 GJ.
+t_s,hrr_kw
+1.6,72
+2.9,96
+6.1,143
+9.0,190
+12.2,190
+15.1,190
+18.2,245
+21.2,245
+24.3,245
+27.2,293
+30.4,293
+33.3,340
+36.3,387
+39.4,497
+42.3,592
+45.5,686
+48.4,939
+51.6,1230
+54.5,1821
+57.6,3144
+60.6,5468
+63.7,8210
+66.7,10667
+69.6,13488
+72.7,16930
+75.7,21255
+78.8,26856
+81.8,34087
+84.9,44817
+87.8,55341
+91.0,56727
+93.9,50622
+97.0,47668
+100.0,45841
+102.9,45746
+106.1,45746
+109.0,45746
+112.2,46298
+115.1,45557
+118.2,45108
+121.2,44029
+124.3,44328
+127.3,43832
+130.3,43588
+133.3,43336
+136.3,42989
+139.4,42745
+142.4,42705
+145.5,42973
+148.4,42957
+151.5,43383
+154.5,43383
+157.6,43383
+160.6,43919
+163.7,43698
+166.7,44328
+169.6,44375
+172.7,43934
+175.7,44612
+178.8,44470
+181.8,44801
+184.9,44234
+187.9,44659
+190.9,45336
+193.9,44966
+197.0,44864
+200.0,44659
+203.0,44123
+206.1,43926
+209.0,43926
+212.1,44423
+215.1,44612
+218.2,45155
+221.2,45203
+224.3,46203
+227.3,45604
+230.4,45352
+233.3,45250
+236.3,45250
+239.4,45793
+242.4,45061
+245.5,45013
+248.5,43690
+249.8,43509
