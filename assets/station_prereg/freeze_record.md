@@ -8,7 +8,7 @@ here is in the tagged tree; `SHA256SUMS` lists its checksum. Check with
 
 | Item | Value |
 |---|---|
-| pyFDS-Evac | the tagged commit (`git rev-list -n 1 station-prereg-v1`); Zenodo DOI added after upload |
+| pyFDS-Evac | the tagged commit `aaeda1f3` (`git rev-list -n 1 station-prereg-v1`); archived on Zenodo, [10.5281/zenodo.24190605](https://doi.org/10.5281/zenodo.24190605) |
 | JuPedSim | 1.4.2 (installed, `importlib.metadata`; `uv.lock` resolves 1.4.2) |
 | fdsvismap | 0.3.3 (pinned `==0.3.3`) |
 | fdsreader | 1.14.0 |
