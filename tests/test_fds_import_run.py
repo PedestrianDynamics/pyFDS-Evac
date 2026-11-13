@@ -116,3 +116,64 @@ def test_point_evac_agent_is_placed_and_leaves(tmp_path):
     scenario = load_scenario(str(result.write(tmp_path / "scenario")))
     x_start, _ = _removal(scenario, seed=3)
     assert 7.7 <= x_start <= 8.3
+
+
+FOUR_EXITS = """\
+&HEAD CHID='doors' /
+&MESH IJK=100,100,24, XB=0,10,0,10,0,2.4 /
+&MESH IJK=100,100,1, XB=0,10,0,10,0.4,1.6, EVACUATION=.TRUE., EVAC_HUMANS=.TRUE.,
+      ID='Main' /
+&TIME T_END=120 /
+&PERS ID='P', VELOCITY_DIST=0, VEL_MEAN=1.25, PRE_MEAN=0, DET_MEAN=0 /
+&EXIT ID='Left', IOR=-1, XB=0,0,4,6,0.4,1.6 /
+&EXIT ID='Right', IOR=1, XB=10,10,4,6,0.4,1.6 /
+&EXIT ID='Bottom', IOR=-2, XB=4,6,0,0,0.4,1.6 /
+&EXIT ID='Top', IOR=2, XB=4,6,10,10,0.4,1.6 /
+&EVAC ID='g', XB=3,7,3,7,1,1, NUMBER_INITIAL_PERSONS=4, PERS_ID='P',
+      KNOWN_DOOR_NAMES='Bottom','Top','Left','Right',
+      KNOWN_DOOR_PROBS=1.0,1.0,0.0,0.0 /
+"""
+FOUR_NAMES = ("Left", "Right", "Bottom", "Top")
+
+
+def test_agents_start_knowing_exactly_the_imported_known_doors(tmp_path, monkeypatch):
+    """Two of four doors known (probabilities 1, 1, 0, 0): the maps hold two."""
+    from pyfds_evac.core import scenario as scenario_mod
+
+    maps = []
+    real = scenario_mod.init_cognitive_map
+
+    def record(*args, **kwargs):
+        cmap = real(*args, **kwargs)
+        maps.append((kwargs.get("entrance"), cmap))
+        return cmap
+
+    monkeypatch.setattr(scenario_mod, "init_cognitive_map", record)
+    scenario = _imported(tmp_path, FOUR_EXITS, "POLYGON((0 0,10 0,10 10,0 10,0 0))")
+    run_scenario(scenario, seed=7).cleanup()
+    assert len(maps) == 4
+    for entrance, cmap in maps:
+        assert entrance == ["Bottom", "Top"]
+        assert {n for n in cmap.known_nodes if n in FOUR_NAMES} == {"Bottom", "Top"}
+
+
+def test_a_malformed_entrance_stops_the_run_before_any_agent_spawns(
+    tmp_path, monkeypatch
+):
+    """Under the default no_known_exit mode the value was first parsed at spawn."""
+    from pyfds_evac.core import scenario as scenario_mod
+
+    spawned = []
+    real = scenario_mod.init_cognitive_map
+
+    def record(*args, **kwargs):
+        spawned.append(1)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(scenario_mod, "init_cognitive_map", record)
+    scenario = _imported(tmp_path, FOUR_EXITS, "POLYGON((0 0,10 0,10 10,0 10,0 0))")
+    for dist in scenario.raw["distributions"].values():
+        dist["parameters"]["entrance"] = ["Bottom", 3]
+    with pytest.raises(ValueError, match="entrance must be"):
+        run_scenario(scenario, seed=7)
+    assert spawned == []

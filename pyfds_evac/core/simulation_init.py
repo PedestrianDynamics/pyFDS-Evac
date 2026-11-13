@@ -1707,7 +1707,7 @@ def build_exit_path_state(
     *,
     agent_radius: float,
     familiarity: Any = "full",
-    entrance: str | None = None,
+    entrance: str | list[str] | None = None,
     no_known_exit: str | None = None,
 ) -> dict[str, Any]:
     """Build DS state that steers an agent straight to the exit *exit_id*.

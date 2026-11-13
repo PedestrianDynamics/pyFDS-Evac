@@ -752,6 +752,17 @@ def no_known_exit_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
     return None
 
 
+def entrance_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
+    """A distribution's ``entrance`` that is not an exit id or a list of them."""
+    from pyfds_evac.core.cognitive_map import distribution_entrances
+
+    try:
+        distribution_entrances(raw)
+    except ValueError as exc:
+        return ConfigIssue("B", None, str(exc), "S")
+    return None
+
+
 def no_known_exit_issue(opts: Any, raw: Mapping[str, Any]) -> ConfigIssue | None:
     """D33: an opt-in ``no_known_exit`` mode in a run without a reroute pass.
 
@@ -785,6 +796,7 @@ def scenario_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
         or speed_alias_issue(raw)
         or routing_issue(raw)
         or no_known_exit_value_issue(raw)
+        or entrance_value_issue(raw)
     )
 
 

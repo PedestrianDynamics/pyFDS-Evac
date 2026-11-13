@@ -510,6 +510,39 @@ def test_known_doors(tmp_path, extra, expected):
     assert got == expected
 
 
+FOUR_DOORS = (
+    "&EXIT ID='Left', IOR=-1, XB=0,0,4.4,5.6,0.4,1.6 /",
+    "&EXIT ID='Right', IOR=1, XB=10,10,4.4,5.6,0.4,1.6 /",
+    "&EXIT ID='Bottom', IOR=-2, XB=4.4,5.6,0,0,0.4,1.6 /",
+    "&EXIT ID='Top', IOR=2, XB=4.4,5.6,10,10,0.4,1.6 /",
+)
+
+
+def _four_doors(tmp_path, probs: str):
+    group = (
+        "&EVAC ID='g', XB=1,9,1,9,1,1, NUMBER_INITIAL_PERSONS=25, "
+        "KNOWN_DOOR_NAMES='Bottom','Top','Left','Right', "
+        f"KNOWN_DOOR_PROBS={probs} /"
+    )
+    return _room(tmp_path, *FOUR_DOORS, group)
+
+
+def test_two_of_four_known_doors_become_an_entrance_list(tmp_path):
+    result = _four_doors(tmp_path, "1.0,1.0,0.0,0.0")
+    params = _params(result, "g")
+    assert params["familiarity"] == "discovery"
+    assert params["entrance"] == ["Bottom", "Top"]
+    assert not [i for i in _items(result) if "cannot be expressed" in i.message]
+
+
+def test_fractional_known_door_is_dropped_and_reported(tmp_path):
+    result = _four_doors(tmp_path, "1.0,1.0,0.5,0.0")
+    assert _params(result, "g")["entrance"] == ["Bottom", "Top"]
+    notes = [i for i in _items(result, "A") if "probability below 1" in i.message]
+    assert len(notes) == 1
+    assert "'Left': 0.5" in notes[0].message
+
+
 def test_known_door_on_the_exit(tmp_path):
     door = "&EXIT ID='Left', IOR=-1, KNOWN_DOOR=.TRUE., XB=0,0,4.4,5.6,0.4,1.6 /"
     result = _room(tmp_path, door, EVAC.format(extra=""))

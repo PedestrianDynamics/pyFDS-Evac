@@ -895,7 +895,7 @@ AREAS: dict[str, Area] = {
             Mutant(
                 "entrance_not_learned",
                 "removed term",
-                "if entrance is not None and entrance in graph.nodes:",
+                "if exit_id in graph.nodes:",
                 "if False:",
             ),
             Mutant(

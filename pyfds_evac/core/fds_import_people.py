@@ -20,8 +20,10 @@ Maintainer decisions applied here (import task record, 2026-10-06):
   for every operational model (D3). One circle as deep as the FDS+Evac
   body (0.30 m for an adult) but narrower than its shoulders (0.51 m).
 - Q1: no known doors -> ``discovery``; every exit known -> ``full``; one
-  known exit -> ``discovery`` with that ``entrance``; else the closest of
-  these, with a warning.
+  known exit -> ``discovery`` with that ``entrance``; several certain exits
+  -> ``discovery`` with the list as ``entrance`` (doors with probability
+  below 1 dropped, with a warning); else the closest of these, with a
+  warning.
 """
 
 from __future__ import annotations
@@ -650,15 +652,8 @@ def _familiarity_for(known, exit_ids, group, add, label) -> dict[str, Any]:
     if len(certain) == len(known) and set(certain) == set(exit_ids):
         add("S", "info", label, "every exit known -> familiarity 'full'", group)
         return {"familiarity": "full"}
-    if len(certain) == len(known) == 1:
-        add(
-            "S",
-            "info",
-            label,
-            f"one known exit -> 'discovery', entrance {certain[0]!r}",
-            group,
-        )
-        return {"familiarity": "discovery", "entrance": certain[0]}
+    if certain:
+        return _certain_entrance(certain, known, group, add, label)
     best = max(known, key=lambda n: (known[n], -list(known).index(n)))
     add(
         "A",
@@ -669,3 +664,27 @@ def _familiarity_for(known, exit_ids, group, add, label) -> dict[str, Any]:
         group,
     )
     return {"familiarity": "discovery", "entrance": best}
+
+
+def _certain_entrance(certain, known, group, add, label) -> dict[str, Any]:
+    """Certain doors become the ``entrance`` list; fractional ones are dropped."""
+    entrance: str | list[str] = certain[0] if len(certain) == 1 else certain
+    dropped = {n: p for n, p in known.items() if p < 1.0}
+    if not dropped:
+        add(
+            "S",
+            "info",
+            label,
+            f"known exits {certain} -> 'discovery', entrance {entrance!r}",
+            group,
+        )
+        return {"familiarity": "discovery", "entrance": entrance}
+    add(
+        "A",
+        "warning",
+        label,
+        f"known doors with probability below 1 {dropped} not expressible per "
+        f"door (FDS+Evac draws them per agent); dropped, entrance {entrance!r}",
+        group,
+    )
+    return {"familiarity": "discovery", "entrance": entrance}

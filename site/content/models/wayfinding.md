@@ -263,10 +263,12 @@ defaults to `"full"` (`simulation_init.py`, `_initialize_with_fallback`).
 - \(p = 1\): the map is the whole stage graph. It is never extended.
 - \(p < 1\): the map starts with the spawn node, marked visited. Then, in
   order:
-  1. **Entrance.** If `entrance` names an exit reachable from the spawn node,
-     the shortest path to it is learned. A name that is missing, is not an
-     exit, or cannot be reached is silently ignored (`cognitive_map.py`,
-     `_learn_route_to`, `init_cognitive_map`).
+  1. **Entrance.** For each exit `entrance` names (one id or a list) that is
+     reachable from the spawn node, the shortest path to it is learned. A
+     name that is missing, is not an exit, or cannot be reached is silently
+     ignored (`cognitive_map.py`, `_learn_route_to`, `init_cognitive_map`).
+     A value that is neither an exit id nor a list of them stops the run
+     before any agent spawns.
   2. **Familiarity draw.** Each other reachable exit is learned, with its
      shortest path, with probability \(p\). The draw uses an RNG seeded from
      the run seed and the agent's spawn order, not its JuPedSim id
@@ -519,7 +521,7 @@ library use.
 | Setting | Source | `run.py` value | Library default | Unit | Meaning |
 |---|---|---|---|---|---|
 | `familiarity` | distribution `parameters` | – | `"full"` (`simulation_init.py`, `_initialize_with_fallback`) | – | `"full"`, `"discovery"` or \(p \in [0,1]\) |
-| `entrance` | distribution `parameters` | – | none (`simulation_init.py`, `_initialize_with_fallback`) | – | a reachable exit learned at spawn |
+| `entrance` | distribution `parameters` | – | none (`simulation_init.py`, `_initialize_with_fallback`) | – | reachable exits (one id or a list) learned at spawn |
 | `no_known_exit` | distribution `parameters` | – | `"default_route"` (`cognitive_map.py`, `DEFAULT_NO_KNOWN_EXIT`) | – | `"default_route"`, `"explore"`, `"return"` or `"stay"`: what an agent does with no reachable known exit (§2.4) |
 | `sign.c` | node `sign` | – | 3 (`visibility.py`, `_default_sign`, `_build_vismap`) | – | *C* |
 | `sign.alpha` | node `sign` | – | `None`, i.e. \(A = 1\) (`visibility.py`, `_default_sign`) | ° | bearing the sign faces |
@@ -750,7 +752,7 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   [Wayfinding in practice](/docs/wayfinding.md) gives the measured spread.
 - **No per-exit familiarity**
   ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)). One
-  \(p\) per group, plus one `entrance`.
+  \(p\) per group, plus an `entrance` list of certain exits.
 
 **Fixed behaviour.** Three earlier defects are fixed: discovery agents ranked
 the first leg as a straight line through walls
