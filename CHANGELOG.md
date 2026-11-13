@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `entrance` accepts a list of exit ids. `pyfds-evac init` maps the doors
+  of `KNOWN_DOOR_NAMES` with probability 1 to that list, so agents of an
+  FDS+Evac group that knows two of four exits start knowing exactly
+  those two; doors with a probability below 1 are still dropped, with an
+  import-report warning (#940).
 - `assets/station_fahy/build_scenario.py --full` and
   `assets/station_nist/build_scenario.py --full` also write
   `config_full.json`: the 333 placed survivors labelled `placed`, plus 22

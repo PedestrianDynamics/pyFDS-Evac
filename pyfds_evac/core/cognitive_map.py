@@ -120,6 +120,21 @@ def _learn_route_to(cmap: AgentCognitiveMap, graph, source: str, target: str) ->
     return True
 
 
+def entrance_exits(entrance) -> list[str]:
+    """The exits named by an ``entrance`` value: none, one string or a list."""
+    if entrance is None:
+        return []
+    if isinstance(entrance, str):
+        return [entrance]
+    if isinstance(entrance, (list, tuple)) and all(
+        isinstance(e, str) for e in entrance
+    ):
+        return list(entrance)
+    raise ValueError(
+        f"entrance must be an exit id or a list of exit ids, got {entrance!r}"
+    )
+
+
 def init_cognitive_map(
     spawn_node: str,
     graph,
@@ -128,7 +143,7 @@ def init_cognitive_map(
     time_s: float,
     *,
     rng=None,
-    entrance: str | None = None,
+    entrance: str | list[str] | None = None,
     no_visibility: bool = False,
 ) -> AgentCognitiveMap:
     """Initialise a cognitive map for an agent spawning at *spawn_node*.
@@ -137,8 +152,9 @@ def init_cognitive_map(
     :func:`familiarity_probability`); 1.0 is the historical ``full`` tier and
     0.0 the ``discovery`` one.
 
-    *entrance* names the exit the agent walked in through, which it knows
-    whatever its familiarity.  At The Station every patron entered by the front
+    *entrance* names the exit, or the list of exits, the agent knows at the
+    start whatever its familiarity; a single exit is the one it walked in
+    through.  At The Station every patron entered by the front
     door, and that one fact is the mechanism behind the crush: the exit everyone
     knew was the one everyone went back to.
 
@@ -165,8 +181,9 @@ def init_cognitive_map(
         visited_nodes={spawn_node},
     )
 
-    if entrance is not None and entrance in graph.nodes:
-        _learn_route_to(cmap, graph, spawn_node, entrance)
+    for exit_id in entrance_exits(entrance):
+        if exit_id in graph.nodes:
+            _learn_route_to(cmap, graph, spawn_node, exit_id)
 
     if rng is not None and probability > 0.0:
         for exit_id in graph.exit_nodes():
@@ -229,7 +246,7 @@ def _must_discover_an_exit(params: dict, mode: str) -> bool:
     """Whether agents with *params* start with no exit and nothing leads them."""
     return (
         mode != DEFAULT_NO_KNOWN_EXIT
-        and params.get("entrance") is None
+        and not entrance_exits(params.get("entrance"))
         and familiarity_probability(params.get("familiarity", "full")) == 0.0
     )
 
