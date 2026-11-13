@@ -302,10 +302,34 @@ def test_a_non_default_option_needs_out_and_never_writes_the_deck(mods, deck, tm
         "w_queue": 0.024,
         "t_jam_s": 71.0,
         "premovement": "galea",
+        "horizon_s": 250.0,
+        "anticipate": True,
     }
     out = json.loads((tmp_path / "config_full.json").read_text())
     assert out["exits"][FRONT_EXIT]["closed_after_s"] == 71.0
     assert out["routing"]["w_queue"] == 0.024
+    assert "anticipate" not in out["routing"]
+
+
+@pytest.mark.parametrize("deck", DECKS)
+def test_horizon_and_no_anticipate_reach_the_config(mods, deck, tmp_path):
+    args = ["--horizon", "234", "--no-anticipate", "--out", str(tmp_path)]
+    with contextlib.redirect_stdout(io.StringIO()):
+        assert mods[deck].main(args) == 0
+    record = json.loads((tmp_path / "build_options.json").read_text())
+    assert (record["horizon_s"], record["anticipate"]) == (234.0, False)
+    for name in ("config.json", "config_full.json"):
+        out = json.loads((tmp_path / name).read_text())
+        sim = out["config"]["simulation_settings"]["simulationParams"]
+        assert sim["max_simulation_time"] == 234.0
+        assert out["routing"]["anticipate"] is False
+
+
+@pytest.mark.parametrize("horizon", ["0", "250.5"])
+def test_a_horizon_outside_the_fire_curve_is_refused(mods, horizon, tmp_path):
+    main = mods["station_fahy"].main
+    with pytest.raises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+        main(["--horizon", horizon, "--out", str(tmp_path)])
 
 
 @pytest.mark.parametrize("deck", DECKS)
