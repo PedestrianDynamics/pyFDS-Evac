@@ -23,6 +23,7 @@ from .smoke_speed import (
     LUND_MIN_SPEED_FACTOR,
     speed_factor_from_extinction,
 )
+from .time_step import TIME_EPS_S
 
 _logger = logging.getLogger(__name__)
 
@@ -3596,8 +3597,8 @@ def should_reevaluate(
         return False
     if state.last_eval_time_s < state.eval_offset_s:
         # Never evaluated yet; evaluate once we reach our offset.
-        return current_time_s >= state.eval_offset_s
-    return current_time_s - state.last_eval_time_s >= interval_s
+        return current_time_s >= state.eval_offset_s - TIME_EPS_S
+    return current_time_s - state.last_eval_time_s >= interval_s - TIME_EPS_S
 
 
 def reroute_agent(

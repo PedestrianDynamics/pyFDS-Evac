@@ -16,6 +16,8 @@ from collections import deque
 from collections.abc import Mapping
 from dataclasses import dataclass
 
+from .time_step import TIME_EPS_S
+
 # Window and net displacement of the #706 model study: a fixed rule, not a
 # setting.
 DEADLOCK_WINDOW_S = 100.0
@@ -23,7 +25,7 @@ DEADLOCK_DISPLACEMENT_M = 0.03
 # Positions are kept once per interval, not every step, to keep the cost low.
 DEADLOCK_SAMPLE_INTERVAL_S = 1.0
 # Absorbs the rounding of a clock that advances in steps of dt.
-_TIME_EPS_S = 1e-9
+_TIME_EPS_S = TIME_EPS_S
 
 
 @dataclass(frozen=True)
