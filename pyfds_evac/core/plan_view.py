@@ -27,6 +27,8 @@ from shapely.ops import linemerge
 
 from pyfds_evac.config import events
 
+from .time_step import TIME_EPS_S
+
 # Simplification tolerance of the walkable outline [m].
 PLAN_TOLERANCE_M = 0.05
 # Largest smoke grid sent, in cells (x, y).
@@ -353,7 +355,10 @@ class FrameRecorder:
             return True
         if self._min_sim is None or self._last_sim is None:
             return False
-        return float(simulation.elapsed_time()) - self._last_sim >= self._min_sim
+        return (
+            float(simulation.elapsed_time()) - self._last_sim
+            >= self._min_sim - TIME_EPS_S
+        )
 
     def finish(
         self, simulation: Any, *, incapacitated: Set[int], not_spawned: int

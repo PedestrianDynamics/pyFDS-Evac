@@ -16,8 +16,11 @@ DEFAULT_DT_S = 0.01
 OUTPUT_INTERVAL_S = 0.1
 """Interval between written trajectory frames."""
 
+TIME_EPS_S = 1e-9
+"""Absorbs float rounding of simulation time advancing in steps of dt (#927)."""
+
 _KEY = "simulationParams.dt"
-_DIVISOR_TOL = 1e-9
+_DIVISOR_TOL = TIME_EPS_S
 
 
 def dt_from_params(sim_params: Mapping[str, Any]) -> float:

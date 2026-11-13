@@ -148,7 +148,7 @@ from .route_graph import (
     with_rival_edges,
 )
 from .smoke_speed import ConstantExtinctionField, sample_accepts_free_speed
-from .time_step import checked_dt, large_step_warning, output_stride
+from .time_step import TIME_EPS_S, checked_dt, large_step_warning, output_stride
 
 _logger = logging.getLogger(__name__)
 _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
@@ -2820,7 +2820,7 @@ def run_scenario(
             spawned_agents = initial_agent_count + sum(agent_counter_per_source)
             evacuated_agents = max(0, spawned_agents - current_agents)
             if (
-                current_time - last_progress_time >= 0.5
+                current_time - last_progress_time >= 0.5 - TIME_EPS_S
                 or current_agents != last_progress_agents
                 or all_mobile_left
             ):
@@ -3279,7 +3279,7 @@ def run_scenario(
                 if (
                     last_smoke_update_time is None
                     or current_time - last_smoke_update_time
-                    >= smoke_speed_model.config.update_interval_s
+                    >= smoke_speed_model.config.update_interval_s - TIME_EPS_S
                 ):
                     for agent in simulation.agents():
                         agent_id = int(agent.id)
@@ -3371,7 +3371,8 @@ def run_scenario(
                 )
                 if (
                     last_fed_update_time is None
-                    or current_time - last_fed_update_time >= fed_update_interval_s
+                    or current_time - last_fed_update_time
+                    >= fed_update_interval_s - TIME_EPS_S
                 ):
                     for agent in simulation.agents():
                         agent_id = int(agent.id)
@@ -3595,7 +3596,8 @@ def run_scenario(
                 and agent_wait_info
                 and (
                     last_reroute_check_time is None
-                    or simulation.elapsed_time() - last_reroute_check_time >= 1.0
+                    or simulation.elapsed_time() - last_reroute_check_time
+                    >= 1.0 - TIME_EPS_S
                 )
             ):
                 current_time = simulation.elapsed_time()
@@ -3692,7 +3694,8 @@ def run_scenario(
                 and has_exit_schedule
                 and (
                     last_reroute_check_time is None
-                    or simulation.elapsed_time() - last_reroute_check_time >= 1.0
+                    or simulation.elapsed_time() - last_reroute_check_time
+                    >= 1.0 - TIME_EPS_S
                 )
             ):
                 # The one-second check of the reroute pass, for runs without
