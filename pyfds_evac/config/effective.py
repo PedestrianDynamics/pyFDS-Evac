@@ -55,6 +55,7 @@ from .rules import (
     Mechanisms,
     check_options,
     dt_issue,
+    entrance_value_issue,
     gas_quantities,
     heat_value_issue,
     height_warnings,
@@ -570,6 +571,9 @@ def _errors(
     if issue is not None:
         errors.append(issue)
     issue = no_known_exit_value_issue(raw) or no_known_exit_issue(opts, raw)
+    if issue is not None:
+        errors.append(issue)
+    issue = entrance_value_issue(raw)
     if issue is not None:
         errors.append(issue)
     issue = spawn_issue(scenario)

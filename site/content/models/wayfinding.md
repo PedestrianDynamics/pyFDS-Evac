@@ -264,9 +264,11 @@ defaults to `"full"` (`simulation_init.py`, `_initialize_with_fallback`).
 - \(p < 1\): the map starts with the spawn node, marked visited. Then, in
   order:
   1. **Entrance.** For each exit `entrance` names (one id or a list) that is
-     reachable from the spawn node, the shortest path to it is learned. A name that is missing, is not an
-     exit, or cannot be reached is silently ignored (`cognitive_map.py`,
-     `_learn_route_to`, `init_cognitive_map`).
+     reachable from the spawn node, the shortest path to it is learned. A
+     name that is missing, is not an exit, or cannot be reached is silently
+     ignored (`cognitive_map.py`, `_learn_route_to`, `init_cognitive_map`).
+     A value that is neither an exit id nor a list of them stops the run
+     before any agent spawns.
   2. **Familiarity draw.** Each other reachable exit is learned, with its
      shortest path, with probability \(p\). The draw uses an RNG seeded from
      the run seed and the agent's spawn order, not its JuPedSim id

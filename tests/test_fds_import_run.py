@@ -155,3 +155,25 @@ def test_agents_start_knowing_exactly_the_imported_known_doors(tmp_path, monkeyp
     for entrance, cmap in maps:
         assert entrance == ["Bottom", "Top"]
         assert {n for n in cmap.known_nodes if n in FOUR_NAMES} == {"Bottom", "Top"}
+
+
+def test_a_malformed_entrance_stops_the_run_before_any_agent_spawns(
+    tmp_path, monkeypatch
+):
+    """Under the default no_known_exit mode the value was first parsed at spawn."""
+    from pyfds_evac.core import scenario as scenario_mod
+
+    spawned = []
+    real = scenario_mod.init_cognitive_map
+
+    def record(*args, **kwargs):
+        spawned.append(1)
+        return real(*args, **kwargs)
+
+    monkeypatch.setattr(scenario_mod, "init_cognitive_map", record)
+    scenario = _imported(tmp_path, FOUR_EXITS, "POLYGON((0 0,10 0,10 10,0 10,0 0))")
+    for dist in scenario.raw["distributions"].values():
+        dist["parameters"]["entrance"] = ["Bottom", 3]
+    with pytest.raises(ValueError, match="entrance must be"):
+        run_scenario(scenario, seed=7)
+    assert spawned == []

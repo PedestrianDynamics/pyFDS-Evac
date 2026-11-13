@@ -10,7 +10,9 @@ from __future__ import annotations
 import pytest
 from shapely.geometry import box
 
+from pyfds_evac.config import rules
 from pyfds_evac.core.cognitive_map import (
+    distribution_entrances,
     entrance_exits,
     init_cognitive_map,
     stranded_distributions,
@@ -82,3 +84,27 @@ def test_a_listed_exit_means_the_agents_are_not_stranded():
     assert stranded_distributions(graph, _raw([])) == stranded_distributions(
         graph, _raw(None)
     )
+
+
+def test_a_malformed_entrance_names_its_distribution():
+    raw = {"distributions": {"S": {"parameters": {"entrance": ["Bottom", 3]}}}}
+    with pytest.raises(ValueError, match="distribution 'S'.*entrance must be"):
+        distribution_entrances(raw)
+    issue = rules.scenario_issue(raw)
+    assert issue is not None and "entrance must be" in issue.message
+
+
+def test_well_formed_entrances_are_read_per_distribution():
+    raw = {
+        "distributions": {
+            "a": {"parameters": {"entrance": "Top"}},
+            "b": {"parameters": {"entrance": ["Bottom", "Top"]}},
+            "c": {"parameters": {}},
+        }
+    }
+    assert distribution_entrances(raw) == {
+        "a": ["Top"],
+        "b": ["Bottom", "Top"],
+        "c": [],
+    }
+    assert rules.entrance_value_issue(raw) is None

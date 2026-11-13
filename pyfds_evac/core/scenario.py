@@ -71,6 +71,7 @@ from .agent_seed import (
 from .cognitive_map import (
     DEFAULT_NO_KNOWN_EXIT,
     AgentCognitiveMap,
+    distribution_entrances,
     distribution_no_known_exit,
     expand_from_visibility,
     expand_on_arrival,
@@ -2206,6 +2207,7 @@ def run_scenario(
                     f"wait_info={len(agent_wait_info)}"
                 )
         no_known_exit_by_dist = distribution_no_known_exit(scenario.raw)
+        distribution_entrances(scenario.raw)
         _check_run_modes(
             smoke_blind,
             reroute_config,

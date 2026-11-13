@@ -135,6 +135,27 @@ def entrance_exits(entrance) -> list[str]:
     )
 
 
+def distribution_entrances(raw) -> dict[str, list[str]]:
+    """Each distribution's ``entrance`` exits, by distribution id.
+
+    Raises ValueError naming the distribution whose value is malformed, so a
+    bad value stops the run before the first agent spawns.
+    """
+    entrances: dict[str, list[str]] = {}
+    for dist_id, dist in (raw.get("distributions") or {}).items():
+        params = (
+            parameters_as_dict(dist.get("parameters"))
+            if isinstance(dist, dict)
+            else None
+        )
+        value = params.get("entrance") if isinstance(params, dict) else None
+        try:
+            entrances[dist_id] = entrance_exits(value)
+        except ValueError as exc:
+            raise ValueError(f"distribution {dist_id!r}: {exc}") from None
+    return entrances
+
+
 def init_cognitive_map(
     spawn_node: str,
     graph,
