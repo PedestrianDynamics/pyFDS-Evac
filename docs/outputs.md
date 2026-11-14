@@ -235,7 +235,8 @@ Detection and reaction times are not split out; see
 
 `--output-knowledge-history CSV` writes one row per exit an agent came
 to know, by time, then agent id. From Python it is
-`result.knowledge_history`. An agent knows, at time t, the exits of its
+`result.knowledge_history`, filled when `run_scenario` is called with
+`collect_cognitive_map_history=True` (the CLI always sets it). An agent knows, at time t, the exits of its
 rows with `time_s` up to t, so a row is written for every exit known at
 spawn too. The web GUI and the terminal UI do not write this file.
 
