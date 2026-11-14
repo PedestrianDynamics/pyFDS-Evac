@@ -25,6 +25,30 @@ class AgentCognitiveMap:
     # frontier: standing there taught the agent everything that position will
     # ever teach, however little that was (see nearest_frontier_target).
     visited_nodes: set[str] = field(default_factory=set)
+    # One (time_s, exit_id, how) per exit, when it first became known (#943).
+    # Recorded only; nothing reads it back.
+    exit_events: list[tuple[float, str, str]] = field(default_factory=list)
+    _noted_size: int = field(default=0, repr=False)
+
+
+#: Why an exit became known, the ``how`` of :attr:`AgentCognitiveMap.exit_events`.
+#: ``sight`` covers signs: a node is seen only when it is signed (#376).
+LEARN_ENTRANCE = "entrance"
+LEARN_FAMILIARITY = "familiarity_draw"
+LEARN_SIGHT = "sight"
+LEARN_ARRIVAL = "arrival"
+LEARN_LOOK = "look"
+
+
+def _note_exits(cmap: AgentCognitiveMap, graph, time_s: float, how: str) -> None:
+    """Append the exits known now but not yet in ``exit_events`` (#943)."""
+    if len(cmap.known_nodes) == cmap._noted_size:
+        return
+    cmap._noted_size = len(cmap.known_nodes)
+    noted = {exit_id for _, exit_id, _ in cmap.exit_events}
+    for exit_id in graph.exit_nodes():
+        if exit_id in cmap.known_nodes and exit_id not in noted:
+            cmap.exit_events.append((float(time_s), exit_id, how))
 
 
 def familiarity_probability(value) -> float:
@@ -190,11 +214,13 @@ def init_cognitive_map(
         all_edges = {
             (e.source, e.target) for edges in graph.edges.values() for e in edges
         }
-        return AgentCognitiveMap(
+        cmap = AgentCognitiveMap(
             familiarity="full",
             known_nodes=set(graph.nodes),
             known_edges=all_edges,
         )
+        _note_exits(cmap, graph, time_s, LEARN_FAMILIARITY)
+        return cmap
 
     cmap = AgentCognitiveMap(
         familiarity="discovery",
@@ -205,17 +231,20 @@ def init_cognitive_map(
     for exit_id in entrance_exits(entrance):
         if exit_id in graph.nodes:
             _learn_route_to(cmap, graph, spawn_node, exit_id)
+    _note_exits(cmap, graph, time_s, LEARN_ENTRANCE)
 
     if rng is not None and probability > 0.0:
         for exit_id in graph.exit_nodes():
             if exit_id not in cmap.known_nodes and rng.random() < probability:
                 _learn_route_to(cmap, graph, spawn_node, exit_id)
+    _note_exits(cmap, graph, time_s, LEARN_FAMILIARITY)
 
     node = graph.nodes.get(spawn_node)
     if node is not None and not no_visibility:
         _expand_visible(
             cmap, spawn_node, graph, vis_model, time_s, node.centroid_x, node.centroid_y
         )
+    _note_exits(cmap, graph, time_s, LEARN_SIGHT)
     return cmap
 
 
@@ -323,6 +352,7 @@ def expand_on_arrival(
     ax: float | None = None,
     ay: float | None = None,
     from_node: str | None = None,
+    how: str = LEARN_ARRIVAL,
 ) -> None:
     """Expand map when the agent physically arrives at a node.
 
@@ -337,6 +367,8 @@ def expand_on_arrival(
     revealed so an unperceiving agent can still progress hop by hop.
     An unsigned neighbour (``"sign": false``) is skipped either way, so nothing
     behind an unsigned node is learnt until the agent stands on it.
+
+    *how* labels the exits learnt here in ``exit_events``.
     """
     if cmap.familiarity == "full":
         return
@@ -355,6 +387,7 @@ def expand_on_arrival(
             continue
         cmap.known_nodes.add(edge.target)
         _learn_edge(cmap, graph, edge.source, edge.target)
+    _note_exits(cmap, graph, time_s, how)
 
 
 def expand_from_visibility(
@@ -373,6 +406,7 @@ def expand_from_visibility(
     if cmap.familiarity == "full":
         return
     _expand_visible(cmap, current_node, graph, vis_model, time_s, ax, ay)
+    _note_exits(cmap, graph, time_s, LEARN_SIGHT)
 
 
 def _expand_visible(

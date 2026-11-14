@@ -3,8 +3,9 @@
 ``tests/golden/cli_options.json`` is the option table of 0.2.1, before the
 help was grouped: option strings, dest, default, choices, type, nargs,
 required, const and action class, plus the flags added since: ``--debug``
-(#486), ``--show-config`` (#484) and ``--output-pre-evacuation-times``
-(#120). Grouping the help must not change it.
+(#486), ``--show-config`` (#484), ``--output-pre-evacuation-times``
+(#120) and ``--output-knowledge-history`` (#943). Grouping the help must
+not change it.
 """
 
 from __future__ import annotations
