@@ -87,6 +87,7 @@ def main() -> int:
             for t, f in zip(runtime_times, runtime_fed)
         ]
         dt = result.metrics["dt"]
+        fed_per_step = accumulate_default_fed(inputs, duration_s=dt)
 
         sns.set_theme(font_scale=1.0, style="whitegrid", font="DejaVu Sans")
         analytic_colour = "#1f253f"
@@ -173,11 +174,11 @@ def main() -> int:
         # alone they look like one series is missing, so state both numerically
         # in the annotation above and show the error here instead.
         ax_r.axhspan(
-            -dt,
-            dt,
+            -fed_per_step,
+            fed_per_step,
             color="#33a02c",
             alpha=0.12,
-            label=f"one timestep (+/-{dt:g} s worth of dose)",
+            label=f"FED accumulated per timestep (+/-{fed_per_step:.2g})",
         )
         ax_r.axhline(0.0, color="grey", linewidth=0.8)
         ax_r.plot(runtime_times, residual, color=runtime_colour)
