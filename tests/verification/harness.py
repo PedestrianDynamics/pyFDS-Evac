@@ -6,7 +6,7 @@ form.  This harness exercises the **coupling inside the real run loop**
 crossing the threshold actually pin speed to zero, does a null input stay at
 zero, does the control arm stay clean.  (Verifying that the field is sampled at
 the agent's *live position* needs a spatially-varying field -- ``ramp_x`` -- and
-is left to a dedicated gradient scenario; the uniform-field tests here are
+is done by ``test_d_gradient_position.py``; the uniform-field tests here are
 position-blind by construction.)
 
 The unlock is that ``run_scenario`` accepts pre-built ``smoke_speed_model`` and
@@ -22,7 +22,8 @@ Design rules baked in (see specs/012-model-verification/SPEC.md):
   absolute.
 - **Uniform fields are transpose-blind.**  A uniform K/CO field cannot catch an
   x/y axis-order bug, so the behavioural suite never claims to; that risk stays
-  with the standalone asymmetric visibility tests (B3.1).
+  with the standalone asymmetric visibility tests (B3.1,
+  ``test_b31_visibility_transpose.py``).
 - **Wiring, not physics.**  The FED/smoke equations are already verified to
   machine precision in Tier A.  Time-of-event is quantised to the FED update
   interval, so assert ``t*`` within one ``update_interval_s`` -- chasing 1e-6

@@ -25,11 +25,15 @@ FDS run.
 |----|------|-----------|----------------|
 | **S1** | `test_s1_corridor_fed.py` | FED lethality | incapacitation at closed-form `t* = 60·D/rate(CO)` within one FED tick; null-field control accrues 0; log-normal population endpoint *(slow)*; aggregate reproducibility *(slow)* |
 | **S2** | `test_s2_corridor_speed.py` | smoke-speed | applied factor == closed-form Lund / Fridolf exactly; Fridolf `desired_speed` == paper's w at v0 = 1.19; laws diverge; `K=0` → factor 1; egress scales `1/factor` |
+| **S3** | `test_s3_sign_acquisition.py` | sign acquisition by sight (`room_with_sign`) | clear air: exit known at t = 0 by sight; K = 0.5: acquired by sight at `R = c/K = 6 m` (window from the agent's true position and one reevaluation interval); no visibility model, or a sign facing away: nothing by sight; `full` familiarity: known at t = 0 by the draw; same seed, same exit multiset. Agents that know no exit still walk to the nearest one (`default_route`), so there is no claim that they wait for the sign |
 | **S4** | `test_s4_tjunction_reroute.py` | dynamic rerouting | control 0 switches; smoke forces every agent `B→A` (never reverse); latency bound; reproducible count *(slow)* |
 | **S6** | `test_s6_heat_fed.py` | heat FED (SFPE Handbook Eq. 63.44) | incapacitation at closed-form `t*` within one tick, `incapacitation_cause == "heat"`; ambient null-field control stays negligible (not exactly 0 — Eq. 63.44 has no artificial floor); OR-incapacitation fires on the faster of the gas/heat tracks. Heat does not yet affect routing (open design question) |
+| **D** | `test_d_gradient_position.py` | live-position sampling | K ramp `0.2·x`, its mirror and zero controls on the corridor: each logged K and Lund factor equals the closed form at the agent's *true* position (recorded by wrapping `Simulation.iterate`); K and factor monotone in x per agent; gradient egress between free walk and the all-slow bound |
+| **E** | `test_b31_visibility_transpose.py` | visibility-map orientation (B3.1) | 8 × 4 m room, off-centre sign: live and cached map equal the hand-computed disc `dx²+dy² ≤ R·dy` cell by cell, with sighting distance `R·dy/d`; on the tracked 30 × 13 m t_junction slice, fdsvismap's local sight distance equals the one from `SliceFieldSampler` |
 
-Pending (see `specs/012-model-verification/Gregory.md`): **S3** visibility gating, **S5** cognitive map,
-**D** gradient (live-position sampling), **E** asymmetric-room transpose.
+Not a separate file: **S5** (cognitive map) is covered at run level by
+`test_cognitive_map_history.py` and `test_initial_exit_from_cognitive_map.py`, plus the
+t = 0 and same-seed checks in S3.
 
 ## Design rules (every scenario)
 
