@@ -299,6 +299,34 @@ class TestOptInModes:
         assert wait_info["state"] == "to_target"
         assert wait_info["current_target_stage"] == "C"
 
+    def test_explore_walks_on_to_its_closed_exit(self):
+        """#946: the only known exit closed, nothing to explore, not there yet."""
+        wait_info = _wait_info("explore", current_target_stage="EB")
+        cmap = _cmap({"S", "EB"}, {("S", "EB")})
+        switch = _evaluate(
+            wait_info, AgentRouteState(), cmap, graph=_graph(closed_after_s=0.5)
+        )
+        assert switch is None
+        assert wait_info["current_target_stage"] == "EB"
+
+    def test_explore_turns_back_at_its_closed_exit(self):
+        """#946: standing at it, the agent looks from where it came, else stays.
+
+        The spawn area here has no stage to steer to, so it stays; the run
+        test in test_scheduled_exits.py walks agents back to look.
+        """
+        wait_info = _wait_info(
+            "explore", current_target_stage="EB", at_closed_exit="EB"
+        )
+        cmap = _cmap({"S", "EB"}, {("S", "EB")})
+        switch = _evaluate(
+            wait_info, AgentRouteState(), cmap, graph=_graph(closed_after_s=0.5)
+        )
+        assert switch is not None and switch.reason == "stay"
+        assert wait_info["current_target_stage"] == "S"
+        # Left behind: walking to EB again later starts afresh.
+        assert "at_closed_exit" not in wait_info
+
     def test_stay_stands_once(self):
         wait_info = _wait_info("stay")
         state = AgentRouteState()

@@ -4646,9 +4646,33 @@ def _decide_no_known_exit(
     # Nothing to explore: an agent must not walk on toward a node it does
     # not know (C4), such as the first stage of a journey or the exit
     # nearest its spawn point.
-    if wait_info.get("current_target_stage") in cognitive_map.known_nodes:
+    target = wait_info.get("current_target_stage")
+    if target not in cognitive_map.known_nodes:
+        return _decide_stay(route_state, source)
+    if target in graph.nodes or wait_info.get("at_closed_exit") != target:
+        # Its own exit, open or still being walked to.
         return decision
-    return _decide_stay(route_state, source)
+    return _look_back(wait_info, route_state, graph, source, agent_position)
+
+
+def _look_back(
+    wait_info: dict,
+    route_state: AgentRouteState,
+    graph: StageGraph,
+    source: str,
+    agent_position: tuple[float, float] | None,
+) -> RouteDecision:
+    """At its closed exit, knowing no other: look from where it came (#946).
+
+    The agent walks to the node point of *source*, the node it came from,
+    and looks from there (#250); it stands where it is when it cannot.
+    Either way it leaves the exit, so a later walk to it starts afresh.
+    """
+    wait_info.pop("at_closed_exit", None)
+    point = _look_point(wait_info, graph, source, agent_position)
+    if point is None:
+        return _decide_stay(route_state, source)
+    return RouteDecision(kind="look", target_id=source, point=point)
 
 
 def _decide_stay(route_state: AgentRouteState, source: str) -> RouteDecision:
