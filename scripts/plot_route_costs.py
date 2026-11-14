@@ -6,7 +6,7 @@ Usage:
 
 from __future__ import annotations
 
-import sys
+import argparse
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -95,8 +95,8 @@ def main(cost_csv: str, routes_csv: str | None = None) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print(__doc__)
-        sys.exit(1)
-    routes = sys.argv[2] if len(sys.argv) > 2 else None
-    main(sys.argv[1], routes)
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("cost_csv", help="route_costs.csv")
+    parser.add_argument("routes_csv", nargs="?", default=None, help="routes.csv")
+    args = parser.parse_args()
+    main(args.cost_csv, args.routes_csv)
