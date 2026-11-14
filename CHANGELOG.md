@@ -127,6 +127,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- An agent whose only known exit has closed, with nothing to explore
+  (`no_known_exit` `explore` or `return`), no longer waits in the closed
+  exit to the end: once there it turns back and looks from the node it
+  came from, then stands there if it learns nothing (#946).
 - A horizontal `CELL_CENTERED=.TRUE.` slice is ranked at its cell
   centres, not half a cell higher at the upper face fdsreader reports:
   the slice nearest `--smoke-slice-height` is picked, the mismatch

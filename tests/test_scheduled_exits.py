@@ -13,6 +13,7 @@ and its mirror in the east wall, and one spawn area covering the room.
 from __future__ import annotations
 
 import contextlib
+import logging
 import math
 import sqlite3
 from types import SimpleNamespace
@@ -249,12 +250,13 @@ def test_exit_opens_on_schedule():
     assert run["evacuated"] == NUM_AGENTS
 
 
-def test_agent_knowing_only_the_closed_exit_learns_no_other():
-    """Familiarity holds: a closed entrance does not reveal the other door.
+def test_agent_knowing_only_the_closed_exit_turns_back_to_look(caplog):
+    """Familiarity holds: a closed entrance does not tell of the other door.
 
-    Such an agent knows only its spawn area, already visited, and the closed
-    door. Under no_known_exit "explore" it has nowhere to explore or wander,
-    so it keeps its route and waits at the closed door.
+    Such an agent knows only its spawn area and the closed door. Under
+    no_known_exit "explore" it has nowhere to explore or wander, so it
+    walks on to the closed door; there it turns back to look from its spawn
+    area (#946). It leaves by the other door only after learning it.
     """
     scenario = _scenario(
         {"west": {"closed_after_s": T_CLOSE_S}},
@@ -262,15 +264,17 @@ def test_agent_knowing_only_the_closed_exit_learns_no_other():
         entrance="west",
         no_known_exit="explore",
     )
-    run = _run(scenario, reroute_config=REROUTE)
+    with caplog.at_level(logging.INFO, logger="pyfds_evac"):
+        run = _run(scenario, reroute_config=REROUTE)
     doors = [(t, door) for t, door in run["departures"] if t < MAX_TIME_S - 1.0]
-    assert all(door == "west" and t <= T_CLOSE_S + FRAME_S for t, door in doors)
+    learned = {r["agent_id"] for r in run["routes"] if r["new_exit"] == "east"}
+    late = [door for t, door in doors if t > T_CLOSE_S + FRAME_S]
+    assert all(door == "east" for door in late)
+    assert len(late) <= len(learned)
     assert run["remaining"] > 0
-    assert not run["routes"]
-    waiting = [(x, y) for t, x, y in run["last_seen"] if t >= MAX_TIME_S - 1.0]
-    assert len(waiting) == run["remaining"]
-    west = DOORS["west"]
-    assert all(west.distance(Point(x, y)) <= WEST_POCKET_M for x, y in waiting)
+    # Turned back: the crowd at the door may jam the walk back, so a look
+    # given up counts as well as one completed.
+    assert "Looks from a node point before a patrol" in caplog.text
 
 
 @pytest.mark.parametrize("mode", list(RUN_MODES))

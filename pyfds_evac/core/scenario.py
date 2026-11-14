@@ -3829,7 +3829,8 @@ def run_scenario(
                             stage_graph, current_target_stage, current_time
                         ):
                             # A closed exit accepts no one; the reroute pass
-                            # sends the agent elsewhere.
+                            # sends the agent elsewhere, or back to look (#946).
+                            wait_info["at_closed_exit"] = current_target_stage
                             continue
 
                         if reached_target:
