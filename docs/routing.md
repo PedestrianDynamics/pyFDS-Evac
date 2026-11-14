@@ -482,6 +482,9 @@ re-fitted there.
 
 #### Provenance of the Station's queue weight
 
+The pre-registered coupled Station study is on the
+[Station study](/docs/study-station.md) page.
+
 Calibrated, not conventional. The table below is the original sweep, which
 selected 0.03; see the caveats above for why the deck shipped 0.024 and why
 neither value has been re-fitted under the gate cost model. The sweep

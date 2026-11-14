@@ -229,6 +229,8 @@ above zero (the default is 0.0), expected queueing at an exit also enters the
 cost, so a crowded exit becomes less attractive. Agents do not follow others,
 and an exit never becomes more attractive because others use it. See
 [issue #78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78).
+The pre-registered Station comparison with survivor exit-use data failed
+its gates; see the [Station study](/docs/study-station.md).
 
 **Perception-limited route choice.** A discovery agent knows only the exits
 its familiarity, `entrance` or a legible sign gave it, but it prices the routes to them with the smoke
