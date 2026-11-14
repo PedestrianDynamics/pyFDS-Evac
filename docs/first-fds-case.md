@@ -103,8 +103,8 @@ mkdir -p fire && cp assets/t_junction/t_junction.fds fire/
 cd fire && mpiexec -n 4 fds t_junction.fds && cd ..
 ```
 
-With FDS 6.10.1 and four MPI processes it took 1169 s, about 20 minutes, on
-an Apple M3 Pro. The deck has four meshes, so it cannot use more than four
+With FDS 6.10.1 and four MPI processes it took 1120 s, about 19 minutes, on
+JURECA; the numbers on this page come from that run. The deck has four meshes, so it cannot use more than four
 processes. `fds t_junction.fds` without `mpiexec` runs it on one process, more
 slowly.
 
