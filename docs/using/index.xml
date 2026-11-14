@@ -3651,6 +3651,40 @@ this file.&lt;/p>
 &lt;/table>
 &lt;p>Detection and reaction times are not split out; see
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/113" target="_blank" rel="noopener">#113&lt;/a>.&lt;/p>
+&lt;h2>Knowledge history&lt;span class="hx-absolute -hx-mt-20" id="knowledge-history">&lt;/span>
+&lt;a href="#knowledge-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--output-knowledge-history CSV&lt;/code> writes one row per exit an agent came
+to know, by time, then agent id. From Python it is
+&lt;code>result.knowledge_history&lt;/code>, filled when &lt;code>run_scenario&lt;/code> is called with
+&lt;code>collect_cognitive_map_history=True&lt;/code> (the CLI always sets it). An agent knows, at time t, the exits of its
+rows with &lt;code>time_s&lt;/code> up to t, so a row is written for every exit known at
+spawn too. The web GUI and the terminal UI do not write this file.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Column&lt;/th>
+&lt;th>Meaning&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>&lt;code>time_s&lt;/code>&lt;/td>
+&lt;td>simulation time [s] the exit became known; for the exits known at spawn, the time the agent&amp;rsquo;s map was made (its spawn, or its first route evaluation)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>agent_id&lt;/code>&lt;/td>
+&lt;td>JuPedSim agent id, as in the trajectory SQLite&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>exit_id&lt;/code>&lt;/td>
+&lt;td>the exit stage id&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>how&lt;/code>&lt;/td>
+&lt;td>&lt;code>entrance&lt;/code> (listed in the distribution&amp;rsquo;s &lt;code>entrance&lt;/code>), &lt;code>familiarity_draw&lt;/code> (the familiarity draw at spawn; with familiarity &lt;code>full&lt;/code> every exit), &lt;code>sight&lt;/code> (seen, at spawn or later; a node is seen only by its sign), &lt;code>arrival&lt;/code> (revealed on reaching a node), &lt;code>look&lt;/code> (revealed from a node point the agent walked to look from)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>An exit known for more than one reason has one row, with the first.&lt;/p>
 &lt;h2>Reading the results&lt;span class="hx-absolute -hx-mt-20" id="reading-the-results">&lt;/span>
 &lt;a href="#reading-the-results" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>ScenarioResult&lt;/code> (and the summary line of &lt;code>run.py&lt;/code>) reports:&lt;/p>
 &lt;table>
@@ -7828,7 +7862,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9888286a30e685015580142d2725d5896b035b05">&lt;code>9888286&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/be397f905e307803c6406a06b9424eeafb17e2c3">&lt;code>be397f9&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7852,7 +7886,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">273d26e6528cc32615f9454ceae50f6978cc60e2852c9070d69f1bc3638da8f3&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2e3782cab1697c0a518cacf7e0ecc768b3f99883f74421b0a66663e570a2a936&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
