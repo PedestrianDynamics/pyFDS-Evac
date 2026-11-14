@@ -4298,9 +4298,11 @@ the default, &lt;code>default_route&lt;/code>, it walks to the nearest open exit
 which need not be in its map, and the switch is logged as &lt;code>default_route&lt;/code>.
 Under &lt;code>explore&lt;/code> it is not told of another exit: it heads for a known node it
 has not visited, or else wanders over the nodes it knows; an agent that
-knows only its spawn area and the closed exit has neither, so it keeps its
-route and waits at the closed exit. With every exit closed, an agent keeps
-its route and waits.&lt;/li>
+knows only its spawn area and the closed exit has neither, so it walks on
+to the closed exit. Once there it turns back to the node it came from and
+looks from its node point, then stands there if it learns nothing (#946).
+With every exit closed, an agent under &lt;code>default_route&lt;/code> keeps its route and
+waits; under &lt;code>explore&lt;/code> or &lt;code>return&lt;/code> it turns back at its exit as above.&lt;/li>
 &lt;/ul>
 &lt;p>When an exit opens, nobody is made to re-decide: an agent takes it at its next
 regular re-evaluation, up to &lt;code>--reroute-interval&lt;/code> later.&lt;/p>
@@ -7862,7 +7864,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/be397f905e307803c6406a06b9424eeafb17e2c3">&lt;code>be397f9&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/1f90d51055b374e42df07d99e735c1a61521b299">&lt;code>1f90d51&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7886,7 +7888,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2e3782cab1697c0a518cacf7e0ecc768b3f99883f74421b0a66663e570a2a936&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6ea0605a654eabd006a9ef08e02496d049dfecb16ec12e82724084abba74e229&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
