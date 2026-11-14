@@ -132,6 +132,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A horizontal `CELL_CENTERED=.TRUE.` slice is ranked at its cell
+  centres, not half a cell higher at the upper face fdsreader reports:
+  the slice nearest `--smoke-slice-height` is picked, the mismatch
+  warning and the run manifest give the centre, and `init` predicts the
+  same z (#942). The vismap cache format is 8, so existing caches
+  rebuild once.
 - `assets/station_fahy`: the rear bar / dart room spawn area reaches
   x −6.0 instead of −8.0 (17.2 m² instead of 13.2 m² for its 28 agents),
   so every registered seed 4–23 of the Station study places all 333
