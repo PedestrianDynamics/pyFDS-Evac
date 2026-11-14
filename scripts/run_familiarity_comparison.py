@@ -128,6 +128,7 @@ def run_tier(
         "agents_remaining": result.agents_remaining,
         "route_cost_history": result.route_cost_history or [],
         "route_history": result.route_history or [],
+        "exit_history": result.exit_history or [],
     }
 
 
@@ -175,24 +176,10 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
 
     for i, r in enumerate(results):
         label = r["label"]
-        rc = pd.DataFrame(r["route_cost_history"])
-        if rc.empty:
-            counts = [0, 0]
-        else:
-            # Count per-agent final exit choice: last non-rejected rank-1 route
-            # Use route switches if available, else first-seen exit per agent
-            rh = pd.DataFrame(r["route_history"])
-            if not rh.empty:
-                # Last switch gives final exit choice
-                final = rh.groupby("agent_id")["new_exit"].last()
-            else:
-                # No switches — use initial exit from cost history rank-1
-                rank1 = rc[rc["route_rank"] == 1].drop_duplicates(
-                    subset="agent_id", keep="first"
-                )
-                final = rank1.set_index("agent_id")["exit_id"]
-
-            counts = [(final == e).sum() for e in exits]
+        # Every agent's final exit: the one it left through, or the one it
+        # was heading for when the run ended (ScenarioResult.exit_history).
+        final = pd.Series([row["exit_id"] for row in r["exit_history"]], dtype=object)
+        counts = [(final == e).sum() for e in exits]
 
         offset = (i - 0.5) * width
         bars = ax.bar(
@@ -266,13 +253,21 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
     evac_times = [r["evacuation_time"] for r in results]
     bar_colors = [colors.get(lbl, "gray") for lbl in labels]
     bars = ax.bar(labels, evac_times, color=bar_colors, edgecolor="white", alpha=0.85)
-    for bar, lbl in zip(bars, labels):
-        bar.set_hatch(hatches.get(lbl, ""))
-    for bar, t in zip(bars, evac_times):
+    for bar, r in zip(bars, results):
+        # A run that ends with agents inside has no evacuation time: the bar
+        # is the run length, marked as such.
+        bar.set_hatch("xx" if r["agents_remaining"] else hatches.get(r["label"], ""))
+    for bar, r in zip(bars, results):
+        t = r["evacuation_time"]
+        text = (
+            f"cap reached, {r['agents_remaining']} inside"
+            if r["agents_remaining"]
+            else f"{t:.0f} s"
+        )
         ax.text(
             bar.get_x() + bar.get_width() / 2,
             bar.get_height() + 1,
-            f"{t:.0f} s",
+            text,
             ha="center",
             va="bottom",
             fontsize=9,
@@ -280,7 +275,7 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
         )
     ax.set_ylabel("Evacuation time (s)", color="dimgrey")
     ax.set_title(r"$\bf{(c)}$ Total evacuation time", loc="left", fontsize=11)
-    ax.set_ylim(bottom=0)
+    ax.set_ylim(0, max(evac_times) * 1.12)
     by_tier = {r["label"]: r for r in results}
     if {"full", "discovery"} <= by_tier.keys():
         full, disc = by_tier["full"], by_tier["discovery"]
@@ -289,8 +284,13 @@ def plot_comparison(results: list[dict], out_dir: Path) -> None:
             0.01,
             f"evacuated: discovery {disc['agents_evacuated']}/"
             f"{disc['total_agents']} vs full {full['agents_evacuated']}/"
-            f"{full['total_agents']}; time difference "
-            f"{disc['evacuation_time'] - full['evacuation_time']:+.0f} s",
+            f"{full['total_agents']}"
+            + (
+                "; no time difference: a run ended with agents inside"
+                if disc["agents_remaining"] or full["agents_remaining"]
+                else f"; time difference "
+                f"{disc['evacuation_time'] - full['evacuation_time']:+.0f} s"
+            ),
             ha="right",
             va="bottom",
             fontsize=9,
