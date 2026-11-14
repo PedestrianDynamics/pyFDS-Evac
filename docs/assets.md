@@ -153,6 +153,6 @@ conventions; what each one proves, and where that proof is checked, is below.
   geometry happens to coincide with the original scripted tour the whole
   way, so they end up taking the long route without ever finding the
   shortcut. The deck sets `no_known_exit` to `explore`. Verified: `full`
-  evacuates in 34.8 s vs `discovery`'s 86.3 s on the default 0.25 m sight
+  evacuates in 34.9 s vs `discovery`'s 76.4 s on the default 0.25 m sight
   grid (both 20/20 evacuated; other grids in
   [`docs/testing-familiarity.md`](testing-familiarity.md)).
