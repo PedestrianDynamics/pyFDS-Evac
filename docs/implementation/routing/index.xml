@@ -525,7 +525,9 @@ different quantity, and no deck pins &lt;code>cost_model&lt;/code> — so the St
 under the gate with a weight fitted under the additive model. It has not been
 re-fitted there.&lt;/p>
 &lt;h4>Provenance of the Station&amp;rsquo;s queue weight&lt;span class="hx-absolute -hx-mt-20" id="provenance-of-the-stations-queue-weight">&lt;/span>
-&lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>Calibrated, not conventional. The table below is the original sweep, which
+&lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The pre-registered coupled Station study is on the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a> page.&lt;/p>
+&lt;p>Calibrated, not conventional. The table below is the original sweep, which
 selected 0.03; see the caveats above for why the deck shipped 0.024 and why
 neither value has been re-fitted under the gate cost model. The sweep
 overrides whatever &lt;code>w_queue&lt;/code> the deck ships.

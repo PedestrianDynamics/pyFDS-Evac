@@ -22,6 +22,7 @@ equations, the &lt;code>SmokeSpeedConfig&lt;/code> defaults and the departures f
 literature are on the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke-speed model&lt;/a> page;
 the published laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/walking-speed/">Walking speed in smoke&lt;/a>.&lt;/p>
+&lt;p>In one single-seed, post-score counterfactual of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/#agents-left-inside-at-the-end-of-r-runs">Station study&lt;/a>, fixing the speed factor at 1 lowered the number of agents reaching FED ≥ 1 from 125 to 89; the study page states the limits.&lt;/p>
 &lt;h2>Extinction sources&lt;span class="hx-absolute -hx-mt-20" id="extinction-sources">&lt;/span>
 &lt;a href="#extinction-sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The model accepts any object that implements the &lt;code>ExtinctionSampler&lt;/code>
 protocol (a &lt;code>sample_extinction(time_s, x, y) -&amp;gt; float&lt;/code> method). Two

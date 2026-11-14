@@ -635,7 +635,9 @@ cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;
 above zero (the default is 0.0), expected queueing at an exit also enters the
 cost, so a crowded exit becomes less attractive. Agents do not follow others,
 and an exit never becomes more attractive because others use it. See
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>.&lt;/p>
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>.
+The pre-registered Station comparison with survivor exit-use data failed
+its gates; see the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Perception-limited route choice.&lt;/strong> A discovery agent knows only the exits
 its familiarity, &lt;code>entrance&lt;/code> or a legible sign gave it, but it prices the routes to them with the smoke
 sampled along the whole route, including stretches it has never seen
