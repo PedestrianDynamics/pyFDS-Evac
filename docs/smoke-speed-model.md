@@ -31,6 +31,8 @@ literature are on the [smoke-speed model](/models/smoke-speed.md) page;
 the published laws are on
 [Walking speed in smoke](/fundamentals/walking-speed.md).
 
+In one single-seed, post-score counterfactual of the [Station study](/docs/study-station.md#agents-left-inside-at-the-end-of-r-runs), fixing the speed factor at 1 lowered the number of agents reaching FED ≥ 1 from 125 to 89; the study page states the limits.
+
 ## Extinction sources
 
 The model accepts any object that implements the `ExtinctionSampler`
