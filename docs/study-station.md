@@ -310,8 +310,15 @@ page.
   *Fire Safety Science* 9, 465–476.
   [doi:10.3801/IAFSS.FSS.9-465](https://doi.org/10.3801/IAFSS.FSS.9-465).
   p. 473 (pre-movement) and p. 468 (HCN).
-- Purser, SFPE Handbook, Table 62.18 (CO yield), 14.9 MJ/kg.
-  <!-- TODO verify ref -->
+- Purser, D. A. (2016). Combustion toxicity. In M. J. Hurley et al. (Eds.),
+  *SFPE Handbook of Fire Protection Engineering*, 5th ed., Ch. 62,
+  pp. 2207–2307. Springer.
+  [doi:10.1007/978-1-4939-2565-0_62](https://doi.org/10.1007/978-1-4939-2565-0_62).
+  Table 62.18, p. 2280: CMHR polyurethane foam, ISO TS 19700 tube furnace at
+  650 °C, fuel-rich row φ = 2.07, effective heat of combustion 14.9 MJ/kg,
+  CO 246 and HCN 14. The column header reads g/g; the values are read as
+  mg/g (CO yield 0.246), an inference. A bench-scale value, used as the
+  central yield by choice.
 - Spearpoint, M. (2012). Network modeling of The Station Nightclub fire
   evacuation. *Journal of Fire Protection Engineering* 22(3), 157–181.
   [doi:10.1177/1042391512447044](https://doi.org/10.1177/1042391512447044).

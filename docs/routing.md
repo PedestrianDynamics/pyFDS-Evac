@@ -486,8 +486,9 @@ The pre-registered coupled Station study is on the
 [Station study](/docs/study-station.md) page.
 
 Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck shipped 0.024 and why
-neither value has been re-fitted under the gate cost model. The sweep
+selected 0.03; see the caveats above for why the deck shipped 0.024, why it
+now ships 0, and why neither value has been re-fitted under the gate cost
+model. The sweep
 overrides whatever `w_queue` the deck ships.
 `scripts/sweep_queue_weight.py` sweeps the
 weight on `assets/station_fahy` with rerouting on, three seeds per
@@ -503,8 +504,13 @@ front-door share falls monotonically with `w_queue`:
 | 1.0 | 22.9 % | 21.8 % |
 
 Fahy, Proulx & Flynn measured 52.9 % of door users at the front door,
-so `w_queue = 0.03` reproduces the Station's aggregate exit split and
-the previous default of `1.0` did not. The mean per-row deviation is
+so on that geometry and under the additive cost model `w_queue = 0.03`
+reproduced the Station's aggregate exit split and the previous default
+of `1.0` did not. It no longer does: on the current deck and under the
+gate it gives about 33 % (see the reruns above). In the pre-registered
+Station study, with the front door closing at 86 s, the 0.024 row scored
+a front-door share of 33 % ([Station study](study-station.md)). The mean
+per-row deviation is
 also lower, but it is nearly flat across 0.02–0.05 (17.1–18.0 %) while
 the front-door share swings 58.1 % → 48.4 %, so the row structure
 confirms that low weights beat 1.0 without discriminating 0.03 within
