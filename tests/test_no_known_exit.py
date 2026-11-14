@@ -324,6 +324,8 @@ class TestOptInModes:
         )
         assert switch is not None and switch.reason == "stay"
         assert wait_info["current_target_stage"] == "S"
+        # Left behind: walking to EB again later starts afresh.
+        assert "at_closed_exit" not in wait_info
 
     def test_stay_stands_once(self):
         wait_info = _wait_info("stay")

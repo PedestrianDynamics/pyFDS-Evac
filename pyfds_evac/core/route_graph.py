@@ -4666,7 +4666,9 @@ def _look_back(
 
     The agent walks to the node point of *source*, the node it came from,
     and looks from there (#250); it stands where it is when it cannot.
+    Either way it leaves the exit, so a later walk to it starts afresh.
     """
+    wait_info.pop("at_closed_exit", None)
     point = _look_point(wait_info, graph, source, agent_position)
     if point is None:
         return _decide_stay(route_state, source)

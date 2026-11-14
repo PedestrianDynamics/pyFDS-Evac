@@ -257,7 +257,8 @@ it is closed:
   knows only its spawn area and the closed exit has neither, so it walks on
   to the closed exit. Once there it turns back to the node it came from and
   looks from its node point, then stands there if it learns nothing (#946).
-  With every exit closed, an agent keeps its route and waits.
+  With every exit closed, an agent under `default_route` keeps its route and
+  waits; under `explore` or `return` it turns back at its exit as above.
 
 When an exit opens, nobody is made to re-decide: an agent takes it at its next
 regular re-evaluation, up to `--reroute-interval` later.
