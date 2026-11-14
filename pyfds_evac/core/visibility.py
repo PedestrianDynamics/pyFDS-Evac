@@ -317,7 +317,9 @@ def _make_meta(
         # past it.
         # Format 7 follows FDS's HIDE_OBST/SHOW_OBST per time point (#453);
         # earlier caches keep timed obstructions present at every time.
-        "format": 7,
+        # Format 8 ranks a cell-centred slice at its cell centres (#942);
+        # earlier caches may hold another extinction slice.
+        "format": 8,
     }
 
 
