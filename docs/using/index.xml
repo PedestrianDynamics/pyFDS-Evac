@@ -5011,7 +5011,7 @@ run&lt;/strong>.&lt;/li>
 &lt;/ul>
 &lt;p>Both open a dialog with &lt;strong>Copy&lt;/strong> and &lt;strong>Download .py&lt;/strong>.&lt;/p>
 &lt;p>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/run_code_dialog.png">&lt;figure>
-&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/run_code_dialog.png" title="The run-code dialog for run #1 of blind_spawn_discovery." alt="Dialog titled “Code for run #1 · blind_spawn_discovery” with its start time and a RUN #1 badge. Below it the line “Status: Incomplete: time limit reached, 2 agents inside, simulated time 300.0 s, incapacitation not modelled”, five notices on packages, files not included, paths, outputs and reproducibility, a collapsed “Details: what the GUI adds or leaves out” line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports" loading="lazy" />
+&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/web-gui/run_code_dialog.png" title="The run-code dialog for run #1 of blind_spawn_discovery." alt="Dialog titled “Code for run #1 · blind_spawn_discovery” with its start time and a RUN #1 badge. Below it the line “Status: Complete: all agents evacuated (30 of 30), evacuation time 34.9 s, incapacitation not modelled”, five notices on packages, files not included, paths, outputs and reproducibility, a collapsed “Details: what the GUI adds or leaves out” line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports" loading="lazy" />
 &lt;figcaption>The run-code dialog for run #1 of blind_spawn_discovery.&lt;/figcaption>
 &lt;/figure>&lt;/a>&lt;/p>
 &lt;h3>Save a run and run it again&lt;span class="hx-absolute -hx-mt-20" id="save-a-run-and-run-it-again">&lt;/span>
@@ -5024,8 +5024,8 @@ settings.&lt;/p>
 &lt;li>
 &lt;p>When the run has finished, click &lt;strong>Show Python for this run&lt;/strong>. The dialog
 is titled &amp;ldquo;Code for run #1 · blind_spawn_discovery · &lt;em>start time&lt;/em>&amp;rdquo; and
-reports &amp;ldquo;Status: Incomplete: time limit reached, 2 agents inside,
-simulated time 300.0 s, incapacitation not modelled&amp;rdquo;.&lt;/p>
+reports &amp;ldquo;Status: Complete: all agents evacuated (30 of 30), evacuation
+time 34.9 s, incapacitation not modelled&amp;rdquo;.&lt;/p>
 &lt;/li>
 &lt;li>
 &lt;p>Click &lt;strong>Download .py&lt;/strong>. The file is named after the scenario, the run
@@ -5053,9 +5053,9 @@ title="Copy code"
 &lt;p class="docs-checkpoint__title">&lt;span class="docs-checkpoint__icon" aria-hidden="true">✓&lt;/span> Script run completed&lt;/p>
 &lt;div class="docs-checkpoint__body">
 &lt;p>After the model&amp;rsquo;s own progress and log lines, the script ends with
-(pyfds-evac 0.1.0; path shortened):&lt;/p>
+(pyfds-evac 0.8.0; path shortened):&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation incomplete: time limit reached after 300.00 s (28/30 evacuated, 2 remaining).
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>Simulation finished in 34.87 s (30/30 evacuated).
 &lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
@@ -5066,7 +5066,8 @@ title="Copy code"
 &lt;/button>
 &lt;/div>
 &lt;/div>
-&lt;p>The run is incomplete, so the script exits with status 2, as &lt;code>run.py&lt;/code> does.
+&lt;p>The run is complete, so the script exits with status 0. An incomplete run
+exits with status 2, as &lt;code>run.py&lt;/code> does.
 The folder &lt;code>pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output&lt;/code>, created in the
 folder you ran the script from, holds &lt;code>trajectory.sqlite&lt;/code> and
 &lt;code>trajectory.manifest.json&lt;/code>.&lt;/p>
@@ -6820,7 +6821,7 @@ font-family: arial;
 &lt;/svg>
 &lt;/div>
 &lt;/div>
-&lt;figcaption>Results of the &lt;code>fire_2MW_PVC&lt;/code> run, with the plan replayed at 60 s.&lt;/figcaption>
+&lt;figcaption>Results of the &lt;code>fire_2MW_PVC&lt;/code> run, with the plan replayed at 60 s. Captured before the CO-yield change of the deck; &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">Your first FDS case&lt;/a> gives the current numbers (89 of 150).&lt;/figcaption>
 &lt;/figure>
 &lt;p>The outcome comes first, in the same words as the Web GUI:&lt;/p>
 &lt;table>
@@ -7864,7 +7865,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/206156615548096799ef3f1de52056b8ab6e6a98">&lt;code>2061566&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/94e05c03ae0678bfa0e5af54b47f0659a1f6b1e3">&lt;code>94e05c0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7888,7 +7889,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">9fc08758cd86a90846f7b93cdb80ca6bd9c9fc2733456a00800da943dd8f75bb&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">797823b4ff021c8f99c6aff78f52b5f4bf9d6b6c133f82e75455bd7eee24238c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
