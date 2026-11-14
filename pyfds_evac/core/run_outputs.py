@@ -155,6 +155,21 @@ def _write_exit_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
+def _write_knowledge_history_csv(rows, output_path: str) -> None:
+    """Write one row per exit an agent came to know to a CSV file (#943)."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=["time_s", "agent_id", "exit_id", "how"],
+            extrasaction="ignore",
+        )
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
 def _write_pre_evacuation_times_csv(rows, output_path: str) -> None:
     """Write one pre-movement row per held agent to a CSV file.
 
@@ -433,6 +448,10 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
     if output_exit_history and result.exit_history is not None:
         _write_exit_history_csv(result.exit_history, output_exit_history)
         artifacts.append(f"Exit history CSV: {output_exit_history}")
+    output_knowledge = getattr(opts, "output_knowledge_history", None)
+    if output_knowledge and result.knowledge_history is not None:
+        _write_knowledge_history_csv(result.knowledge_history, output_knowledge)
+        artifacts.append(f"Knowledge history CSV: {output_knowledge}")
     output_pre_evacuation = getattr(opts, "output_pre_evacuation_times", None)
     if output_pre_evacuation and result.pre_evacuation_times is not None:
         _write_pre_evacuation_times_csv(

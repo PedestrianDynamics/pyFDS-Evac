@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `--output-knowledge-history CSV` writes one row per exit an agent came
+  to know: `time_s`, `agent_id`, `exit_id` and `how` (`entrance`,
+  `familiarity_draw`, `sight`, `arrival`, `look`), the exits known at
+  spawn included; from Python, `ScenarioResult.knowledge_history`
+  (#943). Command line only.
 - `entrance` accepts a list of exit ids. `pyfds-evac init` maps the doors
   of `KNOWN_DOOR_NAMES` with probability 1 to that list, so agents of an
   FDS+Evac group that knows two of four exits start knowing exactly

@@ -470,6 +470,14 @@ PARAMETERS: tuple[Parameter, ...] = (
         python="ScenarioResult.pre_evacuation_times",
     ),
     Parameter(
+        "output_knowledge_history",
+        ("--output-knowledge-history",),
+        GROUP_OUTPUTS,
+        "Write one row per exit an agent came to know (time_s, agent_id, "
+        "exit_id, how) to CSV",
+        python="ScenarioResult.knowledge_history",
+    ),
+    Parameter(
         "smoke_blind",
         ("--smoke-blind",),
         GROUP_ASET,
@@ -987,6 +995,7 @@ GUI_HIDDEN: frozenset[str] = frozenset(
         "inspect_fds",
         "cleanup",
         "output_pre_evacuation_times",
+        "output_knowledge_history",
     }
     | {p.dest for p in PARAMETERS if not p.run_option}
 )

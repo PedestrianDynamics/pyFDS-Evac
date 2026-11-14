@@ -231,6 +231,23 @@ this file.
 Detection and reaction times are not split out; see
 [#113](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/113).
 
+## Knowledge history
+
+`--output-knowledge-history CSV` writes one row per exit an agent came
+to know, by time, then agent id. From Python it is
+`result.knowledge_history`. An agent knows, at time t, the exits of its
+rows with `time_s` up to t, so a row is written for every exit known at
+spawn too. The web GUI and the terminal UI do not write this file.
+
+| Column | Meaning |
+|---|---|
+| `time_s` | simulation time [s] the exit became known; for the exits known at spawn, the time the agent's map was made (its spawn, or its first route evaluation) |
+| `agent_id` | JuPedSim agent id, as in the trajectory SQLite |
+| `exit_id` | the exit stage id |
+| `how` | `entrance` (listed in the distribution's `entrance`), `familiarity_draw` (the familiarity draw at spawn; with familiarity `full` every exit), `sight` (seen, at spawn or later; a node is seen only by its sign), `arrival` (revealed on reaching a node), `look` (revealed from a node point the agent walked to look from) |
+
+An exit known for more than one reason has one row, with the first.
+
 ## Reading the results
 
 `ScenarioResult` (and the summary line of `run.py`) reports:

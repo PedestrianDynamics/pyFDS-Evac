@@ -371,6 +371,16 @@
   "required": false,
   "type": null
  },
+ "--output-knowledge-history": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_knowledge_history",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
  "--output-pre-evacuation-times": {
   "action": "_StoreAction",
   "choices": null,

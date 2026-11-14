@@ -70,6 +70,7 @@ from .agent_seed import (
 )
 from .cognitive_map import (
     DEFAULT_NO_KNOWN_EXIT,
+    LEARN_LOOK,
     AgentCognitiveMap,
     distribution_entrances,
     distribution_no_known_exit,
@@ -1145,6 +1146,9 @@ class ScenarioResult:
     route_history: list[dict[str, Any]] | None = None
     route_cost_history: list[dict[str, Any]] | None = None
     cognitive_map_history: list[dict[str, Any]] | None = None
+    # One row per exit an agent came to know: time_s, agent_id, exit_id, how
+    # (#943); with collect_cognitive_map_history.
+    knowledge_history: list[dict[str, Any]] | None = None
     manifest_file: str | None = None
     exit_history: list[dict[str, Any]] | None = None
     # What the run used (seed, models built); provisional, see
@@ -1276,6 +1280,20 @@ _extract_terminal_exit = terminal_exit
 def _no_known_exit(wait_info: dict) -> str:
     """The agent's no_known_exit mode (#610)."""
     return no_known_exit_mode(wait_info.get("no_known_exit"))
+
+
+def _knowledge_rows(agent_id: int, cmap) -> list[dict[str, Any]]:
+    """The ``knowledge_history`` rows of one agent's map (#943)."""
+    return [
+        {"time_s": time_s, "agent_id": agent_id, "exit_id": exit_id, "how": how}
+        for time_s, exit_id, how in cmap.exit_events
+    ]
+
+
+def _sorted_knowledge(gone: list[dict[str, Any]], maps: dict) -> list[dict[str, Any]]:
+    """*gone* plus the rows of the maps still held, by time then agent id."""
+    rows = gone + [r for aid, cmap in maps.items() for r in _knowledge_rows(aid, cmap)]
+    return sorted(rows, key=lambda r: (r["time_s"], r["agent_id"]))
 
 
 def _known_nodes(cmap) -> frozenset[str] | None:
@@ -2144,6 +2162,8 @@ def run_scenario(
         agent_route_state: dict[int, AgentRouteState] = {}
         cognitive_maps: dict[int, AgentCognitiveMap] = {}
         cognitive_map_history: list[dict[str, Any]] = []
+        # Rows of the maps of agents already gone; the rest join at the end.
+        knowledge_history: list[dict[str, Any]] = []
         # Size of each agent's map when it was last recorded, so a later frame
         # can be compared against the previous one and only changes recorded.
         _cmap_seen: dict[int, tuple[int, int]] = {}
@@ -2444,6 +2464,7 @@ def run_scenario(
                         ax=x,
                         ay=y,
                         from_node=node,
+                        how=LEARN_LOOK,
                     )
                 end_look(wait_info)
                 return
@@ -3749,7 +3770,11 @@ def run_scenario(
                             removed_state = agent_route_state.pop(
                                 tracked_agent_id, None
                             )
-                            cognitive_maps.pop(tracked_agent_id, None)
+                            _gone_map = cognitive_maps.pop(tracked_agent_id, None)
+                            if _gone_map is not None:
+                                knowledge_history.extend(
+                                    _knowledge_rows(tracked_agent_id, _gone_map)
+                                )
                             _counted = (
                                 removed_state.counted_exit
                                 if removed_state is not None
@@ -4182,6 +4207,11 @@ def run_scenario(
             ),
             cognitive_map_history=(
                 cognitive_map_history if collect_cognitive_map_history else None
+            ),
+            knowledge_history=(
+                _sorted_knowledge(knowledge_history, cognitive_maps)
+                if collect_cognitive_map_history
+                else None
             ),
             pre_evacuation_times=pre_evacuation_rows(premovement_times),
             agent_distributions=dict(spawning_info.get("agent_distributions", {})),
