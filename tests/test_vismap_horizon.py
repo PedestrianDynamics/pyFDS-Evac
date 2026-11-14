@@ -133,7 +133,7 @@ def test_format_5_cache_is_rebuilt_once_then_reused(tmp_path):
     kwargs = {"cache_path": path, "time_step_s": 1.5, "slice_height_m": 1.6}
     rebuilt = VisibilityModel(FDS_DIR, SIGN, **kwargs)
     with np.load(path, allow_pickle=False) as data:
-        assert json.loads(str(data["meta"]))["format"] == 7
+        assert json.loads(str(data["meta"]))["format"] == 8
         assert data["time_points"].tolist() == [0.0, 1.5, 2.0]
         assert float(data["output_interval_s"]) == pytest.approx(1.4633, abs=1e-4)
     with patch("pyfds_evac.core.visibility._build_vismap") as build:

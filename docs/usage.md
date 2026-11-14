@@ -814,7 +814,7 @@ chosen z, and the fix as a deck line.
 
 The z printed is the one the run ranks: the grid node FDS writes the slice
 at, from `&MESH` `IJK` and `XB` (the nearest cell face; for
-`CELL_CENTERED=.TRUE.` the top of the cell that holds z; only the mesh
+`CELL_CENTERED=.TRUE.` the centre of the cell that holds z; only the mesh
 `MESH_NUMBER` names, if given), the lowest across meshes, as fdsreader
 reads it. The deck's z follows (`deck z 1.6 m`) when it differs;
 `nearest_pbz` in the report is that z. A slice FDS culls (outside every

@@ -163,7 +163,7 @@ def test_cache_records_the_toggles_and_format_7(obst_model, fds_read_only, tmp_p
     with np.load(cache, allow_pickle=False) as data:
         toggles = data["obstruction_toggles_s"]
     assert toggles.tolist() == pytest.approx([5.063348])
-    assert _make_meta(str(fds_dir), signs, 1.0, 2.0)["format"] == 7
+    assert _make_meta(str(fds_dir), signs, 1.0, 2.0)["format"] == 8
 
 
 # -- time points and periods ------------------------------------------------

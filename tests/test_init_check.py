@@ -334,7 +334,8 @@ def _synthetic_case(folder: Path, writes, grids=TWO_GRIDS) -> None:
 
 # The node K that FDS 6.10 READ_SLCF (read.f90) writes per mesh: a node
 # slice NINT((z - ZS)/DZ), halves up; a cell-centred one the last cell
-# whose centre is within DZ/2 + 1e-10 m; MESH_NUMBER keeps that mesh only.
+# whose centre is within DZ/2 + 1e-10 m, ranked at that centre (#942);
+# MESH_NUMBER keeps that mesh only.
 COARSE_FIRST = tuple(reversed(TWO_GRIDS))
 
 
@@ -348,14 +349,14 @@ COARSE_FIRST = tuple(reversed(TWO_GRIDS))
             "PBZ=1.6, CELL_CENTERED=.TRUE.",
             (("SLCC", 1, 4), ("SLCC", 2, 2)),
             TWO_GRIDS,
-            2.0,
+            1.5,  # centres 1.75 (fine) and 1.5 (coarse), the lowest
         ),
         # On a face both cells are within DZ/2 + 1e-10 m; the last one wins.
         (
             "PBZ=2.0, CELL_CENTERED=.TRUE.",
             (("SLCC", 1, 5), ("SLCC", 2, 3)),
             TWO_GRIDS,
-            2.5,
+            2.25,  # centres 2.25 (fine) and 2.5 (coarse)
         ),
         ("PBZ=1.75, MESH_NUMBER=1", (("SLCF", 1, 4),), TWO_GRIDS, 2.0),  # 3.5 up
         ("PBZ=1.25, MESH_NUMBER=1", (("SLCF", 1, 3),), TWO_GRIDS, 1.5),  # 2.5 up
