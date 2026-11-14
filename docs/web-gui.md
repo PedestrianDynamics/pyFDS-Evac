@@ -385,7 +385,7 @@ Two buttons open the code:
 
 Both open a dialog with **Copy** and **Download .py**.
 
-[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: Incomplete: time limit reached, 2 agents inside, simulated time 300.0 s, incapacitation not modelled", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details: what the GUI adds or leaves out" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
+[![Dialog titled "Code for run #1 · blind_spawn_discovery" with its start time and a RUN #1 badge. Below it the line "Status: Complete: all agents evacuated (30 of 30), evacuation time 34.9 s, incapacitation not modelled", five notices on packages, files not included, paths, outputs and reproducibility, a collapsed "Details: what the GUI adds or leaves out" line, and the start of the script: comment lines with the pyfds-evac version, git commit, run number, start time and scenario, followed by the imports](/images/web-gui/run_code_dialog.png "The run-code dialog for run #1 of blind_spawn_discovery.")](images/web-gui/run_code_dialog.png)
 
 ### Save a run and run it again
 
@@ -394,8 +394,8 @@ Both open a dialog with **Copy** and **Download .py**.
    settings.
 2. When the run has finished, click **Show Python for this run**. The dialog
    is titled "Code for run #1 · blind_spawn_discovery · *start time*" and
-   reports "Status: Incomplete: time limit reached, 2 agents inside,
-   simulated time 300.0 s, incapacitation not modelled".
+   reports "Status: Complete: all agents evacuated (30 of 30), evacuation
+   time 34.9 s, incapacitation not modelled".
 3. Click **Download .py**. The file is named after the scenario, the run
    number and the run's UTC start time, for example
    `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z.py`.
@@ -409,14 +409,15 @@ Both open a dialog with **Copy** and **Download .py**.
 
 {{< checkpoint title="Script run completed" >}}
 After the model's own progress and log lines, the script ends with
-(pyfds-evac 0.1.0; path shortened):
+(pyfds-evac 0.8.0; path shortened):
 
 ```text
-Simulation incomplete: time limit reached after 300.00 s (28/30 evacuated, 2 remaining).
+Simulation finished in 34.87 s (30/30 evacuated).
 Trajectory SQLite: /…/pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output/trajectory.sqlite
 ```
 
-The run is incomplete, so the script exits with status 2, as `run.py` does.
+The run is complete, so the script exits with status 0. An incomplete run
+exits with status 2, as `run.py` does.
 The folder `pyfds_evac_blind_spawn_discovery_run1_20260929T182009Z_output`, created in the
 folder you ran the script from, holds `trajectory.sqlite` and
 `trajectory.manifest.json`.

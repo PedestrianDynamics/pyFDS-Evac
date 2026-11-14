@@ -284,7 +284,7 @@ in progress (run #*N*)".
 
 {{< terminal-figure src="images/tui/tui-results.svg"
   alt="The Results step at 120 by 35 characters after the fire run. The first line reads Incomplete: time limit reached, 51 agents inside, 50 not spawned, exit 2. Then: Simulated time (limit reached) 300.0 s, Evacuated 99 of 150 that entered, Incapacitated 0; a bar for 99 of 150; the summary line; run 1, t_junction, seed 42, wall 0:22. On the left, the plan replayed at 60 s with its scrubber. On the right, one warning, the per-exit counts at the end of the run, exit_A_left 12 and exit_B_right 87, and the evacuated-over-time sparkline. At the bottom, the output files with their sizes: bundle, the smoke, FED, route, route-cost and exit history CSVs, t_junction.sqlite, t_junction.manifest.json and child.log."
-  caption="Results of the `fire_2MW_PVC` run, with the plan replayed at 60 s." >}}
+  caption="Results of the `fire_2MW_PVC` run, with the plan replayed at 60 s. Captured before the CO-yield change of the deck; [Your first FDS case](first-fds-case.md) gives the current numbers (89 of 150)." >}}
 
 The outcome comes first, in the same words as the Web GUI:
 
