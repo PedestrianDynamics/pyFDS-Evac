@@ -13,15 +13,6 @@ aliases: [/docs/wayfinding/, /docs/implementation/wayfinding/wayfinding/]
 > [Models › Wayfinding](/models/wayfinding.md). The intuition is on
 > [Concepts › Wayfinding](/docs/concepts.md#wayfinding).
 
-{{< callout type="warning" >}}
-The run numbers and figures on this page come from
-runs that predate the per-distribution seeds of
-[#360](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/360) and the
-exit rule of [#349](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/349).
-The commands below now give different results; the re-run is tracked in
-[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384).
-{{< /callout >}}
-
 This page follows §3 of the talk
 [*A Modular Workflow for Visibility-Aware Evacuation Modelling*](https://pedestriandynamics.org/pyFDS-Evac/talks/visibility-seminar-2026/),
 one slide per section. Each section says what the code does, where, and which
@@ -392,7 +383,7 @@ over a few known nodes may never pass a legible new sign
 [Movement models](/models/movement.md#deadlock-behaviour)), seeds 1–30,
 the grid study of the
 [familiarity verification](testing-familiarity.md#pass-criteria) (criterion
-6, at `c619a046`) gives the following last-out times of the discovery tier,
+6, at `20615661`) gives the following last-out times of the discovery tier,
 read from the simulation clock, with a run that does not finish counted as
 300 s:
 
@@ -428,12 +419,14 @@ reproduced for this page.
 signs; `familiarity` differs. Clear-air grid 0.05 m. (a) Full: 6 of 6 stages
 known from t = 0, no route changes; the last agent leaves at 34.9 s, median
 path 28 m. (b) Discovery: 3 of 6 stages known at t = 0, a median of 6 at the
-end; the exit enters the maps at t = 28–72 s (median 46 s). After t = 0 the
-agents make 79 route changes (59 explore, 20 onto the exit), all 20
-with a detour into a dead-end room; the last leaves at 84.6 s, median path
-57 m. Over 30 seeds the discovery time meets the convergence criterion from
-0.05 to 0.025 m on this sample (the 90 % interval of the P90 change reaches
-+10 %) but not from 0.1 to 0.05 m
+end; the exit enters the maps at t = 28–55 s (median 44 s). After t = 0 the
+agents make 72 route changes (56 explore, 16 onto the exit). All 20
+explore the dead-end rooms first. 16 leave; 4 stop in CP1's door, the
+doorway deadlock of [#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359),
+and the run ends at 156.0 s. The median path of the 20 is 56 m. Over 30
+seeds the discovery time fails the convergence criterion on both
+halvings, 0.1 to 0.05 m and 0.05 to 0.025 m, because of the #359
+deadlocks, and meets it on both without them
 ([criterion 6](testing-familiarity.md#pass-criteria); #168). This illustrates the mechanism; it is not a result. Script: `scripts/figures/full_vs_discovery_paths.py`.*
 
 > **Talk vs code.** The talk caption gives 35.1 s and 75.1 s. Those are results

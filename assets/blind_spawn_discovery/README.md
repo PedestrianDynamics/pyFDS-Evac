@@ -82,21 +82,24 @@ One geometry, four configs, each changing exactly one thing.
 
 | config | familiarity | entrance | egress | what it isolates |
 |---|---|---|---|---|
-| `config_discovery.json` | `discovery` | — | 35.3 s | the sequence above |
-| `config_full.json` | `full` | — | 43.6 s | straight out, 0 switches |
-| `config_entrance.json` | `discovery` | `E_west` | 43.6 s | seeding: knows one door at t=0 |
-| `config_mixed.json` | `0.5` | — | 38.2 s | scalar familiarity in a run |
+| `config_discovery.json` | `discovery` | — | 36.5 s | the sequence above |
+| `config_full.json` | `full` | — | 46.2 s | straight out, 0 switches |
+| `config_entrance.json` | `discovery` | `E_west` | 46.2 s | seeding: knows one door at t=0 |
+| `config_mixed.json` | `0.5` | — | 37.6 s | scalar familiarity in a run |
 
 At the deck's seed, 1301, all four evacuate 30/30. In the `full` and
 `entrance` runs all 30 agents leave by `E_west`; the two exits are equally
 far from the spawn centre, and the `discovery` and `mixed` crowds split
-between them (west/east 14/16 and 11/19), so they are out sooner. The
+between them (west/east 15/15 and 11/19), so they are out sooner. The
 `discovery` run makes 90 route changes, `mixed` 24, the others none.
-Measured at commit `828ae8c3` (fdsvismap 0.3.2) with the `run.py` recipe
+Measured at commit `20615661` (fdsvismap 0.3.3) with the `run.py` recipe
 below, one `--vis-cache` per config, on the FDS 6.10.1 output of
 `blind_spawn_discovery.fds`, with `--allow-fds-horizon-hold` because the
 FDS run ends at 120 s. The exit is the side of the agent's last position
-(x < 12 m: `E_west`).
+(x < 12 m: `E_west`). The [Web GUI](https://pedestriandynamics.org/pyFDS-Evac/docs/web-gui/) page runs
+`blind_spawn_discovery` without `--fds-dir` or `--vis-cache`, in clear air
+on the 0.25 m grid: 30/30 evacuated in 34.9 s, so its time differs from the
+36.5 s above because the recipes differ.
 
 Not every seed finishes. In clear air (no `--fds-dir`, 0.25 m grid) at
 `828ae8c3`, `config_discovery` completes 41 of 41 runs (seeds 1–40 and
