@@ -357,6 +357,108 @@ def corridor_scenario(spec: CorridorSpec) -> Scenario:
     )
 
 
+# Exit ID and sign position emitted by ``room_with_sign`` (S3 assertions).
+ROOM_EXIT = "exit_east"
+ROOM_SIGN_XY = (19.125, 5.125)
+
+
+@dataclass
+class RoomSpec:
+    """A non-square room with one exit on the east wall and one authored sign.
+
+    The sign sits off-centre (not on the exit's own axis) and is omni-directional
+    unless ``sign_alpha`` is set, so the reading distance ``R = c / K`` is exact.
+    Agents spawn on the west side, ``|spawn - sign|`` ~ 17.4 m from the sign.
+    """
+
+    width_m: float = 20.0
+    height_m: float = 8.0
+    num_agents: int = 4
+    v0: float = 1.3
+    seed: int = 42
+    familiarity: str = "discovery"
+    sign_alpha: float | None = None  # compass bearing; None = omni-directional
+    sign_c: float = 3.0
+    max_simulation_time: float = 120.0
+
+
+def room_with_sign(spec: RoomSpec) -> Scenario:
+    """Build a one-room ``Scenario`` with an authored exit sign (no asset files).
+
+    The sign is authored in ``raw["exits"][ROOM_EXIT]["sign"]``, the form
+    ``extract_sign_descriptors`` reads. Premovement is off and the default
+    ``no_known_exit`` applies, so an agent that has not seen the exit still walks
+    to it: the sign decides *when the exit becomes known*, not *whether the
+    agents leave*.
+    """
+    w, h = spec.width_m, spec.height_m
+    walkable_wkt = f"POLYGON ((0 0, {w} 0, {w} {h}, 0 {h}, 0 0))"
+    raw = {
+        "project_version": "2.0",
+        "config": {
+            "simulation_settings": {
+                "simulationParams": {
+                    "max_simulation_time": spec.max_simulation_time,
+                    "model_type": "CollisionFreeSpeedModel",
+                },
+                "numberOfSimulations": 1,
+                "baseSeed": spec.seed,
+            },
+            "ui_state": {"useShortestPaths": False},
+        },
+        "exits": {
+            ROOM_EXIT: {
+                "type": "polygon",
+                "coordinates": [
+                    [w - 1, 2.5],
+                    [w, 2.5],
+                    [w, 4.5],
+                    [w - 1, 4.5],
+                    [w - 1, 2.5],
+                ],
+                "enable_throughput_throttling": False,
+                "max_throughput": 0,
+                "sign": {
+                    "x": ROOM_SIGN_XY[0],
+                    "y": ROOM_SIGN_XY[1],
+                    "alpha": spec.sign_alpha,
+                    "c": spec.sign_c,
+                },
+            }
+        },
+        "distributions": {
+            "spawn_west": {
+                "type": "polygon",
+                "coordinates": [[1, 1], [2.5, 1], [2.5, h - 1], [1, h - 1], [1, 1]],
+                "parameters": {
+                    "number": spec.num_agents,
+                    "radius": 0.15,
+                    "v0": spec.v0,
+                    "use_flow_spawning": False,
+                    "distribution_mode": "by_number",
+                    "use_premovement": False,
+                    "familiarity": spec.familiarity,
+                    "radius_distribution": "constant",
+                    "v0_distribution": "constant",
+                },
+            }
+        },
+        "checkpoints": {},
+        "zones": {},
+        "journeys": [],
+        "transitions": [],
+    }
+    sim_params = raw["config"]["simulation_settings"]["simulationParams"]
+    return Scenario(
+        raw=raw,
+        walkable_area_wkt=walkable_wkt,
+        model_type="CollisionFreeSpeedModel",
+        seed=spec.seed,
+        sim_params=sim_params,
+        source_path=None,
+    )
+
+
 def first_incapacitation_times(result) -> dict[int, float]:
     """Map agent_id -> earliest time_s at which it was flagged incapacitated."""
     times: dict[int, float] = {}
