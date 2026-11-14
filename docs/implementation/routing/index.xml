@@ -528,8 +528,9 @@ re-fitted there.&lt;/p>
 &lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The pre-registered coupled Station study is on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a> page.&lt;/p>
 &lt;p>Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck shipped 0.024 and why
-neither value has been re-fitted under the gate cost model. The sweep
+selected 0.03; see the caveats above for why the deck shipped 0.024, why it
+now ships 0, and why neither value has been re-fitted under the gate cost
+model. The sweep
 overrides whatever &lt;code>w_queue&lt;/code> the deck ships.
 &lt;code>scripts/sweep_queue_weight.py&lt;/code> sweeps the
 weight on &lt;code>assets/station_fahy&lt;/code> with rerouting on, three seeds per
@@ -572,8 +573,13 @@ front-door share falls monotonically with &lt;code>w_queue&lt;/code>:&lt;/p>
 &lt;/tbody>
 &lt;/table>
 &lt;p>Fahy, Proulx &amp;amp; Flynn measured 52.9 % of door users at the front door,
-so &lt;code>w_queue = 0.03&lt;/code> reproduces the Station&amp;rsquo;s aggregate exit split and
-the previous default of &lt;code>1.0&lt;/code> did not. The mean per-row deviation is
+so on that geometry and under the additive cost model &lt;code>w_queue = 0.03&lt;/code>
+reproduced the Station&amp;rsquo;s aggregate exit split and the previous default
+of &lt;code>1.0&lt;/code> did not. It no longer does: on the current deck and under the
+gate it gives about 33 % (see the reruns above). In the pre-registered
+Station study, with the front door closing at 86 s, the 0.024 row scored
+a front-door share of 33 % (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a>). The mean
+per-row deviation is
 also lower, but it is nearly flat across 0.02–0.05 (17.1–18.0 %) while
 the front-door share swings 58.1 % → 48.4 %, so the row structure
 confirms that low weights beat 1.0 without discriminating 0.03 within
