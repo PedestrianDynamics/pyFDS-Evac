@@ -178,6 +178,12 @@ def main() -> None:
             ax.add_patch(
                 MplPoly(list(zip(*poly.exterior.xy)), fc="#f5f5f5", ec="#888", lw=1.0)
             )
+            for hole in poly.interiors:
+                ax.add_patch(
+                    MplPoly(
+                        list(zip(*hole.xy)), fc="white", ec="#888", lw=1.0, zorder=1
+                    )
+                )
 
     for agent_id, track in tracks.items():
         reached = exit_reached(track[-1][1:], exits, args.reach)
