@@ -36,6 +36,14 @@ builder and adds one `test_s*_*.py` file.
 
 ## Task A — S3: visibility gating (sign acquisition in smoke)
 
+> **DONE, rescoped** (#22) -- see `tests/verification/test_s3_sign_acquisition.py`
+> and `room_with_sign` in `harness.py`. The behavioural half below does not hold
+> in the model: with the default `no_known_exit = default_route` agents walk to
+> the nearest exit whether or not they have seen its sign, and visibility does
+> not slow walking. The test pins acquisition by sight at `R = c/K` instead
+> (omni sign, agent's true position), a wrong-way sign, and the `full` arm.
+> The notes below are kept for context.
+
 **Mechanism:** `core/visibility.py` + fdsvismap, injected via `vis_model`.
 Agents only head to an exit once its **sign is acquired** (within `V = c/K` of
 the sign, in the view cone, unobstructed).
@@ -141,6 +149,10 @@ unbounded).
 
 ## Task C — S5: cognitive map (staff vs visitor)
 
+> **Covered** (#23) by `test_cognitive_map_history.py` and
+> `test_initial_exit_from_cognitive_map.py`; the t = 0 and same-seed residuals
+> are in `test_s3_sign_acquisition.py`. No separate S5 file.
+
 **Mechanism:** `core/cognitive_map.py`. `full` agents know all exits at `t=0`;
 `discovery` agents only know exits they've seen.
 
@@ -169,6 +181,11 @@ model; S5 verifies it is *wired into the run loop*.
 
 ## Task D — Gradient scenario (live-position sampling)
 
+> **DONE** (#24) -- see `tests/verification/test_d_gradient_position.py`. K
+> and the Lund factor are checked against the agent's true position (recorded
+> by wrapping `Simulation.iterate`), not the logged `x`. The notes below are
+> kept for context.
+
 **Why:** every uniform-field test above is **position-blind** — it cannot prove
 the field is sampled at the agent's *moving* position. This task closes that gap
 (advisor finding; harness docstring currently disclaims it).
@@ -188,6 +205,12 @@ uniform test, visible here.
 ---
 
 ## Task E — Asymmetric room transpose test (B3.1, standalone)
+
+> **DONE** (#25) -- see `tests/verification/test_b31_visibility_transpose.py`:
+> a hand-computed disc on an 8 x 4 m room (live and cached map) and an orientation
+> check on the tracked 30 x 13 m t_junction slice. The sign is read through a
+> cosine-weighted half-plane, so the visible set is a disc tangent to the sign,
+> not a fixed-angle cone. The notes below are kept for context.
 
 **Why separate:** this is the single highest-value suspected bug (x/y axis order
 masked by square geometry, SPEC §3). It does **not** need the behavioral harness
