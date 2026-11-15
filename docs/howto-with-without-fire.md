@@ -38,11 +38,11 @@ For this fire and this T-junction, with 100 people placed at t = 0:
 - **Exit usage** differs: without the fire everyone takes the near exit B.
   With smoke-aware routing (arm R), 94 % take the far exit A when people
   move at once; with 30 s of pre-movement 3 % do, and with 60 s 2 %: from
-  23 to 24 s after ignition every route is refused, and the router takes
+  about 23 s after ignition every route is refused, and the router takes
   the one with the lowest optical depth, the shorter route to exit B, although it
   passes the densest smoke by the burner
   ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
-- **The pass/fail verdict** at a fixed point is the same in every arm for
+- **The pass/fail verdict** at a fixed point is the same in U, S, R and R-na for
   visibility (fails) and, at 0 and 30 s, for FED 0.3 (passes). At 60 s one
   of ten R seeds misses FED 0.3 at the junction and the branch mouth, as
   do two of ten S seeds and one of ten R-na seeds. For
@@ -344,14 +344,13 @@ often than R-na; the two differ only in the look ahead.
 {{< callout type="warning" >}}
 **When every route is refused, the router takes the route with the lowest
 optical depth τ.** With 30 or 60 s of pre-movement the first exit changes
-under this fallback rule come 23 to 24 s after ignition in every seed,
-while the agents still wait. In seed 7 at 60 s, 101 agents switch from exit
+under this fallback rule come at 23 s after ignition in seed 7 at 30 and
+60 s, while the agents still wait. In seed 7 at 60 s, 101 agents switch from exit
 A to exit B and 2 from B to A, the first at 23 s. Between two refused
 routes the lower τ decides
 ([#458](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/458)).
 Here that is the shorter route to exit B (17.7 m against 24.7 m), although
-it passes the densest smoke near the burner. It is not the safer route:
-R's largest max FED at 60 s is 0.38, against 0.07 in U. At 30 and 60 s,
+it passes the densest smoke near the burner. At 30 and 60 s,
 97 % and 98 % of R's agents go past the burner to B; with no pre-movement
 94 % go to exit A.
 
@@ -373,11 +372,14 @@ out earlier at every pre-movement. With no pre-movement the largest max FED is h
 (median +0.027) and the 95th person leaves 1.4 s earlier in 17 of 20; the
 last person leaves later in 13 of 19 seeds (p = 0.17). At
 30 s the mean largest max FED is +0.033 (p = 0.002) and the 95th
-person leaves 15.4 s earlier (p = 0.039). At 60 s there is no
+person leaves 15.4 s earlier (p = 0.039, weak evidence). At 60 s there is no
 dose penalty (+0.013, p = 0.27) and the 95th person leaves 58.0 s earlier
 (p = 0.002); under `"hold"`, 6 agents of the 10 runs are still inside at
 270 s. `"hold"` is experimental: no scenario key or
-flag sets it, and it is neither recommended nor validated. Whether the
+flag sets it, and it is neither recommended nor validated. The ranking depends on the fire: on the earlier output of the same deck
+(`fire_2MW_PVC`), `"hold"` gave the lower dose at 60 s (median largest max
+FED 0.100 against 0.178 under `"tau"`); on `fire_2MW_PVC_796` the gap is
+gone. Whether the
 rule should send everyone to the exit by the fire is open
 ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
 {{< /callout >}}
@@ -577,7 +579,7 @@ exit A) and gives nearly the same exits at 0 s (97 % against 94 %) and at
   but under-states the max FED in 19: U walks into exit B's HCl, which
   almost every R agent avoids. In 19 of 20 seeds the agent with the
   highest FED in R is one of the few that end at exit B; the median R
-  agent has a FED near zero. At 30 and 60 s U under-states every metric in every seed: almost every
+  agent has a FED near zero. At 30 and 60 s U under-states every dose metric except the crossing count in every seed: almost every
   R agent walks to B later, in thicker smoke.
 - **Against S, U under-states the run totals** in every seed, at every
   pre-movement: agent-seconds at HCl ≥ 300 and ≥ 1000 ppm and at *K* ≥ 0.3
@@ -587,7 +589,7 @@ exit A) and gives nearly the same exits at 0 s (97 % against 94 %) and at
 - The largest max FED of any agent is 0.07 in U, 0.38 in R and 0.42 in S,
   each at 60 s. In U no agent reaches FED 0.3. At 60 s one R agent reaches
   it (seed 13, out at 265.8 s), 4 S agents in 3 seeds and 2 R-na agents in
-  2 seeds; at 30 s none does. No agent of these arms reaches FED 1. A FED
+  2 seeds; at 30 s none does. No agent of U, S, R or R-na reaches FED 1. A FED
   below 0.3 or 1 is not a statement of tenability: FED 0.3 is a threshold for susceptible people, and FED < 1
   does not mean safe
   ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md)).
@@ -628,7 +630,7 @@ dose differences above.
 | R-na | `"anticipate": false` in the scenario's `routing` block (see below) | With no pre-movement 3.5 s later than R in median (R-na > R in 14 of 20, p = 0.064), with 97 % [95, 98] at exit A against 94 % in R. At 30 s: 40 % at A against 3 %, last out 20.7 s earlier in median (10 of 10, p = 0.002). At 60 s: 1 % at A against 2 %, last out 19.1 s earlier in median (7 of 10, p = 0.34); 1 of 10 runs is censored. |
 | R-det | tenability on (FED 1 incapacitates) | Identical to R: nobody reaches FED 1. |
 | R-prob | R-det with `--incapacitation-mode probabilistic` | Identical to R with no pre-movement: nobody is incapacitated. At 30 s, 7 agents are incapacitated in 5 of 10 seeds and 7 are inside when the run ends; RSET is censored in those 5 seeds. At 60 s, 27 agents are incapacitated in 10 of 10 seeds and 30 are inside at 270 s; RSET is censored in all 10 seeds. The median last exit among the rest is 150.1 s at 30 s and 235.3 s at 60 s, as in R. Their dose counts only until incapacitation. |
-| R+FIC | R-det with `--enable-fic-speed` | No pre-movement: RSET 168.3 s [164.7, 174.1], 81 % [74, 87] to exit A, with 26 [20, 33] agents per seed reaching FIC 1, where the irritant fraction is 0 and the speed is at its 0.1 floor. At 30 s: all 100 agents reach FIC 1; censored in 5 of 10 seeds, 8 of 1,000 agents inside at 270 s. At 60 s: all 100 reach FIC 1; censored in 3 of 10 seeds, 3 of 1,000 inside, and 4.5 [3, 8] agents per seed reach FED 0.3. Max FED reaches 0.40 at 30 s and 0.44 at 60 s. |
+| R+FIC | R-det with `--enable-fic-speed` | No pre-movement: RSET 168.3 s [164.7, 174.1], 81 % [74, 87] to exit A, with 26 [20, 33] agents per seed reaching FIC 1, where the irritant fraction is 0 and the speed is at its 0.1 floor ([FED and FIC](/models/fed.md), Eq. 70.11/70.12). At 30 s: all 100 agents reach FIC 1; censored in 5 of 10 seeds, 8 of 1,000 agents inside at 270 s. At 60 s: all 100 reach FIC 1; censored in 3 of 10 seeds, 3 of 1,000 inside, and 4.5 [3, 8] agents per seed reach FED 0.3. Max FED reaches 0.40 at 30 s and 0.44 at 60 s. |
 
 To build R-na, add the key to a copy of the scenario and save the copy
 next to a copy of `geometry.wkt`, which the scenario needs beside it:

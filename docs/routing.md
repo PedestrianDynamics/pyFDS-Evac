@@ -338,10 +338,11 @@ fallback exit changes per run, median (max).
 |---|---|---|
 | 0 s | 94 [86, 99] %; 0.037; 6 (14) | 100 [100, 100] %; 0.009; 0 (0) |
 | 30 s | 3 [1, 4] %; 0.170; 101 (104) | 100 [100, 100] %; 0.139; 0 (0) |
-| 60 s | 2 [1, 5] %; 0.271; 103.5 (107) | 100 [100, 100] %; 0.268; 0 (0) |
+| 60 s | 2 [1, 5] %; 0.271; 103.5 (107) | 100 [100, 100] %; 0.268; 0 (0); 6 agents of 10 runs inside at 270 s |
 
 Paired over seeds, the default rule has the higher largest max FED at 30 s
-(mean +0.033, p = 0.002) and a 15.4 s earlier 95th person out (p = 0.039);
+(mean +0.033, p = 0.002) and a 15.4 s earlier 95th person out (p = 0.039,
+weak evidence);
 at 60 s the dose does not differ (+0.013, p = 0.27) and the 95th person
 leaves 58.0 s earlier (p = 0.002). The fallback exit changes are the
 `fallback` rows of the route history.
