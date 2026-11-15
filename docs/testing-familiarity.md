@@ -393,7 +393,7 @@ exact per seed.
 
 | Case | `familiarity` | Prediction | Result |
 |---|---|---|---|
-| V0 | `"discovery"` | reference split, default route to the nearest exit | exit 2 in 52.5 % |
+| V0 | `"discovery"` | reference split, default route to the nearest exit | exit 2 in 52.5 % on fixed seeds 1 to 200; the 49.2 % on the ISO 20414 page is seeds 1 to 61 under its stopping rule |
 | V1 | `{"exit_2": 1}` | exit 2 in 200 of 200; trajectories equal those of `"discovery"` with `entrance: "exit_2"` | 200 of 200; identical |
 | V2 | both exits at 1 | the cheapest exit, which is V0's, for every seed | 0 mismatches; exit 2 in 52.5 % |
 | V3 | `{"exit_1": 0.5, "exit_2": 1}` | exit 2 unless exit 1 was drawn, then V2's exit; share knowing exit 1 within 0.5 ± 0.106 (3 SD of Binomial(200, 0.5)) | 0 mismatches; 47.5 % knew exit 1; exit 2 in 78.0 % |
