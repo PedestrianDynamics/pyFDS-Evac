@@ -15,283 +15,213 @@
 
 &SURF ID='Fire' RGB=204,3,6 HRRPUA=50 RAMP_Q='ramp_fire' /
 
---- Computational domain | MPI Processes: 54 | MESH Qty: 54 | Cell Qty: 6750000
+--- Computational domain | MPI Processes: 88 | MESH Qty: 88 | Cell Qty: 10312500
+! Covers the walkable WKT outline (x 8.48-58.83, y 8.05-40.61) with a margin (#229).
 
--- MPI Process: <0> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s0_i0_j0_k0' IJK=50,50,50
-      XB=11.250,16.250,10.750,15.750,0.000,5.000 MPI_PROCESS=0 /
-
--- MPI Process: <1> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s1_i0_j0_k0' IJK=50,50,50
-      XB=11.250,16.250,15.750,20.750,0.000,5.000 MPI_PROCESS=1 /
-
--- MPI Process: <2> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s2_i0_j0_k0' IJK=50,50,50
-      XB=11.250,16.250,20.750,25.750,0.000,5.000 MPI_PROCESS=2 /
-
--- MPI Process: <3> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s3_i0_j0_k0' IJK=50,50,50
-      XB=11.250,16.250,25.750,30.750,0.000,5.000 MPI_PROCESS=3 /
-
--- MPI Process: <4> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s4_i0_j0_k0' IJK=50,50,50
-      XB=11.250,16.250,30.750,35.750,0.000,5.000 MPI_PROCESS=4 /
-
--- MPI Process: <5> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s5_i0_j0_k0' IJK=50,50,50
-      XB=11.250,16.250,35.750,40.750,0.000,5.000 MPI_PROCESS=5 /
-
--- MPI Process: <6> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s6_i0_j0_k0' IJK=50,50,50
-      XB=16.250,21.250,10.750,15.750,0.000,5.000 MPI_PROCESS=6 /
-
--- MPI Process: <7> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s7_i0_j0_k0' IJK=50,50,50
-      XB=16.250,21.250,15.750,20.750,0.000,5.000 MPI_PROCESS=7 /
-
--- MPI Process: <8> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s8_i0_j0_k0' IJK=50,50,50
-      XB=16.250,21.250,20.750,25.750,0.000,5.000 MPI_PROCESS=8 /
-
--- MPI Process: <9> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s9_i0_j0_k0' IJK=50,50,50
-      XB=16.250,21.250,25.750,30.750,0.000,5.000 MPI_PROCESS=9 /
-
--- MPI Process: <10> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s10_i0_j0_k0' IJK=50,50,50
-      XB=16.250,21.250,30.750,35.750,0.000,5.000 MPI_PROCESS=10 /
-
--- MPI Process: <11> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s11_i0_j0_k0' IJK=50,50,50
-      XB=16.250,21.250,35.750,40.750,0.000,5.000 MPI_PROCESS=11 /
-
--- MPI Process: <12> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s12_i0_j0_k0' IJK=50,50,50
-      XB=21.250,26.250,10.750,15.750,0.000,5.000 MPI_PROCESS=12 /
-
--- MPI Process: <13> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s13_i0_j0_k0' IJK=50,50,50
-      XB=21.250,26.250,15.750,20.750,0.000,5.000 MPI_PROCESS=13 /
-
--- MPI Process: <14> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s14_i0_j0_k0' IJK=50,50,50
-      XB=21.250,26.250,20.750,25.750,0.000,5.000 MPI_PROCESS=14 /
-
--- MPI Process: <15> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s15_i0_j0_k0' IJK=50,50,50
-      XB=21.250,26.250,25.750,30.750,0.000,5.000 MPI_PROCESS=15 /
-
--- MPI Process: <16> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s16_i0_j0_k0' IJK=50,50,50
-      XB=21.250,26.250,30.750,35.750,0.000,5.000 MPI_PROCESS=16 /
-
--- MPI Process: <17> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s17_i0_j0_k0' IJK=50,50,50
-      XB=21.250,26.250,35.750,40.750,0.000,5.000 MPI_PROCESS=17 /
-
--- MPI Process: <18> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s18_i0_j0_k0' IJK=50,50,50
-      XB=26.250,31.250,10.750,15.750,0.000,5.000 MPI_PROCESS=18 /
-
--- MPI Process: <19> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s19_i0_j0_k0' IJK=50,50,50
-      XB=26.250,31.250,15.750,20.750,0.000,5.000 MPI_PROCESS=19 /
-
--- MPI Process: <20> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s20_i0_j0_k0' IJK=50,50,50
-      XB=26.250,31.250,20.750,25.750,0.000,5.000 MPI_PROCESS=20 /
-
--- MPI Process: <21> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s21_i0_j0_k0' IJK=50,50,50
-      XB=26.250,31.250,25.750,30.750,0.000,5.000 MPI_PROCESS=21 /
-
--- MPI Process: <22> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s22_i0_j0_k0' IJK=50,50,50
-      XB=26.250,31.250,30.750,35.750,0.000,5.000 MPI_PROCESS=22 /
-
--- MPI Process: <23> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s23_i0_j0_k0' IJK=50,50,50
-      XB=26.250,31.250,35.750,40.750,0.000,5.000 MPI_PROCESS=23 /
-
--- MPI Process: <24> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s24_i0_j0_k0' IJK=50,50,50
-      XB=31.250,36.250,10.750,15.750,0.000,5.000 MPI_PROCESS=24 /
-
--- MPI Process: <25> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s25_i0_j0_k0' IJK=50,50,50
-      XB=31.250,36.250,15.750,20.750,0.000,5.000 MPI_PROCESS=25 /
-
--- MPI Process: <26> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s26_i0_j0_k0' IJK=50,50,50
-      XB=31.250,36.250,20.750,25.750,0.000,5.000 MPI_PROCESS=26 /
-
--- MPI Process: <27> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s27_i0_j0_k0' IJK=50,50,50
-      XB=31.250,36.250,25.750,30.750,0.000,5.000 MPI_PROCESS=27 /
-
--- MPI Process: <28> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s28_i0_j0_k0' IJK=50,50,50
-      XB=31.250,36.250,30.750,35.750,0.000,5.000 MPI_PROCESS=28 /
-
--- MPI Process: <29> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s29_i0_j0_k0' IJK=50,50,50
-      XB=31.250,36.250,35.750,40.750,0.000,5.000 MPI_PROCESS=29 /
-
--- MPI Process: <30> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s30_i0_j0_k0' IJK=50,50,50
-      XB=36.250,41.250,10.750,15.750,0.000,5.000 MPI_PROCESS=30 /
-
--- MPI Process: <31> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s31_i0_j0_k0' IJK=50,50,50
-      XB=36.250,41.250,15.750,20.750,0.000,5.000 MPI_PROCESS=31 /
-
--- MPI Process: <32> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s32_i0_j0_k0' IJK=50,50,50
-      XB=36.250,41.250,20.750,25.750,0.000,5.000 MPI_PROCESS=32 /
-
--- MPI Process: <33> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s33_i0_j0_k0' IJK=50,50,50
-      XB=36.250,41.250,25.750,30.750,0.000,5.000 MPI_PROCESS=33 /
-
--- MPI Process: <34> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s34_i0_j0_k0' IJK=50,50,50
-      XB=36.250,41.250,30.750,35.750,0.000,5.000 MPI_PROCESS=34 /
-
--- MPI Process: <35> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s35_i0_j0_k0' IJK=50,50,50
-      XB=36.250,41.250,35.750,40.750,0.000,5.000 MPI_PROCESS=35 /
-
--- MPI Process: <36> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s36_i0_j0_k0' IJK=50,50,50
-      XB=41.250,46.250,10.750,15.750,0.000,5.000 MPI_PROCESS=36 /
-
--- MPI Process: <37> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s37_i0_j0_k0' IJK=50,50,50
-      XB=41.250,46.250,15.750,20.750,0.000,5.000 MPI_PROCESS=37 /
-
--- MPI Process: <38> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s38_i0_j0_k0' IJK=50,50,50
-      XB=41.250,46.250,20.750,25.750,0.000,5.000 MPI_PROCESS=38 /
-
--- MPI Process: <39> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s39_i0_j0_k0' IJK=50,50,50
-      XB=41.250,46.250,25.750,30.750,0.000,5.000 MPI_PROCESS=39 /
-
--- MPI Process: <40> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s40_i0_j0_k0' IJK=50,50,50
-      XB=41.250,46.250,30.750,35.750,0.000,5.000 MPI_PROCESS=40 /
-
--- MPI Process: <41> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s41_i0_j0_k0' IJK=50,50,50
-      XB=41.250,46.250,35.750,40.750,0.000,5.000 MPI_PROCESS=41 /
-
--- MPI Process: <42> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s42_i0_j0_k0' IJK=50,50,50
-      XB=46.250,51.250,10.750,15.750,0.000,5.000 MPI_PROCESS=42 /
-
--- MPI Process: <43> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s43_i0_j0_k0' IJK=50,50,50
-      XB=46.250,51.250,15.750,20.750,0.000,5.000 MPI_PROCESS=43 /
-
--- MPI Process: <44> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s44_i0_j0_k0' IJK=50,50,50
-      XB=46.250,51.250,20.750,25.750,0.000,5.000 MPI_PROCESS=44 /
-
--- MPI Process: <45> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s45_i0_j0_k0' IJK=50,50,50
-      XB=46.250,51.250,25.750,30.750,0.000,5.000 MPI_PROCESS=45 /
-
--- MPI Process: <46> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s46_i0_j0_k0' IJK=50,50,50
-      XB=46.250,51.250,30.750,35.750,0.000,5.000 MPI_PROCESS=46 /
-
--- MPI Process: <47> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s47_i0_j0_k0' IJK=50,50,50
-      XB=46.250,51.250,35.750,40.750,0.000,5.000 MPI_PROCESS=47 /
-
--- MPI Process: <48> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s48_i0_j0_k0' IJK=50,50,50
-      XB=51.250,56.250,10.750,15.750,0.000,5.000 MPI_PROCESS=48 /
-
--- MPI Process: <49> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s49_i0_j0_k0' IJK=50,50,50
-      XB=51.250,56.250,15.750,20.750,0.000,5.000 MPI_PROCESS=49 /
-
--- MPI Process: <50> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s50_i0_j0_k0' IJK=50,50,50
-      XB=51.250,56.250,20.750,25.750,0.000,5.000 MPI_PROCESS=50 /
-
--- MPI Process: <51> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s51_i0_j0_k0' IJK=50,50,50
-      XB=51.250,56.250,25.750,30.750,0.000,5.000 MPI_PROCESS=51 /
-
--- MPI Process: <52> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s52_i0_j0_k0' IJK=50,50,50
-      XB=51.250,56.250,30.750,35.750,0.000,5.000 MPI_PROCESS=52 /
-
--- MPI Process: <53> | MESH Qty: 1 | Cell Qty: 125000
-Cell Qty: 125000 | Size: 0.100·0.100·0.100m | Aspect: 1.0 | Poisson: Yes
-&MESH ID='Domain_s53_i0_j0_k0' IJK=50,50,50
-      XB=51.250,56.250,35.750,40.750,0.000,5.000 MPI_PROCESS=53 /
+&MESH ID='Domain_0' IJK=50,50,50
+      XB=6.250,11.250,5.750,10.750,0.000,5.000 MPI_PROCESS=0 /
+&MESH ID='Domain_1' IJK=50,50,50
+      XB=11.250,16.250,5.750,10.750,0.000,5.000 MPI_PROCESS=1 /
+&MESH ID='Domain_2' IJK=50,50,50
+      XB=16.250,21.250,5.750,10.750,0.000,5.000 MPI_PROCESS=2 /
+&MESH ID='Domain_3' IJK=50,50,50
+      XB=21.250,26.250,5.750,10.750,0.000,5.000 MPI_PROCESS=3 /
+&MESH ID='Domain_4' IJK=50,50,50
+      XB=26.250,31.250,5.750,10.750,0.000,5.000 MPI_PROCESS=4 /
+&MESH ID='Domain_5' IJK=50,50,50
+      XB=31.250,36.250,5.750,10.750,0.000,5.000 MPI_PROCESS=5 /
+&MESH ID='Domain_6' IJK=50,50,50
+      XB=36.250,41.250,5.750,10.750,0.000,5.000 MPI_PROCESS=6 /
+&MESH ID='Domain_7' IJK=50,50,50
+      XB=41.250,46.250,5.750,10.750,0.000,5.000 MPI_PROCESS=7 /
+&MESH ID='Domain_8' IJK=50,50,50
+      XB=46.250,51.250,5.750,10.750,0.000,5.000 MPI_PROCESS=8 /
+&MESH ID='Domain_9' IJK=50,50,50
+      XB=51.250,56.250,5.750,10.750,0.000,5.000 MPI_PROCESS=9 /
+&MESH ID='Domain_10' IJK=50,50,50
+      XB=56.250,61.250,5.750,10.750,0.000,5.000 MPI_PROCESS=10 /
+&MESH ID='Domain_11' IJK=50,50,50
+      XB=6.250,11.250,10.750,15.750,0.000,5.000 MPI_PROCESS=11 /
+&MESH ID='Domain_12' IJK=50,50,50
+      XB=11.250,16.250,10.750,15.750,0.000,5.000 MPI_PROCESS=12 /
+&MESH ID='Domain_13' IJK=50,50,50
+      XB=16.250,21.250,10.750,15.750,0.000,5.000 MPI_PROCESS=13 /
+&MESH ID='Domain_14' IJK=50,50,50
+      XB=21.250,26.250,10.750,15.750,0.000,5.000 MPI_PROCESS=14 /
+&MESH ID='Domain_15' IJK=50,50,50
+      XB=26.250,31.250,10.750,15.750,0.000,5.000 MPI_PROCESS=15 /
+&MESH ID='Domain_16' IJK=50,50,50
+      XB=31.250,36.250,10.750,15.750,0.000,5.000 MPI_PROCESS=16 /
+&MESH ID='Domain_17' IJK=50,50,50
+      XB=36.250,41.250,10.750,15.750,0.000,5.000 MPI_PROCESS=17 /
+&MESH ID='Domain_18' IJK=50,50,50
+      XB=41.250,46.250,10.750,15.750,0.000,5.000 MPI_PROCESS=18 /
+&MESH ID='Domain_19' IJK=50,50,50
+      XB=46.250,51.250,10.750,15.750,0.000,5.000 MPI_PROCESS=19 /
+&MESH ID='Domain_20' IJK=50,50,50
+      XB=51.250,56.250,10.750,15.750,0.000,5.000 MPI_PROCESS=20 /
+&MESH ID='Domain_21' IJK=50,50,50
+      XB=56.250,61.250,10.750,15.750,0.000,5.000 MPI_PROCESS=21 /
+&MESH ID='Domain_22' IJK=50,50,50
+      XB=6.250,11.250,15.750,20.750,0.000,5.000 MPI_PROCESS=22 /
+&MESH ID='Domain_23' IJK=50,50,50
+      XB=11.250,16.250,15.750,20.750,0.000,5.000 MPI_PROCESS=23 /
+&MESH ID='Domain_24' IJK=50,50,50
+      XB=16.250,21.250,15.750,20.750,0.000,5.000 MPI_PROCESS=24 /
+&MESH ID='Domain_25' IJK=50,50,50
+      XB=21.250,26.250,15.750,20.750,0.000,5.000 MPI_PROCESS=25 /
+&MESH ID='Domain_26' IJK=50,50,50
+      XB=26.250,31.250,15.750,20.750,0.000,5.000 MPI_PROCESS=26 /
+&MESH ID='Domain_27' IJK=50,50,50
+      XB=31.250,36.250,15.750,20.750,0.000,5.000 MPI_PROCESS=27 /
+&MESH ID='Domain_28' IJK=50,50,50
+      XB=36.250,41.250,15.750,20.750,0.000,5.000 MPI_PROCESS=28 /
+&MESH ID='Domain_29' IJK=50,50,50
+      XB=41.250,46.250,15.750,20.750,0.000,5.000 MPI_PROCESS=29 /
+&MESH ID='Domain_30' IJK=50,50,50
+      XB=46.250,51.250,15.750,20.750,0.000,5.000 MPI_PROCESS=30 /
+&MESH ID='Domain_31' IJK=50,50,50
+      XB=51.250,56.250,15.750,20.750,0.000,5.000 MPI_PROCESS=31 /
+&MESH ID='Domain_32' IJK=50,50,50
+      XB=56.250,61.250,15.750,20.750,0.000,5.000 MPI_PROCESS=32 /
+&MESH ID='Domain_33' IJK=50,50,50
+      XB=6.250,11.250,20.750,25.750,0.000,5.000 MPI_PROCESS=33 /
+&MESH ID='Domain_34' IJK=50,50,50
+      XB=11.250,16.250,20.750,25.750,0.000,5.000 MPI_PROCESS=34 /
+&MESH ID='Domain_35' IJK=50,50,50
+      XB=16.250,21.250,20.750,25.750,0.000,5.000 MPI_PROCESS=35 /
+&MESH ID='Domain_36' IJK=50,50,50
+      XB=21.250,26.250,20.750,25.750,0.000,5.000 MPI_PROCESS=36 /
+&MESH ID='Domain_37' IJK=50,50,50
+      XB=26.250,31.250,20.750,25.750,0.000,5.000 MPI_PROCESS=37 /
+&MESH ID='Domain_38' IJK=50,50,50
+      XB=31.250,36.250,20.750,25.750,0.000,5.000 MPI_PROCESS=38 /
+&MESH ID='Domain_39' IJK=50,50,50
+      XB=36.250,41.250,20.750,25.750,0.000,5.000 MPI_PROCESS=39 /
+&MESH ID='Domain_40' IJK=50,50,50
+      XB=41.250,46.250,20.750,25.750,0.000,5.000 MPI_PROCESS=40 /
+&MESH ID='Domain_41' IJK=50,50,50
+      XB=46.250,51.250,20.750,25.750,0.000,5.000 MPI_PROCESS=41 /
+&MESH ID='Domain_42' IJK=50,50,50
+      XB=51.250,56.250,20.750,25.750,0.000,5.000 MPI_PROCESS=42 /
+&MESH ID='Domain_43' IJK=50,50,50
+      XB=56.250,61.250,20.750,25.750,0.000,5.000 MPI_PROCESS=43 /
+&MESH ID='Domain_44' IJK=50,50,50
+      XB=6.250,11.250,25.750,30.750,0.000,5.000 MPI_PROCESS=44 /
+&MESH ID='Domain_45' IJK=50,50,50
+      XB=11.250,16.250,25.750,30.750,0.000,5.000 MPI_PROCESS=45 /
+&MESH ID='Domain_46' IJK=50,50,50
+      XB=16.250,21.250,25.750,30.750,0.000,5.000 MPI_PROCESS=46 /
+&MESH ID='Domain_47' IJK=50,50,50
+      XB=21.250,26.250,25.750,30.750,0.000,5.000 MPI_PROCESS=47 /
+&MESH ID='Domain_48' IJK=50,50,50
+      XB=26.250,31.250,25.750,30.750,0.000,5.000 MPI_PROCESS=48 /
+&MESH ID='Domain_49' IJK=50,50,50
+      XB=31.250,36.250,25.750,30.750,0.000,5.000 MPI_PROCESS=49 /
+&MESH ID='Domain_50' IJK=50,50,50
+      XB=36.250,41.250,25.750,30.750,0.000,5.000 MPI_PROCESS=50 /
+&MESH ID='Domain_51' IJK=50,50,50
+      XB=41.250,46.250,25.750,30.750,0.000,5.000 MPI_PROCESS=51 /
+&MESH ID='Domain_52' IJK=50,50,50
+      XB=46.250,51.250,25.750,30.750,0.000,5.000 MPI_PROCESS=52 /
+&MESH ID='Domain_53' IJK=50,50,50
+      XB=51.250,56.250,25.750,30.750,0.000,5.000 MPI_PROCESS=53 /
+&MESH ID='Domain_54' IJK=50,50,50
+      XB=56.250,61.250,25.750,30.750,0.000,5.000 MPI_PROCESS=54 /
+&MESH ID='Domain_55' IJK=50,50,50
+      XB=6.250,11.250,30.750,35.750,0.000,5.000 MPI_PROCESS=55 /
+&MESH ID='Domain_56' IJK=50,50,50
+      XB=11.250,16.250,30.750,35.750,0.000,5.000 MPI_PROCESS=56 /
+&MESH ID='Domain_57' IJK=50,50,50
+      XB=16.250,21.250,30.750,35.750,0.000,5.000 MPI_PROCESS=57 /
+&MESH ID='Domain_58' IJK=50,50,50
+      XB=21.250,26.250,30.750,35.750,0.000,5.000 MPI_PROCESS=58 /
+&MESH ID='Domain_59' IJK=50,50,50
+      XB=26.250,31.250,30.750,35.750,0.000,5.000 MPI_PROCESS=59 /
+&MESH ID='Domain_60' IJK=50,50,50
+      XB=31.250,36.250,30.750,35.750,0.000,5.000 MPI_PROCESS=60 /
+&MESH ID='Domain_61' IJK=50,50,50
+      XB=36.250,41.250,30.750,35.750,0.000,5.000 MPI_PROCESS=61 /
+&MESH ID='Domain_62' IJK=50,50,50
+      XB=41.250,46.250,30.750,35.750,0.000,5.000 MPI_PROCESS=62 /
+&MESH ID='Domain_63' IJK=50,50,50
+      XB=46.250,51.250,30.750,35.750,0.000,5.000 MPI_PROCESS=63 /
+&MESH ID='Domain_64' IJK=50,50,50
+      XB=51.250,56.250,30.750,35.750,0.000,5.000 MPI_PROCESS=64 /
+&MESH ID='Domain_65' IJK=50,50,50
+      XB=56.250,61.250,30.750,35.750,0.000,5.000 MPI_PROCESS=65 /
+&MESH ID='Domain_66' IJK=50,50,50
+      XB=6.250,11.250,35.750,40.750,0.000,5.000 MPI_PROCESS=66 /
+&MESH ID='Domain_67' IJK=50,50,50
+      XB=11.250,16.250,35.750,40.750,0.000,5.000 MPI_PROCESS=67 /
+&MESH ID='Domain_68' IJK=50,50,50
+      XB=16.250,21.250,35.750,40.750,0.000,5.000 MPI_PROCESS=68 /
+&MESH ID='Domain_69' IJK=50,50,50
+      XB=21.250,26.250,35.750,40.750,0.000,5.000 MPI_PROCESS=69 /
+&MESH ID='Domain_70' IJK=50,50,50
+      XB=26.250,31.250,35.750,40.750,0.000,5.000 MPI_PROCESS=70 /
+&MESH ID='Domain_71' IJK=50,50,50
+      XB=31.250,36.250,35.750,40.750,0.000,5.000 MPI_PROCESS=71 /
+&MESH ID='Domain_72' IJK=50,50,50
+      XB=36.250,41.250,35.750,40.750,0.000,5.000 MPI_PROCESS=72 /
+&MESH ID='Domain_73' IJK=50,50,50
+      XB=41.250,46.250,35.750,40.750,0.000,5.000 MPI_PROCESS=73 /
+&MESH ID='Domain_74' IJK=50,50,50
+      XB=46.250,51.250,35.750,40.750,0.000,5.000 MPI_PROCESS=74 /
+&MESH ID='Domain_75' IJK=50,50,50
+      XB=51.250,56.250,35.750,40.750,0.000,5.000 MPI_PROCESS=75 /
+&MESH ID='Domain_76' IJK=50,50,50
+      XB=56.250,61.250,35.750,40.750,0.000,5.000 MPI_PROCESS=76 /
+&MESH ID='Domain_77' IJK=50,25,50
+      XB=6.250,11.250,40.750,43.250,0.000,5.000 MPI_PROCESS=77 /
+&MESH ID='Domain_78' IJK=50,25,50
+      XB=11.250,16.250,40.750,43.250,0.000,5.000 MPI_PROCESS=78 /
+&MESH ID='Domain_79' IJK=50,25,50
+      XB=16.250,21.250,40.750,43.250,0.000,5.000 MPI_PROCESS=79 /
+&MESH ID='Domain_80' IJK=50,25,50
+      XB=21.250,26.250,40.750,43.250,0.000,5.000 MPI_PROCESS=80 /
+&MESH ID='Domain_81' IJK=50,25,50
+      XB=26.250,31.250,40.750,43.250,0.000,5.000 MPI_PROCESS=81 /
+&MESH ID='Domain_82' IJK=50,25,50
+      XB=31.250,36.250,40.750,43.250,0.000,5.000 MPI_PROCESS=82 /
+&MESH ID='Domain_83' IJK=50,25,50
+      XB=36.250,41.250,40.750,43.250,0.000,5.000 MPI_PROCESS=83 /
+&MESH ID='Domain_84' IJK=50,25,50
+      XB=41.250,46.250,40.750,43.250,0.000,5.000 MPI_PROCESS=84 /
+&MESH ID='Domain_85' IJK=50,25,50
+      XB=46.250,51.250,40.750,43.250,0.000,5.000 MPI_PROCESS=85 /
+&MESH ID='Domain_86' IJK=50,25,50
+      XB=51.250,56.250,40.750,43.250,0.000,5.000 MPI_PROCESS=86 /
+&MESH ID='Domain_87' IJK=50,25,50
+      XB=56.250,61.250,40.750,43.250,0.000,5.000 MPI_PROCESS=87 /
 
 --- Geometric namelists from Blender Collections
 
 -- Blender Collection: <Obstacles>
-&VENT ID='Burner' SURF_ID='Fire' XB=46.470,48.470,21.092,23.092,1.000,1.000 /
-&OBST ID='Burner_box' XB=46.470,48.470,21.092,23.092,0.000,1.000 /
+&VENT ID='Burner' SURF_ID='Fire' XB=33.500,35.500,12.500,14.500,1.000,1.000 /
+&OBST ID='Burner_box' XB=33.500,35.500,12.500,14.500,0.000,1.000 /
+
+-- Outer walls along the walkable WKT outline; exits are the only openings (#229)
+&OBST ID='Outer_wall_0' XB=8.280,29.785,8.240,8.440,0.000,5.000 /
+&OBST ID='Outer_wall_1' XB=29.585,29.785,8.050,8.440,0.000,5.000 /
+&OBST ID='Outer_wall_2' XB=31.885,32.085,8.050,8.440,0.000,5.000 /
+&OBST ID='Outer_wall_3' XB=31.885,58.350,8.240,8.440,0.000,5.000 /
+&OBST ID='Outer_wall_4' XB=8.280,8.480,8.240,40.300,0.000,5.000 /
+&OBST ID='Outer_wall_5' XB=8.280,52.460,40.100,40.300,0.000,5.000 /
+&OBST ID='Outer_wall_6' XB=52.260,52.460,40.100,40.810,0.000,5.000 /
+&OBST ID='Outer_wall_7' XB=52.260,57.220,40.610,40.810,0.000,5.000 /
+&OBST ID='Outer_wall_8' XB=57.020,57.220,40.100,40.810,0.000,5.000 /
+&OBST ID='Outer_wall_9' XB=57.020,58.350,40.100,40.300,0.000,5.000 /
+&OBST ID='Outer_wall_10' XB=58.150,58.350,28.670,40.300,0.000,5.000 /
+&OBST ID='Outer_wall_11' XB=58.150,58.830,28.670,28.870,0.000,5.000 /
+&OBST ID='Outer_wall_12' XB=58.150,58.830,26.370,26.570,0.000,5.000 /
+&OBST ID='Outer_wall_13' XB=58.150,58.350,8.240,26.570,0.000,5.000 /
+
+-- Domain sides open to the outside
+&VENT ID='Open_xmin' SURF_ID='OPEN' XB=6.250,6.250,5.750,43.250,0.000,5.000 /
+&VENT ID='Open_xmax' SURF_ID='OPEN' XB=61.250,61.250,5.750,43.250,0.000,5.000 /
+&VENT ID='Open_ymin' SURF_ID='OPEN' XB=6.250,61.250,5.750,5.750,0.000,5.000 /
+&VENT ID='Open_ymax' SURF_ID='OPEN' XB=6.250,61.250,43.250,43.250,0.000,5.000 /
 
 -- Blender Collection: <Output>
 &SLCF ID='extinction_coefficient' QUANTITY='EXTINCTION COEFFICIENT'
@@ -3443,6 +3373,6 @@ XB Voxels: 12 | Resolution: 0.100 m
 &SURF ID='CONCRETE_COMPONENT' MATL_ID='CONCRETE', THICKNESS=0.2, DEFAULT=T RGB=204,204,204 /
 &MATL ID='CONCRETE' CONDUCTIVITY=1.6 DENSITY=2400 SPECIFIC_HEAT=0.75 /
 &RAMP ID='ramp_fire' T=0 F=0/
-&RAMP ID='ramp_fire' T=300 F=1/
+&RAMP ID='ramp_fire' T=60 F=1/
 
 &TAIL /

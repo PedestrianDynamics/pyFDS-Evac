@@ -3,7 +3,7 @@ artifacts/fds_from_wkt/HC.fds	3	1449.88	0	0	no exit found; no agents to place	d9
 artifacts/fds_from_wkt/ISO-table21.fds	3	200.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 artifacts/fds_from_wkt/ISO-table22.fds	3	100.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 artifacts/fds_from_wkt/t_junction.fds	3	150.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
-assets/Haspel/haspel.fds	3	1273.90	0	0	no exit found; no agents to place	f6117edd57551135151812459a389a0f025ba8f8cc9d44d25a194bd484a851a2
+assets/Haspel/haspel.fds	0	893.63	38	100		d1a3ca29522b35c5e64582d33604512019114143b0acb4faae58f89c00cae38b
 assets/ISO-table21/ISO-table21.fds	3	200.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 assets/blind_spawn_discovery/blind_spawn_discovery.fds	3	720.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
 assets/cognitive_map_memory/cognitive_map_memory.fds	3	130.00	0	0	no exit found; no agents to place	d97dcc02ff87e37bf6284eb73c71e5c878625db55c40d552ab74b92f4398de92
