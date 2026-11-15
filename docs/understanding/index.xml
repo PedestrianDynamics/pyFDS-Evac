@@ -606,11 +606,6 @@ sampling exists
 each level separately at its own height, with the matching &lt;code>&amp;amp;SLCF PBZ=&lt;/code> in
 the FDS deck, or pick the height that is conservative for the occupants who
 matter most and say so.&lt;/p>
-&lt;p>&lt;strong>FED activity level.&lt;/strong> The CO term of the toxic dose uses one fixed
-coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
-the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>). Rest and heavy work cannot be selected, although
-breathing rate changes the CO dose. Not supported; see
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">issue #135&lt;/a>.&lt;/p>
 &lt;p>&lt;strong>Per-exit familiarity.&lt;/strong> Familiarity is set per spawn distribution, as
 &lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, or one probability applied to every exit. The
 &lt;code>entrance&lt;/code> key adds one exit that the whole group knows. A separate
@@ -1477,7 +1472,7 @@ three-gas subset: every optional species defaults to zero concentration in
 &lt;tr>
 &lt;td>&lt;strong>Activity level&lt;/strong>&lt;/td>
 &lt;td>Input accepted; no effect in 6.7.6, the dose is always light work (&lt;code>evac.f90:16086–16088&lt;/code>)&lt;/td>
-&lt;td>Not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135" target="_blank" rel="noopener">#135&lt;/a>); the CO term uses the light-work coefficient (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>)&lt;/td>
+&lt;td>&lt;code>--fed-activity-level rest|light|heavy&lt;/code> scales the CO term only (Purser, SFPE Ch. 63); light work is the default and equals FDS+Evac 6.7.6, the other levels have no counterpart there (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/#coded-form">FED model&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>FED in routing&lt;/strong>&lt;/td>

@@ -1451,6 +1451,11 @@ by default, as FDS+Evac has none. The equations are on
 &lt;td>O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default.&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>--fed-activity-level L&lt;/code>&lt;/td>
+&lt;td>&lt;code>light&lt;/code>&lt;/td>
+&lt;td>Activity of the gas FED: &lt;code>rest&lt;/code>, &lt;code>light&lt;/code> or &lt;code>heavy&lt;/code>. Scales the CO term only, by 0.255, 1 or 3.0 (Purser, SFPE Ch. 63). FDS 6.7.6 always uses light work.&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>--incapacitation-mode MODE&lt;/code>&lt;/td>
 &lt;td>&lt;code>deterministic&lt;/code>&lt;/td>
 &lt;td>&lt;code>deterministic&lt;/code> or &lt;code>probabilistic&lt;/code>. &lt;code>deterministic&lt;/code>: every agent stops at &lt;code>--fed-threshold&lt;/code>, as FDS+Evac. &lt;code>probabilistic&lt;/code>: each agent draws a log-normal threshold with median &lt;code>--fed-threshold&lt;/code>.&lt;/td>
@@ -4820,7 +4825,7 @@ means clothed, ISO 13571 Eq. (9), and a blank &lt;code>heat_fed_threshold&lt;/co
 &lt;/tr>
 &lt;tr>
 &lt;td>FED &amp;amp; Tenability&lt;/td>
-&lt;td>&lt;code>disable_tenability&lt;/code>, &lt;code>incapacitation_mode&lt;/code>, &lt;code>susceptibility_sigma&lt;/code>, &lt;code>enable_fic_speed&lt;/code>, &lt;code>fed_threshold&lt;/code>, &lt;code>o2_threshold_percent&lt;/code>, &lt;code>enable_heat_fed&lt;/code>, &lt;code>heat_incapacitation_mode&lt;/code>, &lt;code>heat_susceptibility_sigma&lt;/code>, &lt;code>heat_clothing&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
+&lt;td>&lt;code>disable_tenability&lt;/code>, &lt;code>incapacitation_mode&lt;/code>, &lt;code>susceptibility_sigma&lt;/code>, &lt;code>enable_fic_speed&lt;/code>, &lt;code>fed_threshold&lt;/code>, &lt;code>o2_threshold_percent&lt;/code>, &lt;code>fed_activity_level&lt;/code>, &lt;code>enable_heat_fed&lt;/code>, &lt;code>heat_incapacitation_mode&lt;/code>, &lt;code>heat_susceptibility_sigma&lt;/code>, &lt;code>heat_clothing&lt;/code>, &lt;code>heat_fed_threshold&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Rerouting&lt;/td>
@@ -7871,7 +7876,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a9a66722717618ab84a3d828df8a862e6025e54c">&lt;code>a9a6672&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/295d5d0061da11f616d1faef87a1d3f8e0b663a2">&lt;code>295d5d0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7895,7 +7900,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5d67e2fd56e17c1e748c67fe55892b726f8487e7cd008ce3db2244942cc119d6&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">70eccda51b00dd35c607d4ffa29e3ba59042fcb237b01b732c04c4a1efa76a63&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
