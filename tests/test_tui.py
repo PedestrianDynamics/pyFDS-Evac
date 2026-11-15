@@ -2914,3 +2914,71 @@ def test_enter_after_tab_chooses_an_fds_folder_with_subfolders(workdir, tmp_path
             assert app.form.fds_dir == str(case.resolve())
 
     run(go())
+
+
+def _frame(t: float, smoke=None) -> events.FrameEvent:
+    return events.FrameEvent(
+        sim_time=t,
+        wall_time=t,
+        ids=b"",
+        x=b"",
+        y=b"",
+        states=b"",
+        evacuated=0,
+        exit_counts={},
+        unattributed=0,
+        incapacitated=0,
+        not_spawned=0,
+        smoke=smoke,
+    )
+
+
+def _grid(fds_time: float = 0.0) -> events.SmokeGrid:
+    return events.SmokeGrid(0.0, 0.0, 1.0, 1, 1, b"\x00\x00", fds_time, 2.0)
+
+
+def test_frame_store_short_run_keeps_every_frame() -> None:
+    from pyfds_evac.tui.replay import FrameStore
+
+    store = FrameStore(cap=50)
+    for t in range(30):
+        store.append((_frame(float(t)), None))
+    assert [f.sim_time for f, _s in store] == [float(t) for t in range(30)]
+
+
+def test_frame_store_is_bounded_and_keeps_ends() -> None:
+    from pyfds_evac.tui.replay import FrameStore
+
+    store = FrameStore(cap=20)
+    for t in range(10_000):
+        store.append((_frame(float(t)), None))
+    times = [f.sim_time for f, _s in store]
+    assert len(times) <= 21
+    assert times[0] == 0.0 and times[-1] == 9999.0
+    assert times == sorted(times)
+    gaps = {b - a for a, b in zip(times[:-2], times[1:-1])}
+    assert len(gaps) == 1  # even thinning
+
+
+def test_frame_store_at_returns_nearest_kept_before() -> None:
+    from pyfds_evac.tui.replay import FrameStore
+
+    store = FrameStore(cap=20)
+    for t in range(1000):
+        store.append((_frame(float(t)), None))
+    kept = [f.sim_time for f, _s in store]
+    hit = store.at(500.5)
+    assert hit is not None
+    assert hit[0].sim_time == max(k for k in kept if k <= 500.5)
+
+
+def test_frame_store_shares_equal_smoke_grids() -> None:
+    from pyfds_evac.tui.replay import FrameStore
+
+    store = FrameStore()
+    store.append((_frame(0.0, _grid()), _grid()))
+    store.append((_frame(1.0, _grid()), _grid()))
+    store.append((_frame(2.0, _grid(1.0)), _grid(1.0)))
+    assert store[0][1] is store[1][1]
+    assert store[1][0].smoke is store[1][1]
+    assert store[2][1] is not store[1][1]
