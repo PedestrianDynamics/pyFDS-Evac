@@ -203,6 +203,7 @@ def _gas_settings(model: Any) -> dict[str, Any] | None:
     return {
         **_fed_config(config),
         "o2_threshold_percent": getattr(config, "o2_threshold_percent", None),
+        "activity_level": getattr(config, "activity_level", None),
         **_slice_heights(model),
     }
 

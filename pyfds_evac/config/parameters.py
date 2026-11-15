@@ -23,9 +23,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from pyfds_evac.core.fed import (
+    DEFAULT_FED_ACTIVITY_LEVEL,
     DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
     DEFAULT_HEAT_EMISSIVITY,
     DEFAULT_HEAT_SKIN_TEMPERATURE_C,
+    FED_ACTIVITY_LEVELS,
     HEAT_CLOTHING,
     HEAT_ENDPOINTS,
     HEAT_FED_METHODS,
@@ -626,6 +628,23 @@ PARAMETERS: tuple[Parameter, ...] = (
         "Pathfinder uses.",
     ),
     Parameter(
+        "fed_activity_level",
+        ("--fed-activity-level",),
+        GROUP_GAS,
+        "Activity level of the gas FED; scales the CO term only (Purser, "
+        "SFPE Ch. 63): rest 0.255, light 1, heavy 3.0 times the light-work "
+        f"rate (default: {DEFAULT_FED_ACTIVITY_LEVEL}). FDS 6.7.6 always uses "
+        "light work",
+        choices=tuple(FED_ACTIVITY_LEVELS),
+        default=DEFAULT_FED_ACTIVITY_LEVEL,
+        python="DefaultFedConfig.activity_level",
+        fds_evac=DEFAULT_FED_ACTIVITY_LEVEL,
+        gui_help="How hard the occupants breathe: rest, light work (default, "
+        "as FDS+Evac) or heavy work. Faster breathing takes up carbon "
+        "monoxide faster, so the CO part of the toxic dose grows with "
+        "activity.",
+    ),
+    Parameter(
         "incapacitation_mode",
         ("--incapacitation-mode",),
         GROUP_GAS,
@@ -954,6 +973,7 @@ GUI_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "enable_fic_speed",
             "fed_threshold",
             "o2_threshold_percent",
+            "fed_activity_level",
             "enable_heat_fed",
             "heat_incapacitation_mode",
             "heat_susceptibility_sigma",

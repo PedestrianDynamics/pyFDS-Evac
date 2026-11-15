@@ -196,12 +196,6 @@ each level separately at its own height, with the matching `&SLCF PBZ=` in
 the FDS deck, or pick the height that is conservative for the occupants who
 matter most and say so.
 
-**FED activity level.** The CO term of the toxic dose uses one fixed
-coefficient, the FDS+Evac default for light work (Korhonen 2021, Eq. 13; see
-the [FED model](/models/fed.md#coded-form)). Rest and heavy work cannot be selected, although
-breathing rate changes the CO dose. Not supported; see
-[issue #135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135).
-
 **Per-exit familiarity.** Familiarity is set per spawn distribution, as
 `"full"`, `"discovery"`, or one probability applied to every exit. The
 `entrance` key adds one exit that the whole group knows. A separate

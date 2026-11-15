@@ -825,7 +825,11 @@ def predicted_run_settings(
         },
         "gas_fed": None
         if not m.gas_fed
-        else {**sampling, "o2_threshold_percent": option(opts, "o2_threshold_percent")},
+        else {
+            **sampling,
+            "o2_threshold_percent": option(opts, "o2_threshold_percent"),
+            "activity_level": option(opts, "fed_activity_level"),
+        },
         "heat_fed": _predicted_heat(opts, sampling) if m.heat_fed else None,
         "tenability": _predicted_tenability(opts, m) if m.tenability else None,
         "rerouting": _predicted_rerouting(opts, raw) if m.rerouting else None,

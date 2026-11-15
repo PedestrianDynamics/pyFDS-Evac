@@ -199,6 +199,7 @@ def _build_fed_model(opts: Any, log: Logger):
         update_interval_s=opts.smoke_update_interval,
         slice_height_m=opts.smoke_slice_height,
         o2_threshold_percent=option(opts, "o2_threshold_percent"),
+        activity_level=option(opts, "fed_activity_level"),
     )
     return DefaultFedModel(
         FdsFedField.from_fds(

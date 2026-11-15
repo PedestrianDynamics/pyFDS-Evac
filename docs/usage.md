@@ -160,6 +160,7 @@ by default, as FDS+Evac has none. The equations are on
 | `--enable-fic-speed` | off | Turn the FIC slowdown on. |
 | `--fed-threshold F` | 1.0 | FED at which agents are incapacitated, as FDS+Evac; in probabilistic mode the median of the per-agent threshold. |
 | `--o2-threshold-percent P` | 20.0 % | O₂ vol % at or above which the hypoxia term is zero, as FDS; 19.5 was the previous default. |
+| `--fed-activity-level L` | `light` | Activity of the gas FED: `rest`, `light` or `heavy`. Scales the CO term only, by 0.255, 1 or 3.0 (Purser, SFPE Ch. 63). FDS 6.7.6 always uses light work. |
 | `--incapacitation-mode MODE` | `deterministic` | `deterministic` or `probabilistic`. `deterministic`: every agent stops at `--fed-threshold`, as FDS+Evac. `probabilistic`: each agent draws a log-normal threshold with median `--fed-threshold`. |
 | `--susceptibility-sigma S` | 0.94 | Log-normal σ of the gas threshold in probabilistic mode. |
 

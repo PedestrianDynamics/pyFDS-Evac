@@ -109,6 +109,7 @@ def test_python_defaults_of_the_model_match_the_code():
     assert (
         fed_fields["o2_threshold_percent"] == parameter("o2_threshold_percent").default
     )
+    assert fed_fields["activity_level"] == parameter("fed_activity_level").default
 
 
 def test_gui_metadata_comes_from_the_model():

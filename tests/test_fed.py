@@ -20,6 +20,7 @@ from pyfds_evac.core.fed import (
     _nox_fed_rate_per_minute,
     _o2_hypoxia_rate_per_minute,
     accumulate_default_fed,
+    default_fed_components,
     default_fed_rate_per_minute,
     time_to_fed_threshold_s,
 )
@@ -191,6 +192,48 @@ class TestCoFedRate:
 
     def test_negative(self):
         assert _co_fed_rate_per_minute(-10.0) == 0.0
+
+
+class TestCoActivityLevel:
+    """The activity level scales the CO term by (V_E/D) / (25/30) (Purser)."""
+
+    LIGHT = 2.764e-5 * (1000.0**1.036)
+
+    def test_light_is_the_default_and_bit_identical(self):
+        assert _co_fed_rate_per_minute(1000.0) == self.LIGHT
+        assert _co_fed_rate_per_minute(1000.0, "light") == self.LIGHT
+        assert DefaultFedConfig().activity_level == "light"
+
+    def test_rest(self):
+        rate = _co_fed_rate_per_minute(1000.0, "rest")
+        assert rate == pytest.approx(0.255 * self.LIGHT, rel=1e-12)
+        assert rate == pytest.approx(7.05e-6 * 1000.0**1.036, rel=1e-3)
+
+    def test_heavy(self):
+        rate = _co_fed_rate_per_minute(1000.0, "heavy")
+        assert rate == pytest.approx(3.0 * self.LIGHT, rel=1e-12)
+        assert rate == pytest.approx(8.29e-5 * 1000.0**1.036, rel=1e-3)
+
+    def test_other_terms_do_not_change(self):
+        inputs = DefaultFedInputs(
+            co_volume_fraction_percent=0.1,
+            co2_volume_fraction_percent=2.0,
+            o2_volume_fraction_percent=15.0,
+            hcn_ppm=50.0,
+        )
+        light = default_fed_components(inputs)
+        heavy = default_fed_components(inputs, activity_level="heavy")
+        assert heavy.co_rate_per_min == pytest.approx(3.0 * light.co_rate_per_min)
+        assert heavy.cn_rate_per_min == light.cn_rate_per_min
+        assert heavy.o2_rate_per_min == light.o2_rate_per_min
+        assert heavy.hv_co2 == light.hv_co2
+
+    @pytest.mark.parametrize("level", ["Heavy", "", "moderate"])
+    def test_invalid_level_is_rejected(self, level):
+        with pytest.raises(ValueError, match="FED activity level.*expected one of"):
+            DefaultFedConfig(activity_level=level)
+        with pytest.raises(ValueError, match="FED activity level"):
+            _co_fed_rate_per_minute(1000.0, level)
 
 
 class TestCnFedRate:

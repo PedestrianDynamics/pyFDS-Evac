@@ -56,6 +56,29 @@ to use it.
 """
 
 
+# Purser (SFPE Handbook 5th ed., Ch. 63, p. 2356): minute ventilation V_E
+# [L/min] and the CO2-uptake dose fraction D [%] by activity. Light work is
+# the reference of the CO coefficient 2.764e-5 (guide Eq. 13).
+FED_ACTIVITY_LEVELS: dict[str, tuple[float, float]] = {
+    "rest": (8.5, 40.0),
+    "light": (25.0, 30.0),
+    "heavy": (50.0, 20.0),
+}
+DEFAULT_FED_ACTIVITY_LEVEL = "light"
+
+
+def co_activity_factor(level: str) -> float:
+    """Return the CO-term factor (V_E/D) / (V_E/D at light work) of ``level``."""
+    if level not in FED_ACTIVITY_LEVELS:
+        raise ValueError(
+            f"Unknown FED activity level {level!r}; "
+            f"expected one of {tuple(FED_ACTIVITY_LEVELS)}"
+        )
+    v_e, dose_percent = FED_ACTIVITY_LEVELS[level]
+    v_e_light, dose_light = FED_ACTIVITY_LEVELS[DEFAULT_FED_ACTIVITY_LEVEL]
+    return (v_e / dose_percent) / (v_e_light / dose_light)
+
+
 @dataclass(frozen=True)
 class DefaultFedConfig:
     """Store FDS path and sampling settings for FED evaluation."""
@@ -67,6 +90,12 @@ class DefaultFedConfig:
     # guard (func.f90: the O2 term applies only when X_O2 < 0.20); 19.5 is
     # the OSHA / Pathfinder value pyFDS-Evac used before.
     o2_threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT
+    # Scales the CO term only; "light" is the FDS+Evac value (FDS 6.7.6
+    # evaluates FED at all levels and keeps light work).
+    activity_level: str = DEFAULT_FED_ACTIVITY_LEVEL
+
+    def __post_init__(self) -> None:
+        co_activity_factor(self.activity_level)
 
 
 def _co_percent_to_ppm(co_volume_fraction_percent: float) -> float:
@@ -74,12 +103,21 @@ def _co_percent_to_ppm(co_volume_fraction_percent: float) -> float:
     return max(0.0, float(co_volume_fraction_percent)) * 10000.0
 
 
-def _co_fed_rate_per_minute(co_ppm: float) -> float:
-    """Return the CO FED contribution in 1/min from guide Eq. 13."""
+def _co_fed_rate_per_minute(
+    co_ppm: float, activity_level: str = DEFAULT_FED_ACTIVITY_LEVEL
+) -> float:
+    """Return the CO FED contribution in 1/min from guide Eq. 13.
+
+    ``activity_level`` scales the light-work law by (V_E/D) relative to light
+    work (Purser, SFPE Ch. 63); light work leaves it unchanged.
+    """
 
     if not math.isfinite(co_ppm) or co_ppm <= 0.0:
         return 0.0
-    return 2.764e-5 * (co_ppm**1.036)
+    rate = 2.764e-5 * (co_ppm**1.036)
+    if activity_level == DEFAULT_FED_ACTIVITY_LEVEL:
+        return rate
+    return co_activity_factor(activity_level) * rate
 
 
 def _hyperventilation_factor(co2_percent: float) -> float:
@@ -790,11 +828,12 @@ def default_fed_components(
     inputs: DefaultFedInputs,
     *,
     o2_threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT,
+    activity_level: str = DEFAULT_FED_ACTIVITY_LEVEL,
 ) -> FedComponents:
     """Return the per-term FED rate breakdown for one gas sample."""
     return FedComponents(
         co_rate_per_min=_co_fed_rate_per_minute(
-            _co_percent_to_ppm(inputs.co_volume_fraction_percent)
+            _co_percent_to_ppm(inputs.co_volume_fraction_percent), activity_level
         ),
         cn_rate_per_min=_cn_fed_rate_per_minute(
             inputs.hcn_ppm, inputs.no_ppm, inputs.no2_ppm
@@ -812,6 +851,7 @@ def default_fed_rate_per_minute(
     inputs: DefaultFedInputs,
     *,
     o2_threshold_percent: float = _O2_HYPOXIA_THRESHOLD_PERCENT,
+    activity_level: str = DEFAULT_FED_ACTIVITY_LEVEL,
 ) -> float:
     """Return the Purser FED accumulation rate in 1/min.
 
@@ -821,7 +861,9 @@ def default_fed_rate_per_minute(
     model (FED_CO * HV_CO2 + FED_O2) when only CO/CO2/O2 are available.
     """
     return default_fed_components(
-        inputs, o2_threshold_percent=o2_threshold_percent
+        inputs,
+        o2_threshold_percent=o2_threshold_percent,
+        activity_level=activity_level,
     ).total_rate_per_min
 
 
@@ -1126,7 +1168,9 @@ class DefaultFedModel:
         """Return both the sampled inputs and their FED rate in 1/min."""
         inputs = self.sample_inputs(time_s, x, y)
         return inputs, default_fed_rate_per_minute(
-            inputs, o2_threshold_percent=self.config.o2_threshold_percent
+            inputs,
+            o2_threshold_percent=self.config.o2_threshold_percent,
+            activity_level=self.config.activity_level,
         )
 
     def sample_components(
@@ -1135,7 +1179,9 @@ class DefaultFedModel:
         """Return the sampled inputs together with the per-term FED breakdown."""
         inputs = self.sample_inputs(time_s, x, y)
         return inputs, default_fed_components(
-            inputs, o2_threshold_percent=self.config.o2_threshold_percent
+            inputs,
+            o2_threshold_percent=self.config.o2_threshold_percent,
+            activity_level=self.config.activity_level,
         )
 
     def advance(

@@ -263,6 +263,7 @@ def model_docs() -> Any:
                 ("Incapacitation mode", "--incapacitation-mode"),
                 ("Susceptibility σ", "--susceptibility-sigma"),
                 ("O2 threshold percent", "--o2-threshold-percent"),
+                ("Fed activity level", "--fed-activity-level"),
                 ("Disable tenability", "--disable-tenability"),
             ),
             _eq(
