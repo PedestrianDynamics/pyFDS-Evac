@@ -311,6 +311,7 @@ class HeatEndpoint:
 # pp. 2382-2383, fitted to air with less than 10 % water vapour. The fatal
 # r is 16.7 as printed on pp. 2382 and 2384; Purser's spreadsheet uses
 # 16.667 (personal communication), the code follows the Handbook.
+# The 6th ed. Ch. 70 has the same laws as Eqs. 70.41-70.47 (pp. 2318-2319).
 HEAT_ENDPOINTS: dict[str, HeatEndpoint] = {
     "tolerance": HeatEndpoint(1.33, "63.45", 2e31, 16.963, 4e8, 3.7561),
     "injury": HeatEndpoint(10.0, "63.46", 5e22, 11.783, 3e7, 2.9636),

@@ -42,7 +42,8 @@ synthetic fields by the S6 test
 
 ## Equation
 
-SFPE Handbook 5th ed., Ch. 63 ([Models › Heat](/models/heat.md)). The time
+SFPE Handbook 5th ed., Ch. 63 ([Models › Heat](/models/heat.md)); the
+6th ed., Ch. 70, has the same equations as Eqs. 70.42 and 70.46. The time
 to incapacitation by convected heat, with *T* the gas temperature in °C
 (Eq. 63.44, p. 2382):
 
