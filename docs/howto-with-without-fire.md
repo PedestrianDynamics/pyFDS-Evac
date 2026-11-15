@@ -23,7 +23,8 @@ where to get it) in `$FDS`. Each run below takes 4 to 6 s.
 from the earlier `fire_2MW_PVC` FDS output. The current deck output is
 `t_junction/fire_2MW_PVC_796`. On it, with the fire-blind setup and
 `--disable-tenability`, the exit A share of arm R is 94 / 2.5 / 2.7 % at
-pre-movement 0 / 30 / 60 s, against 100 / 51 / 3 % here. At 30 s the default
+pre-movement 0 / 30 / 60 s. On this page it is 100 % [94, 100] (median over
+seeds), 51 % and 3 %; the re-measure on the old output gave 99 / 51 / 3 %. At 30 s the default
 `tau` rule costs dose (max FED +0.033, p = 0.002) and saves time (RSET p95
 −15.5 s, p = 0.037) against holding the original choice; at 60 s it has no
 dose penalty (p = 0.27) and is faster (RSET p95 −58 s, p = 0.002). The
@@ -48,7 +49,8 @@ For this fire and this T-junction, with 100 people placed at t = 0:
   depends on the metric (see [the dose table](#dose)).
 - **Exit usage** differs: without the fire everyone takes the near exit B.
   With smoke-aware routing (arm R), 100 % take the far exit A when people
-  move at once; with 30 s of pre-movement 51 % do, and with 60 s 3 %: by
+  move at once; with 30 s of pre-movement 51 % do, and with 60 s 3 %
+  (on the older `fire_2MW_PVC` output; see the data note above): by
   then every route is refused, and the router takes the one with the
   lowest optical depth, the shorter route to exit B, although it passes
   the densest smoke by the burner.

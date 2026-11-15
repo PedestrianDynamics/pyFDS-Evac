@@ -576,10 +576,14 @@ for it. The figures come from the commit messages of `0d9bf79`, `9f55f6e` and
 `25a6f8f`; no CSV for them is in the results folder. `25a6f8f` reports only
 `l_corridor`, so the `world100` column for it is unverified rather than
 measured. The deck and seed of those runs were not recorded, so the table
-cannot be reproduced one-to-one. Re-measured at `c2c2081f` with the
-`scripts/margin_audit.py` decks: `l_corridor_gate` on `fire_1MW_west`
-(seeds 1–20) gives 1 return in 20 runs (seed 15, 1 s after leaving, to a
-feasible route) and 37–40 of 100 agents (37–40 %) on the far exit; `world100_stream_east`
+cannot be reproduced one-to-one. The ~18 figures come from the earlier deck
+and spawn (the spawn moved at `a98f8bb`) and are not comparable with the
+re-measures below. Re-measured with the `scripts/margin_audit.py` decks:
+`l_corridor_gate` on `fire_1MW_west` (seeds 1–20) gives, at `efee66e3`,
+37–40 of 100 agents (mean 37.9 %) on the far exit and 1 return in 20 runs
+(seed 15, 1 s after leaving, to a feasible route); the same result was
+recorded at `da4e6468`
+([#124](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/124#issuecomment-6894634291)). At `c2c2081f`, `world100_stream_east`
 sends 28–31 agents to `jps-exits_3` and `world100_stream_oval` 28–35 to
 `jps-exits_1` (seeds 100–109), with no returns on either.
 
