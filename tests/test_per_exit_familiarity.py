@@ -109,6 +109,14 @@ def test_the_entrance_is_known_whatever_its_probability():
     assert cmap.exit_events == [(0.0, "e_near", "entrance")]
 
 
+def test_a_known_entrance_takes_no_draw_at_a_fractional_probability():
+    """The draw meant for the second exit must not go to the entrance."""
+    rng = _Draws(0.1, 0.9)
+    cmap = _init({"e_near": 0.5, "e_far": 0.5}, entrance="e_near", rng=rng)
+    assert _known_exits(cmap) == {"e_near", "e_far"}
+    assert rng.calls == 1
+
+
 def test_an_all_ones_mapping_still_learns_on_arrival():
     """Not the ``full`` tier: only the routes to the exits are known at t=0."""
     stages = {
