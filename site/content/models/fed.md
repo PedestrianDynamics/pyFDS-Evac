@@ -29,7 +29,7 @@ is one function in `fed.py`:
 
 | Term | Function | Coded rate [1/min] | Input |
 |------|----------|--------------------|-------|
-| CO | `_co_fed_rate_per_minute` | \(2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036}\) | CO (ppm) |
+| CO | `_co_fed_rate_per_minute` | \(2.764 \times 10^{-5}\, C_{\mathrm{CO}}^{1.036} \times f\) (activity level, see below; \(f = 1\) by default) | CO (ppm) |
 | CN | `_cn_fed_rate_per_minute` | \(\max\bigl(0,\ \exp(C_{\mathrm{CN}}/43)/220 - 1/220\bigr)\), \(C_{\mathrm{CN}} = \max\bigl(0,\ C_{\mathrm{HCN}} - (C_{\mathrm{NO}} + C_{\mathrm{NO_2}})\bigr)\) | HCN, NO, NO2 (ppm) |
 | NOₓ | `_nox_fed_rate_per_minute` | \((C_{\mathrm{NO}} + C_{\mathrm{NO_2}})/1500\) | NO, NO2 (ppm) |
 | Irritants | `_irritant_fld_rate_per_minute` | \(\sum_i C_i / F_{\mathrm{FLD},i}\) | seven irritants (ppm) |
@@ -124,6 +124,7 @@ stop need the gas FED model; the heat stop needs only the heat FED model
 | `heat_incapacitation_mode` | `"deterministic"` | `--heat-incapacitation-mode` |
 | `heat_susceptibility_sigma` | `0.94` | `--heat-susceptibility-sigma` |
 | `o2_threshold_percent` (`DefaultFedConfig`) | `20.0` | `--o2-threshold-percent` |
+| `activity_level` (`DefaultFedConfig`) | `"light"` | `--fed-activity-level` |
 
 The gas and heat FED are updated every `DefaultFedConfig.update_interval_s`,
 which `run.py` sets from `--smoke-update-interval`. `--disable-tenability`
@@ -179,9 +180,6 @@ the speed to zero at the agent's threshold. Script:
   ([Heat](/models/heat.md)).
 - Effects of heat on route choice or walking speed: the heat FED only
   incapacitates.
-- FED activity level: the CO term is fixed at light work; rest and heavy
-  work are not supported
-  ([#135](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/135)).
 - Removing incapacitated agents: they stay where they collapsed until
   the run ends. The run ends when only incapacitated agents remain and no flow
   window is open (`end_reason` `all_mobile_left`), and `evacuation_time` is
@@ -261,8 +259,21 @@ computes it
 - **CO₂.** Eq. 63.34 (`fed.py`, `_hyperventilation_factor`), not its simplification Eq. 63.35 used in
   Eq. 63.38. The 70 L/min limit on \(V_E\times VCO_2\) is not applied, and
   the CO₂ asphyxiant endpoint \(F_{I_{CO_2}}\) is not computed.
-- **CO.** Fixed at light work (`fed.py`, `_co_fed_rate_per_minute`), Eq. 63.18 at its default
-  \(V_E\) and *D*.
+- **CO.** Light work by default (`fed.py`, `_co_fed_rate_per_minute`), Eq. 63.18 at its default
+  \(V_E\) and *D*. `--fed-activity-level` (`DefaultFedConfig.activity_level`)
+  multiplies this term, and only this term, by
+  \(f = (V_E/D)/(25/30)\), with \(V_E\) and *D* from Purser (SFPE Handbook,
+  5th ed., Ch. 63, p. 2356):
+
+  | Level | \(V_E\) [L/min] | *D* [%] | *f* |
+  |-------|------------------|---------|-----|
+  | `rest` | 8.5 | 40 | 0.255 |
+  | `light` (default) | 25 | 30 | 1 |
+  | `heavy` | 50 | 20 | 3.0 |
+
+  FDS+Evac has a `FED_ACTIVITY` input, but FDS 6.7.6 ignores it and always
+  uses light work (`evac.f90:16086-16088`), so `rest` and `heavy` have no
+  FDS+Evac 6.7.6 counterpart. The CO\(_2\), O\(_2\) and HCN terms do not depend on the level.
 - **O₂.** The rate is zero at or above `o2_threshold_percent`, 20.0 % O₂
   by default, the guard of FDS+Evac's code (the `FED` function of FDS 6.7.6
   `func.f90` adds the term only when X_O2 < 0.20); neither Purser nor the

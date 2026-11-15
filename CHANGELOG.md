@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `--fed-activity-level rest|light|heavy` (`DefaultFedConfig.activity_level`,
+  default `light`) scales the CO term of the gas FED by 0.255, 1 or 3.0
+  (Purser, SFPE Ch. 63); light work is unchanged and equals FDS 6.7.6,
+  which ignores `FED_ACTIVITY`. The run manifest records `activity_level`
+  under `gas_fed` (#135).
+
 - `--output-knowledge-history CSV` writes one row per exit an agent came
   to know: `time_s`, `agent_id`, `exit_id` and `how` (`entrance`,
   `familiarity_draw`, `sight`, `arrival`, `look`), the exits known at

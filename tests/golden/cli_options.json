@@ -119,6 +119,20 @@
   "required": false,
   "type": null
  },
+ "--fed-activity-level": {
+  "action": "_StoreAction",
+  "choices": [
+   "rest",
+   "light",
+   "heavy"
+  ],
+  "const": null,
+  "default": "light",
+  "dest": "fed_activity_level",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
  "--fed-threshold": {
   "action": "_StoreAction",
   "choices": null,

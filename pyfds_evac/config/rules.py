@@ -534,6 +534,7 @@ _RULES: dict[str, Callable[[Any, Mechanisms], _Reason]] = {
     "enable_fic_speed": _fic_reason,
     "fed_threshold": _fed_threshold_reason,
     "o2_threshold_percent": _o2_reason,
+    "fed_activity_level": _o2_reason,
     "incapacitation_mode": _gas_tenability_reason,
     "susceptibility_sigma": _sigma_reason,
 }

@@ -109,6 +109,7 @@ def test_python_defaults_of_the_model_match_the_code():
     assert (
         fed_fields["o2_threshold_percent"] == parameter("o2_threshold_percent").default
     )
+    assert fed_fields["activity_level"] == parameter("fed_activity_level").default
 
 
 def test_gui_metadata_comes_from_the_model():
@@ -1128,6 +1129,8 @@ def test_manifest_of_a_fire_run_is_the_run(tmp_path, iso22_scenario):
         "--enable-fic-speed",
         "--incapacitation-mode",
         "probabilistic",
+        "--fed-activity-level",
+        "heavy",
         "--output-sqlite",
         str(tmp_path / "r.sqlite"),
     )
@@ -1137,6 +1140,7 @@ def test_manifest_of_a_fire_run_is_the_run(tmp_path, iso22_scenario):
     run = section["run"]
     assert run["smoke_speed"]["source"] == "fds"
     assert run["gas_fed"]["o2_threshold_percent"] == 20.0
+    assert run["gas_fed"]["activity_level"] == "heavy"
     assert run["tenability"]["incapacitation_mode"] == "probabilistic"
     assert run["rerouting"]["cost_config"]["w_smoke"] == 0.0
 

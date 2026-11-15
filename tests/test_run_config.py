@@ -141,6 +141,15 @@ def test_enable_fic_speed_opts_in():
     assert kwargs["tenability_config"].enable_fic_speed is True
 
 
+def test_fed_activity_level_reaches_the_fed_model():
+    default = build_run_kwargs(_scenario(), _opts(fds_dir=_GAS_DIR))
+    assert default["fed_model"].config.activity_level == "light"
+    heavy = build_run_kwargs(
+        _scenario(), _opts(fds_dir=_GAS_DIR, fed_activity_level="heavy")
+    )
+    assert heavy["fed_model"].config.activity_level == "heavy"
+
+
 def test_cli_fic_speed_flag():
     import run
 

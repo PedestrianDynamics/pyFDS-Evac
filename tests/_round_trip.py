@@ -36,6 +36,7 @@ PROFILE_A = {
     "susceptibility_sigma": "0.5",
     "fed_threshold": "0.3",
     "o2_threshold_percent": "15.0",
+    "fed_activity_level": "heavy",
     "enable_fic_speed": "on",
 }
 PROFILE_B = {
