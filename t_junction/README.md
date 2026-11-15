@@ -162,7 +162,8 @@ always prefers B**. With heavy extinction on B's arm:
 | 1.0 | `exit_A_left` | 25.16 | 43.30 |
 | 5.0 | `exit_A_left` | 25.16 | 143.87 |
 
-The crossover is at **`w_smoke` ≈ 0.28**. Note that cost A never moves: smoke
+The crossover is at **`w_smoke` ≈ 0.28** (the figure below marks the first
+0.05 grid step past it, 0.30). Note that cost A never moves: smoke
 charges only the route that passes through it.
 
 ### The control that matters
