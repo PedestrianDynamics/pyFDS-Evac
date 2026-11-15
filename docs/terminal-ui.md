@@ -128,8 +128,11 @@ and exit history CSVs, and `bundle/`.
 The sections below describe each step. The screenshots of the Scenario and
 Configure steps are the terminal UI's snapshot tests, so they change when the
 screens change. The others come from a real run of `assets/t_junction` with
-the `fire_2MW_PVC` FDS output and seed 42; that FDS output was produced
-separately and is not in the repository.
+the `fire_2MW_PVC` FDS output and seed 42. That is an earlier output of the
+deck, run before its PVC yields and heat of combustion changed
+([#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796)); the
+current one is `fire_2MW_PVC_796`. Neither is in the repository, so the
+numbers on these screenshots differ from those of a run today.
 
 ### The step bar
 

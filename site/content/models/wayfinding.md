@@ -133,7 +133,8 @@ it does in smoke.
 
 ![Left: plan of the T-shaped corridor with the extinction field at t = 20 s, the fire between the junction and exit B, the cells from which sign B is legible in yellow and those legible in clear air outlined by a dotted line. Three cells are marked: P, 4.5 m from the sign on the corridor axis, legible; Q, 3 m from the sign next to the fire, not legible because of smoke; R in the stem, hidden behind a wall. Right: a flowchart of the steps from the FDS slice to the agent's cognitive map](/images/wayfinding/sign_legibility_steps.png)
 
-*(a) Sign B of `assets/t_junction` in the FDS run `fire_2MW_PVC` at
+*(a) Sign B of `assets/t_junction` in the FDS run `fire_2MW_PVC` (an earlier
+output of the deck, before [#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796); its slices are tracked for this figure) at
 t = 20 s, the first map time at which its legible area falls below half the
 clear-air area (9.7 of 92.3 m²). Every value is read from the VisMap of a
 run. For an unobstructed sight line (\(U = 1\)) below the cap, the test

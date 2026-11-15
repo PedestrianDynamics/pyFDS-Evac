@@ -13,7 +13,8 @@ shipped model does now, read [route-cost-gate.md](route-cost-gate.md).
 ## Verdict
 
 **The gate does almost no work in real fires, and the least-K fallback is the
-model that actually runs.** Measured on `assets/t_junction` + `fire_2MW_PVC`:
+model that actually runs.** Measured on `assets/t_junction` + `fire_2MW_PVC` (the FDS output of that
+time, before #796):
 239 of 33 008 route evaluations feasible (0.7 %), **zero feasible after ~60 s**;
 26 of 27 exit switches decided by the fallback, 1 by the gate. `sign_contrast_c=8`
 barely moves it (490/33 044), so this is not a calibration artefact of `c = 3`.
