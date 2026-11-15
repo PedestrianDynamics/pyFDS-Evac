@@ -182,6 +182,14 @@ def unsigned_exits_only(dist_id: str) -> str:
     )
 
 
+def unreachable_known_exit(dist_id: str, key: str, exit_id: str) -> str:
+    """A known exit no route from the spawn area leads to."""
+    return (
+        f"Distribution {dist_id!r} lists exit {exit_id!r} in {key}, but no route "
+        "from its spawn area reaches it; its agents will never learn it."
+    )
+
+
 def no_known_exit_needs_rerouting(dist_id: str, mode: str, smoke_blind: bool) -> str:
     """D33: an opt-in no_known_exit mode in a run without a reroute pass."""
     prefix = f"Distribution {dist_id!r} sets no_known_exit {mode!r}, which"

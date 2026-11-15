@@ -130,6 +130,8 @@ def has_discovery_agents(raw: Mapping[str, Any]) -> bool:
         value = params.get("familiarity", "full")
         if value is None:
             continue
+        if isinstance(value, Mapping):
+            return True  # a per-exit map starts as a discovery map
         try:
             if familiarity_probability(value) < 1.0:
                 return True
@@ -754,11 +756,15 @@ def no_known_exit_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
 
 
 def entrance_value_issue(raw: Mapping[str, Any]) -> ConfigIssue | None:
-    """A distribution's ``entrance`` that is not an exit id or a list of them."""
-    from pyfds_evac.core.cognitive_map import distribution_entrances
+    """An ``entrance`` or per-exit ``familiarity`` that names no exit or no probability."""
+    from pyfds_evac.core.cognitive_map import (
+        distribution_entrances,
+        distribution_familiarities,
+    )
 
     try:
         distribution_entrances(raw)
+        distribution_familiarities(raw)
     except ValueError as exc:
         return ConfigIssue("B", None, str(exc), "S")
     return None
