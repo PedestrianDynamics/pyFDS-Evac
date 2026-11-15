@@ -25,7 +25,7 @@ the 10 seeds); the animation shows one seed, the one whose room empties at
 the median time.
 
 With and without the fire (``docs/howto-with-without-fire.md``): arms U and
-R, pre-movement 30 s, one seed. ``DATA`` is the ``fire_2MW_PVC`` output and
+R, pre-movement 30 s, one seed. ``DATA`` is the ``fire_2MW_PVC_796`` output and
 ``RUNS`` the folder of ``scripts/docs/fire_blind_vs_coupled.py``::
 
     uv run python scripts/docs/study_animations.py \\

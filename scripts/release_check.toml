@@ -79,7 +79,7 @@ expect = ['"OXYGEN VOLUME FRACTION",', '"SOOT EXTINCTION COEFFICIENT"']
 [[page]]
 name = "first-fds-case"
 source = "docs/first-fds-case.md"
-copy = [["fire", "t_junction/fire_2MW_PVC"]]
+copy = [["fire", "t_junction/fire_2MW_PVC_796"]]
 env = { FDS = "$WORK/fire" }
 
 [[page.step]]
@@ -100,7 +100,7 @@ expect = [
 
 [[page.step]]
 name = "2. FDS run"
-manual = "FDS (mpiexec -n 4 fds, about 20 min); the FDS output comes from fds-evac-data/t_junction/fire_2MW_PVC"
+manual = "FDS (mpiexec -n 4 fds, about 20 min); the FDS output comes from fds-evac-data/t_junction/fire_2MW_PVC_796"
 
 [[page.step]]
 name = "3. run.py --inspect-fds"
@@ -121,9 +121,9 @@ timeout = 900
 exit_ok = [0, 2]
 expect = [
   "Configuring visibility model (3 signs).",
-  "Simulation incomplete: time limit reached after 300.00 s (99/150 evacuated, 51 remaining, 50 not spawned).",
+  "Simulation incomplete: time limit reached after 300.00 s (89/150 evacuated, 61 remaining, 50 not spawned).",
   "Route history rows: 163",
-  "Agents that left by an exit not in their map: 87",
+  "Agents that left by an exit not in their map: 77",
 ]
 
 [[page.step]]
@@ -174,8 +174,8 @@ expect_bundle = "rset-ensemble"
 [[page]]
 name = "howto-with-without-fire"
 source = "docs/howto-with-without-fire.md"
-copy = [["fire", "t_junction/fire_2MW_PVC"]]
-copy_quick = [["runs", "t_junction/fire_blind_runs_f5c61f21"]]
+copy = [["fire", "t_junction/fire_2MW_PVC_796"]]
+copy_quick = [["runs", "t_junction/fire_blind_runs_efee66e3"]]
 env = { FDS = "$WORK/fire", SC = "assets/t_junction/config_initial_pre0.json", RUNS = "$WORK/runs" }
 
 [[page.step]]
@@ -210,7 +210,7 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
 timeout = 900
 expect = [
   "Replaying the exits of 100 agents from ww/u_exits.csv.",
-  "Simulation finished in 68.17 s (100/100 evacuated).",
+  "Simulation finished in 74.84 s (100/100 evacuated).",
 ]
 
 [[page.step]]
@@ -220,7 +220,7 @@ uv run python run.py --scenario $SC --seed 4 --fds-dir "$FDS" \\
     --disable-tenability \\
     --output-sqlite ww/r.sqlite --output-exit-history ww/r_exits.csv"""
 timeout = 900
-expect = ["Simulation finished in 54.80 s (100/100 evacuated)."]
+expect = ["Simulation finished in 61.93 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "3. arm R-na, no anticipation"
@@ -239,22 +239,21 @@ uv run python run.py --scenario ww/na/config_initial_pre0.json --seed 4 \\
     --fds-dir "$FDS" --disable-tenability \\
     --output-sqlite ww/rna.sqlite --output-exit-history ww/rna_exits.csv"""
 timeout = 900
-expect = ["Simulation finished in 60.68 s (100/100 evacuated)."]
+expect = ["Simulation finished in 67.59 s (100/100 evacuated)."]
 
 [[page.step]]
 name = "4. whole study, stored runs"
 mode = "quick"
 run = 'uv run python scripts/docs/fire_blind_vs_coupled.py --data "$FDS" --runs "$RUNS"'
 timeout = 1200
-# The stored runs predate 0.4.0, so this checks the analysis against
-# their rows, not the current model; the page quotes the --full rows.
+# The stored runs are the page's runs, so these are the --full rows.
 expect = [
-  "U last 56.5 [52.2, 61.1] p95 53.9 [49.7, 58.9] censored 0/20 exit A 0% [0%, 0%]",
-  "R last 60.5 [56.2, 64.6] p95 58.0 [53.9, 61.8] censored 0/20 exit A 100% [98%, 100%]",
-  "pre 0 R-U median 3.7 [-3.1, 10.2] R>U in 17/20, R<U 3, sign p = 0.00258",
-  "ISO FEC 1 pre 0 n=20 U:0/15/20/0 S:0/0/5/0 R:0/6/20/0 R-na:0/0/20/0 R+FIC:0/0/0/0",
+  "U last 53.3 [50.1, 56.9] p95 50.7 [47.2, 54.5] censored 0/20 exit A 0% [0%, 0%]",
+  "R last 62.5 [53.5, 66.5] p95 52.7 [49.6, 57.7] censored 0/20 exit A 94% [86%, 99%]",
+  "pre 0 R-U median 9.9 [-2.3, 13.8] R>U in 19/20, R<U 1, sign p = 4.01e-05",
+  "ISO FEC 1 pre 0 n=20 U:0/20/20/0 S:0/0/0/0 R:0/2/10/0 R-na:0/0/4/0 R+FIC:0/0/0/0",
 ]
-stored_runs = "f5c61f21 (fire_blind_runs_f5c61f21)"
+stored_runs = "efee66e3 (fire_blind_runs_efee66e3)"
 
 [[page.step]]
 name = "4. whole study, 320 runs"
@@ -264,9 +263,9 @@ timeout = 3600
 # Rows the page's tables quote.
 expect = [
   "U last 53.3 [50.1, 56.9] p95 50.7 [47.2, 54.5] censored 0/20 exit A 0% [0%, 0%]",
-  "R last 54.5 [50.5, 57.1] p95 51.0 [46.5, 53.4] censored 0/20 exit A 100% [94%, 100%]",
-  "pre 0 R-U median 0.7 [-5.2, 5.4] R>U in 13/20, R<U 7, sign p = 0.263",
-  "ISO FEC 1 pre 0 n=20 U:0/20/20/0 S:0/0/3/0 R:0/20/20/0 R-na:0/19/20/0 R+FIC:0/0/0/0",
+  "R last 62.5 [53.5, 66.5] p95 52.7 [49.6, 57.7] censored 0/20 exit A 94% [86%, 99%]",
+  "pre 0 R-U median 9.9 [-2.3, 13.8] R>U in 19/20, R<U 1, sign p = 4.01e-05",
+  "ISO FEC 1 pre 0 n=20 U:0/20/20/0 S:0/0/0/0 R:0/2/10/0 R-na:0/0/4/0 R+FIC:0/0/0/0",
 ]
 
 [[page.step]]
@@ -274,15 +273,15 @@ name = "4. animation, stored runs"
 mode = "quick"
 run = 'uv run python scripts/docs/study_animations.py fire-blind --data "$FDS" --runs "$RUNS"'
 timeout = 1200
-expect = ["- pre 30 s: seed 11, R last out 118.7 s (median 116.6 s)"]
-stored_runs = "f5c61f21 (fire_blind_runs_f5c61f21)"
+expect = ["- pre 30 s: seed 7, R last out 150.8 s (median 150.1 s)"]
+stored_runs = "efee66e3 (fire_blind_runs_efee66e3)"
 
 [[page.step]]
 name = "4. animation"
 mode = "full"
 run = 'uv run python scripts/docs/study_animations.py fire-blind --data "$FDS" --runs "$RUNS"'
 timeout = 1200
-expect = ["- pre 30 s: seed 4, R last out 95.3 s (median 95.5 s)"]
+expect = ["- pre 30 s: seed 7, R last out 150.8 s (median 150.1 s)"]
 
 # --- Verification -----------------------------------------------------------
 

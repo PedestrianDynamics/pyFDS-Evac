@@ -327,24 +327,25 @@ the smoke, until the current route crosses the FED limit and a rival does
 not ([#750](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750), [#751](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751)).
 
 `fallback_switch_margin` then has no
-effect. On `t_junction` (`fire_2MW_PVC`, R arm of
+effect. On `t_junction` (`fire_2MW_PVC_796`, R arm of
 [Evacuation with and without the fire](howto-with-without-fire.md), seeds
-4–23 with no pre-movement and 4–13 at 30 and 60 s, at `c619a046`) the two
+4–23 with no pre-movement and 4–13 at 30 and 60 s, at `efee66e3`) the two
 rules give the following. Each cell lists the agents to exit A, median
 [min, max] over seeds; the median of the largest max FED; and the
 fallback exit changes per run, median (max).
 
 | Pre-movement | `"tau"` | `"hold"` |
 |---|---|---|
-| 0 s | 100 [94, 100] %; 0.006; 0 (6) | 100 [100, 100] %; 0.006; 0 (0) |
-| 30 s | 51 [49, 55] %; 0.070; 195 (201) | 100 [100, 100] %; 0.024; 0 (0) |
-| 60 s | 3 [0, 6] %; 0.178; 267 (278) | 100 [100, 100] %; 0.100; 0 (0) |
+| 0 s | 94 [86, 99] %; 0.037; 6 (14) | 100 [100, 100] %; 0.009; 0 (0) |
+| 30 s | 3 [1, 4] %; 0.170; 101 (104) | 100 [100, 100] %; 0.139; 0 (0) |
+| 60 s | 2 [1, 5] %; 0.271; 103.5 (107) | 100 [100, 100] %; 0.268; 0 (0); 6 agents of 10 runs inside at 270 s |
 
-With the return lockout removed ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187); seeds 4–13 at `7c366911`)
-the `"tau"` fallback exit changes per run are 196.5 (200) at 30 s and
-303 (306) at 60 s; at 60 s the shares and FED are unchanged in every
-seed, at 30 s they are 51 [48, 55] % and 0.073. The `"hold"` column
-does not read the lockout and is unchanged.
+Paired over seeds, the default rule has the higher largest max FED at 30 s
+(mean +0.033, p = 0.002) and a 15.4 s earlier 95th person out (p = 0.039,
+weak evidence);
+at 60 s the dose does not differ (+0.013, p = 0.27) and the 95th person
+leaves 58.0 s earlier (p = 0.002). The fallback exit changes are the
+`fallback` rows of the route history.
 
 This is one deck and one fire, and the evidence that people keep going
 once they are in smoke is expert judgement. A user setting waits for
