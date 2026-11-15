@@ -47,14 +47,14 @@ These are the only two exits. The scenario has no checkpoints; the north exit an
 | `jps-distributions_0` | exhibition area (x 16–26, y 13–17), roaming | 50 |
 | `jps-distributions_1` | Mensa food counter (x 37–51, y 20.9–24.9) | 30 |
 | `jps-distributions_2` | Foyer (x 27.5–36.3, y 15.5–34.5), roaming | 50 |
-| `jps-distributions_3` | Hörsaal (x 12–26.4, y 22.4–36.8), including the seat rows | 100 |
+| `jps-distributions_3`, `_5` … `_16` | Hörsaal, seated: one strip per desk row behind each of the 13 desks (x 13.73–24.26, 0.55–0.6 m deep), 7 or 8 per row | 100 |
 | `jps-distributions_4` | Mensa seating (x 37–54, y 27–36.5), eating | 30 |
 
 Until #894 the scenario prescribed three journeys with fixed exit shares (85/15, 90/10), and two of its checkpoints sat in doorways the agents then had to walk back from: the Hörsaal group turned back into its own queue at the north door, and the Mensa group walked north to the Foyer door and back south to `exit_south`. In clear air 74 of 300 agents deadlocked (#894, #132).
 
 ## Current status: not a valid comparison yet
 
-Clear air (no `--fds-dir`), seeds 1–5, this population: one seed clears all 260 agents (seed 2, 119.7 s). The other four end on a deadlock with 2 agents left, after 258 have left. In seeds 1, 4 and 5 the two agents block each other at the west end of a Hörsaal seat row (x ≈ 13.4–13.9, y ≈ 32); in seed 3 one agent stops in front of `jps-exits_1` (x 31.3, y 8.6). The earlier result, 400 agents out by 103.2 s at seed 42, was for the old population and exits.
+Clear air (no `--fds-dir`), seeds 1–5, this population: seeds 3 and 4 clear all 260 agents (119.8 s and 117.7 s). Seeds 1, 2 and 5 end on a deadlock with 258/260 out, every time at the same spot: an agent walking up the west aisle turns east into the desk row at y ≈ 31.6–32.1 (0.58 m wide) while a seated agent of that row walks out west, and the two meet head-on at the row end (x ≈ 13.4–13.9). The shortest path through the floor plan uses the gaps between desk rows as passages. The earlier result, 400 agents out by 103.2 s at seed 42, was for the old population and exits.
 
 **1. The FDS output predates the deck.**
 `haspel.fds` was changed for #229: the mesh now covers the whole floor plan (x 6.25–61.25, y 5.75–43.25, 0.1 m cells, 88 meshes, about 10.3 million cells against 6.75 million before), so both exits lie inside the sampled smoke field. Walls 0.2 m thick, 5 m high, now follow the WKT outline, and the domain sides are open (`SURF_ID='OPEN'`), so smoke leaves the building only through the two exits. The strip between the building and the outline, including the strip north of the long wall at y ≈ 37.1 that the floor plan treats as outdoors, is therefore an enclosed walkway in FDS. The burner (2 × 2 m, x 44.2–46.2, y 17.2–19.2) is now in the kitchen, whose north wall and door to the Mensa food counter (x 41.8–48.7, y ≈ 19.7) were removed, so the kitchen opens to the counter. The fire ramps linearly to 200 kW (50 kW/m² × 4 m²) at 300 s. No FDS output of this deck exists yet; it needs a run on JURECA. See #229.
