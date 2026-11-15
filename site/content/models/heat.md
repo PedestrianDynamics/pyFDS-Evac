@@ -88,7 +88,9 @@ against 2.0 min at 150 °C, 2.0 against 0.75 min at 200 °C. Before
 [#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290) the
 default was Eq. 63.44; `--heat-clothing unclothed` reproduces it exactly.
 SFPE Ch. 63 treats the unclothed expressions as the relevant ones unless
-protective clothing is worn (p. 2336); the default follows ISO instead
+protective clothing is worn (p. 2336); the 6th edition presents no
+expressions for clothed subjects and refers to ISO 13571 for them (Ch. 70,
+p. 2283). The default follows ISO
 ([Fundamentals › Heat](/fundamentals/heat.md#iso-135712012-clause-8)).
 `--heat-clothing` has no effect with `--heat-endpoint` or
 `--heat-fed-method total-flux`, and logs a warning there and without
@@ -648,7 +650,7 @@ result; none is a Handbook tolerance.
 | Flux basis of *f U* | excess over a skin-temperature isotropic field, *f* (*U* − 4σ\(T_s^4\)) | none (fixed) | `--heat-radiant-source integrated-intensity` | Maintainer decision: surroundings at skin temperature give no flux for any *f*; at *f* = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS User's Guide 6.10.1, Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383) | Whether the radiant tolerance data (Table 63.19) hold for incident flux or for flux above the skin's own exchange |
 | *U* with the layer regime | *U* supplies the radiant term; layer term not added | `--heat-regime layer` with `--heat-radiant-source integrated-intensity` | Total-flux *q* when both are set | *U* already contains the layer's emission and is the better-resolved input | Gauge devices, which replace both ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
 | Heat σ | 0.94 | `--heat-susceptibility-sigma` / `heat_susceptibility_sigma` | Probabilistic heat mode only (`--heat-incapacitation-mode probabilistic`) | Borrowed from the gas dose ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)); the radiant lethality figures imply about 0.22 | A population spread for the convective dose, e.g. the probits of Hockey & Rew (1996), not read |
-| Clothing | fully clothed, every agent | `--heat-clothing` / `heat_clothing` (`DEFAULT_HEAT_CLOTHING`) | Convective law without `--heat-endpoint` or total flux ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)) | Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.1); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336) | Clothing data per occupancy or per agent |
+| Clothing | fully clothed, every agent | `--heat-clothing` / `heat_clothing` (`DEFAULT_HEAT_CLOTHING`) | Convective law without `--heat-endpoint` or total flux ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)) | Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.1); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336); the 6th edition refers clothed subjects to ISO 13571 (Ch. 70, p. 2283) | Clothing data per occupancy or per agent |
 | One threshold for gas and heat | heat threshold = `fed_threshold` | `--heat-fed-threshold` / `heat_fed_threshold` overrides it | Heat incapacitation | Maintainer reading of ISO 13571:2012 §5.4 with §8.5; the standard does not say whether the heat FED shares the gas threshold ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)) | A statement of the standard, or data on heat and gas thresholds in the same people |
 
 The assumptions of the test decks and test bands (the #224 and #221 decks,
@@ -667,6 +669,15 @@ they do not affect a run.
   Protection Engineers (Ed.), *SFPE Handbook of Fire Protection
   Engineering* (6th ed., Ch. 70, pp. 2271–2352). Springer.
   doi:10.1007/978-3-031-59212-6_70
+
+  Citations of Eq. 63.xx and Table 63.xx are to the 5th edition, citations
+  of Ch. 70 to the 6th. The 6th edition renumbers the heat equations with
+  the same content: Eqs. 63.43–63.49 are Eqs. 70.41–70.47 (pp. 2318–2319),
+  and Tables 63.17, 63.20 and 63.21 are Tables 70.15, 70.18 and 70.19
+  (pp. 2313, 2319, 2320). Both editions name the wrong equation in the
+  caption of that last table (Eq. 63.44 / 70.42; its values follow
+  Eq. 63.45 / 70.43). The only change in the heat sections is the clothing
+  statement above.
 - Lovreglio, R. *FED Heat v3*. Unpublished draft, which cites the 6th ed.,
   Ch. 70. Reviewed by D. Purser (personal communication, 2026).
 - McGrattan, K., et al. (2025). *Fire Dynamics Simulator User's Guide*,
