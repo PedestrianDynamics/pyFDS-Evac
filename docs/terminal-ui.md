@@ -312,8 +312,9 @@ used, wall time), the warnings, the per-exit counts at the end of the run,
 the evacuated-over-time sparkline (wide layout only), and the output files
 with their sizes.
 
-- `←` and `→` replay the stored plan frames 1 s at a time, `shift+←` and
-  `shift+→` 10 s at a time. Replay works only after the run has ended.
+- `←` and `→` replay the stored plan frames one at a time, `shift+←` and
+  `shift+→` ten at a time: 1 s and 10 s, or coarser on a long run (see
+  below). Replay works only after the run has ended.
 - `y` copies the path of the highlighted file. `t` shows the traceback or the
   end of `child.log`.
 - `c` and `s` give the command and the script of this run; see
@@ -350,7 +351,7 @@ output folder is included. The idea is the same as in the Web GUI; see
 | Results | `Enter` | preview the highlighted output file: the first 40 lines of a text file, the tables and row counts of a SQLite file, the files of a folder. In the dialog `y` copies the path and `o` opens the file in the system app (macOS `open`, Linux `xdg-open`; not over SSH) |
 | Results | `y` | copy the path of the highlighted output file |
 | Results | `e` / `n` / `t` / `w` | change settings (Configure) / new scenario / traceback or end of `child.log` / warnings |
-| Results, full plan | `←` / `→`, `shift+←` / `shift+→` | replay the plan frames by 1 s / 10 s, after the run has ended |
+| Results, full plan | `←` / `→`, `shift+←` / `shift+→` | replay the plan frames by 1 / 10 stored frames (1 s / 10 s, coarser on long runs), after the run has ended |
 | Run, Results | `v` | full-screen plan (`Esc` back) |
 
 The keys avoid common terminal conflicts: there is no `ctrl+s` (XOFF) and no
@@ -463,7 +464,7 @@ the plan to 1 or 2 updates per second.
 
 The replay keeps at most 2000 frames, no finer than 1 s apart. On a long
 run the TUI drops every other stored frame and doubles the spacing, so the
-whole run stays replayable at a coarser step; the latest frame is always
+whole run stays replayable at a coarser, roughly even step; the latest frame is always
 kept. Tests show that recording the frames does not change the results.
 {{< /details >}}
 
@@ -579,7 +580,7 @@ differences:
 | Scenario input | `./assets` picker; uploads saved in `./uploads` | `./assets` examples, Recent, or a file, zip or folder opened where it is |
 | Options offered | the GUI form (several heat and visibility options under "Other", [#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311), [#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270)) | 40 options: every run option except `--cleanup`, `--export-only`, `--inspect-fds`, `--print-summary` |
 | Effective configuration before the run | — | Review (the `--show-config` report) |
-| Results | charts, trajectory replay, FED panel | outcome, per-exit counts, sparkline, plan replay in 1 s steps, file list |
+| Results | charts, trajectory replay, FED panel | outcome, per-exit counts, sparkline, plan replay in 1 s steps (coarser on long runs), file list |
 | Results-only mode | yes | no |
 | Over SSH | needs port forwarding (`--host`, `--port`) | runs in the SSH session |
 
@@ -597,7 +598,7 @@ differences:
   ([#550](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/550)).
 - The run counts planned agents; Results counts the agents that entered
   ([#279](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279)).
-- All replay frames are held in memory.
+- On long runs the replay is thinned to at most 2000 frames, so it steps coarser than 1 s.
 - No results-only mode, no charts and no trajectory replay. Open the SQLite in
   the Web GUI or in [fds-viewer](https://github.com/PedestrianDynamics/fds-viewer).
 
