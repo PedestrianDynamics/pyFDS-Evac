@@ -2,7 +2,7 @@
 
 Runs the T-junction crowd of ``assets/t_junction/config_initial_pre*.json``
 (100 agents placed at t = 0, constant pre-movement 0, 30 or 60 s, 270 s cap)
-against the ``fire_2MW_PVC`` FDS output in these arms, one ``run.py`` process
+against the ``fire_2MW_PVC_796`` FDS output in these arms, one ``run.py`` process
 per arm and seed (the familiarity draw is keyed by JuPedSim id, #198):
 
 ======  ===============================================================
@@ -24,7 +24,7 @@ the figures in ``site/static/images/fire-blind/``::
     uv run python scripts/docs/fire_blind_vs_coupled.py \\
         --data FDS --runs RUNS
 
-``FDS`` is the ``t_junction/fire_2MW_PVC`` output. Prints every number of the
+``FDS`` is the ``t_junction/fire_2MW_PVC_796`` output. Prints every number of the
 study and writes ``RUNS/summary_runs.csv`` and ``RUNS/summary_agents.csv``.
 """
 
@@ -80,7 +80,7 @@ ARMS = ("C", *FIRE_ARMS)
 MAIN = ("U", "S", "R")
 TENABILITY_ARMS = ("R-det", "R-prob", "R+FIC")
 # First-fds-case §6 (K >= 0.3 1/m); the page reuses that table.
-EXPECTED_K_ASET = {"junction": 24.0, "exit B": 18.0, "exit A": 45.0}
+EXPECTED_K_ASET = {"junction": 23.0, "exit B": 17.0, "exit A": 46.0}
 STUDY_CRITERIA = ("K 0.3", "ISO FEC 0.3", "ISO FEC 1", "FED 0.3")
 FIXED_POINTS = ("exit B", "junction", "branch mouth", "exit A")
 FN_K = (1.9, 7.4)  # Frantzich and Nilsson, Fig. 14, as on first-fds-case
@@ -346,6 +346,13 @@ def rset(people):
 
 def summarise_run(arm, pre, seed, base, loc):
     people = people_of(base)
+    rec = None if arm == "C" else records_of(base)
+    if rec is not None:
+        # An incapacitated agent stays put until the run ends, which can be
+        # before the cap when only such agents remain; it never counts as out
+        # (Galea 2008 T. 4). The logged count checks this below.
+        down = rec[rec.incapacitated].agent_id.unique()
+        people.loc[down, "exit"] = np.nan
     logged = evacuated_in_log(f"{base}.log")
     n_out = int(people["exit"].notna().sum())
     assert logged is None or logged == n_out, (base, logged, n_out)
@@ -371,10 +378,6 @@ def summarise_run(arm, pre, seed, base, loc):
             )
     if arm == "C":
         return row, None, None
-    rec = records_of(base)
-    # Incapacitated agents are censored, never counted as out (Galea 2008 T. 4).
-    down = rec[rec.incapacitated].agent_id.unique()
-    assert people.loc[down, "exit"].isna().all(), (base, "incapacitated agent left")
     table, shares, k_moving = agent_table(people, rec, pre)
     row.update(shares)
     row["n_incap"] = int(table.incapacitated.sum())
@@ -383,7 +386,9 @@ def summarise_run(arm, pre, seed, base, loc):
     row["agent_s_hcl300"] = table.s_hcl300.sum()
     row["agent_s_hcl1000"] = table.s_hcl1000.sum()
     row["agent_s_k03"] = table.s_k03.sum()
-    row["n_fic_floor"] = int((table.min_fic_speed <= 0.3 + 1e-9).sum())
+    # F_irr = 0 from FIC 1 on (Purser Eq. 70.11); the combined speed is then
+    # at its floor of 0.1.
+    row["n_fic_floor"] = int((table.min_fic_speed <= 1e-9).sum())
     for key in STUDY_CRITERIA:
         before_out = table[f"cross {key}"].notna()
         row[f"crossed {key}"] = int(before_out.sum())
@@ -569,7 +574,7 @@ def report_tenability(runs_df, agents_df):
                 f"(seeds with any {int((sub.n_incap > 0).sum())}/{len(sub)}), "
                 f"inside total {int(sub.n_inside.sum())} "
                 f"(seeds {int((sub.n_inside > 0).sum())}), last exit among the "
-                f"rest {fmt_range(sub.last_exit_out)}, agents at FIC floor "
+                f"rest {fmt_range(sub.last_exit_out)}, agents with F_irr = 0 "
                 f"{fmt_range(sub.n_fic_floor)}"
             )
 
