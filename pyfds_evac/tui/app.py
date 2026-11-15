@@ -51,6 +51,7 @@ from pyfds_evac.config.parameters import GROUP_FDS, GROUP_HEAT, GROUP_OUTPUTS, G
 
 from . import model
 from .planview import PlanView, legend, scrubber
+from .replay import FrameStore
 from .runner import (
     ChildExited,
     ProcessRunner,
@@ -157,9 +158,7 @@ class RunState:
     phase_detail: str = ""
     progress: Progress | None = None
     plan: events.PlanEvent | None = None
-    frames: list[tuple[events.FrameEvent, events.SmokeGrid | None]] = field(
-        default_factory=list
-    )
+    frames: FrameStore = field(default_factory=FrameStore)
     smoke: events.SmokeGrid | None = None
     warnings: list[events.WarningEvent] = field(default_factory=list)
     result: events.ResultEvent | None = None

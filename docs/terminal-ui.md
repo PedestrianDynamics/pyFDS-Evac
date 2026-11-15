@@ -461,8 +461,10 @@ frames come per wall second. The Run screen redraws at most 10 times per wall
 second. So the two variables only lower the wall-time rule; they do not limit
 the plan to 1 or 2 updates per second.
 
-All frames stay in memory for the replay, so a very long run uses more
-memory. Tests show that recording the frames does not change the results.
+The replay keeps at most 2000 frames, no finer than 1 s apart. On a long
+run the TUI drops every other stored frame and doubles the spacing, so the
+whole run stays replayable at a coarser step; the latest frame is always
+kept. Tests show that recording the frames does not change the results.
 {{< /details >}}
 
 ## How a run is executed
