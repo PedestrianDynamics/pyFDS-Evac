@@ -614,8 +614,10 @@ Exit throughput throttling has no general test yet
   ([#452](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/452)).
   The anchor treats a difference within `tau_max` × `tau_deadband` as a tie,
   but a real difference inside that band still keeps the current exit ranked
-  first, and the anchor is then never consulted
-  ([#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187), open).
+  first, and the anchor is then never consulted. This is the tau-first order
+  of [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187),
+  kept by decision
+  ([Gate model in practice](/docs/route-cost-gate.md#one-asymmetry-favours-the-exit-the-agent-already-walks-to)).
 - The queue term counts agents globally, not those an agent can perceive
   ([#89](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89)).
 - Heat does not enter route choice

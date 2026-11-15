@@ -573,9 +573,11 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   ([#272](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/272)). Without `--heat-endpoint`, temperatures above 205 °C are not
   flagged either, although Eq. 63.44 rests on the same data (p. 2382); ISO
   states no temperature range for Eqs. (9) and (10).
-- **Web GUI.** The GUI offers `--heat-clothing` (a dropdown) and
-  `--heat-fed-threshold` in its FED group. The other heat options are fields
-  of its collapsed "Other" section, not next to them
+- **Web GUI.** The GUI's FED & Tenability group holds `--enable-heat-fed`,
+  `--heat-clothing` (a dropdown), `--heat-fed-threshold`,
+  `--heat-incapacitation-mode` and `--heat-susceptibility-sigma`. The other
+  11 heat options are fields of its collapsed "Other" section, not next to
+  them
   ([Web GUI](/docs/web-gui.md);
   [#270](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/270),
   [#311](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/311)).

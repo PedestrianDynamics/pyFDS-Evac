@@ -337,8 +337,9 @@ movie.
   Criterion 6 fails on both halvings on this 30-seed sample, because of
   doorway deadlocks ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)) on every grid, and passes on both when the
   deadlocked runs are left out.
-  #168 stays open, is blocked on the #359 fix and is then rerun with the
-  same rule. Do not quote a discovery egress time without its grid, and on
+  #168 stays open until the doorway deadlock is cleared (since #760 it is
+  detected, not cleared; #359 is closed), and is then rerun with the same
+  rule. Do not quote a discovery egress time without its grid, and on
   this deck use 0.05 m or finer.
 - **The look is not logged.** The look from CP3's node point writes no
   route-history row, so the outputs this page checks cannot show where an
