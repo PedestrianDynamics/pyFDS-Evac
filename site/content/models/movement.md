@@ -207,6 +207,30 @@ implementation checks of what each model does on two decks.
 `CollisionFreeSpeedModelV2` gives the CFSM numbers, so they are not
 listed.
 
+**What a raw-CFSM prototype shows.** A raw JuPedSim 1.4.2
+`CollisionFreeSpeedModel` prototype of Iso-06-counterflow-50 (no
+pyFDS-Evac routing, exits as direct targets; 2026-11-15,
+[#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745#issuecomment-6894793321)) ended with no free lane: about 149 of 150 agents stood mixed
+across the full width of the 2 m × 10 m corridor at about 7 agents/m².
+A keep-right heading offset cleared 8, 2 and 0 of 150 agents in seeds 1–3
+(trigger 1.0 m, offset 0.3 m) and 6 of 150 at 2.0 m / 0.6 m; at 3.0 m /
+0.9 m it moved 75 of 150 (seed 1, unfinished at 200 s). A per-agent target
+jitter of ±0.8 m cleared 0 of 150 (seeds 1–2). Neither reopened a lane at
+a defensible size. This does not show that no other rule could, and the
+100 % deck was not run. `SocialForceModel` finished the prototype in 69
+and 79 s (seeds 1–2). In the pyFDS-Evac runs above it clears the corridor
+by pushing (peak 2.25–2.65 m/s against v0 = 1.2 m/s) and `WarpDriverModel`
+by overlap, so no supported model is shown to handle dense counterflow.
+
+Two agents exactly head-on in a 12 m strip stop about 0.42 m apart, centre
+to centre (1.4 × 2r, r = 0.15 m), because `CollisionFreeSpeedModel` stops
+at its time-gap distance; this is not the 1.00 × 2r contact of the dense
+case. A lateral offset of 0.02 m lets them pass in strips 0.7 m wide or
+wider. The exact-symmetry lock showed up in the Haspel desk rows (0.58 m
+gaps) and was removed there by closing each row at one end
+(`assets/Haspel/README.md`,
+[#959](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/959)).
+
 ## Coded mapping
 
 The model is built by `_MODEL_BUILDERS` (`scenario.py`), and each agent's
@@ -294,7 +318,10 @@ JuPedSim's defaults.
   counterflow. On the counterflow case its peak speed exceeds the desired
   speed by a factor of about 2
   ([Counterflow with hard journeys](#counterflow-with-hard-journeys)).
-- pyFDS-Evac has no counterflow algorithm of its own
+- The dense lock of `CollisionFreeSpeedModel` is not cleared by the steering
+  variants tried in a prototype
+  ([Counterflow with hard journeys](#counterflow-with-hard-journeys)).
+  pyFDS-Evac adds no counterflow algorithm of its own
   ([Model comparison › Movement model](/docs/model-comparison.md#1-movement-model)).
 - The open defects are listed under
   [Limitations › Known defects](/docs/limitations.md#known-defects).
