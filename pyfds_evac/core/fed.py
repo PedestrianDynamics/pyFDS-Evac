@@ -116,8 +116,8 @@ def _co_fed_rate_per_minute(
         return 0.0
     rate = 2.764e-5 * (co_ppm**1.036)
     if activity_level == DEFAULT_FED_ACTIVITY_LEVEL:
-        return rate
-    return co_activity_factor(activity_level) * rate
+        return float(rate)
+    return float(co_activity_factor(activity_level) * rate)
 
 
 def _hyperventilation_factor(co2_percent: float) -> float:
