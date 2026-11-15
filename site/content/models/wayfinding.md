@@ -747,7 +747,8 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   ([#168](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/168)). On
   the familiarity deck the 30-seed criterion fails on both halvings because
   of #359 deadlocks, and passes on both without the deadlocked runs; #168
-  stays open, blocked on the #359 fix. Use a cell at most half the thinnest wall. Do
+  stays open until the doorway deadlock is cleared (since #760 it is
+  detected, not cleared; #359 is closed). Use a cell at most half the thinnest wall. Do
   not report a discovery egress time without its grid;
   [Wayfinding in practice](/docs/wayfinding.md) gives the measured spread.
 - **No per-exit familiarity**
