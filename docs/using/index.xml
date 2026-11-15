@@ -6879,8 +6879,9 @@ used, wall time), the warnings, the per-exit counts at the end of the run,
 the evacuated-over-time sparkline (wide layout only), and the output files
 with their sizes.&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>←&lt;/code> and &lt;code>→&lt;/code> replay the stored plan frames 1 s at a time, &lt;code>shift+←&lt;/code> and
-&lt;code>shift+→&lt;/code> 10 s at a time. Replay works only after the run has ended.&lt;/li>
+&lt;li>&lt;code>←&lt;/code> and &lt;code>→&lt;/code> replay the stored plan frames one at a time, &lt;code>shift+←&lt;/code> and
+&lt;code>shift+→&lt;/code> ten at a time: 1 s and 10 s, or coarser on a long run (see
+below). Replay works only after the run has ended.&lt;/li>
 &lt;li>&lt;code>y&lt;/code> copies the path of the highlighted file. &lt;code>t&lt;/code> shows the traceback or the
 end of &lt;code>child.log&lt;/code>.&lt;/li>
 &lt;li>&lt;code>c&lt;/code> and &lt;code>s&lt;/code> give the command and the script of this run; see
@@ -7001,7 +7002,7 @@ output folder is included. The idea is the same as in the Web GUI; see
 &lt;tr>
 &lt;td>Results, full plan&lt;/td>
 &lt;td>&lt;code>←&lt;/code> / &lt;code>→&lt;/code>, &lt;code>shift+←&lt;/code> / &lt;code>shift+→&lt;/code>&lt;/td>
-&lt;td>replay the plan frames by 1 s / 10 s, after the run has ended&lt;/td>
+&lt;td>replay the plan frames by 1 / 10 stored frames (1 s / 10 s, coarser on long runs), after the run has ended&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Run, Results&lt;/td>
@@ -7313,8 +7314,10 @@ is set, and 1 when &lt;code>PYFDS_EVAC_TUI_REDUCED_MOTION&lt;/code> is set.&lt;/
 frames come per wall second. The Run screen redraws at most 10 times per wall
 second. So the two variables only lower the wall-time rule; they do not limit
 the plan to 1 or 2 updates per second.&lt;/p>
-&lt;p>All frames stay in memory for the replay, so a very long run uses more
-memory. Tests show that recording the frames does not change the results.&lt;/p>
+&lt;p>The replay keeps at most 2000 frames, no finer than 1 s apart. On a long
+run the TUI drops every other stored frame and doubles the spacing, so the
+whole run stays replayable at a coarser, roughly even step; the latest frame is always
+kept. Tests show that recording the frames does not change the results.&lt;/p>
 &lt;/div>
 &lt;/details>
 &lt;h2>How a run is executed&lt;span class="hx-absolute -hx-mt-20" id="how-a-run-is-executed">&lt;/span>
@@ -7455,7 +7458,7 @@ differences:&lt;/p>
 &lt;tr>
 &lt;td>Results&lt;/td>
 &lt;td>charts, trajectory replay, FED panel&lt;/td>
-&lt;td>outcome, per-exit counts, sparkline, plan replay in 1 s steps, file list&lt;/td>
+&lt;td>outcome, per-exit counts, sparkline, plan replay in 1 s steps (coarser on long runs), file list&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Results-only mode&lt;/td>
@@ -7483,7 +7486,7 @@ line; Results shows the file names
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/550" target="_blank" rel="noopener">#550&lt;/a>).&lt;/li>
 &lt;li>The run counts planned agents; Results counts the agents that entered
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/279" target="_blank" rel="noopener">#279&lt;/a>).&lt;/li>
-&lt;li>All replay frames are held in memory.&lt;/li>
+&lt;li>On long runs the replay is thinned to at most 2000 frames, so it steps coarser than 1 s.&lt;/li>
 &lt;li>No results-only mode, no charts and no trajectory replay. Open the SQLite in
 the Web GUI or in &lt;a href="https://github.com/PedestrianDynamics/fds-viewer" target="_blank" rel="noopener">fds-viewer&lt;/a>.&lt;/li>
 &lt;/ul>
@@ -7865,7 +7868,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/227d37d7a535266444afad794905c72af853e92c">&lt;code>227d37d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/efee66e331bb72df699feb84460474503346bce1">&lt;code>efee66e&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7889,7 +7892,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">83fba02cd39c3e9d76d8cf8c19158f2f166c0ff6698488f5c6648215b8f5cc3a&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">298730cd83f5db0da796c686de18bf818e842b4f747b50dc37587480cc4adc70&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
