@@ -358,8 +358,8 @@ There is **no** preference ordering, no agent types
 (conservative/active/herding/follower), and no game-theoretic
 component.  Familiarity is modelled, but as a per-agent cognitive map
 that restricts the graph before routing, not as a per-exit preference
-group.  Per-exit familiarity is not supported
-([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)).
+group.  A known exit competes on cost alone; it is not preferred over a
+known exit that is cheaper.
 
 | Aspect | FDS+Evac | pyFDS-Evac |
 |--------|----------|------------|
@@ -367,7 +367,7 @@ group.  Per-exit familiarity is not supported
 | **Cost function** | `T_i = beta_k * lambda_i + tau_i` (queueing + walking time) [8] Eq. 6 | gate: route optical depth `K_ave * L`, with travel time (+ `w_queue` x queue time) as tie-break; additive: `length * (1 + w_smoke * K) + w_fed * FED` |
 | **Smoke test on a door** | Absolute `K_ave < 0.03 /m` (`FED_DOOR_CRIT`, evac.f90:1524, :5496, :16497); the `0.5 x d` visibility rule is the tier-4 last resort (:16799), where `L2_tmp = d * 0.5 / (3/K_ave) >= 1` is exactly `K_ave * d > 6` | Optical depth `K_ave * L <= 6`, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute `K` door criterion. It vetoes *and* ranks |
 | **Congestion** | Modelled: queueing time depends on count of closer agents heading to same exit | Optional (`w_queue`), off by default; a global tally of agents targeting the exit |
-| **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on *topology* only — smoke is sampled globally, so a discovery agent's route choice is not perception-limited ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). Per-exit familiarity is not supported ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)) |
+| **Familiarity** | Per-agent per-exit familiarity (user-configurable, constrains feasible exit set) | Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on *topology* only — smoke is sampled globally, so a discovery agent's route choice is not perception-limited ([#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)). Per exit: `familiarity: {exit_id: p}` draws each listed exit once per agent, as `KNOWN_DOOR_PROBS` does per group; an unlisted exit is unknown |
 | **Social behaviour** | Herding and follower agent types observe neighbours | Not modelled |
 | **Smoke in cost** | Admission only in tiers 1–3 (`K_ave_Door < 0.03 /m`, the rank stays `T_tmp`); smoke ranks doors only in the tier-4 last resort (`:16803`), over known-or-visible doors, with a strike-out that lasts one call; the only lasting memory is a weak mark on a lone agent's previous target once `K_ave >= 0.3 /m` (:16628-16637), which acts weakly: a "some smoke" mark forces the door unknown only in the periodic re-evaluation, and a "too much smoke" mark only drops it from the list | gate: availability *and* ordering, both on route optical depth, for every candidate at every tick and with no memory; additive: continuous weighted term |
 | **FED in cost** | Not in cost function by default (`FED_DOOR_CRIT < 0`); only used for incapacitation at FED >= 1.0 | Veto threshold under both models; a ranking term (`w_fed * FED_max`) under additive only |
