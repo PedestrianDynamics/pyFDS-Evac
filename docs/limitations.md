@@ -380,9 +380,22 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   With the same patch, Iso-06-counterflow-0 and -10 finish.
   Other operational models behave differently on these cases
   ([Movement models](/models/movement.md#counterflow-with-hard-journeys)).
-  The jam is head-on contact in JuPedSim's operational model;
-  pyFDS-Evac has no dedicated counterflow algorithm
-  ([Model comparison](model-comparison.md#1-movement-model)).
+  The dense lock is a geometric gridlock. In a raw JuPedSim 1.4.2
+  `CollisionFreeSpeedModel` prototype of Iso-06-counterflow-50 (exits as
+  direct targets, not pyFDS-Evac routing; 2026-11-15), about 149 agents
+  interpenetrate in the 2 m × 10 m corridor at about 7 agents/m², and no
+  free lane is left. A keep-right heading offset cleared 8, 2 and 0 of 150
+  agents in seeds 1–3 (trigger 1.0 m, offset 0.3 m) and 6 of 150 at
+  2.0 m / 0.6 m; only a 0.9 m offset in the 2 m corridor moved 75 of 150
+  (seed 1, unfinished at 200 s). A per-agent target jitter of ±0.8 m
+  cleared 0 of 150. `SocialForceModel` clears the corridor by pushing (peak
+  2.2–2.65 m/s against v0 = 1.2 m/s) and `WarpDriverModel` by letting
+  agents overlap, so no supported model is shown to handle dense
+  counterflow ([Movement models](/models/movement.md#counterflow-with-hard-journeys)).
+  Two agents exactly head-on in a narrow gap stop about 0.42 m apart
+  (r = 0.15 m); a lateral offset of 0.02 m lets them pass in at least
+  0.7 m. This exact-symmetry lock appeared in the Haspel desk rows and was
+  resolved there by closing the rows at one end.
   At `8e513ea1` (after #504) that patch makes each group take its nearest exit,
   so there is no counterflow and Iso-06-counterflow-50 finishes 150 of 150
   in 23.0–23.4 s (seeds 1–3). The reproduction keeps the deck's two

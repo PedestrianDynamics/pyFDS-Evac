@@ -19,6 +19,18 @@ the uncoupled run is conservative for one fire: the 2 MW PVC fire of
 **You need** the `fire_2MW_PVC` FDS output of that page (step 3 there says
 where to get it) in `$FDS`. Each run below takes 4 to 6 s.
 
+**Data note (2026-11-15).** The figures and numbers on this page come
+from the earlier `fire_2MW_PVC` FDS output. The current deck output is
+`t_junction/fire_2MW_PVC_796`. On it, with the fire-blind setup and
+`--disable-tenability`, the exit A share of arm R is 94 / 2.5 / 2.7 % at
+pre-movement 0 / 30 / 60 s, against 100 / 51 / 3 % here. At 30 s the default
+`tau` rule costs dose (max FED +0.033, p = 0.002) and saves time (RSET p95
+−15.5 s, p = 0.037) against holding the original choice; at 60 s it has no
+dose penalty (p = 0.27) and is faster (RSET p95 −58 s, p = 0.002). The
+exit-usage finding below therefore depends on the deck. The re-measure is in
+[#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696#issuecomment-6894635056);
+the study on this page has not been re-run on `_796`.
+
 ## The answer in short
 
 For this fire and this T-junction, with 100 people placed at t = 0:

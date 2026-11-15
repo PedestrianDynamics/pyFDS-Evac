@@ -245,7 +245,8 @@ ordering" is too strong and should not be written; "smoke never enters the
 ordering until every smoke-free tier is exhausted" is what the source supports.
 
 **The measured consequence, and what it is not.** On `l_corridor` the model
-diverts 18 of 100 agents to the longer, cleaner route. The reference criterion
+diverts 37–40 of 100 agents (mean 37.9 %, seeds 1–20 at `efee66e3`, see
+[Churn protection](#churn-protection)) to the longer, cleaner route. The reference criterion
 would not: tiers 1-3 rank on distance, both doors clear the `K_ave < 0.03 /m`
 admission test until the smoke is well developed, and the near exit is nearer
 throughout — so essentially every occupant goes near, roughly 100/0. **That

@@ -286,7 +286,7 @@ pyFDS-Evac promotes that last-resort ranking criterion to its primary one, over
 all candidates, at every tick, on the walked polyline, and drops the reference's
 one lasting smoke memory, a weak mark on a lone agent's previous target once its
 `K_ave` reaches 0.3 /m (`:16628-16637`; see [The smoke criteria on a door](#the-smoke-criteria-on-a-door)).  Measured consequence on
-`assets/l_corridor`: this model diverts **18 of 100** agents to the longer,
+`assets/l_corridor`: this model diverts **37–40 of 100** agents (mean 37.9 %, seeds 1–20 at `efee66e3`) to the longer,
 cleaner route, where the reference criterion — distance ranking, both doors
 clearing the 0.03 /m admission test until the smoke is well developed — would
 send essentially everyone to the near exit, roughly 100/0.  **That 100/0 is a

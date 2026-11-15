@@ -207,6 +207,25 @@ implementation checks of what each model does on two decks.
 `CollisionFreeSpeedModelV2` gives the CFSM numbers, so they are not
 listed.
 
+**Why the default model locks.** A raw JuPedSim 1.4.2
+`CollisionFreeSpeedModel` prototype of Iso-06-counterflow-50 (exits as
+direct targets, not pyFDS-Evac routing; 2026-11-15,
+[#745](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/745))
+shows a geometric gridlock: about 149 agents interpenetrate in the
+2 m × 10 m corridor at about 7 agents/m², with no free lane. A keep-right
+heading offset cleared 8, 2 and 0 of 150 agents in seeds 1–3 (trigger
+1.0 m, offset 0.3 m) and 6 of 150 at 2.0 m / 0.6 m. Only a 0.9 m offset
+in the 2 m corridor moved 75 of 150 (seed 1, unfinished at 200 s). A
+per-agent target jitter of ±0.8 m cleared 0 of 150. `SocialForceModel`
+clears the corridor by pushing (peak 2.2–2.65 m/s against v0 = 1.2 m/s)
+and `WarpDriverModel` by overlap, so no supported model is shown to handle
+dense counterflow.
+
+Two agents exactly head-on in a narrow gap stop about 0.42 m apart
+(r = 0.15 m), and a lateral offset of 0.02 m lets them pass in at least
+0.7 m. This exact-symmetry lock appeared in the Haspel desk rows and was
+resolved there by closing the rows at one end.
+
 ## Coded mapping
 
 The model is built by `_MODEL_BUILDERS` (`scenario.py`), and each agent's
@@ -294,7 +313,10 @@ JuPedSim's defaults.
   counterflow. On the counterflow case its peak speed exceeds the desired
   speed by a factor of about 2
   ([Counterflow with hard journeys](#counterflow-with-hard-journeys)).
-- pyFDS-Evac has no counterflow algorithm of its own
+- The dense lock of `CollisionFreeSpeedModel` is a geometric gridlock, not
+  a missing counterflow rule
+  ([Counterflow with hard journeys](#counterflow-with-hard-journeys)).
+  pyFDS-Evac adds no counterflow algorithm of its own
   ([Model comparison › Movement model](/docs/model-comparison.md#1-movement-model)).
 - The open defects are listed under
   [Limitations › Known defects](/docs/limitations.md#known-defects).

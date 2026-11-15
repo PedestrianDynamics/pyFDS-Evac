@@ -91,8 +91,11 @@ Its only lasting smoke memory is a weak mark on a lone agent's previous
 target once `K_ave >= 0.3 /m` (`:16628-16637`), described in
 [docs/model-comparison.md](/docs/model-comparison.md#the-smoke-criteria-on-a-door). Here `tau` is the
 ordering everywhere, with no memory.
-On `l_corridor` that diverts 18 of 100 agents where the reference criterion
-would send essentially everyone to the near exit -- a prediction reasoned from
+On `l_corridor` that sends 37–40 of 100 agents (mean 37.9 %) to the far
+exit (`scripts/margin_audit.py`, deck `l_corridor_gate` on `fire_1MW_west`,
+seeds 1–20, `--allow-fds-horizon-hold`, run at `efee66e3`), where the
+reference criterion would send essentially everyone to the near exit -- a
+prediction reasoned from
 `evac.f90`, not a measured run of it. A `L/d` geometric bias (1.41 near against
 1.27 far on that deck) tilts the criterion about 11 % further in the same
 direction. Both are written up in
