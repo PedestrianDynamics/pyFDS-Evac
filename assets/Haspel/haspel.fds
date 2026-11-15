@@ -198,8 +198,8 @@
 --- Geometric namelists from Blender Collections
 
 -- Blender Collection: <Obstacles>
-&VENT ID='Burner' SURF_ID='Fire' XB=44.200,46.200,17.200,19.200,1.000,1.000 /
-&OBST ID='Burner_box' XB=44.200,46.200,17.200,19.200,0.000,1.000 /
+&VENT ID='Burner' SURF_ID='Fire' XB=33.500,35.500,12.500,14.500,1.000,1.000 /
+&OBST ID='Burner_box' XB=33.500,35.500,12.500,14.500,0.000,1.000 /
 
 -- Outer walls along the walkable WKT outline; exits are the only openings (#229)
 &OBST ID='Outer_wall_0' XB=8.280,29.785,8.240,8.440,0.000,5.000 /
@@ -333,6 +333,8 @@
       XB=49.434,49.659,15.227,16.286,0.000,2.159 /
 &OBST ID='IfcDoor/I_DT 1-flg - Stahlzarge - Glasfüllung:1.23 / 2.18:4485'
       XB=37.114,37.414,18.242,19.521,0.000,2.204 /
+&OBST ID='IfcDoor/I_DT 1-flg - Stahlzarge - Glasfüllung:1.23 / 2.18:4492'
+      XB=44.737,46.016,19.667,19.882,0.000,2.204 /
 &OBST ID='IfcDoor/I_DT 1-flg - Stahlzarge - Glasfüllung:1.23 / 2.18:4493'
       XB=49.560,50.839,20.362,20.612,0.000,2.204 /
 &OBST ID='IfcDoor/I_DT 1-flg - Stahlzarge - Glasfüllung:1.23 / 2.18:4497'
@@ -2021,6 +2023,8 @@ XB Voxels: 12 | Resolution: 0.100 m
       XB=14.150,25.150,24.750,34.950,-3.100,-2.900 /
 &OBST ID='IfcStairFlight/Fertigbetontreppe:Treppe:1068856 Run 1'
       XB=13.129,21.229,20.377,21.977,0.000,4.500 /
+&OBST ID='IfcWallStandardCase/Basiswand:I_WA_GKV_17.5_A:1124525'
+      XB=47.169,48.669,19.507,19.682,0.000,4.170 /
 &OBST ID='IfcWallStandardCase/Basiswand:I_WA_GK_10:801098'
       XB=41.764,48.669,16.827,16.927,0.000,3.500 /
 &OBST ID='IfcWallStandardCase/Basiswand:I_WA_GK_12.5:399197'
@@ -2076,7 +2080,7 @@ XB Voxels: 12 | Resolution: 0.100 m
 &OBST ID='IfcWallStandardCase/Basiswand:I_WR_MW_11.5:399678'
       XB=38.384,38.499,19.682,20.482,-0.130,4.170 /
 &OBST ID='IfcWallStandardCase/Basiswand:I_WR_MW_11.5:399682'
-      XB=38.499,41.764,19.682,19.797,-0.130,4.170 /
+      XB=38.499,48.669,19.682,19.797,-0.130,4.170 /
 &OBST ID='IfcWallStandardCase/Basiswand:I_WR_MW_17.5:398441'
       XB=24.824,27.174,18.277,18.452,-0.130,4.170 /
 &OBST ID='IfcWallStandardCase/Basiswand:I_WR_MW_17.5:400680'
@@ -3369,6 +3373,6 @@ XB Voxels: 12 | Resolution: 0.100 m
 &SURF ID='CONCRETE_COMPONENT' MATL_ID='CONCRETE', THICKNESS=0.2, DEFAULT=T RGB=204,204,204 /
 &MATL ID='CONCRETE' CONDUCTIVITY=1.6 DENSITY=2400 SPECIFIC_HEAT=0.75 /
 &RAMP ID='ramp_fire' T=0 F=0/
-&RAMP ID='ramp_fire' T=300 F=1/
+&RAMP ID='ramp_fire' T=60 F=1/
 
 &TAIL /
