@@ -25,7 +25,7 @@ def _subplots():
     return plt.subplots(2, 1, figsize=(10, 7), sharex=True)
 
 
-def _finish(fig, ax1, ax2, times, factors, extinction, title) -> None:
+def _finish(fig, ax1, ax2, times, factors, extinction, title, ax1b=None) -> None:
     """Label the lowest speed factor, then style both panels."""
     if factors:
         i = min(range(len(factors)), key=factors.__getitem__)
@@ -44,12 +44,24 @@ def _finish(fig, ax1, ax2, times, factors, extinction, title) -> None:
     for ax in (ax1, ax2):
         ax.set_xlabel(ax.get_xlabel(), color="dimgrey")
         ax.set_ylabel(ax.get_ylabel(), color="dimgrey")
-        ax.legend(loc="best", **_LEGEND_STYLE)
+        handles, labels = ax.get_legend_handles_labels()
+        if ax is ax1 and ax1b is not None:
+            extra_handles, extra_labels = ax1b.get_legend_handles_labels()
+            handles, labels = handles + extra_handles, labels + extra_labels
+        ax.legend(handles, labels, loc="best", **_LEGEND_STYLE)
         ax.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
         ax.ticklabel_format(axis="y", useOffset=False)
         ax.patch.set_edgecolor("lightgrey")
         ax.patch.set_linewidth(0.8)
-    sns.despine(left=True, bottom=True)
+    # Zero-based extinction axis: sampling noise must not fill the panel.
+    ax2.set_ylim(0.0, max(1e-3, 1.4 * max(extinction)))
+    ax1.set_ylim(0.0, 1.35 * ax1.get_ylim()[1])
+    if ax1b is not None:
+        ax1b.set_ylim(ax1.get_ylim())
+        ax1b.set_ylabel(ax1b.get_ylabel(), color="dimgrey")
+        ax1b.tick_params(axis="both", which="both", length=0, labelcolor="dimgrey")
+        ax1b.grid(False)
+    sns.despine(left=True, bottom=True, right=True)
     fig.suptitle(title, color="dimgrey")
 
 
@@ -97,14 +109,16 @@ def _plot_aggregate(rows: list[dict[str, str]], output: str) -> None:
 
     fig, (ax1, ax2) = _subplots()
     ax1.plot(times, mean_desired_speed, label="Mean desired speed", color=_SPEED_COLOUR)
-    ax1.plot(
+    ax1b = ax1.twinx()
+    ax1b.plot(
         times,
         mean_speed,
         label="Mean speed factor",
         color=_FACTOR_COLOUR,
         linestyle="--",
     )
-    ax1.set_ylabel("Speed / factor")
+    ax1.set_ylabel("Speed [m/s]")
+    ax1b.set_ylabel("Speed factor [-]")
 
     ax2.plot(times, mean_extinction, label="Mean extinction", color=_EXTINCTION_COLOUR)
     ax2.set_xlabel("Time [s]")
@@ -118,6 +132,7 @@ def _plot_aggregate(rows: list[dict[str, str]], output: str) -> None:
         mean_speed,
         mean_extinction,
         "Smoke-speed history (aggregate)",
+        ax1b,
     )
     fig.tight_layout()
     fig.savefig(output, dpi=200, bbox_inches="tight")
@@ -136,8 +151,10 @@ def _plot_agent(rows: list[dict[str, str]], agent_id: int, output: str) -> None:
     fig, (ax1, ax2) = _subplots()
     ax1.plot(times, desired_speed, label="Desired speed", color=_SPEED_COLOUR)
     ax1.plot(times, base_speed, label="Base speed", color="grey", linestyle=":")
-    ax1.plot(times, speed, label="Speed factor", color=_FACTOR_COLOUR, linestyle="--")
-    ax1.set_ylabel("Speed / factor")
+    ax1b = ax1.twinx()
+    ax1b.plot(times, speed, label="Speed factor", color=_FACTOR_COLOUR, linestyle="--")
+    ax1.set_ylabel("Speed [m/s]")
+    ax1b.set_ylabel("Speed factor [-]")
 
     ax2.plot(times, extinction, label="Extinction", color=_EXTINCTION_COLOUR)
     ax2.set_xlabel("Time [s]")
@@ -151,6 +168,7 @@ def _plot_agent(rows: list[dict[str, str]], agent_id: int, output: str) -> None:
         speed,
         extinction,
         f"Smoke-speed history (agent {agent_id})",
+        ax1b,
     )
     fig.tight_layout()
     fig.savefig(output, dpi=200, bbox_inches="tight")
