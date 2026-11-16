@@ -811,6 +811,7 @@ AREAS: dict[str, Area] = {
             "tests/test_cognitive_map_history.py",
             "tests/test_cognitive_map_memory.py",
             "tests/test_scalar_familiarity.py",
+            "tests/test_per_exit_familiarity.py",
             "tests/test_familiarity_routing.py",
             "tests/test_familiarity_no_journey.py",
             "tests/test_initial_exit_from_cognitive_map.py",
@@ -883,14 +884,14 @@ AREAS: dict[str, Area] = {
             Mutant(
                 "draw_needs_positive_probability",
                 "reversed comparison",
-                "if rng is not None and probability > 0.0:",
-                "if rng is not None and probability > 0.5:",
+                "if p <= 0.0 or (p < 1.0 and rng is None):",
+                "if p <= 0.5 or (p < 1.0 and rng is None):",
             ),
             Mutant(
                 "draw_reversed",
                 "reversed comparison",
-                "and rng.random() < probability:",
-                "and rng.random() > probability:",
+                "if p >= 1.0 or rng.random() < p:",
+                "if p >= 1.0 or rng.random() > p:",
             ),
             Mutant(
                 "entrance_not_learned",

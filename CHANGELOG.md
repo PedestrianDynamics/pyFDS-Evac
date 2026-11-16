@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--fic-alpha` or `--fic-min-factor`, and `TenabilityConfig` no longer
   has `fic_alpha` or `fic_min_factor`. Drop them from command lines and
   scripts: the CLI rejects them and the config raises `TypeError`.
+- An `entrance` id that is not in `exits` now stops the run, naming the
+  distribution; it was ignored before (#136).
 
 ### Added
 
@@ -22,6 +24,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which ignores `FED_ACTIVITY`. The run manifest records `activity_level`
   under `gas_fed` (#135).
 
+- `familiarity` accepts an object `{exit_id: p}`: each listed exit is known
+  at the start with probability p, drawn once per agent, and an unlisted
+  exit is unknown, as in FDS+Evac's `KNOWN_DOOR_PROBS`. A uniform object
+  gives the scalar result seed for seed; the key absent, a name or a number
+  behave as before. `pyfds-evac init` writes `KNOWN_DOOR_PROBS` below 1 into
+  the object, which changes the output for the `MonStairs` and
+  `HUT_Library` guide decks. An id in the object that is not in
+  `exits` stops the run, and an `entrance` or `familiarity` exit no route
+  from the spawn area reaches draws a warning (#136).
 - `--output-knowledge-history CSV` writes one row per exit an agent came
   to know: `time_s`, `agent_id`, `exit_id` and `how` (`entrance`,
   `familiarity_draw`, `sight`, `arrival`, `look`), the exits known at
@@ -30,8 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `entrance` accepts a list of exit ids. `pyfds-evac init` maps the doors
   of `KNOWN_DOOR_NAMES` with probability 1 to that list, so agents of an
   FDS+Evac group that knows two of four exits start knowing exactly
-  those two; doors with a probability below 1 are still dropped, with an
-  import-report warning (#940).
+  those two; doors with a probability below 1 go to the per-exit
+  `familiarity` object (#940, #136).
 - `assets/station_fahy/build_scenario.py --full` and
   `assets/station_nist/build_scenario.py --full` also write
   `config_full.json`: the 333 placed survivors labelled `placed`, plus 22

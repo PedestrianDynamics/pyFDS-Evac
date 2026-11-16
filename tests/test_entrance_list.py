@@ -96,11 +96,12 @@ def test_a_malformed_entrance_names_its_distribution():
 
 def test_well_formed_entrances_are_read_per_distribution():
     raw = {
+        "exits": {name: {} for name in EXITS},
         "distributions": {
             "a": {"parameters": {"entrance": "Top"}},
             "b": {"parameters": {"entrance": ["Bottom", "Top"]}},
             "c": {"parameters": {}},
-        }
+        },
     }
     assert distribution_entrances(raw) == {
         "a": ["Top"],

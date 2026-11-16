@@ -652,39 +652,25 @@ def _familiarity_for(known, exit_ids, group, add, label) -> dict[str, Any]:
     if len(certain) == len(known) and set(certain) == set(exit_ids):
         add("S", "info", label, "every exit known -> familiarity 'full'", group)
         return {"familiarity": "full"}
+    return _per_exit_familiarity(certain, known, group, add, label)
+
+
+def _per_exit_familiarity(certain, known, group, add, label) -> dict[str, Any]:
+    """Certain doors become the ``entrance`` list, fractional ones a mapping.
+
+    FDS+Evac draws a fractional door once per group, pyFDS-Evac once per agent.
+    """
+    params: dict[str, Any] = {"familiarity": "discovery"}
     if certain:
-        return _certain_entrance(certain, known, group, add, label)
-    best = max(known, key=lambda n: (known[n], -list(known).index(n)))
-    add(
-        "A",
-        "warning",
-        label,
-        f"known doors {dict(known)} cannot be expressed; "
-        f"closest: 'discovery' with entrance {best!r}",
-        group,
-    )
-    return {"familiarity": "discovery", "entrance": best}
-
-
-def _certain_entrance(certain, known, group, add, label) -> dict[str, Any]:
-    """Certain doors become the ``entrance`` list; fractional ones are dropped."""
-    entrance: str | list[str] = certain[0] if len(certain) == 1 else certain
-    dropped = {n: p for n, p in known.items() if p < 1.0}
-    if not dropped:
-        add(
-            "S",
-            "info",
-            label,
-            f"known exits {certain} -> 'discovery', entrance {entrance!r}",
-            group,
+        params["entrance"] = certain[0] if len(certain) == 1 else certain
+    fractional = {n: p for n, p in known.items() if p < 1.0}
+    if not fractional:
+        text = f"known exits {certain} -> 'discovery', entrance {params['entrance']!r}"
+    else:
+        params["familiarity"] = fractional
+        text = (
+            f"known doors with probability below 1 {fractional} -> per-exit "
+            f"familiarity; certain doors {certain} -> entrance"
         )
-        return {"familiarity": "discovery", "entrance": entrance}
-    add(
-        "A",
-        "warning",
-        label,
-        f"known doors with probability below 1 {dropped} not expressible per "
-        f"door (FDS+Evac draws them per agent); dropped, entrance {entrance!r}",
-        group,
-    )
-    return {"familiarity": "discovery", "entrance": entrance}
+    add("S", "info", label, text, group)
+    return params

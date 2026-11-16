@@ -27,6 +27,9 @@ No weight, journey or per-run assignment sets the exit. The fractions are
 measured, not prescribed. The FDS+Evac import maps a known door to the same
 ``entrance`` key.
 
+A graded affiliation, a probability per exit, is verified at the end of the
+module (#136).
+
 Stopping rule. A run is one seed. After each added run the cumulative
 fraction of occupants leaving by exit 2 is compared with the one before; the
 rule is met when that change has been below 1 % (0.01) for ``QUIET_RUNS``
@@ -40,6 +43,7 @@ from __future__ import annotations
 import functools
 from collections.abc import Callable
 
+import pandas as pd
 import pytest
 from shapely.geometry import box
 
@@ -365,3 +369,120 @@ def test_preference_allocation_switches_at_the_tau_deadband():
         above = _smoke_run(seed, OCCUPANT_B, BRACKET_ABOVE_PER_M)
         assert below["exits"] == ["exit_2"], f"seed {seed}"
         assert above["exits"] == ["exit_1"], f"seed {seed}"
+
+
+# --- Graded affiliation: familiarity per exit (#136) -------------------------
+#
+# ``familiarity: {exit_id: p}`` makes exit e known at t=0 with probability p
+# (unlisted: 0). One occupant, no smoke, no queue term and an anchor of 0.9, so
+# once the map is built the choice is deterministic: any per-seed mismatch is a
+# defect, not noise. Seeds 1..200 are fixed for every case; the start does not
+# depend on familiarity, so a seed is paired across cases.
+#
+#   V0  "discovery"                 reference, default route to the nearest exit
+#   V1  {exit_2: 1}                 exit 2 every time; trajectories equal those of
+#                                   "discovery" + entrance exit_2 (E2)
+#   V2  {exit_1: 1, exit_2: 1}      both known: cheapest exit, which is V0's
+#   V3  {exit_1: .5, exit_2: 1}     exit 2 unless exit_1 was drawn, then V2's exit;
+#                                   pooled share knowing exit_1 is 0.5 +- 3 SD
+#   V4  {}                          bit-identical to V0
+#   V5  {exit_1: .5, exit_2: .5}    bit-identical to the scalar 0.5 (S5)
+GRADED_SEEDS = range(1, 201)
+# Three standard deviations of Binomial(200, 0.5), as a share.
+POOLED_3SD = 3 * (0.25 / len(GRADED_SEEDS)) ** 0.5
+GRADED_CASES = {
+    "V0": {"familiarity": "discovery"},
+    "V1": {"familiarity": {"exit_2": 1.0}},
+    "V2": {"familiarity": {"exit_1": 1.0, "exit_2": 1.0}},
+    "V3": {"familiarity": {"exit_1": 0.5, "exit_2": 1.0}},
+    "V4": {"familiarity": {}},
+    "V5": {"familiarity": {"exit_1": 0.5, "exit_2": 0.5}},
+    "E2": AFFILIATED_EXIT_2,
+    "S5": {"familiarity": 0.5},
+}
+
+
+def _graded_run(seed: int, parameters: dict) -> dict:
+    result = run_scenario(
+        _scenario(seed, parameters),
+        seed=seed,
+        reroute_config=REROUTE,
+        collect_cognitive_map_history=True,
+    )
+    try:
+        assert result.agents_evacuated == 1, f"seed {seed}: occupant did not leave"
+        frame = (
+            result.trajectory_dataframe()
+            .sort_values(["id", "frame"])
+            .drop(columns="id")  # agent ids count up across runs in a process
+            .reset_index(drop=True)
+        )
+        return {
+            "exit": result.exit_history[0]["exit_id"],
+            "unknown_exit": result.metrics["agents_left_by_unknown_exit"],
+            "drew": {
+                r["exit_id"]
+                for r in result.knowledge_history
+                if r["how"] == "familiarity_draw"
+            },
+            "trajectory": int(pd.util.hash_pandas_object(frame).sum()),
+        }
+    finally:
+        result.cleanup()
+
+
+@pytest.fixture(scope="module")
+def graded():
+    return {
+        case: {seed: _graded_run(seed, params) for seed in GRADED_SEEDS}
+        for case, params in GRADED_CASES.items()
+    }
+
+
+def _share_exit_2(runs: dict) -> float:
+    return sum(r["exit"] == "exit_2" for r in runs.values()) / len(runs)
+
+
+def test_graded_reference_split_is_geometric(graded):
+    assert 0.3 < _share_exit_2(graded["V0"]) < 0.7
+    # Default route to an exit the map does not hold.
+    assert all(r["unknown_exit"] == 1 for r in graded["V0"].values())
+
+
+def test_graded_certain_exit_matches_the_entrance(graded):
+    assert _share_exit_2(graded["V1"]) == 1.0
+    assert all(r["unknown_exit"] == 0 for r in graded["V1"].values())
+    for seed in GRADED_SEEDS:
+        assert graded["V1"][seed]["trajectory"] == graded["E2"][seed]["trajectory"]
+
+
+def test_graded_both_exits_known_picks_the_nearest(graded):
+    share = _share_exit_2(graded["V2"])
+    print(f"V2: exit 2 used {share:.3f} (V0 {_share_exit_2(graded['V0']):.3f})")
+    assert all(r["unknown_exit"] == 0 for r in graded["V2"].values())
+    for seed in GRADED_SEEDS:
+        assert graded["V2"][seed]["exit"] == graded["V0"][seed]["exit"], seed
+
+
+def test_graded_half_known_exit_1_follows_the_draw(graded):
+    runs = graded["V3"]
+    knows_exit_1 = {s for s, r in runs.items() if "exit_1" in r["drew"]}
+    share = len(knows_exit_1) / len(runs)
+    print(f"V3: exit_1 known {share:.3f}; exit 2 used {_share_exit_2(runs):.3f}")
+    assert abs(share - 0.5) < POOLED_3SD
+    for seed, run in runs.items():
+        expected = graded["V2"][seed]["exit"] if seed in knows_exit_1 else "exit_2"
+        assert run["exit"] == expected, seed
+    assert all(r["unknown_exit"] == 0 for r in runs.values())
+
+
+def test_graded_empty_mapping_is_discovery(graded):
+    for seed in GRADED_SEEDS:
+        assert graded["V4"][seed] == graded["V0"][seed]
+
+
+def test_graded_uniform_mapping_is_the_scalar(graded):
+    for seed in GRADED_SEEDS:
+        assert graded["V5"][seed] == graded["S5"][seed]
+    for seed, run in graded["V5"].items():
+        assert run["unknown_exit"] == (0 if run["drew"] else 1), seed

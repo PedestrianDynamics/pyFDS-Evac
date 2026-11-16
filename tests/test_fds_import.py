@@ -497,7 +497,7 @@ def test_weibull_mapping_has_the_fds_evac_mean():
         (", KNOWN_DOOR_NAMES='Left','R'", {"familiarity": "full"}),
         (
             ", KNOWN_DOOR_NAMES='Left','R', KNOWN_DOOR_PROBS=0.5,1.0",
-            {"familiarity": "discovery", "entrance": "R"},
+            {"familiarity": {"Left": 0.5}, "entrance": "R"},
         ),
     ],
     ids=["none", "one", "all", "partial"],
@@ -535,12 +535,26 @@ def test_two_of_four_known_doors_become_an_entrance_list(tmp_path):
     assert not [i for i in _items(result) if "cannot be expressed" in i.message]
 
 
-def test_fractional_known_door_is_dropped_and_reported(tmp_path):
+def test_fractional_known_door_becomes_a_per_exit_familiarity(tmp_path):
     result = _four_doors(tmp_path, "1.0,1.0,0.5,0.0")
-    assert _params(result, "g")["entrance"] == ["Bottom", "Top"]
-    notes = [i for i in _items(result, "A") if "probability below 1" in i.message]
+    params = _params(result, "g")
+    assert params["entrance"] == ["Bottom", "Top"]
+    assert params["familiarity"] == {"Left": 0.5}
+    assert not _items(result, "A")
+
+
+def test_known_door_probabilities_without_a_certain_door(tmp_path):
+    group = (
+        "&EVAC ID='g', XB=1,9,1,9,1,1, NUMBER_INITIAL_PERSONS=25, "
+        "KNOWN_DOOR_NAMES='Bottom','Top', KNOWN_DOOR_PROBS=0.5,0.3 /"
+    )
+    result = _room(tmp_path, *FOUR_DOORS, group)
+    params = _params(result, "g")
+    assert params["familiarity"] == {"Bottom": 0.5, "Top": 0.3}
+    assert "entrance" not in params
+    notes = [i for i in _items(result, "S") if "per-exit familiarity" in i.message]
     assert len(notes) == 1
-    assert "'Left': 0.5" in notes[0].message
+    assert not _items(result, "A")
 
 
 def test_known_door_on_the_exit(tmp_path):

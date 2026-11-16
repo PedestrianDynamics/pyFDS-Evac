@@ -73,12 +73,14 @@ from .cognitive_map import (
     LEARN_LOOK,
     AgentCognitiveMap,
     distribution_entrances,
+    distribution_familiarities,
     distribution_no_known_exit,
     expand_from_visibility,
     expand_on_arrival,
     init_cognitive_map,
     no_known_exit_mode,
     stranded_distributions,
+    unreachable_known_exits,
 )
 from .deadlock import Deadlock, DeadlockDetector
 from .direct_steering_runtime import (
@@ -2228,6 +2230,7 @@ def run_scenario(
                 )
         no_known_exit_by_dist = distribution_no_known_exit(scenario.raw)
         distribution_entrances(scenario.raw)
+        distribution_familiarities(scenario.raw)
         _check_run_modes(
             smoke_blind,
             reroute_config,
@@ -2239,6 +2242,8 @@ def run_scenario(
         if stage_graph is not None:
             for dist_id in stranded_distributions(stage_graph, scenario.raw):
                 _logger.warning(messages.unsigned_exits_only(dist_id))
+            for found in unreachable_known_exits(stage_graph, scenario.raw):
+                _logger.warning(messages.unreachable_known_exit(*found))
         has_exit_schedule = _has_exit_schedule(stage_graph)
         last_exit_opening_s = _last_exit_opening_s(stage_graph)
         _check_exit_schedule(has_exit_schedule, replay_exits)

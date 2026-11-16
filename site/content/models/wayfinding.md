@@ -260,18 +260,23 @@ nodes (`cognitive_map.py`, `AgentCognitiveMap`). The contract has four parts.
 probability \(p\): `"full"` is 1, `"discovery"` is 0, a number in [0, 1] is
 used as given, anything else raises (`cognitive_map.py`, `familiarity_probability`). The key
 defaults to `"full"` (`simulation_init.py`, `_initialize_with_fallback`).
+An object `{exit_id: p}` sets a probability per exit instead: a listed exit
+has its own \(p\), an unlisted one 0, and the map is always a discovery map,
+also when every \(p\) is 1 (`cognitive_map.py`, `familiarity_exit_probabilities`).
 
 - \(p = 1\): the map is the whole stage graph. It is never extended.
 - \(p < 1\): the map starts with the spawn node, marked visited. Then, in
   order:
   1. **Entrance.** For each exit `entrance` names (one id or a list) that is
      reachable from the spawn node, the shortest path to it is learned. A
-     name that is missing, is not an exit, or cannot be reached is silently
-     ignored (`cognitive_map.py`, `_learn_route_to`, `init_cognitive_map`).
-     A value that is neither an exit id nor a list of them stops the run
-     before any agent spawns.
+     name that cannot be reached is ignored, with a setup warning
+     (`cognitive_map.py`, `_learn_route_to`, `unreachable_known_exits`).
+     A value that is neither an exit id nor a list of them, or an id that is
+     not in `exits`, stops the run before any agent spawns.
   2. **Familiarity draw.** Each other reachable exit is learned, with its
-     shortest path, with probability \(p\). The draw uses an RNG seeded from
+     shortest path, with probability \(p\) (the exit's own \(p\) under the
+     object form: none drawn at 0 or 1, one draw per exit in between, in the
+     order of the exit stages). The draw uses an RNG seeded from
      the run seed and the agent's spawn order, not its JuPedSim id
      (`agent_seed.py`, `agent_rng`; `scenario.py`, `_assign_initial_exit`,
      `run_scenario`). A library caller
@@ -521,7 +526,7 @@ library use.
 
 | Setting | Source | `run.py` value | Library default | Unit | Meaning |
 |---|---|---|---|---|---|
-| `familiarity` | distribution `parameters` | – | `"full"` (`simulation_init.py`, `_initialize_with_fallback`) | – | `"full"`, `"discovery"` or \(p \in [0,1]\) |
+| `familiarity` | distribution `parameters` | – | `"full"` (`simulation_init.py`, `_initialize_with_fallback`) | – | `"full"`, `"discovery"`, \(p \in [0,1]\) or `{exit_id: p}` |
 | `entrance` | distribution `parameters` | – | none (`simulation_init.py`, `_initialize_with_fallback`) | – | reachable exits (one id or a list) learned at spawn |
 | `no_known_exit` | distribution `parameters` | – | `"default_route"` (`cognitive_map.py`, `DEFAULT_NO_KNOWN_EXIT`) | – | `"default_route"`, `"explore"`, `"return"` or `"stay"`: what an agent does with no reachable known exit (§2.4) |
 | `sign.c` | node `sign` | – | 3 (`visibility.py`, `_default_sign`, `_build_vismap`) | – | *C* |
@@ -752,9 +757,9 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   detected, not cleared; #359 is closed). Use a cell at most half the thinnest wall. Do
   not report a discovery egress time without its grid;
   [Wayfinding in practice](/docs/wayfinding.md) gives the measured spread.
-- **No per-exit familiarity**
-  ([#136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136)). One
-  \(p\) per group, plus an `entrance` list of certain exits.
+- **Familiarity is knowledge, not preference.** A known exit competes on cost
+  with every other known exit; FDS+Evac ranks known doors ahead of doors that
+  are only visible. The draw is per agent, not per social group.
 
 **Fixed behaviour.** Three earlier defects are fixed: discovery agents ranked
 the first leg as a straight line through walls
@@ -780,7 +785,7 @@ that file. The detailed account of FDS+Evac door choice is on
 | Concept | FDS+Evac | pyFDS-Evac |
 |---|---|---|
 | **Visible** | Geometric line of sight from agent to door centre, or to the door's `XB` centre from the correct side; no range limit, no contrast, no angle factor | *Legible*: sign test with *C*, view angle, obstruction, \(V_{\max}\) and line-of-sight extinction |
-| **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group) and `entrance`, then learned from legible signs; never downgraded |
+| **Known** | `KNOWN_DOOR` (default `.FALSE.`) and `KNOWN_DOOR_PROBS` per door, written at initialisation into a per-agent or per-group list; afterwards only downgraded | *Known*: seeded by `familiarity` (one \(p\) per group or per exit) and `entrance`, then learned from legible signs; never downgraded |
 | **Visible counts as known** | for the current target in `imode == 1` calls (`:16533–16535`), and for any visible door for type-1 agents; both for the current call only | a legible neighbour is learned and kept |
 | **Memory of the target** | a current target with positive `I_Target` stays visible | every known node persists |
 | **Smoke-free door** | tiers 1–3 admit a door with \(\bar K < \lvert\texttt{FED\_DOOR\_CRIT}\rvert\) = 0.03 m⁻¹ by default (≈ 100 m visibility); the door of the current flow field is tested at `FAC_DOOR_OLD` = 0.1 × \(\bar K\), so it passes below 0.3 m⁻¹. Evac 2.6.1 (FDS 6.7.7) tests \(\bar K d\) < 0.003 instead ([Evac 2.6.1 door test](/docs/model-comparison.md#evac-261-door-criterion)) | roughly the exposure gate, applied to route optical depth \(\tau = \bar K L\) along the route |

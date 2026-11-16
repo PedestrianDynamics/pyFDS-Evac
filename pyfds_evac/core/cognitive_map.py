@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import heapq
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from .agent_params import parameters_as_dict
@@ -80,6 +81,29 @@ def familiarity_probability(value) -> float:
             "that an exit is already known"
         )
     return probability
+
+
+def familiarity_exit_probabilities(value: Mapping) -> dict[str, float]:
+    """Validate a per-exit familiarity ``{exit_id: p}`` and return it as floats.
+
+    Each listed exit is known at t=0 with probability p; an unlisted exit has
+    p = 0, as in FDS+Evac's ``KNOWN_DOOR_PROBS``. A bool is rejected although
+    ``float(True)`` is 1.0: it is a typo, not a probability.
+    """
+    probabilities: dict[str, float] = {}
+    for exit_id, p in value.items():
+        if isinstance(p, bool) or not isinstance(p, (int, float)):
+            raise ValueError(
+                f"familiarity for exit {exit_id!r} must be a number in [0, 1], "
+                f"got {p!r}"
+            )
+        if not 0.0 <= p <= 1.0:
+            raise ValueError(
+                f"familiarity {p} for exit {exit_id!r} is outside [0, 1]; it is "
+                "the probability that the exit is already known"
+            )
+        probabilities[str(exit_id)] = float(p)
+    return probabilities
 
 
 #: What an agent does while no exit is reachable in its known subgraph, set
@@ -159,12 +183,23 @@ def entrance_exits(entrance) -> list[str]:
     )
 
 
+def _check_exit_ids(ids, exit_ids: set[str], key: str) -> None:
+    unknown = [e for e in ids if e not in exit_ids]
+    if unknown:
+        raise ValueError(
+            f"{key} names {unknown}, which {'is' if len(unknown) == 1 else 'are'} "
+            f"not in exits (known exits: {sorted(exit_ids)})"
+        )
+
+
 def distribution_entrances(raw) -> dict[str, list[str]]:
     """Each distribution's ``entrance`` exits, by distribution id.
 
-    Raises ValueError naming the distribution whose value is malformed, so a
-    bad value stops the run before the first agent spawns.
+    Raises ValueError naming the distribution whose value is malformed or
+    names an id that is not in ``exits``, so a bad value stops the run before
+    the first agent spawns.
     """
+    exit_ids = set(raw.get("exits") or {})
     entrances: dict[str, list[str]] = {}
     for dist_id, dist in (raw.get("distributions") or {}).items():
         params = (
@@ -175,9 +210,56 @@ def distribution_entrances(raw) -> dict[str, list[str]]:
         value = params.get("entrance") if isinstance(params, dict) else None
         try:
             entrances[dist_id] = entrance_exits(value)
+            _check_exit_ids(entrances[dist_id], exit_ids, "entrance")
         except ValueError as exc:
             raise ValueError(f"distribution {dist_id!r}: {exc}") from None
     return entrances
+
+
+def distribution_familiarities(raw) -> dict[str, dict[str, float]]:
+    """Each per-exit ``familiarity`` mapping, by distribution id.
+
+    Only distributions whose ``familiarity`` is an object appear. Raises
+    ValueError naming the distribution whose mapping holds an id that is not
+    in ``exits`` or a value that is not a probability.
+    """
+    exit_ids = set(raw.get("exits") or {})
+    mappings: dict[str, dict[str, float]] = {}
+    for dist_id, dist in (raw.get("distributions") or {}).items():
+        params = (
+            parameters_as_dict(dist.get("parameters"))
+            if isinstance(dist, dict)
+            else None
+        )
+        value = params.get("familiarity") if isinstance(params, dict) else None
+        if not isinstance(value, Mapping):
+            continue
+        try:
+            mappings[dist_id] = familiarity_exit_probabilities(value)
+            _check_exit_ids(mappings[dist_id], exit_ids, "familiarity")
+        except ValueError as exc:
+            raise ValueError(f"distribution {dist_id!r}: {exc}") from None
+    return mappings
+
+
+def unreachable_known_exits(graph, raw) -> list[tuple[str, str, str]]:
+    """``(distribution, key, exit)`` for each named exit its spawn cannot reach.
+
+    Covers ``entrance`` and the exits a ``familiarity`` mapping lists above 0.
+    Such an exit is silently never learned, so the setup warns about it.
+    """
+    found: list[tuple[str, str, str]] = []
+    mappings = distribution_familiarities(raw)
+    for dist_id, entrance in distribution_entrances(raw).items():
+        if dist_id not in graph.nodes:
+            continue
+        reachable = graph.shortest_paths_to_exits(dist_id)
+        listed = [("entrance", e) for e in entrance]
+        listed += [
+            ("familiarity", e) for e, p in mappings.get(dist_id, {}).items() if p > 0
+        ]
+        found += [(dist_id, k, e) for k, e in listed if e not in reachable]
+    return found
 
 
 def init_cognitive_map(
@@ -208,6 +290,10 @@ def init_cognitive_map(
     an irreproducible one.  *no_visibility* skips the perception step, for
     callers testing the initial draw alone.
     """
+    per_exit = None
+    if isinstance(familiarity, Mapping):
+        per_exit = familiarity_exit_probabilities(familiarity)
+        familiarity = 0.0  # a per-exit map is a discovery map
     probability = familiarity_probability(familiarity)
 
     if probability >= 1.0:
@@ -233,10 +319,7 @@ def init_cognitive_map(
             _learn_route_to(cmap, graph, spawn_node, exit_id)
     _note_exits(cmap, graph, time_s, LEARN_ENTRANCE)
 
-    if rng is not None and probability > 0.0:
-        for exit_id in graph.exit_nodes():
-            if exit_id not in cmap.known_nodes and rng.random() < probability:
-                _learn_route_to(cmap, graph, spawn_node, exit_id)
+    _draw_known_exits(cmap, graph, spawn_node, rng, probability, per_exit)
     _note_exits(cmap, graph, time_s, LEARN_FAMILIARITY)
 
     node = graph.nodes.get(spawn_node)
@@ -246,6 +329,30 @@ def init_cognitive_map(
         )
     _note_exits(cmap, graph, time_s, LEARN_SIGHT)
     return cmap
+
+
+def _draw_known_exits(
+    cmap: AgentCognitiveMap,
+    graph,
+    spawn_node: str,
+    rng,
+    probability: float,
+    per_exit: dict[str, float] | None,
+) -> None:
+    """Learn each exit not yet known with its probability, in exit order.
+
+    A probability of 0 consumes no draw and 1 learns without one; between them
+    each exit takes one draw, so a uniform mapping reproduces the scalar form
+    seed for seed. Without an *rng* only the certain exits are learned.
+    """
+    for exit_id in graph.exit_nodes():
+        if exit_id in cmap.known_nodes:
+            continue
+        p = probability if per_exit is None else per_exit.get(exit_id, 0.0)
+        if p <= 0.0 or (p < 1.0 and rng is None):
+            continue
+        if p >= 1.0 or rng.random() < p:
+            _learn_route_to(cmap, graph, spawn_node, exit_id)
 
 
 def _learn_edge(cmap: AgentCognitiveMap, graph, source: str, target: str) -> None:
@@ -297,8 +404,15 @@ def _must_discover_an_exit(params: dict, mode: str) -> bool:
     return (
         mode != DEFAULT_NO_KNOWN_EXIT
         and not entrance_exits(params.get("entrance"))
-        and familiarity_probability(params.get("familiarity", "full")) == 0.0
+        and _knows_no_exit(params.get("familiarity", "full"))
     )
+
+
+def _knows_no_exit(familiarity) -> bool:
+    """Whether *familiarity* gives no exit a chance of being known at t=0."""
+    if isinstance(familiarity, Mapping):
+        return not any(familiarity_exit_probabilities(familiarity).values())
+    return familiarity_probability(familiarity) == 0.0
 
 
 def stranded_distributions(graph, raw) -> list[str]:

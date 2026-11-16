@@ -196,12 +196,13 @@ each level separately at its own height, with the matching `&SLCF PBZ=` in
 the FDS deck, or pick the height that is conservative for the occupants who
 matter most and say so.
 
-**Per-exit familiarity.** Familiarity is set per spawn distribution, as
-`"full"`, `"discovery"`, or one probability applied to every exit. The
-`entrance` key adds one exit that the whole group knows. A separate
-probability for each exit, as FDS+Evac allows with `KNOWN_DOOR_PROBS`, is not
-supported; see
-[issue #136](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136).
+**Familiarity has no preference.** Familiarity is set per spawn distribution:
+`"full"`, `"discovery"`, one probability for every exit, or a probability per
+exit. `entrance` names the exits the whole group knows. A known exit only
+enters the route choice; it competes on cost with every other known exit, and
+an exit learned by sight counts the same as one known at the start. FDS+Evac
+ranks known doors ahead of doors that are only visible. A habitual exit that
+is not the cheapest is therefore not reproduced.
 
 **Familiarity does not change how agents treat smoke.** Familiarity decides
 which exits an agent knows, not how much smoke it accepts. The route-cost
