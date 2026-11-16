@@ -697,6 +697,7 @@ AREAS: dict[str, Area] = {
             "tests/test_rerouting_hand_checks.py",
             "tests/test_routing_decisions.py",
             "tests/test_switch_reasons.py",
+            "tests/test_queue_ahead.py",
             "tests/test_no_known_exit.py",
             # Needs the webapp extra and exercises none of the mutated lines.
             "--deselect=tests/test_no_known_exit.py::TestRunModes::test_the_gui_refuses_the_form",
