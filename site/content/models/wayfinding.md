@@ -561,7 +561,7 @@ count as 300 s; without them it changes by −3.0 % from 0.1 to 0.05 m and
    (`run_config.py`, `build_run_kwargs`). Each agent placed at t = 0 gets its map and opening
    choice (`scenario.py`, `run_scenario`); flow-spawned agents get theirs when they
    appear (`scenario.py`, `run_scenario`).
-2. **Reroute pass.** It runs at most once per simulated second
+2. **Reroute pass.** It runs every `min(1 s, --reroute-interval)` of simulated time
    (`scenario.py`, `run_scenario`). For each agent whose re-evaluation is due,
    periodic learning runs first, then ranking and possible adoption.
 3. **Steering loop, every step.** Positions are stored

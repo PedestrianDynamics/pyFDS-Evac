@@ -411,9 +411,6 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   `SocialForceModel` and `WarpDriverModel` finish both cases, the first
   by pushing and the second by letting agents overlap; neither is a
   counterflow model, and the default model's jam is not cleared.
-- **Re-evaluation at most once per second** ([#660](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660)).
-  `run_scenario` runs the reroute pass at most once per simulated second, so
-  a `reevaluation_interval_s` (`--reroute-interval`) below 1 s acts as 1 s.
 - **`init --check` keeps the deck's z on a stretched grid.** The check
   moves each slice to the uniform `&MESH` grid as FDS does
   ([#687](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687)); with

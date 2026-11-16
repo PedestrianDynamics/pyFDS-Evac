@@ -3378,7 +3378,12 @@ class RerouteConfig:
     exit_switch_anchor: float | None = None
 
     def __post_init__(self) -> None:
-        """Reject an explicit exit_switch_anchor outside (0, 1]."""
+        """Reject a non-positive interval and an anchor outside (0, 1]."""
+        if not self.reevaluation_interval_s > 0.0:
+            raise ValueError(
+                "RerouteConfig.reevaluation_interval_s must be > 0, got "
+                f"{self.reevaluation_interval_s!r}"
+            )
         if self.exit_switch_anchor is not None:
             _check_margin(
                 "RerouteConfig.exit_switch_anchor", self.exit_switch_anchor, False, True
