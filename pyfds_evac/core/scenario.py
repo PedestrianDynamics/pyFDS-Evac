@@ -167,6 +167,8 @@ _ZERO_EXTINCTION = ConstantExtinctionField(0.0)
 # frame and point alone (#239). The bound only limits memory: when full
 # the memo is cleared and refilled.
 _FED_RATE_MEMO_SIZE = 262144
+# Longest period between two reroute passes, in simulated seconds (#660).
+REROUTE_CHECK_PERIOD_S = 1.0
 
 
 class _FedRateAdapter:
@@ -2167,6 +2169,13 @@ def run_scenario(
         last_smoke_update_time = None
         last_fed_update_time = None
         last_reroute_check_time: float | None = None
+        # The reroute pass runs at the configured interval, at most once per
+        # REROUTE_CHECK_PERIOD_S; the closure-only pass has no interval (#660).
+        reroute_pass_period_s = (
+            REROUTE_CHECK_PERIOD_S
+            if reroute_config is None
+            else min(REROUTE_CHECK_PERIOD_S, reroute_config.reevaluation_interval_s)
+        )
         route_history: list[dict[str, Any]] = []
         # Exit each path agent is heading for, then the one it left through.
         agent_exits: dict[int, str] = {}
@@ -3702,7 +3711,7 @@ def run_scenario(
                 and (
                     last_reroute_check_time is None
                     or simulation.elapsed_time() - last_reroute_check_time
-                    >= 1.0 - TIME_EPS_S
+                    >= reroute_pass_period_s - TIME_EPS_S
                 )
             ):
                 current_time = simulation.elapsed_time()
@@ -3800,7 +3809,7 @@ def run_scenario(
                 and (
                     last_reroute_check_time is None
                     or simulation.elapsed_time() - last_reroute_check_time
-                    >= 1.0 - TIME_EPS_S
+                    >= reroute_pass_period_s - TIME_EPS_S
                 )
             ):
                 # The one-second check of the reroute pass, for runs without

@@ -167,6 +167,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A `--reroute-interval` below 1 s now sets the cadence of the reroute
+  pass; the pass ran at most once per simulated second, so such an
+  interval acted as 1 s (#660). Intervals of 1 s and more are unchanged,
+  and a `RerouteConfig` interval of 0 or less is rejected.
 - `AnticipationVelocityModel` runs with the same seed now give the same
   trajectories in every process: JuPedSim fills the model's `rng_seed`
   with a random number at import, and it is now derived from the run seed.
