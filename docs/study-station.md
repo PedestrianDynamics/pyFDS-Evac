@@ -171,6 +171,10 @@ The 0.024 row is a calibration to Fahy's front-door share. It is not a
 result. The [routing page](/docs/routing.md#provenance-of-the-stations-queue-weight)
 states that 0.024 no longer reproduces Fahy's split at 0.5.0 (34.8 %).
 
+Provenance: the 0.024 row was scored with the global-tally queue term, before
+the agents-ahead count of #89. It does not reproduce on main after that change.
+The primary arms and the V1-V3 scores use `w_queue = 0` and are unaffected.
+
 ### How to read them
 
 - **T1 shares cover different agent sets per arm.** The low T1 of V2 alone

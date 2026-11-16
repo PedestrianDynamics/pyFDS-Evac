@@ -396,7 +396,7 @@ the additive model it is converted to distance and added to the
 composite:
 
 ```
-queue_time     = N_exit / capacity
+queue_time     = N_ahead / capacity
 queue_distance = base_speed_m_per_s * queue_time
 composite = path_length * (1 + w_smoke * K_ave)
           + w_fed * FED_max
@@ -411,7 +411,13 @@ carries the extra `base_speed_m_per_s` factor.
 
 where:
 
-- `N_exit` is the number of agents currently targeting that exit
+- `N_ahead` is the number of agents currently targeting that exit that are
+  strictly closer to the exit's centroid (straight line) than the agent being
+  ranked, the agent itself excluded. It is counted from the agent positions of
+  the reroute pass, and an agent that switches earlier in the same pass is
+  counted at its new exit. The agent at the head of a queue pays nothing for
+  it; the agent at the back pays for everyone ahead. `exit_count` in the route
+  cost history stays the global tally and `exit_queue_ahead` is `N_ahead`
 - `capacity` is the exit's `capacity_agents_per_s` (default 1.3)
 - `base_speed_m_per_s` converts queueing delay (seconds) into
   distance-equivalent cost (metres) so all terms share the same
@@ -426,13 +432,31 @@ scenario's `routing` block to switch it on.
 
 #### Why it is opt-in, and what 0.024 means
 
-The term is `w_queue * v0 * N / c` with `N` a **global** tally of every agent
-targeting the exit — where `v0` is the `base_speed_m_per_s` conversion constant
-(not any agent's desired speed) and `c` is the exit's `capacity_agents_per_s`,
-falling back to `default_exit_capacity`. With both at their 1.3 defaults the
-penalty is simply
-`w_queue * N` metres, so it grows without bound in the population while the
-path-length differences it competes against are fixed by the geometry:
+The term is `w_queue * v0 * N_ahead / c`, where `v0` is the
+`base_speed_m_per_s` conversion constant (not any agent's desired speed) and
+`c` is the exit's `capacity_agents_per_s`, falling back to
+`default_exit_capacity`. `N_ahead / c` is the time the agent waits for the
+agents in front of it, so under the gate `w_queue = 1` means one second of
+queue per second of walking. This is the FDS+Evac counterpart, which counts
+the agents that target the door and are closer to it than the agent
+(`FAC_DOOR_QUEUE`; see [Coming from FDS+Evac](coming-from-fds-evac.md)). With
+both constants at their 1.3 defaults the additive penalty is
+`w_queue * N_ahead` metres.
+
+`N_ahead` is still of the order of the crowd: the last of `N` agents has
+`N - 1` ahead. It does not remove the dependence on the crowd size, and it has
+no perception in it: an agent far from a door still counts nearly everyone at
+that door, because nearly everyone is closer. What it gives is a meaning
+(the agent's own wait) in place of a per-population factor, and a charge that
+depends on where the agent stands. The old form, a global tally of every agent
+targeting the exit with the deciding agent included, charged the head of a
+queue for the whole queue, so who diverted was set by the order of evaluation
+and not by position. On the T-junction deck with 100 agents (`w_queue = 1`,
+seeds 1–3), re-pricing the logged congestion switches with `N_ahead` removes
+36 of 134 (27 %), a one-step re-score without feedback on later counts; some
+of the agents that switched had nobody ahead at the exit.
+
+With the old global form the penalty at `w_queue = 1.0` and `w_queue = 0.03` was
 
 | N | `w_queue = 1.0` | `w_queue = 0.03` |
 |---|---|---|
@@ -440,11 +464,19 @@ path-length differences it competes against are fixed by the geometry:
 | 50 | 50 m | 1.5 m |
 | 333 | 333 m | 10 m |
 
-No constant is right at more than one crowd size. 1.0 puts 333 m on a door at
-Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
-library ships no congestion weight at all, and the calibrated value lives with
-the deck it was calibrated on. Issue #89 tracks replacing the global `N` with a
-queue the agent can perceive, which would remove the scale dependence.
+and `N_ahead` is bounded by the same `N`, so the table is the bound: no
+constant is right at more than one crowd size. 1.0 puts up to 333 m on a door
+at Station scale; the 0.03 that fixes that is inert in an ordinary room. So
+the library ships no congestion weight at all, and the calibrated value lives
+with the deck it was calibrated on.
+
+**Limitations.** The distance is straight, so it is only meaningful where the
+agents and the exit share one open area. An agent in the next room can be
+closer to an exit than an agent that is walking to it, and then it counts as
+ahead. FDS+Evac has the same limit and hides it behind its visible-door tier;
+pyFDS-Evac ranks every exit in one list and has no such gate, no semicircle cap
+on the count and no width-based capacity (the capacity is a flat
+`default_exit_capacity` unless the exit sets one).
 
 **`assets/station_fahy` and `assets/station_nist` ship `w_queue = 0` (the
 Station V0 configs). 0.024, the value this section is about, is the labelled
@@ -487,7 +519,8 @@ The pre-registered coupled Station study is on the
 [Station study](/docs/study-station.md) page.
 
 Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck shipped 0.024, why it
+selected 0.03, measured with the global tally `N` (the count of agents ahead
+was introduced later; see above); see the caveats above for why the deck shipped 0.024, why it
 now ships 0, and why neither value has been re-fitted under the gate cost
 model. The sweep
 overrides whatever `w_queue` the deck ships.
@@ -517,15 +550,14 @@ the front-door share swings 58.1 % → 48.4 %, so the row structure
 confirms that low weights beat 1.0 without discriminating 0.03 within
 that band. The value is fixed by the aggregate target alone.
 
-**This calibration holds at one crowd size.** The term is
-`w_queue * v0 * N / c` (`v0`, `c` as above) with `N` a global tally, so its
-magnitude
+**This calibration holds at one crowd size.** Fitted with the global tally,
+the term was `w_queue * v0 * N / c` (`v0`, `c` as above), so its magnitude
 relative to the path-length differences it competes with grows linearly
-with the population — 0.03 was fitted at the Station's 333 agents, and
+with the population: 0.03 was fitted at the Station's 333 agents, and
 a scenario an order of magnitude smaller wants a correspondingly larger
-weight to express the same preference. That scale dependence is a
-property of the global-`N` form rather than of this number; a queue an
-agent could actually perceive would not have it.
+weight to express the same preference. `N_ahead` is of the same order (the last
+agent of `N` sees `N - 1`), so the scale dependence stays, and the fitted
+number belongs to the global form and has not been refitted for `N_ahead`.
 
 Exit capacity can be configured per exit in the scenario config:
 

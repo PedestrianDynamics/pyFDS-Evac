@@ -221,7 +221,8 @@ associated with leaving the building (Wood 1980, p. 91). See
 **Herding and social influence.** Each agent chooses its route from its own
 cognitive map and the hazard along each route. When `routing.w_queue` is
 above zero (the default is 0.0), expected queueing at an exit also enters the
-cost, so a crowded exit becomes less attractive. Agents do not follow others,
+cost, so an exit with many agents closer to it than the deciding agent becomes
+less attractive. Agents do not follow others,
 and an exit never becomes more attractive because others use it. See
 [issue #78](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78).
 The pre-registered Station comparison with survivor exit-use data failed

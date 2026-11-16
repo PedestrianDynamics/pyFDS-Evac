@@ -1185,20 +1185,19 @@ class RouteCostConfig:
     w_smoke: float = 1.0
     w_fed: float = 10.0
     # Off by default. The term is
-    #     w_queue * base_speed_m_per_s * N / capacity_agents_per_s
-    # with N a *global* tally of every agent targeting the exit. (The paper
-    # writes this v0 * N / c; base_speed_m_per_s is that conversion constant,
-    # NOT any agent's desired speed.) With both speed and capacity at their
-    # 1.3 defaults the penalty is simply w_queue * N metres: it grows without
-    # bound in the
-    # population while the path lengths it competes against are fixed by the
-    # geometry. No constant is therefore right at more than one crowd size --
-    # 1.0 put 333 m on a door at Station scale, and the 0.03 that fixes that is
-    # inert (0.8 m at N = 25) in an ordinary room. Rather than ship a number
-    # calibrated on one deck as the default for every deck, congestion-aware
-    # routing is opt-in; assets/station_fahy sets it in its own routing block.
-    # See issue #89 for the perceivable-queue form that would remove the scale
-    # dependence.
+    #     w_queue * base_speed_m_per_s * N_ahead / capacity_agents_per_s
+    # with N_ahead the agents counted at the exit that are strictly closer to
+    # it (straight line to the exit centroid) than the deciding agent, itself
+    # excluded (#89). N_ahead / capacity is the agent's own waiting time, so
+    # under the gate w_queue = 1 reads as one second of queue per second of
+    # walking. (The paper writes v0 * N / c; base_speed_m_per_s is that
+    # conversion constant, NOT any agent's desired speed.) N_ahead still
+    # grows with the crowd -- the last agent of N sees N - 1 -- so no constant
+    # is right at every crowd size: 1.0 put 333 m on a door at Station scale
+    # under the old global tally, and the 0.03 that fixed it is inert (0.8 m
+    # at N = 25) in an ordinary room. Rather than ship a number calibrated on
+    # one deck as the default for every deck, congestion-aware routing is
+    # opt-in; assets/station_fahy sets it in its own routing block.
     w_queue: float = 0.0
     fed_rejection_threshold: float = 1.0
     visibility_extinction_threshold: float = 0.5

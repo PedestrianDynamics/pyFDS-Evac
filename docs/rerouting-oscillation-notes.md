@@ -331,10 +331,11 @@ Two mechanisms were prototyped while hunting this bug, then reverted once the de
 showed neither was the cause. Kept here so they are cheap to resurrect **with a test
 grounded in a scenario that actually exhibits them**:
 
-- **Congestion overshoot / distance-gated queue (Ehtamo Eq. 6).** The queue term counts
-  *all* agents heading to an exit, not just those closer than you; a far-field crowd
-  shift can then swing every agent's cost. Real, but the demo's `queue = 0` — not its
-  problem. Fix would be a per-exit sorted-distance snapshot and `bisect_left(..., my_dist)`.
+- **Congestion overshoot / distance-gated queue (Ehtamo Eq. 6).** The distance-gated
+  queue is now implemented (#89): the queue term counts the agents heading to an exit
+  that are closer than you, from a per-exit sorted-distance snapshot and
+  `bisect_left(..., my_dist)` (`core/exit_queue.py`). The demo's `queue = 0`, so it
+  was never this bug's cause.
   The full FDS+Evac answer is Nash-iterating exit choice to convergence each tick before
   anyone moves (`NASH_CLOSE_ENOUGH = 0.05`) — expensive; only worth it if metrics show
   mis-allocation (waves piling on one exit), not a busy-looking viewer.

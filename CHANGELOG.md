@@ -80,6 +80,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The queue term of `w_queue > 0` counts the agents ahead of the deciding
+  agent, not a global tally (#89). `N_ahead` is the agents counted at the
+  exit that are strictly closer to the exit centroid (straight line) than the
+  agent, itself excluded, from the positions of the reroute pass; an agent
+  that switches earlier in the pass is counted at its new exit. The head of a
+  queue was charged for the whole queue, so who diverted depended on the
+  evaluation order: on the T-junction deck (100 agents, `w_queue = 1`,
+  seeds 1-3) re-pricing the logged congestion switches with `N_ahead` removes
+  36 of 134 (27 %), a one-step re-score, and some switchers had nobody ahead
+  at all. Runs
+  with `w_queue > 0` change; at the default `w_queue = 0` the route, cost and exit
+  histories are identical, and the route cost history CSV gains the
+  `exit_queue_ahead` column. The weight is not refitted: `N_ahead` still grows
+  with the crowd, so `w_queue` keeps no crowd-size-independent value. The
+  route cost history gains `exit_queue_ahead` (`N_ahead`, 0 while `w_queue`
+  is 0); `exit_count` keeps its meaning, every agent counted at the exit, and
+  `queue_time_s` is now `exit_queue_ahead / exit_capacity`.
+
 - `simulationParams.dt` is honoured (#922). It was ignored before: every run
   stepped at 0.01 s. It now sets the JuPedSim step and `Result.dt`; it
   must divide 0.1 s, and the trajectory stays at 10 frames/s. The asset

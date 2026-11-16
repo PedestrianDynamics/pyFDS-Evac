@@ -99,6 +99,7 @@ from .direct_steering_runtime import (
     set_agent_smoke_factor,
     update_checkpoint_speed,
 )
+from .exit_queue import ExitQueueIndex
 from .fds_coverage import (
     apply_coverage_policy,
     check_fds_coverage,
@@ -2383,6 +2384,60 @@ def run_scenario(
             )
 
         exit_counts: dict[str, int] = {}
+        _queue_state: dict[str, Any] = {}
+
+        def _queue_index(current_time: float, graph: StageGraph) -> ExitQueueIndex:
+            """The holders of each exit at *current_time*, from live positions."""
+            if _queue_state.get("time") == current_time:
+                cached: ExitQueueIndex = _queue_state["index"]
+                return cached
+            points = {
+                node_id: (node.centroid_x, node.centroid_y)
+                for node_id, node in graph.nodes.items()
+                if node.stage_type == "exit"
+            }
+            holders = []
+            for agent in simulation.agents():
+                rs = agent_route_state.get(int(agent.id))
+                x, y = extract_agent_xy(agent)
+                if rs is None or rs.counted_exit is None or x is None or y is None:
+                    continue
+                holders.append((int(agent.id), rs.counted_exit, (x, y)))
+            index = ExitQueueIndex(points)
+            index.build(holders)
+            _queue_state.update(time=current_time, index=index)
+            return index
+
+        def _agent_xy(agent_id: int) -> tuple[float, float]:
+            x, y = extract_agent_xy(simulation.agent(agent_id))
+            if x is None or y is None:
+                raise ValueError(f"Exit queue: agent {agent_id} has no position")
+            return x, y
+
+        def _exit_queue_counts(
+            agent_id: int,
+            current_time: float,
+            config: RerouteConfig,
+            graph: StageGraph,
+        ) -> dict[str, int]:
+            """Per exit, the holders ahead of this agent; the global tally when w_queue is 0.
+
+            The tally is inert at weight 0; it keeps the argument of the route
+            functions the same for every weight.
+            """
+            if _cost_config(config).w_queue <= 0:
+                return exit_counts
+            index = _queue_index(current_time, graph)
+            return index.ahead(agent_id, _agent_xy(agent_id))
+
+        def _move_holder(agent_id: int, old: str | None, new: str | None) -> None:
+            """Move one agent's holder entry between exits, in both tallies."""
+            if old == new:
+                return
+            _move_count(exit_counts, old, new)
+            if "index" in _queue_state:
+                _queue_state["index"].move(agent_id, new, _agent_xy(agent_id))
+
         _engine_cache: list = []
 
         def _spawn_routing_engine():
@@ -2523,6 +2578,10 @@ def run_scenario(
                         )
             if rs.counted_exit is not None:
                 exit_counts[rs.counted_exit] = exit_counts.get(rs.counted_exit, 0) + 1
+                if "index" in _queue_state:
+                    _queue_state["index"].move(
+                        agent_id, rs.counted_exit, _agent_xy(agent_id)
+                    )
 
         def _prepare_route_agent(
             agent_id: int, wait_info: dict, current_time: float, config: RerouteConfig
@@ -2607,6 +2666,7 @@ def run_scenario(
                         _pos[0],
                         _pos[1],
                     )
+            queue_counts = _exit_queue_counts(agent_id, current_time, config, graph)
             if collect_route_cost_history:
                 source = wait_info.get("current_origin") or wait_info.get(
                     "current_target_stage"
@@ -2621,7 +2681,7 @@ def run_scenario(
                         _fed_rate_adapter,
                         _cost_config(config),
                         cached_segments=route_segment_cache,
-                        exit_counts=exit_counts,
+                        exit_counts=queue_counts,
                         cognitive_map=_cmap,
                         agent_position=tuple(_pos) if _pos is not None else None,
                         current_exit=rs.current_exit or None,
@@ -2666,6 +2726,9 @@ def run_scenario(
                                 "rejection_reason": rc.rejection_reason or "",
                                 "queue_time_s": float(rc.queue_time_s),
                                 "exit_count": exit_counts.get(rc.exit_id, 0),
+                                "exit_queue_ahead": queue_counts.get(rc.exit_id, 0)
+                                if _cost_config(config).w_queue > 0
+                                else 0,
                                 "exit_capacity": float(_exit_cap),
                                 "length_outside_m": (
                                     route_length_outside(
@@ -2688,11 +2751,11 @@ def run_scenario(
                 fed_rate_sampler=_fed_rate_adapter,
                 config=config,
                 cached_segments=route_segment_cache,
-                exit_counts=exit_counts,
+                exit_counts=queue_counts,
                 cognitive_map=_cmap,
                 agent_position=tuple(_pos) if _pos is not None else None,
             )
-            _move_count(exit_counts, _counted_before, rs.counted_exit)
+            _move_holder(agent_id, _counted_before, rs.counted_exit)
             if rs.counted_exit is not None:
                 agent_exits[agent_id] = rs.counted_exit
             else:
@@ -3677,7 +3740,7 @@ def run_scenario(
                             cognitive_maps.get(agent_id),
                             current_time,
                         )
-                        _move_count(exit_counts, _counted, rs.counted_exit)
+                        _move_holder(agent_id, _counted, rs.counted_exit)
                     if not first_eval and not should_reevaluate(
                         current_time, rs, reroute_config.reevaluation_interval_s
                     ):

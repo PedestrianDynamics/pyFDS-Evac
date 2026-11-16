@@ -212,8 +212,8 @@ fire and a clean 58 m way round -- and its results are in the sciebo case folder
   optionally hidden from the spawn) for exercising discovery routing; the same
   decks drive the invariant tests in `tests/test_generated_worlds.py`
 - **Congestion-aware routing**: Optional exit-congestion term (`w_queue`), **off
-  by default** — it scales with a global agent count, so no constant suits every
-  scenario. `assets/station_fahy` and `assets/station_nist` ship it at 0; 0.024,
+  by default** — it counts the agents ahead of the deciding agent at the exit, a
+  number that grows with the crowd, so no constant suits every scenario. `assets/station_fahy` and `assets/station_nist` ship it at 0; 0.024,
   calibrated against Fahy Table 2, is their labelled sensitivity — see [docs/routing.md](/docs/routing.md#why-it-is-opt-in-and-what-0024-means)
   and `scripts/sweep_queue_weight.py`
 - **Throughput throttling**: Optional exit flux limiting via
@@ -241,7 +241,7 @@ tabulated in [docs/route-cost-gate.md](/docs/route-cost-gate.md#configuration).
 | `exit_switch_anchor` | `0.9` | A rival exit needs `rank_cost` below this fraction of the current exit's; an explicit `RerouteConfig.exit_switch_anchor` overrides it. It also decides whether a rival replaces the exit a journey allocated ([Allocated exit: preference or hard](#allocated-exit-preference-or-hard)) |
 | `w_smoke` | `1.0` | Smoke weight; additive model only, inert under the gate |
 | `w_fed` | `10.0` | Dose weight; additive model only, inert under the gate |
-| `w_queue` | `0.0` | Weight on queue time in the ranking cost (off) |
+| `w_queue` | `0.0` | Weight on queue time in the ranking cost (off); the queue is the agents ahead of the agent at the exit |
 | `visibility_extinction_threshold` | `0.5` | Extinction [1/m] at or above which a segment counts as not visible; additive model only, inert under the gate |
 | `sampling_step_m` | `2.0` | \(\Delta s\), spacing of smoke samples where the field has no grid (a constant or test field) or the line leaves every FDS subslice, and of the FED-rate samples of the walk dose [m]. An FDS field is read once per grid cell the line crosses ([#653](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/653)) |
 | `base_speed_m_per_s` | `1.3` | Router's clear-air speed [m/s], not the agent's \(v_0\) |
@@ -624,8 +624,9 @@ Exit throughput throttling has no general test yet
   of [#187](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187),
   kept by decision
   ([Gate model in practice](/docs/route-cost-gate.md#one-asymmetry-favours-the-exit-the-agent-already-walks-to)).
-- The queue term counts agents globally, not those an agent can perceive
-  ([#89](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89)).
+- The queue term counts the agents ahead of an agent by straight-line distance
+  to the exit, with no perception and no wall test: an agent in the next room
+  can count as ahead ([#89](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89)).
 - Heat does not enter route choice
   ([#81](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81)).
 - The smoke terms are the same for every familiarity setting
