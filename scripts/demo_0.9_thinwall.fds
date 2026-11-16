@@ -1,0 +1,10 @@
+&HEAD CHID='thinwall', TITLE='0.25 m wall vs 0.5 m wall on a 0.5 m mesh' /
+&MESH IJK=20,20,6, XB=0,10,0,10,0,3 /
+&TIME T_END=2.0 /
+&DUMP DT_SLCF=1.0 /
+&REAC FUEL='PROPANE', SOOT_YIELD=0.01 /
+&OBST XB=5.0,5.5,0,10,0,3 /             divider between the two rooms
+&OBST XB=0,5.0,5.0,5.25,0,3 /            left room: wall 0.25 m thick
+&OBST XB=5.5,10,5.0,5.5,0,3 /            right room: wall 0.50 m thick
+&SLCF PBZ=1.75, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT', CELL_CENTERED=.TRUE., ID='ext' /
+&TAIL /
