@@ -75,8 +75,9 @@ Symbols used below:
    ```
    **The three routing weights live here:** `w_smoke = 1.0`, `w_fed = 10.0`,
    `w_queue = 0.0`. `w_smoke` and `w_fed` are hand-picked and NOT calibrated.
-   The queue term is **off by default**: it scales with a global `N`, so the
-   weight expressing a given preference depends on the population and no
+   The queue term is **off by default**: it counts the agents ahead of the
+   deciding agent at the exit (`N_ahead`, #89), which grows with the
+   population, so the weight expressing a given preference depends on the population and no
    constant suits every deck. Both Station decks keep `w_queue = 0.0`; 0.024
    is a sensitivity value from `scripts/sweep_queue_weight.py`.
 
@@ -333,8 +334,8 @@ for picking weights. Key tensions:
 
 ### One-line takeaways
 - `w_smoke` and `w_fed` are uncalibrated — the core issue. `w_queue` is off by
-  default: it scales with a global agent tally, so any constant is calibrated at
-  one crowd size only. The Station deck opts in at 0.03 (Fahy Table 2).
+  default: it counts the agents ahead at the exit (`N_ahead`, #89), which grows
+  with the crowd, so any constant is calibrated at one crowd size only. The Station deck opts in at 0.03 (Fahy Table 2).
 - **"`w_smoke` is redundant" is now true under the gate.** Since `0d9bf79` the
   gate weights each Dijkstra edge by its own optical depth and ranks routes by
   theirs, so neither `w_smoke` nor `w_fed` reaches route choice; the composite is

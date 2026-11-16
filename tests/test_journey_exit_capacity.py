@@ -1,8 +1,8 @@
 """A journey deck prices each exit with its own ``capacity_agents_per_s`` (#394).
 
 Route pricing charges an exit's queue as the agents counted ahead of the
-pricing agent divided by its capacity in agents per second, the deck's ``capacity_agents_per_s``
-or else ``routing.default_exit_capacity`` (1.3). Before #394 the set-up
+pricing agent divided by its capacity in agents per second, the deck's
+``capacity_agents_per_s`` or else ``routing.default_exit_capacity`` (1.3). Before #394 the set-up
 with journeys left the key out of the exit's stage data, so every exit of
 a journey deck was priced at 1.3 agents/s; the set-up without journeys
 carried it.

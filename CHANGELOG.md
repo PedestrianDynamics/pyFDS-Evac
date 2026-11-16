@@ -90,8 +90,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   seeds 1-3) re-pricing the logged congestion switches with `N_ahead` removes
   36 of 134 (27 %), a one-step re-score, and some switchers had nobody ahead
   at all. Runs
-  with `w_queue > 0` change; the default `w_queue = 0` is unchanged and its
-  outputs are identical. The weight is not refitted: `N_ahead` still grows
+  with `w_queue > 0` change; at the default `w_queue = 0` the route, cost and exit
+  histories are identical, and the route cost history CSV gains the
+  `exit_queue_ahead` column. The weight is not refitted: `N_ahead` still grows
   with the crowd, so `w_queue` keeps no crowd-size-independent value. The
   route cost history gains `exit_queue_ahead` (`N_ahead`, 0 while `w_queue`
   is 0); `exit_count` keeps its meaning, every agent counted at the exit, and
