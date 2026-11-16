@@ -1185,6 +1185,7 @@ def _finish(
     _check_extent(walkable, domain, tol, report)
     _check_density(walkable, spawns, report)
     _fire_surfaces(deck, (floor.z_floor, band[1]), walkable, report)
+    _check_thin_obstructions(deck, floor, band, report)
     report.floor = {
         "id": floor.id,
         "z_floor": rounded(floor.z_floor),
@@ -1311,6 +1312,61 @@ def _burning_surface(record: NamelistRecord, burning: set) -> bool:
         str(v) for k in ("SURF_ID", "SURF_IDS", "SURF_ID6") for v in record.values(k)
     ]
     return any(s in burning for s in surfs)
+
+
+def _check_thin_obstructions(deck, floor: Floor, band, report: ImportReport) -> None:
+    """Warn when an &OBST collapses to zero thickness on its fire mesh (#948)."""
+    fire_meshes = [m for m in deck.group("MESH") if not m.flag("EVACUATION", False)]
+    if not fire_meshes:
+        return
+    misc_thicken = _misc_thicken(deck)
+    legacy = report.kind == "legacy"
+    obsts = _floor_obstructions(deck, floor, band, legacy=legacy)
+    for record in obsts:
+        if record.flag("EVACUATION", False):
+            continue
+        thicken = record.flag("THICKEN")
+        if thicken is True or (thicken is None and misc_thicken):
+            continue
+        xb = record.xb()
+        if xb is None:
+            continue
+        ox0, ox1, oy0, oy1, oz0, oz1 = record.box6()
+        thx = round(ox1 - ox0, 6)
+        thy = round(oy1 - oy0, 6)
+        for m in fire_meshes:
+            mxb = m.box6()
+            ijk = m.values("IJK")
+            if not ijk or len(ijk) != 3 or min(ijk) < 1:
+                continue
+            dx = (mxb[1] - mxb[0]) / int(ijk[0])
+            dy = (mxb[3] - mxb[2]) / int(ijk[1])
+            if (
+                (min(ox1, mxb[1]) - max(ox0, mxb[0]) <= 1e-9 and thx > 1e-9)
+                or (min(oy1, mxb[3]) - max(oy0, mxb[2]) <= 1e-9 and thy > 1e-9)
+                or (min(oz1, mxb[5]) - max(oz0, mxb[4]) <= 1e-9 and (oz1 - oz0) > 1e-9)
+            ):
+                continue
+            thin_x = 0 < thx < dx - 1e-9
+            thin_y = 0 < thy < dy - 1e-9
+            if not (thin_x or thin_y):
+                continue
+            if thin_x and thin_y:
+                thickness, cell_size = (thx, dx) if thx <= thy else (thy, dy)
+            elif thin_x:
+                thickness, cell_size = thx, dx
+            else:
+                thickness, cell_size = thy, dy
+            report.add(
+                "A",
+                "warning",
+                "OBST",
+                f"({thickness:g} m thick) is thinner than the {cell_size:g} m fire cell: "
+                "FDS keeps it as a thin wall for smoke, but signs are visible through it. "
+                "Make it at least one cell thick.",
+                record,
+            )
+            break
 
 
 def _exit_report(exit_: ImportedExit) -> dict[str, Any]:

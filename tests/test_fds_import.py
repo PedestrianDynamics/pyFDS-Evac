@@ -1839,3 +1839,40 @@ def test_mult_seams_do_not_split_the_walkable_area(tmp_path):
     report = import_fds_deck(deck).report
     assert report.walkable["components"] == 1
     assert report.walkable["area_m2"] == pytest.approx(72.9)
+
+
+def test_warn_when_wall_is_thinner_than_fire_mesh_cell(tmp_path):
+    """init: warn when a wall is thinner than a fire-mesh cell (#948)."""
+    # 0.25 m wall in y on a 0.5 m fire mesh (dx=dy=0.5 m)
+    deck_text = (
+        "&HEAD CHID='thin' /\n"
+        "&MESH IJK=20,20,4, XB=0,10,0,10,0,2 /\n"
+        "&VENT MB='XMIN', SURF_ID='OPEN' /\n"
+        "&OBST XB=2,8,4,4.25,0,2 /\n"
+    )
+    deck = _deck(tmp_path, deck_text)
+    res = import_fds_deck(deck)
+    [item] = [i for i in res.report.items if i.group == "OBST"]
+    assert item.status == "A"
+    assert item.level == "warning"
+    assert item.line == 4
+    assert (
+        item.message == "(0.25 m thick) is thinner than the 0.5 m fire cell: "
+        "FDS keeps it as a thin wall for smoke, but signs are visible through it. "
+        "Make it at least one cell thick."
+    )
+
+
+def test_no_warning_when_wall_is_thickened_or_equal_to_cell(tmp_path):
+    # Thickened wall or wall equal to cell size should not warn
+    deck_text = (
+        "&HEAD CHID='not_thin' /\n"
+        "&MESH IJK=20,20,4, XB=0,10,0,10,0,2 /\n"
+        "&VENT MB='XMIN', SURF_ID='OPEN' /\n"
+        "&OBST XB=2,8,2,2.25,0,2, THICKEN=.TRUE. /\n"
+        "&OBST XB=2,8,4,4.5,0,2 /\n"
+    )
+    deck = _deck(tmp_path, deck_text)
+    res = import_fds_deck(deck)
+    obst_items = [i for i in res.report.items if i.group == "OBST"]
+    assert obst_items == []

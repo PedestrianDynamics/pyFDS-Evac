@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `pyfds-evac init` warns when an `&OBST` is thinner than a fire-mesh cell
+  in x or y and collapses to zero thickness, noting that signs are visible
+  through it (#948).
+
 - `--fed-activity-level rest|light|heavy` (`DefaultFedConfig.activity_level`,
   default `light`) scales the CO term of the gas FED by 0.255, 1 or 3.0
   (Purser, SFPE Ch. 63); light work is unchanged and equals FDS 6.7.6,
