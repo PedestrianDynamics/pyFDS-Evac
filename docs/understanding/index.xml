@@ -809,9 +809,6 @@ Iso-06-counterflow-100 all 200 are stuck since t = 80, 138 and 94 s
 &lt;code>SocialForceModel&lt;/code> and &lt;code>WarpDriverModel&lt;/code> finish both cases, the first
 by pushing and the second by letting agents overlap; neither is a
 counterflow model, and the default model&amp;rsquo;s jam is not cleared.&lt;/li>
-&lt;li>&lt;strong>Re-evaluation at most once per second&lt;/strong> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/660" target="_blank" rel="noopener">#660&lt;/a>).
-&lt;code>run_scenario&lt;/code> runs the reroute pass at most once per simulated second, so
-a &lt;code>reevaluation_interval_s&lt;/code> (&lt;code>--reroute-interval&lt;/code>) below 1 s acts as 1 s.&lt;/li>
 &lt;li>&lt;strong>&lt;code>init --check&lt;/code> keeps the deck&amp;rsquo;s z on a stretched grid.&lt;/strong> The check
 moves each slice to the uniform &lt;code>&amp;amp;MESH&lt;/code> grid as FDS does
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/687" target="_blank" rel="noopener">#687&lt;/a>); with
