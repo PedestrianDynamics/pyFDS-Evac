@@ -55,6 +55,7 @@ from .agent_seed import (
     PURPOSE_FAMILIARITY,
     PURPOSE_INCAP_GAS,
     PURPOSE_INCAP_HEAT,
+    PURPOSE_MODEL_RNG,
     PURPOSE_TARGET,
     PURPOSE_VARIANT,
     SEEDING_SCHEME,
@@ -64,6 +65,7 @@ from .agent_seed import (
     assign_spawn_key,
     commit_spawn_key,
     lookup_spawn_key,
+    model_seed,
     pending_spawn_key,
     stagger_index,
     steering_seeds,
@@ -264,7 +266,7 @@ def sfm_model_settings(params: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _build_social_force_model(params: Mapping[str, Any]):
+def _build_social_force_model(params: Mapping[str, Any], _seed: int | None = None):
     """SocialForceModel from ``sfm_body_force``, with friction clamped to 0."""
     settings = sfm_model_settings(params)
     if "sfm_friction" in params and settings["friction_clamped"]:
@@ -284,7 +286,7 @@ def _build_social_force_model(params: Mapping[str, Any]):
 # pinned against an upstream change, or a pyFDS-Evac choice, marked as such
 # with its source. Values a scenario cannot set keep JuPedSim's defaults.
 _MODEL_BUILDERS = {
-    "CollisionFreeSpeedModel": lambda p: jps.CollisionFreeSpeedModel(
+    "CollisionFreeSpeedModel": lambda p, _seed: jps.CollisionFreeSpeedModel(
         # pyFDS-Evac choice: JuPedSim's default is 8.0; 2.6 is the value the
         # clear-air movement study ran with (models/movement, #757).
         strength_neighbor_repulsion=p.get("strength_neighbor_repulsion", 2.6),
@@ -293,25 +295,34 @@ _MODEL_BUILDERS = {
     ),
     # V2 carries the repulsion parameters per agent, not on the model, so its
     # constructor takes nothing; create_agent_parameters supplies them.
-    "CollisionFreeSpeedModelV2": lambda p: jps.CollisionFreeSpeedModelV2(),
-    # Takes no model-level parameters a scenario sets.
-    "AnticipationVelocityModel": lambda p: jps.AnticipationVelocityModel(),
+    "CollisionFreeSpeedModelV2": lambda p, _seed: jps.CollisionFreeSpeedModelV2(),
+    # Takes no model-level parameters a scenario sets. JuPedSim draws its
+    # rng_seed once per process, so it is derived from the run seed (#758).
+    "AnticipationVelocityModel": lambda p, seed: jps.AnticipationVelocityModel(
+        rng_seed=model_seed(seed, PURPOSE_MODEL_RNG)
+    ),
     # All JuPedSim defaults.
-    "GeneralizedCentrifugalForceModel": lambda p: jps.GeneralizedCentrifugalForceModel(
-        strength_neighbor_repulsion=p.get("gcfm_strength_neighbor_repulsion", 0.3),
-        strength_geometry_repulsion=p.get("gcfm_strength_geometry_repulsion", 0.2),
-        max_neighbor_interaction_distance=p.get(
-            "gcfm_max_neighbor_interaction_distance", 2.0
-        ),
-        max_geometry_interaction_distance=p.get(
-            "gcfm_max_geometry_interaction_distance", 2.0
-        ),
-        max_neighbor_repulsion_force=p.get("gcfm_max_neighbor_repulsion_force", 9.0),
-        max_geometry_repulsion_force=p.get("gcfm_max_geometry_repulsion_force", 3.0),
+    "GeneralizedCentrifugalForceModel": lambda p, _seed: (
+        jps.GeneralizedCentrifugalForceModel(
+            strength_neighbor_repulsion=p.get("gcfm_strength_neighbor_repulsion", 0.3),
+            strength_geometry_repulsion=p.get("gcfm_strength_geometry_repulsion", 0.2),
+            max_neighbor_interaction_distance=p.get(
+                "gcfm_max_neighbor_interaction_distance", 2.0
+            ),
+            max_geometry_interaction_distance=p.get(
+                "gcfm_max_geometry_interaction_distance", 2.0
+            ),
+            max_neighbor_repulsion_force=p.get(
+                "gcfm_max_neighbor_repulsion_force", 9.0
+            ),
+            max_geometry_repulsion_force=p.get(
+                "gcfm_max_geometry_repulsion_force", 3.0
+            ),
+        )
     ),
     "SocialForceModel": _build_social_force_model,
     # All JuPedSim defaults.
-    "WarpDriverModel": lambda p: jps.WarpDriverModel(
+    "WarpDriverModel": lambda p, _seed: jps.WarpDriverModel(
         time_horizon=p.get("time_horizon", 2.0),
         step_size=p.get("step_size", 0.5),
         sigma=p.get("sigma", 0.3),
@@ -322,15 +333,18 @@ _MODEL_BUILDERS = {
 }
 
 
-def _build_model(model_type: str, sim_params: dict):
-    """Construct the configured JuPedSim operational model."""
+def _build_model(model_type: str, sim_params: dict, seed: int | None = None):
+    """Construct the configured JuPedSim operational model.
+
+    *seed* is the run seed; only models with their own random stream use it.
+    """
     _require_jupedsim()
     builder = _MODEL_BUILDERS.get(model_type)
     if builder is None:
         raise ValueError(
             f"Unknown model type: {model_type}. Available: {list(_MODEL_BUILDERS)}"
         )
-    return builder(sim_params)
+    return builder(sim_params, seed)
 
 
 def _require_jupedsim():
@@ -2040,7 +2054,7 @@ def run_scenario(
     step_warning = large_step_warning(scenario.model_type, dt)
     if step_warning is not None:
         _logger.warning(step_warning)
-    model = _build_model(scenario.model_type, scenario.sim_params)
+    model = _build_model(scenario.model_type, scenario.sim_params, seed)
 
     sqlite_tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
     output_file = sqlite_tmp.name

@@ -167,6 +167,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `AnticipationVelocityModel` runs with the same seed now give the same
+  trajectories in every process: JuPedSim fills the model's `rng_seed`
+  with a random number at import, and it is now derived from the run seed.
+  The manifest records `agent_seeding: spawn-key-blake2b-v3`; runs of the
+  other models are unchanged (#758).
+
 - An agent whose only known exit has closed, with nothing to explore
   (`no_known_exit` `explore` or `return`), no longer waits in the closed
   exit to the end: once there it turns back and looks from the node it
