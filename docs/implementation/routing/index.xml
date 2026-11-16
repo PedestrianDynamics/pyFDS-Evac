@@ -421,7 +421,7 @@ the path either. Under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> both weig
 the additive model it is converted to distance and added to the
 composite:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>queue_time = N_exit / capacity
+&lt;pre>&lt;code>queue_time = N_ahead / capacity
 queue_distance = base_speed_m_per_s * queue_time
 composite = path_length * (1 &amp;#43; w_smoke * K_ave)
 &amp;#43; w_fed * FED_max
@@ -442,7 +442,13 @@ but &lt;code>w_queue&lt;/code> is not the same quantity in the two: the additive
 carries the extra &lt;code>base_speed_m_per_s&lt;/code> factor.&lt;/p>
 &lt;p>where:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>N_exit&lt;/code> is the number of agents currently targeting that exit&lt;/li>
+&lt;li>&lt;code>N_ahead&lt;/code> is the number of agents currently targeting that exit that are
+strictly closer to the exit&amp;rsquo;s centroid (straight line) than the agent being
+ranked, the agent itself excluded. It is counted from the agent positions of
+the reroute pass, and an agent that switches earlier in the same pass is
+counted at its new exit. The agent at the head of a queue pays nothing for
+it; the agent at the back pays for everyone ahead. &lt;code>exit_count&lt;/code> in the route
+cost history stays the global tally and &lt;code>exit_queue_ahead&lt;/code> is &lt;code>N_ahead&lt;/code>&lt;/li>
 &lt;li>&lt;code>capacity&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code> (default 1.3)&lt;/li>
 &lt;li>&lt;code>base_speed_m_per_s&lt;/code> converts queueing delay (seconds) into
 distance-equivalent cost (metres) so all terms share the same
@@ -454,13 +460,29 @@ that cannot change which path is selected to a given exit.&lt;/p>
 &lt;p>&lt;strong>Congestion-aware routing is off by default&lt;/strong> (&lt;code>w_queue = 0&lt;/code>); set it in a
 scenario&amp;rsquo;s &lt;code>routing&lt;/code> block to switch it on.&lt;/p>
 &lt;h4>Why it is opt-in, and what 0.024 means&lt;span class="hx-absolute -hx-mt-20" id="why-it-is-opt-in-and-what-0024-means">&lt;/span>
-&lt;a href="#why-it-is-opt-in-and-what-0024-means" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The term is &lt;code>w_queue * v0 * N / c&lt;/code> with &lt;code>N&lt;/code> a &lt;strong>global&lt;/strong> tally of every agent
-targeting the exit — where &lt;code>v0&lt;/code> is the &lt;code>base_speed_m_per_s&lt;/code> conversion constant
-(not any agent&amp;rsquo;s desired speed) and &lt;code>c&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code>,
-falling back to &lt;code>default_exit_capacity&lt;/code>. With both at their 1.3 defaults the
-penalty is simply
-&lt;code>w_queue * N&lt;/code> metres, so it grows without bound in the population while the
-path-length differences it competes against are fixed by the geometry:&lt;/p>
+&lt;a href="#why-it-is-opt-in-and-what-0024-means" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The term is &lt;code>w_queue * v0 * N_ahead / c&lt;/code>, where &lt;code>v0&lt;/code> is the
+&lt;code>base_speed_m_per_s&lt;/code> conversion constant (not any agent&amp;rsquo;s desired speed) and
+&lt;code>c&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code>, falling back to
+&lt;code>default_exit_capacity&lt;/code>. &lt;code>N_ahead / c&lt;/code> is the time the agent waits for the
+agents in front of it, so under the gate &lt;code>w_queue = 1&lt;/code> means one second of
+queue per second of walking. This is the FDS+Evac counterpart, which counts
+the agents that target the door and are closer to it than the agent
+(&lt;code>FAC_DOOR_QUEUE&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/">Coming from FDS+Evac&lt;/a>). With
+both constants at their 1.3 defaults the additive penalty is
+&lt;code>w_queue * N_ahead&lt;/code> metres.&lt;/p>
+&lt;p>&lt;code>N_ahead&lt;/code> is still of the order of the crowd: the last of &lt;code>N&lt;/code> agents has
+&lt;code>N - 1&lt;/code> ahead. It does not remove the dependence on the crowd size, and it has
+no perception in it: an agent far from a door still counts nearly everyone at
+that door, because nearly everyone is closer. What it gives is a meaning
+(the agent&amp;rsquo;s own wait) in place of a per-population factor, and a charge that
+depends on where the agent stands. The old form, a global tally of every agent
+targeting the exit with the deciding agent included, charged the head of a
+queue for the whole queue, so who diverted was set by the order of evaluation
+and not by position. On the T-junction deck with 100 agents (&lt;code>w_queue = 1&lt;/code>,
+seeds 1–3), re-pricing the logged congestion switches with &lt;code>N_ahead&lt;/code> removes
+36 of 134 (27 %), a one-step re-score without feedback on later counts; some
+of the agents that switched had nobody ahead at the exit.&lt;/p>
+&lt;p>With the old global form the penalty at &lt;code>w_queue = 1.0&lt;/code> and &lt;code>w_queue = 0.03&lt;/code> was&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -487,11 +509,18 @@ path-length differences it competes against are fixed by the geometry:&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>No constant is right at more than one crowd size. 1.0 puts 333 m on a door at
-Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
-library ships no congestion weight at all, and the calibrated value lives with
-the deck it was calibrated on. Issue #89 tracks replacing the global &lt;code>N&lt;/code> with a
-queue the agent can perceive, which would remove the scale dependence.&lt;/p>
+&lt;p>and &lt;code>N_ahead&lt;/code> is bounded by the same &lt;code>N&lt;/code>, so the table is the bound: no
+constant is right at more than one crowd size. 1.0 puts up to 333 m on a door
+at Station scale; the 0.03 that fixes that is inert in an ordinary room. So
+the library ships no congestion weight at all, and the calibrated value lives
+with the deck it was calibrated on.&lt;/p>
+&lt;p>&lt;strong>Limitations.&lt;/strong> The distance is straight, so it is only meaningful where the
+agents and the exit share one open area. An agent in the next room can be
+closer to an exit than an agent that is walking to it, and then it counts as
+ahead. FDS+Evac has the same limit and hides it behind its visible-door tier;
+pyFDS-Evac ranks every exit in one list and has no such gate, no semicircle cap
+on the count and no width-based capacity (the capacity is a flat
+&lt;code>default_exit_capacity&lt;/code> unless the exit sets one).&lt;/p>
 &lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> and &lt;code>assets/station_nist&lt;/code> ship &lt;code>w_queue = 0&lt;/code> (the
 Station V0 configs). 0.024, the value this section is about, is the labelled
 sensitivity &lt;code>build_scenario.py --w-queue 0.024 --out DIR&lt;/code>. It was fitted under
@@ -529,7 +558,8 @@ re-fitted there.&lt;/p>
 &lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The pre-registered coupled Station study is on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a> page.&lt;/p>
 &lt;p>Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck shipped 0.024, why it
+selected 0.03, measured with the global tally &lt;code>N&lt;/code> (the count of agents ahead
+was introduced later; see above); see the caveats above for why the deck shipped 0.024, why it
 now ships 0, and why neither value has been re-fitted under the gate cost
 model. The sweep
 overrides whatever &lt;code>w_queue&lt;/code> the deck ships.
@@ -585,15 +615,14 @@ also lower, but it is nearly flat across 0.02–0.05 (17.1–18.0 %) while
 the front-door share swings 58.1 % → 48.4 %, so the row structure
 confirms that low weights beat 1.0 without discriminating 0.03 within
 that band. The value is fixed by the aggregate target alone.&lt;/p>
-&lt;p>&lt;strong>This calibration holds at one crowd size.&lt;/strong> The term is
-&lt;code>w_queue * v0 * N / c&lt;/code> (&lt;code>v0&lt;/code>, &lt;code>c&lt;/code> as above) with &lt;code>N&lt;/code> a global tally, so its
-magnitude
+&lt;p>&lt;strong>This calibration holds at one crowd size.&lt;/strong> Fitted with the global tally,
+the term was &lt;code>w_queue * v0 * N / c&lt;/code> (&lt;code>v0&lt;/code>, &lt;code>c&lt;/code> as above), so its magnitude
 relative to the path-length differences it competes with grows linearly
-with the population — 0.03 was fitted at the Station&amp;rsquo;s 333 agents, and
+with the population: 0.03 was fitted at the Station&amp;rsquo;s 333 agents, and
 a scenario an order of magnitude smaller wants a correspondingly larger
-weight to express the same preference. That scale dependence is a
-property of the global-&lt;code>N&lt;/code> form rather than of this number; a queue an
-agent could actually perceive would not have it.&lt;/p>
+weight to express the same preference. &lt;code>N_ahead&lt;/code> is of the same order (the last
+agent of &lt;code>N&lt;/code> sees &lt;code>N - 1&lt;/code>), so the scale dependence stays, and the fitted
+number belongs to the global form and has not been refitted for &lt;code>N_ahead&lt;/code>.&lt;/p>
 &lt;p>Exit capacity can be configured per exit in the scenario config:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
@@ -1293,7 +1322,9 @@ whichever exit it leads to. &lt;strong>Dose:&lt;/strong> it is refused when its 
 &lt;code>fed_rejection_threshold&lt;/code>. Either refusal alone removes the route.&lt;/li>
 &lt;li>&lt;strong>Ordering among survivors.&lt;/strong> Optical depth first, travel time second. The
 sort key is &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code> with
-&lt;code>rank_cost = travel_time_s + w_queue * queue_time_s&lt;/code>. The &lt;code>tau&lt;/code> in the key
+&lt;code>rank_cost = travel_time_s + w_queue * queue_time_s&lt;/code>, with &lt;code>queue_time_s&lt;/code>
+the agents ahead of this agent at the exit over the exit&amp;rsquo;s capacity
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#congestion-aware-routing">Congestion-aware routing&lt;/a>). The &lt;code>tau&lt;/code> in the key
 is scaled by &lt;code>current_exit_discount&lt;/code> (0.9) for the exit the agent already
 heads for. &lt;code>tier&lt;/code> is the clean-exit tier, off by default.&lt;/li>
 &lt;li>&lt;strong>Adoption.&lt;/strong> The ordering proposes; the exit-switch anchor disposes.
@@ -1878,7 +1909,8 @@ too, which is why pinning pre-gate behaviour needs both keys.&lt;/p>
 &lt;a href="#the-additive-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>composite = effective_length * (1 &amp;#43; w_smoke * K_ave)
 &amp;#43; w_fed * FED_max
-&amp;#43; w_queue * base_speed_m_per_s * queue_time (when w_queue &amp;gt; 0)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&amp;#43; w_queue * base_speed_m_per_s * queue_time (when w_queue &amp;gt; 0;
+queue_time = N_ahead / capacity)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"

@@ -1284,7 +1284,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1315,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3f064b1a0892092092476ca47553ff06b55e1a822c46aa38831e19e5974c0c2e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">dd3ab3cfa22d27bcb2174c4d9992ebff39c14e640e12cbb5799df71c1aaf8f77&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2053,7 +2053,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2072,7 +2072,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2fbb3d150ee46b6bbda8fdead3c6c97093aa9857c03f28bbe030a0a4adbe439f&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">91b5969c1e123e51ad88497bd30aa4a15a05f2071794d9458f3bfa527f9d627d&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -4055,7 +4055,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -4080,7 +4080,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e5a4ffddc1cbcf6bfa4447331311087983aa9504bfca8b458a0bd42c4a37f226&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c4be91e1b89f6c78710ad0a4041bf7ba9d705f697ebd57b6b443f2ab859896cf&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5532,7 +5532,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5563,7 +5563,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2798903310d9f2970e266ac534bfadddada519f8ae506f33c00812b1cd428a80&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">03681a2eda769ed8950387fc647f7468b2e560fb15153b3cbf9fb76c9e625119&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -7025,7 +7025,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7046,7 +7046,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">36624285bf70e8667491751d2c1985b83578d407fb3d072ad41527ab35095e95&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">36857d81766b8e003c71749d793831e50a725f533cf4c72fd22e9657c0ec95b4&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -9116,8 +9116,8 @@ random test decks (open room, convex obstacles, signed checkpoints, exits
 optionally hidden from the spawn) for exercising discovery routing; the same
 decks drive the invariant tests in &lt;code>tests/test_generated_worlds.py&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Congestion-aware routing&lt;/strong>: Optional exit-congestion term (&lt;code>w_queue&lt;/code>), &lt;strong>off
-by default&lt;/strong> — it scales with a global agent count, so no constant suits every
-scenario. &lt;code>assets/station_fahy&lt;/code> and &lt;code>assets/station_nist&lt;/code> ship it at 0; 0.024,
+by default&lt;/strong> — it counts the agents ahead of the deciding agent at the exit, a
+number that grows with the crowd, so no constant suits every scenario. &lt;code>assets/station_fahy&lt;/code> and &lt;code>assets/station_nist&lt;/code> ship it at 0; 0.024,
 calibrated against Fahy Table 2, is their labelled sensitivity — see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#why-it-is-opt-in-and-what-0024-means">docs/routing.md&lt;/a>
 and &lt;code>scripts/sweep_queue_weight.py&lt;/code>&lt;/li>
 &lt;li>&lt;strong>Throughput throttling&lt;/strong>: Optional exit flux limiting via
@@ -9205,7 +9205,7 @@ tabulated in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implemen
 &lt;tr>
 &lt;td>&lt;code>w_queue&lt;/code>&lt;/td>
 &lt;td>&lt;code>0.0&lt;/code>&lt;/td>
-&lt;td>Weight on queue time in the ranking cost (off)&lt;/td>
+&lt;td>Weight on queue time in the ranking cost (off); the queue is the agents ahead of the agent at the exit&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>visibility_extinction_threshold&lt;/code>&lt;/td>
@@ -9672,8 +9672,9 @@ first, and the anchor is then never consulted. This is the tau-first order
 of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/187" target="_blank" rel="noopener">#187&lt;/a>,
 kept by decision
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/route-cost-gate/#one-asymmetry-favours-the-exit-the-agent-already-walks-to">Gate model in practice&lt;/a>).&lt;/li>
-&lt;li>The queue term counts agents globally, not those an agent can perceive
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89" target="_blank" rel="noopener">#89&lt;/a>).&lt;/li>
+&lt;li>The queue term counts the agents ahead of an agent by straight-line distance
+to the exit, with no perception and no wall test: an agent in the next room
+can count as ahead (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/89" target="_blank" rel="noopener">#89&lt;/a>).&lt;/li>
 &lt;li>Heat does not enter route choice
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/81" target="_blank" rel="noopener">#81&lt;/a>).&lt;/li>
 &lt;li>The smoke terms are the same for every familiarity setting
@@ -9832,7 +9833,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -9848,7 +9849,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">62fdf8ff5ee6a7e0728afc62c7b0f06c2da53f1dee9855acf1ed64588302a779&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">31418cae75357f1b2d0706b5ede6fd35391e01f74b504847a75eb6a069db5eda&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -10897,6 +10898,9 @@ envelope on the fire time. They are not a knob and no row is a match.&lt;/p>
 &lt;p>The 0.024 row is a calibration to Fahy&amp;rsquo;s front-door share. It is not a
 result. The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#provenance-of-the-stations-queue-weight">routing page&lt;/a>
 states that 0.024 no longer reproduces Fahy&amp;rsquo;s split at 0.5.0 (34.8 %).&lt;/p>
+&lt;p>Provenance: the 0.024 row was scored with the global-tally queue term, before
+the agents-ahead count of #89. It does not reproduce on main after that change.
+The primary arms and the V1-V3 scores use &lt;code>w_queue = 0&lt;/code> and are unaffected.&lt;/p>
 &lt;h3>How to read them&lt;span class="hx-absolute -hx-mt-20" id="how-to-read-them">&lt;/span>
 &lt;a href="#how-to-read-them" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
 &lt;li>&lt;strong>T1 shares cover different agent sets per arm.&lt;/strong> The low T1 of V2 alone
@@ -12537,7 +12541,7 @@ or &lt;code>app.py&lt;/code> in a source checkout) runs uploaded scenarios. It d
 &lt;tr>
 &lt;td>Queueing in door selection (&lt;code>FAC_DOOR_QUEUE&lt;/code>)&lt;/td>
 &lt;td>On by default (1.3 persons/m/s, &lt;code>evac.f90:1568&lt;/code>). Within &lt;code>Change_Target_Door&lt;/code> the estimated queueing time ranks only the first preference tier, the doors that are both known and visible (&lt;code>:16592&lt;/code>); the parameter also switches on the Nash iteration of the initial exit choice (&lt;code>:7071&lt;/code>) and enters the queue estimates in &lt;code>EVACUATE_HUMANS&lt;/code> (&lt;code>:9364&lt;/code>)&lt;/td>
-&lt;td>Off by default: &lt;code>w_queue&lt;/code> = 0 in the JSON &lt;code>routing&lt;/code> block. When set, it counts all agents targeting an exit, not a local queue.&lt;/td>
+&lt;td>Off by default: &lt;code>w_queue&lt;/code> = 0 in the JSON &lt;code>routing&lt;/code> block. When set, it counts the agents targeting the exit that are strictly closer to it than the deciding agent (straight-line distance to the exit centroid, self excluded), as &lt;code>Change_Target_Door&lt;/code> does. FDS+Evac bins the distance into 50 intervals and counts the agents at least one bin closer; pyFDS-Evac uses the continuous strict comparison. It has no visible-door gate (every exit is ranked in one list), no semicircle cap on the count and no width-based capacity (a flat &lt;code>default_exit_capacity&lt;/code>, 1.3 agents/s, unless the exit sets one); it does not switch on the Nash iteration of the initial choice.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>TAU&lt;/code> (&lt;code>TAU_MEAN&lt;/code> etc., §8.7)&lt;/td>
@@ -14251,7 +14255,7 @@ origin node, and the current exit is never ranked behind the path the
 agent walks (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/">Routing&lt;/a>). It adopts a different exit only if the rival passes the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/routing/#switching-rule">switching rule&lt;/a> of the routing model:
 an optical-depth margin, then an anchor on the ranking cost. The
-optional queue term (&lt;code>w_queue&lt;/code>, 0 by default) enters the ranking cost.&lt;/li>
+optional queue term (&lt;code>w_queue&lt;/code>, 0 by default; the agents ahead of the agent at the exit) enters the ranking cost.&lt;/li>
 &lt;li>&lt;strong>All refused.&lt;/strong> When every known route fails the gate, the least smoky one
 is promoted (it stays rejected, marked &lt;code>fallback:&lt;/code>), but the current route is kept first unless the rival&amp;rsquo;s
 optical depth \(\tau\) is more than &lt;code>fallback_switch_margin&lt;/code> lower
@@ -19147,8 +19151,8 @@ evaluation:&lt;/p>
 &lt;td>whether the route was available, and why not. When every route is refused, the route the agent is sent along stays &lt;code>rejected&lt;/code> and its reason starts with &lt;code>fallback: &lt;/code>; read that prefix to tell it from a refusal that ended the tick&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;code>queue_time_s&lt;/code>, &lt;code>exit_count&lt;/code>, &lt;code>exit_capacity&lt;/code>&lt;/td>
-&lt;td>queue estimate at the exit&lt;/td>
+&lt;td>&lt;code>queue_time_s&lt;/code>, &lt;code>exit_count&lt;/code>, &lt;code>exit_queue_ahead&lt;/code>, &lt;code>exit_capacity&lt;/code>&lt;/td>
+&lt;td>queue estimate at the exit: &lt;code>queue_time_s&lt;/code> is &lt;code>exit_queue_ahead / exit_capacity&lt;/code> (the agents ahead of this agent at that exit, 0 while &lt;code>w_queue&lt;/code> is 0); &lt;code>exit_count&lt;/code> is every agent counted at the exit&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>length_outside_m&lt;/code>&lt;/td>
@@ -19884,7 +19888,8 @@ associated with leaving the building (Wood 1980, p. 91). See
 &lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
 cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
 above zero (the default is 0.0), expected queueing at an exit also enters the
-cost, so a crowded exit becomes less attractive. Agents do not follow others,
+cost, so an exit with many agents closer to it than the deciding agent becomes
+less attractive. Agents do not follow others,
 and an exit never becomes more attractive because others use it. See
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>.
 The pre-registered Station comparison with survivor exit-use data failed
@@ -22526,7 +22531,7 @@ the path either. Under &lt;code>&amp;quot;additive&amp;quot;&lt;/code> both weig
 the additive model it is converted to distance and added to the
 composite:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;pre>&lt;code>queue_time = N_exit / capacity
+&lt;pre>&lt;code>queue_time = N_ahead / capacity
 queue_distance = base_speed_m_per_s * queue_time
 composite = path_length * (1 &amp;#43; w_smoke * K_ave)
 &amp;#43; w_fed * FED_max
@@ -22547,7 +22552,13 @@ but &lt;code>w_queue&lt;/code> is not the same quantity in the two: the additive
 carries the extra &lt;code>base_speed_m_per_s&lt;/code> factor.&lt;/p>
 &lt;p>where:&lt;/p>
 &lt;ul>
-&lt;li>&lt;code>N_exit&lt;/code> is the number of agents currently targeting that exit&lt;/li>
+&lt;li>&lt;code>N_ahead&lt;/code> is the number of agents currently targeting that exit that are
+strictly closer to the exit&amp;rsquo;s centroid (straight line) than the agent being
+ranked, the agent itself excluded. It is counted from the agent positions of
+the reroute pass, and an agent that switches earlier in the same pass is
+counted at its new exit. The agent at the head of a queue pays nothing for
+it; the agent at the back pays for everyone ahead. &lt;code>exit_count&lt;/code> in the route
+cost history stays the global tally and &lt;code>exit_queue_ahead&lt;/code> is &lt;code>N_ahead&lt;/code>&lt;/li>
 &lt;li>&lt;code>capacity&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code> (default 1.3)&lt;/li>
 &lt;li>&lt;code>base_speed_m_per_s&lt;/code> converts queueing delay (seconds) into
 distance-equivalent cost (metres) so all terms share the same
@@ -22559,13 +22570,29 @@ that cannot change which path is selected to a given exit.&lt;/p>
 &lt;p>&lt;strong>Congestion-aware routing is off by default&lt;/strong> (&lt;code>w_queue = 0&lt;/code>); set it in a
 scenario&amp;rsquo;s &lt;code>routing&lt;/code> block to switch it on.&lt;/p>
 &lt;h4>Why it is opt-in, and what 0.024 means&lt;span class="hx-absolute -hx-mt-20" id="why-it-is-opt-in-and-what-0024-means">&lt;/span>
-&lt;a href="#why-it-is-opt-in-and-what-0024-means" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The term is &lt;code>w_queue * v0 * N / c&lt;/code> with &lt;code>N&lt;/code> a &lt;strong>global&lt;/strong> tally of every agent
-targeting the exit — where &lt;code>v0&lt;/code> is the &lt;code>base_speed_m_per_s&lt;/code> conversion constant
-(not any agent&amp;rsquo;s desired speed) and &lt;code>c&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code>,
-falling back to &lt;code>default_exit_capacity&lt;/code>. With both at their 1.3 defaults the
-penalty is simply
-&lt;code>w_queue * N&lt;/code> metres, so it grows without bound in the population while the
-path-length differences it competes against are fixed by the geometry:&lt;/p>
+&lt;a href="#why-it-is-opt-in-and-what-0024-means" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The term is &lt;code>w_queue * v0 * N_ahead / c&lt;/code>, where &lt;code>v0&lt;/code> is the
+&lt;code>base_speed_m_per_s&lt;/code> conversion constant (not any agent&amp;rsquo;s desired speed) and
+&lt;code>c&lt;/code> is the exit&amp;rsquo;s &lt;code>capacity_agents_per_s&lt;/code>, falling back to
+&lt;code>default_exit_capacity&lt;/code>. &lt;code>N_ahead / c&lt;/code> is the time the agent waits for the
+agents in front of it, so under the gate &lt;code>w_queue = 1&lt;/code> means one second of
+queue per second of walking. This is the FDS+Evac counterpart, which counts
+the agents that target the door and are closer to it than the agent
+(&lt;code>FAC_DOOR_QUEUE&lt;/code>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/">Coming from FDS+Evac&lt;/a>). With
+both constants at their 1.3 defaults the additive penalty is
+&lt;code>w_queue * N_ahead&lt;/code> metres.&lt;/p>
+&lt;p>&lt;code>N_ahead&lt;/code> is still of the order of the crowd: the last of &lt;code>N&lt;/code> agents has
+&lt;code>N - 1&lt;/code> ahead. It does not remove the dependence on the crowd size, and it has
+no perception in it: an agent far from a door still counts nearly everyone at
+that door, because nearly everyone is closer. What it gives is a meaning
+(the agent&amp;rsquo;s own wait) in place of a per-population factor, and a charge that
+depends on where the agent stands. The old form, a global tally of every agent
+targeting the exit with the deciding agent included, charged the head of a
+queue for the whole queue, so who diverted was set by the order of evaluation
+and not by position. On the T-junction deck with 100 agents (&lt;code>w_queue = 1&lt;/code>,
+seeds 1–3), re-pricing the logged congestion switches with &lt;code>N_ahead&lt;/code> removes
+36 of 134 (27 %), a one-step re-score without feedback on later counts; some
+of the agents that switched had nobody ahead at the exit.&lt;/p>
+&lt;p>With the old global form the penalty at &lt;code>w_queue = 1.0&lt;/code> and &lt;code>w_queue = 0.03&lt;/code> was&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -22592,11 +22619,18 @@ path-length differences it competes against are fixed by the geometry:&lt;/p>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
-&lt;p>No constant is right at more than one crowd size. 1.0 puts 333 m on a door at
-Station scale; the 0.03 that fixes that is inert in an ordinary room. So the
-library ships no congestion weight at all, and the calibrated value lives with
-the deck it was calibrated on. Issue #89 tracks replacing the global &lt;code>N&lt;/code> with a
-queue the agent can perceive, which would remove the scale dependence.&lt;/p>
+&lt;p>and &lt;code>N_ahead&lt;/code> is bounded by the same &lt;code>N&lt;/code>, so the table is the bound: no
+constant is right at more than one crowd size. 1.0 puts up to 333 m on a door
+at Station scale; the 0.03 that fixes that is inert in an ordinary room. So
+the library ships no congestion weight at all, and the calibrated value lives
+with the deck it was calibrated on.&lt;/p>
+&lt;p>&lt;strong>Limitations.&lt;/strong> The distance is straight, so it is only meaningful where the
+agents and the exit share one open area. An agent in the next room can be
+closer to an exit than an agent that is walking to it, and then it counts as
+ahead. FDS+Evac has the same limit and hides it behind its visible-door tier;
+pyFDS-Evac ranks every exit in one list and has no such gate, no semicircle cap
+on the count and no width-based capacity (the capacity is a flat
+&lt;code>default_exit_capacity&lt;/code> unless the exit sets one).&lt;/p>
 &lt;p>&lt;strong>&lt;code>assets/station_fahy&lt;/code> and &lt;code>assets/station_nist&lt;/code> ship &lt;code>w_queue = 0&lt;/code> (the
 Station V0 configs). 0.024, the value this section is about, is the labelled
 sensitivity &lt;code>build_scenario.py --w-queue 0.024 --out DIR&lt;/code>. It was fitted under
@@ -22634,7 +22668,8 @@ re-fitted there.&lt;/p>
 &lt;a href="#provenance-of-the-stations-queue-weight" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h4>&lt;p>The pre-registered coupled Station study is on the
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-station/">Station study&lt;/a> page.&lt;/p>
 &lt;p>Calibrated, not conventional. The table below is the original sweep, which
-selected 0.03; see the caveats above for why the deck shipped 0.024, why it
+selected 0.03, measured with the global tally &lt;code>N&lt;/code> (the count of agents ahead
+was introduced later; see above); see the caveats above for why the deck shipped 0.024, why it
 now ships 0, and why neither value has been re-fitted under the gate cost
 model. The sweep
 overrides whatever &lt;code>w_queue&lt;/code> the deck ships.
@@ -22690,15 +22725,14 @@ also lower, but it is nearly flat across 0.02–0.05 (17.1–18.0 %) while
 the front-door share swings 58.1 % → 48.4 %, so the row structure
 confirms that low weights beat 1.0 without discriminating 0.03 within
 that band. The value is fixed by the aggregate target alone.&lt;/p>
-&lt;p>&lt;strong>This calibration holds at one crowd size.&lt;/strong> The term is
-&lt;code>w_queue * v0 * N / c&lt;/code> (&lt;code>v0&lt;/code>, &lt;code>c&lt;/code> as above) with &lt;code>N&lt;/code> a global tally, so its
-magnitude
+&lt;p>&lt;strong>This calibration holds at one crowd size.&lt;/strong> Fitted with the global tally,
+the term was &lt;code>w_queue * v0 * N / c&lt;/code> (&lt;code>v0&lt;/code>, &lt;code>c&lt;/code> as above), so its magnitude
 relative to the path-length differences it competes with grows linearly
-with the population — 0.03 was fitted at the Station&amp;rsquo;s 333 agents, and
+with the population: 0.03 was fitted at the Station&amp;rsquo;s 333 agents, and
 a scenario an order of magnitude smaller wants a correspondingly larger
-weight to express the same preference. That scale dependence is a
-property of the global-&lt;code>N&lt;/code> form rather than of this number; a queue an
-agent could actually perceive would not have it.&lt;/p>
+weight to express the same preference. &lt;code>N_ahead&lt;/code> is of the same order (the last
+agent of &lt;code>N&lt;/code> sees &lt;code>N - 1&lt;/code>), so the scale dependence stays, and the fitted
+number belongs to the global form and has not been refitted for &lt;code>N_ahead&lt;/code>.&lt;/p>
 &lt;p>Exit capacity can be configured per exit in the scenario config:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-json" data-lang="json">&lt;span style="display:flex;">&lt;span>{
@@ -25626,7 +25660,9 @@ whichever exit it leads to. &lt;strong>Dose:&lt;/strong> it is refused when its 
 &lt;code>fed_rejection_threshold&lt;/code>. Either refusal alone removes the route.&lt;/li>
 &lt;li>&lt;strong>Ordering among survivors.&lt;/strong> Optical depth first, travel time second. The
 sort key is &lt;code>(rejected, tier, tau, rank_cost, hops)&lt;/code> with
-&lt;code>rank_cost = travel_time_s + w_queue * queue_time_s&lt;/code>. The &lt;code>tau&lt;/code> in the key
+&lt;code>rank_cost = travel_time_s + w_queue * queue_time_s&lt;/code>, with &lt;code>queue_time_s&lt;/code>
+the agents ahead of this agent at the exit over the exit&amp;rsquo;s capacity
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/routing/routing/#congestion-aware-routing">Congestion-aware routing&lt;/a>). The &lt;code>tau&lt;/code> in the key
 is scaled by &lt;code>current_exit_discount&lt;/code> (0.9) for the exit the agent already
 heads for. &lt;code>tier&lt;/code> is the clean-exit tier, off by default.&lt;/li>
 &lt;li>&lt;strong>Adoption.&lt;/strong> The ordering proposes; the exit-switch anchor disposes.
@@ -26211,7 +26247,8 @@ too, which is why pinning pre-gate behaviour needs both keys.&lt;/p>
 &lt;a href="#the-additive-model" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;pre>&lt;code>composite = effective_length * (1 &amp;#43; w_smoke * K_ave)
 &amp;#43; w_fed * FED_max
-&amp;#43; w_queue * base_speed_m_per_s * queue_time (when w_queue &amp;gt; 0)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&amp;#43; w_queue * base_speed_m_per_s * queue_time (when w_queue &amp;gt; 0;
+queue_time = N_ahead / capacity)&lt;/code>&lt;/pre>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
 &lt;button
 class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
 title="Copy code"
@@ -27526,14 +27563,14 @@ known exit that is cheaper.&lt;/p>
 &lt;td>Optical depth &lt;code>K_ave * L &amp;lt;= 6&lt;/code>, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute &lt;code>K&lt;/code> door criterion. It vetoes &lt;em>and&lt;/em> ranks&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;strong>Congestion&lt;/strong>&lt;/td>
-&lt;td>Modelled: queueing time depends on count of closer agents heading to same exit&lt;/td>
-&lt;td>Optional (&lt;code>w_queue&lt;/code>), off by default; a global tally of agents targeting the exit&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>&lt;strong>Familiarity&lt;/strong>&lt;/td>
 &lt;td>Per-agent per-exit familiarity (user-configurable, constrains feasible exit set)&lt;/td>
 &lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>). Per exit: &lt;code>familiarity: {exit_id: p}&lt;/code> draws each listed exit once per agent, as &lt;code>KNOWN_DOOR_PROBS&lt;/code> does per group; an unlisted exit is unknown&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Congestion&lt;/strong>&lt;/td>
+&lt;td>Modelled: queueing time depends on count of closer agents heading to same exit&lt;/td>
+&lt;td>Optional (&lt;code>w_queue&lt;/code>), off by default; the agents targeting the exit that are closer to it than the deciding agent (straight-line distance, self excluded), with no visible-door gate, no semicircle cap and no width-based capacity&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Social behaviour&lt;/strong>&lt;/td>
@@ -27987,9 +28024,9 @@ between routing (&lt;code>route_graph.py&lt;/code>), FED (&lt;code>fed.py&lt;/co
 &lt;ul>
 &lt;li>
 &lt;p>&lt;strong>Congestion modelling is opt-in and scale-dependent.&lt;/strong> A queueing
-term exists (&lt;code>w_queue&lt;/code>) but is &lt;strong>off by default&lt;/strong>: it is driven by a
-global tally of every agent targeting an exit, so no constant is
-right at more than one crowd size. With it off, agents
+term exists (&lt;code>w_queue&lt;/code>) but is &lt;strong>off by default&lt;/strong>: it is driven by the
+number of agents ahead at an exit, which grows with the crowd, so no
+constant is right at more than one crowd size. With it off, agents
 independently pick the cheapest path without considering how many
 others are heading to the same exit — exactly the overcrowding the
 game-theoretic model in FDS+Evac was designed to solve. See
@@ -28454,7 +28491,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -28478,7 +28515,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d968a989fcc72f662e761286e77d1407c1631c6e93d44044e866dec658900f14&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">eb1809e0b51a9336916d3de4cb665864b9997697aeab420bdb9f12ddb578eeb3&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -29671,7 +29708,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29689,7 +29726,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">00a40203fae1892e007ac41973a76c6208625b1c16c72608996d48fe8c188f44&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">958e4b58bff57665a76e9c2226b7036f4650ad543210470a57145143574eb720&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -31399,7 +31436,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;/div>
 &lt;p class="docs-files__summary">The two scenarios, the FDS decks, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 45 s for the 16 runs and the figures&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>run K v0 f hand t_clear t_smoke t_pred diff tol 1/f ratio err % f rec-hand walk/fv0-1&lt;/code>&lt;br>&lt;code>K10 10.0000 1.25 0.192635 79.24 408.91 408.913 -0.0035 0.0357 5.19118 5.16040 -0.593 -2.8e-17 -9.6e-06&lt;/code>&lt;br>&lt;code>coupled_fds 0.9955 1.25 0.919626 78.44 85.30 85.296 &amp;#43;0.0045 0.0209 1.08740 1.08746 &amp;#43;0.005 -2.7e-07 -5.8e-09&lt;/code>&lt;br>&lt;code>pass criteria: all met&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -31423,7 +31460,7 @@ six decimals (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issue
 &lt;li>&lt;code>assets/iso_table21_coupled/build_geometry.py&lt;/code>: writes the coupled deck, scenario and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table21_coupled/README.md&lt;/code>: what the coupled case is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e7a1b2844bda8b65fc2a81fb37024544c2d8aafb50bcf482830f4d2dee1283e4&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f7f4d3799140e6437ea431e7f7569c34bc711321eef49f9441a5f6e8bd81e64e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The tests of the first two cases run in about 20 s. They are weaker than this page: the
@@ -31927,7 +31964,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The four FDS decks and scenarios, run.py, the figure script, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/85e61af8155b6a2c3d2bb561ecca3fa46e17f164">&lt;code>85e61af&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s (a), 44 s (b), 44 s (c) and 24 s (d) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 1 min for the four cases&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>a: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>d: t* &amp;lt;= t_sim &amp;lt; t* &amp;#43; 1: True; stop == crossing: True&lt;/code>&lt;br>&lt;code>all pass criteria hold&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -31956,7 +31993,7 @@ otherwise the exposure, and the comparison, would be meaningless.&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/geometry.wkt&lt;/code>: the second version of this test, walkable area&lt;/li>
 &lt;li>&lt;code>assets/ISO-table22/README.md&lt;/code>: the second version of this test&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bbd1511d9cbeeee9eb449416df88b5f2f844b3ea25979bdcdd76d3b4daf99f5a&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">af4341d9947571222aa86466559225065703058b8989bcc90d5ca558f17023d7&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output (slices only, 256 kB for a–d and 29 kB for e) is committed in

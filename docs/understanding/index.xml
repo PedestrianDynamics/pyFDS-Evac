@@ -629,7 +629,8 @@ associated with leaving the building (Wood 1980, p. 91). See
 &lt;p>&lt;strong>Herding and social influence.&lt;/strong> Each agent chooses its route from its own
 cognitive map and the hazard along each route. When &lt;code>routing.w_queue&lt;/code> is
 above zero (the default is 0.0), expected queueing at an exit also enters the
-cost, so a crowded exit becomes less attractive. Agents do not follow others,
+cost, so an exit with many agents closer to it than the deciding agent becomes
+less attractive. Agents do not follow others,
 and an exit never becomes more attractive because others use it. See
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/78" target="_blank" rel="noopener">issue #78&lt;/a>.
 The pre-registered Station comparison with survivor exit-use data failed
@@ -1255,14 +1256,14 @@ known exit that is cheaper.&lt;/p>
 &lt;td>Optical depth &lt;code>K_ave * L &amp;lt;= 6&lt;/code>, the same threshold, but applied to the walked polyline rather than a straight sight line; x 0.8 budget for a rival exit; no absolute &lt;code>K&lt;/code> door criterion. It vetoes &lt;em>and&lt;/em> ranks&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&lt;strong>Congestion&lt;/strong>&lt;/td>
-&lt;td>Modelled: queueing time depends on count of closer agents heading to same exit&lt;/td>
-&lt;td>Optional (&lt;code>w_queue&lt;/code>), off by default; a global tally of agents targeting the exit&lt;/td>
-&lt;/tr>
-&lt;tr>
 &lt;td>&lt;strong>Familiarity&lt;/strong>&lt;/td>
 &lt;td>Per-agent per-exit familiarity (user-configurable, constrains feasible exit set)&lt;/td>
 &lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>). Per exit: &lt;code>familiarity: {exit_id: p}&lt;/code> draws each listed exit once per agent, as &lt;code>KNOWN_DOOR_PROBS&lt;/code> does per group; an unlisted exit is unknown&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;strong>Congestion&lt;/strong>&lt;/td>
+&lt;td>Modelled: queueing time depends on count of closer agents heading to same exit&lt;/td>
+&lt;td>Optional (&lt;code>w_queue&lt;/code>), off by default; the agents targeting the exit that are closer to it than the deciding agent (straight-line distance, self excluded), with no visible-door gate, no semicircle cap and no width-based capacity&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Social behaviour&lt;/strong>&lt;/td>
@@ -1716,9 +1717,9 @@ between routing (&lt;code>route_graph.py&lt;/code>), FED (&lt;code>fed.py&lt;/co
 &lt;ul>
 &lt;li>
 &lt;p>&lt;strong>Congestion modelling is opt-in and scale-dependent.&lt;/strong> A queueing
-term exists (&lt;code>w_queue&lt;/code>) but is &lt;strong>off by default&lt;/strong>: it is driven by a
-global tally of every agent targeting an exit, so no constant is
-right at more than one crowd size. With it off, agents
+term exists (&lt;code>w_queue&lt;/code>) but is &lt;strong>off by default&lt;/strong>: it is driven by the
+number of agents ahead at an exit, which grows with the crowd, so no
+constant is right at more than one crowd size. With it off, agents
 independently pick the cheapest path without considering how many
 others are heading to the same exit — exactly the overcrowding the
 game-theoretic model in FDS+Evac was designed to solve. See
