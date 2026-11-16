@@ -34,7 +34,7 @@ V0 = 1.5
 
 def _sim_with_one_agent(model_type: str):
     simulation = jps.Simulation(
-        model=_MODEL_BUILDERS[model_type]({}), geometry=AREA, dt=0.05
+        model=_MODEL_BUILDERS[model_type]({}, None), geometry=AREA, dt=0.05
     )
     waypoint = simulation.add_waypoint_stage((9.0, 5.0), 0.5)
     journey = simulation.add_journey(jps.JourneyDescription([waypoint]))

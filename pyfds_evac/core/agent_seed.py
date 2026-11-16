@@ -45,13 +45,18 @@ PURPOSE_FLOW_SHUFFLE = "flow_shuffle"
 PURPOSE_FILL_POSITIONS = "fill_positions"
 PURPOSE_FILL_SHUFFLE = "fill_shuffle"
 
+# The operational model's own random stream (AnticipationVelocityModel).
+PURPOSE_MODEL_RNG = "model_rng"
+
 # Hashed into every per-agent seed; fixed so that those seeds stay as they are.
 _AGENT_SEED_TAG = "spawn-key-blake2b-v1"
 _DISTRIBUTION_SEED_TAG = "distribution-blake2b-v1"
+_MODEL_SEED_TAG = "model-blake2b-v1"
 
 # Bumped whenever a derivation below changes; recorded in the manifest.
 # v2: per-distribution streams are hashed from the distribution key (#360).
-SEEDING_SCHEME = "spawn-key-blake2b-v2"
+# v3: the operational model's rng_seed is derived from the run seed (#758).
+SEEDING_SCHEME = "spawn-key-blake2b-v3"
 
 _SEED_MASK = (1 << 63) - 1
 # numpy's legacy seeding, which jupedsim's distribute_* functions use,
@@ -91,6 +96,19 @@ def distribution_seed(run_seed: int | None, dist_key: str, purpose: str) -> int:
     text = "\x1f".join((_DISTRIBUTION_SEED_TAG, purpose, str(run), str(dist_key)))
     digest = hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest()
     return int.from_bytes(digest, "big") & _NUMPY_SEED_MASK
+
+
+def model_seed(run_seed: int | None, purpose: str) -> int:
+    """Return a deterministic 63-bit seed for the operational model's *purpose* stream.
+
+    JuPedSim's AnticipationVelocityModel draws its ``rng_seed`` once per
+    process, so two processes with the same run seed differ unless it is
+    set (#758). A ``None`` run seed counts as 0.
+    """
+    run = 0 if run_seed is None else int(run_seed)
+    text = "\x1f".join((_MODEL_SEED_TAG, purpose, str(run)))
+    digest = hashlib.blake2b(text.encode("utf-8"), digest_size=8).digest()
+    return int.from_bytes(digest, "big") & _SEED_MASK
 
 
 def agent_rng(run_seed: int | None, key: SpawnKey, purpose: str) -> random.Random:

@@ -367,7 +367,7 @@ def test_manifest_records_the_seeding_scheme():
         manifest = json.loads(Path(result.manifest_file).read_text(encoding="utf-8"))
     finally:
         result.cleanup()
-    assert manifest["agent_seeding"] == "spawn-key-blake2b-v2"
+    assert manifest["agent_seeding"] == "spawn-key-blake2b-v3"
 
 
 def _next_stage(**seeds) -> str:

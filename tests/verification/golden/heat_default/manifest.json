@@ -4,7 +4,7 @@
   "git_commit": "<normalised>",
   "git_dirty": "<normalised>",
   "seed": 11,
-  "agent_seeding": "spawn-key-blake2b-v2",
+  "agent_seeding": "spawn-key-blake2b-v3",
   "scenario_path": "<normalised>",
   "fds_dir": null,
   "fds_version": "<normalised>",
