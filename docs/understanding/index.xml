@@ -606,12 +606,13 @@ sampling exists
 each level separately at its own height, with the matching &lt;code>&amp;amp;SLCF PBZ=&lt;/code> in
 the FDS deck, or pick the height that is conservative for the occupants who
 matter most and say so.&lt;/p>
-&lt;p>&lt;strong>Per-exit familiarity.&lt;/strong> Familiarity is set per spawn distribution, as
-&lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, or one probability applied to every exit. The
-&lt;code>entrance&lt;/code> key adds one exit that the whole group knows. A separate
-probability for each exit, as FDS+Evac allows with &lt;code>KNOWN_DOOR_PROBS&lt;/code>, is not
-supported; see
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">issue #136&lt;/a>.&lt;/p>
+&lt;p>&lt;strong>Familiarity has no preference.&lt;/strong> Familiarity is set per spawn distribution:
+&lt;code>&amp;quot;full&amp;quot;&lt;/code>, &lt;code>&amp;quot;discovery&amp;quot;&lt;/code>, one probability for every exit, or a probability per
+exit. &lt;code>entrance&lt;/code> names the exits the whole group knows. A known exit only
+enters the route choice; it competes on cost with every other known exit, and
+an exit learned by sight counts the same as one known at the start. FDS+Evac
+ranks known doors ahead of doors that are only visible. A habitual exit that
+is not the cheapest is therefore not reproduced.&lt;/p>
 &lt;p>&lt;strong>Familiarity does not change how agents treat smoke.&lt;/strong> Familiarity decides
 which exits an agent knows, not how much smoke it accepts. The route-cost
 settings, including every smoke setting of both cost models, are built once
@@ -1227,8 +1228,8 @@ exit and not at 40 m — but it is not what FDS+Evac reaches for first.&lt;/p>
 (conservative/active/herding/follower), and no game-theoretic
 component. Familiarity is modelled, but as a per-agent cognitive map
 that restricts the graph before routing, not as a per-exit preference
-group. Per-exit familiarity is not supported
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>).&lt;/p>
+group. A known exit competes on cost alone; it is not preferred over a
+known exit that is cheaper.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -1261,7 +1262,7 @@ group. Per-exit familiarity is not supported
 &lt;tr>
 &lt;td>&lt;strong>Familiarity&lt;/strong>&lt;/td>
 &lt;td>Per-agent per-exit familiarity (user-configurable, constrains feasible exit set)&lt;/td>
-&lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>). Per-exit familiarity is not supported (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/136" target="_blank" rel="noopener">#136&lt;/a>)&lt;/td>
+&lt;td>Per-agent cognitive map: an agent can only route over stages it knows or has discovered. The restriction is on &lt;em>topology&lt;/em> only — smoke is sampled globally, so a discovery agent&amp;rsquo;s route choice is not perception-limited (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125" target="_blank" rel="noopener">#125&lt;/a>). Per exit: &lt;code>familiarity: {exit_id: p}&lt;/code> draws each listed exit once per agent, as &lt;code>KNOWN_DOOR_PROBS&lt;/code> does per group; an unlisted exit is unknown&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Social behaviour&lt;/strong>&lt;/td>

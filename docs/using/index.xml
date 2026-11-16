@@ -4198,14 +4198,14 @@ empty object, before the setter&amp;rsquo;s keys are written.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>familiarity&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;full&amp;quot;&lt;/code>&lt;/td>
-&lt;td>&lt;code>full&lt;/code>, &lt;code>discovery&lt;/code>, or a probability in [0, 1]&lt;/td>
-&lt;td>What the agents know of the exits at the start; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>.&lt;/td>
+&lt;td>&lt;code>full&lt;/code>, &lt;code>discovery&lt;/code>, a probability in [0, 1], or an object &lt;code>{exit_id: p}&lt;/code>&lt;/td>
+&lt;td>What the agents know of the exits at the start; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/">Models › Wayfinding&lt;/a>. The object form makes each listed exit known with probability p, drawn once per agent in the order of &lt;code>exits&lt;/code>; an unlisted exit is unknown, and an empty object is &lt;code>discovery&lt;/code>. The agents then learn as under &lt;code>discovery&lt;/code>, also when every p is 1. An id that is not in &lt;code>exits&lt;/code>, or a p outside [0, 1] or not a number, stops the run.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>entrance&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>an exit id, or a list of exit ids&lt;/td>
-&lt;td>The exits, reachable from the spawn area, that the agents know from the start. &lt;code>pyfds-evac init&lt;/code> writes a list for a group whose &lt;code>KNOWN_DOOR_NAMES&lt;/code> has several doors with probability 1.&lt;/td>
+&lt;td>The exits, reachable from the spawn area, that the agents know from the start; an id that is not in &lt;code>exits&lt;/code> stops the run, and an exit no route from the spawn area reaches is reported as a warning. &lt;code>pyfds-evac init&lt;/code> writes a list for a group whose &lt;code>KNOWN_DOOR_NAMES&lt;/code> has several doors with probability 1.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>no_known_exit&lt;/code>&lt;/td>
@@ -7876,7 +7876,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/295d5d0061da11f616d1faef87a1d3f8e0b663a2">&lt;code>295d5d0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5443ea8b67ac4c3d1fd55c99f19dd83217d84533">&lt;code>5443ea8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7900,7 +7900,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">70eccda51b00dd35c607d4ffa29e3ba59042fcb237b01b732c04c4a1efa76a63&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d968a989fcc72f662e761286e77d1407c1631c6e93d44044e866dec658900f14&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
