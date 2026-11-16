@@ -195,7 +195,7 @@ evaluation:
 | `path_length_m`, `k_ave_route`, `travel_time_s`, `fed_max_route` | route measures |
 | `composite_cost`, `rank_cost`, `k_max_route`, `tau_route`, `k_leg_max`, `clean` | cost terms; which one orders the routes depends on the cost model |
 | `feasible`, `rejected`, `rejection_reason` | whether the route was available, and why not. When every route is refused, the route the agent is sent along stays `rejected` and its reason starts with `fallback: `; read that prefix to tell it from a refusal that ended the tick |
-| `queue_time_s`, `exit_count`, `exit_capacity` | queue estimate at the exit |
+| `queue_time_s`, `exit_count`, `exit_queue_ahead`, `exit_capacity` | queue estimate at the exit: `queue_time_s` is `exit_queue_ahead / exit_capacity` (the agents ahead of this agent at that exit, 0 while `w_queue` is 0); `exit_count` is every agent counted at the exit |
 | `length_outside_m` | length of the route outside the FDS slice coverage [m], measured on the edges between its nodes, like `path_length_m`, so it does not change as the agent walks; empty without FDS data. Outside the slices the route is costed in clear air ([#431](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/431)) |
 
 Under the default `"gate"` model, routes are ordered on `tau_route`, not on

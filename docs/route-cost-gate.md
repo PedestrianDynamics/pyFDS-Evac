@@ -81,7 +81,9 @@ Per agent, per reevaluation tick:
    `fed_rejection_threshold`. Either refusal alone removes the route.
 3. **Ordering among survivors.** Optical depth first, travel time second. The
    sort key is `(rejected, tier, tau, rank_cost, hops)` with
-   `rank_cost = travel_time_s + w_queue * queue_time_s`. The `tau` in the key
+   `rank_cost = travel_time_s + w_queue * queue_time_s`, with `queue_time_s`
+   the agents ahead of this agent at the exit over the exit's capacity
+   ([Congestion-aware routing](routing.md#congestion-aware-routing)). The `tau` in the key
    is scaled by `current_exit_discount` (0.9) for the exit the agent already
    heads for. `tier` is the clean-exit tier, off by default.
 4. **Adoption.** The ordering proposes; the exit-switch anchor disposes.
@@ -637,7 +639,8 @@ too, which is why pinning pre-gate behaviour needs both keys.
 ```
 composite = effective_length * (1 + w_smoke * K_ave)
           + w_fed * FED_max
-          + w_queue * base_speed_m_per_s * queue_time      (when w_queue > 0)
+          + w_queue * base_speed_m_per_s * queue_time      (when w_queue > 0;
+                                                            queue_time = N_ahead / capacity)
 ```
 
 and routes are ordered by `(rejected, composite, hops)`.

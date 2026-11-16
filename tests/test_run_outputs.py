@@ -259,6 +259,7 @@ def test_route_cost_csv_has_the_queue_and_capacity_columns(tmp_path):
         "rejection_reason",
         "queue_time_s",
         "exit_count",
+        "exit_queue_ahead",
         "exit_capacity",
         "length_outside_m",
     ]

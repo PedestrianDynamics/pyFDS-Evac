@@ -404,7 +404,7 @@ two differ:
   agent walks ([Routing](/models/routing.md)). It adopts a different exit only if the rival passes the
   [switching rule](/models/routing.md#switching-rule) of the routing model:
   an optical-depth margin, then an anchor on the ranking cost. The
-  optional queue term (`w_queue`, 0 by default) enters the ranking cost.
+  optional queue term (`w_queue`, 0 by default; the agents ahead of the agent at the exit) enters the ranking cost.
 - **All refused.** When every known route fails the gate, the least smoky one
   is promoted (it stays rejected, marked `fallback:`), but the current route is kept first unless the rival's
   optical depth \(\tau\) is more than `fallback_switch_margin` lower

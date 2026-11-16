@@ -777,7 +777,7 @@ AREAS: dict[str, Area] = {
             Mutant(
                 "reevaluate_counts_not_moved",
                 "removed term",
-                "_move_count(exit_counts, _counted_before, rs.counted_exit)",
+                "_move_holder(agent_id, _counted_before, rs.counted_exit)",
                 "pass",
                 module="pyfds_evac/core/scenario.py",
             ),

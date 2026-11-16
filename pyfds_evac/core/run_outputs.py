@@ -221,6 +221,7 @@ def _write_route_cost_history_csv(rows, output_path: str) -> None:
         "rejection_reason",
         "queue_time_s",
         "exit_count",
+        "exit_queue_ahead",
         "exit_capacity",
         "length_outside_m",
     ]

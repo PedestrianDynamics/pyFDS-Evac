@@ -463,7 +463,10 @@ def test_station_switches_to_exits_seen_at_spawn_are_learned_exit(
     with out.open(encoding="utf-8") as f:
         rows = [r for r in csv.DictReader(f) if float(r["time_s"]) == 1.0]
     reasons = collections.Counter(r["reason"] for r in rows)
-    assert reasons == {"learned_exit": 13, "congestion": 11}
+    # With the agents ahead counted (#89) nobody at t = 1 s has enough agents
+    # closer to the front exit to switch for the queue; the global tally gave
+    # {"learned_exit": 13, "congestion": 11}.
+    assert reasons == {"learned_exit": 12}
 
 
 # ── Which rows the route_switches metric counts (#733) ──
