@@ -775,8 +775,11 @@ THINWALL_OBST = {  # &OBST XB of the deck: x0, x1, y0, y1
 def _thinwall_data(sim_dir: Path) -> dict:
     from fdsvismap import VisMap
 
+    from pyfds_evac.core.fdsreader_adapter import fdsreader_without_cache
+
     vis = VisMap()
-    vis.read_fds_data(str(sim_dir), fds_slc_height=1.75)
+    with fdsreader_without_cache():
+        vis.read_fds_data(str(sim_dir), fds_slc_height=1.75)
     vis.set_time_points([0.0])
     for sign_id, (x, y) in THINWALL_SIGNS.items():
         vis.add_sign(sign_id, x, y, 3, "omni")
