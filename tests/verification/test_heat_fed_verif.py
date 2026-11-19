@@ -393,6 +393,8 @@ def test_a3_9_eq_63_44_within_factor_two_of_table_63_20():
     The factor 2 is a stated choice, not a sourced tolerance. The Handbook
     says only "somewhat" over- or nonconservative; the observed ratios are
     0.61 to 1.07. The band catches a wrong exponent or unit, not a refit.
+    ISO 13571's +-25 % for the same Eq. (10) is read as the fit's own
+    uncertainty, not agreement with Table 63.20 (#289).
     """
     for temp, tabulated in TABLE_63_20_CONVECTIVE_MIN.items():
         rate = default_heat_fed_rate_per_minute(

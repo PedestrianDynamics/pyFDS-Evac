@@ -676,7 +676,7 @@ Exit throughput throttling has no general test yet
   leaves only for a rival the anchor accepts (clearly lower τ, or clean
   where the current route is not)
   ([#750](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/750)). A dose-based comparator is researched in
-  [#751](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751); the wider question is [#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696).
+  [#751](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/751); on the T-junction it did worse than the default, which [#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696) keeps.
 - Anticipation assumes unimpeded speed and, by default, perfect foresight of
   the finished FDS record.
 
