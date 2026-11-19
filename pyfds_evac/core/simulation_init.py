@@ -55,6 +55,12 @@ from .time_step import DEFAULT_DT_S, dt_from_params
 
 _logger = logging.getLogger(__name__)
 
+# AnticipationVelocityModel ``wall_buffer_distance`` [m]. pyFDS-Evac choice:
+# JuPedSim's default is 0.1 m and has no published source. An agent whose
+# target lies behind a wall stops at r + b, so 0.1 leaves a flush exit 0.2 m
+# deep unreachable at r = 0.15 (#975: 0 of 6 out, 6 of 6 with 0.0).
+AVM_WALL_BUFFER_M = 0.0
+
 _AGENT_MODEL_TYPES = (
     "CollisionFreeSpeedModel",
     "CollisionFreeSpeedModelV2",
@@ -504,6 +510,8 @@ def create_agent_parameters(
             global_params, "anticipation_time", 1.0
         )
         avm_params["reaction_time"] = getattr(global_params, "reaction_time", 0.3)
+        # pyFDS-Evac choice, see AVM_WALL_BUFFER_M.
+        avm_params["wall_buffer_distance"] = AVM_WALL_BUFFER_M
         return jps.AnticipationVelocityModelAgentParameters(**avm_params)
 
     raise ValueError(

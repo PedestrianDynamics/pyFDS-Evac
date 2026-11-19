@@ -245,6 +245,9 @@ def effective_configuration(
     step_warning = _step_warning(raw)
     if step_warning is not None:
         warnings.append(step_warning)
+    reach_warning = _exit_reach_warning(scenario, raw)
+    if reach_warning is not None:
+        warnings.append(reach_warning)
     return EffectiveConfiguration(
         level=level,
         inputs=_inputs(opts, scenario, raw, max_time, known),
@@ -333,6 +336,21 @@ def _step_warning(raw: Mapping[str, Any]) -> str | None:
     params = _sim_settings(raw).get("simulationParams", {}) or {}
     model_type = params.get("model_type", "CollisionFreeSpeedModel")
     return None if dt is None else large_step_warning(model_type, dt)
+
+
+def _exit_reach_warning(scenario: Any, raw: Mapping[str, Any]) -> str | None:
+    """The run's exit-reachability warning (#975), predicted.
+
+    Nothing without a loaded walkable polygon (a raw scenario mapping).
+    """
+    walkable = getattr(scenario, "walkable_polygon", None)
+    if walkable is None:
+        return None
+    from pyfds_evac.core.exit_reach import exit_reach_warning
+
+    params = _sim_settings(raw).get("simulationParams", {}) or {}
+    model_type = params.get("model_type", "CollisionFreeSpeedModel")
+    return exit_reach_warning(model_type, walkable, raw)
 
 
 def _inputs(

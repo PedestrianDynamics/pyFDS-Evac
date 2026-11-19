@@ -102,6 +102,7 @@ from .direct_steering_runtime import (
     update_checkpoint_speed,
 )
 from .exit_queue import ExitQueueIndex
+from .exit_reach import exit_reach_warning
 from .fds_coverage import (
     apply_coverage_policy,
     check_fds_coverage,
@@ -2056,6 +2057,11 @@ def run_scenario(
     step_warning = large_step_warning(scenario.model_type, dt)
     if step_warning is not None:
         _logger.warning(step_warning)
+    reach_warning = exit_reach_warning(
+        scenario.model_type, scenario.walkable_polygon, scenario.raw
+    )
+    if reach_warning is not None:
+        _logger.warning(reach_warning)
     model = _build_model(scenario.model_type, scenario.sim_params, seed)
 
     sqlite_tmp = tempfile.NamedTemporaryFile(suffix=".sqlite", delete=False)
