@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Upgrading
 
+- AnticipationVelocityModel runs use a wall buffer of 0.0 m, where JuPedSim's
+  default is 0.1 m, so agents reach an exit that is flush with a wall and
+  0.2 m deep (#975: 6 of 6 out, 0 of 6 before). AVM results change; other
+  models do not. AVM stays not recommended.
 - The opt-in irritant slowdown (`--enable-fic-speed`) no longer takes
   `--fic-alpha` or `--fic-min-factor`, and `TenabilityConfig` no longer
   has `fic_alpha` or `fic_min_factor`. Drop them from command lines and
@@ -17,6 +21,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   distribution; it was ignored before (#136).
 
 ### Added
+
+- Every model warns, at setup and in the effective configuration, when the
+  region an agent centre can occupy (the walkable area eroded by the largest
+  spawn radius plus the model's wall clearance) is farther than 0.03 m from an
+  exit, since agents heading straight at it can stop short (#975). The
+  clearance is 0 m for AnticipationVelocityModel, 0.02 m for
+  CollisionFreeSpeedModel and CollisionFreeSpeedModelV2, and 0 otherwise. A
+  single-agent bound, not a guarantee.
 
 - `--fed-activity-level rest|light|heavy` (`DefaultFedConfig.activity_level`,
   default `light`) scales the CO term of the gas FED by 0.255, 1 or 3.0
