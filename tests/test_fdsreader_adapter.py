@@ -440,3 +440,35 @@ def test_the_verification_scripts_refuse_an_fdsreader_without_the_hooks(
     monkeypatch.delattr(settings, "ENABLE_CACHING")
     with pytest.raises(RuntimeError, match="has no settings.ENABLE_CACHING"):
         module.open_fds_case(_copy(VIS_CASE, tmp_path / "case", "none"))
+
+
+def _without_smoke3d_files(src: Path, dst: Path) -> Path:
+    """Copy *src* and list a smoke3d file in its .smv that is not there (#978)."""
+    case = _copy(src, dst, "none")
+    smv = next(case.glob("*.smv"))
+    entry = (
+        "SMOKF3D     1   8700.000\n missing_1_1.s3d\n SOOT DENSITY\n rho_C\n kg/m3\n"
+    )
+    smv.write_text(smv.read_text() + entry)
+    return case
+
+
+@pytest.mark.parametrize(
+    ("src", "load"), LOADERS, ids=[load.__name__ for _, load in LOADERS]
+)
+def test_missing_smoke3d_files_log_no_warning(tmp_path, caplog, src, load):
+    """pyfds-evac never reads smoke3d; fdsreader's traceback per mesh is noise."""
+    case = _without_smoke3d_files(src, tmp_path / "case")
+    with caplog.at_level("WARNING"):
+        load(case)
+    assert not [
+        r for r in caplog.records if r.getMessage().startswith("Module smoke3d")
+    ]
+
+
+def test_other_fdsreader_warnings_still_reach_the_log(caplog):
+    with caplog.at_level("WARNING"), fdsreader_without_cache():
+        import logging
+
+        logging.warning("Module slice: broken")
+    assert [r.getMessage() for r in caplog.records] == ["Module slice: broken"]
