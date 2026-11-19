@@ -150,7 +150,7 @@ agent stops about r from a wall, not r + 0.1 m. With 0.1 m, agents stopped
 r + 0.1 m from a wall and could not reach an exit 0.2 m deep that sits flush
 with it, because an exit counts as reached within 0.03 m of its polygon
 ([#975](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/975)). In a
-10 × 6 m room with such an exit and r = 0.15 m, 0 of 6 runs left at 0.1 m
+10 × 6 m room with such an exit and r = 0.15 m, 0 of 6 agents left at 0.1 m
 and 6 of 6 at 0.0 m (seeds 3 and 5).
 
 The change does not make the model complete the decks. On `1fc317db`,
