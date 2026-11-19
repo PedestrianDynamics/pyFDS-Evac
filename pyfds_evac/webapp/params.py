@@ -865,6 +865,11 @@ def form_to_opts(
         value = form.get(name)
         if value is not None and str(value).strip():
             raise ValueError(message)
+    # The form never renders a hidden flag, so a post that carries one did
+    # not come from it; reject it rather than apply or drop it (#591).
+    posted_hidden = sorted(name for name in _HIDDEN & set(RUN_OPTIONS) if name in form)
+    if posted_hidden:
+        raise ValueError(f"not a GUI option: {', '.join(posted_hidden)}")
     parser = _load_parser()
     opts: dict[str, Any] = {}
     for action in parser._actions:
