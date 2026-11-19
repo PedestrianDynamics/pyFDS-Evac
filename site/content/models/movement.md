@@ -103,7 +103,7 @@ the counterflow is 0.99 × 2r. CFSM is
 
 The AVM and CFSM HUT and Familiarity 20 figures are from `1fc317db`
 (seeds 1–13 and 1–60). The AVM counterflow and Familiarity 5 cells were
-measured before the wall buffer was set to 0 and are not re-measured.
+measured with the 0.1 m wall buffer (`47cfeec5`) and are not re-measured.
 
 **`CollisionFreeSpeedModel`.** Agents stop at contact: the smallest
 distance between two centres is 1.00 × 2r, and between a centre and a wall
@@ -139,8 +139,7 @@ its doorway deadlocks are those of
 [#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359#issuecomment-6110207162):
 3 of 150 and 7 of 60 runs.
 
-**`AnticipationVelocityModel`.** Not recommended
-([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
+**`AnticipationVelocityModel`.** Not recommended.
 The model is seeded from the run seed
 ([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
 pyFDS-Evac sets its `wall_buffer_distance` to 0.0 m; JuPedSim's default is
@@ -151,7 +150,7 @@ r + 0.1 m from a wall and could not reach an exit 0.2 m deep that sits flush
 with it, because an exit counts as reached within 0.03 m of its polygon
 ([#975](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/975)). In a
 10 × 6 m room with such an exit and r = 0.15 m, 0 of 6 agents left at 0.1 m
-and 6 of 6 at 0.0 m (seeds 3 and 5).
+in each of seeds 3 and 5, and 6 of 6 at 0.0 m, the last at 6.69 s and 7.62 s.
 
 The change does not make the model complete the decks. On `1fc317db`,
 going from 0.1 m to 0.0 m changed the runs as follows:
@@ -167,13 +166,14 @@ completed 30 of 30. The model still jams at that door in 6 to 7 of 30
 seeds at 0.1 m (upstream issue pending). It also comes close to walls at
 corners and door jambs: the closest sampled centre-to-wall distance falls
 from 0.063 r to 0.041 r on HUT and from 0.105 r to 0.039 r on Familiarity
-20, and in 67 of 73 earlier runs the closest point lay within 1 r of a wall
+20, and in 67 of the 73 runs at 0.1 m the closest point lay within 1 r of a wall
 vertex. Positions are sampled every 0.1 s, so the true minimum can be
 smaller. The cause is not established.
 
 All other values stay at JuPedSim 1.4.2's defaults. Xu et al.'s Table 3
-parameters were run and not adopted: they helped HUT only with a 0.0 m
-buffer (0 to 2 of 13) and changed nothing on Familiarity 20 or at the door.
+parameters were run and not adopted: with a 0.0 m buffer they raised HUT
+from 0 to 2 of 13, lowered Familiarity 20 from 8 to 6 of 60 and left the
+door at 29 of 30; with 0.1 m they lowered the door from 23 to 17 of 30.
 
 **`GeneralizedCentrifugalForceModel`.** Not recommended. It refuses most
 spawns and overlaps when it runs. It fails at spawn on HUT and the
@@ -234,7 +234,7 @@ desired speed. `WarpDriverModel` keeps to the desired speed but clears
 them by letting agents overlap, down to 0.20 × 2r on the 100 % case.
 Neither result shows that a model handles counterflow; they are
 implementation checks of what each model does on two decks.
-`AnticipationVelocityModel` was not run on this deck,
+`AnticipationVelocityModel` has no seeded run with hard journeys on this deck,
 `GeneralizedCentrifugalForceModel` fails at spawn on this geometry, and
 `CollisionFreeSpeedModelV2` gives the CFSM numbers, so they are not
 listed.
@@ -285,15 +285,6 @@ value that pyFDS-Evac does not pass, so JuPedSim 1.4.2's default applies.
 | `strength_geometry_repulsion` (none) | JuPedSim, 5.0 |
 | `range_geometry_repulsion` (none) | JuPedSim, 0.02 m |
 | `time_gap`, per agent (none) | JuPedSim, 1.0 s |
-
-**Wall clearance and flush exits.** A model that keeps an agent's centre
-at least r + c from a wall can leave an exit that is flush with the wall out
-of reach. pyFDS-Evac checks this per exit, with c = 0.0 m for
-`AnticipationVelocityModel`, 0.02 m for `CollisionFreeSpeedModel` and
-`CollisionFreeSpeedModelV2` (JuPedSim's `range_geometry_repulsion`) and 0 for
-the other models, whose clearance is unmeasured. It warns when the largest
-agent radius plus c leaves more than 0.03 m between the exit and the
-walkable area ([Troubleshooting](/docs/troubleshooting.md)).
 
 **`CollisionFreeSpeedModelV2`**: the repulsion values are per agent.
 `strength_neighbor_repulsion` and `range_neighbor_repulsion` are read from
@@ -351,6 +342,17 @@ Decks exported from the JuPedSim web app carry `"mass": 80`.
 JuPedSim's defaults.
 
 {{< /details >}}
+
+### Wall clearance and flush exits
+
+A model that keeps an agent's centre at least r + c from a wall can leave
+an exit that is flush with the wall out of reach. pyFDS-Evac checks this
+per exit, with c = 0.0 m for `AnticipationVelocityModel`, 0.02 m for
+`CollisionFreeSpeedModel` and `CollisionFreeSpeedModelV2` (JuPedSim's
+`range_geometry_repulsion`) and 0 for the other models, whose clearance is
+unmeasured. It warns when more than 0.03 m lies between the exit and the
+region agent centres can occupy, the walkable area shrunk by the largest
+agent radius plus c ([Troubleshooting](/docs/troubleshooting.md)).
 
 ## Limitations
 

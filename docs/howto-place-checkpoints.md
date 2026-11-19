@@ -174,7 +174,7 @@ can do:
 
 - Draw door checkpoints that span both sides of the opening.
 - Run several seeds. A smaller agent radius does not remove the jam:
-  `HUT_Library` at 0.15 m still jams in 5 of 13 seeds.
+  `HUT_Library` at 0.15 m still jams in 7 of 13 seeds (`1fc317db`).
 - Before you read the evacuation time, check that every agent left before
   `max_simulation_time`. A deadlock stops the run early with `end_reason`
   `"deadlock"`.

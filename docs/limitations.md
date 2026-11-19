@@ -441,10 +441,11 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
 The warning that an exit may be out of reach of the agents' wall clearance
 tests one agent heading straight at the exit. It is a necessary condition,
 not a guarantee. A silent check does not exclude stranded agents in a
-crowd: with a wall clearance of 0.06 to 0.07 m, 2 to 6 of 6 agents were
-stranded while the check was silent. The check can also fire for an exit that an
+crowd: with `AnticipationVelocityModel` in the #975 room and a wall
+clearance of 0.06 to 0.07 m, 2 to 6 of 6 agents per seed were stranded
+while the check was silent. The check can also fire for an exit that an
 agent arriving at an angle reaches
-([Movement models](/models/movement.md#values-passed-to-each-model)).
+([Movement models](/models/movement.md#wall-clearance-and-flush-exits)).
 
 ## Reproducibility
 
