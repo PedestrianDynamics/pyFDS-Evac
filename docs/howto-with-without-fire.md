@@ -379,9 +379,11 @@ dose penalty (+0.013, p = 0.27) and the 95th person leaves 58.0 s earlier
 flag sets it, and it is neither recommended nor validated. The ranking depends on the fire: on the earlier output of the same deck
 (`fire_2MW_PVC`), `"hold"` gave the lower dose at 60 s (median largest max
 FED 0.100 against 0.178 under `"tau"`); on `fire_2MW_PVC_796` the gap is
-gone. Whether the
-rule should send everyone to the exit by the fire is open
-([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
+gone. A comparator on predicted dose did worse on this output, because
+its walk-time clock assumes unimpeded speed; the default stays until a
+walk-time model sees the crowd's speed
+([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696),
+[#125](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/125)).
 {{< /callout >}}
 
 ### U and R, animated
@@ -753,8 +755,9 @@ page.
   (median 0.139 against 0.170; the default rule's paired mean is +0.033,
   p = 0.002) and a later 95th person out (by 15.4 s, p = 0.039). At 60 s
   the doses do not differ (median 0.268 against 0.271; p = 0.27) and the
-  default rule is faster by 58.0 s. Whether this rule is right is
-  open ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
+  default rule is faster by 58.0 s. The default stays until a walk-time
+  model sees the crowd's speed
+  ([#696](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/696)).
 - **HCl is probably overestimated.** The deck has no HCl loss to walls
   ([A crowd in a fire › What this does not show](first-fds-case.md#what-this-does-not-show)).
   That makes the HCl crossings early and inflates R+FIC.
