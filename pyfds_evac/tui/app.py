@@ -30,6 +30,7 @@ from textual.app import App, ComposeResult, SystemCommand
 from textual.binding import Binding
 from textual.containers import Horizontal, Vertical, VerticalScroll
 from textual.content import Content
+from textual.css.query import NoMatches
 from textual.screen import ModalScreen, Screen
 from textual.widgets import (
     Collapsible,
@@ -804,7 +805,12 @@ class EvacTui(App[None]):
                 )
 
     def _sc_tab(self) -> str | None:
-        return self.query_one("#sc-tabs", TabbedContent).active
+        # A queued highlight can arrive after the tabs are unmounted (#677).
+        try:
+            tabs = self.query_one("#sc-tabs", TabbedContent)
+        except NoMatches:
+            return None
+        return tabs.active
 
     @on(OptionList.OptionHighlighted, "#recent")
     def _recent_highlighted(self, event: OptionList.OptionHighlighted) -> None:

@@ -2951,10 +2951,6 @@ class TestRoundTrip:
                 assert f'name="{key}"' not in html, key
                 assert opts[key] == default(key), key
 
-    @pytest.mark.xfail(
-        strict=True,
-        reason="#591: form_to_opts applies a posted hidden flag the form never shows",
-    )
     def test_a_posted_hidden_flag_is_not_applied(self):
         from pyfds_evac.config.parameters import default
         from pyfds_evac.webapp.params import form_to_opts

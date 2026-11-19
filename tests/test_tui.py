@@ -1514,6 +1514,32 @@ def test_598_at_80_columns_the_step_keys_give_way(workdir, step):
     run(go())
 
 
+def test_677_highlight_after_the_tabs_are_gone_is_ignored(workdir):
+    """A highlight that arrives once #sc-tabs is unmounted is dropped."""
+    from textual.widgets import OptionList
+    from textual.widgets.option_list import Option
+
+    async def go():
+        app = make_app(workdir)
+        async with app.run_test(size=(80, 24)) as pilot:
+            await pilot.pause()
+            lists = {
+                i: app.query_one(f"#{i}", OptionList) for i in ("recent", "examples")
+            }
+            await app.query_one("#sc-tabs").remove()
+            await pilot.pause()
+            assert app._sc_tab() is None
+            for ident, handler in (
+                ("recent-0", app._recent_highlighted),
+                ("ex-0", app._example_highlighted),
+            ):
+                option = Option("row", id=ident)
+                list_id = "recent" if ident.startswith("recent") else "examples"
+                handler(OptionList.OptionHighlighted(lists[list_id], option, 0))
+
+    run(go())
+
+
 def test_598_question_mark_opens_the_keys_from_a_text_box(workdir):
     async def go():
         app = make_app(workdir)
