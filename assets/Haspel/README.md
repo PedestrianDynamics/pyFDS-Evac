@@ -57,9 +57,24 @@ Until #894 the scenario prescribed three journeys with fixed exit shares (85/15,
 Clear air (no `--fds-dir`), seeds 1–10, this population: all 260 agents leave in every seed, the last after 114.4–122.9 s (median 117.2 s); 204–212 of them leave by `jps-exits_1` (south). The desk rows of the Hörsaal are closed at their west end in the WKT (a 0.2 m wall at x 13.73–13.93 joins the 13 desks), so each row opens only to the east aisle. With both ends open, the shortest path cut through the 0.58 m gaps between desks, and in 3 of 5 seeds an agent walking through a row met a seated agent walking out of it head-on at the west end, a deadlock with 2 agents left. The FDS deck keeps the desks as they were. The earlier result, 400 agents out by 103.2 s at seed 42, was for the old population and exits.
 
 **1. The FDS output predates the deck.**
-`haspel.fds` was changed for #229: the mesh now covers the whole floor plan (x 6.25–61.25, y 5.75–43.25, 0.1 m cells, 88 meshes, about 10.3 million cells against 6.75 million before), so both exits lie inside the sampled smoke field. Walls 0.2 m thick, 5 m high, now follow the WKT outline, and the domain sides are open (`SURF_ID='OPEN'`), so smoke leaves the building only through the two exits. The strip between the building and the outline, including the strip north of the long wall at y ≈ 37.1 that the floor plan treats as outdoors, is therefore an enclosed walkway in FDS. The burner (2 × 2 m, x 33.5–35.5, y 12.5–14.5, top at 1 m) is in the south corner of the Foyer, about 3 m east of the entrance vestibule that most agents pass on their way to `jps-exits_1`; the WKT has the same 2 × 2 m as an obstacle, so agents walk around it. The fire ramps linearly to 200 kW (50 kW/m² × 4 m²) at 60 s, then stays at 200 kW. No FDS output of this deck exists yet; it needs a run on JURECA. See #229.
+`haspel.fds` was changed for #229: the mesh now covers the whole floor plan (x 6.25–61.25, y 5.75–43.25, 0.1 m cells, 88 meshes, about 10.3 million cells against 6.75 million before), so both exits lie inside the sampled smoke field. Walls 0.2 m thick, 5 m high, now follow the WKT outline, and the domain sides are open (`SURF_ID='OPEN'`), so smoke leaves the building only through the two exits. The strip between the building and the outline, including the strip north of the long wall at y ≈ 37.1 that the floor plan treats as outdoors, is therefore an enclosed walkway in FDS. The burner (2 × 2 m, x 33.5–35.5, y 12.5–14.5, top at 1 m) is in the south corner of the Foyer, about 3 m east of the entrance vestibule that most agents pass on their way to `jps-exits_1`; the WKT has the same 2 × 2 m as an obstacle, so agents walk around it. The fire ramps linearly to 200 kW (50 kW/m² × 4 m²) at 60 s, then stays at 200 kW. The deck writes its gas slices at z = 2 m, cell-centred, so pyfds-evac reads smoke, CO, CO₂ and O₂ at z = 2.05 m, not at its 1.6 m default, and says so in a setup warning.
 
-**Before running the comparison:** run FDS on this deck (#229), match the inputs above, and compare a clear-air run against scenario 1 (#230). Keep fire runs as a separate comparison against scenario 2, once its blocked routes and impaired agents are modelled.
+FDS output: FDS 6.10.1 (FDS-6.10.1-0-g12efa16) on JURECA, 88 MPI processes, T_END 1200 s, run `jureca-2026-11` (Slurm jobs 15850945, 15850956, 15850957), deck sha256 `2e7becb7…e436eb`, ended with `STOP: FDS completed successfully`. The slices, `.out` and provenance records are in `<sciebo>/fds-evac-data/Haspel/jureca-2026-11/`; the job files are not in this repository.
+
+Fire against clear air, seeds 1–10, same code, `--fds-dir` the run above:
+
+| | Clear air | Fire |
+|---|---|---|
+| Last agent out, median | 117.2 s | 117.4 s |
+| Last agent out, range | 114.4–122.9 s | 116.1–122.7 s |
+| Leave by `jps-exits_1` (south) | 204–212 | the same as clear air in every seed |
+| Evacuated | 260/260 | 260/260 |
+| Largest FED of any agent | – | 1.7 × 10⁻⁵ |
+| Smallest smoke speed factor | – | 0.988 (about 75 agents slowed per seed) |
+
+The fire has no measurable effect on this evacuation. The burner reaches 200 kW only at 60 s and the last agent leaves at about 117 s, before the smoke at the slice height is dense enough to slow anyone by more than 1.2 % or to give a dose. Single seeds move by −5.4 s to +3.2 s against clear air because these small slowdowns change how the crowd interacts; no agent changes its exit. A fire comparison needs a faster or larger fire, or a later evacuation start.
+
+**Before running the comparison:** match the inputs above, and compare a clear-air run against scenario 1 (#230). Keep fire runs as a separate comparison against scenario 2, once its blocked routes and impaired agents are modelled.
 
 ## Parameters
 
