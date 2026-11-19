@@ -760,12 +760,16 @@ fixed in its own pull request; the rows below are the per-model defaults.
 | default `radius` 0.2 to 0.25 | same | `test_radius_default[<model>]` |
 | GCFM `tau`, `a_v`, `a_min`, `b_min`, `b_max` default changed, with and without global parameters | same | `test_gcfm_defaults_without_global_parameters[None]`, `[global_params1]` |
 | AVM `time_gap` 1.06 to 1.5; `anticipation_time` 1.0 to 2.0; `reaction_time` 0.3 to 0.4, both default branches | same | `test_avm_defaults_without_global_parameters` |
+| AVM `wall_buffer_distance` 0.0 to 0.1 | same | `test_avm_mapping.py::test_avm_wall_buffer_default_is_pinned` |
+| exit-reach clearance AVM 0.0 to 0.1; CFSM 0.02 to 0.0 | `exit_reach.wall_clearance` | `test_avm_mapping.py::test_warning_fires`, `test_warning_is_silent` |
+| exit-reach tolerance 0.03 changed | `direct_steering_runtime.EXIT_REACH_TOLERANCE_M` | `test_avm_mapping.py::test_avm_leaves_a_flush_exit`, `test_warning_fires` (AVM 0.08 on the threshold) |
 | Gaussian `v0` clip low 0.1 to 0.0, high 5.0 to 6.0 | `_sample_agent_values` | `test_gaussian_v0_is_clipped_to_the_documented_range` |
 
 Sources of the expected values are stated in the test module: `v0` and
 `radius` from `docs/scenario-json.md`, the clip from
 `docs/coming-from-fds-evac.md`, the GCFM and AVM numbers from JuPedSim
-1.4.2's defaults (not documented in the pyFDS-Evac pages).
+1.4.2's defaults (not documented in the pyFDS-Evac pages), except the AVM wall
+buffer 0.0 m, a pyFDS-Evac choice documented in `site/content/models/movement.md`.
 
 `test_sfm_params.py` and `test_csm_v2_params.py` run-level tests now compare
 the run without the keys with the run that sets the defaults, and pin the

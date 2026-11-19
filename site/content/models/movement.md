@@ -94,18 +94,22 @@ the counterflow is 0.99 × 2r. CFSM is
 
 | Model | HUT | Counterflow 50 % | Familiarity 5 | Familiarity 20 |
 |---|---|---|---|---|
-| CFSM | 8/13; 5 deadlock | 0/3; 0–1 of 150 out | 150/150 | 60/60 |
+| CFSM | 6/13; 7 deadlock | 0/3; 0–1 of 150 out | 150/150 | 60/60 |
 | CSM V2 | as CFSM | as CFSM | as CFSM | as CFSM |
 | SFM | 4/13; 1 deadlock, 8 with 1 agent left | 3/3, mean 86 s | 147/150; 3 deadlock | 53/60; 7 deadlock |
-| AVM | 0/13 | 0/3 | 90/150 | 0/60 |
+| AVM | 0/13 | not re-measured | not re-measured | 8/60 |
 | GCFM | error at spawn | error at spawn | 4/4, 3 overlap; 4 runs made | not run |
 | WarpDriver | 13/13; 3 overlap | 3/3; 3 overlap | 150/150 | 60/60; 1 overlap |
+
+The AVM and CFSM HUT and Familiarity 20 figures are from `1fc317db`
+(seeds 1–13 and 1–60). The AVM counterflow and Familiarity 5 cells were
+measured before the wall buffer was set to 0 and are not re-measured.
 
 **`CollisionFreeSpeedModel`.** Agents stop at contact: the smallest
 distance between two centres is 1.00 × 2r, and between a centre and a wall
 about one radius. There is no side-step and no push, so a pair that meets
-face to face waits for the rest of the run. On HUT at r = 0.15 m, 5 of 13
-seeds jam; which seeds jam changes between commits
+face to face waits for the rest of the run. On HUT at r = 0.15 m, 7 of 13
+seeds jam (`1fc317db`); which seeds jam changes between commits
 ([#706](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/706#issuecomment-6110206792)).
 On the 50 % counterflow the two streams lock, with one agent out in seed 1
 and none in seeds 2 and 3
@@ -137,10 +141,39 @@ its doorway deadlocks are those of
 
 **`AnticipationVelocityModel`.** Not recommended
 ([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
-Its model-level parameters are commented out in the mapping, so the model
-runs at JuPedSim's defaults. pyFDS-Evac never sets its `rng_seed`, and JuPedSim
-draws a new one each time it is imported, so a run cannot be reproduced
-from the run seed. Agent centres come within 0.03–0.18 r of walls.
+The model is seeded from the run seed
+([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
+pyFDS-Evac sets its `wall_buffer_distance` to 0.0 m; JuPedSim's default is
+0.1 m. Neither value has a published source, and Xu, Chraibi and Seyfried
+(2021, *Transp. Res. C* 133:103464) model no walls or doors. At 0.0 m an
+agent stops about r from a wall, not r + 0.1 m. With 0.1 m, agents stopped
+r + 0.1 m from a wall and could not reach an exit 0.2 m deep that sits flush
+with it, because an exit counts as reached within 0.03 m of its polygon
+([#975](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/975)). In a
+10 × 6 m room with such an exit and r = 0.15 m, 0 of 6 runs left at 0.1 m
+and 6 of 6 at 0.0 m (seeds 3 and 5).
+
+The change does not make the model complete the decks. On `1fc317db`,
+going from 0.1 m to 0.0 m changed the runs as follows:
+
+| Deck | Complete at 0.1 m | Complete at 0.0 m | Agents out at 0.1 m → 0.0 m | CFSM completes |
+|---|---|---|---|---|
+| HUT, seeds 1–13 | 0/13 | 0/13 | 700 → 870 of 1560 | 6/13 |
+| Familiarity 20, seeds 1–60 | 0/60 | 8/60 | 50 → 535 of 1200 | 60/60 |
+
+On a plain 1.2 m door without pyFDS-Evac, JuPedSim's model completed 23 of
+30 seeds at 0.1 m and 29 of 30 at 0.0 m; `CollisionFreeSpeedModel`
+completed 30 of 30. The model still jams at that door in 6 to 7 of 30
+seeds at 0.1 m (upstream issue pending). It also comes close to walls at
+corners and door jambs: the closest sampled centre-to-wall distance falls
+from 0.063 r to 0.041 r on HUT and from 0.105 r to 0.039 r on Familiarity
+20, and in 67 of 73 earlier runs the closest point lay within 1 r of a wall
+vertex. Positions are sampled every 0.1 s, so the true minimum can be
+smaller. The cause is not established.
+
+All other values stay at JuPedSim 1.4.2's defaults. Xu et al.'s Table 3
+parameters were run and not adopted: they helped HUT only with a 0.0 m
+buffer (0 to 2 of 13) and changed nothing on Familiarity 20 or at the door.
 
 **`GeneralizedCentrifugalForceModel`.** Not recommended. It refuses most
 spawns and overlaps when it runs. It fails at spawn on HUT and the
@@ -201,8 +234,7 @@ desired speed. `WarpDriverModel` keeps to the desired speed but clears
 them by letting agents overlap, down to 0.20 × 2r on the 100 % case.
 Neither result shows that a model handles counterflow; they are
 implementation checks of what each model does on two decks.
-`AnticipationVelocityModel` cannot be reproduced from the seed
-([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)),
+`AnticipationVelocityModel` was not run on this deck,
 `GeneralizedCentrifugalForceModel` fails at spawn on this geometry, and
 `CollisionFreeSpeedModelV2` gives the CFSM numbers, so they are not
 listed.
@@ -254,6 +286,15 @@ value that pyFDS-Evac does not pass, so JuPedSim 1.4.2's default applies.
 | `range_geometry_repulsion` (none) | JuPedSim, 0.02 m |
 | `time_gap`, per agent (none) | JuPedSim, 1.0 s |
 
+**Wall clearance and flush exits.** A model that keeps an agent's centre
+at least r + c from a wall can leave an exit that is flush with the wall out
+of reach. pyFDS-Evac checks this per exit, with c = 0.0 m for
+`AnticipationVelocityModel`, 0.02 m for `CollisionFreeSpeedModel` and
+`CollisionFreeSpeedModelV2` (JuPedSim's `range_geometry_repulsion`) and 0 for
+the other models, whose clearance is unmeasured. It warns when the largest
+agent radius plus c leaves more than 0.03 m between the exit and the
+walkable area ([Troubleshooting](/docs/troubleshooting.md)).
+
 **`CollisionFreeSpeedModelV2`**: the repulsion values are per agent.
 `strength_neighbor_repulsion` and `range_neighbor_repulsion` are read from
 the deck. Each missing key takes the `CollisionFreeSpeedModel` value: 2.6
@@ -277,9 +318,11 @@ for the strength (JuPedSim's is 8.0) and 0.1 m for the range
 A deck that sets `sfm_friction` above 0 gets a warning, and the run
 manifest records the requested and the applied friction.
 
-**`AnticipationVelocityModel`**: no model-level value is passed, so
-`pushout_strength` is JuPedSim's 0.3 and `rng_seed` is drawn at import
+**`AnticipationVelocityModel`**: `wall_buffer_distance` is 0.0 m, a
+pyFDS-Evac choice (JuPedSim's is 0.1 m; see
+[above](#deadlock-behaviour)), and `rng_seed` comes from the run seed
 ([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
+`pushout_strength` is JuPedSim's 0.3. No deck key sets the buffer.
 Per agent, `anticipation_time` (1.0 s) and `reaction_time` (0.3 s) come
 from the deck keys of the same name, defaulting to JuPedSim's values; the
 CollisionFreeSpeedModel keys `T` and `s0` are not read
@@ -313,7 +356,7 @@ JuPedSim's defaults.
 
 - The deadlock rates above come from three geometries and a few seeds each.
   A smaller radius does not remove the `CollisionFreeSpeedModel` jam: HUT
-  at 0.15 m still jams in 5 of 13 seeds.
+  at 0.15 m still jams in 7 of 13 seeds (`1fc317db`).
 - `SocialForceModel` pushing has not been validated against measured
   counterflow. On the counterflow case its peak speed exceeds the desired
   speed by a factor of about 2

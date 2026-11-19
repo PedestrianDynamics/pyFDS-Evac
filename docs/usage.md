@@ -273,7 +273,9 @@ values, options that have no effect, the setup warnings and errors the run
 would report, and the shortest equivalent command, with absolute paths.
 Errors include the value checks made when a model is built (for example
 `--vis-cell-size 0` or `--heat-emissivity 2`); warnings logged while a model
-is built, such as signs outside the FDS extinction slice, are not listed. With `--fds-dir` it reads
+is built, such as signs outside the FDS extinction slice, are not listed. The
+warning that an exit may be out of reach of the agents' wall clearance is among
+the setup warnings ([Troubleshooting](troubleshooting.md#warnings-that-change-the-result)). With `--fds-dir` it reads
 the FDS inventory (slices and output end time), not the slice data. It exits
 with status 1 when the configuration has an error, else 0. It does not check
 an unknown `routing.cost_model` or an alias that contradicts its `v0*` key;

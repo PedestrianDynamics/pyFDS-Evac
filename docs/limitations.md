@@ -325,8 +325,8 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   several body widths wide and never clear it, so the crowd stands to the end
   of the run. Imported FDS+Evac decks such
   as `HUT_Library` and `imo/CompTest9a` show it in some seeds. A smaller
-  radius does not remove it: `HUT_Library` at 0.15 m still jams in 5 of 13
-  seeds, the rate of the issue, and which seeds jam changes between
+  radius does not remove it: `HUT_Library` at 0.15 m still jams in 7 of 13
+  seeds (`1fc317db`), and which seeds jam changes between
   commits. `SocialForceModel` completes 4 of these 13 runs and
   `WarpDriverModel` all 13, with the closest pair of agents within
   0.9 × 2r in 3 of them
@@ -340,6 +340,16 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   evacuated; seed 6: 26 agents stuck since t = 135 s, stopped at 235 s with
   94 of 120 evacuated) and finishes in the other six
   (`8e513ea1`).
+- **`AnticipationVelocityModel` jams at doors and walks close to walls**
+  ([#758](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758)).
+  The model stays not recommended. Setting its wall buffer to 0.0 m raised
+  the agents out on HUT from 700 to 870 of 1560 and on Familiarity 20 from
+  50 to 535 of 1200, and completed 8 of 60 Familiarity 20 runs, but it
+  completes 0 of 13 HUT runs where `CollisionFreeSpeedModel` completes 6.
+  It also jams at a plain 1.2 m door in some seeds and comes close to walls
+  at corners and door jambs; the cause is not established. A full mapping
+  of the model's parameters is not planned. Upstream issue pending. Figures
+  and method: [Movement models](/models/movement.md#deadlock-behaviour).
 - **Doorway deadlocks of exploring agents**
   ([#359](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359)). Under `no_known_exit: explore`, and
   `return` when it explores, two agents that meet head-on in a door, or
@@ -425,6 +435,16 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   guide ("Features of Limited Functionality"), FDS+Evac keeps the geometry
   of t = 0 for the whole run, so the two differ here. See
   [Wayfinding › Limitations](/models/wayfinding.md#limitations).
+
+## Exit-reach warning
+
+The warning that an exit may be out of reach of the agents' wall clearance
+tests one agent heading straight at the exit. It is a necessary condition,
+not a guarantee. A silent check does not exclude stranded agents in a
+crowd: with a wall clearance of 0.06 to 0.07 m, 0 to 4 of 6 agents were
+stranded while the check was silent. The check can also fire for an exit that an
+agent arriving at an angle reaches
+([Movement models](/models/movement.md#values-passed-to-each-model)).
 
 ## Reproducibility
 
