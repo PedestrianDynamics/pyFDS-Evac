@@ -11,7 +11,9 @@ to or deletes from the user's FDS directory (#716).
 path at an empty temporary folder for the duration of a block, so
 fdsreader neither writes nor deletes anything in the case directory.
 This also reaches fdsreader calls made by fdsvismap. Both values are
-restored on exit. The cache only saves parsing the ``.smv`` and slice
+restored on exit. The block also drops fdsreader's ``Module smoke3d``
+warnings: fdsreader logs one with a traceback for every mesh whose
+``.s3d`` files are missing, and pyfds-evac never reads 3D smoke (#978). The cache only saves parsing the ``.smv`` and slice
 headers: 0.1-0.4 s for a 64-mesh case with 768 slice files.
 
 Both values are process-global. Inside the block, any fdsreader call in
@@ -44,6 +46,7 @@ folder be set, or turns caching off without deleting the pickle.
 
 from __future__ import annotations
 
+import logging
 import tempfile
 import threading
 from collections.abc import Iterator
@@ -52,6 +55,11 @@ from pathlib import Path
 from typing import Any
 
 _LOCK = threading.RLock()
+
+
+def _not_smoke3d(record: logging.LogRecord) -> bool:
+    """Drop fdsreader's ``Module smoke3d`` warning (``utils/misc.py``)."""
+    return not str(record.msg).startswith("Module smoke3d:")
 
 
 def _check_fdsreader(fdsreader: Any, settings: Any, simulation_cls: Any) -> None:
@@ -99,11 +107,16 @@ def fdsreader_without_cache() -> Iterator[None]:
             # move out of the empty folder.
             return str(Path(tmp) / "simulation.pickle")
 
+        # A fresh filter per block, so a nested block removes only its own.
+        smoke3d_filter = logging.Filter()
+        smoke3d_filter.filter = _not_smoke3d  # type: ignore[method-assign]
         settings.ENABLE_CACHING = False
         Simulation._get_pickle_filename = classmethod(no_pickle)
+        logging.getLogger().addFilter(smoke3d_filter)
         try:
             yield
         finally:
+            logging.getLogger().removeFilter(smoke3d_filter)
             Simulation._get_pickle_filename = pickle_filename
             settings.ENABLE_CACHING = caching
 
@@ -123,6 +136,11 @@ def _case_safe_class() -> type:
             # the .smv path from Simulation.__getnewargs__.
             with fdsreader_without_cache():
                 return super().__new__(cls, *args, **kwargs)
+
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            # Parses the .smv, where fdsreader logs the smoke3d warnings.
+            with fdsreader_without_cache():
+                super().__init__(*args, **kwargs)
 
         def clear_cache(self, clear_persistent_cache: bool = False) -> None:
             """Free the loaded data; there is no pickle of this one to delete."""
