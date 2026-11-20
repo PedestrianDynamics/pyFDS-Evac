@@ -649,3 +649,62 @@ seen through phi, and it made agreement worse. #274 keeps L2 (layer
 temperature from FDS devices) with eps_L a user input; layered cases are
 pointed to the radiometer source. The base of phi (FDS interface or a
 fixed height) is still open.
+
+## 15. Base of phi: FDS interface (I) or fixed height (F), predeclared (2026-11-20)
+
+Question: in the layer term q = h (T_g - T_s) + phi eps_L sigma
+(T_u^4 - T_s^4), where is the base of the layer that phi sees?
+
+- (I): the FDS interface, `LAYER HEIGHT` of the column, read at every
+  output time.
+- (F): a fixed height set by the user, as `--heat-layer-height` today.
+  Scored at 1.8, 2.0 and 2.5 m.
+
+Written before the descending run (step 2). The step-1 numbers below were
+known when this section was written; the descending run was not.
+
+### 15.1 Criterion
+
+- Facing up only. T_u = `UPPER TEMPERATURE` of the column, T_g =
+  `TEMPERATURE` at 1.6 m (device), eps_L = 1, h = 8 W/(m2 K), T_s = 35 C.
+  phi = Howell C-11 from the gauge (1.6 m, the 4 x 4 m footprint) to the
+  base, `phi_up` with `scripts/verification/heat_layer_view_factor.py`.
+- Reference: `GAUGE HEAT FLUX GAS` facing up at 1.6 m, same column, same
+  run. Check first that gauge - radiometer = h (T_g - 35 C) / 1000.
+- Score: model / gauge within +-30 % (the #308 band).
+- Pairwise: (I) against each of F1.8, F2.0, F2.5; three verdicts. The
+  option with more scored rows within +-30 % wins the pair; a tie goes to
+  (F) (simpler, implemented). Overall, (I) is adopted only if it wins all
+  three pairs, since the user may set any fixed height.
+- Deciding data: the descending run alone. Step 1 (`layer_274`,
+  `layer_274_pl`) is reported beside it, not pooled.
+- Sample times, set from `LAYER HEIGHT` only: t_a = first output time with
+  the median interface over the 7 columns below 2.6 m, t_b = first time it
+  is at or below 1.3 m (T_END if never). 8 times equally spaced over
+  [t_a, t_b], both ends included.
+- Values: model flux and gauge are each averaged over a centred 2 s window
+  (output rows in [t - 1, t + 1]); the ratio is the ratio of those means.
+  Point values are reported as a sensitivity.
+- Floor: rows with mean gauge below 0.5 kW/m2 are listed, not scored.
+- Head in the layer (interface at or below 1.6 m): outside the layer
+  regime, which assumes clear air at the head. Not scored. Listed with
+  phi = 1 for (I) (the limit of C-11 as the base reaches the gauge).
+- Report per option: count within +-30 %, median ratio, worst miss.
+- Sensitivity only, not gates: bands +-20 % and +-40 %, per-time counts,
+  point values, and dropping the column nearest the fire.
+
+### 15.2 Step 1 (no new runs; t = 3, 6, 9 s, 7 columns, point values)
+
+| run | option | within +-30 % | median | worst |
+|---|---|---|---|---|
+| layer_274 | I | 21/21 | 1.096 | 1.257 |
+| layer_274 | F1.8 | 18/21 | 1.228 | 1.380 |
+| layer_274 | F2.0 | 20/21 | 1.184 | 1.310 |
+| layer_274 | F2.5 | 21/21 | 1.031 | 0.788 |
+| layer_274_pl | I | 21/21 | 1.031 | 1.150 |
+| layer_274_pl | F1.8 | 21/21 | 1.160 | 1.287 |
+| layer_274_pl | F2.0 | 21/21 | 1.123 | 1.236 |
+| layer_274_pl | F2.5 | 20/21 | 0.952 | 0.663 |
+
+The interface stays at 1.85-2.59 m, so the head is never in the layer.
+(I) has the smallest spread; F2.0 is 20/21 and 21/21.
