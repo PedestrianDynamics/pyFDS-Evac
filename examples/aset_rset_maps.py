@@ -89,6 +89,7 @@ for seed in SEEDS:
         f"seed {seed}: {len(result.exit_times)} left, remaining {result.agents_remaining}"
     )
     result.cleanup()
+assert grid is not None
 
 # %% [markdown]
 # ## DIFF per seed, and pooled

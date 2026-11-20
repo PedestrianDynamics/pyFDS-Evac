@@ -442,6 +442,12 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   of t = 0 for the whole run, so the two differ here. See
   [Wayfinding › Limitations](/models/wayfinding.md#limitations).
 
+## ASET maps
+
+The FED and heat FED of an ASET map are those of a person standing at the
+cell from t = 0, not of a walker. Sign visibility is a separate map and is
+not part of DIFF. See [ASET, RSET and DIFF maps](aset-rset-maps.md).
+
 ## Exit-reach warning
 
 The warning that an exit may be out of reach of the agents' wall clearance

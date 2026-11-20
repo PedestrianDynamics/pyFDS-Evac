@@ -71,6 +71,7 @@ for seed in SEEDS:
         f"seed {seed}: {len(result.exit_times)} left, remaining {result.agents_remaining}"
     )
     result.cleanup()
+assert grid is not None
 ```
 
 ### DIFF, per seed and pooled
@@ -205,6 +206,22 @@ Whether the signs of a route can be read through the smoke is a wayfinding
 question. It is not a tenability limit and is not part of DIFF. fdsvismap
 computes it separately
 ([#140](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140)).
+
+## Verification against the data release
+
+Run with `SCHROEDER2020_RELEASE` set to the unpacked Zenodo release
+(`tests/test_analysis_zenodo.py`; the release is not in the repository).
+
+- **Stage 1, exact.** The released difference map, counted by the release's
+  rules: min DIFF −29 s, 54 cells (19.44 m²) with DIFF ≤ 0, C = −310 m² s
+  binned. By the default rules (DIFF = 0 passes, bin-free C): 52 cells,
+  C = −274.7 m² s.
+- **Stage 2, rebuild.** ASET and RSET rebuilt with this module (PedPy RSET)
+  against row A of `scripts/docs/schroeder2020_reproduce.py`: min DIFF
+  differs by 2 s and the failing area by −9 %, within the predeclared 10 s
+  and 10 %.
+- Only the `nearest` cell rule is checked against the release. The default
+  `exists` rule (block maximum) has no release check.
 
 ## Limits
 

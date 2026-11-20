@@ -935,7 +935,7 @@ grid).
 ## Limits and open issues
 
 - **Not modelled here:** smoke slowing agents or changing their route, and
-  signs losing visibility. Both are open questions for the built-in maps
+  signs losing visibility. Neither is in the built-in maps either
   ([#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210)).
   Sign visibility is a wayfinding map and never enters DIFF
   ([#140](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140)).
