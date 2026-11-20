@@ -2004,7 +2004,10 @@ from pyfds_evac.webapp.app import app, manager
 from pyfds_evac.webapp.pyexport import run_script
 
 client = TestClient(app)
-client.post("/run", data={"scenario": sys.argv[1]})
+form = {"scenario": sys.argv[1]}
+if len(sys.argv) > 4:
+    form["fds_dir"] = sys.argv[4]
+client.post("/run", data=form)
 with client.stream("GET", "/progress") as s:
     for line in s.iter_lines():
         if line.startswith("event:") and line.split(":", 1)[1].strip() in ("done", "error"):
@@ -2038,7 +2041,18 @@ def _metrics(stdout):
     return json.loads(line[len("METRICS") :])
 
 
-def test_exported_script_reproduces_the_gui_run(tmp_path):
+@pytest.mark.parametrize(
+    ("scenario", "seed", "agents", "fds_dir"),
+    [
+        ("blind_spawn_discovery", 1301, 30, None),
+        # Its extinction is read from committed FDS slices (#904): the fire
+        # input reaches the result, not only the clear-air model.
+        ("iso_table21_coupled", 420, 1, "assets/iso_table21_coupled/fds"),
+    ],
+)
+def test_exported_script_reproduces_the_gui_run(
+    tmp_path, scenario, seed, agents, fds_dir
+):
     """The run's exported script, run alone, matches the GUI run exactly.
 
     Each side runs in a fresh interpreter, so the two cannot affect each
@@ -2053,11 +2067,12 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     repo = pathlib.Path(__file__).resolve().parents[1]
     keys = (
         "total_agents,agents_evacuated,agents_remaining,agents_not_spawned,"
-        "evacuation_time,seed,status"
+        "evacuation_time,seed,status" + (",smoke_history_samples" if fds_dir else "")
     )
     script = tmp_path / "exported.py"
     gui = subprocess.run(
-        [sys.executable, "-c", _GUI_DRIVER, "blind_spawn_discovery", str(script), keys],
+        [sys.executable, "-c", _GUI_DRIVER, scenario, str(script), keys]
+        + ([str(repo / fds_dir)] if fds_dir else []),
         cwd=repo,
         capture_output=True,
         text=True,
@@ -2073,14 +2088,16 @@ def test_exported_script_reproduces_the_gui_run(tmp_path):
     )
     assert exported.returncode == 0, exported.stderr[-3000:]
     gui_metrics, script_metrics = _metrics(gui.stdout), _metrics(exported.stdout)
-    assert gui_metrics["seed"] == 1301
-    assert gui_metrics["total_agents"] == 30
+    assert gui_metrics["seed"] == seed
+    assert gui_metrics["total_agents"] == agents
     assert script_metrics == gui_metrics
+    if fds_dir:
+        assert gui_metrics["smoke_history_samples"] > 0
     # Like run.py, the script exits 2 when the run is incomplete (#444).
     exit_line = next(ln for ln in exported.stdout.splitlines() if ln.startswith("EXIT"))
     expected_exit = 0 if gui_metrics["status"] == "completed" else 2
     assert int(exit_line[len("EXIT") :]) == expected_exit
-    (output,) = tmp_path.glob("pyfds_evac_blind_spawn_discovery_run1_*Z_output")
+    (output,) = tmp_path.glob(f"pyfds_evac_{scenario}_run1_*Z_output")
     assert (output / "trajectory.sqlite").is_file()
 
 

@@ -738,11 +738,21 @@ port default come from `docs/usage.md`; smoke bins from the fixed edges).
   carried as float16, where 0.1 is 0.09998 and falls below the edge.
 - F17 to F19, F46, T7, T13: equivalent, cosmetic or killed elsewhere.
 - F29, F35 are killed by `test_run_events` and `test_config_model`.
-- JS and CSS source-substring tests in `test_webapp.py` (no executed
-  browser or Node test), the wall-clock bound in
-  `test_a1_help_is_fast_and_imports_no_stack`, `test_a9_no_range_rejection`
-  lock-in, and the GUI-versus-API run equivalence beyond one clear-air deck:
-  not changed here.
+- JS and CSS source-substring tests in `test_webapp.py`: only the
+  output-folder autofill is also executed (below); the other inline
+  scripts and the CSS are still checked as text. `test_a9_no_range_rejection`
+  lock-in: not changed here.
+- Closed (#904): `test_webapp_browser.py` runs `_AUTOFILL_JS` in headless
+  Chromium (Playwright, dev dependency; CI installs Chromium on Python 3.12,
+  elsewhere the test skips). It types relative and absolute output folders
+  and reads the run note; dropping `~` from the absolute-path regex fails it.
+- Closed (#904): the GUI-versus-API run equivalence now also covers
+  `iso_table21_coupled`, whose extinction is read from committed FDS slices
+  (`test_exported_script_reproduces_the_gui_run`, parametrised; the exported
+  script is blind to the `fds_dir` path it must carry). The wall-clock bound
+  in `test_a1_help_is_fast_and_imports_no_stack` is replaced by a check that
+  `--help` imports no installed package (killed by `import rich` in
+  `tui/launch.py`).
 - Closed (#876): `ISO-table21` emits no event after its one agent leaves;
   documented in the `ProgressEvent` docstring and pinned by
   `test_progress_callback.py::test_no_event_is_emitted_after_the_last_agent_leaves`.
@@ -1007,16 +1017,18 @@ examples (`derandomize=True`), so CI runs are reproducible.
 | Leg travel time is non-decreasing in extinction and in length; speed factor non-increasing in K | routing | `test_route_leg_properties.py`; precondition alpha > 0, beta <= 0, base speed > 0, 0 <= min factor <= 1; `inf` time allowed. A strict case guards the non-strict orderings |
 | Exported `OPTIONS` read back equal the options written (keys, order, values, types, `-0.0`, hostile text) | export | `test_script_export_properties.py` (the comparison is to `export_options`, so only the rendering is under test) |
 
-Open (PR 9 of the survey):
+Closed in #904 (PR 9 of the survey):
 
-- Agent conservation as a generated property: the outcome counts are assembled
-  inline in `run_scenario` (`scenario.py`, from `initial_agent_count` and the
-  flow counters), not in a function that can be called alone. A Hypothesis
-  test needs that extraction (a source change) or a run per example; the fixed
-  table in `test_agent_conservation.py` stays the check.
-- Full route composite non-decreasing in K and length: needs a graph fixture
-  with the additive model, one edge per route and no rival; the default
-  `gate` model ranks by time and the queue and FED terms are not monotone in
-  K alone. Not cheap enough for this pull request.
+- Agent conservation as a generated property: the counts are assembled in
+  `scenario._outcome_counts`, extracted from `run_scenario` without a change
+  of output; `test_agent_conservation_properties.py` checks
+  `total = evacuated + remaining`, `total + not_spawned` = configured and the
+  completion rule (killed by dropping `not_spawned` from `completed`, by
+  `evacuated + 1`, and by counting flow agents without flow). The fixed runs
+  in `test_agent_conservation.py` stay.
+- Full route composite non-decreasing in K and length, additive model, one
+  edge, no rival: `test_route_composite_properties.py` (killed by
+  `1 - w_smoke * K` and by `1000 - length` in the composite). The default
+  `gate` model ranks by time and is not covered.
 - Threshold boundaries: the survey assigns no rows to this pull request and
   asks for parametrised tests, not Hypothesis; none added.
