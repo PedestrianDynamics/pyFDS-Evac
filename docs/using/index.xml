@@ -3164,6 +3164,12 @@ fields of the &lt;code>ScenarioResult&lt;/code> that &lt;code>run_scenario()&lt;
 &lt;td>one per agent per FED update&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>agent_exits&lt;/code> table&lt;/td>
+&lt;td>inside the SQLite&lt;/td>
+&lt;td>always&lt;/td>
+&lt;td>one per agent that left&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>Smoke history&lt;/td>
 &lt;td>&lt;code>--output-smoke-history CSV&lt;/code>&lt;/td>
 &lt;td>a smoke model ran (&lt;code>--fds-dir&lt;/code> with an extinction slice, or &lt;code>--constant-extinction&lt;/code>)&lt;/td>
@@ -3240,6 +3246,11 @@ frame of a FED update, and &lt;code>in_fds_domain&lt;/code> (1 inside the FDS sl
 &lt;code>NULL&lt;/code> without FDS output; see the FED history). The JuPedSim tables are
 untouched, so JuPedSim tools still read the file. &lt;code>heat_fed&lt;/code> sits before
 &lt;code>speed&lt;/code>: read the columns by name, not by position.&lt;/p>
+&lt;p>Every file, and the trajectory of the exported Python script, also holds
+&lt;code>agent_exits(id, exit_time_s)&lt;/code>: the time each agent that left did so
+(&lt;code>ScenarioResult.exit_times&lt;/code>). An agent still inside at the end has no row.
+&lt;code>pyfds_evac.analysis.load_exit_times&lt;/code> reads it for the RSET
+map (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET/RSET maps&lt;/a>).&lt;/p>
 &lt;h2>Run manifest&lt;span class="hx-absolute -hx-mt-20" id="run-manifest">&lt;/span>
 &lt;a href="#run-manifest" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The provenance record of the run. From Python it is &lt;code>result.manifest_file&lt;/code>;
 with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
