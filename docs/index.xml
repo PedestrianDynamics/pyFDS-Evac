@@ -26,9 +26,10 @@ The authors published their inputs, code and results
 (&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">Zenodo, doi:10.5281/zenodo.3875550&lt;/a>).
 We take the room, door, fire and crowd from that release, run them with our
 own FDS and evacuation model, and compare with the release where it has
-data. The script &lt;code>scripts/docs/schroeder_room_maps.py&lt;/code> builds the maps; a
-built-in version is planned in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. The
+data. The script &lt;code>scripts/docs/schroeder_room_maps.py&lt;/code> builds the maps; the
+built-in version is described in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>),
+and this page has not been re-run with it. The
 page reports research software applied to one room and gives no design or
 safety verdict.
 &lt;/div>
@@ -1284,7 +1285,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1316,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">519f11d6d9f106b3c08d2f049e66591bb0b8f3f99630f580598c3ab40cd2652e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">86af634cf13f0914134abece3bac6d9442a45069322af25f902e37c5939aa62e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1594,7 +1595,7 @@ grid).&lt;/p>
 &lt;h2>Limits and open issues&lt;span class="hx-absolute -hx-mt-20" id="limits-and-open-issues">&lt;/span>
 &lt;a href="#limits-and-open-issues" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>Not modelled here:&lt;/strong> smoke slowing agents or changing their route, and
-signs losing visibility. Both are open questions for the built-in maps
+signs losing visibility. Neither is in the built-in maps either
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>).
 Sign visibility is a wayfinding map and never enters DIFF
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140" target="_blank" rel="noopener">#140&lt;/a>).&lt;/li>
@@ -1718,7 +1719,7 @@ for &lt;code>PRE_MEAN&lt;/code>.&lt;/li>
 classic single-point comparison this page maps.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: per-agent exposure and a
 location ASET map on an FDS fire.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET from an ensemble of seeds&lt;/a>.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">RSET from an ensemble of seeds&lt;/a>.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>.&lt;/li>
 &lt;/ul>
@@ -2010,7 +2011,7 @@ engineering analysis&lt;/em>. SFPE Handbook of Fire Protection Engineering,
 &lt;a href="https://doi.org/10.1007/978-3-031-59212-6_72" target="_blank" rel="noopener">doi:10.1007/978-3-031-59212-6_72&lt;/a>&lt;/li>
 &lt;/ul>
 &lt;p>How pyFDS-Evac uses this: see the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>, and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>, and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/#aset-rset">A crowd in a fire › ASET and RSET&lt;/a>
 for a per-agent comparison on an FDS fire, and
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a> for ASET, RSET and their
@@ -2021,7 +2022,324 @@ its own dose along its path; see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/implementation/fds-sampling/#selecting-a-slice-height">Selecting a slice height&lt;/a>.&lt;/p>
 &lt;p>RSET from a run without the fire against a coupled run:
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>.&lt;/p>
-&lt;p>How it is verified: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; ASET and RSET themselves are outputs of a study.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
+&lt;p>How it is verified: the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index; ASET and RSET themselves are outputs of a study.&lt;/p></description></item><item><title>ASET, RSET and DIFF maps</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/</guid><description>
+&lt;p>&lt;strong>This page reads tracked FDS output. You do not need to run FDS.&lt;/strong>&lt;/p>
+&lt;p>The ASET-RSET comparison asks whether people can leave before conditions turn
+untenable. Schröder, Arnold and Seyfried (2020) turned it from one number
+into maps over the floor. &lt;code>pyfds_evac.analysis&lt;/code> builds those maps from a
+finished run and from FDS output:&lt;/p>
+&lt;ul>
+&lt;li>the &lt;strong>ASET map&lt;/strong> is, for each map cell, the first time the fire makes it
+untenable;&lt;/li>
+&lt;li>the &lt;strong>RSET map&lt;/strong> is, for each cell, the last time anyone is in it;&lt;/li>
+&lt;li>&lt;strong>DIFF = ASET − RSET&lt;/strong>. Negative means the fire wins in that cell.&lt;/li>
+&lt;/ul>
+&lt;p>The module post-processes: it changes no simulation. It needs &lt;code>pedpy&amp;gt;=1.5.1&lt;/code>
+for the RSET map, which pyFDS-Evac now requires.&lt;/p>
+&lt;h2>A runnable example&lt;span class="hx-absolute -hx-mt-20" id="a-runnable-example">&lt;/span>
+&lt;a href="#a-runnable-example" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/aset_rset_maps.py" target="_blank" rel="noopener">&lt;code>examples/aset_rset_maps.py&lt;/code>&lt;/a>.
+Run it from the repository root (runtime about 10 s):&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python examples/aset_rset_maps.py&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>It takes the 10 × 10 m gas room of &lt;code>assets/iso_table22_coupled&lt;/code> (deck e) and
+20 people leaving through the corner exit in clear air. The gas of that deck
+is uniform, so its ASET map is flat and only the RSET map varies; a real study
+uses a fire that varies in space. The FED limit is 0.05 here so that the room
+fails somewhere.&lt;/p>
+&lt;h3>ASET from the FDS output&lt;span class="hx-absolute -hx-mt-20" id="aset-from-the-fds-output">&lt;/span>
+&lt;a href="#aset-from-the-fds-output" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>read_crossings&lt;/code> returns, for every node of the slices, the first time each
+criterion is met, and the height of the slice it read.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>criteria &lt;span style="color:#f92672">=&lt;/span> AsetCriteria(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> visibility_limit_m&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">None&lt;/span>, temperature_c&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">None&lt;/span>, heat_fed&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">None&lt;/span>, fed&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0.05&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>crossings &lt;span style="color:#f92672">=&lt;/span> read_crossings(FDS, criteria)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> crossing &lt;span style="color:#f92672">in&lt;/span> crossings:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>crossing&lt;span style="color:#f92672">.&lt;/span>name&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">: slice at z = &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>crossing&lt;span style="color:#f92672">.&lt;/span>z_m&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> m, data to &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>crossing&lt;span style="color:#f92672">.&lt;/span>horizon_s&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.0f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>RSET from the runs&lt;span class="hx-absolute -hx-mt-20" id="rset-from-the-runs">&lt;/span>
+&lt;a href="#rset-from-the-runs" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>One run per seed. Passing &lt;code>exit_times&lt;/code> lets the map tell an agent that left
+from one still inside when the run ended.&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>scenario &lt;span style="color:#f92672">=&lt;/span> load_scenario(&lt;span style="color:#e6db74">&amp;#34;assets/iso_table22_coupled/config_a.json&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>spawn &lt;span style="color:#f92672">=&lt;/span> scenario&lt;span style="color:#f92672">.&lt;/span>distributions[&lt;span style="color:#e6db74">&amp;#34;jps-distributions_0&amp;#34;&lt;/span>]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>spawn[&lt;span style="color:#e6db74">&amp;#34;coordinates&amp;#34;&lt;/span>] &lt;span style="color:#f92672">=&lt;/span> [[&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>], [&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>], [&lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">5&lt;/span>], [&lt;span style="color:#ae81ff">5&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>], [&lt;span style="color:#ae81ff">1&lt;/span>, &lt;span style="color:#ae81ff">1&lt;/span>]]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>spawn[&lt;span style="color:#e6db74">&amp;#34;parameters&amp;#34;&lt;/span>]&lt;span style="color:#f92672">.&lt;/span>update(number&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">20&lt;/span>, use_premovement&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#66d9ef">False&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>rsets, grid &lt;span style="color:#f92672">=&lt;/span> [], &lt;span style="color:#66d9ef">None&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> seed &lt;span style="color:#f92672">in&lt;/span> SEEDS:
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result &lt;span style="color:#f92672">=&lt;/span> run_scenario(scenario, seed&lt;span style="color:#f92672">=&lt;/span>seed)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> trajectory, walkable &lt;span style="color:#f92672">=&lt;/span> load_trajectory(result&lt;span style="color:#f92672">.&lt;/span>sqlite_file)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> grid &lt;span style="color:#f92672">=&lt;/span> grid &lt;span style="color:#f92672">or&lt;/span> grid_from_walkable(walkable, CELL)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> rsets&lt;span style="color:#f92672">.&lt;/span>append(rset_map(trajectory, walkable, grid, exit_times&lt;span style="color:#f92672">=&lt;/span>result&lt;span style="color:#f92672">.&lt;/span>exit_times))
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;seed &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>seed&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>len(result&lt;span style="color:#f92672">.&lt;/span>exit_times)&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> left, remaining &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>result&lt;span style="color:#f92672">.&lt;/span>agents_remaining&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> result&lt;span style="color:#f92672">.&lt;/span>cleanup()
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">assert&lt;/span> grid &lt;span style="color:#f92672">is&lt;/span> &lt;span style="color:#f92672">not&lt;/span> &lt;span style="color:#66d9ef">None&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;h3>DIFF, per seed and pooled&lt;span class="hx-absolute -hx-mt-20" id="diff-per-seed-and-pooled">&lt;/span>
+&lt;a href="#diff-per-seed-and-pooled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>aset &lt;span style="color:#f92672">=&lt;/span> aset_map(grid, crossings)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>per_seed &lt;span style="color:#f92672">=&lt;/span> [measures(diff_map(aset, rset, grid)) &lt;span style="color:#66d9ef">for&lt;/span> rset &lt;span style="color:#f92672">in&lt;/span> rsets]
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#66d9ef">for&lt;/span> name, interval &lt;span style="color:#f92672">in&lt;/span> seed_measures(per_seed)&lt;span style="color:#f92672">.&lt;/span>items():
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>name&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">: mean &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>interval&lt;span style="color:#f92672">.&lt;/span>mean&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.2f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">, 95 % CI &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>interval&lt;span style="color:#f92672">.&lt;/span>low&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.2f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> to &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>interval&lt;span style="color:#f92672">.&lt;/span>high&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.2f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> )
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>pooled, pooled_values &lt;span style="color:#f92672">=&lt;/span> pool_rset(rsets, &lt;span style="color:#e6db74">&amp;#34;p95&amp;#34;&lt;/span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>diff &lt;span style="color:#f92672">=&lt;/span> diff_map(aset, pooled, grid)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>m &lt;span style="color:#f92672">=&lt;/span> measures(diff)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;ASET &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>np&lt;span style="color:#f92672">.&lt;/span>nanmin(aset&lt;span style="color:#f92672">.&lt;/span>time_s)&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.0f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s everywhere on &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>int(grid&lt;span style="color:#f92672">.&lt;/span>area&lt;span style="color:#f92672">.&lt;/span>astype(bool)&lt;span style="color:#f92672">.&lt;/span>sum())&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> cells&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;pooled RSET (&lt;/span>&lt;span style="color:#e6db74">{&lt;/span>pooled_values&lt;span style="color:#f92672">.&lt;/span>label&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">): last cell empty at &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>np&lt;span style="color:#f92672">.&lt;/span>nanmax(pooled&lt;span style="color:#f92672">.&lt;/span>time_s)&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> &lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;min DIFF &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>m&lt;span style="color:#f92672">.&lt;/span>min_diff_s&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> s, failing area &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>m&lt;span style="color:#f92672">.&lt;/span>fail_area_m2&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.2f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> m2, C &lt;/span>&lt;span style="color:#e6db74">{&lt;/span>m&lt;span style="color:#f92672">.&lt;/span>c_m2s&lt;span style="color:#e6db74">:&lt;/span>&lt;span style="color:#e6db74">.1f&lt;/span>&lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74"> m2 s&amp;#34;&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>)
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>print(&lt;span style="color:#e6db74">f&lt;/span>&lt;span style="color:#e6db74">&amp;#34;cells by state: &lt;/span>&lt;span style="color:#e6db74">{&lt;/span> {k: v &lt;span style="color:#66d9ef">for&lt;/span> k, v &lt;span style="color:#f92672">in&lt;/span> m&lt;span style="color:#f92672">.&lt;/span>counts&lt;span style="color:#f92672">.&lt;/span>items() &lt;span style="color:#66d9ef">if&lt;/span> v} &lt;span style="color:#e6db74">}&lt;/span>&lt;span style="color:#e6db74">&amp;#34;&lt;/span>)&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The printed lines on this commit include:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-text" data-lang="text">&lt;span style="display:flex;">&lt;span>FED 0.05: slice at z = 1.5 m, data to 250 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>ASET 10 s everywhere on 289 cells
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>min DIFF -2.9 s, failing area 6.48 m2, C -9.7 m2 s
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>cells by state: {&amp;#39;pass&amp;#39;: 97, &amp;#39;fail&amp;#39;: 18, &amp;#39;aset_only&amp;#39;: 174}&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>The script writes the figure to a new temporary directory and prints its
+path. To write it elsewhere, pass the path.&lt;/p>
+&lt;p>&lt;img src="https://pedestriandynamics.org/pyFDS-Evac/images/analysis/aset_rset_diff.png" alt="Three maps of a 10 by 10 m room. Left, ASET: one colour, 10 s, in every cell. Middle, pooled RSET: a band of cells from the lower left, where the 20 people start, to the exit in the upper right corner, from about 1 s to 13 s. Right, DIFF: blue, up to about 10 s to spare, near the start; white and light red, down to about minus 3 s, in a patch near the exit." loading="lazy" />&lt;/p>
+&lt;p>&lt;em>ASET, pooled RSET (95th percentile over n = 3 seeds) and DIFF = ASET − RSET,
+all in seconds, on 0.6 m cells, 20 people, clear air, FED limit 0.05, deck e
+of &lt;code>assets/iso_table22_coupled&lt;/code>. Cells without a map are white. The FED map is
+for a person standing still from t = 0 at 1.5 m; it is not the dose of a walk.
+Regenerated by
+&lt;code>uv run python examples/aset_rset_maps.py site/static/images/analysis/aset_rset_diff.png&lt;/code>.&lt;/em>&lt;/p>
+&lt;h2>The ASET criteria&lt;span class="hx-absolute -hx-mt-20" id="the-aset-criteria">&lt;/span>
+&lt;a href="#the-aset-criteria" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A cell is untenable when &lt;strong>any&lt;/strong> sample point in it meets a limit (the block
+maximum, as the study chose). A point on a cell edge belongs to both cells.
+&lt;code>AsetCriteria&lt;/code> sets the limits; a &lt;code>None&lt;/code> leaves a criterion out. The combined
+ASET is the earliest crossing of any selected criterion, and every
+criterion&amp;rsquo;s own map is kept.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Criterion&lt;/th>
+&lt;th>Per-point condition&lt;/th>
+&lt;th>Default&lt;/th>
+&lt;th>Source&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Visibility&lt;/td>
+&lt;td>extinction coefficient K ≥ C / V&lt;sub>lim&lt;/sub>&lt;/td>
+&lt;td>V&lt;sub>lim&lt;/sub> = 10 m, C = 3, so K ≥ 0.3 1/m&lt;/td>
+&lt;td>10 m: Engineers Australia (2014) p. 15, NZBC C/VM2 p. 30, vfdb TB 04-01 Table 8.3. C: Jin, as quoted in vfdb p. 314 and ISO 13571 Note 2&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Temperature&lt;/td>
+&lt;td>T ≥ T&lt;sub>lim&lt;/sub>&lt;/td>
+&lt;td>45 °C, stay under 30 min; 50 °C for about 15 min and under 5 min (&lt;code>AsetCriteria.with_stay&lt;/code>)&lt;/td>
+&lt;td>vfdb TB 04-01 Table 8.3, DIN 18009-2 Table 1; dry air&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Toxic FED&lt;/td>
+&lt;td>FED of a person standing still from t = 0 ≥ 0.3&lt;/td>
+&lt;td>0.3, configurable&lt;/td>
+&lt;td>ISO 13571 design criterion; the engine&amp;rsquo;s own rate functions&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Heat FED&lt;/td>
+&lt;td>convective heat FED, same person, ≥ 0.3&lt;/td>
+&lt;td>0.3, &lt;code>clothed&lt;/code> law&lt;/td>
+&lt;td>ISO 13571:2012 Eq. 9&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;ul>
+&lt;li>Visibility and the limit are separate inputs. Schröder et al. use
+K ≥ 0.23 1/m (&lt;code>extinction_per_m=0.23&lt;/code>, from the vfdb smoke density limit
+of 0.1 1/m) and 45 °C; the reproduction passes those.&lt;/li>
+&lt;li>The study uses no FED criterion. The FED and heat FED maps &lt;strong>go beyond the
+paper&lt;/strong>.&lt;/li>
+&lt;li>The FED and heat FED maps are &lt;strong>location-only&lt;/strong>: the dose of someone who
+stands at that point from t = 0, at the sampling height. It is not the dose
+of anyone&amp;rsquo;s walk, which is what the per-agent summary of
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/">the ASET check with FED&lt;/a> gives.&lt;/li>
+&lt;li>Dose criteria are integrated per sample point, with the engine&amp;rsquo;s rule and
+clock (right endpoint, FED(t₀) = 0, one-second step, nearest slice frame),
+and the earliest point of a cell wins. A block-maximum concentration is
+never integrated.&lt;/li>
+&lt;li>The slices are read at the engine&amp;rsquo;s sampling height, 1.6 m by default;
+each result records the height of the slice it read.&lt;/li>
+&lt;li>A cell that never meets a limit by the end of the fire data is &lt;strong>open&lt;/strong>,
+not filled with the last time. A criterion with shorter data cuts the
+others at its horizon.&lt;/li>
+&lt;li>A cell with no sample point or no floor has no data (NaN); it is never
+treated as safe.&lt;/li>
+&lt;/ul>
+&lt;p>The temperature limit assumes dry air, below 10 % water vapour by volume. The
+maps do not read humidity.&lt;/p>
+&lt;h2>The RSET map and the five cell states&lt;span class="hx-absolute -hx-mt-20" id="the-rset-map-and-the-five-cell-states">&lt;/span>
+&lt;a href="#the-rset-map-and-the-five-cell-states" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>rset_map&lt;/code> wraps PedPy&amp;rsquo;s &lt;code>compute_rset_map&lt;/code> with the maximum per cell. The
+grid comes from PedPy&amp;rsquo;s own output, row 0 at the largest y, so ASET and RSET
+subtract with no flip; &lt;code>tests/test_analysis_rset.py&lt;/code> fails if a PedPy release
+changes its grid.&lt;/p>
+&lt;p>A cell&amp;rsquo;s RSET is &lt;strong>censored&lt;/strong> when it holds the last position of an agent that
+never left (a time limit, a deadlock, an incapacitated agent). Pass the run&amp;rsquo;s
+&lt;code>exit_times&lt;/code>; without them the cells of the last frame are censored and a
+warning says so.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>State&lt;/th>
+&lt;th>ASET&lt;/th>
+&lt;th>RSET&lt;/th>
+&lt;th>DIFF&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>pass&lt;/td>
+&lt;td>exact&lt;/td>
+&lt;td>exact&lt;/td>
+&lt;td>≥ 0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>fail&lt;/td>
+&lt;td>exact&lt;/td>
+&lt;td>exact&lt;/td>
+&lt;td>&amp;lt; 0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>≥ bound&lt;/td>
+&lt;td>open (not by the end of the fire data)&lt;/td>
+&lt;td>exact&lt;/td>
+&lt;td>&amp;gt; T&lt;sub>F&lt;/sub> − RSET&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>≤ bound&lt;/td>
+&lt;td>exact&lt;/td>
+&lt;td>censored&lt;/td>
+&lt;td>&amp;lt; ASET − T&lt;sub>R&lt;/sub>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>undetermined&lt;/td>
+&lt;td>open&lt;/td>
+&lt;td>censored&lt;/td>
+&lt;td>none&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Cells with an ASET but nobody walked there cannot fail; cells with an RSET but
+no ASET are a data gap. Both are counted and never passed.&lt;/p>
+&lt;h2>Measures, seeds&lt;span class="hx-absolute -hx-mt-20" id="measures-seeds">&lt;/span>
+&lt;a href="#measures-seeds" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>measures&lt;/code> gives, on the cells where DIFF is exact: the minimum DIFF and its
+cell, the failing area in m² (true floor area per cell), and &lt;strong>C&lt;/strong>, the sum
+of DIFF times area over the failing cells in m² s, without binning. The
+paper&amp;rsquo;s C bins DIFF into 20 s classes; &lt;code>Measures.c_binned_m2s&lt;/code> and
+&lt;code>release_measures&lt;/code> give that only to compare with the paper. &lt;code>support&lt;/code>
+is &lt;code>&amp;quot;intersection&amp;quot;&lt;/code> (cells with both maps) or &lt;code>&amp;quot;union&amp;quot;&lt;/code>; the failing area and
+C are the same, the shares and the coverage report differ.&lt;/p>
+&lt;p>One run per seed gives one RSET map. &lt;code>pool_rset&lt;/code> takes the 95th percentile per
+cell over the seeds that visit it, and a cell censored in any seed stays
+censored. &lt;code>seed_measures&lt;/code> gives each measure per seed with a 95 % bootstrap
+interval of the mean, and &lt;code>convergence_curve&lt;/code> the interval half-width against
+the number of seeds. Choose the number of seeds from the curve. A maximum over
+seeds grows with their number; &lt;code>pool_seeds(..., &amp;quot;max&amp;quot;)&lt;/code> carries it as
+&lt;code>&amp;quot;max over n=…&amp;quot;&lt;/code>.&lt;/p>
+&lt;h2>Sign visibility is a different map&lt;span class="hx-absolute -hx-mt-20" id="sign-visibility-is-a-different-map">&lt;/span>
+&lt;a href="#sign-visibility-is-a-different-map" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Whether the signs of a route can be read through the smoke is a wayfinding
+question. It is not a tenability limit and is not part of DIFF. fdsvismap
+computes it separately
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140" target="_blank" rel="noopener">#140&lt;/a>).&lt;/p>
+&lt;h2>Verification against the data release&lt;span class="hx-absolute -hx-mt-20" id="verification-against-the-data-release">&lt;/span>
+&lt;a href="#verification-against-the-data-release" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Run with &lt;code>SCHROEDER2020_RELEASE&lt;/code> set to the unpacked Zenodo release
+(&lt;code>tests/test_analysis_zenodo.py&lt;/code>; the release is not in the repository).&lt;/p>
+&lt;ul>
+&lt;li>&lt;strong>Stage 1, exact.&lt;/strong> The released difference map, counted by the release&amp;rsquo;s
+rules: min DIFF −29 s, 54 cells (19.44 m²) with DIFF ≤ 0, C = −310 m² s
+binned. By the default rules (DIFF = 0 passes, bin-free C): 52 cells,
+C = −274.7 m² s.&lt;/li>
+&lt;li>&lt;strong>Stage 2, rebuild.&lt;/strong> ASET and RSET rebuilt with this module (PedPy RSET)
+against row A of &lt;code>scripts/docs/schroeder2020_reproduce.py&lt;/code>: min DIFF
+differs by 2 s and the failing area by −9 %, within the predeclared 10 s
+and 10 %.&lt;/li>
+&lt;li>Only the &lt;code>nearest&lt;/code> cell rule is checked against the release. The default
+&lt;code>exists&lt;/code> rule (block maximum) has no release check.&lt;/li>
+&lt;/ul>
+&lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
+&lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>The FED and heat FED maps are for a person standing still from t = 0; they
+are conservative and not a walker&amp;rsquo;s dose.&lt;/li>
+&lt;li>ASET is read on one slice height. The cell rules &lt;code>exists&lt;/code>, &lt;code>all&lt;/code> and
+&lt;code>nearest&lt;/code> are available (&lt;code>cell_rule&lt;/code>); the cell-centre rule of the study
+script is not.&lt;/li>
+&lt;li>The ASET is as fine as the slice output interval for the level criteria
+(visibility, temperature), and one second for the dose criteria.&lt;/li>
+&lt;li>RSET here is travel and modelled pre-movement from ignition. Detection and
+alarm times are not included (ISO/TR 16738).&lt;/li>
+&lt;li>With few seeds the 95th percentile lies near the maximum.&lt;/li>
+&lt;li>Research software. No result is a design or safety verdict.&lt;/li>
+&lt;/ul>
+&lt;h2>References&lt;span class="hx-absolute -hx-mt-20" id="references">&lt;/span>
+&lt;a href="#references" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
+&lt;li>Schröder, B., Arnold, L., Seyfried, A. (2020). &lt;em>A map representation of the
+ASET-RSET concept&lt;/em>. Fire Safety Journal 115, 103154.
+&lt;a href="https://doi.org/10.1016/j.firesaf.2020.103154" target="_blank" rel="noopener">doi:10.1016/j.firesaf.2020.103154&lt;/a>&lt;/li>
+&lt;li>ISO 13571:2012, &lt;em>Life-threatening components of fire&lt;/em>.&lt;/li>
+&lt;li>vfdb TB 04-01 (2020); DIN 18009-2:2021-06; Engineers Australia (2014),
+&lt;em>Practice Note for Tenability Criteria&lt;/em>; MBIE C/VM2 Commentary.&lt;/li>
+&lt;/ul>
+&lt;p>See also &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a>
+for the study these maps follow, and
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">RSET from an ensemble of seeds&lt;/a>.&lt;/p></description></item><item><title>Quickstart</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/quickstart/</guid><description>
 &lt;p>Run the same evacuation twice, once in clear air and once in smoke, and see
 how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;p>&lt;strong>What you will do&lt;/strong>&lt;/p>
@@ -2053,7 +2371,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2072,7 +2390,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a168c799a939bf73f3bff1a4120262535a74d78dc6ce9f3ee133a6f842305c7b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f80d77d397d10b24504f45724a2431071af6d79e5a32f8f20045e28ae980aaa9&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -2500,7 +2818,7 @@ and agents, drawn in JuPedSim Web or copied from an example.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>, before you
 point the tool at your own FDS output.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>: every file a run writes and how to read it.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">Smoke-speed model&lt;/a>: the speed laws and their
 parameters.&lt;/li>
 &lt;/ul>
@@ -4055,7 +4373,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -4080,7 +4398,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">afa18c3de475d3958c4c61b9092f6493e28255a72775735d6c18b54a5e6e80cb&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a6b46dce3380787e3b3ede7edede4e29d29e8f92e30b2ed70471256f1eb34064&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -4503,7 +4821,7 @@ temporary copy.&lt;/p>
 fire, with figures for the scenario, the smoke, the run and its results.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/fds-case-requirements/">What your FDS case must provide&lt;/a>: the slices to
 add to your deck and the full list of failure modes.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/">Outputs&lt;/a>: every file a run writes, column by column.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/">Troubleshooting&lt;/a>: error messages and their fixes.&lt;/li>
 &lt;/ul>
@@ -5532,7 +5850,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5563,7 +5881,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6248d3ad95782dadd29b7c51a9b6d7b46a5ae542ed24019981ac11ce5d74cc9c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e5cb67df2bc5c92e8bbb7f065781fbb4cc02e8f239e1231675b34d4fe0ee9d0a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -5986,7 +6304,7 @@ zero, check that both runs use the same scenario file and seed.&lt;/p>
 &lt;/div>
 &lt;/aside>
 &lt;p>&lt;strong>Read RSET from the trajectory&lt;/strong>, not from the &lt;code>Simulation finished&lt;/code> line.
-The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">ensemble how-to&lt;/a> explains why and how. For one
+The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">ensemble how-to&lt;/a> explains why and how. For one
 seed:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sqlite3
@@ -6956,8 +7274,10 @@ individuals (§5.2). The FED is the FDS+Evac FED, not the ISO asphyxiant
 FED.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;strong>The ASET side is not built in.&lt;/strong> The location ASET and the crossings
-are computed by the script, not by the engine
+&lt;p>&lt;strong>The ASET side of this page is a script.&lt;/strong> The location ASET and the
+crossings here come from the script; the built-in versions are
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a> and the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/">ASET/RSET check with FED&lt;/a>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>).&lt;/p>
 &lt;/li>
 &lt;/ul>
@@ -7004,7 +7324,7 @@ the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154, §4.
 &lt;a href="#what-next" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#smoke-blind-runs-and-exit-replay">Usage › Smoke-blind runs and exit replay&lt;/a>:
 every flag of the three arms.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get the egress time from an ensemble?&lt;/a>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">How do I get the egress time from an ensemble?&lt;/a>
 for RSET over many seeds.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a> for the concepts.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a>: arm U only, as ASET − RSET
@@ -7028,7 +7348,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7049,7 +7369,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f9b01c557c28ff46dd84e5f7680f3054238184288303f4c8f050eea52f0ad51a&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c658441b8bf753627c9c0ec859b5a196575791e134bc7fc18ea2602271d235f6&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -7494,9 +7814,11 @@ the spawn centre or the branch mouth from ignition would reach it only at
 one fire, one seed, and research software. The result describes this run
 only.&lt;/p>
 &lt;h3>Make the numbers yourself&lt;span class="hx-absolute -hx-mt-20" id="make-the-numbers-yourself">&lt;/span>
-&lt;a href="#make-the-numbers-yourself" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>pyFDS-Evac does not compute ASET itself. A built-in report is planned in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. The
-script
+&lt;a href="#make-the-numbers-yourself" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The per-agent comparison is built in: see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/">the ASET/RSET check with FED&lt;/a>, and for maps of
+the whole floor &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>). The
+numbers below come from the script
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/scripts/docs/first_fds_case_aset.py" target="_blank" rel="noopener">&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>&lt;/a>
 reads the run files from step 4 and the FDS slices:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
@@ -7765,7 +8087,7 @@ median of 103.9 s and a maximum of 153.5 s for the 88 who got out.&lt;/li>
 &lt;/ul>
 &lt;p>More seeds would not supply an RSET either, because every seed stops at the
 same 300 s. For a scenario in which everyone gets out, see the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">ensemble how-to&lt;/a>. For one where everyone is placed
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">ensemble how-to&lt;/a>. For one where everyone is placed
 at t = 0 and gets out, with RSET mapped cell by cell, see
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a>.&lt;/p>
 &lt;h3>What this does not show&lt;span class="hx-absolute -hx-mt-20" id="what-this-does-not-show">&lt;/span>
@@ -7935,7 +8257,7 @@ turn it into a scenario with &lt;code>pyfds-evac init&lt;/code>.&lt;/li>
 your own FDS output.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/walkthrough/">Real-FDS walkthrough&lt;/a>: FED from FDS slices, and how to spot
 a run that finishes but has no FED in it.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">How do I get RSET with its spread from an ensemble of seeds?&lt;/a>&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/howto-with-without-fire/">Evacuation with and without the fire&lt;/a>: the
 same fire, run uncoupled and coupled.&lt;/li>
 &lt;li>Models: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/smoke-speed/">smoke and speed&lt;/a>,
@@ -9849,7 +10171,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -9865,7 +10187,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">c1a4cce4d8078c0db0514ed89684d59678006d7aebe9d0afd92c7428c6f4775b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">4244d9096db5facccc8dea8ca8c6b422b02118ddeb14233e47b69488910a79a5&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -19199,7 +19521,7 @@ history writes no file. The run&amp;rsquo;s console output ends with one line pe
 criterion: outcome counts and the first crossing time. The same totals
 are &lt;code>exposure_totals(rows)&lt;/code> in &lt;code>pyfds_evac.core.exposure_summary&lt;/code>; they are
 not written to the CSV. How to read it:
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-aset-rset-check/">ASET/RSET check with FED&lt;/a>.&lt;/p>
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/">ASET/RSET check with FED&lt;/a>.&lt;/p>
 &lt;table>
 &lt;thead>
 &lt;tr>
@@ -19543,7 +19865,7 @@ agent has left and no flow window is open: &lt;code>end_reason&lt;/code> is
 &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code>, the run is &lt;code>&amp;quot;incomplete&amp;quot;&lt;/code> and &lt;code>success&lt;/code> is &lt;code>False&lt;/code>.
 &lt;code>evacuation_time&lt;/code> is then the end of the loop, not an exit time. Read
 &lt;code>metrics[&amp;quot;last_exit_time&amp;quot;]&lt;/code> or the trajectory for exit times, as the
-&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET how-to&lt;/a> does
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">RSET how-to&lt;/a> does
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/141" target="_blank" rel="noopener">#141&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>A deadlocked run stops early.&lt;/strong> When every mobile agent inside has
 moved less than 0.03 m, net, over the last 100 s, the run stops at once
@@ -20330,6 +20652,10 @@ guide (&amp;ldquo;Features of Limited Functionality&amp;rdquo;), FDS+Evac keeps 
 of t = 0 for the whole run, so the two differ here. See
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>.&lt;/li>
 &lt;/ul>
+&lt;h2>ASET maps&lt;span class="hx-absolute -hx-mt-20" id="aset-maps">&lt;/span>
+&lt;a href="#aset-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The FED and heat FED of an ASET map are those of a person standing at the
+cell from t = 0, not of a walker. Sign visibility is a separate map and is
+not part of DIFF. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a>.&lt;/p>
 &lt;h2>Exit-reach warning&lt;span class="hx-absolute -hx-mt-20" id="exit-reach-warning">&lt;/span>
 &lt;a href="#exit-reach-warning" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The warning that an exit may be out of reach of the agents&amp;rsquo; wall clearance
 tests one agent heading straight at the exit. It is a necessary condition,
@@ -27058,7 +27384,7 @@ decision-making process during pre-evacuation&lt;/em>. Fire Safety Journal, 78,
 &lt;p>How pyFDS-Evac uses this: the presets and their sources are in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/coming-from-fds-evac/#pre-movement-parameters">Coming from FDS+Evac › Pre-movement parameters&lt;/a>,
 the scenario keys in &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/">Scenario JSON&lt;/a>, and a worked
-ensemble in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>.&lt;/p>
+ensemble in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">RSET ensemble how-to&lt;/a>.&lt;/p>
 &lt;p>How it is verified: the pre-movement row of the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/">Verification&lt;/a> index.&lt;/p></description></item><item><title>Troubleshooting</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/</guid><description>
 &lt;p>Find the message you see, then its cause and fix. Errors stop the run;
 warnings let it continue, often with part of the model switched off, so read
@@ -28738,7 +29064,7 @@ until &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/238" t
 was fixed, the FED read the first slice of each species in the deck.&lt;/li>
 &lt;li>This page is not yet an automated test: the check runs from the figure
 script on the stored output.&lt;/li>
-&lt;/ul></description></item><item><title>How do I get the egress time and its spread from an ensemble of seeds?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/</guid><description>
+&lt;/ul></description></item><item><title>How do I get the egress time and its spread from an ensemble of seeds?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/</guid><description>
 &lt;p>&lt;strong>This how-to reads tracked FDS output. You do not need to run FDS.&lt;/strong> Part 1
 needs no FDS output at all.&lt;/p>
 &lt;p class="docs-files__jump">&lt;a href="#files-rset-ensemble">&lt;span aria-hidden="true">↓&lt;/span> Download the files for this page (22 kB zip)&lt;/a>&lt;/p>
@@ -28797,7 +29123,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -28821,7 +29147,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b8499a18fa373f10a14d0b003c3497824e763d781c86ee46cc35b845c8acfd97&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">985a9bf1f0e4a719ff049e5bd054b6bded1bfbf582ecb078b6906503930ca669&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -29950,75 +30276,7 @@ surface at 20 or 35 °C, within ±10 % of the Handbook&amp;rsquo;s &amp;ldquo;ap
 2.5 kW/m²&amp;rdquo;. Table 63.20 radiant rows: within ±30 %, the band chosen in
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/219" target="_blank" rel="noopener">#219&lt;/a>.
 D = 16.7 as printed on pp. 2382 and 2384 of Ch. 63.&lt;/li>
-&lt;/ul></description></item><item><title>How do I check each agent against ASET with FED, as in Pathfinder?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/howto-aset-rset-check/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/howto-aset-rset-check/</guid><description>
-&lt;p>A Pathfinder-style check keeps the occupants moving through the fire&amp;rsquo;s
-smoke, records the dose each one collects on the way, and compares the time
-a limit is reached with the time the occupant leaves. This page does the
-same with &lt;code>--output-fed-summary&lt;/code>. It reads no new physics: the summary is
-a post-processing of the FED and smoke histories the run already writes.&lt;/p>
-&lt;p>&lt;strong>You need&lt;/strong> the FDS output of &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a> in
-&lt;code>$FDS&lt;/code>. Nothing here runs FDS.&lt;/p>
-&lt;h2>1. Keep the occupants walking and the dose on&lt;span class="hx-absolute -hx-mt-20" id="1-keep-the-occupants-walking-and-the-dose-on">&lt;/span>
-&lt;a href="#1-keep-the-occupants-walking-and-the-dose-on" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--disable-tenability&lt;/code> turns off the irritant slowdown and both
-incapacitation checks. Smoke still slows walking, and the gas FED, the heat
-FED and the FIC are still accumulated and written. Nobody drops, so every
-agent has one RSET and the margin to each limit is defined for all of them.&lt;/p>
-&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
-&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-bash" data-lang="bash">&lt;span style="display:flex;">&lt;span>uv run python run.py --scenario assets/t_junction --fds-dir &lt;span style="color:#e6db74">&amp;#34;&lt;/span>$FDS&lt;span style="color:#e6db74">&amp;#34;&lt;/span> &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --disable-tenability &lt;span style="color:#ae81ff">\
-&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#ae81ff">&lt;/span> --output-fed-summary tj/summary.csv&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
-&lt;button
-class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
-title="Copy code"
->
-&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
-&lt;/button>
-&lt;/div>
-&lt;/div>
-&lt;p>This checks a design: the occupants are not allowed to fall. Leaving the
-checks on, and the dose with them, answers a different question, what
-happens to the people once they drop. Run both when both matter.&lt;/p>
-&lt;h2>2. Read the summary&lt;span class="hx-absolute -hx-mt-20" id="2-read-the-summary">&lt;/span>
-&lt;a href="#2-read-the-summary" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>One row per agent. For each criterion there are three columns:&lt;/p>
-&lt;ul>
-&lt;li>&lt;code>t_&amp;lt;criterion&amp;gt;_s&lt;/code>: first sample time at which the value reached the
-threshold (&lt;code>&amp;gt;=&lt;/code>), empty if never;&lt;/li>
-&lt;li>&lt;code>diff_&amp;lt;criterion&amp;gt;_s&lt;/code>: crossing time minus exit time, so a negative value
-means the limit was reached before the agent left (the sign of
-DIFF = ASET - RSET);&lt;/li>
-&lt;li>&lt;code>outcome_&amp;lt;criterion&amp;gt;&lt;/code>: &lt;code>fail&lt;/code>, &lt;code>pass&lt;/code>, &lt;code>open&lt;/code> or &lt;code>not_evaluated&lt;/code>.&lt;/li>
-&lt;/ul>
-&lt;p>An agent still inside at &lt;code>max_simulation_time&lt;/code> has no exit time
-(&lt;code>censored&lt;/code> is &lt;code>True&lt;/code>, &lt;code>exit_time_s&lt;/code> is empty). If it crossed, it failed,
-with no margin. If it did not, the outcome is &lt;code>open&lt;/code>: its margin is
-undetermined, and the summary never fills it from the last frame. Read the
-counts of &lt;code>pass&lt;/code> only together with the number of censored agents.&lt;/p>
-&lt;p>Heat is &lt;code>not_evaluated&lt;/code> when the run had no TEMPERATURE slice, not
-ambient. The run&amp;rsquo;s console output ends with one line per criterion giving
-the outcome counts and the first crossing.&lt;/p>
-&lt;p>The thresholds are options: &lt;code>--summary-fed-low&lt;/code> and &lt;code>--summary-fed-high&lt;/code>
-(0.3 and 1) for the gas FED, the heat FED and the FIC;
-&lt;code>--summary-visibility-limit-m&lt;/code> (10 m) and &lt;code>--summary-visibility-c&lt;/code> (3) for
-the visibility, which is crossed when K reaches C / limit, 0.3 1/m by
-default. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#exposure-summary">Outputs&lt;/a> for the columns and the
-sources of the defaults.&lt;/p>
-&lt;h2>What differs from Pathfinder&lt;span class="hx-absolute -hx-mt-20" id="what-differs-from-pathfinder">&lt;/span>
-&lt;a href="#what-differs-from-pathfinder" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These are differences in the run, not in the summary:&lt;/p>
-&lt;ul>
-&lt;li>the O2 term starts below 20 % here and below 19.5 % in Pathfinder (set
-&lt;code>--o2-threshold-percent 19.5&lt;/code> to match);&lt;/li>
-&lt;li>the speed in smoke follows Lund by default here; Fridolf&amp;rsquo;s Eq. 7 is
-available and is being verified
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/146" target="_blank" rel="noopener">#146&lt;/a>);&lt;/li>
-&lt;li>the gas is read at one slice height for everyone, not at each occupant&amp;rsquo;s
-own height
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/150" target="_blank" rel="noopener">#150&lt;/a>,
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/157" target="_blank" rel="noopener">#157&lt;/a>).&lt;/li>
-&lt;/ul>
-&lt;p>The crossing time has the resolution of &lt;code>--smoke-update-interval&lt;/code> (1 s by
-default). An agent that crossed between its last sample and its exit reads
-&lt;code>pass&lt;/code>.&lt;/p></description></item><item><title>How do I check each agent against ASET with FED, as in Pathfinder?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-aset-rset-check/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-aset-rset-check/</guid><description>
+&lt;/ul></description></item><item><title>How do I check each agent against ASET with FED, as in Pathfinder?</title><link>https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/</guid><description>
 &lt;p>A Pathfinder-style check keeps the occupants moving through the fire&amp;rsquo;s
 smoke, records the dose each one collects on the way, and compares the time
 a limit is reached with the time the occupant leaves. This page does the
@@ -30419,7 +30677,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -30437,7 +30695,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">a0003802263f4ba133519ebf01c3a4378d3692ac0157e151e813bd856d46b993&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5f0470ad6d3f55770ed15366c51b4c94f4e00882d5ad4a8eae7992ac79967c97&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s

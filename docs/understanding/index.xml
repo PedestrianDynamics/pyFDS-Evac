@@ -840,6 +840,10 @@ guide (&amp;ldquo;Features of Limited Functionality&amp;rdquo;), FDS+Evac keeps 
 of t = 0 for the whole run, so the two differ here. See
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>.&lt;/li>
 &lt;/ul>
+&lt;h2>ASET maps&lt;span class="hx-absolute -hx-mt-20" id="aset-maps">&lt;/span>
+&lt;a href="#aset-maps" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The FED and heat FED of an ASET map are those of a person standing at the
+cell from t = 0, not of a walker. Sign visibility is a separate map and is
+not part of DIFF. See &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a>.&lt;/p>
 &lt;h2>Exit-reach warning&lt;span class="hx-absolute -hx-mt-20" id="exit-reach-warning">&lt;/span>
 &lt;a href="#exit-reach-warning" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The warning that an exit may be out of reach of the agents&amp;rsquo; wall clearance
 tests one agent heading straight at the exit. It is a necessary condition,

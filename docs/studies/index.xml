@@ -26,9 +26,10 @@ The authors published their inputs, code and results
 (&lt;a href="https://doi.org/10.5281/zenodo.3875550" target="_blank" rel="noopener">Zenodo, doi:10.5281/zenodo.3875550&lt;/a>).
 We take the room, door, fire and crowd from that release, run them with our
 own FDS and evacuation model, and compare with the release where it has
-data. The script &lt;code>scripts/docs/schroeder_room_maps.py&lt;/code> builds the maps; a
-built-in version is planned in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>. The
+data. The script &lt;code>scripts/docs/schroeder_room_maps.py&lt;/code> builds the maps; the
+built-in version is described in
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>),
+and this page has not been re-run with it. The
 page reports research software applied to one room and gives no design or
 safety verdict.
 &lt;/div>
@@ -1284,7 +1285,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1315,7 +1316,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">519f11d6d9f106b3c08d2f049e66591bb0b8f3f99630f580598c3ab40cd2652e&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">86af634cf13f0914134abece3bac6d9442a45069322af25f902e37c5939aa62e&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -1594,7 +1595,7 @@ grid).&lt;/p>
 &lt;h2>Limits and open issues&lt;span class="hx-absolute -hx-mt-20" id="limits-and-open-issues">&lt;/span>
 &lt;a href="#limits-and-open-issues" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;strong>Not modelled here:&lt;/strong> smoke slowing agents or changing their route, and
-signs losing visibility. Both are open questions for the built-in maps
+signs losing visibility. Neither is in the built-in maps either
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>).
 Sign visibility is a wayfinding map and never enters DIFF
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/140" target="_blank" rel="noopener">#140&lt;/a>).&lt;/li>
@@ -1718,7 +1719,7 @@ for &lt;code>PRE_MEAN&lt;/code>.&lt;/li>
 classic single-point comparison this page maps.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/first-fds-case/">A crowd in a fire&lt;/a>: per-agent exposure and a
 location ASET map on an FDS fire.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">RSET from an ensemble of seeds&lt;/a>.&lt;/li>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">RSET from an ensemble of seeds&lt;/a>.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/visibility/">Visibility through smoke&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/fed/">Fractional effective dose&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>.&lt;/li>
 &lt;/ul>
@@ -2747,7 +2748,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee96f3896262b13f72f7263dd252f96b6efa9353">&lt;code>ee96f38&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/ee4053d7b4ff255261333a4026365f7350880aba">&lt;code>ee4053d&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2778,7 +2779,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">6248d3ad95782dadd29b7c51a9b6d7b46a5ae542ed24019981ac11ce5d74cc9c&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">e5cb67df2bc5c92e8bbb7f065781fbb4cc02e8f239e1231675b34d4fe0ee9d0a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -3201,7 +3202,7 @@ zero, check that both runs use the same scenario file and seed.&lt;/p>
 &lt;/div>
 &lt;/aside>
 &lt;p>&lt;strong>Read RSET from the trajectory&lt;/strong>, not from the &lt;code>Simulation finished&lt;/code> line.
-The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">ensemble how-to&lt;/a> explains why and how. For one
+The &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">ensemble how-to&lt;/a> explains why and how. For one
 seed:&lt;/p>
 &lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
 &lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-python" data-lang="python">&lt;span style="display:flex;">&lt;span>&lt;span style="color:#f92672">import&lt;/span> sqlite3
@@ -4171,8 +4172,10 @@ individuals (§5.2). The FED is the FDS+Evac FED, not the ISO asphyxiant
 FED.&lt;/p>
 &lt;/li>
 &lt;li>
-&lt;p>&lt;strong>The ASET side is not built in.&lt;/strong> The location ASET and the crossings
-are computed by the script, not by the engine
+&lt;p>&lt;strong>The ASET side of this page is a script.&lt;/strong> The location ASET and the
+crossings here come from the script; the built-in versions are
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/aset-rset-maps/">ASET, RSET and DIFF maps&lt;/a> and the
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-aset-rset-check/">ASET/RSET check with FED&lt;/a>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210" target="_blank" rel="noopener">#210&lt;/a>).&lt;/p>
 &lt;/li>
 &lt;/ul>
@@ -4219,7 +4222,7 @@ the ASET-RSET concept. &lt;em>Fire Safety Journal&lt;/em>, 115, 103154, §4.
 &lt;a href="#what-next" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/usage/#smoke-blind-runs-and-exit-replay">Usage › Smoke-blind runs and exit replay&lt;/a>:
 every flag of the three arms.&lt;/li>
-&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/howto-rset-ensemble/">How do I get the egress time from an ensemble?&lt;/a>
+&lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/analysis/howto-rset-ensemble/">How do I get the egress time from an ensemble?&lt;/a>
 for RSET over many seeds.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/aset-rset/">ASET and RSET&lt;/a> for the concepts.&lt;/li>
 &lt;li>&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/">ASET-RSET maps after Schröder et al. (2020)&lt;/a>: arm U only, as ASET − RSET
