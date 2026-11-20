@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `assets/station_fahy/score_owed.py` scores the Station study's owed
+  pre-registration items beside the frozen `validate.py`: the V4 NIST
+  construct, V5, V6 (HRR, T5, T6), survival of W differences under Fahy
+  resampling, heat and raised-floor FED, the vestibule count and the
+  censored shares and t_jam splits. `docs/study-station.md` reports the
+  results (#950).
 - `--heat-radiant-source radiometer` with `--heat-radiometer-orientation x,y,z`
   takes the radiant term of the total-flux heat dose from FDS
   `RADIOMETER GAS` devices of one orientation, with no orientation factor

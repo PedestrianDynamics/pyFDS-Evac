@@ -10,7 +10,9 @@ data (Fahy, Proulx & Flynn 2011, Table 2). The comparison was
 pre-registered: the criteria were frozen before the first FDS fire run.
 
 **Every scored gate fails.** V1 fails, V2 fails and V3, the primary claim,
-fails. V4 to V6 were not scored. The registered wording for the primary
+fails. V4 to V6 and the other owed items were scored afterwards, with
+scorers written before their outputs were opened
+([below](#owed-items-scored-afterwards)). The registered wording for the primary
 claim applies: **"coupling adds no measurable skill to exit choice here"**.
 
 This page publishes the failure under the pre-registration's failure
@@ -244,30 +246,170 @@ against Purser's 14.9 MJ/kg, so FED is biased low.
 **Inputs.** The geometry `station_nist` is "provenance unverified": the
 NCSTAR 2 App. L.2.2 deck, transcribed. Victim placement is an assumption;
 Spearpoint (2012) Table 1 gives no recovery sites. The fire field was
-not checked against NIST: the fire is model against model at best, because
-V6 was not scored.
+checked against NIST only afterwards, and only partly (see V6 below): the
+fire is model against model at best.
 
-## Owed and not yet produced
+## Owed items, scored afterwards
 
-These items are required by the pre-registration and tracked in
-[#950](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/950).
+{{< callout type="warning" >}}
+These items are required by the pre-registration and were owed when the
+page was first published
+([#950](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/950)).
+They are disclosed results, scored after V1 to V3 were known. The scorers
+are in `assets/station_fahy/score_owed.py` and were committed with their
+tests before the output they score was opened; every look is in the look
+log. They use the same runs (seeds 4 to 23, commit `aaeda1f3`); nothing was
+re-run and nothing was tuned. The frozen `validate.py` is unchanged
+(sha256 `2313b91a…`). The scorers read the outputs with the current
+lockfile, not the freeze lockfile (`uv.lock` differs; the runs do not).
+{{< /callout >}}
 
-- V4: first-target front-door share.
-- V5: 0.9 to 1.5 person/s through the 914 mm door.
-- V6: fire-side check, T5 in 65 to 100 s and T6 in 65 to 115 s. It needs
-  fire slices that nobody has opened.
-- The §2 survival rates under Fahy resampling.
-- The §3 heat-only incapacitation, raised-floor FED and K
-  ([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)
-  is open), and the vestibule count at 86 s.
-- Censored shares and t_jam splits beside every sensitivity row. They are
-  in score files 08 to 34 and not tabulated here.
+| Item | Result | Registered band | Status |
+|---|---|---|---|
+| V4, first-target front share | not scored | none | The runs did not record the first target (`output_route_history` was unset). |
+| V4, NIST construct, arm R | 0.329 pooled (per seed 0.312 / 0.330 / 0.345) | none | Reported. Arm C+jam 0.400 (0.387 / 0.398 / 0.420), arm U 0.408 (0.387 / 0.408 / 0.424). |
+| V5, highest 60 s moving mean | undefined in all 20 seeds of C+jam, U and R | 0.9 to 1.5 person/s | No 60 s window fits between the first arrival and t_jam. |
+| V6, T5 (50 % of dance-floor gas cells above 120 °C at the 1.5 m slice) | 68.0 s (10 %: 67.0 s, 90 %: 72.0 s) | [65, 100] s | pass |
+| V6, T6 (95 % of masked gas cells below 12 % O₂) | not reached by 250 s; the masked share peaks at 92.1 % at 234 s | [65, 115] s | fail with the connectivity-only mask; the verdict depends on room exclusions the registration does not give (see below) |
+| V6, 0.1 m grid check | not scored | T5, T6 | The 0.1 m run has no output: the data folder holds the deck only. |
+| V6, realised against prescribed HRR | energy ratio 0.764; peak 52.1 MW at 92.0 s against 56.7 MW at 91 s | none | Reported (central deck). |
+| Survival under Fahy resampling | see the table below | none | Reported beside V3. |
+| Heat-incapacitated agents | not produced | reported | The runs did not compute heat FED: the recorded column is 0.0 everywhere and heat incapacitation was off. |
+| Raised-floor FED | arm R: 212 of 367 agents (57.8 %) against 26.6 % elsewhere | reported | FED only; K is not recorded in the runs. |
+| Vestibule count at 86 s | C+jam 4 to 8 (median 6), U 5 to 8 (6.5), R 1 to 4 (3) | reported | Ranges over the 20 seeds. |
+| Censored shares and t_jam splits | table below | reported | Reported. |
 
-The frozen tree has no scorer for these. The pre-registration forbids
-tuning, not implementing frozen analyses. None of them is a result of this
-page.
+V5 and V6 are on the central fire and the primary row (arms C+jam, U and
+R). V5 is a secondary check and V6 a model-against-model check; neither
+validates the model.
+
+**V4.** NIST's construct is (agents that exited by the front + agents
+stopped in the entry and sunroom) / (door users + stopped agents), over all
+agents. "Stopped" are the agents still on the grid when the run ended, which
+only arm R has (117 to 138 per seed). In arm R, 2542 front exits and 456
+stopped agents in the entry and sunroom stand against 6585 door users and
+2515 stopped agents over the 20 seeds. The entry and sunroom are boxes read
+from the deck plan (approximate in their source). The first-target share
+cannot be computed from these runs; a rerun with route history on would
+give it, and the pre-registration forbids re-running the matrix.
+
+**V5.** The first agent crosses the 914 mm interior-door line (y = −14.36
+m) at 30.5 to 34.1 s, and t_jam is 86 s, so the span is 51.9 to 55.5 s.
+Registered: the highest 60 s moving mean from the first arrival to t_jam.
+The window is not shortened and does not run past t_jam, so no V5 value
+exists. In that span 182 to 197 agents cross in C+jam, 184 to 200 in U and
+123 to 136 in R. The page gives no rate and no verdict. The first arrival is
+read as the first crossing of the door line, one reading of "first arrival".
+
+**V6.** T5 is the first slice frame (1 s interval) at which at least half
+of the 654 gas nodes of the dance-floor box (A4) exceed 120 °C. NIST's
+FDS 4 result is 80 to 85 s, so the model reaches it earlier, inside the
+registered window. The slice at the nominal 1.5 m is read at 1.6 m (the same
+cell, registered in C24), at the grid nodes. T6 needs a mask of "interior
+gas cells connected to the dance floor, minus the bathrooms, office and
+storage". The registration gives no coordinates for those rooms, so the
+mask is built by connectivity only: nodes of the slice plane that can be
+reached from the dance floor in the closed initial state (10 522 of 14 453
+gas nodes). With it, the masked share below 12 % oxygen reaches 83 % at
+150 s and 92.1 % at 234 s, never 95 %. The nodes still at or above 12 % at
+the end lie mostly in two groups, 433 nodes at x −3.4 to 1.6 m, y −1.4 to
+3.2 m and 360 nodes at x −12.0 to −10.2 m, y −6.8 to 0.4 m. Whether they
+are the excluded rooms is not established; excluding them is a choice the
+registration does not make, and it is not made here. By zone (O₂ 95 %):
+dance floor 102 s, sunroom 96 s, main bar 109 s, dart room 114 s, foyer
+122 s. The sunroom reaches 120 °C (half of its nodes) at 84 s on the 1.6 m
+plane; NIST's "by 90 s" refers to a vertical slice.
+
+**Survival of W differences under Fahy resampling.** Registered as a rate
+reported beside the V3 sign test (plan, line 146): how often a W difference
+survives resampling of Fahy's table. These are rates for a difference in W;
+they say nothing about occupants. Reading: 4000 multinomial resamples of
+Fahy's table, one per draw, shared by all 20 seeds and both arms. A
+difference survives a draw when it keeps its observed sign and its size is
+at least 0.03. "V3 holds" is the share of draws in which V3 as registered
+(R lower in at least 15 of 20 seeds and a mean at least 0.03 lower) holds.
+
+| Row | Mean W(R) − W(C+jam) | Per seed, min / median / max | Mean survives | V3 holds |
+|---|---|---|---|---|
+| primary, central | +0.078 | 0.601 / 0.996 / 1.000 | 0.999 | 0.000 |
+| low yields | +0.092 | 0.971 / 1.000 / 1.000 | 1.000 | 0.000 |
+| high yields | +0.033 | 0.000 / 0.511 / 0.996 | 0.496 | 0.000 |
+| +15 s | +0.068 | 0.481 / 0.994 / 1.000 | 0.998 | 0.000 |
+| −15 s | +0.004 | 0.000 / 0.170 / 0.969 | 0.000 | 0.001 |
+| t_jam 71 s | +0.030 | 0.004 / 0.467 / 0.927 | 0.461 | 0.000 |
+| t_jam 102 s | +0.074 | 0.868 / 1.000 / 1.000 | 1.000 | 0.000 |
+| pre-movement zero | +0.106 | 1.000 / 1.000 / 1.000 | 1.000 | 0.000 |
+| pre-movement tracked | +0.096 | 0.995 / 1.000 / 1.000 | 1.000 | 0.000 |
+| `w_queue` 0.024 (a Fahy fit) | +0.030 | 0.001 / 0.460 / 0.984 | 0.472 | 0.000 |
+| R-na | +0.075 | 0.872 / 0.994 / 1.000 | 0.997 | 0.000 |
+| dose only | +0.072 | 0.749 / 1.000 / 1.000 | 1.000 | 0.000 |
+
+The V3m pairs (R against U) are scored the same way: the primary row has
+mean +0.093 and per-seed survival 0.894 / 1.000 / 1.000. The result is the
+one already reported: the primary difference is positive (R worse) and
+survives resampling; no row passes V3 in more than 0.1 % of draws.
+
+**Raised floors.** Agents are counted as on a raised floor when they start
+inside the platform or rear-strip boxes of the deck plan (302 and 66 placed
+survivors over 20 seeds; the alcove holds none). In arm R 57.8 % of them
+reach FED 1 against 26.6 % of the others; in arm U, where nobody stops, 35.7 %
+against 23.7 %. The slice is sampled at an absolute height
+([#365](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365)), so on
+these floors it sits 0.2 to 1.0 m higher above the feet than elsewhere. No
+claim is made from the difference.
+
+### Censored shares and t_jam splits
+
+Over the 20 seeds, T1 and W of the agents that exited before and at or
+after t_jam (descriptive, not a gate). After t_jam the front door is closed:
+in the clear-air rows nobody uses it, and the W values after t_jam rest on
+few agents.
+
+| Row | Arm | Censored | Before t_jam: T1, W | At or after t_jam: T1, W |
+|---|---|---|---|---|
+| primary | C+jam | 0 | 49.7 %, 0.343 | 0.0 %, 0.564 |
+| primary | U | 0 | 51.2 %, 0.329 | 0.0 %, 0.569 |
+| primary | R | 0 | 39.4 %, 0.404 | 39.2 %, 0.567 |
+| low yields | R | 0 | 37.8 %, 0.416 | 36.9 %, 0.463 |
+| high yields | R | 0 | 40.8 %, 0.375 | 51.4 %, 0.505 |
+| +15 s | R | 0 | 44.6 %, 0.395 | 21.5 %, 0.434 |
+| −15 s (234 s) | R | 0 | 35.1 %, 0.410 | 35.2 %, 0.515 |
+| t_jam 71 s | C+jam | 0 | 42.9 %, 0.379 | 0.0 %, 0.553 |
+| t_jam 71 s | R | 0 | 38.4 %, 0.408 | 20.4 %, 0.376 |
+| t_jam 102 s | C+jam | 2 | 54.6 %, 0.333 | 0.0 %, 0.608 |
+| t_jam 102 s | R | 0 | 39.4 %, 0.404 | 39.3 %, 0.567 |
+| pre-movement zero | C+jam | 0 | 57.9 %, 0.324 | 0.0 %, 0.611 |
+| pre-movement zero | R | 0 | 44.7 %, 0.422 | 78.8 %, 0.378 |
+| pre-movement tracked | C+jam | 0 | 52.2 %, 0.340 | 0.0 %, 0.579 |
+| pre-movement tracked | R | 0 | 40.8 %, 0.410 | 43.4 %, 0.522 |
+| `w_queue` 0.024 (a Fahy fit) | C+jam | 0 | 38.5 %, 0.364 | 0.0 %, 0.562 |
+| `w_queue` 0.024 (a Fahy fit) | R | 0 | 32.9 %, 0.391 | 35.8 %, 0.631 |
+| R-na | R | 0 | 39.9 %, 0.388 | 47.7 %, 0.598 |
+| dose only | R | 1008 (15.1 %) | 39.2 %, 0.403 | 0.0 %, 0.598 |
+
+Censored counts are of 6660 placed survivor-agents per row. `validate.py`
+takes an agent's last recorded frame as its exit time, so in the R rows the
+group at or after t_jam includes agents that stopped near a door.
 
 ## Deviations and history
+
+- The owed scorers read the t_jam rows with `assets/station_nist/config_full.json`
+  and `--horizon 234` where needed, because the built configs of the
+  coupled matrix no longer exist. The frozen `validate.py` with these
+  configs reproduces all 32 score files of the data record (diff of every
+  file).
+- The first version of the V6 mask read the slice at cell centres and its
+  flood fill leaked through zero-thickness walls (fdsreader's cell mask does
+  not see them). T5 was the same in both versions and T6 was not reached in
+  both. The version reported reads the plane at its grid nodes. The first
+  result had been seen when the mask was changed; both are in the look log.
+- The slice used for V6 is read at 1.6 m (the cell of the 1.5 m request), as
+  registered in C24.
+- The registration leaves some readings open: the first arrival of V5, the
+  stopped agents and the entry and sunroom of V4, the rooms of the T6 mask,
+  which agents are on a raised floor, and what "survives" means for a W
+  difference. Each reading is stated above and was fixed in the scorer before
+  its output was opened.
 
 - Pre-movement, `w_queue` and t_jam rows have no arm-C build. They were
   scored for C+jam, U and R only.
@@ -280,6 +422,8 @@ page.
   the freeze.
 - The look log is public in the data record
   ([doi:10.5281/zenodo.24226552](https://doi.org/10.5281/zenodo.24226552)).
+  That version ends on 2026-11-14. The looks of the owed scoring (2026-11-20)
+  are appended to the log and are not in the record until it is updated.
 
 ## Limits
 
