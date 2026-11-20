@@ -1037,7 +1037,7 @@ can do:&lt;/p>
 &lt;ul>
 &lt;li>Draw door checkpoints that span both sides of the opening.&lt;/li>
 &lt;li>Run several seeds. A smaller agent radius does not remove the jam:
-&lt;code>HUT_Library&lt;/code> at 0.15 m still jams in 5 of 13 seeds.&lt;/li>
+&lt;code>HUT_Library&lt;/code> at 0.15 m still jams in 7 of 13 seeds (&lt;code>1fc317db&lt;/code>).&lt;/li>
 &lt;li>Before you read the evacuation time, check that every agent left before
 &lt;code>max_simulation_time&lt;/code>. A deadlock stops the run early with &lt;code>end_reason&lt;/code>
 &lt;code>&amp;quot;deadlock&amp;quot;&lt;/code>.&lt;/li>
@@ -1707,7 +1707,9 @@ values, options that have no effect, the setup warnings and errors the run
 would report, and the shortest equivalent command, with absolute paths.
 Errors include the value checks made when a model is built (for example
 &lt;code>--vis-cell-size 0&lt;/code> or &lt;code>--heat-emissivity 2&lt;/code>); warnings logged while a model
-is built, such as signs outside the FDS extinction slice, are not listed. With &lt;code>--fds-dir&lt;/code> it reads
+is built, such as signs outside the FDS extinction slice, are not listed. The
+warning that an exit may be out of reach of the agents&amp;rsquo; wall clearance is among
+the setup warnings (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/troubleshooting/#warnings-that-change-the-result">Troubleshooting&lt;/a>). With &lt;code>--fds-dir&lt;/code> it reads
 the FDS inventory (slices and output end time), not the slice data. It exits
 with status 1 when the configuration has an error, else 0. It does not check
 an unknown &lt;code>routing.cost_model&lt;/code> or an alias that contradicts its &lt;code>v0*&lt;/code> key;
@@ -7744,6 +7746,11 @@ Each message, its cause and its fix are in
 &lt;td>Set &lt;code>use_premovement&lt;/code> and the &lt;code>premovement_*&lt;/code> keys (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/scenario-json/">Scenario JSON&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>&amp;lt;Model&amp;gt;: agent centres stay … m (radius … + clearance …) from walls and may not come within 0.03 m of exit …&lt;/code>&lt;/td>
+&lt;td>The model keeps agent centres too far from the wall to reach an exit that is flush with it. An agent that heads straight at the exit stops short; one that arrives at an angle may still get in. The check is a necessary condition for one agent, not a guarantee: a crowd can strand agents while it is silent.&lt;/td>
+&lt;td>Deepen the exit, reduce the radius or the wall clearance (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#wall-clearance-and-flush-exits">Movement models › Wall clearance&lt;/a>).&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>pyfds-evac: warning: import_report.json marks this scenario not runnable&lt;/code>&lt;/td>
 &lt;td>&lt;code>pyfds-evac init&lt;/code> wrote the folder as not runnable and lists why. The run goes on, since the folder may have been fixed by hand after &lt;code>init&lt;/code>; a stale cause can still stop it later.&lt;/td>
 &lt;td>Fix what the reasons name and import again, or edit the folder by hand (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/getting-started/start-from-fds-deck/">Start from an FDS deck&lt;/a>).&lt;/td>
@@ -7876,7 +7883,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/0f3c155f72c949b62a8b62792bfeb41a9c6fd179">&lt;code>0f3c155&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/2b52097cdb1962e89eca31ab1222d5ce4b7b00ca">&lt;code>2b52097&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7900,7 +7907,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">b9f60704e8c376769789ff71b3a8e77fd7887886deaf1c48705f0c3ccc9b71ea&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5d5bae6f52627c1c91b17d7546ec9432c9fef8b38853a0530aa156eabcb5c660&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the

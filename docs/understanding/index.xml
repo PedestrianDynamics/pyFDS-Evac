@@ -723,8 +723,8 @@ collision-free speed model, a crowd can stop in front of an opening
 several body widths wide and never clear it, so the crowd stands to the end
 of the run. Imported FDS+Evac decks such
 as &lt;code>HUT_Library&lt;/code> and &lt;code>imo/CompTest9a&lt;/code> show it in some seeds. A smaller
-radius does not remove it: &lt;code>HUT_Library&lt;/code> at 0.15 m still jams in 5 of 13
-seeds, the rate of the issue, and which seeds jam changes between
+radius does not remove it: &lt;code>HUT_Library&lt;/code> at 0.15 m still jams in 7 of 13
+seeds (&lt;code>1fc317db&lt;/code>), and which seeds jam changes between
 commits. &lt;code>SocialForceModel&lt;/code> completes 4 of these 13 runs and
 &lt;code>WarpDriverModel&lt;/code> all 13, with the closest pair of agents within
 0.9 × 2r in 3 of them
@@ -738,6 +738,16 @@ jam itself is not cleared.
 evacuated; seed 6: 26 agents stuck since t = 135 s, stopped at 235 s with
 94 of 120 evacuated) and finishes in the other six
 (&lt;code>8e513ea1&lt;/code>).&lt;/li>
+&lt;li>&lt;strong>&lt;code>AnticipationVelocityModel&lt;/code> jams at doors and walks close to walls&lt;/strong>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/758" target="_blank" rel="noopener">#758&lt;/a>).
+The model stays not recommended. Setting its wall buffer to 0.0 m raised
+the agents out on HUT from 700 to 870 of 1560 and on Familiarity 20 from
+50 to 535 of 1200, and completed 8 of 60 Familiarity 20 runs, but it
+completes 0 of 13 HUT runs where &lt;code>CollisionFreeSpeedModel&lt;/code> completes 6.
+It also jams at a plain 1.2 m door in some seeds and comes close to walls
+at corners and door jambs; the cause is not established. A full mapping
+of the model&amp;rsquo;s parameters is not planned. Upstream issue pending. Figures
+and method: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#deadlock-behaviour">Movement models&lt;/a>.&lt;/li>
 &lt;li>&lt;strong>Doorway deadlocks of exploring agents&lt;/strong>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/359" target="_blank" rel="noopener">#359&lt;/a>). Under &lt;code>no_known_exit: explore&lt;/code>, and
 &lt;code>return&lt;/code> when it explores, two agents that meet head-on in a door, or
@@ -824,6 +834,15 @@ guide (&amp;ldquo;Features of Limited Functionality&amp;rdquo;), FDS+Evac keeps 
 of t = 0 for the whole run, so the two differ here. See
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/wayfinding/#limitations">Wayfinding › Limitations&lt;/a>.&lt;/li>
 &lt;/ul>
+&lt;h2>Exit-reach warning&lt;span class="hx-absolute -hx-mt-20" id="exit-reach-warning">&lt;/span>
+&lt;a href="#exit-reach-warning" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>The warning that an exit may be out of reach of the agents&amp;rsquo; wall clearance
+tests one agent heading straight at the exit. It is a necessary condition,
+not a guarantee. A silent check does not exclude stranded agents in a
+crowd: with &lt;code>AnticipationVelocityModel&lt;/code> in the #975 room and a wall
+clearance of 0.06 to 0.07 m, 2 to 6 of 6 agents per seed were stranded
+while the check was silent. The check can also fire for an exit that an
+agent arriving at an angle reaches
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/movement/#wall-clearance-and-flush-exits">Movement models&lt;/a>).&lt;/p>
 &lt;h2>Reproducibility&lt;span class="hx-absolute -hx-mt-20" id="reproducibility">&lt;/span>
 &lt;a href="#reproducibility" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>A fixed seed does not give identical trajectories. The verification suite
 found that individual trajectories differ between runs with the same seed,
