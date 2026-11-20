@@ -11,8 +11,8 @@ aliases: [/docs/testing-heat/, /models/verification/testing-heat/]
 | **Component** | Heat FED and heat incapacitation ([Models › Heat](/models/heat.md)) |
 | **Level** | FDS case: a full run on FDS output |
 | **Asset** | `assets/fed_incap_heat_150c` (also `_100c` and `_200c`) |
-| **Expected value from** | closed form of SFPE Eq. 63.44 (ISO 13571:2012 Eq. (10), `--heat-clothing unclothed`) at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS's own `TEMPERATURE` slice |
-| **Status** | passes with `--heat-clothing unclothed`; checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10, A3.12); the default law, ISO Eq. (9), has expected times only ([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)) |
+| **Expected value from** | closed form of SFPE Eq. 63.44 (ISO 13571:2012 Eq. (10), `--heat-clothing unclothed`) and of ISO Eq. (9), the default, at the deck temperature; per agent, hand sum of Eq. 63.48 on FDS's own `TEMPERATURE` slice |
+| **Status** | passes with `--heat-clothing unclothed` at 100, 150 and 200 °C, and with the default law, ISO Eq. (9), at 150 and 200 °C ([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)); checks the pipeline, not the law (the law against the Handbook's tables: `test_heat_fed_verif.py`, A3.8–A3.10, A3.12) |
 
 ![100 agents walk a loop in a room at 150 °C; their colour shows the heat dose, and all of them stop at 120 s](/images/verification/heat_room.gif)
 
@@ -32,11 +32,11 @@ Eq. (9), for fully clothed subjects
 ([Models › Heat](/models/heat.md#clothing),
 [#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)). The
 two laws share the pipeline this page checks and differ only in their
-constants. Only the 100 °C deck is too short for Eq. (9): it would reach
-FED = 1 at 1482 s, after the end of the 1000 s FDS record. The 150 and
-200 °C decks could check it (343 s and 121 s) but have not been rerun
-([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)), so the
-Eq. (9) times are expected values only. The default law is checked on
+constants. The 150 and 200 °C decks are also run with the default law
+([#307](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/307)), deterministic only.
+The 100 °C deck is too short for Eq. (9): it would reach FED = 1 at
+1482 s, after the end of the 1000 s FDS record, so it is run with
+Eq. (10) only. The default law is also checked on
 synthetic fields by the S6 test
 ([`test_s6_heat_fed.py`](../tests/verification/test_s6_heat_fed.py)).
 
@@ -124,11 +124,11 @@ position, read from the slice with fdsreader, independent of pyFDS-Evac.
 
 ![Room temperature at 1.5 m against time for the three decks, as the difference from the deck value in mK](/images/verification/heat_room_temperature.png)
 
-| Deck | \(t^{*}\) at the deck *T* | First update with FED ≥ 1 | \(t^{*}\) under ISO Eq. (9), the default (not run) |
-|---|---|---|---|
-| 100 °C | 475.5 s | **476 s** | 1482.3 s, after the 1000 s record |
-| 150 °C | 119.8 s | **120 s** | 343.0 s |
-| 200 °C | 45.0 s | **46 s** | 121.4 s |
+| Deck | \(t^{*}\) at the deck *T*, Eq. (10) | First update with FED ≥ 1 | \(t^{*}\) under ISO Eq. (9), the default | First update with FED ≥ 1 |
+|---|---|---|---|---|
+| 100 °C | 475.5 s | **476 s** | 1482.3 s | not run: after the 1000 s record |
+| 150 °C | 119.8 s | **120 s** | 343.0 s | **343 s** |
+| 200 °C | 45.0 s | **46 s** | 121.4 s | **122 s** |
 
 The last column is \(60 \times 4.1\times10^{8}/T^{3.61}\) s.
 
@@ -168,6 +168,9 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 | deterministic stop, 100 °C | 476 s | all 100 agents at 476 s |
 | deterministic stop, 150 °C | 120 s | all 100 agents at 120 s |
 | deterministic stop, 200 °C | 46 s | all 100 agents at 46 s |
+| default law, Eq. (9): agent FED against the hand sum on the slice, 150 / 200 °C | ≤ seam bound, row by row | max 3.2 × 10⁻⁹ / 4.5 × 10⁻⁹, all within |
+| default law, Eq. (9): deterministic stop, 150 °C | 343 s | all 100 agents at 343 s |
+| default law, Eq. (9): deterministic stop, 200 °C | 122 s | all 100 agents at 122 s |
 | cause of every stop | `heat` | `heat` |
 | probabilistic, 150 °C, 10 seeds pooled: stopped by 999 s | 98.8 % | 985 of 1000 |
 | probabilistic, 150 °C, 10 seeds pooled: largest gap between the curves | ≤ 0.043 | 0.034 (p = 0.21) |
@@ -241,6 +244,25 @@ for seed in $(seq 42 51); do
 done
 uv run python scripts/verification/heat_room_figures.py --data <data>
 ```
+
+The default-law rows come from the same command without
+`--heat-clothing`, at 150 and 200 °C, writing to
+`<data>/fed_incap_heat_<T>c/evac/deterministic_clothed/`. With
+`--law clothed` the figure script runs the same checks under Eq. (9) and
+prints them; it draws no figures:
+
+```bash
+for T in 150 200; do
+  uv run python run.py --scenario assets/fed_incap_heat_${T}c \
+    --fds-dir <data>/fed_incap_heat_${T}c/fds \
+    --enable-heat-fed --heat-incapacitation-mode deterministic \
+    --output-sqlite <data>/fed_incap_heat_${T}c/evac/deterministic_clothed/run.sqlite \
+    --output-fed-history <data>/fed_incap_heat_${T}c/evac/deterministic_clothed/fed_history.csv
+done
+uv run python scripts/verification/heat_room_figures.py --data <data> --law clothed
+```
+
+These runs were made at `2b52097c`.
 
 Each run takes about three minutes; the deterministic runs use the default
 seed 42. A temperature without output is skipped. The published runs were made when

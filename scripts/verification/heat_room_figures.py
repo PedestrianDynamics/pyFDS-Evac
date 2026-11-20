@@ -66,6 +66,10 @@ OUT = ROOT / "site" / "static" / "images" / "verification"
 TEMPS = (100, 150, 200)
 Z = 1.5
 SIGMA = 0.94
+# Heat-dose laws as (A, B): t_I = A * T^-B min.  "unclothed" is SFPE
+# Eq. 63.44 = ISO 13571:2012 Eq. (10); "clothed" is ISO Eq. (9), the default.
+LAWS = {"unclothed": (5e7, 3.4), "clothed": (4.1e8, 3.61)}
+DET_DIRS = {"unclothed": "deterministic", "clothed": "deterministic_clothed"}
 
 AGENT = "#969696"  # pyFDS-Evac agents: thin grey solid lines
 HAND = "#4575b4"  # hand calculation from the slice: blue dashed line
@@ -86,9 +90,10 @@ LEGEND = dict(
 )
 
 
-def t_nominal(temp_c):
-    """Seconds to FED = 1 at a constant temperature, SFPE Eq. 63.44."""
-    return 60.0 * 5e7 / temp_c**3.4
+def t_nominal(temp_c, law="unclothed"):
+    """Seconds to FED = 1 at a constant temperature under *law*."""
+    a, b = LAWS[law]
+    return 60.0 * a / temp_c**b
 
 
 def phi(x):
@@ -145,14 +150,15 @@ def load_history(path):
     return hist.sort_values(["agent_id", "time_s"]).reset_index(drop=True)
 
 
-def hand_dose(hist, times, xs, ys, temp, shared, gap):
+def hand_dose(hist, times, xs, ys, temp, shared, gap, law="unclothed"):
     """Add the slice temperature and hand-summed heat FED to each history row.
 
     ``seam_bound`` is the largest FED difference the mesh seams allow: at a
     shared node the agent may read the other mesh, up to ``gap`` K away, and
-    d(rate)/rate = 3.4 dT/T, so each such update adds at most
-    3.4 * gap / T * rate * dt.
+    d(rate)/rate = B dT/T, so each such update adds at most
+    B * gap / T * rate * dt.
     """
+    a, b = LAWS[law]
     t = hist["time_s"].to_numpy()
     ti = np.abs(times[None, :] - t[:, None]).argmin(axis=1)
     ii = np.abs(xs[None, :] - hist["x"].to_numpy()[:, None]).argmin(axis=1)
@@ -160,17 +166,15 @@ def hand_dose(hist, times, xs, ys, temp, shared, gap):
     hist["t_slice"] = temp[ti, ii, jj]
     dt_min = hist.groupby("agent_id")["time_s"].diff().fillna(0.0) / 60.0
     hist["fed_hand"] = (
-        (hist["t_slice"] ** 3.4 / 5e7 * dt_min).groupby(hist["agent_id"]).cumsum()
+        (hist["t_slice"] ** b / a * dt_min).groupby(hist["agent_id"]).cumsum()
     )
-    step = hist["t_slice"] ** 3.4 / 5e7 * dt_min
+    step = hist["t_slice"] ** b / a * dt_min
     at_seam = shared[ii, jj]
     hist["at_seam"] = at_seam
     hist["seam_bound"] = (
-        (3.4 * gap / hist["t_slice"] * step * at_seam)
-        .groupby(hist["agent_id"])
-        .cumsum()
+        (b * gap / hist["t_slice"] * step * at_seam).groupby(hist["agent_id"]).cumsum()
     )
-    rec = hist["temperature_celsius"] ** 3.4 / 5e7 * dt_min
+    rec = hist["temperature_celsius"] ** b / a * dt_min
     hist["fed_from_recorded_t"] = rec.groupby(hist["agent_id"]).cumsum()
     return hist
 
@@ -756,18 +760,20 @@ def render_gif(out, hist, room, cfg, n, t_last, step_s, fps, hold):
     return len(picks) + hold
 
 
-def analyse(case_dir, temp_c):
+def analyse(case_dir, temp_c, law="unclothed"):
     """Read one temperature's FDS slice and runs; return the numbers to check."""
+    a, b = LAWS[law]
     times, xs, ys, temp, gap, shared = temperature_slice(case_dir / "fds")
     case = dict(times=times, xs=xs, ys=ys, temp=temp, seam_gap=gap)
     det = hand_dose(
-        load_history(case_dir / "evac" / "deterministic" / "fed_history.csv"),
+        load_history(case_dir / "evac" / DET_DIRS[law] / "fed_history.csv"),
         times,
         xs,
         ys,
         temp,
         shared,
         gap,
+        law,
     )
     heat_cause = det["incapacitation_cause"].astype(str) == "heat"
     case["det"] = det
@@ -807,10 +813,10 @@ def analyse(case_dir, temp_c):
     case["seam_rows_to_stop"] = int(
         det[det["time_s"] <= stop_t].groupby("agent_id")["at_seam"].sum().max()
     )
-    # FED(t) at the median stop, as a T^3.4-weighted mean temperature.
+    # FED(t) at the median stop, as a T^B-weighted mean temperature.
     before = det[det["time_s"] <= case["t_hand_cross"]]
-    case["t_eff"] = float((before["t_slice"] ** 3.4).mean() ** (1 / 3.4))
-    case["t_star_eff"] = t_nominal(case["t_eff"])
+    case["t_eff"] = float((before["t_slice"] ** b).mean() ** (1 / b))
+    case["t_star_eff"] = t_nominal(case["t_eff"], law)
     case["drop_pct"] = float((1.0 - np.nanmean(temp[times > 60.0]) / temp_c) * 100)
     # Last slice time at which the room mean still falls by more than 0.01 K.
     mean = np.nanmean(temp, axis=(1, 2))
@@ -824,7 +830,7 @@ def analyse(case_dir, temp_c):
     case["t_end"] = float(det["time_s"].max())
 
     seeds_dir = case_dir / "evac" / "probabilistic_seeds"
-    if seeds_dir.exists():
+    if law == "unclothed" and seeds_dir.exists():
         runs = {}
         for d in sorted(seeds_dir.iterdir(), key=lambda d: int(d.name)):
             prob = load_history(d / "fed_history.csv")
@@ -848,14 +854,14 @@ def analyse(case_dir, temp_c):
     return case
 
 
-def report(temp_c, case):
+def report(temp_c, case, law="unclothed"):
     """Print the numbers quoted on the verification page."""
     lo, hi = case["t_late"]
     t_det = case["t_det"]
-    print(f"--- {temp_c} C ---")
+    print(f"--- {temp_c} C, {law} ---")
     print(f"slice T after 60 s: {lo:.2f}-{hi:.2f} C; seam gap {case['seam_gap']:.2e} K")
     print(f"FED update spacing {case['dt'][0]:.3f}-{case['dt'][1]:.3f} s")
-    print(f"closed form at {temp_c} C: {t_nominal(temp_c):.2f} s")
+    print(f"closed form at {temp_c} C: {t_nominal(temp_c, law):.2f} s")
     print(
         f"room mean after 60 s is {case['drop_pct']:.2f} % below the deck; "
         f"T_eff = {case['t_eff']:.2f} C, closed form at T_eff "
@@ -928,6 +934,9 @@ def main():
     ----------
     --data : path
         Directory holding ``fed_incap_heat_<T>c/`` for T in 100, 150, 200.
+    --law : {unclothed, clothed}
+        Heat-dose law of the runs. ``clothed`` (ISO Eq. (9)) reads
+        ``evac/deterministic_clothed/`` and prints the checks only.
 
     Saves
     -----
@@ -951,6 +960,12 @@ def main():
         required=True,
         help="directory with fed_incap_heat_<T>c/{fds,evac}/",
     )
+    parser.add_argument(
+        "--law",
+        choices=sorted(LAWS),
+        default="unclothed",
+        help="heat-dose law of the runs (default: unclothed, the published figures)",
+    )
     args = parser.parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
 
@@ -961,11 +976,14 @@ def main():
     cases = {}
     for temp_c in TEMPS:
         case_dir = args.data / f"fed_incap_heat_{temp_c}c"
-        if not (case_dir / "evac" / "deterministic" / "fed_history.csv").exists():
-            print(f"skip {temp_c} C: no {case_dir}/evac/deterministic")
+        det_dir = case_dir / "evac" / DET_DIRS[args.law]
+        if not (det_dir / "fed_history.csv").exists():
+            print(f"skip {temp_c} C: no {det_dir}")
             continue
-        cases[temp_c] = analyse(case_dir, temp_c)
-        report(temp_c, cases[temp_c])
+        cases[temp_c] = analyse(case_dir, temp_c, args.law)
+        report(temp_c, cases[temp_c], args.law)
+    if args.law != "unclothed":
+        return
     main_case = cases[150]
 
     # --- Plot ---
