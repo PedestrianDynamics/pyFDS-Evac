@@ -249,21 +249,39 @@ def v5_max_moving_mean(
     window lies inside [first arrival, t_jam]; if no window of that length
     fits the result is ``None`` (undefined), not a shortened window. Returns
     the first arrival, the span available, the crossings up to t_jam and the
-    maximum mean rate [person/s].
+    maximum mean rate [person/s]. ``rate_window_to_t_jam`` is a second
+    reading, not the registered one: windows may start before the first
+    arrival (the flow there is zero), so the last 60 s before t_jam hold
+    every crossing and the rate is at least their count over 60 s.
     """
     inside = [t for t in crossings if t < t_jam]
     if not inside:
-        return {"first": None, "span": None, "count": 0, "rate": None}
+        return {
+            "first": None,
+            "span": None,
+            "count": 0,
+            "rate": None,
+            "rate_window_to_t_jam": None,
+        }
     first = min(inside)
     span = t_jam - first
     out = {"first": first, "span": span, "count": len(inside), "rate": None}
+    out["rate_window_to_t_jam"] = _best_window(inside, 0.0, t_jam, window_s, step_s)
     if span < window_s:
         return out
-    starts = np.arange(first, t_jam - window_s + 1e-9, step_s)
-    arr = np.asarray(inside)
-    counts = [(arr[(arr >= s) & (arr < s + window_s)]).size for s in starts]
-    out["rate"] = max(counts) / window_s
+    out["rate"] = _best_window(inside, first, t_jam, window_s, step_s)
     return out
+
+
+def _best_window(times, start: float, end: float, window_s: float, step_s: float):
+    """Highest mean rate of a window that starts at or after *start* and ends
+    at or before *end*; None if no window of *window_s* fits."""
+    if end - start < window_s:
+        return None
+    arr = np.asarray(times)
+    starts = np.arange(start, end - window_s + 1e-9, step_s)
+    counts = [(arr[(arr >= s) & (arr < s + window_s)]).size for s in starts]
+    return max(counts) / window_s
 
 
 def stopped_ids(run: Run) -> set[int]:
@@ -474,33 +492,45 @@ def paired_draws(runs, others, targets, draws: int, seed: int = 0) -> dict:
 def survival(paired: dict, threshold: float = V3_MIN_DIFFERENCE) -> dict:
     """How often the registered W differences survive resampling of Fahy.
 
-    Reading of plan line 146 ("a difference of 0.03 in W survives resampling
-    of Fahy's table in x % of draws"): a difference survives a draw when it
-    keeps its observed sign and has magnitude of at least *threshold*.
-    Reported per seed (min, median, max over seeds), for the mean over seeds,
-    and the share of draws in which V3 as registered holds (the run lower in
-    at least 15 of 20 seeds and a mean difference of at least 0.03 lower).
-    These are rates for a difference in W; they say nothing about occupants.
+    Plan line 146: "a difference of 0.03 in W survives resampling of Fahy's
+    table in more than 99 % of draws" (spread uniformly over rows). Two
+    readings of "survives" are reported:
+
+    * ``sign``: the difference keeps its observed sign (the reading under
+      which the plan's 99 % holds; see the test on a uniform shift);
+    * ``size``: it keeps its sign and a size of at least *threshold* (the
+      first reading, kept so both are on record).
+
+    Each is given per seed (min, median, max over seeds) and for the mean
+    over seeds. ``v3_holds`` is the share of draws in which V3 as registered
+    holds (the run lower in at least 15 of 20 seeds and a mean difference of
+    at least 0.03 lower). These are rates for a difference in W; they say
+    nothing about occupants. Whether the plan's rates are the referee's three
+    synthetic cases or rates on observed differences is not stated.
     """
     obs, res = paired["observed"], paired["resampled"]
     sign = np.where(obs >= 0, 1.0, -1.0)[:, None]
-    per_seed = ((res * sign) >= threshold).mean(axis=1)
+    signed = res * sign
     mean_obs = obs.mean()
-    mean_res = res.mean(axis=0)
-    mean_survives = ((mean_res * np.sign(mean_obs)) >= threshold).mean()
+    mean_res = res.mean(axis=0) * (1.0 if mean_obs >= 0 else -1.0)
     lower = (res < 0).sum(axis=0)
-    v3_holds = (
-        (lower >= min(V3_MIN_SEEDS, len(obs))) & (mean_res <= -threshold)
-    ).mean()
-    return {
-        "per_seed": (
+    needed = min(V3_MIN_SEEDS, len(obs))
+    v3 = ((lower >= needed) & (res.mean(axis=0) <= -threshold)).mean()
+
+    def spread(per_seed):
+        return (
             float(per_seed.min()),
             float(np.median(per_seed)),
             float(per_seed.max()),
-        ),
+        )
+
+    return {
         "mean_difference": float(mean_obs),
-        "mean_survives": float(mean_survives),
-        "v3_holds": float(v3_holds),
+        "sign_per_seed": spread((signed > 0).mean(axis=1)),
+        "sign_mean": float((mean_res > 0).mean()),
+        "size_per_seed": spread((signed >= threshold).mean(axis=1)),
+        "size_mean": float((mean_res >= threshold).mean()),
+        "v3_holds": float(v3),
         "draws": res.shape[1],
     }
 
@@ -800,6 +830,9 @@ def cmd_trajectory(args) -> None:
         first = "-" if v5["first"] is None else f"{v5['first']:.1f}"
         span = "-" if v5["span"] is None else f"{v5['span']:.1f}"
         rate = "undefined" if v5["rate"] is None else f"{v5['rate']:.3f}"
+        relaxed = v5["rate_window_to_t_jam"]
+        if relaxed is not None:
+            rate += f" (window from {args.t_jam - V5_WINDOW_S:g} s: {relaxed:.3f})"
         construct = "n/a" if nist["construct"] is None else f"{nist['construct']:.3f}"
         print(
             f"| {path.stem} | {vestibule_count(run, args.t_jam)} | {first} | {span} | "

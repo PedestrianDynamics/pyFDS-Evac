@@ -153,6 +153,19 @@ def test_v5_highest_moving_mean_by_hand():
     assert S.band_verdict(result["rate"], S.V5_BAND) == "pass"
 
 
+def test_v5_second_reading_lets_the_window_start_before_the_first_arrival():
+    # One person per second from 30 s to 85 s: 56 crossings. The registered
+    # window cannot fit; the window of the last 60 s before t_jam holds them all.
+    result = S.v5_max_moving_mean([30.0 + i for i in range(56)], t_jam=86.0)
+    assert result["rate"] is None
+    assert result["rate_window_to_t_jam"] == pytest.approx(56 / 60)
+
+
+def test_v5_second_reading_is_none_when_t_jam_is_inside_the_window():
+    result = S.v5_max_moving_mean([10.0, 20.0], t_jam=50.0)
+    assert result["rate_window_to_t_jam"] is None
+
+
 def test_v5_without_crossing_is_empty():
     assert S.v5_max_moving_mean([], t_jam=86.0)["first"] is None
 
@@ -340,16 +353,54 @@ def test_survival_by_hand():
     observed = np.array([0.05, 0.05, -0.05])
     resampled = np.array(
         [
-            [0.04, 0.02, 0.05, 0.06],  # same sign, >= 0.03 in 3 of 4 draws
-            [0.05, 0.05, 0.05, 0.05],  # 4 of 4
-            [-0.05, 0.05, -0.03, -0.02],  # sign kept and >= 0.03: draws 0 and 2
+            [0.04, 0.02, 0.05, 0.06],  # sign kept 4 of 4; also >= 0.03 in 3 of 4
+            [0.05, 0.05, 0.05, 0.05],  # 4 of 4 and 4 of 4
+            [-0.05, 0.05, -0.03, -0.02],  # sign kept in draws 0, 2, 3; size in 0, 2
         ]
     )
     out = S.survival({"observed": observed, "resampled": resampled}, threshold=0.03)
-    assert out["per_seed"] == pytest.approx((0.5, 0.75, 1.0))
+    assert out["sign_per_seed"] == pytest.approx((0.75, 1.0, 1.0))
+    assert out["size_per_seed"] == pytest.approx((0.5, 0.75, 1.0))
     assert out["draws"] == 4
     # R lower in 15 of 20 seeds never holds with three seeds: needs min(15, 3) = 3.
     assert out["v3_holds"] == pytest.approx(0.0)
+
+
+def test_a_uniform_shift_of_003_keeps_its_sign_in_over_99_percent():
+    # Plan line 146: a difference of 0.03 spread uniformly over the rows
+    # survives resampling of Fahy's table in more than 99 % of draws. Model B
+    # is Fahy's table itself, model A mixes every row toward the uniform
+    # distribution until W(A) = 0.03.
+    targets = V.fahy_targets()
+    exact = {r: {d: c * 1000 for d, c in cs.items()} for r, cs in targets.items()}
+
+    def mixed(lam):
+        out = {}
+        for row, counts in exact.items():
+            n = sum(counts.values())
+            out[row] = {d: (1 - lam) * counts.get(d, 0) + lam * n / 4 for d in F.DOORS}
+        return out
+
+    lo, hi = 0.0, 1.0
+    for _ in range(50):
+        mid = (lo + hi) / 2
+        lo, hi = (mid, hi) if V.w_statistic(mixed(mid), targets) < 0.03 else (lo, mid)
+    shifted = mixed(lo)
+    assert V.w_statistic(shifted, targets) == pytest.approx(0.03, abs=1e-6)
+    groups, vectors = S._target_layout(targets)
+    rng = np.random.default_rng(0)
+    resampled = {
+        g: rng.multinomial(int(v.sum()), v / v.sum(), size=4000).astype(float)
+        for g, v in vectors.items()
+    }
+    delta = S._w_against(V.pool(shifted, groups), vectors, resampled) - S._w_against(
+        V.pool(exact, groups), vectors, resampled
+    )
+    out = S.survival({"observed": np.array([0.03]), "resampled": delta[None, :]})
+    assert out["sign_per_seed"][0] > 0.99
+    # The stricter reading (sign and size >= 0.03) fails here: 0.03 is the
+    # observed difference, and resampling moves it either way.
+    assert out["size_per_seed"][0] < 0.5
 
 
 def test_survival_of_a_passing_v3():
@@ -359,7 +410,8 @@ def test_survival_of_a_passing_v3():
     resampled[:, 2] = 0.01  # one draw where R is no longer lower
     out = S.survival({"observed": observed, "resampled": resampled})
     assert out["v3_holds"] == pytest.approx(2 / 3)
-    assert out["mean_survives"] == pytest.approx(2 / 3)
+    assert out["sign_mean"] == pytest.approx(2 / 3)
+    assert out["size_mean"] == pytest.approx(2 / 3)
 
 
 # --- V6 ---------------------------------------------------------------------
