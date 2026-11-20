@@ -27,9 +27,10 @@ The authors published their inputs, code and results
 ([Zenodo, doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550)).
 We take the room, door, fire and crowd from that release, run them with our
 own FDS and evacuation model, and compare with the release where it has
-data. The script `scripts/docs/schroeder_room_maps.py` builds the maps; a
-built-in version is planned in
-[#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210). The
+data. The script `scripts/docs/schroeder_room_maps.py` builds the maps; the
+built-in version is described in
+[ASET, RSET and DIFF maps](aset-rset-maps.md) ([#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210)),
+and this page has not been re-run with it. The
 page reports research software applied to one room and gives no design or
 safety verdict.
 {{< /callout >}}

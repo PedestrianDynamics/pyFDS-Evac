@@ -29,9 +29,17 @@ results:
   {{< card link="using/usage" title="Usage" subtitle="Running simulations, every CLI flag, and the post-processing scripts." >}}
   {{< card link="using/scenario-json" title="Scenario JSON" subtitle="The keys a scenario reads, with their defaults." >}}
   {{< card link="using/outputs" title="Outputs" subtitle="Every file a run writes, column by column, and how to read the results." >}}
-  {{< card link="using/howto-rset-ensemble" title="RSET from an ensemble" subtitle="How to get RSET with its spread from runs over several seeds." >}}
   {{< card link="using/troubleshooting" title="Troubleshooting" subtitle="Error messages and warnings, with their cause and fix." >}}
   {{< card link="understanding/limitations" title="Limitations" subtitle="Research-software status, library-level parameters, and what is not modelled." >}}
+{{< /cards >}}
+
+**Analysing a run.** When the fire makes each place untenable, when each
+place is last occupied, and who wins:
+
+{{< cards >}}
+  {{< card link="analysis/aset-rset-maps" title="ASET, RSET and DIFF maps" subtitle="Maps of when each cell becomes untenable and when it is last occupied, and their difference." >}}
+  {{< card link="analysis/howto-aset-rset-check" title="ASET/RSET check with FED" subtitle="Check each agent against the time a limit is reached." >}}
+  {{< card link="analysis/howto-rset-ensemble" title="RSET from an ensemble" subtitle="How to get RSET with its spread from runs over several seeds." >}}
 {{< /cards >}}
 
 **Coming from FDS+Evac.** Map your inputs, then check where the two tools

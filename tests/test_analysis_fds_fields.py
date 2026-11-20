@@ -184,3 +184,28 @@ def test_tracked_deck_gives_a_map_with_the_slice_height_recorded():
     assert set(aset.per_criterion) == {"K 0.001", "FED 0.3"}
     assert aset.horizon_s == 1150.0
     assert np.isfinite(aset.time_s[~np.isnan(aset.time_s)]).all()
+
+
+def test_map_crossing_equals_the_fed_history_of_a_held_agent_in_an_engine_run():
+    """ISO Table 22 case a: the held occupant reaches FED 1 at 982 s in the run."""
+    from pyfds_evac import TenabilityConfig, load_scenario, run_scenario
+
+    fds = "assets/iso_table22_coupled/fds/a"
+    criteria = AsetCriteria(
+        visibility_limit_m=None, temperature_c=None, heat_fed=None, fed=1.0
+    )
+    (crossing,) = fds_fields.read_crossings(fds, criteria)
+    fed = DefaultFedModel(FdsFedField.from_fds(fds), DefaultFedConfig())
+    room = load_scenario("assets/iso_table22_coupled/config_a.json")
+    run = run_scenario(
+        room,
+        seed=420,
+        fed_model=fed,
+        tenability_config=TenabilityConfig(incapacitation_mode="deterministic"),
+    )
+    try:
+        first = next(r for r in run.fed_history if r["fed_cumulative"] >= 1.0)
+    finally:
+        run.cleanup()
+    assert first["time_s"] == 982.0
+    assert (crossing.first_s == first["time_s"]).all()

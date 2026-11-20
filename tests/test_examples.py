@@ -23,6 +23,7 @@ PAGES = {
     "walkthrough.py": "walkthrough.md",
     "first_fds_case.py": "first-fds-case.md",
     "rset_ensemble.py": "howto-rset-ensemble.md",
+    "aset_rset_maps.py": "aset-rset-maps.md",
 }
 
 _PYTHON_BLOCK = re.compile(r"^```python\n(.*?)^```", re.DOTALL | re.MULTILINE)

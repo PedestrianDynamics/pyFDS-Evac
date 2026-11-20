@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Mapping
+from pathlib import Path
 
 import numpy as np
 
@@ -46,9 +47,10 @@ def _walkable(walkable):
 def load_trajectory(sqlite_file):
     """Trajectory and walkable area of a JuPedSim SQLite file, via PedPy."""
     pedpy = _pedpy()
+    path = Path(sqlite_file)
     return (
-        pedpy.load_trajectory_from_jupedsim_sqlite(trajectory_file=sqlite_file),
-        pedpy.load_walkable_area_from_jupedsim_sqlite(trajectory_file=sqlite_file),
+        pedpy.load_trajectory_from_jupedsim_sqlite(trajectory_file=path),
+        pedpy.load_walkable_area_from_jupedsim_sqlite(trajectory_file=path),
     )
 
 

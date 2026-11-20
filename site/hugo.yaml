@@ -51,12 +51,14 @@ module:
         - "howto-create-scenario.md"
         - "usage.md"
         - "howto-with-without-fire.md"
+        - "aset-rset-maps.md"
+        - "howto-aset-rset-check.md"
+        - "howto-rset-ensemble.md"
         - "outputs.md"
         - "scenario-json.md"
         - "web-gui.md"
         - "terminal-ui.md"
         - "troubleshooting.md"
-        - "howto-rset-ensemble.md"
         - "howto-place-checkpoints.md"
         - "assets.md"
         - "fds-sampling.md"
@@ -92,9 +94,13 @@ module:
         - "web-gui.md"
         - "terminal-ui.md"
         - "troubleshooting.md"
+        - "howto-place-checkpoints.md"
+    - source: ../docs
+      target: content/docs/analysis
+      includeFiles:
+        - "aset-rset-maps.md"
         - "howto-aset-rset-check.md"
         - "howto-rset-ensemble.md"
-        - "howto-place-checkpoints.md"
     - source: ../docs
       target: content/docs/studies
       includeFiles:

@@ -59,6 +59,11 @@ Defaults follow <a href="https://github.com/firemodels/fds/tree/c9da70d7a/Source
     link="models/wayfinding/"
   >}}
   {{< hextra/feature-card
+    title="ASET and RSET maps"
+    subtitle="Maps of when each cell becomes untenable (visibility, temperature, FED), when it is last occupied (PedPy), and their difference with the cells where the fire wins, after Schröder et al. (2020)."
+    link="docs/analysis/aset-rset-maps/"
+  >}}
+  {{< hextra/feature-card
     title="Verification"
     subtitle="Each model checked against hand calculations, published tables and FDS's own output, one page per test with the setup, the expected value and the simulated result."
     link="verification/"

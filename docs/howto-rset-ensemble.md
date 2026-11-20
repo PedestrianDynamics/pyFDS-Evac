@@ -2,7 +2,7 @@
 title: "How do I get the egress time and its spread from an ensemble of seeds?"
 linkTitle: "How-to: egress time from an ensemble"
 weight: 14
-aliases: [/docs/howto-rset-ensemble/]
+aliases: [/docs/howto-rset-ensemble/, /docs/using/howto-rset-ensemble/]
 ---
 
 **This how-to reads tracked FDS output. You do not need to run FDS.** Part 1
