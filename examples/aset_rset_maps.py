@@ -23,7 +23,6 @@ import sys
 import tempfile
 
 import numpy as np
-from matplotlib.figure import Figure
 
 from pyfds_evac import load_scenario, run_scenario
 from pyfds_evac.analysis import (
@@ -33,6 +32,7 @@ from pyfds_evac.analysis import (
     grid_from_walkable,
     load_trajectory,
     measures,
+    plot_maps,
     pool_rset,
     read_crossings,
     rset_map,
@@ -122,32 +122,12 @@ print(f"cells by state: { {k: v for k, v in m.counts.items() if v} }")
 
 # %% [markdown]
 # ## Plot the maps
+#
+# `plot_maps` draws the three maps; failing cells are hatched, cells nobody
+# visited are grey. With one criterion there is no deciding-criterion panel.
 
 # %%
-fig = Figure(figsize=(11, 3.6), layout="constrained")
-axes = fig.subplots(1, 3)
-extent = (grid.x_edges[0], grid.x_edges[-1], grid.y_edges[0], grid.y_edges[-1])
-panels = [
-    ("ASET [s]", aset.time_s, "viridis"),
-    (f"RSET, {pooled_values.label} [s]", pooled.time_s, "viridis"),
-    ("DIFF = ASET - RSET [s]", diff.diff_s, "RdBu"),
-]
-latest = max(np.nanmax(aset.time_s), np.nanmax(pooled.time_s))
-for ax, (title, values, cmap) in zip(axes, panels):
-    shown = np.ma.masked_invalid(values)
-    limit = np.abs(shown).max()
-    image = ax.imshow(
-        shown,
-        extent=extent,
-        cmap=cmap,
-        vmin=-limit if cmap == "RdBu" else 0.0,
-        vmax=limit if cmap == "RdBu" else latest,
-    )
-    fig.colorbar(image, ax=ax)
-    ax.set_title(title, color="dimgrey")
-    ax.set_xlabel("x [m]", color="dimgrey")
-    ax.tick_params(length=0, labelcolor="dimgrey")
-axes[0].set_ylabel("y [m]", color="dimgrey")
+fig = plot_maps(grid, aset, pooled, diff, walkable=walkable, deciding=False)
 fig.text(
     0.5,
     -0.02,

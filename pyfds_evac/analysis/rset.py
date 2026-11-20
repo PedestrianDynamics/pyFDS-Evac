@@ -13,7 +13,9 @@ alignment, so a PedPy that changes its grid fails there first.
 
 from __future__ import annotations
 
+import contextlib
 import logging
+import sqlite3
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -52,6 +54,30 @@ def load_trajectory(sqlite_file):
         pedpy.load_trajectory_from_jupedsim_sqlite(trajectory_file=path),
         pedpy.load_walkable_area_from_jupedsim_sqlite(trajectory_file=path),
     )
+
+
+def load_exit_times(sqlite_file) -> dict[int, float]:
+    """Exit time per agent that left, from the ``agent_exits`` table.
+
+    The CLI writes the table into every ``--output-sqlite`` file; pass the
+    result to ``rset_map(..., exit_times=)``. A file without the table (an
+    older run, or a trajectory written by other software) raises ValueError
+    rather than guessing exits from the last frame.
+    """
+    path = Path(sqlite_file)
+    with contextlib.closing(
+        sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
+    ) as con:
+        has_table = con.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='agent_exits'"
+        ).fetchone()
+        if not has_table:
+            raise ValueError(
+                f"{path} has no agent_exits table; rerun with this pyfds-evac, "
+                "or pass ScenarioResult.exit_times"
+            )
+        rows = con.execute("SELECT id, exit_time_s FROM agent_exits").fetchall()
+    return {int(i): float(t) for i, t in rows}
 
 
 def _single_point(trajectory_data_cls, x: float, y: float):
@@ -120,9 +146,10 @@ def rset_map(
     """RSET per cell, the last time anyone is in it (PedPy, ``RsetMethod.MAX``).
 
     *exit_times* maps the agents that left to the time they left (the run's
-    ``ScenarioResult.exit_times``). An agent in the trajectory with no exit
-    time was still inside at the end of the run, so the cell of its last
-    position is censored: its RSET is a lower bound. Without *exit_times*
+    ``ScenarioResult.exit_times``, or ``load_exit_times`` of a CLI run). An
+    agent in the trajectory with no exit time was still inside at the end of
+    the run, so the cell of its last position is censored: its RSET is a
+    lower bound. Without *exit_times*
     that cannot be told from the trajectory alone; the cells that hold the
     last frame of the run are censored instead, and a warning says so.
     """
@@ -146,7 +173,8 @@ def rset_map(
     if exit_times is None:
         _logger.warning(
             "rset_map without exit_times: cells holding the last frame of the "
-            "run are censored; pass ScenarioResult.exit_times to censor by agent"
+            "run are censored; pass ScenarioResult.exit_times or load_exit_times(sqlite) "
+            "to censor by agent"
         )
         stayed = data[data["frame"] == data["frame"].max()]
     else:

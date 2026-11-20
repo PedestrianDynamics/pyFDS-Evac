@@ -1,4 +1,4 @@
-"""Write an optional agent_scalars side table into a JuPedSim sqlite.
+"""Write the agent_scalars and agent_exits side tables into a JuPedSim sqlite.
 
 The base JuPedSim schema (trajectory_data, metadata, geometry, frame_data) is
 never touched, so jupedsim replay and Web-Based-JuPedSim still read the file.
@@ -74,3 +74,26 @@ def _scalar_row(
     flag = row.get("in_fds_domain")
     in_domain = None if flag is None else int(bool(flag))
     return (frame, agent_id, fed, heat_fed, speed, in_domain)
+
+
+def write_agent_exits(sqlite_path: str | Path, exit_times: Mapping[int, float]) -> None:
+    """Write agent_exits(id, exit_time_s): when each agent that left did so.
+
+    ``exit_times`` is ``ScenarioResult.exit_times``. An agent still inside at
+    the end has no row. The table is written even when nobody left, so that a
+    reader can tell such a run from a file written before the table existed.
+    ``pyfds_evac.analysis.load_exit_times`` reads it back for ``rset_map``.
+    """
+    con = sqlite3.connect(str(sqlite_path))
+    try:
+        con.execute("DROP TABLE IF EXISTS agent_exits")
+        con.execute(
+            "CREATE TABLE agent_exits(id INTEGER PRIMARY KEY, exit_time_s REAL NOT NULL)"
+        )
+        con.executemany(
+            "INSERT INTO agent_exits(id, exit_time_s) VALUES (?, ?)",
+            sorted((int(i), float(t)) for i, t in exit_times.items()),
+        )
+        con.commit()
+    finally:
+        con.close()
