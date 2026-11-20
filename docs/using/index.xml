@@ -3271,7 +3271,7 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_endpoint&lt;/code>, &lt;code>heat_validity&lt;/code>&lt;/td>
-&lt;td>the SFPE endpoint and its validity limits, only with &lt;code>--heat-endpoint&lt;/code>&lt;/td>
+&lt;td>the SFPE endpoint and its validity limits, only with &lt;code>--heat-endpoint&lt;/code>; &lt;code>heat_validity&lt;/code> also holds &lt;code>humidity&lt;/code> (&lt;code>ok&lt;/code>, &lt;code>humid&lt;/code> or &lt;code>unknown&lt;/code>), &lt;code>humid_rows&lt;/code>, &lt;code>humid_agents&lt;/code> and &lt;code>max_water_vapour_fraction&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>smoke_blind&lt;/code>&lt;/td>
@@ -3479,7 +3479,11 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tbody>
 &lt;tr>
 &lt;td>&lt;code>heat_endpoint&lt;/code>, &lt;code>heat_outside_validity&lt;/code>, &lt;code>heat_humidity&lt;/code>&lt;/td>
-&lt;td>&lt;code>--heat-endpoint&lt;/code>; &lt;code>heat_outside_validity&lt;/code> is &lt;code>True&lt;/code> above 205 °C or for a non-finite sample, &lt;code>heat_humidity&lt;/code> is &lt;code>unknown&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-endpoint&lt;/code>; &lt;code>heat_outside_validity&lt;/code> is &lt;code>True&lt;/code> above 205 °C or for a non-finite sample, &lt;code>heat_humidity&lt;/code> is &lt;code>ok&lt;/code> below 10 % water vapour by volume, &lt;code>humid&lt;/code> at or above it, and &lt;code>unknown&lt;/code> without a &lt;code>WATER VAPOR VOLUME FRACTION&lt;/code> slice&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_water_vapour_fraction&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-endpoint&lt;/code> with a &lt;code>WATER VAPOR VOLUME FRACTION&lt;/code> slice: the sampled fraction [mol/mol, 0-1]&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_flux_kw_m2&lt;/code>&lt;/td>
@@ -7899,7 +7903,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/516650a5178f6285c8b6c3f7b42e2225353af6b4">&lt;code>516650a&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/5dea647e095389b1c34ebc5c665c8016d72cfa7a">&lt;code>5dea647&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7923,7 +7927,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ee45d6e3c05bcb72447aa3afbce1e972437aaf6d84d9bc699fa7a552fbc3d201&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">84b14b386c7c96bf02e837ef5eed223b3d768f1a4ed9ff3b58f65ec3d0b1ca00&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
