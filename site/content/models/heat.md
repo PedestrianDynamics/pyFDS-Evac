@@ -434,11 +434,10 @@ dose ([Models › FED](/models/fed.md#tenability-irritant-slowdown-and-incapacit
   heat threshold; that departs from ISO, so the run logs a warning and the
   manifest records `heat_fed_threshold_override`.
 - **`deterministic` (default).** Every agent uses the heat threshold. No
-  published source gives a population spread for heat tolerance:
-  SFPE Ch. 63 gives population figures for heat only for radiant lethality
-  (p. 2382). Read as a log-normal, those figures give σ ≈ 0.22; the gas
-  value σ = 0.94 would put 29 % of agents below FED 0.60, where they imply
-  1 % ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)).
+  published source gives a population spread for
+  tolerance of convective heat. The only sourced spread is for radiant
+  lethality: the probits reviewed by Hockey and Rew (1996) give σ ≈ 0.39
+  ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)).
   That is why heat stays deterministic by default
   ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 - **`probabilistic` (opt-in).** Each agent draws its own threshold once, from
@@ -649,7 +648,7 @@ result; none is a Handbook tolerance.
 | U factor *f* | in [0.25, 1], no default | `--heat-u-factor` / `u_factor` (`HEAT_U_FACTOR_RANGE`) | `--heat-radiant-source integrated-intensity` ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)) | Geometric bounds: *U*/4 for a sphere or an isotropic field, *U* for one small source face-on; the #224 data put some orientations below 0.25 | Gauge devices per orientation ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
 | Flux basis of *f U* | excess over a skin-temperature isotropic field, *f* (*U* − 4σ\(T_s^4\)) | none (fixed) | `--heat-radiant-source integrated-intensity` | Maintainer decision: surroundings at skin temperature give no flux for any *f*; at *f* = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS User's Guide 6.10.1, Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383) | Whether the radiant tolerance data (Table 63.19) hold for incident flux or for flux above the skin's own exchange |
 | *U* with the layer regime | *U* supplies the radiant term; layer term not added | `--heat-regime layer` with `--heat-radiant-source integrated-intensity` | Total-flux *q* when both are set | *U* already contains the layer's emission and is the better-resolved input | Gauge devices, which replace both ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
-| Heat σ | 0.94 | `--heat-susceptibility-sigma` / `heat_susceptibility_sigma` | Probabilistic heat mode only (`--heat-incapacitation-mode probabilistic`) | Borrowed from the gas dose ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)); the radiant lethality figures imply about 0.22 | A population spread for the convective dose, e.g. the probits of Hockey & Rew (1996), not read |
+| Heat σ | 0.94 | `--heat-susceptibility-sigma` / `heat_susceptibility_sigma` | Probabilistic heat mode only (`--heat-incapacitation-mode probabilistic`) | Borrowed from the gas dose ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)); the radiant lethality probits reviewed by Hockey & Rew (1996) give 0.39 | A population spread for the convective dose; Hockey & Rew give none |
 | Clothing | fully clothed, every agent | `--heat-clothing` / `heat_clothing` (`DEFAULT_HEAT_CLOTHING`) | Convective law without `--heat-endpoint` or total flux ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)) | Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.1); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336); the 6th edition refers clothed subjects to ISO 13571 (Ch. 70, p. 2283) | Clothing data per occupancy or per agent |
 | One threshold for gas and heat | heat threshold = `fed_threshold` | `--heat-fed-threshold` / `heat_fed_threshold` overrides it | Heat incapacitation | Maintainer reading of ISO 13571:2012 §5.4 with §8.5; the standard does not say whether the heat FED shares the gas threshold ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)) | A statement of the standard, or data on heat and gas thresholds in the same people |
 
