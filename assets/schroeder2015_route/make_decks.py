@@ -5,8 +5,11 @@ Usage: ``python3 make_decks.py <outdir> [--dx 0.2] [--t-end 480]
 
 The fire is a design fire fixed before any routing run. Sweep: alpha in
 {0.012, 0.047} kW/s^2, fuel in {PVC, PUR}, ceiling H in {3.0, 4.0} m, plus
-the central case (0.047, PVC, 3.5 m). Geometry from geometry.py. Tags: [N]
-design fire, [D] digitised, [A] assumed here; see README.md.
+the central case (0.047, PVC, 3.5 m). Outside the sweep, and written only
+with --only, the sensitivity case a047_cvm2_h40: the main fire with the
+NZ C/VM2 pre-flashover growth rate and species (issue #419). Geometry from
+geometry.py. Tags: [N] design fire, [D] digitised, [A] assumed here; see
+README.md.
 """
 
 import argparse
@@ -38,6 +41,18 @@ from geometry import (
 FUELS = {
     "pvc": dict(soot=0.172, co=0.063),
     "pur": dict(soot=0.056, co=0.122),
+    "cvm2": dict(soot=0.07, co=0.04),
+}
+# Sensitivity cases outside the sweep; make_decks writes them only with --only.
+SENSITIVITY = {
+    "a047_cvm2_h40": dict(
+        alpha=0.0469,
+        fuel="cvm2",
+        h=4.0,
+        intro="Sensitivity fire added after the\n! routing runs (#419); not run.",
+        tag="R",
+        tags="[R] C/VM2 design fire,",
+    )
 }
 HRRPUA = 250.0  # kW/m2 [N]
 BURNER = BURNER_XY  # 3 x 2 m, centred in Room 3 [N]
@@ -90,6 +105,27 @@ def pur_reaction(soot: float, co: float) -> str:
 &REAC FUEL='REAC_FUEL', FYI='NFPA Babrauskas polyurethane',
       C=6.3, H=7.1, O=2.1, N=1.0, SOOT_YIELD={soot}, CO_YIELD={co},
       HEAT_OF_COMBUSTION=18770. /"""
+
+
+def cvm2_reaction(soot: float, co: float) -> str:
+    return f"""! NZ C/VM2 pre-flashover design fire, "All buildings" row [R]: growth
+! 0.0469 t^2 kW, Ysoot {soot}, YCO {co} kg/kg, heat of combustion 20 MJ/kg,
+! radiative fraction 0.35. MBIE, C/VM2 Second Edition (effective 28 July 2025),
+! Table 2.3.2.1, p. 20; these five values are unchanged from Table 2.1 of the
+! 2012 edition (Commentary for C/VM2, Dec 2012, p. 56). Fuel CH2O0.5, the
+! generic fuel of note (2) of that table. Not C/VM2: its peak (20 MW, burner
+! sized at 500-1000 kW/m2 in CFD) is replaced by the study's 1.5 MW cap on the
+! same 250 kW/m2 burner, so only growth and species differ from the main
+! fire [A]. Pre-flashover yields only: the
+! post-flashover yields (Ysoot 0.14, YCO 0.40 kg/kg after flashover, the
+! average upper layer first at 500 C, or after the fire becomes ventilation
+! limited; paragraphs 2.3.3.2 and 2.3.3.4) are not modelled.
+&SPEC ID='CVM2 FUEL', C=1.0, H=2.0, O=0.5 /
+&REAC FUEL='CVM2 FUEL', SOOT_YIELD={soot}, CO_YIELD={co},
+      HEAT_OF_COMBUSTION=20000., RADIATIVE_FRACTION=0.35 /"""
+
+
+REACTIONS = {"pvc": pvc_reaction, "pur": pur_reaction, "cvm2": cvm2_reaction}
 
 
 def meshes(dx: float, h: float) -> tuple[list[str], float]:
@@ -170,7 +206,7 @@ def deck(name: str, v: dict, dx: float, t_end: float, door_c: str) -> str:
     nz = round(v["h"] / dz)
     tau = math.sqrt(Q_MAX / v["alpha"])
     fuel = FUELS[v["fuel"]]
-    reac = pvc_reaction(**fuel) if v["fuel"] == "pvc" else pur_reaction(**fuel)
+    reac = REACTIONS[v["fuel"]](**fuel)
     slices = [
         f"&SLCF PBZ={z}, QUANTITY='EXTINCTION COEFFICIENT' /" for z in (1.6, 2.0, 2.8)
     ]
@@ -187,8 +223,7 @@ def deck(name: str, v: dict, dx: float, t_end: float, door_c: str) -> str:
 
 ! Geometry after Schroeder et al. 2015 Fig. 6 / Schroeder 2017 Fig. 3.9
 ! (digitised, +-0.5-1 m, snapped to 0.2 m); see
-! assets/schroeder2015_route/geometry.py. Design fire fixed before any
-! routing run. Tags: [N] design fire, [D] digitised, [A] assumed. See
+! assets/schroeder2015_route/geometry.py. {v.get("intro", "Design fire fixed before any\n! routing run.")} Tags: {v.get("tags", "[N] design fire,")} [D] digitised, [A] assumed. See
 ! assets/schroeder2015_route/README.md.
 
 ! --- Domain: corridor x -5..0, y -10..35; hall + Room 3 x 0..10.6, y 0..31 ---
@@ -198,10 +233,10 @@ def deck(name: str, v: dict, dx: float, t_end: float, door_c: str) -> str:
 &TIME T_END={t_end:g} /
 &DUMP DT_SLCF=1.0, DT_DEVC=1.0, DT_RESTART=60.0 /
 
-! --- Reaction [N] ---
+! --- Reaction [{v.get("tag", "N")}] ---
 {reac}
 
-! --- Fire: t^2, alpha = {v["alpha"]} kW/s^2, to {Q_MAX:.0f} kW at {tau:.1f} s [N] ---
+! --- Fire: t^2, alpha = {v["alpha"]} kW/s^2, to {Q_MAX:.0f} kW at {tau:.1f} s [{v.get("tag", "N")}] ---
 ! HRRPUA {HRRPUA:g} kW/m2 on a 3 x 2 m floor burner centred in Room 3.
 &SURF ID='FIRE', HRRPUA={HRRPUA:g}, TAU_Q=-{tau:.1f}, COLOR='RED' /
 &VENT XB={bx0:.1f},{bx1:.1f},{by0:.1f},{by1:.1f},0.0,0.0, SURF_ID='FIRE' /
@@ -235,8 +270,10 @@ def main() -> None:
     a = ap.parse_args()
     suffix = "" if a.dx == 0.2 else f"_dx{round(a.dx * 100):03d}"
     suffix += "" if a.door_c == "open" else "_Cclosed"
-    for name, v in variants().items():
+    for name, v in {**variants(), **SENSITIVITY}.items():
         if a.only and name not in a.only:
+            continue
+        if not a.only and name in SENSITIVITY:
             continue
         chid = name + suffix
         d = a.outdir / chid

@@ -22,13 +22,16 @@ repository.
 | `a047_pvc_h40/a047_pvc_h40.fds` | Main fire: t², α = 0.047 kW/s² to 1.5 MW, PVC, ceiling 4.0 m |
 | `a047_pvc_h35/a047_pvc_h35.fds` | Comparison fire: as the main fire, ceiling 3.5 m |
 | `a012_pvc_h30/a012_pvc_h30.fds` | Comparison fire: α = 0.012 kW/s², ceiling 3.0 m |
+| `a047_cvm2_h40/a047_cvm2_h40.fds` | Sensitivity fire, not run: the main fire with the NZ C/VM2 pre-flashover growth and species (#419). Not in the page's example files; `make_decks.py --only a047_cvm2_h40` writes it |
 | `run_p1.sh` | Runs the evacuation arms for seeds 1–10 on one FDS output |
 
-`make_decks.py` writes the three decks byte for byte. They differ from
-the decks of the page's FDS runs only in the header comment, which now
+`make_decks.py` writes the four decks byte for byte; it writes the
+sensitivity deck only when `--only` names it. The three study decks
+differ from the decks of the page's FDS runs only in the header comment, which now
 points to this folder. The comments inside the decks name the tags of the study
 notes: [N] is the design fire fixed before any routing run, [D] digitised
-from the paper (±0.5–1 m), [A] assumed here.
+from the paper (±0.5–1 m), [A] assumed here, [R] the C/VM2 fire of the
+sensitivity deck.
 
 ## Regenerate the inputs
 
@@ -37,7 +40,7 @@ From the repository root:
 ```bash
 uv run python assets/schroeder2015_route/make_configs.py assets/schroeder2015_route
 uv run python assets/schroeder2015_route/make_decks.py assets/schroeder2015_route \
-    --only a047_pvc_h40 a047_pvc_h35 a012_pvc_h30
+    --only a047_pvc_h40 a047_pvc_h35 a012_pvc_h30 a047_cvm2_h40
 ```
 
 ## Run

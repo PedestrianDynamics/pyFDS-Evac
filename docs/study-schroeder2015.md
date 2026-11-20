@@ -134,6 +134,14 @@ Smoke is written at 1.6 m (routing, walking speed and gas dose), and at
 1.56, 1.94 and 2.72 m; pyFDS-Evac takes the nearest slice and logs the
 height mismatch.
 
+A fourth deck, `a047_cvm2_h40`, is the main fire with the growth rate and
+species of the New Zealand C/VM2 pre-flashover design fire (α = 0.0469
+kW/s², soot yield 0.07, CO yield 0.04 kg/kg, 20 MJ/kg; see
+[Design fires](/fundamentals/design-fires.md#fires-used-in-pyfds-evac-studies)).
+It is a sensitivity case for
+[#419](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/419) and has
+not been run: no number on this page comes from it.
+
 ### How the main fire was chosen
 
 Steps 2 to 5 below, the nine-variant table and the smoke-entry figure

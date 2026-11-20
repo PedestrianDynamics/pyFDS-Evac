@@ -231,7 +231,7 @@ none is a pyFDS-Evac default. Each new study adds a row here and one to the
 | Study | Curve type | Parameters | Stated or assumed |
 |---|---|---|---|
 | [ASET-RSET maps after Schröder et al. (2020)](/docs/study-schroeder2020.md) | Steady from ignition | 60 kW: HRRPUA 60 kW/m² on 1 × 1 m; polyurethane (NFPA Babrauskas), soot yield 0.129. Sensitivity: HRRPUA 166.7 kW/m² on 0.6 × 0.6 m, flexible polyurethane foam | From the authors' reference implementation ([doi:10.5281/zenodo.3875550](https://doi.org/10.5281/zenodo.3875550)); the paper's text does not state the fire. The sensitivity burner and fuel are ours |
-| [Route choice in smoke after Schröder et al. (2015)](/docs/study-schroeder2015.md) | t² growth to a cap | Fast, α = 0.047 kW/s², capped at 1.5 MW (HRRPUA 250 kW/m² on 3 × 2 m) at 179 s; PVC, soot yield 0.172, CO yield 0.063, 10.3 MJ/kg; ceiling 4.0 m. Comparison: medium, α = 0.012 kW/s² (cap at 354 s), ceiling 3.0 m; and fast with ceiling 3.5 m | Ours. The paper does not state its fire. Chosen before any routing run, then picked among nine variants by visual match to the paper's smoke snapshot (Fig. 6c) |
+| [Route choice in smoke after Schröder et al. (2015)](/docs/study-schroeder2015.md) | t² growth to a cap | Fast, α = 0.047 kW/s², capped at 1.5 MW (HRRPUA 250 kW/m² on 3 × 2 m) at 179 s; PVC, soot yield 0.172, CO yield 0.063, 10.3 MJ/kg; ceiling 4.0 m. Comparison: medium, α = 0.012 kW/s² (cap at 354 s), ceiling 3.0 m; and fast with ceiling 3.5 m. Sensitivity deck, not run: C/VM2 growth and species on the main fire (below) | Ours. The paper does not state its fire. Chosen before any routing run, then picked among nine variants by visual match to the paper's smoke snapshot (Fig. 6c) |
 | [With and without the fire](/docs/howto-with-without-fire.md) | Piecewise-linear ramp, then steady | 0, 100, 800, 1600, 2000 kW at 0, 20, 40, 60, 90 s; 2 MW to 300 s (HRRPUA 1000 kW/m² on 2 m²); fuel vinyl chloride (PVC), soot yield 0.172, CO yield 0.063, 10.3 MJ/kg | From the deck `assets/t_junction/t_junction.fds`. Not a t² class: it passes 1055 kW at 46 s, faster than ultra-fast (75 s). The deck comments and README disagree with the deck ([#280](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/280)) |
 | [Station nightclub fire](/docs/study-station.md) | Prescribed heat release rate | NCSTAR Fig. 5-42 (`nist_fig5_42_hrr.csv`, 84 vertices, 1.6–249.8 s); fuel C<sub>6.3</sub>H<sub>7.1</sub>O<sub>2.1</sub>N<sub>1.0</sub>, heat of combustion 22,600 kJ/kg; soot yield 0.10, CO yield 0.246, HCN yield 0.010 (central), with low and high variants; FDS 6.10.1, 0.2 m | HRR stated by NIST (FDS 4 deck; model against model). Yields as published, factor 1.0. A 34 % per-MJ CO/HCN shortfall against Purser's 14.9 MJ/kg is a known bias |
 
@@ -251,6 +251,21 @@ data set implies (10.5 against 30.2 g/MJ; the current set gives
 16.7 g/MJ). The `t_junction` deck also used an under-ventilated CO yield
 (0.150) with the well-ventilated soot yield; it now uses 0.063
 ([#796](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796)).
+
+The deck `assets/schroeder2015_route/a047_cvm2_h40` is a sensitivity case
+of the route study with a published, regulatory fire
+([#419](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/419)).
+It takes the pre-flashover design fire of the New Zealand Verification
+Method C/VM2 (Second Edition, Table 2.3.2.1): growth 0.0469 t² kW, soot
+yield 0.07, CO yield 0.04 kg/kg, heat of combustion 20 MJ/kg, radiative
+fraction 0.35, generic fuel CH₂O₀.₅. These values are unchanged since
+the 2012 edition (MBIE 2012, Table 2.1). Everything else is the main
+fire's, including the 1.5 MW cap, so the deck is not the C/VM2 design
+fire: C/VM2 grows to 20 MW. It carries no post-flashover yields (soot
+0.14 and CO 0.40 kg/kg after flashover, taken as an upper layer at
+500 °C, or once the fire is ventilation limited). Per MJ it
+releases about 0.2 times the soot and 0.3 times the CO of the PVC fire
+(3.5 against 16.7 g/MJ soot). No FDS run of it exists yet.
 
 ## Sources
 
@@ -296,6 +311,14 @@ data set implies (10.5 against 30.2 g/MJ; the current set gives
   underventilated fires*. Fire Safety Science, 9, 849–860. Cited from the
   abstract.
   [doi:10.3801/IAFSS.FSS.9-849](https://doi.org/10.3801/IAFSS.FSS.9-849)
+- Ministry of Business, Innovation and Employment (2025). *C/VM2
+  Verification Method: Framework for fire safety design*. Second Edition,
+  effective 28 July 2025. Table 2.3.2.1 (p. 20); paragraphs 2.3.3.2 and
+  2.3.3.4 (p. 21).
+  [building.govt.nz](https://www.building.govt.nz/building-code-compliance/c-protection-from-fire/c-clauses-c1-c6/acceptable-solutions-and-verification-methods)
+- Ministry of Business, Innovation and Employment (2012). *Commentary for
+  Verification Method C/VM2*. December 2012. Table 2.1 and paragraphs
+  2.3.2–2.3.3 of C/VM2 as extracted on p. 56; commentary pp. 55, 57.
 - McGrattan, K., Hostikka, S., Floyd, J., McDermott, R., Vanella, M.,
   Mueller, E., & Paul, C. (2025). *Fire Dynamics Simulator User's
   Guide*. NIST Special Publication 1019, 6th ed., revision

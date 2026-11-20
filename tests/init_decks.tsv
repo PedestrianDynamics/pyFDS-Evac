@@ -228,6 +228,7 @@ assets/iso_test_8_fire/iso_test_8_fire_k5.fds	3	193.80	0	0	no exit found; no age
 assets/l_corridor/l_corridor.fds	0	261.00	2	100		fe5edf562f2a4ca88e7ae14d741895e849dce10323c19bbc4e2572f1de58136b
 assets/pathfinder_fed_stationary/pathfinder_fed_stationary.fds	3	16.00	1	100	spawn area spawn_1 (15.500 m2) holds about 61 agents of radius 0.2 m, but 100 are requested: pass --agents N with a smaller N, or enlarge the walkable area	e181ade4b220f57911b4de556a02bad3486c1555356b9731a6f77641c72a3d38
 assets/schroeder2015_route/a012_pvc_h30/a012_pvc_h30.fds	0	546.92	2	100		ce816e26f8b3d60697898d2ca0f51e60ecf7bdf840a853e74e10d043a175b007
+assets/schroeder2015_route/a047_cvm2_h40/a047_cvm2_h40.fds	0	546.92	2	100		ce816e26f8b3d60697898d2ca0f51e60ecf7bdf840a853e74e10d043a175b007
 assets/schroeder2015_route/a047_pvc_h35/a047_pvc_h35.fds	0	546.92	2	100		ce816e26f8b3d60697898d2ca0f51e60ecf7bdf840a853e74e10d043a175b007
 assets/schroeder2015_route/a047_pvc_h40/a047_pvc_h40.fds	0	546.92	2	100		ce816e26f8b3d60697898d2ca0f51e60ecf7bdf840a853e74e10d043a175b007
 assets/schroeder2020_room/hrr060_1door/hrr060_1door.fds	0	300.00	1	100		a4b067079dcae9f9b32173f6f88b3cff115a0824810d83159d1cc769963c08d9
