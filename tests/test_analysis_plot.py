@@ -5,6 +5,7 @@ from matplotlib.collections import PatchCollection
 from shapely import box
 
 from pyfds_evac.analysis import (
+    AsetMap,
     Grid,
     PointCrossing,
     RsetMap,
@@ -58,6 +59,22 @@ def test_image_rows_follow_the_grid_orientation():
     image = _panels(fig)[0].get_images()[0]
     assert image.origin == "upper"
     assert tuple(image.get_extent()) == (0.0, 3.0, 0.0, 2.0)
+
+
+def test_hatched_cells_sit_on_the_failing_cells_of_an_asymmetric_grid():
+    grid = Grid(1.0, np.arange(6.0), np.arange(4.0), np.ones((3, 5)))
+    aset = AsetMap(np.full((3, 5), 10.0), 50.0)
+    rset_s = np.full((3, 5), 5.0)
+    rset_s[0, 4] = rset_s[2, 0] = 20.0  # fail at top right and bottom left
+    rset = RsetMap(rset_s, np.zeros((3, 5), bool), 40.0)
+    fig = plot_maps(grid, aset, rset, diff_map(aset, rset, grid), deciding=False)
+    (hatched,) = [
+        c for c in _panels(fig)[2].collections if isinstance(c, PatchCollection)
+    ]
+    centres = sorted(
+        tuple(path.vertices[:4].mean(axis=0).round(6)) for path in hatched.get_paths()
+    )
+    assert centres == [(0.5, 0.5), (4.5, 2.5)]
 
 
 def test_no_crossing_leaves_the_deciding_panel_empty():

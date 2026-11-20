@@ -54,9 +54,10 @@ frame of a FED update, and `in_fds_domain` (1 inside the FDS slices, 0 outside,
 untouched, so JuPedSim tools still read the file. `heat_fed` sits before
 `speed`: read the columns by name, not by position.
 
-Every file also holds `agent_exits(id, exit_time_s)`: the time each agent
-that left did so (`ScenarioResult.exit_times`). An agent still inside at the
-end has no row. `pyfds_evac.analysis.load_exit_times` reads it for the RSET
+Every file, and the trajectory of the exported Python script, also holds
+`agent_exits(id, exit_time_s)`: the time each agent that left did so
+(`ScenarioResult.exit_times`). An agent still inside at the end has no row.
+`pyfds_evac.analysis.load_exit_times` reads it for the RSET
 map ([ASET/RSET maps](aset-rset-maps.md)).
 
 ## Run manifest
