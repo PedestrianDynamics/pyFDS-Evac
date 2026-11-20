@@ -24,11 +24,10 @@
 &VENT XB=1.4,1.8,0,0,0,0.3, SURF_ID='OPEN' /
 
 ! 0.4 x 0.4 m propane burner on the floor against the y = 4 m wall, away
-! from the device line (1.55 m from it). 625 kW/m2, about 100 kW. A wall
-! fire entrains about 0.2 z^(5/3) kg/s (half of a 2Q plume), which puts
-! the interface near 1-1.5 m at 30-50 s. Soot yield 0.1 makes the layer
-! sooty, so eps_L = 1 is not far off. Fuel, size, HRR, place and soot yield
-! are assumptions of this deck, not sourced values.
+! from the device line (1.55 m from it). 625 kW/m2, about 100 kW, soot
+! yield 0.1. The run brings the median interface to 1.35 m at 20 s and
+! 0.7 m at 60 s (contract Sec. 15.3). Fuel, size, HRR, place and soot
+! yield are assumptions of this deck, not sourced values.
 &REAC FUEL='PROPANE', SOOT_YIELD=0.1 /
 &SURF ID='BURNER', HRRPUA=625., COLOR='RED' /
 &VENT XB=2.1,2.5,3.6,4.0,0,0, SURF_ID='BURNER' /

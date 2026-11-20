@@ -729,7 +729,8 @@ Interface (median over the 7 columns, min-max):
 The head (1.6 m) is inside the layer at most columns from about 18 s on.
 Sample times by the 15.1 rule: t_a = 9.97 s, t_b = 21.61 s, 8 times.
 Of 56 rows, 33 are under the 0.5 kW/m2 floor (the layer is 55-70 C while
-it is above the head), 16 have the head in the layer, 7 are scored.
+it is above the head), 16 have the head in the layer, 7 are scored. The
+floor is applied first: some floor rows also have the head in the layer.
 
 | option | within +-30 % | median | worst | +-40 % |
 |---|---|---|---|---|
@@ -752,14 +753,26 @@ I 2/16, each F 0/16, medians 0.56-0.64.
 ### 15.4 Verdict
 
 By the predeclared rule, **(F) wins** on the descending run, by ties at
-0 scored rows each. The win is not robust and not informative: no option
-meets the band, only 7 rows pass the floor, and the order flips with the
-band (at +-40 % (I) leads 5/7 to 4/7, 3/7, 0/7). Where the layer is
-above the head, (I) has the median closest to 1 and the smallest spread
-in all three runs (step 1: 21/21 twice, medians 1.10 and 1.03); a fixed
-height is as good only when it happens to be near the interface (F2.5 in
-`layer_274`, F1.8-F2.0 in `layer_274_pl`). As the interface reaches the
-head, (I) and F1.8 converge (phi near 1 for both).
+0 scored rows each. The win is not informative: no option meets the band
+and only 7 rows pass the floor.
+
+Robustness, post hoc (not part of the rule):
+
+- Descending, +-40 %: (I) 5/7, F1.8 4/7, F2.0 3/7, F2.5 0/7. (I) leads
+  only there, nowhere at +-30 %.
+- Descending, no floor (head below the interface, 38 rows): (I) 1/38,
+  F1.8 6/38, F2.0 1/38, F2.5 1/38 at +-30 %; at +-40 % F1.8 19/38 against
+  (I) 10/38. Without the floor F1.8 leads (I) outright.
+- Step 1 under the pairwise rule: in `layer_274` (I) beats F1.8 and F2.0
+  and ties F2.5 (medians 1.096 and 1.031: F2.5 is closer to 1); in
+  `layer_274_pl` (I) ties F1.8 and F2.0 and beats F2.5. (I) wins all three
+  pairs in neither run. Pooled over 42 rows: (I) 42, F1.8 39, F2.0 41,
+  F2.5 41.
+- Which fixed height reaches 21/21 flips between `layer_274` (F2.5) and
+  `layer_274_pl` (F1.8, F2.0) with nearly the same interface; the gauges
+  differ by 5-6 % between the two (Sec. 14 O3).
+- As the interface reaches the head, (I) and F1.8 converge (phi near 1
+  for both).
 
 Open for the maintainer: keep (F) as the rule's outcome, or approve one
 more run with a hotter layer above the head (the 15.1 criterion stays as
