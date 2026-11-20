@@ -16,10 +16,14 @@ contains ``0_ASET``, ``1_RSET`` and ``2_DIFF``::
     uv run --with "pedpy>=1.5.1" python scripts/docs/schroeder2020_reproduce.py \\
         --data DATA
 
-Nothing of pyFDS-Evac is used: the script reads the release's ASCII
-extinction slices (``0_ASET/HRR_60kW/ascii_slices/extinction/sf_*.txt``,
-z = 2.0 m, every 10 s), its JuPedSim trajectories (``1_RSET/12*/``,
-1 fps) and its maps, and prints
+The script reads the release's ASCII extinction slices
+(``0_ASET/HRR_60kW/ascii_slices/extinction/sf_*.txt``, z = 2.0 m, every
+10 s), its JuPedSim trajectories (``1_RSET/12*/``, 1 fps) and its maps. The
+maps, the DIFF classification, the measures and the seed pooling are those
+of ``pyfds_evac.analysis``; what stays here is what the module does not do
+by design: the release's own counting (rows 0, A, B of stage 2), the
+release's nearest-resize rule, the ``forall`` and ``centre`` cell rules and
+the 30 s subsampling. It prints
 
 * stage 1: the measures of the released difference map (min DIFF, negative
   area, C), with the release's counting and with the corrected one, plus
@@ -31,13 +35,28 @@ z = 2.0 m, every 10 s), its JuPedSim trajectories (``1_RSET/12*/``,
 
 import argparse
 import math
-import warnings
 import xml.etree.ElementTree as ET
 from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+
+from pyfds_evac.analysis import (
+    AsetMap,
+    PointSeries,
+    RsetMap,
+    diff_map,
+    first_crossing_level,
+    grid_from_walkable,
+    measures,
+    pool_seeds,
+    reduce_to_cells,
+    rset_map,
+)
+from pyfds_evac.analysis import (
+    release_measures as module_release_measures,
+)
 
 K_TH = 0.23  # 1/m, the release's threshold (paper Sect. 2.2.4, p. 3)
 T_END = 120.0  # s, last slice; the release fills unexceeded cells with it
@@ -107,20 +126,36 @@ def read_seeds(data):
 # --- Maps ----------------------------------------------------------------
 
 
+def _flip(a):
+    """Map rows between this script (row 0 at y = 0) and the module (row 0 at max y)."""
+    return np.flipud(a)
+
+
+def _node_xy(shape):
+    """Slice node coordinates, flattened row-major, row 0 at y = 0."""
+    ny, nx = shape
+    gy, gx = np.meshgrid(
+        np.arange(ny) * DX_SLICE, np.arange(nx) * DX_SLICE, indexing="ij"
+    )
+    return gx.ravel(), gy.ravel()
+
+
 def first_crossing(slices, value_maps, times=None):
-    """First time each cell's value reaches K_TH; inf when never."""
-    times = sorted(slices) if times is None else times
-    aset = np.full(value_maps[times[0]].shape, np.inf)
-    for t in reversed(times):
-        aset[value_maps[t] >= K_TH] = t
-    return aset
+    """First time each cell's value reaches K_TH (module rule); inf when never."""
+    times = np.array(sorted(slices)) if times is None else np.asarray(times, float)
+    shape = value_maps[times[0]].shape
+    frames = np.stack([np.asarray(value_maps[t], float).ravel() for t in times])
+    x, y = _node_xy(shape)
+    series = PointSeries(x, y, times, np.arange(len(times)), frames)
+    return first_crossing_level(series, K_TH).reshape(shape)
 
 
 def cell_values(field, rule, nx_cells, ny_cells):
-    """Reduce one slice (row 0 at y = 0) to map cells with a cell rule.
+    """Reduce one slice (row 0 at y = 0) to map cells with a script-side cell rule.
 
-    Cells are [i*CELL, (i+1)*CELL] with both edges included, so a node on a
-    cell edge belongs to both cells. Cells that no node reaches get NaN.
+    ``nearest`` is the release's Pillow resize, ``centre`` interpolates at the
+    cell centre, ``forall`` takes the cell minimum (every node at once). The
+    ``exists`` rule is the module's, see ``aset_map``.
     """
     step = round(CELL / DX_SLICE)
     ny, nx = field.shape
@@ -141,9 +176,8 @@ def cell_values(field, rule, nx_cells, ny_cells):
         yc = (np.arange(ny_cells) + 0.5) * CELL
         along_x = np.array([np.interp(xc, xs, row) for row in field])
         return np.array([np.interp(yc, ys, col) for col in along_x.T]).T
-    reduce = np.max if rule == "exists" else np.min
     for j in range(ny_cells):
-        out[j] = _row_blocks(field[step * j : step * j + step + 1], reduce, nx_cells)
+        out[j] = _row_blocks(field[step * j : step * j + step + 1], np.min, nx_cells)
     return out
 
 
@@ -153,9 +187,19 @@ def _row_blocks(rows, reduce, nx_cells):
     return [reduce(v) if v.size else np.nan for v in vals]
 
 
-def aset_map(slices, rule, nx_cells, ny_cells, times=None):
-    """ASET per cell, row 0 at y = 0; inf = not by the last slice."""
-    values = {t: cell_values(a, rule, nx_cells, ny_cells) for t, a in slices.items()}
+def aset_map(slices, rule, shape, times=None, grid=None):
+    """ASET per cell of *shape* (ny, nx), row 0 at y = 0; inf = not by the last slice.
+
+    ``exists`` is the module's block maximum on the per-node first crossings
+    on *grid* (NaN where a cell has no floor). The other rules reduce each
+    slice first.
+    """
+    ny, nx = shape
+    if rule == "exists":
+        node = first_crossing(slices, slices, times)
+        x, y = _node_xy(node.shape)
+        return _flip(reduce_to_cells(grid, x, y, node.ravel(), "exists"))
+    values = {t: cell_values(a, rule, nx, ny) for t, a in slices.items()}
     return first_crossing(slices, values, times)
 
 
@@ -172,96 +216,75 @@ def release_rset(traj, rate):
     return out
 
 
-def pedpy_rset(traj, rate, area):
-    """PedPy RSET map (RsetMethod.MAX), flipped back to row 0 at y = 0."""
+def seed_rsets(seeds, walkable, grid):
+    """Module RSET map per seed on *grid* (row 0 at max y), every seed empty."""
     import pedpy
 
-    data = pedpy.TrajectoryData(data=traj, frame_rate=rate)
-    rset = pedpy.compute_rset_map(
-        traj_data=data,
-        walkable_area=area,
-        grid_size=CELL,
-        method=pedpy.RsetMethod.MAX,
-    )
-    return np.flipud(rset)
+    rsets = []
+    for rate, traj in seeds.values():
+        data = pedpy.TrajectoryData(data=traj, frame_rate=rate)
+        left = {int(i): 0.0 for i in traj["id"].unique()}  # asserted: room empties
+        rsets.append(rset_map(data, walkable, grid, exit_times=left))
+    return rsets
 
 
 def pool(maps, how):
-    """Pool seeds per cell over the seeds that visit it; NaN if none does."""
-    stack = np.dstack(maps)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN cells
-        if how == "max":
-            return np.nanmax(stack, axis=2)
-        return np.nanpercentile(stack, PERCENTILE, axis=2)
-
-
-def shared_edges(area):
-    """PedPy's edges, computed with the same expression PedPy uses."""
-    min_x, min_y, max_x, max_y = area.bounds
-    x_edges = np.arange(min_x, max_x + CELL, CELL)
-    y_edges = np.arange(min_y, max_y + CELL, CELL)
-    return x_edges, y_edges
-
-
-def check_orientation(area):
-    """Assert PedPy's row 0 is max y, so the flip in pedpy_rset is right."""
-    probe = pd.DataFrame({"id": [1], "frame": [7], "x": [0.1], "y": [0.1]})
-    rset = pedpy_rset(probe, 1.0, area)
-    assert rset[0, 0] == 7.0, "PedPy orientation changed: row 0 is not max y"
+    """Pool seeds per cell over the seeds that visit it (module rule); NaN if none."""
+    return pool_seeds(maps, how).values
 
 
 # --- Measures ------------------------------------------------------------
 
 
 def release_measures(diff):
-    """min DIFF, area and C exactly as 2_DIFF/diff_map.py computes them."""
-    flat = diff[np.isfinite(diff)]
-    bins = np.arange(-120, 0.01, BIN)  # last bin [-20, 0] closed: 0 counts
-    freqs, bins = np.histogram(flat, bins=bins)
-    c = float(np.sum(freqs * (bins[1:] - BIN / 2))) * CELL**2
+    """min DIFF, area and C as 2_DIFF/diff_map.py computes them (module rule)."""
+    r = module_release_measures(diff, cell_area_m2=CELL**2, bin_s=BIN)
     return {
-        "min": float(flat.min()),
-        "n_le0": int(freqs.sum()),
-        "n_lt0": int((flat < 0).sum()),
-        "c_binned": c,
-        "c_free": float(flat[flat < 0].sum()) * CELL**2,
+        "min": r.min_diff_s,
+        "n_le0": r.n_le0,
+        "n_lt0": r.n_lt0,
+        "c_binned": r.c_binned_m2s,
+        "c_free": r.c_free_m2s,
     }
 
 
-def states(aset, rset):
-    """Five cell states on visited cells (RSET finite); DIFF = 0 passes."""
-    visited = np.isfinite(rset)
-    censored = np.isinf(aset)
-    exact = visited & ~censored
-    diff = np.where(exact, aset - rset, np.nan)
-    # Every seed is empty before T_END (asserted in main), so no RSET is
-    # censored: the "<= bound" and "undetermined" states are empty here.
+_STATE_LABEL = {
+    "pass": "pass",
+    "fail": "fail",
+    "aset_open": ">= bound",
+    "rset_censored": "<= bound",
+    "undetermined": "undetermined",
+}
+
+
+def corrected_measures(aset, rset, grid, zero_fails=False):
+    """Module measures on visited cells; zero_fails = release counting.
+
+    *aset* and *rset* have row 0 at y = 0; *grid* is the module's. Every seed
+    is empty before T_END (asserted in main), so no RSET is censored. Floor
+    area is the true area per cell, not the nominal CELL**2.
+    """
     assert np.nanmax(rset) < T_END, "RSET reaches T_END: censored states needed"
+    a, r = _flip(aset), _flip(rset)
+    diff = diff_map(
+        AsetMap(a, T_END),
+        RsetMap(r, np.zeros(r.shape, bool), T_END),
+        grid,
+        zero_fails=zero_fails,
+    )
+    m = measures(diff)
+    c_binned = m.c_binned_m2s
+    if zero_fails:  # the release's histogram, 0 counted in the last bin
+        c_binned = release_measures(
+            np.where(np.isfinite(diff.diff_s), diff.diff_s, np.nan)
+        )["c_binned"]
     return {
-        "pass": int((diff >= 0).sum()),
-        "fail": int((diff < 0).sum()),
-        ">= bound": int((visited & censored).sum()),
-        "<= bound": 0,
-        "undetermined": 0,
-    }, diff
-
-
-def corrected_measures(aset, rset, zero_fails=False):
-    """Measures on visited cells with exact DIFF; zero_fails = release counting."""
-    counts, diff = states(aset, rset)
-    exact = diff[np.isfinite(diff)]
-    neg = exact[exact <= 0] if zero_fails else exact[exact < 0]
-    # Binned C: the release's histogram, or the same 20 s bins with 0 excluded.
-    centres = (np.floor(neg / BIN) + 0.5) * BIN
-    c_binned = release_measures(diff)["c_binned"] if zero_fails else centres.sum()
-    return {
-        "min": float(exact.min()),
-        "n_fail": int(neg.size),
-        "area": neg.size * CELL**2,
-        "c_free": float(neg.sum()) * CELL**2,
-        "c_binned": float(c_binned) * (1 if zero_fails else CELL**2),
-        "states": counts,
+        "min": m.min_diff_s,
+        "n_fail": m.n_fail,
+        "area": m.fail_area_m2,
+        "c_free": m.c_m2s,
+        "c_binned": c_binned,
+        "states": {_STATE_LABEL[k]: m.counts[k] for k in _STATE_LABEL},
     }
 
 
@@ -274,8 +297,9 @@ def filled(aset):
 
 
 def line(label, m):
+    area = m.get("area", m["n_fail"] * CELL**2)  # release rows: nominal cells
     return (
-        f"  {label:<44} {m['min']:>6.0f} {m['n_fail']:>5d} {m['n_fail'] * CELL**2:>7.2f}"
+        f"  {label:<44} {m['min']:>6.0f} {m['n_fail']:>5d} {area:>7.2f}"
         f" {m['c_free']:>8.1f} {m['c_binned']:>8.1f}"
     )
 
@@ -314,7 +338,7 @@ def stage1(data, slices, seeds):
     )
 
     released = np.loadtxt(data / "0_ASET" / "aset_map.txt")
-    rebuilt = filled(aset_map(slices, "nearest", 50, 17))
+    rebuilt = filled(aset_map(slices, "nearest", (17, 50)))
     share = np.mean(rebuilt == released)
     print(
         f"\n  1b ASET rebuilt, nearest rule, t_end fill vs aset_map.txt: {share:.1%} of cells"
@@ -362,14 +386,15 @@ def stage2(data, slices, seeds, released):
     from pedpy import WalkableArea
 
     area = WalkableArea(read_room(data / "1_RSET" / "1254" / "corridor_geo.xml"))
-    check_orientation(area)
-    x_edges, y_edges = shared_edges(area)
+    grid = grid_from_walkable(area, CELL)
+    x_edges, y_edges = grid.x_edges, grid.y_edges
     nx_cells, ny_cells = len(x_edges) - 1, len(y_edges) - 1
-    per_seed = [pedpy_rset(traj, rate, area) for rate, traj in seeds.values()]
-    assert per_seed[0].shape == (ny_cells, nx_cells), "RSET and ASET grids differ"
-    rset = pool(per_seed, "p95")
-    rset_max = pool(per_seed, "max")
-    asets = {r: aset_map(slices, r, nx_cells, ny_cells) for r in RULES}
+    per_seed = seed_rsets(seeds, area, grid)
+    assert per_seed[0].time_s.shape == grid.shape, "RSET and ASET grids differ"
+    maps = [_flip(r.time_s) for r in per_seed]
+    rset = pool(maps, "p95")
+    rset_max = pool(maps, "max")
+    asets = {r: aset_map(slices, r, (ny_cells, nx_cells), grid=grid) for r in RULES}
 
     print("\nSTAGE 2 - ASET and RSET rebuilt on one shared grid")
     print(
@@ -401,24 +426,28 @@ def stage2(data, slices, seeds, released):
         ),
         (
             "1 shared grid, nearest rule, t_end fill",
-            corrected_measures(filled(nearest), rset, zero_fails=True),
+            corrected_measures(filled(nearest), rset, grid, zero_fails=True),
         ),
-        ("2 + DIFF = 0 passes", corrected_measures(filled(nearest), rset)),
-        ("3 + censored cells kept, not filled", corrected_measures(nearest, rset)),
+        ("2 + DIFF = 0 passes", corrected_measures(filled(nearest), rset, grid)),
+        (
+            "3 + censored cells kept, not filled",
+            corrected_measures(nearest, rset, grid),
+        ),
         (
             "4 + cell rule exists (plan default)",
-            corrected_measures(asets["exists"], rset),
+            corrected_measures(asets["exists"], rset, grid),
         ),
         (
             f"4' pooled by max ({len(seeds)} seeds) not p95",
-            corrected_measures(asets["exists"], rset_max),
+            corrected_measures(asets["exists"], rset_max, grid),
         ),
     ]
     for label, m in rows:
         print(line(label, m))
     print(
         "\n  'fail' counts DIFF <= 0 in rows 0, A, B, 1 and DIFF < 0 from row 2 on. 'C free' is the"
-        "\n  sum of the failing DIFF times 0.36 m²; 'C 20 s' bins them at 20 s (release bins)."
+        "\n  sum of the failing DIFF times the cell's floor area (rows 0, A, B: the release's nominal"
+        "\n  0.36 m²); 'C 20 s' bins them at 20 s (release bins)."
         "\n  0 -> A/B: only the ASET source changes (release grid, RSET and window kept):"
         "\n          the ASET_map.txt behind row 0 is not in the release (stage 1)."
         "\n  A -> 1: the half-cell offset (release RSET centred on 0.6 k, ASET on 0.6 k + 0.3),"
@@ -439,7 +468,7 @@ def stage2(data, slices, seeds, released):
     )
     states_exists = by["4 + cell rule exists (plan default)"]["states"]
     print(f"\n  Cell states, rule exists, p{PERCENTILE}: {states_exists}")
-    return asets, rset, (nx_cells, ny_cells), _in_room(area, x_edges, y_edges)
+    return asets, rset, grid, _in_room(area, x_edges, y_edges)
 
 
 def _release_grid_measures(aset, ref):
@@ -475,14 +504,14 @@ def _in_room(area, x_edges, y_edges):
     )
 
 
-def table_rules(asets, rset, inside):
+def table_rules(asets, rset, grid, inside):
     print("\nF3 - cell rule (shared grid, 10 s slices, p95 RSET)")
     print(
         f"  {'rule':<8} {'never by 120 s':>14} {'> 80 s':>9} {'min':>6} {'n<0':>5} {'C free':>8}"
     )
     for r in RULES:
         a = asets[r]
-        m = corrected_measures(a, rset)
+        m = corrected_measures(a, rset, grid)
         never = f"{int(np.isinf(a[inside]).sum())} ({int(np.isinf(a).sum())})"
         late = f"{int((a[inside] > 80).sum())} ({int((a > 80).sum())})"
         print(
@@ -502,20 +531,19 @@ def table_rules(asets, rset, inside):
     )
 
 
-def table_dt(slices, rset, shape):
-    nx_cells, ny_cells = shape
+def table_dt(slices, rset, grid):
     print("\nF8 - slice time step, 10 s vs 30 s (30 s by subsampling the 10 s slices)")
     print(
         f"  {'rule':<8} {'dt':>4} {'min':>6} {'n<0':>5} {'A<0 m²':>7} {'C free':>8} {'mean ASET shift':>16}"
     )
     coarse = [t for t in sorted(slices) if t % 30 == 0]
     for r in ("exists", "nearest"):
-        fine = aset_map(slices, r, nx_cells, ny_cells)
-        slow = aset_map(slices, r, nx_cells, ny_cells, times=coarse)
+        fine = aset_map(slices, r, grid.shape, grid=grid)
+        slow = aset_map(slices, r, grid.shape, times=coarse, grid=grid)
         both = np.isfinite(fine) & np.isfinite(slow)
         shift = float(np.mean(slow[both] - fine[both]))
         for dt, a, s in ((10, fine, ""), (30, slow, f"+{shift:.1f} s")):
-            m = corrected_measures(a, rset)
+            m = corrected_measures(a, rset, grid)
             print(
                 f"  {r:<8} {dt:>4d} {m['min']:>6.0f} {m['n_fail']:>5d} {m['area']:>7.2f}"
                 f" {m['c_free']:>8.1f} {s:>16}"
@@ -555,9 +583,9 @@ def main():
         " dt <= w / v_max = 0.5 s.\n"
     )
     released = stage1(data, slices, seeds)
-    asets, rset, shape, inside = stage2(data, slices, seeds, released)
-    table_rules(asets, rset, inside)
-    table_dt(slices, rset, shape)
+    asets, rset, grid, inside = stage2(data, slices, seeds, released)
+    table_rules(asets, rset, grid, inside)
+    table_dt(slices, rset, grid)
 
 
 if __name__ == "__main__":

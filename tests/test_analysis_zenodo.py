@@ -15,7 +15,10 @@ Stage 2 rebuilds ASET and RSET on PedPy's grid with the module and compares
 with row A of ``scripts/docs/schroeder2020_reproduce.py`` (release RSET, ASET
 rebuilt at its grid points) within the tolerance that script predeclares:
 min DIFF within 10 s and the failing area within 10 %. The tolerance is not
-changed to pass.
+changed to pass. It holds for the ``nearest`` rule (the release's) and for
+the default ``exists`` rule (block maximum); row A is a nearest-node
+reference, so ``exists`` is checked against it, not against the release's
+own cell rule.
 """
 
 import importlib.util
@@ -110,16 +113,17 @@ def _rebuild(script, rule):
     return grid, aset, rset
 
 
-def test_stage2_rebuild_is_within_the_predeclared_tolerance_of_row_a():
+@pytest.mark.parametrize("rule", ["nearest", "exists"])
+def test_stage2_rebuild_is_within_the_predeclared_tolerance_of_row_a(rule):
     script = _script()
     slices = script.read_slices(RELEASE)
     ref_rset = np.loadtxt(RELEASE / "1_RSET" / "RSET_map_all_seeds.txt")
     row_a = script._release_grid_measures(
         script.filled(script._release_rset_grid_aset(slices)), ref_rset
     )
-    grid, aset, rset = _rebuild(script, "nearest")
+    grid, aset, rset = _rebuild(script, rule)
     m = measures(diff_map(aset, rset, grid, zero_fails=True))
     ours = {"min": m.min_diff_s, "n_fail": m.n_fail}
     verdict = script._tolerance(ours, row_a)
-    print(f"module (nearest) vs row A: {verdict}")
+    print(f"module ({rule}) vs row A: {verdict}")
     assert verdict.startswith("PASS"), verdict
