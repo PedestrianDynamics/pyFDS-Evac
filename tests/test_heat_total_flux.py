@@ -117,15 +117,13 @@ def t_fatal_conv_min(t_c):
 
 
 @pytest.mark.parametrize(
-    ("t_c", "minutes"), [(100.0, 6.0), (120.0, 4.2), (140.0, 3.2), (180.0, 2.1)]
+    ("t_c", "minutes"), [(100.0, 5.93), (120.0, 4.15), (140.0, 3.13), (180.0, 2.04)]
 )
 def test_hand_formula_reproduces_spec_convection_table(t_c, minutes):
-    """Spec 016 "Convection check": eps = 0, h = 5, T_s = 36 deg C, D = 1.33.
-
-    The spec prints one decimal (6.05 min at 100 deg C as 6.0).
-    """
-    q = q_hand(t_c, eps=0.0, h=5.0, t_skin_c=36.0)
-    assert t_hand_min(q, DOSE["tolerance"]) == pytest.approx(minutes, abs=0.06)
+    """Spec 016 "Convection check": eps = 0, h = 5, T_s = 35 deg C (the
+    default), D = 1.33. The spec prints two decimals."""
+    q = q_hand(t_c, eps=0.0, h=5.0, t_skin_c=35.0)
+    assert t_hand_min(q, DOSE["tolerance"]) == pytest.approx(minutes, abs=0.006)
 
 
 @pytest.mark.parametrize(("t_c", "eps"), [(201.0, 0.5), (310.0, 0.05)])
