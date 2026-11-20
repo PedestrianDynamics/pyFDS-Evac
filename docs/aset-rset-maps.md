@@ -132,6 +132,7 @@ criterion's own map is kept.
 |---|---|---|---|
 | Visibility | extinction coefficient K ≥ C / V<sub>lim</sub> | V<sub>lim</sub> = 10 m, C = 3, so K ≥ 0.3 1/m | 10 m: Engineers Australia (2014) p. 15, NZBC C/VM2 p. 30, vfdb TB 04-01 Table 8.3. C: Jin, as quoted in vfdb p. 314 and ISO 13571 Note 2 |
 | Temperature | T ≥ T<sub>lim</sub> | 45 °C, stay under 30 min; 50 °C for about 15 min and under 5 min (`AsetCriteria.with_stay`) | vfdb TB 04-01 Table 8.3, DIN 18009-2 Table 1; dry air |
+| Radiant flux (reference only) | q ≥ q<sub>lim</sub> | 1.7 kW/m² for a stay under 30 min, 2.0 for about 15 min, below 2.5 for under 5 min (vfdb); **not computed by the module** | vfdb TB 04-01 Table 8.3, as listed in the [criteria comparison](/docs/study-schroeder2020.md#tenability-criteria-in-the-literature). 1.7 is the no-pain critical flux of Wieczorek and Dembsey (2001), p. 96; ISO 13571:2012 §8.2 uses 2.5, where their Eq. (4) gives pain in about 22 s |
 | Toxic FED | FED of a person standing still from t = 0 ≥ 0.3 | 0.3, configurable | ISO 13571 design criterion; the engine's own rate functions |
 | Heat FED | convective heat FED, same person, ≥ 0.3 | 0.3, `clothed` law | ISO 13571:2012 Eq. 9 |
 

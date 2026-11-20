@@ -247,6 +247,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   additive combination with its 0.1 floor, that FIC does not
   incapacitate, and that the default smoke law's own irritancy is still
   partly counted twice (#147, #153).
+- Docs: Incapacitation thresholds gains the radiant time-to-pain and
+  time-to-burn equations of Wieczorek and Dembsey (2001), with their ranges
+  and safety factors, and notes that ISO 13571:2012 Eqs. (7) and (8) omit
+  the factors; Models › Heat says the coded radiant law is the dose
+  q^1.33/D; the ASET criteria table lists the radiant limits as reference.
 
 ### Fixed
 
