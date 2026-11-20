@@ -18,8 +18,9 @@ Checks (contract §4.5):
 - V4 (gate): q - gauge = h (T_slice - T_dev) / 1000 (1e-6 kW/m2), an identity
   of Eq. 22.35 given V3.
 - V5 (report, not gated): |q / q_gauge - 1| at t = 3, 6, 9 s per orientation.
-- V6: the 21 #308 runs (up, px, mx at 7 positions) through the CLI; V4 is the
-  gate, the ratio to the gauge is reported beside the layer term's 54 of 63.
+- V6: the 21 #308 cases (up, px, mx at 7 positions), sampled through the
+  model at the device positions; V4 is the gate, the ratio to the gauge is
+  reported beside the layer term's 54 of 63.
 - V7: where the net reading is >= 2.5 kW/m2 the dose rate has the radiation
   in it, below that it is convection only (burner).
 

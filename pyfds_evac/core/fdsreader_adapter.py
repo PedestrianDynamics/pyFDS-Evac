@@ -218,8 +218,14 @@ def read_fds_devices(path: str | Path) -> DeviceSet:
             f"cannot read the devices of the FDS case in {case_dir}: expected one "
             f"TIME device, found {len(clocks)}"
         )
-    times = np.asarray(clocks[0].data, dtype=float)
-    points = tuple(_device_point(d) for d in devices if d is not clocks[0])
+    try:  # fdsreader reads the _devc.csv lazily, on first data access
+        times = np.asarray(clocks[0].data, dtype=float)
+        points = tuple(_device_point(d) for d in devices if d is not clocks[0])
+    except (OSError, ValueError) as exc:
+        raise ValueError(
+            f"cannot read the device output (_devc.csv) of the FDS case in "
+            f"{case_dir}: {exc}"
+        ) from exc
     for point in points:
         if point.data.shape != times.shape:
             raise ValueError(

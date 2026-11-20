@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import csv
 import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -318,3 +319,24 @@ def test_the_224_radiometers_are_read_unchanged(fds_read_only):
     assert mid == pytest.approx(
         0.5 * (column["RAD_z16_up-3"][60] + column["RAD_z16_up-4"][60]), rel=1e-6
     )
+
+
+@pytest.mark.external_data
+@pytest.mark.skipif(
+    not (LAYER / "heat_radiometer_layer.smv").is_file(),
+    reason="heat_radiometer/layer FDS output absent; set HEAT_RADIOMETER_DATA",
+)
+def test_a_case_without_its_devc_csv_names_the_file(tmp_path):
+    """fdsreader lists the devices from the .smv and reads the CSV lazily."""
+    from pyfds_evac.core.fdsreader_adapter import read_fds_devices
+
+    case = tmp_path / "layer"
+    case.mkdir()
+    for src in LAYER.iterdir():
+        if src.suffix == ".pickle" or src.name.endswith("_devc.csv"):
+            continue
+        (case / src.name).symlink_to(src)
+    (case / "heat_radiometer_layer.smv").unlink()
+    shutil.copy(LAYER / "heat_radiometer_layer.smv", case)
+    with pytest.raises(ValueError, match=r"_devc\.csv"):
+        read_fds_devices(case)
