@@ -136,27 +136,45 @@ dose of 10 (kW/m²)^4/3·min is a fatal level for people over 65 and "a 1%
 lethal level" for the average population, and 16.7 (kW/m²)^4/3·min is "a
 50% lethal level". The chapter cites Hockey and Rew
 (1996) and Purser (1997) for its radiant dose relation (refs. [125, 126],
-p. 2318). Hockey and Rew is a candidate source for probit relations behind
-these figures; we have not read it.
+p. 2318).
 
-Inference, not a statement of the sources: if the lethal dose is log-normal
-with median 16.7 and 1 % below 10, its log-scale standard deviation is
-ln(16.7/10)/2.326 = 0.513/2.326, so \(\sigma \approx 0.22\). The median
-is the fatal dose D = 16.7 of the total-flux method; Purser's spreadsheet
-value 16.667 gives the same σ to two decimals. Its limits:
+Hockey and Rew review the probits for radiant exposure. All use the dose
+\(V = I^{4/3} t\) in (kW/m²)^4/3·s and the natural log of *V*:
 
-- The Handbook states no distribution; the log-normal is assumed.
-- Two figures fix two parameters, so nothing tests the fit.
-- The figures are for radiant lethality, the fatal dose *D* = 16.7 of
-  Eq. 70.41. They concern neither convective tolerance nor the ISO
-  convective times.
+| Probit (as cited by Hockey and Rew) | Endpoint | *Y* | σ = 1/*b* |
+|---|---|---|---|
+| Eisenberg et al. (1975), §4.2.2, pp. 15–16 | death | −14.9 + 2.56 ln *V* | 0.39 |
+| Tsao and Perry (1979), §4.2.3, p. 17 | death | −12.80 + 2.56 ln *V* | 0.39 |
+| Tsao and Perry (1979), p. 17 | thermal injury | −12.03 + 3.0186 ln *V* | 0.33 |
+| TNO Green Book, §4.2.4, p. 17 | second-degree burn | −15.34 + 3.0186 ln *V* | 0.33 |
 
-With FED = 1 at D = 16.7, the 1 % lethal dose is FED = 0.60. A log-normal
-with σ = 0.94, between the two TN 1797 bin values above, would put 29 % of people
-below FED = 0.60 instead of 1 %. A probit in the natural log of dose with
-slope b gives σ = 1/b. A published probit slope for a heat endpoint would
-settle the value for that endpoint; Hockey and Rew is the source to check
-first ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
+A probit in ln *V* with slope *b* is a log-normal with σ = 1/*b* (our
+arithmetic). Their Table 5.1 (p. 23) gives the matching lethal doses for
+Eisenberg, 960 (1 %) and 2380 (50 %): ln(2380/960)/2.326 = 0.39, the same
+σ. Eisenberg's probit is fitted to the casualties of Hiroshima and
+Nagasaki, an ultraviolet exposure; Tsao and Perry's has the same slope,
+shifted for infrared (p. 16). The report adds that the cause of death in
+those data is uncertain (p. 16).
+
+So the only sourced spread for a heat endpoint is σ ≈ 0.39, for radiant
+lethality. It is not a spread for convective tolerance: nothing in the
+report concerns convected heat (ISO 13571:2012 Eqs. (9) and (10); SFPE
+Eq. 70.42), and carrying it over to a total-flux dose would need an
+argument the report does not make.
+
+The Handbook's two figures are not these probits. In the report's units
+they are 600 and 1000 (kW/m²)^4/3·s; the report gives 1000 as the HSE
+dangerous dose for the average population, about 1 % lethal, and 500 for
+the vulnerable (Table 5.1, after Kinsman), not 1000 as a 50 % level. An
+earlier version of this page read 10 and 16.7 as the 1 % and 50 % points
+of a log-normal, which gives σ ≈ 0.22; the report does not support that
+pairing, so the 0.22 is withdrawn.
+
+With FED = 1 at the median, σ = 0.94, the gas value between the two
+TN 1797 bin values above, puts 1 % of people below FED = 0.11; σ = 0.39
+puts them below FED = 0.40 (our arithmetic). Heat stays deterministic by
+default, since no source gives a spread for the convective laws
+([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)).
 
 How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.md#incapacitation).
 
@@ -201,10 +219,10 @@ How pyFDS-Evac applies this: [Models › Heat › Incapacitation](/models/heat.m
   [doi:10.6028/NIST.TN.1797](https://doi.org/10.6028/NIST.TN.1797)
 - Hockey, S. M., & Rew, P. J. (1996). *Human response to thermal
   radiation*. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
-  by Ch. 70 as ref. [125]; not consulted.
+  by Ch. 70 as ref. [125]; read in full (§4.2, Table 5.1, App. B).
 - Purser, D. A. (1997). Review of human response to thermal radiation.
-  *Fire Safety Journal*, 28, 290–291. Cited by Ch. 70 as ref. [126]; not
-  consulted.
+  *Fire Safety Journal*, 28, 290–291. Cited by Ch. 70 as ref. [126]; a
+  one-page review of Hockey and Rew, read; it gives no probit.
 
 How pyFDS-Evac uses this: see [Fractional effective dose](/models/fed.md#tenability-irritant-slowdown-and-incapacitation).
 
