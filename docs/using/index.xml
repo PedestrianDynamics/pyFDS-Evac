@@ -5030,8 +5030,13 @@ that names the run and its own buttons:&lt;/p>
 &lt;td>&lt;strong>Show Python for this run&lt;/strong>, &lt;strong>Clear results&lt;/strong>&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>Failed&lt;/td>
-&lt;td>the run raised an error; the message comes first&lt;/td>
+&lt;td>Configuration rejected&lt;/td>
+&lt;td>the run was refused before the simulation started (&amp;ldquo;Configuration rejected, no simulation was run&amp;rdquo;); the message comes first, with a hint to correct the settings, which stay in the form&lt;/td>
+&lt;td>&lt;strong>Show configuration of this run&lt;/strong>, &lt;strong>Clear&lt;/strong>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Run crashed&lt;/td>
+&lt;td>an error after the simulation started (&amp;ldquo;Run crashed, no result&amp;rdquo;); the message comes first, with the run log and technical details, and the settings stay in the form&lt;/td>
 &lt;td>&lt;strong>Show configuration of this run&lt;/strong>, &lt;strong>Clear&lt;/strong>&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -5055,7 +5060,7 @@ that names the run and its own buttons:&lt;/p>
 sample, &amp;ldquo;Run #N was cancelled at sim &lt;em>t&lt;/em> s.&amp;rdquo;, or says that the run was
 cancelled before the first progress sample.&lt;/p>
 &lt;p>&lt;strong>Clear results&lt;/strong> asks for confirmation first: &amp;ldquo;Clear the results of run #N
-from this view? The files on disk are kept.&amp;rdquo; &lt;strong>Clear&lt;/strong> on a failed or
+from this view? The files on disk are kept.&amp;rdquo; &lt;strong>Clear&lt;/strong> on a rejected, crashed or
 cancelled run does not ask. A reload of the page shows the state the server
 holds, so results survive a refresh. The form itself returns to its
 defaults, so the Settings changed banner appears until you set the run&amp;rsquo;s
@@ -5161,7 +5166,7 @@ configuration; it does not validate the model. The GUI never executes it.&lt;/p>
 current form settings. It is not a run.&lt;/li>
 &lt;li>&lt;strong>Show Python for this run&lt;/strong>, in the results header: the code of the most
 recent run, built from the settings frozen when it was submitted. On a
-failed or cancelled run the same button reads &lt;strong>Show configuration of this
+rejected, crashed or cancelled run the same button reads &lt;strong>Show configuration of this
 run&lt;/strong>.&lt;/li>
 &lt;/ul>
 &lt;p>Both open a dialog with &lt;strong>Copy&lt;/strong> and &lt;strong>Download .py&lt;/strong>.&lt;/p>
@@ -5266,17 +5271,18 @@ simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
 spawned], simulated time &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
 &lt;li>&amp;ldquo;Incomplete: deadlock, &lt;em>k&lt;/em> agents stuck[, &lt;em>m&lt;/em> not spawned], simulated time
 &lt;em>t&lt;/em> s, …&amp;rdquo;;&lt;/li>
-&lt;li>failed, cancelled, or not recorded.&lt;/li>
+&lt;li>&amp;ldquo;Configuration rejected, no simulation was run&amp;rdquo;, &amp;ldquo;Run crashed, no result&amp;rdquo;,
+&amp;ldquo;Cancelled at sim &lt;em>t&lt;/em> s&amp;rdquo; (or &amp;ldquo;Cancelled before the first progress sample&amp;rdquo;),
+or not recorded.&lt;/li>
 &lt;/ul>
 &lt;p>In the first five, &amp;ldquo;…&amp;rdquo; is &amp;ldquo;&lt;em>j&lt;/em> incapacitated&amp;rdquo; when the run modelled
 incapacitation and &amp;ldquo;incapacitation not modelled&amp;rdquo; otherwise. The file is named
 &lt;code>pyfds_evac_&amp;lt;scenario&amp;gt;_run&amp;lt;N&amp;gt;_&amp;lt;start time&amp;gt;.py&lt;/code>, with the run&amp;rsquo;s UTC start
 time such as &lt;code>20260929T182009Z&lt;/code>.&lt;/p>
 &lt;ul>
-&lt;li>&lt;strong>Failed and cancelled runs&lt;/strong> still have code. The dialog is titled
-&amp;ldquo;Configuration of the failed run #N&amp;rdquo; or &amp;ldquo;Configuration of the cancelled
-run #N&amp;rdquo;; the button that opens it reads &lt;strong>Show configuration of this
-run&lt;/strong>. The code stays until you click &lt;strong>Clear&lt;/strong>.&lt;/li>
+&lt;li>&lt;strong>Rejected, crashed and cancelled runs&lt;/strong> still have code. The dialog is
+titled &amp;ldquo;Configuration of run #N&amp;rdquo; followed by the run&amp;rsquo;s state; the button
+that opens it reads &lt;strong>Show configuration of this run&lt;/strong>. The code stays until you click &lt;strong>Clear&lt;/strong>.&lt;/li>
 &lt;li>&lt;strong>Only the most recent run has code.&lt;/strong> There is none while a run is in
 progress. After &lt;strong>Clear&lt;/strong> (or &lt;strong>Clear results&lt;/strong> for a finished run) or a
 new run, the old run&amp;rsquo;s code is gone and its button disappears. A button
@@ -5394,9 +5400,9 @@ scenario sets none (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/u
 &lt;li>&lt;strong>Run code, the run reported the seed expected at submission:&lt;/strong> that seed,
 with &lt;code># seed used by run #N&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Run code, seed box left blank and no seed confirmed&lt;/strong> (for example a
-failed or cancelled run): &lt;code>None&lt;/code>, with
+rejected, crashed or cancelled run): &lt;code>None&lt;/code>, with
 &lt;code># seed not recorded for this run; None = the scenario's baseSeed&lt;/code>.&lt;/li>
-&lt;li>&lt;strong>Run code, seed typed in but not confirmed&lt;/strong> (for example a failed or
+&lt;li>&lt;strong>Run code, seed typed in but not confirmed&lt;/strong> (for example a rejected, crashed or
 cancelled run): the submitted value, with
 &lt;code># seed submitted; the seed used was not recorded&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Preview, seed box blank:&lt;/strong> &lt;code>None&lt;/code>, with
@@ -5642,7 +5648,7 @@ colour:&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>✗&lt;/code> (Results)&lt;/td>
-&lt;td>failed, or the run stopped without a result&lt;/td>
+&lt;td>configuration rejected, or the run crashed&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -7011,7 +7017,11 @@ font-family: arial;
 &lt;td>2&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&amp;ldquo;Run failed: …&amp;rdquo;; &amp;ldquo;(during setup; the run was not started)&amp;rdquo; when the run failed before it started&lt;/td>
+&lt;td>&amp;ldquo;Configuration rejected, no simulation was run: …&amp;rdquo; (refused before the first progress sample, for example a spawn area too small for its agents)&lt;/td>
+&lt;td>1&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&amp;ldquo;Run crashed, no result: …&amp;rdquo; (an error after the run started)&lt;/td>
 &lt;td>1&lt;/td>
 &lt;/tr>
 &lt;tr>
@@ -7019,7 +7029,7 @@ font-family: arial;
 &lt;td>none&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&amp;ldquo;The run stopped without a result (process exit &lt;em>N&lt;/em>)&amp;rdquo;&lt;/td>
+&lt;td>&amp;ldquo;Run crashed, no result (process exit &lt;em>N&lt;/em>)&amp;rdquo; (the child ended without a result)&lt;/td>
 &lt;td>none&lt;/td>
 &lt;/tr>
 &lt;/tbody>
@@ -7494,8 +7504,8 @@ and the &lt;code>--debug&lt;/code> lines. Nothing prints over the screen.&lt;/li
 when the child ends, whatever the outcome. If the terminal UI itself was
 killed, its folder (&lt;code>pyfds-evac-run-&amp;lt;pid&amp;gt;-…&lt;/code>) stays behind until the next
 start of the terminal UI removes it.&lt;/li>
-&lt;li>&lt;strong>A crashed run.&lt;/strong> When the child ends without a result, Results reads &amp;ldquo;The
-run stopped without a result (process exit &lt;em>N&lt;/em>)&amp;rdquo;, and &lt;code>t&lt;/code> shows the last 20
+&lt;li>&lt;strong>A crashed run.&lt;/strong> When the child ends without a result, Results reads &amp;ldquo;Run
+crashed, no result (process exit &lt;em>N&lt;/em>)&amp;rdquo;, and &lt;code>t&lt;/code> shows the last 20
 lines of &lt;code>child.log&lt;/code>.&lt;/li>
 &lt;/ul>
 &lt;h3>Cancel a run&lt;span class="hx-absolute -hx-mt-20" id="cancel-a-run">&lt;/span>
@@ -7954,7 +7964,7 @@ off by default, as in FDS+Evac.&lt;/li>
 &lt;td>Check that the folder holds the &lt;code>.smv&lt;/code> file; then choose &amp;ldquo;Inspect FDS folder&amp;rdquo; in the palette (&lt;code>ctrl+k&lt;/code>).&lt;/td>
 &lt;/tr>
 &lt;tr>
-&lt;td>&amp;ldquo;The run stopped without a result (process exit N).&amp;rdquo;&lt;/td>
+&lt;td>&amp;ldquo;Run crashed, no result (process exit N).&amp;rdquo;&lt;/td>
 &lt;td>The run&amp;rsquo;s process crashed or was killed.&lt;/td>
 &lt;td>&lt;code>t&lt;/code> shows the end of &lt;code>child.log&lt;/code>; the full log is in the run folder.&lt;/td>
 &lt;/tr>
