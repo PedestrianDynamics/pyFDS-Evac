@@ -400,6 +400,22 @@ def test_band_verdict_edges():
     assert S.band_verdict(100.0, S.T5_BAND) == "pass"
     assert S.band_verdict(100.5, S.T5_BAND) == "fail"
     assert S.band_verdict(None, S.T6_BAND) == "undefined"
+    # Not crossed by the end of the data, which is past the band: a fail.
+    assert S.band_verdict(None, S.T6_BAND, last_time=250.0) == "fail"
+    assert S.band_verdict(None, S.T6_BAND, last_time=100.0) == "undefined"
+
+
+def test_unreached_regions_group_by_connectivity():
+    mask = np.ones((4, 6), dtype=bool)
+    o2 = np.full(mask.shape, 0.05)
+    o2[0, 0:2] = 0.2  # a pair of nodes still at ambient
+    o2[3, 5] = 0.2  # a single node
+    o2[2, 2] = 0.2  # unmasked below: masked out
+    mask[2, 2] = False
+    xc, yc = np.arange(6.0), np.arange(4.0)
+    groups = S.unreached_regions(o2, mask, xc, yc)
+    assert [g["nodes"] for g in groups] == [2, 1]
+    assert groups[0]["box"] == (0.0, 1.0, 0.0, 0.0)
 
 
 def test_interior_mask_excludes_a_sealed_room_and_flags_a_leak():

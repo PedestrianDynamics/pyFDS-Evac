@@ -713,6 +713,7 @@ def v6_times(times, temperature, o2, xc, yc, free) -> dict:
             (float(t), float(f))
             for t, f in zip(times, exceedance_fractions(o2, mask, o2_below))
         ],
+        "unreached": unreached_regions(o2[-1], mask, xc, yc)[:8],
         "mask_cells": int(mask.sum()),
         "gas_cells": int(free.sum()),
         "dance_cells": int(dance.sum()),
@@ -721,11 +722,53 @@ def v6_times(times, temperature, o2, xc, yc, free) -> dict:
     }
 
 
-def band_verdict(value: float | None, band) -> str:
-    """pass / fail against a closed band; 'undefined' when there is no value."""
+def band_verdict(value: float | None, band, last_time: float | None = None) -> str:
+    """pass / fail against a closed band.
+
+    Without a value the verdict is 'undefined', except when *last_time*, the
+    end of the data, is past the band: a crossing that has not happened by
+    then lies outside the band, which is a fail.
+    """
     if value is None:
-        return "undefined"
+        return "fail" if last_time is not None and last_time > band[1] else "undefined"
     return "pass" if band[0] <= value <= band[1] else "fail"
+
+
+def unreached_regions(
+    o2_last: np.ndarray, mask: np.ndarray, xc, yc, limit: float = T6_O2
+) -> list[dict]:
+    """Connected groups of masked nodes still at or above *limit* in the last frame.
+
+    Each group: node count and bounding box (x0, x1, y0, y1). It shows what
+    holds a mask back from T6; it is not a rule for leaving them out.
+    """
+    open_nodes = mask & (o2_last >= limit)
+    seen = np.zeros_like(open_nodes)
+    groups = []
+    for j, i in zip(*np.nonzero(open_nodes)):
+        if seen[j, i]:
+            continue
+        region, _ = interior_mask(open_nodes, _single(open_nodes, j, i))
+        seen |= region
+        jj, ii = np.nonzero(region)
+        groups.append(
+            {
+                "nodes": int(region.sum()),
+                "box": (
+                    float(xc[ii.min()]),
+                    float(xc[ii.max()]),
+                    float(yc[jj.min()]),
+                    float(yc[jj.max()]),
+                ),
+            }
+        )
+    return sorted(groups, key=lambda g: -g["nodes"])
+
+
+def _single(like: np.ndarray, j: int, i: int) -> np.ndarray:
+    out = np.zeros_like(like)
+    out[j, i] = True
+    return out
 
 
 # --- command line -----------------------------------------------------------
@@ -803,8 +846,8 @@ def cmd_fire(args) -> None:
     times, temperature, o2, xc, yc, free, z_mid = read_fire_fields(args.fds_dir)
     result = v6_times(times, temperature, o2, xc, yc, free)
     result["slice_height_m"] = z_mid
-    result["T5_verdict"] = band_verdict(result["T5"]["50%"], T5_BAND)
-    result["T6_verdict"] = band_verdict(result["T6"], T6_BAND)
+    result["T5_verdict"] = band_verdict(result["T5"]["50%"], T5_BAND, float(times[-1]))
+    result["T6_verdict"] = band_verdict(result["T6"], T6_BAND, float(times[-1]))
     print(json.dumps(result, indent=2))
 
 
