@@ -255,7 +255,8 @@ that names the run and its own buttons:
 | State | Shown when | Buttons |
 |---|---|---|
 | Results | the run finished and its results are displayed | **Show Python for this run**, **Clear results** |
-| Failed | the run raised an error; the message comes first | **Show configuration of this run**, **Clear** |
+| Configuration rejected | the run was refused before the simulation started ("Configuration rejected, no simulation was run"); the message comes first, with a hint to correct the settings, which stay in the form | **Show configuration of this run**, **Clear** |
+| Run crashed | an error after the simulation started ("Run crashed, no result"); the message comes first, with the run log and technical details, and the settings stay in the form | **Show configuration of this run**, **Clear** |
 | Cancelled | you cancelled the run; no results were produced | **Show configuration of this run**, **Clear** |
 | Results not displayed | the run finished, but its results view could not be built | **Show Python for this run**, **Clear** |
 | Ended | another run started, possibly in another window | **Show current run** |
@@ -265,7 +266,7 @@ sample, "Run #N was cancelled at sim *t* s.", or says that the run was
 cancelled before the first progress sample.
 
 **Clear results** asks for confirmation first: "Clear the results of run #N
-from this view? The files on disk are kept." **Clear** on a failed or
+from this view? The files on disk are kept." **Clear** on a rejected, crashed or
 cancelled run does not ask. A reload of the page shows the state the server
 holds, so results survive a refresh. The form itself returns to its
 defaults, so the Settings changed banner appears until you set the run's
@@ -380,7 +381,7 @@ Two buttons open the code:
   current form settings. It is not a run.
 - **Show Python for this run**, in the results header: the code of the most
   recent run, built from the settings frozen when it was submitted. On a
-  failed or cancelled run the same button reads **Show configuration of this
+  rejected, crashed or cancelled run the same button reads **Show configuration of this
   run**.
 
 Both open a dialog with **Copy** and **Download .py**.
@@ -464,17 +465,18 @@ times to one decimal:
   spawned], simulated time *t* s, …";
 - "Incomplete: deadlock, *k* agents stuck[, *m* not spawned], simulated time
   *t* s, …";
-- failed, cancelled, or not recorded.
+- "Configuration rejected, no simulation was run", "Run crashed, no result",
+  "Cancelled at sim *t* s" (or "Cancelled before the first progress sample"),
+  or not recorded.
 
 In the first five, "…" is "*j* incapacitated" when the run modelled
 incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.
 
-- **Failed and cancelled runs** still have code. The dialog is titled
-  "Configuration of the failed run #N" or "Configuration of the cancelled
-  run #N"; the button that opens it reads **Show configuration of this
-  run**. The code stays until you click **Clear**.
+- **Rejected, crashed and cancelled runs** still have code. The dialog is
+  titled "Configuration of run #N" followed by the run's state; the button
+  that opens it reads **Show configuration of this run**. The code stays until you click **Clear**.
 - **Only the most recent run has code.** There is none while a run is in
   progress. After **Clear** (or **Clear results** for a finished run) or a
   new run, the old run's code is gone and its button disappears. A button
@@ -576,9 +578,9 @@ scenario sets none ([Usage](usage.md)).
 - **Run code, the run reported the seed expected at submission:** that seed,
   with `# seed used by run #N`.
 - **Run code, seed box left blank and no seed confirmed** (for example a
-  failed or cancelled run): `None`, with
+  rejected, crashed or cancelled run): `None`, with
   `# seed not recorded for this run; None = the scenario's baseSeed`.
-- **Run code, seed typed in but not confirmed** (for example a failed or
+- **Run code, seed typed in but not confirmed** (for example a rejected, crashed or
   cancelled run): the submitted value, with
   `# seed submitted; the seed used was not recorded`.
 - **Preview, seed box blank:** `None`, with

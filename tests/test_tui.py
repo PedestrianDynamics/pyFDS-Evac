@@ -587,32 +587,78 @@ async def _started(pilot, app, workdir, runner=None):
     assert app.current_run is not None
 
 
+def _refused_event(**kwargs) -> events.ResultEvent:
+    return events.ResultEvent(
+        events.STATUS_FAILED,
+        1,
+        execution=events.EXECUTION_FINISHED,
+        outcome=events.OUTCOME_REJECTED,
+        error="SpawnCapacityError: room too small",
+        **kwargs,
+    )
+
+
+def _shown(result: events.ResultEvent, **expected) -> str:
+    """The shared function's label for *result*'s (execution, outcome)."""
+    return frontend.execution_outcome(
+        result.execution, result.outcome, **expected
+    ).label
+
+
 @pytest.mark.parametrize(
-    ("status", "words", "never"),
+    ("make", "glyph", "never"),
     [
-        (events.STATUS_SUCCESS, "✓ Complete: all agents evacuated", "Incomplete"),
+        (lambda: result_event(events.STATUS_SUCCESS), "✓", "Incomplete"),
+        (lambda: result_event(events.STATUS_INCOMPLETE), "◐", "Complete:"),
         (
-            events.STATUS_INCOMPLETE,
-            "◐ Incomplete: time limit reached, 3 agents inside, 1 not spawned",
+            lambda: result_event(events.STATUS_INCOMPLETE, end_reason="deadlock"),
+            "◐",
             "Complete:",
         ),
-        (events.STATUS_FAILED, "✗ Run failed: ValueError: boom", "Complete"),
-        (events.STATUS_CANCELLED, "■ Cancelled at sim 20.0 s", "Complete"),
+        (_refused_event, "✗", "crashed"),
+        (lambda: result_event(events.STATUS_FAILED), "✗", "rejected"),
+        (lambda: result_event(events.STATUS_CANCELLED), "■", "Complete"),
+    ],
+    ids=[
+        "completed",
+        "incomplete-time",
+        "incomplete-deadlock",
+        "rejected",
+        "crashed",
+        "cancelled",
     ],
 )
-def test_a12_run_states(workdir, status, words, never):
+def test_a12_run_states(workdir, make, glyph, never):
+    """Each (execution, outcome) is worded by the shared frontend function."""
+    result = make()
+    expected = _shown(
+        result,
+        remaining=result.remaining,
+        not_spawned=result.not_spawned,
+        end_reason=result.end_reason,
+        incapacitated=result.incapacitated,
+        sim_time=20.0,
+    )
+
     async def go():
         app = make_app(workdir)
         async with app.run_test(size=(100, 30)) as pilot:
             await _started(pilot, app, workdir)
-            replay(app, result_event(status))
+            replay(app, result)
             await pilot.pause()
             assert app.step == 5
             text = str(app.query_one("#res-outcome").render())
-            assert words in text
+            assert f"{glyph} {expected}" in text
             assert never not in text.split("\n")[0]
 
     run(go())
+
+
+def test_a12_rejected_and_crashed_are_worded_apart(workdir):
+    rejected = _shown(_refused_event())
+    crashed = _shown(result_event(events.STATUS_FAILED))
+    assert rejected == "Configuration rejected, no simulation was run"
+    assert crashed == "Run crashed, no result"
 
 
 @pytest.mark.parametrize(
@@ -673,7 +719,8 @@ def test_a12_child_died_without_result(workdir):
             app.on_run_event(ChildExited(-9, "Killed", "child.log", stopped=False))
             await pilot.pause()
             text = str(app.query_one("#res-outcome").render())
-            assert "The run stopped without a result (process exit -9)" in text
+            crashed = frontend.execution_outcome("crashed", "no_result").label
+            assert f"{crashed} (process exit -9)" in text
 
     run(go())
 

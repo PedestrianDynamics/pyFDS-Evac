@@ -147,7 +147,7 @@ colour:
 | `✎` | settings changed since the run |
 | `◐` (Results) | incomplete |
 | `■` (Results) | cancelled |
-| `✗` (Results) | failed, or the run stopped without a result |
+| `✗` (Results) | configuration rejected, or the run crashed |
 
 ### 1 Scenario
 
@@ -298,9 +298,10 @@ The outcome comes first, in the same words as the Web GUI:
 | "Incomplete: flow windows closed, *m* not spawned" | 2 |
 | "Incomplete: all mobile agents left, *j* incapacitated inside[, *m* not spawned]" | 2 |
 | "Incomplete: deadlock, *k* agents stuck" | 2 |
-| "Run failed: …"; "(during setup; the run was not started)" when the run failed before it started | 1 |
+| "Configuration rejected, no simulation was run: …" (refused before the first progress sample, for example a spawn area too small for its agents) | 1 |
+| "Run crashed, no result: …" (an error after the run started) | 1 |
 | "Cancelled at sim *t* s", or "Cancelled before the first progress sample" | none |
-| "The run stopped without a result (process exit *N*)" | none |
+| "Run crashed, no result (process exit *N*)" (the child ended without a result) | none |
 
 The exit statuses are those of `pyfds-evac`; see
 [Exit status](usage.md#exit-status). Then follow the time, "Evacuated *e*
@@ -488,8 +489,8 @@ histories; it does not cover a fire scenario.
   when the child ends, whatever the outcome. If the terminal UI itself was
   killed, its folder (`pyfds-evac-run-<pid>-…`) stays behind until the next
   start of the terminal UI removes it.
-- **A crashed run.** When the child ends without a result, Results reads "The
-  run stopped without a result (process exit *N*)", and `t` shows the last 20
+- **A crashed run.** When the child ends without a result, Results reads "Run
+  crashed, no result (process exit *N*)", and `t` shows the last 20
   lines of `child.log`.
 
 ### Cancel a run

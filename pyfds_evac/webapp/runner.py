@@ -22,6 +22,13 @@ from collections.abc import Callable, Iterator, Mapping
 from types import MappingProxyType
 from typing import Any
 
+from pyfds_evac.config.events import (
+    EXECUTION_CANCELLED,
+    EXECUTION_CRASHED,
+    EXECUTION_FINISHED,
+    EXECUTION_RUNNING,
+    OUTCOME_NO_RESULT,
+)
 from pyfds_evac.config.frontend import Outcome as Outcome
 from pyfds_evac.config.frontend import agents_label as agents_label
 from pyfds_evac.config.frontend import incapacitation_modelled, utc_now
@@ -29,6 +36,7 @@ from pyfds_evac.config.frontend import run_outcome as run_outcome
 from pyfds_evac.config.frontend import run_stamp as run_stamp
 from pyfds_evac.core import ProgressEvent, ScenarioResult, run_scenario
 from pyfds_evac.core.manifest import find_project_root, git_state, package_versions
+from pyfds_evac.core.run_stream import failure_pair
 
 _MAX_LOG_LINES = 800
 _MAX_WARNINGS = 50
@@ -69,6 +77,12 @@ class RunSpec:
     # agrees with expected_seed.
     seed_used: int | None = None
     status: str = "running"
+    # What happened to the run and what it produced (config.events); the
+    # outcome is None while it runs.
+    execution: str = EXECUTION_RUNNING
+    outcome: str | None = None
+    # Simulated time [s] of the last progress sample; None before the first.
+    last_sim_time: float | None = None
     # The scenario's max_simulation_time [s] at submission.
     time_limit: float | None = None
     # result.metrics["status"] ("completed" or "incomplete"); None when the
@@ -148,10 +162,21 @@ def make_run_spec(
 
 
 def _finished_spec(
-    spec: RunSpec, outcome: str, result: Any, error: str | None
+    spec: RunSpec,
+    status: str,
+    pair: tuple[str, str],
+    result: Any,
+    error: str | None,
+    last_sim_time: float | None = None,
 ) -> RunSpec:
-    """Return *spec* with the run's outcome and confirmed seed recorded."""
-    fields: dict[str, Any] = {"status": outcome, "error": error}
+    """Return *spec* with the run's end state and confirmed seed recorded."""
+    fields: dict[str, Any] = {
+        "status": status,
+        "execution": pair[0],
+        "outcome": pair[1],
+        "error": error,
+        "last_sim_time": last_sim_time,
+    }
     if result is not None:
         reported = result.metrics.get("seed")
         if reported is not None and reported == spec.expected_seed:
@@ -240,6 +265,9 @@ class RunManager:
         self._thread: threading.Thread | None = None
         # idle | running | cancelling | done | error | cancelled
         self.status: str = "idle"
+        # (execution, outcome) of the ended run, from config.events; None
+        # while idle or running.
+        self.pair: tuple[str, str] | None = None
         # Bumped by every start(), so a progress stream can tell its own run
         # from a later one.
         self.run_id: int = 0
@@ -314,6 +342,7 @@ class RunManager:
             self._cancel.clear()
             self.run_id += 1
             self.status = "running"
+            self.pair = None
             self.result = None
             self.error = None
             self.scenario_name = scenario_name
@@ -356,10 +385,13 @@ class RunManager:
             if model_logger.getEffectiveLevel() > logging.WARNING:
                 model_logger.setLevel(logging.WARNING)
             outcome = "error"
+            pair = (EXECUTION_CRASHED, OUTCOME_NO_RESULT)
+            started = False
             try:
                 with contextlib.redirect_stdout(capture):
                     run_kwargs = build_run_kwargs()
                     check_cancel()
+                    started = True
                     result = run_scenario(
                         scenario, progress_callback=on_progress, **run_kwargs
                     )
@@ -368,24 +400,30 @@ class RunManager:
                     if post_run is not None:
                         self.artifacts = post_run(result)
                 outcome = "done"
+                pair = (EXECUTION_FINISHED, result.status)
             except RunCancelled:
                 outcome = "cancelled"
+                pair = (EXECUTION_CANCELLED, OUTCOME_NO_RESULT)
             except Exception as exc:  # surface any run failure to the UI
                 self.error = f"{type(exc).__name__}: {exc}"
                 outcome = "error"
+                pair = failure_pair(
+                    exc, started=started, progressed=self.last_event is not None
+                )
             finally:
                 model_logger.removeHandler(warning_handler)
                 model_logger.setLevel(previous_level)
-                self._finish(outcome)
+                self._finish(outcome, pair)
 
         self._thread = threading.Thread(target=worker, daemon=True)
         self._thread.start()
 
-    def _finish(self, outcome: str) -> None:
+    def _finish(self, outcome: str, pair: tuple[str, str]) -> None:
         """Release the run lock and publish the run's terminal status."""
         with self._state:
             if outcome == "done" and self._cancel.is_set():
                 outcome = "cancelled"
+                pair = (EXECUTION_CANCELLED, OUTCOME_NO_RESULT)
             if outcome == "cancelled":
                 # A deliberate stop, not a failure: leave no error for the UI
                 # to report and drop any partial result.
@@ -393,10 +431,19 @@ class RunManager:
                 self.result = None
                 self.error = None
             if self.spec is not None:
-                self.spec = _finished_spec(self.spec, outcome, self.result, self.error)
+                ev = self.last_event
+                self.spec = _finished_spec(
+                    self.spec,
+                    outcome,
+                    pair,
+                    self.result,
+                    self.error,
+                    None if ev is None else float(ev.sim_time),
+                )
             # Release before publishing: a client that sees the terminal
             # status may start the next run straight away.
             self._lock.release()
+            self.pair = pair
             self.status = outcome
 
     def cancel(self) -> bool:
@@ -427,6 +474,7 @@ class RunManager:
                 return
             discard_result(self.result)
             self.status = "idle"
+            self.pair = None
             self.result = None
             self.error = None
             self.scenario_name = None

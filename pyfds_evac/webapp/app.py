@@ -44,8 +44,10 @@ from fasthtml.common import (
 from starlette.requests import Request
 
 from pyfds_evac.config.frontend import (
+    NO_RESULT_HEADERS,
     cancelled_text,
     evacuated_text,
+    execution_outcome,
     incapacitated_text,
     incapacitation_modelled,
 )
@@ -1598,7 +1600,7 @@ async def export_run(request: Request, run: int | None = None):
     form = dict(await request.form())
     with manager.snapshot():
         spec = manager.spec
-    if spec is None or spec.run_id != run or spec.status == "running":
+    if spec is None or spec.run_id != run or spec.outcome is None:
         return _pyexport_panel(
             "No recorded run",
             "RUN",
@@ -1606,9 +1608,11 @@ async def export_run(request: Request, run: int | None = None):
             error=ValueError("this run's settings are no longer available"),
         )
     title = f"Code for run #{spec.run_id} · {spec.scenario_name} · {spec.started_at}"
-    if spec.status in ("error", "cancelled"):
-        word = "failed" if spec.status == "error" else "cancelled"
-        title = f"Configuration of the {word} run #{spec.run_id} · {spec.scenario_name}"
+    if spec.outcome not in ("completed", "incomplete"):
+        word = execution_outcome(
+            spec.execution, spec.outcome, sim_time=spec.last_sim_time
+        ).label
+        title = f"Configuration of run #{spec.run_id} · {spec.scenario_name} · {word}"
     try:
         script = pyexport.run_script(spec)
     except Exception as exc:
@@ -1679,8 +1683,8 @@ async def form_state(request: Request):
     """
     form = dict(await request.form())
     with manager.snapshot():
-        spec, status = manager.spec, manager.status
-    if status != "done" or spec is None:
+        spec = manager.spec
+    if spec is None or spec.outcome not in ("completed", "incomplete"):
         return ""
     changed, error = _form_vs_run(form, spec)
     tag = Span(
@@ -1849,31 +1853,44 @@ def _superseded_view(run_id: int) -> Div:
     )
 
 
+def _failed_hint(rejected: bool) -> P:
+    """What to do next: fix the settings if refused, else read the log."""
+    if not rejected:
+        return P(
+            "Your settings are still in the form. The run log and the technical "
+            "details below show what went wrong; if the settings look right, "
+            "report the error.",
+            cls="state-hint",
+        )
+    return P(
+        "Check the scenario and the FDS dir against the ",
+        A(
+            "FDS case requirements",
+            href=_DOCS_CASE_REQUIREMENTS,
+            target="_blank",
+            rel="noopener",
+        ),
+        ", correct the settings and run again. Your settings are still in the form.",
+        cls="state-hint",
+    )
+
+
 def _failed_view() -> Div:
     """Terminal panel of a failed run: the message first, details apart."""
     raw = manager.error or "no message"
     _kind, sep, message = raw.partition(": ")
+    execution, outcome = manager.pair or ("crashed", "no_result")
+    label = execution_outcome(execution, outcome).label
     return Div(
         _state_head(
             "✕",
-            "Failed",
+            NO_RESULT_HEADERS[(execution, outcome)],
             _run_code_button("Show configuration of this run"),
             _clear_button(False),
             tone="is-failed",
         ),
-        P(B("Run failed: "), message if sep else raw, cls="state-msg"),
-        P(
-            "Check the scenario and the FDS dir against the ",
-            A(
-                "FDS case requirements",
-                href=_DOCS_CASE_REQUIREMENTS,
-                target="_blank",
-                rel="noopener",
-            ),
-            ", correct the settings and run again. Your settings are still "
-            "in the form.",
-            cls="state-hint",
-        ),
+        P(B(f"{label}: "), message if sep else raw, cls="state-msg"),
+        _failed_hint(outcome == "rejected"),
         Details(Summary("Technical details"), Pre(raw, cls="tech-pre")),
         _run_log(),
         style=_PANEL,
@@ -2684,19 +2701,20 @@ def _done_view() -> Div:
 
 def _terminal_view(status: str) -> Div | None:
     """The panel that settles a run in ``status``, or None while it runs."""
-    if status == "done":
-        return _done_view()
-    if status == "error":
-        return _failed_view()
     # Cancelled and idle still end with a terminal ``done``: a stream that
     # just closes is reopened by EventSource, so another tab, or a cancel
     # that outlived /cancel's wait, would never settle. Idle means the run
     # was cleared elsewhere.
-    if status == "cancelled":
-        return _cancelled_view()
     if status == "idle":
         return _run_panel_idle_body()
-    return None
+    if status in ("running", "cancelling") or manager.pair is None:
+        return None
+    execution, outcome = manager.pair
+    if outcome in ("completed", "incomplete"):
+        return _done_view()
+    if execution == "cancelled":
+        return _cancelled_view()
+    return _failed_view()
 
 
 def _current_panel_body():

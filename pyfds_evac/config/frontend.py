@@ -253,6 +253,14 @@ def execution_outcome(
     )
 
 
+#: The short header of a run that ended without a result, by (execution,
+#: outcome); the full sentence is :func:`execution_outcome`'s label.
+NO_RESULT_HEADERS = {
+    ("finished", "rejected"): "Configuration rejected",
+    ("crashed", "no_result"): "Run crashed",
+}
+
+
 #: Extinction-coefficient bin edges K [1/m] of the smoke layers: below the
 #: first edge is clear air, the last bin is open-ended. Shared by the GUI
 #: replay and the TUI plan view so both draw smoke on one fixed scale.

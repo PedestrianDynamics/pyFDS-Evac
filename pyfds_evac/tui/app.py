@@ -80,11 +80,22 @@ from .widgets import (
     m,
 )
 
+# The words of a finished run in the recents list; "failed" stays so entries
+# stored before rejected and crashed were told apart still show a glyph.
+RECENT_WORDS = {
+    events.OUTCOME_COMPLETED: "complete",
+    events.OUTCOME_INCOMPLETE: "incomplete",
+    events.OUTCOME_REJECTED: events.OUTCOME_REJECTED,
+    events.EXECUTION_CRASHED: events.EXECUTION_CRASHED,
+    events.EXECUTION_CANCELLED: events.EXECUTION_CANCELLED,
+}
 RECENT_GLYPHS = {
     "complete": "✓ ",
     "incomplete": "◐ ",
     "failed": "✗ ",
-    "cancelled": "■ ",
+    events.OUTCOME_REJECTED: "✗ ",
+    events.EXECUTION_CRASHED: "✗ ",
+    events.EXECUTION_CANCELLED: "■ ",
 }
 STEPS = ("scenario", "fds", "configure", "review", "run", "results")
 # Rich colour systems below truecolor, with the number of colours they show.
@@ -178,13 +189,22 @@ class RunState:
         return (self.ended or time.monotonic()) - self.started
 
     @property
-    def status(self) -> str:
-        """``running``, or how the run ended (``success`` … ``died``)."""
+    def pair(self) -> tuple[str, str | None]:
+        """The run's (execution, outcome); outcome is None while it runs.
+
+        A child that ended without a result event was cancelled when the TUI
+        stopped it, else it crashed.
+        """
         if self.result is not None:
-            return self.result.status
-        if self.exited is not None:
-            return events.STATUS_CANCELLED if self.exited.stopped else "died"
-        return "running"
+            return self.result.execution, self.result.outcome
+        if self.exited is None:
+            return events.EXECUTION_RUNNING, None
+        execution = (
+            events.EXECUTION_CANCELLED
+            if self.exited.stopped
+            else events.EXECUTION_CRASHED
+        )
+        return execution, events.OUTCOME_NO_RESULT
 
 
 # --- steps ---------------------------------------------------------------------
@@ -2337,20 +2357,20 @@ def review_text(cfg: Any) -> Content:
 
 def outcome_glyph(run: RunState) -> str:
     """The glyph of a finished run's state (spec §6)."""
+    execution, outcome = run.pair
+    if execution == events.EXECUTION_CANCELLED:
+        return "■"
     return {
-        events.STATUS_SUCCESS: "✓",
-        events.STATUS_INCOMPLETE: "◐",
-        events.STATUS_CANCELLED: "■",
-    }.get(run.status, "✗")
+        events.OUTCOME_COMPLETED: "✓",
+        events.OUTCOME_INCOMPLETE: "◐",
+    }.get(outcome or "", "✗")
 
 
 def status_word(run: RunState) -> str:
-    return {
-        events.STATUS_SUCCESS: "complete",
-        events.STATUS_INCOMPLETE: "incomplete",
-        events.STATUS_FAILED: "failed",
-        events.STATUS_CANCELLED: "cancelled",
-    }.get(run.status, "failed")
+    execution, outcome = run.pair
+    if execution in (events.EXECUTION_CANCELLED, events.EXECUTION_CRASHED):
+        return RECENT_WORDS[execution]
+    return RECENT_WORDS.get(outcome or "", events.EXECUTION_CRASHED)
 
 
 def results_text(run: RunState, width: int = 120) -> Content:
@@ -2366,13 +2386,14 @@ def results_text(run: RunState, width: int = 120) -> Content:
         s=snap.expected_seed if r is None or r.seed is None else r.seed,
         w=_clock(run.wall),
     )
-    if r is not None and r.status in (events.STATUS_SUCCESS, events.STATUS_INCOMPLETE):
-        status = "completed" if r.status == events.STATUS_SUCCESS else "incomplete"
-        outcome = frontend.run_outcome(
-            status,
-            r.remaining,
-            r.not_spawned,
-            r.end_reason,
+    execution, kind = run.pair
+    if r is not None and kind in (events.OUTCOME_COMPLETED, events.OUTCOME_INCOMPLETE):
+        outcome = frontend.execution_outcome(
+            execution,
+            kind,
+            remaining=r.remaining,
+            not_spawned=r.not_spawned,
+            end_reason=r.end_reason,
             incapacitated=r.incapacitated,
         )
         glyph, colour = ("✓", "$success") if outcome.complete else ("◐", "$warning")
@@ -2417,34 +2438,35 @@ def results_text(run: RunState, width: int = 120) -> Content:
         return Content.assemble(
             line, nums, bar, extra, m("  [dim]$s[/]\n", s=r.summary), head
         )
-    if r is not None and r.status == events.STATUS_FAILED:
-        where = (
-            "" if run.plan is not None else " (during setup; the run was not started)"
-        )
-        return Content.assemble(
-            m(
-                "[b $error]✗ Run failed$w: $e[/]   [dim]exit $x · t traceback · e change settings[/]\n",
-                w=where,
-                e=r.error or "",
-                x=r.exit_code,
-            ),
-            head,
-        )
-    if run.status == events.STATUS_CANCELLED:
+    if run.pair[0] == events.EXECUTION_CANCELLED:
         sim = run.progress.sim_time if run.progress else None
         how = "; the process was stopped" if run.exited is not None else ""
         return Content.assemble(
             m(
                 "[b]■ $c$h[/]   [dim]no exit code[/]\n",
-                c=frontend.cancelled_text(sim),
+                c=frontend.execution_outcome(*run.pair, sim_time=sim).label,
                 h=how,
+            ),
+            head,
+        )
+    if kind is None:
+        return head
+    label = frontend.execution_outcome(execution, kind).label
+    if r is not None:
+        return Content.assemble(
+            m(
+                "[b $error]✗ $l: $e[/]   [dim]exit $x · t traceback · e change settings[/]\n",
+                l=label,
+                e=r.error or "",
+                x=r.exit_code,
             ),
             head,
         )
     code = None if run.exited is None else run.exited.exit_code
     return Content.assemble(
         m(
-            "[b $error]✗ The run stopped without a result (process exit $c).[/]  [dim]t: end of child.log[/]\n",
+            "[b $error]✗ $l (process exit $c).[/]  [dim]t: end of child.log[/]\n",
+            l=label,
             c=code,
         ),
         head,
