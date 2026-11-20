@@ -143,7 +143,10 @@ def _parse(text: str) -> list[tuple[str, dict]]:
 def _decks() -> dict[Path, list[tuple[str, dict]]]:
     if not DECK_DIR.is_dir():
         return {}
-    return {p: _parse(p.read_text()) for p in sorted(DECK_DIR.glob("*.fds"))}
+    # The #224 reference decks; the folder also holds later decks (#276, #274).
+    names = ("burner", "layer", "uniform")
+    paths = [DECK_DIR / f"heat_radiometer_{n}.fds" for n in names]
+    return {p: _parse(p.read_text()) for p in paths if p.is_file()}
 
 
 def _all(nml, group):
