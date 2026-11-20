@@ -105,6 +105,13 @@ def test_samples_after_the_exit_do_not_count():
     assert row["outcome_fed_ge_0.3"] == "pass"
 
 
+def test_last_sample_ignores_samples_after_the_exit():
+    fed = _fed(1, range(8), lambda t: 0.0)
+    smoke = _smoke(1, range(9), lambda t: 0.0)
+    row = _summary(fed, smoke, {1: 5.0})[1]
+    assert row["last_sample_s"] == 5.0
+
+
 def test_no_heat_model_reads_not_evaluated_never_zero():
     fed = _fed(1, range(4), lambda t: 0.0)
     row = _summary(fed, None, {1: 3.0})[1]

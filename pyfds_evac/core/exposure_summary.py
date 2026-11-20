@@ -193,7 +193,9 @@ def summarise_exposure(
     agent_ids = set(exit_times)
     for per_agent in samples.values():
         agent_ids |= set(per_agent)
-    has_domain_flag = bool(fed_rows) and "in_fds_domain" in fed_rows[0]
+    has_domain_flag = fed_rows is not None and any(
+        "in_fds_domain" in r for r in fed_rows[:1]
+    )
     outside = Counter(
         int(r["agent_id"]) for r in fed_rows or [] if r.get("in_fds_domain") is False
     )

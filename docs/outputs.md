@@ -161,7 +161,9 @@ histories and the exit times of the run (`ScenarioResult.exit_times`,
 the simulation time at which JuPedSim removed the agent). In Python,
 `result.exposure_summary()` returns the same rows. A run that kept neither
 history writes no file. The run's console output ends with one line per
-criterion: outcome counts and the first crossing time. How to read it:
+criterion: outcome counts and the first crossing time. The same totals
+are `exposure_totals(rows)` in `pyfds_evac.core.exposure_summary`; they are
+not written to the CSV. How to read it:
 [ASET/RSET check with FED](howto-aset-rset-check.md).
 
 | Column | Unit | Meaning |
@@ -173,7 +175,7 @@ criterion: outcome counts and the first crossing time. How to read it:
 | `outside_fds_samples` | — | with FDS output: samples read as ambient air outside the slices; a crossing there is not evidence |
 | `heat_evaluated` | — | `False` when no heat model ran |
 | `fed_max`, `heat_fed_max`, `fic_max`, `k_max` | —, —, —, 1/m | maximum of the gas FED, the heat FED, the FIC and the extinction coefficient while inside |
-| `t_fed_ge_<thr>_s`, `t_heat_fed_ge_<thr>_s`, `t_fic_ge_<thr>_s` | s | first sample time with the value `>=` the threshold (`--summary-fed-low`, `--summary-fed-high`; 0.3 and 1); empty if never |
+| `t_fed_ge_<thr>_s`, `t_heat_fed_ge_<thr>_s`, `t_fic_ge_<thr>_s` | s | first sample time with the value `>=` the threshold; empty if never. Exactly two thresholds, `--summary-fed-low` and `--summary-fed-high` (0.3 and 1); in Python, `ExposureSummaryConfig.fed_thresholds` takes any list |
 | `t_k_ge_<K>_s` | s | first sample time with *K* `>=` C / limit; `<K>` is that number (0.3 by default) |
 | `diff_<criterion>_s` | s | crossing time minus exit time: negative means the limit was reached before the agent left; empty when censored or never crossed |
 | `outcome_<criterion>` | — | `fail`: crossed while inside (an agent still inside that crossed fails, without a margin); `pass`: left, with no crossing; `open`: still inside with no crossing, or no sample, so the margin is undetermined; `not_evaluated`: the run did not compute the quantity |
