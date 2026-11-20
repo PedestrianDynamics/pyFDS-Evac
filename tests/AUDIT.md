@@ -738,9 +738,14 @@ port default come from `docs/usage.md`; smoke bins from the fixed edges).
   carried as float16, where 0.1 is 0.09998 and falls below the edge.
 - F17 to F19, F46, T7, T13: equivalent, cosmetic or killed elsewhere.
 - F29, F35 are killed by `test_run_events` and `test_config_model`.
-- JS and CSS source-substring tests in `test_webapp.py` (no executed
-  browser or Node test; needs a new dependency, not approved) and
-  `test_a9_no_range_rejection` lock-in: not changed here.
+- JS and CSS source-substring tests in `test_webapp.py`: only the
+  output-folder autofill is also executed (below); the other inline
+  scripts and the CSS are still checked as text. `test_a9_no_range_rejection`
+  lock-in: not changed here.
+- Closed (#904): `test_webapp_browser.py` runs `_AUTOFILL_JS` in headless
+  Chromium (Playwright, dev dependency; CI installs Chromium on Python 3.12,
+  elsewhere the test skips). It types relative and absolute output folders
+  and reads the run note; dropping `~` from the absolute-path regex fails it.
 - Closed (#904): the GUI-versus-API run equivalence now also covers
   `iso_table21_coupled`, whose extinction is read from committed FDS slices
   (`test_exported_script_reproduces_the_gui_run`, parametrised; the exported
