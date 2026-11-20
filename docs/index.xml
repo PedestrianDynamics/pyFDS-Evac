@@ -1285,7 +1285,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1316,7 +1316,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">402b68595fdf2b71e68ec0f4c67c9bcaa4943d58acbbaecef32502fb99eb517d&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d36878ebffdb67ac8013ac2577c0ce507c230f867527583c367a99d21feaeef9&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2189,6 +2189,12 @@ criterion&amp;rsquo;s own map is kept.&lt;/p>
 &lt;td>vfdb TB 04-01 Table 8.3, DIN 18009-2 Table 1; dry air&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>Radiant flux (reference only)&lt;/td>
+&lt;td>q ≥ q&lt;sub>lim&lt;/sub>&lt;/td>
+&lt;td>1.7 kW/m² for a stay under 30 min, 2.0 for about 15 min, below 2.5 for under 5 min (vfdb); &lt;strong>not computed by the module&lt;/strong>&lt;/td>
+&lt;td>vfdb TB 04-01 Table 8.3, as listed in the &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/studies/study-schroeder2020/#tenability-criteria-in-the-literature">criteria comparison&lt;/a>. 1.7 is the no-pain critical flux of Wieczorek and Dembsey (2001), p. 96; ISO 13571:2012 §8.2 uses 2.5, where their Eq. (4) gives pain in about 22 s&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>Toxic FED&lt;/td>
 &lt;td>FED of a person standing still from t = 0 ≥ 0.3&lt;/td>
 &lt;td>0.3, configurable&lt;/td>
@@ -2371,7 +2377,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2390,7 +2396,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">12ccbb1b217a439ba6c87386af4113797446526650d030e5953bf6f5f284bb34&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">82831957938a764534e7899d88087f51b6f8db1c0888fda7ee895a859d0a116c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -4373,7 +4379,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -4398,7 +4404,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">09b80ca26e71a885c0c6fb0c1d72beb6e8d24d362eea6a72e6510ea12d7d2bd0&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">815dd497be0d0503117b7e85a095eb11b34018c484df5f269d4a263ac68a07c4&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5850,7 +5856,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5881,7 +5887,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">dfadb4370ed37266b1638c9f9bba85dc83fb26c1d4c69a4db7ab13e3476fa7cd&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">87d28f89ae6ed77888f941915f58baa6ebeb92bd58d6e78bf473fa1094c57bf2&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -7348,7 +7354,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1169 s wall clock (about 20 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 99/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.23&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>e7bed1dd&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7369,7 +7375,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3b29bffc5949d9647b72ee0b0d2722e1d293d0c0362f2c200a59fc3ed4b6e635&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">fad8823cbc564440af1dae7c4dc487fe29550205144720e2db48afb3fea45f2a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -8530,6 +8536,10 @@ dose below about 310 °C. ISO&amp;rsquo;s 2.5 kW/m² is an incident flux; the co
 applies it to the net or excess radiant term (spec 016). &lt;code>heat_flux_kw_m2&lt;/code>
 stays the physical &lt;em>q&lt;/em>; the constant is &lt;code>ISO_RADIANT_THRESHOLD_KW_M2&lt;/code>.&lt;/li>
 &lt;li>&lt;strong>Not added to a convective law.&lt;/strong> The rate is \(q^{1.33}/D\) alone.&lt;/li>
+&lt;li>&lt;strong>Not the time-to-pain or time-to-burn equations.&lt;/strong> The coded radiant law is
+the dose \(q^{1.33}/D\), not ISO Eqs. (7) and (8) or the Wieczorek and
+Dembsey correlations, whose exponents are 1.56 and 1.9
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#radiant-pain-and-burn-times">published equations&lt;/a>).&lt;/li>
 &lt;li>Where the &lt;em>q&lt;/em> that enters the dose (convection plus the counted radiant
 term) is at or below zero, or the temperature is not finite, the rate is
 zero: no dose, and no recovery. The physical &lt;em>q&lt;/em> can be negative while
@@ -10171,7 +10181,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -10187,7 +10197,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d78bbdfa7232a6fc92d66452a97f0ceecb6e32ec5f8b0aead2294a76c3610c98&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">081eac773d202ac2d0123ad1c825361e16f6eb05de7a55ced9673e861c0ba3be&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -21760,7 +21770,9 @@ in full from a licensed copy.&lt;/li>
 &lt;li>Wieczorek, C. J., &amp;amp; Dembsey, N. A. (2001). Human variability correction
 factors for use with simplified engineering tools for predicting pain
 and second degree skin burns. &lt;em>Journal of Fire Protection Engineering&lt;/em>,
-11(2), 88–111. ISO ref. [17] for Eqs. (7) and (8); not consulted.
+11(2), 88–111. ISO ref. [17] for Eqs. (7) and (8); read in full. Its
+own recommended equations carry safety factors of 2 and 1.6 that ISO omits; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/#radiant-pain-and-burn-times">Incapacitation thresholds&lt;/a>.
 &lt;a href="https://doi.org/10.1106/0D9U-KLP9-TG1P-XJ1B" target="_blank" rel="noopener">doi:10.1106/0D9U-KLP9-TG1P-XJ1B&lt;/a>&lt;/li>
 &lt;li>Crane, C. (1978). &lt;em>Human tolerance limit to elevated temperature: an
 empirical approach to the dynamics of acute thermal collapse&lt;/em>. Federal
@@ -22688,6 +22700,92 @@ TN 1797 bin values above, puts 1 % of people below FED = 0.11; σ = 0.39
 puts them below FED = 0.40 (our arithmetic). Heat stays deterministic by
 default, since no source gives a spread for the convective laws
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225" target="_blank" rel="noopener">#225&lt;/a>).&lt;/p>
+&lt;h3>Radiant pain and burn times&lt;span class="hx-absolute -hx-mt-20" id="radiant-pain-and-burn-times">&lt;/span>
+&lt;a href="#radiant-pain-and-burn-times" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Wieczorek and Dembsey (2001) give time-to-pain and time-to-burn
+correlations for radiant exposure of the skin, with &lt;em>q&lt;/em> the incident
+radiant flux [kW/m²] and times in seconds (p. 96):&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Equation&lt;/th>
+&lt;th>Endpoint&lt;/th>
+&lt;th>Time&lt;/th>
+&lt;th>Safety factor&lt;/th>
+&lt;th>Stated range [kW/m²]&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>Eq. (4), p. 96&lt;/td>
+&lt;td>pain&lt;/td>
+&lt;td>\(t_p = 125\,q^{-1.9}\)&lt;/td>
+&lt;td>2 on time&lt;/td>
+&lt;td>1.7–10, confirmed to 20&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Eq. (5), p. 96&lt;/td>
+&lt;td>superficial second-degree burn&lt;/td>
+&lt;td>\(t_{2b} = 260\,q^{-1.56}\)&lt;/td>
+&lt;td>1.6 on exposure time&lt;/td>
+&lt;td>2–50&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Eq. (4a), p. 97&lt;/td>
+&lt;td>pain&lt;/td>
+&lt;td>\(t_p = 250\,q^{-1.9}\)&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>as Eq. (4)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Eq. (5a), p. 97&lt;/td>
+&lt;td>superficial second-degree burn&lt;/td>
+&lt;td>\(t_{2b} = 416\,q^{-1.56}\)&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>as Eq. (5)&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Both pairs are fitted to the authors&amp;rsquo; skin heat-transfer model at the
+reference skin of their Table 2 (p. 93: 32.5 °C initial temperature,
+80 µm epidermis, pain receptors at 100 µm); the model is Eq. (1) for pain
+(p. 94) and Eqs. (2)–(3) for the burn damage integral (pp. 94–95). The
+paper states that 1.7 kW/m² is the critical flux below which no pain is
+experienced however long the exposure (p. 96). The recommended equations
+are (4) and (5); (4a) and (5a) are given &amp;ldquo;for comparative purposes&amp;rdquo; (p. 97).
+Against the full model, the simplified pain times differ by 0.08 s on
+average at 20 kW/m² and 0.1 s at 10 kW/m²; the burn times by 0.7 s (SD
+0.3 s) at 10 kW/m² and 0.1 s at 50 kW/m². At 1.7 kW/m² (pain) and
+2 kW/m² (burn) they are shorter, by 12 % and on average 29 % at the
+coldest skin of the paper&amp;rsquo;s range (β = 0.83); at the reference skin or
+warmer the difference is under 0.5 s for pain and about 5 s for burns
+(p. 106).&lt;/p>
+&lt;p>ISO 13571:2012 Eqs. (7) and (8), which cite this paper as ref. [17], are
+the equations without the safety factors: 6.9 &lt;em>q&lt;/em>^−1.56 min is 414 s,
+Eq. (5a) with 416 s, and 4.2 &lt;em>q&lt;/em>^−1.9 min is 252 s, Eq. (4a) with 250 s
+(our conversion; the small differences are rounding of the constants).
+ISO&amp;rsquo;s times are therefore 1.6 times (burn) and 2 times (pain) longer than
+those of the equations the paper recommends. At 2.5 kW/m², the ISO
+threshold flux, pain comes at about 44 s by ISO against 22 s by Eq. (4),
+and a burn at about 99 s against 62 s by Eq. (5) (our arithmetic).&lt;/p>
+&lt;p>The paper compares (4a) and (5a) with the dose form \(t = A\,q^{-4/3}\)
+used in the United Kingdom, which it cites to Hymes, Boydell and Prescott
+(1996) (ref. [12]): pain at 92 (kW/m²)^4/3·s and a superficial
+second-degree burn at 210–700 (kW/m²)^4/3·s, with 113 for pain from Mudan
+and Croce (pp. 96–97). It finds the unfactored times consistent with these
+(p. 97, &amp;ldquo;very consistent&amp;rdquo;; again in the conclusions, p. 108). We have not read ref. [12].&lt;/p>
+&lt;p>Heat-tolerance variability enters the paper as ranges, not as a
+distribution. Initial skin temperature is varied over 27–38 °C and
+epidermal thickness over 16–430 µm (Table 9, p. 103); pain receptor depth is held fixed
+for lack of data (p. 103). With β the skin temperature over 32.5 °C and
+γ the epidermal thickness over 80 µm, correction factors multiply the
+time of Eqs. (4) and (5): a quadratic in β for pain (Eq. 6, p. 104),
+another for burns (Eq. 7, p. 105), and a function of &lt;em>q&lt;/em> and γ for
+thickness (Eq. 8, p. 106). Table 10 (p. 107) gives the pain-time factor
+as 1.92 at 27 °C and 0.29 at 38 °C, the burn-time factor as 1.25 to 0.50,
+and the thickness factor at 50 kW/m² as 0.76 (16 µm) to 2.35 (430 µm). These are
+min/max bounds with no stated probability, so they give no σ and do not
+replace the σ ≈ 0.39 above, which is a lethality probit slope. The
+paper contains no probit, no convective-heat data and no FED threshold.&lt;/p>
 &lt;p>How pyFDS-Evac applies this: &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#incapacitation">Models › Heat › Incapacitation&lt;/a>.&lt;/p>
 &lt;h2>Sources&lt;span class="hx-absolute -hx-mt-20" id="sources">&lt;/span>
 &lt;a href="#sources" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
@@ -22731,6 +22829,12 @@ Butler, Ed.). NIST Technical Note 1797.
 &lt;li>Hockey, S. M., &amp;amp; Rew, P. J. (1996). &lt;em>Human response to thermal
 radiation&lt;/em>. Contract Research Report 97/1996. HSE Books, Sudbury. Cited
 by Ch. 70 as ref. [125]; read in full (§4.2, Table 5.1, App. B).&lt;/li>
+&lt;li>Wieczorek, C. J., &amp;amp; Dembsey, N. A. (2001). Human variability correction
+factors for use with simplified engineering tools for predicting pain
+and second degree skin burns. &lt;em>Journal of Fire Protection Engineering&lt;/em>,
+11(2), 88–111; pp. 93–97, 103–107. ISO ref. [17] for Eqs. (7) and (8);
+read in full.
+&lt;a href="https://doi.org/10.1106/0D9U-KLP9-TG1P-XJ1B" target="_blank" rel="noopener">doi:10.1106/0D9U-KLP9-TG1P-XJ1B&lt;/a>&lt;/li>
 &lt;li>Purser, D. A. (1997). Review of human response to thermal radiation.
 &lt;em>Fire Safety Journal&lt;/em>, 28, 290–291. Cited by Ch. 70 as ref. [126]; a
 one-page review of Hockey and Rew, read; it gives no probit.&lt;/li>
@@ -29133,7 +29237,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29157,7 +29261,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">ba26df312806fbd836e2e5a793c87fd9233a4190ddff3434e07e50121c84d146&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">fd08e8c08d62299647c8dad84bc4bd62da31b25692e416589902ea389587629c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -30687,7 +30791,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/7291fa8520ddd2a8662c37917be81ae125795a5b">&lt;code>7291fa8&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a82a5b4c49b420324488d988b4c157dc6df32a29">&lt;code>a82a5b4&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -30705,7 +30809,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0e599850511edc4d7fb0b362a2ecd8154156f3510c9e28c10e1a8684748b3533&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0ad07cb6ceb1b5145a1f4451eff13b070e03e46a6f56774d909325427b47676c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
