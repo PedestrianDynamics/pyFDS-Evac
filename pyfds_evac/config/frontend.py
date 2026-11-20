@@ -140,6 +140,16 @@ def agents_label(count: int | None) -> str:
     return f"{count} agent" if count == 1 else f"{count} agents"
 
 
+#: The words for each ``end_reason`` of an incomplete run; a missing or
+#: unknown one is the time limit. The one place these are written.
+STOP_REASONS = {
+    "time_limit": "time limit reached",
+    "flows_closed": "flow windows closed",
+    "all_mobile_left": "all mobile agents left",
+    "deadlock": "deadlock",
+}
+
+
 def stop_reason_phrase(
     end_reason: str | None, deadlock: Mapping[str, Any] | None = None
 ) -> str:
@@ -157,11 +167,9 @@ def stop_reason_phrase(
         info = deadlock or {}
         stuck = info.get("agents", 0)
         since = float(info.get("since_s", 0.0))
-        return f"deadlock, {agents_label(stuck)} stuck since t = {since:.2f} s,"
-    return {
-        "flows_closed": "flow windows closed",
-        "all_mobile_left": "all mobile agents left",
-    }.get(end_reason or "", "time limit reached")
+        reason = STOP_REASONS["deadlock"]
+        return f"{reason}, {agents_label(stuck)} stuck since t = {since:.2f} s,"
+    return STOP_REASONS.get(end_reason or "", STOP_REASONS["time_limit"])
 
 
 def run_outcome(
@@ -184,22 +192,23 @@ def run_outcome(
         return Outcome(None, "Outcome not reported", "Simulated time")
     if status == "completed":
         return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
+    reason = STOP_REASONS.get(end_reason or "", STOP_REASONS["time_limit"])
     if end_reason == "flows_closed":
-        label = f"Incomplete: flow windows closed, {not_spawned} not spawned"
+        label = f"Incomplete: {reason}, {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
     if end_reason == "all_mobile_left":
         dead = remaining if incapacitated is None else incapacitated
-        label = f"Incomplete: all mobile agents left, {dead} incapacitated inside"
+        label = f"Incomplete: {reason}, {dead} incapacitated inside"
         if not_spawned:
             label += f", {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
     if end_reason == "deadlock":
         stuck = (remaining or 0) - (incapacitated or 0)
-        label = f"Incomplete: deadlock, {agents_label(stuck)} stuck"
+        label = f"Incomplete: {reason}, {agents_label(stuck)} stuck"
         if not_spawned:
             label += f", {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
-    label = f"Incomplete: time limit reached, {agents_label(remaining)} inside"
+    label = f"Incomplete: {reason}, {agents_label(remaining)} inside"
     if not_spawned:
         label += f", {not_spawned} not spawned"
     return Outcome(False, label, "Simulated time (limit reached)")

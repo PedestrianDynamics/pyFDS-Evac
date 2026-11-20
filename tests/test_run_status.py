@@ -214,3 +214,62 @@ def test_execution_outcome_refuses_an_illegal_pair():
         execution_outcome("finished", "no_result")
     with pytest.raises(ValueError, match="illegal run state"):
         execution_outcome("running", "completed")
+
+
+@pytest.mark.parametrize(
+    "name", ["SpawnCapacityError", "SpawnConfigError", "AgentInsertionError"]
+)
+@pytest.mark.parametrize("after_progress", [False, True])
+def test_a_spawn_check_failure_is_rejected_until_the_run_progresses(
+    monkeypatch, name, after_progress
+):
+    """#692: a spawn or insertion check is a configuration refusal, not a crash;
+    the same error after the first progress sample is a crash."""
+    import pyfds_evac.core.run_config as run_config
+    import pyfds_evac.core.scenario as scenario_module
+    import pyfds_evac.core.simulation_init as simulation_init
+    from pyfds_evac.core import run_stream
+
+    plan = events.PlanEvent(
+        extent=(0.0, 0.0, 1.0, 1.0),
+        walkable=(),
+        exits={},
+        exit_openings={},
+        signs=(),
+        spawn_areas={},
+        smoke_mode="none",
+    )
+    monkeypatch.setattr(scenario_module, "load_scenario", lambda _p: SimpleNamespace())
+    monkeypatch.setattr(run_config, "build_run_kwargs", lambda *_a, **_k: {})
+    monkeypatch.setattr(run_stream, "plan_event", lambda *_a, **_k: plan)
+    monkeypatch.setattr(run_stream, "_modelled", lambda _k: False)
+    error = getattr(simulation_init, name)
+
+    def run(*_a, progress_callback=None, **_k):
+        if after_progress:
+            progress_callback(SimpleNamespace(sim_time=1.0))
+        raise error("refused")
+
+    monkeypatch.setattr(scenario_module, "run_scenario", run)
+    result = run_stream.stream_run(
+        run_stream.options({"scenario": "x.json"}), lambda _e: None
+    )
+    pair = (result.execution, result.outcome)
+    assert pair == (
+        ("crashed", "no_result") if after_progress else ("finished", "rejected")
+    )
+    assert result.exit_code == 1
+
+
+def test_run_outcome_uses_the_shared_stop_reason():
+    from pyfds_evac.config.frontend import STOP_REASONS, run_outcome
+
+    for end_reason in ("time_limit", "flows_closed", "all_mobile_left", "deadlock"):
+        label = run_outcome("incomplete", 3, 2, end_reason, incapacitated=1).label
+        phrase = stop_reason_phrase(end_reason, DEADLOCK)
+        # The phrase is the label's reason up to the detail each one adds.
+        assert label.startswith(f"Incomplete: {STOP_REASONS[end_reason]}, ")
+        assert phrase.startswith(STOP_REASONS[end_reason])
+    assert run_outcome("incomplete", 3, 0, None).label.startswith(
+        f"Incomplete: {stop_reason_phrase(None)}, "
+    )

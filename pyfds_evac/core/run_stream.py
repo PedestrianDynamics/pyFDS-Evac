@@ -188,12 +188,15 @@ def stream_run(
     result: Any = None
     recorder: FrameRecorder | None = None
     started = False
+    progressed = False
 
     def check_cancel() -> None:
         if cancel is not None and cancel():
             raise RunCancelled()
 
     def on_progress(event: Any) -> None:
+        nonlocal progressed
+        progressed = True
         clock.sim_time = float(event.sim_time)
         emit(event)
         check_cancel()
@@ -246,12 +249,19 @@ def stream_run(
             outcome=pair[1],
         )
     except Exception as exc:  # reported to the front end, not raised
-        # Refused before the simulation started: finished, rejected; after:
-        # crashed, no result.
+        # Refused before the simulation ran: finished, rejected. That is any
+        # error before the run starts, and a spawn or insertion check that
+        # fails before the first progress sample. An exception after that
+        # is crashed, no result.
+        from .simulation_init import CONFIGURATION_ERRORS
+
+        refused = not started or (
+            not progressed and isinstance(exc, CONFIGURATION_ERRORS)
+        )
         pair = (
-            (events.EXECUTION_CRASHED, events.OUTCOME_NO_RESULT)
-            if started
-            else (events.EXECUTION_FINISHED, events.OUTCOME_REJECTED)
+            (events.EXECUTION_FINISHED, events.OUTCOME_REJECTED)
+            if refused
+            else (events.EXECUTION_CRASHED, events.OUTCOME_NO_RESULT)
         )
         outcome = events.ResultEvent(
             events.legacy_status(*pair),
