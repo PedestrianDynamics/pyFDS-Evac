@@ -2562,7 +2562,10 @@ class TestTerminalStates:
         assert pair == ("crashed", "no_result")
         html = to_xml(app_module._terminal_view(stub.status))
         label = frontend.execution_outcome(*pair).label
-        assert "Failed" in html
+        header = frontend.NO_RESULT_HEADERS[pair]
+        assert f">{header}<" in html and "Failed" not in html
+        assert "correct the settings and run again" not in html
+        assert "report the error" in html
         assert f"{label}: </b>slice not found" in html
         assert "Technical details" in html
         assert "RuntimeError: slice not found" in html
@@ -2590,6 +2593,8 @@ class TestTerminalStates:
             html = to_xml(app_module._terminal_view(stub.status))
             label = frontend.execution_outcome(*pair).label
             assert f"{label}: </b>" in html
+            assert f">{frontend.NO_RESULT_HEADERS[pair]}<" in html
+            assert "correct the settings and run again" in html
             assert "Your settings are still in the form" in html
             assert "crashed" not in html
 

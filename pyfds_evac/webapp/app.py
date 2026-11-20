@@ -44,6 +44,7 @@ from fasthtml.common import (
 from starlette.requests import Request
 
 from pyfds_evac.config.frontend import (
+    NO_RESULT_HEADERS,
     cancelled_text,
     evacuated_text,
     execution_outcome,
@@ -1852,6 +1853,28 @@ def _superseded_view(run_id: int) -> Div:
     )
 
 
+def _failed_hint(rejected: bool) -> P:
+    """What to do next: fix the settings if refused, else read the log."""
+    if not rejected:
+        return P(
+            "Your settings are still in the form. The run log and the technical "
+            "details below show what went wrong; if the settings look right, "
+            "report the error.",
+            cls="state-hint",
+        )
+    return P(
+        "Check the scenario and the FDS dir against the ",
+        A(
+            "FDS case requirements",
+            href=_DOCS_CASE_REQUIREMENTS,
+            target="_blank",
+            rel="noopener",
+        ),
+        ", correct the settings and run again. Your settings are still in the form.",
+        cls="state-hint",
+    )
+
+
 def _failed_view() -> Div:
     """Terminal panel of a failed run: the message first, details apart."""
     raw = manager.error or "no message"
@@ -1861,24 +1884,13 @@ def _failed_view() -> Div:
     return Div(
         _state_head(
             "✕",
-            "Failed",
+            NO_RESULT_HEADERS[(execution, outcome)],
             _run_code_button("Show configuration of this run"),
             _clear_button(False),
             tone="is-failed",
         ),
         P(B(f"{label}: "), message if sep else raw, cls="state-msg"),
-        P(
-            "Check the scenario and the FDS dir against the ",
-            A(
-                "FDS case requirements",
-                href=_DOCS_CASE_REQUIREMENTS,
-                target="_blank",
-                rel="noopener",
-            ),
-            ", correct the settings and run again. Your settings are still "
-            "in the form.",
-            cls="state-hint",
-        ),
+        _failed_hint(outcome == "rejected"),
         Details(Summary("Technical details"), Pre(raw, cls="tech-pre")),
         _run_log(),
         style=_PANEL,
