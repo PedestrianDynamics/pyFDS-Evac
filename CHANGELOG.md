@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   scripts: the CLI rejects them and the config raises `TypeError`.
 - An `entrance` id that is not in `exits` now stops the run, naming the
   distribution; it was ignored before (#136).
+- pyFDS-Evac requires `pedpy>=1.5.1` (was unpinned, 1.4.0 locked), the first
+  release with `compute_rset_map`.
 
 ### Added
 
@@ -47,6 +49,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `--summary-visibility-c` (3). `ScenarioResult.exit_times` and
   `ScenarioResult.exposure_summary()` are new, and a new how-to,
   [ASET/RSET check with FED](docs/howto-aset-rset-check.md).
+- `pyfds_evac.analysis` builds ASET, RSET and DIFF maps from a finished run
+  and its FDS output, after Schröder et al. (2020) (#210). ASET: the first
+  time K reaches C / V_lim (10 m and C = 3, so 0.3 1/m by default), the gas
+  temperature reaches 45 degC (50 degC by stay class), or the toxic or heat
+  FED of a person standing still from t = 0 reaches 0.3, read at the slice
+  nodes with the engine's sampling and its own FED rate functions. RSET:
+  PedPy `compute_rset_map`, with cells that hold an agent who never left
+  marked censored. DIFF has five states (pass, fail, ASET open, RSET
+  censored, undetermined), measures on the intersection and the union of the
+  two supports, C without binning, and seed pooling (95th percentile map,
+  bootstrap intervals). New page [ASET, RSET and DIFF
+  maps](docs/aset-rset-maps.md) and `examples/aset_rset_maps.py`; the docs
+  gain an Analysis section that holds the RSET-ensemble how-to (old URL kept
+  as an alias). No simulation output changes.
 - `--output-fed-history` has `hcl_ppm` after `no2_ppm`, and `hbr_ppm`,
   `hf_ppm`, `so2_ppm`, `acrolein_ppm`, `formaldehyde_ppm` after it when the
   run samples that species (#210). The file gains columns; no value changes.

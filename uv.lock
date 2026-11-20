@@ -1446,7 +1446,7 @@ wheels = [
 
 [[package]]
 name = "pedpy"
-version = "1.4.0"
+version = "1.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "h5py" },
@@ -1456,9 +1456,9 @@ dependencies = [
     { name = "scipy" },
     { name = "shapely" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3d/00/176fbb1e490f603f6772919f3f69acf806a4187b62fdbe69034aa7ef3470/pedpy-1.4.0.tar.gz", hash = "sha256:97a430788bf814cf59fe912c58562a8feb4d059552abd5aa14aad0c8d34d3c37", size = 64283, upload-time = "2025-09-08T20:25:35.731Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4d/2d/dd56ae5adb3856847c5518af5029ea5d11eaa91da7954091ccd8ce9398a8/pedpy-1.5.1.tar.gz", hash = "sha256:d306cbe9934be47563622ee9d5c83f59833003bd1cd63fcfa1eb387ae651e8f7", size = 79947, upload-time = "2026-07-21T15:58:21.66Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/22/b9/0556ac40ac288cb9670c5eefaa2e738d07592312a8b308a7fbb75d159ef1/pedpy-1.4.0-py3-none-any.whl", hash = "sha256:52dfd3d3e3281be34b64384cf4bef3b7ca748b47fa1d094f9385b797cdb2cd97", size = 70563, upload-time = "2025-09-08T20:25:34.547Z" },
+    { url = "https://files.pythonhosted.org/packages/1a/e1/d60b294c8289d9e8500ebc3ea6ca390d395fadfc094e16dad9dc356054ac/pedpy-1.5.1-py3-none-any.whl", hash = "sha256:20517f5d3bf8a27119efc0b527afab3e0d135c42576f11569ca08432cf06ac9c", size = 92808, upload-time = "2026-07-21T15:58:20.649Z" },
 ]
 
 [[package]]
@@ -1610,7 +1610,7 @@ requires-dist = [
     { name = "monsterui", marker = "extra == 'gui'" },
     { name = "nbformat", specifier = ">=4.2.0" },
     { name = "numpy", specifier = ">=2.1" },
-    { name = "pedpy" },
+    { name = "pedpy", specifier = ">=1.5.1" },
     { name = "plotly" },
     { name = "python-fasthtml", marker = "extra == 'gui'" },
     { name = "python-multipart", marker = "extra == 'gui'" },

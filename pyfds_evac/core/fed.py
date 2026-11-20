@@ -1117,6 +1117,14 @@ class FdsFedField:
         field.fds_dir = str(fds_dir)
         return field
 
+    def gas_samplers(self) -> dict[str, "SliceFieldSampler"]:
+        """Return the loaded gas samplers by species: co, co2, o2, then optional."""
+        optional = {
+            attr.lstrip("_"): getattr(self, attr) for attr, _ in self._OPTIONAL_SPECIES
+        }
+        found = {"co": self._co, "co2": self._co2, "o2": self._o2}
+        return found | {k: v for k, v in optional.items() if v is not None}
+
     def samplers(self) -> list["SliceFieldSampler"]:
         """Return every loaded gas slice sampler, required ones first."""
         optional = [getattr(self, attr, None) for attr, _ in self._OPTIONAL_SPECIES]

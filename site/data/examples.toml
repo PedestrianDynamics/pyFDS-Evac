@@ -273,7 +273,7 @@ results_machine = "Apple M3 Pro, macOS"
 [rset-ensemble]
 title = "Egress time from an ensemble of seeds"
 zip = "pyfds-evac-rset-ensemble.zip"
-page = "docs/using/howto-rset-ensemble/"
+page = "docs/analysis/howto-rset-ensemble/"
 source = "docs/howto-rset-ensemble.md"
 summary = """\
 30 agents leave a corridor once per seed; the script reads every exit \

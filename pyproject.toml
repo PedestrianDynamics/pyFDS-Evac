@@ -21,7 +21,7 @@ classifiers = [
 ]
 dependencies = [
     "jupedsim>=1.4.2",
-    "pedpy",
+    "pedpy>=1.5.1",
     # pyfds_evac/core/fdsreader_adapter.py replaces fdsreader's private
     # pickle-cache hooks; re-verify a new minor with
     # tests/test_fdsreader_adapter.py before widening. 1.11.9 and 1.12.0

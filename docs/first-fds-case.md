@@ -365,9 +365,11 @@ only.
 
 ### Make the numbers yourself
 
-pyFDS-Evac does not compute ASET itself. A built-in report is planned in
-[#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210). The
-script
+The per-agent comparison is built in: see
+[the ASET/RSET check with FED](howto-aset-rset-check.md), and for maps of
+the whole floor [ASET, RSET and DIFF maps](aset-rset-maps.md)
+([#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210)). The
+numbers below come from the script
 [`scripts/docs/first_fds_case_aset.py`](https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/scripts/docs/first_fds_case_aset.py)
 reads the run files from step 4 and the FDS slices:
 

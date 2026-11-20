@@ -2,6 +2,7 @@
 title: "How do I check each agent against ASET with FED, as in Pathfinder?"
 linkTitle: "How-to: ASET/RSET check with FED"
 weight: 15
+aliases: [/docs/using/howto-aset-rset-check/]
 ---
 
 A Pathfinder-style check keeps the occupants moving through the fire's

@@ -415,6 +415,19 @@ class SliceFieldSampler:
         return np.asarray(self._slice.times, dtype=float)
 
     @property
+    def frame_times_s(self) -> np.ndarray:
+        """The times of the slice frames [s]."""
+        return self._frame_times
+
+    def node_axes(self) -> list[tuple[np.ndarray, np.ndarray]]:
+        """The x and y value positions of every subslice, in subslice order.
+
+        Nodes for FDS's default slices, cell centres for cell-centred ones:
+        the positions :meth:`sample` reads from.
+        """
+        return [self._axes(subslice) for subslice in self._subslices]
+
+    @property
     def z_m(self) -> float:
         """Height of the slice [m]: the mid z of its extent."""
         return _slice_z_mid(self._slice)

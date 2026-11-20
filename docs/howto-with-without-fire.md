@@ -791,8 +791,10 @@ page.
 - **Per agent goes beyond ISO 13571,** which treats populations, not
   individuals (§5.2). The FED is the FDS+Evac FED, not the ISO asphyxiant
   FED.
-- **The ASET side is not built in.** The location ASET and the crossings
-  are computed by the script, not by the engine
+- **The ASET side of this page is a script.** The location ASET and the
+  crossings here come from the script; the built-in versions are
+  [ASET, RSET and DIFF maps](aset-rset-maps.md) and the
+  [ASET/RSET check with FED](howto-aset-rset-check.md)
   ([#210](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/210)).
 
 {{< details title="Sources" closed="true" >}}
