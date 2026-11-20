@@ -151,7 +151,7 @@ run = 'uv run python scripts/docs/first_fds_case_aset.py --data "$FDS" --runs tj
 timeout = 1800
 expect = [
   "agents 150, spawned last at 298 s",
-  "trajectory: 99 left before 300 s, last exit 299.7 s",
+  "trajectory: 89 left before 300 s, last exit 299.9 s",
 ]
 
 # --- How-tos ----------------------------------------------------------------

@@ -26,7 +26,7 @@ SPEC = tomllib.loads((ROOT / "site" / "data" / "examples.toml").read_text())
 SCIEBO = Path.home() / "sciebo - ped23 (ped23.pbox@fz-juelich.de)@fz-juelich.sciebo.de"
 T_JUNCTION_FDS = Path(
     os.environ.get(
-        "T_JUNCTION_FDS", SCIEBO / "fds-evac-data" / "t_junction" / "fire_2MW_PVC"
+        "T_JUNCTION_FDS", SCIEBO / "fds-evac-data" / "t_junction" / "fire_2MW_PVC_796"
     )
 )
 # A repository path on a page: `assets/...`, `examples/...`, `scripts/...`
