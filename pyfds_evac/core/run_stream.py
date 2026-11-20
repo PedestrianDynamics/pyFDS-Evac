@@ -157,6 +157,24 @@ def _result_event(
     )
 
 
+def failure_pair(
+    exc: BaseException, *, started: bool, progressed: bool
+) -> tuple[str, str]:
+    """The (execution, outcome) pair of a run that raised *exc*.
+
+    Refused before the simulation ran is finished, rejected: any error
+    before the run starts, and a spawn or insertion check that fails before
+    the first progress sample (*progressed*). An exception after that is
+    crashed, no result.
+    """
+    from .simulation_init import CONFIGURATION_ERRORS
+
+    refused = not started or (not progressed and isinstance(exc, CONFIGURATION_ERRORS))
+    if refused:
+        return events.EXECUTION_FINISHED, events.OUTCOME_REJECTED
+    return events.EXECUTION_CRASHED, events.OUTCOME_NO_RESULT
+
+
 def stream_run(
     opts: argparse.Namespace,
     emit: Emit,
@@ -249,20 +267,7 @@ def stream_run(
             outcome=pair[1],
         )
     except Exception as exc:  # reported to the front end, not raised
-        # Refused before the simulation ran: finished, rejected. That is any
-        # error before the run starts, and a spawn or insertion check that
-        # fails before the first progress sample. An exception after that
-        # is crashed, no result.
-        from .simulation_init import CONFIGURATION_ERRORS
-
-        refused = not started or (
-            not progressed and isinstance(exc, CONFIGURATION_ERRORS)
-        )
-        pair = (
-            (events.EXECUTION_FINISHED, events.OUTCOME_REJECTED)
-            if refused
-            else (events.EXECUTION_CRASHED, events.OUTCOME_NO_RESULT)
-        )
+        pair = failure_pair(exc, started=started, progressed=progressed)
         outcome = events.ResultEvent(
             events.legacy_status(*pair),
             events.exit_code(*pair),

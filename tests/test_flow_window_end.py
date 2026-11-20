@@ -44,7 +44,7 @@ def test_a_run_ends_when_it_empties_after_its_flow_windows_closed(monkeypatch):
     event = _result_event(result, (), None)
     assert event.end_reason == "flows_closed"
     spec = make_run_spec(argparse.Namespace(), scenario, "t", "t")
-    spec = _finished_spec(spec, "done", result, None)
+    spec = _finished_spec(spec, "done", ("finished", "completed"), result, None)
     assert spec.end_reason == "flows_closed"
     assert any(
         line.startswith(f"Flow spawning: '{D1}' found no free position")

@@ -23,6 +23,7 @@ from _round_trip import hidden as _rt_hidden
 from _round_trip import shown as _rt_shown
 from starlette.testclient import TestClient
 
+from pyfds_evac.config import frontend
 from pyfds_evac.webapp.app import app, manager
 
 
@@ -245,7 +246,7 @@ class TestCancelLifecycle:
 
         def fake_run_scenario(scenario, progress_callback=None, **kwargs):
             calls["run"] += 1
-            return SimpleNamespace(sqlite_file=None)
+            return SimpleNamespace(sqlite_file=None, status="completed")
 
         monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", fake_run_scenario)
         fresh = RunManager()
@@ -372,8 +373,9 @@ class TestCancelLifecycle:
         run_id = mgr.spec.run_id
         assert f'data-pyexport-run="{run_id}"' in r.text
         code = client.post(f"/export/run?run={run_id}", data=form, headers=_HX)
-        assert f"Configuration of the cancelled run #{run_id}" in code.text
-        assert "Status: cancelled" in code.text
+        label = frontend.execution_outcome("cancelled", "no_result").label
+        assert f"Configuration of run #{run_id}" in code.text
+        assert f"Status: {label}" in code.text
         # No result, so the seed used stays unrecorded.
         assert "the seed used was not recorded" in _code_of(code.text)
         client.post("/clear")
@@ -704,7 +706,7 @@ class TestCancelLifecycle:
         def ticking_run_scenario(scenario, progress_callback=None, **kwargs):
             calls["run"] += 1
             progress_callback(SimpleNamespace(sim_time=7.0))
-            return SimpleNamespace(sqlite_file=None)
+            return SimpleNamespace(sqlite_file=None, status="completed")
 
         monkeypatch.setattr(
             "pyfds_evac.webapp.runner.run_scenario", ticking_run_scenario
@@ -746,7 +748,7 @@ class TestRunCapture:
     def _run(mgr, monkeypatch, body):
         def stub(scenario, progress_callback=None, **kwargs):
             body()
-            return SimpleNamespace(sqlite_file=None)
+            return SimpleNamespace(sqlite_file=None, status="completed")
 
         monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", stub)
         mgr.start(None, dict, "stub")
@@ -2168,6 +2170,55 @@ class TestRunOutcome:
         assert "Not spawned" not in html
         assert "0 of 100 agents" in html
 
+    @pytest.mark.parametrize(
+        ("kind", "end_reason", "remaining"),
+        [
+            ("completed", "all_evacuated", 0),
+            ("incomplete", "time_limit", 4),
+            ("incomplete", "deadlock", 4),
+        ],
+    )
+    def test_tiles_word_the_pair_as_the_shared_function_does(
+        self, monkeypatch, kind, end_reason, remaining
+    ):
+        from fasthtml.common import to_xml
+
+        from pyfds_evac.webapp.app import _kpi_tiles
+
+        result = SimpleNamespace(
+            metrics={"status": kind, "end_reason": end_reason},
+            agents_remaining=remaining,
+            agents_evacuated=6 - remaining,
+            total_agents=6,
+            evacuation_time=50.0,
+        )
+        monkeypatch.setattr(manager, "spec", None)
+        expected = frontend.execution_outcome(
+            "finished", kind, remaining=remaining, not_spawned=0, end_reason=end_reason
+        )
+        html = to_xml(_kpi_tiles(result))
+        assert expected.label in html
+        assert expected.time_label in html
+
+    def test_a_cancel_after_progress_is_worded_with_its_sim_time(self, monkeypatch):
+        from pyfds_evac.webapp.pyexport import run_status
+        from pyfds_evac.webapp.runner import RunManager, make_run_spec
+
+        mgr = RunManager()
+
+        def run(scenario, progress_callback=None, **kw):
+            progress_callback(SimpleNamespace(sim_time=12.5))
+            mgr.cancel()
+            progress_callback(SimpleNamespace(sim_time=13.5))
+
+        monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", run)
+        spec = make_run_spec(SimpleNamespace(seed=1), SimpleNamespace(seed=1), "t", "t")
+        mgr.start(None, dict, "stub", spec=spec)
+        assert mgr.join(5.0)
+        assert mgr.pair == ("cancelled", "no_result")
+        assert mgr.spec.last_sim_time == 12.5
+        assert run_status(mgr.spec) == frontend.cancelled_text(12.5)
+
     def test_tiles_flow_cut_off_is_not_complete(self, monkeypatch):
         """#444: a flow run stopped with nobody inside showed as complete."""
         from fasthtml.common import to_xml
@@ -2212,6 +2263,8 @@ class TestRunOutcome:
             git_dirty=None,
             expected_seed=1,
             status="done",
+            execution="finished",
+            outcome="incomplete",
             time_limit=300.0,
             completion="incomplete",
             agents_not_spawned=0,
@@ -2256,6 +2309,7 @@ class TestRunOutcome:
         done = dataclasses.replace(
             spec,
             completion="completed",
+            outcome="completed",
             agents_evacuated=150,
             agents_remaining=0,
             evacuation_time=212.4,
@@ -2340,7 +2394,7 @@ class TestRunOutcome:
             agents_remaining=0,
             evacuation_time=300.0,
         )
-        done = _finished_spec(spec, "done", result, None)
+        done = _finished_spec(spec, "done", ("finished", "completed"), result, None)
         assert done.completion == "incomplete"
         assert done.agents_not_spawned == 50
 
@@ -2438,7 +2492,7 @@ class TestTerminalStates:
         monkeypatch.setattr(
             "pyfds_evac.webapp.runner.run_scenario",
             lambda scenario, progress_callback=None, **kw: SimpleNamespace(
-                sqlite_file=None
+                sqlite_file=None, status="completed"
             ),
         )
         fresh = RunManager()
@@ -2479,22 +2533,92 @@ class TestTerminalStates:
         assert "cancel-btn" not in done
         assert "data-run-live" not in done
 
-    def test_failed_run_names_the_message_and_keeps_details_apart(self, stub):
+    @staticmethod
+    def _settle(stub, monkeypatch, run_scenario, build=dict):
+        monkeypatch.setattr("pyfds_evac.webapp.runner.run_scenario", run_scenario)
+        stub.start(None, build, "stub")
+        assert stub.join(5.0)
+        return stub.pair
+
+    @staticmethod
+    def _crash_after_start(scenario, progress_callback=None, **kw):
+        progress_callback(SimpleNamespace(sim_time=1.0))
+        raise RuntimeError("slice not found")
+
+    @staticmethod
+    def _refuse(scenario, progress_callback=None, **kw):
+        from pyfds_evac.core.simulation_init import SpawnCapacityError
+
+        raise SpawnCapacityError("room too small")
+
+    def test_failed_run_names_the_message_and_keeps_details_apart(
+        self, stub, monkeypatch
+    ):
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        pair = self._settle(stub, monkeypatch, self._crash_after_start)
+        assert pair == ("crashed", "no_result")
+        html = to_xml(app_module._terminal_view(stub.status))
+        label = frontend.execution_outcome(*pair).label
+        assert "Failed" in html
+        assert f"{label}: </b>slice not found" in html
+        assert "Technical details" in html
+        assert "RuntimeError: slice not found" in html
+        assert "hx-confirm" not in html  # nothing to lose
+
+    def test_rejected_run_is_worded_apart_from_a_crash(self, stub, monkeypatch):
         from fasthtml.common import to_xml
 
         import pyfds_evac.webapp.app as app_module
 
         def boom():
-            raise RuntimeError("slice not found")
+            raise ValueError("bad option")
 
-        stub.start(None, boom, "stub")
-        assert stub.join(5.0)
+        # Refused while resolving the options, and by a spawn check before
+        # the first progress sample: finished, rejected; the form stays.
+        for build, run in ((boom, None), (dict, self._refuse)):
+            stub.reset()
+            pair = self._settle(
+                stub,
+                monkeypatch,
+                run or (lambda s, progress_callback=None, **k: 0),
+                build,
+            )
+            assert pair == ("finished", "rejected")
+            html = to_xml(app_module._terminal_view(stub.status))
+            label = frontend.execution_outcome(*pair).label
+            assert f"{label}: </b>" in html
+            assert "Your settings are still in the form" in html
+            assert "crashed" not in html
+
+    @pytest.mark.parametrize("kind", ["completed", "incomplete"])
+    def test_result_states_show_the_results_view(self, stub, monkeypatch, kind):
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        def run(scenario, progress_callback=None, **kw):
+            return SimpleNamespace(sqlite_file=None, status=kind)
+
+        pair = self._settle(stub, monkeypatch, run)
+        assert pair == ("finished", kind)
+        assert "results of stub" in to_xml(app_module._terminal_view(stub.status))
+
+    def test_cancelled_run_is_cancelled_not_failed(self, stub, monkeypatch):
+        from fasthtml.common import to_xml
+
+        import pyfds_evac.webapp.app as app_module
+
+        def run(scenario, progress_callback=None, **kw):
+            stub.cancel()
+            progress_callback(SimpleNamespace(sim_time=1.0))
+
+        pair = self._settle(stub, monkeypatch, run)
+        assert pair == ("cancelled", "no_result")
         html = to_xml(app_module._terminal_view(stub.status))
-        assert "Failed" in html
-        assert "Run failed: </b>slice not found" in html
-        assert "Technical details" in html
-        assert "RuntimeError: slice not found" in html
-        assert "hx-confirm" not in html  # nothing to lose
+        assert "Cancelled" in html and "Failed" not in html
 
     def test_reload_shows_the_server_state(self, stub, client):
         import threading
@@ -2891,7 +3015,7 @@ class TestRoundTrip:
                 agents_remaining=0,
                 evacuation_time=1.0,
             )
-            done = _finished_spec(spec, "done", result, None)
+            done = _finished_spec(spec, "done", ("finished", "completed"), result, None)
             assert done.seed_used == (seed if confirmed else None)
             # A blank Seed becomes the seed the run used; an explicit 0 stays 0.
             want = done.seed_used if confirmed else spec.opts["seed"]
@@ -3105,13 +3229,21 @@ class TestIncapacitated321:
         opts = SimpleNamespace(seed=1)
         spec = make_run_spec(opts, SimpleNamespace(seed=1), "co", "co")
         done = _finished_spec(
-            spec, "done", self._result(_settings(gas=True), 100), None
+            spec,
+            "done",
+            ("finished", "completed"),
+            self._result(_settings(gas=True), 100),
+            None,
         )
         assert done.agents_incapacitated == 100
         assert done.incapacitation_modelled is True
         assert run_status(done).endswith(", 100 incapacitated")
         blind = _finished_spec(
-            spec, "done", self._result(_settings(gas=True, tenability=False)), None
+            spec,
+            "done",
+            ("finished", "completed"),
+            self._result(_settings(gas=True, tenability=False)),
+            None,
         )
         assert run_status(blind).endswith(", incapacitation not modelled")
 

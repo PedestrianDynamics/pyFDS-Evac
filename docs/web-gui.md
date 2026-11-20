@@ -255,7 +255,7 @@ that names the run and its own buttons:
 | State | Shown when | Buttons |
 |---|---|---|
 | Results | the run finished and its results are displayed | **Show Python for this run**, **Clear results** |
-| Failed | the run raised an error; the message comes first | **Show configuration of this run**, **Clear** |
+| Failed | the run was refused ("Configuration rejected, no simulation was run") or raised an error after it started ("Run crashed, no result"); the message comes first, and your settings stay in the form | **Show configuration of this run**, **Clear** |
 | Cancelled | you cancelled the run; no results were produced | **Show configuration of this run**, **Clear** |
 | Results not displayed | the run finished, but its results view could not be built | **Show Python for this run**, **Clear** |
 | Ended | another run started, possibly in another window | **Show current run** |
@@ -464,17 +464,18 @@ times to one decimal:
   spawned], simulated time *t* s, …";
 - "Incomplete: deadlock, *k* agents stuck[, *m* not spawned], simulated time
   *t* s, …";
-- failed, cancelled, or not recorded.
+- "Configuration rejected, no simulation was run", "Run crashed, no result",
+  "Cancelled at sim *t* s" (or "Cancelled before the first progress sample"),
+  or not recorded.
 
 In the first five, "…" is "*j* incapacitated" when the run modelled
 incapacitation and "incapacitation not modelled" otherwise. The file is named
 `pyfds_evac_<scenario>_run<N>_<start time>.py`, with the run's UTC start
 time such as `20260929T182009Z`.
 
-- **Failed and cancelled runs** still have code. The dialog is titled
-  "Configuration of the failed run #N" or "Configuration of the cancelled
-  run #N"; the button that opens it reads **Show configuration of this
-  run**. The code stays until you click **Clear**.
+- **Rejected, crashed and cancelled runs** still have code. The dialog is
+  titled "Configuration of run #N" followed by the run's state; the button
+  that opens it reads **Show configuration of this run**. The code stays until you click **Clear**.
 - **Only the most recent run has code.** There is none while a run is in
   progress. After **Clear** (or **Clear results** for a finished run) or a
   new run, the old run's code is gone and its button disappears. A button

@@ -48,12 +48,18 @@ def test_unparsable_field_keeps_its_default_and_reports_the_error():
     [
         (events.STATUS_SUCCESS, "complete"),
         (events.STATUS_INCOMPLETE, "incomplete"),
-        (events.STATUS_FAILED, "failed"),
+        (events.STATUS_FAILED, "crashed"),
         (events.STATUS_CANCELLED, "cancelled"),
     ],
 )
 def test_status_word_names_each_outcome(status, word):
-    assert status_word(SimpleNamespace(status=status)) == word
+    pair = events.pair_of_status(status)
+    assert status_word(SimpleNamespace(pair=pair)) == word
+
+
+def test_status_word_tells_a_rejected_run_from_a_crash():
+    rejected = events.pair_of_status(events.STATUS_FAILED, started=False)
+    assert status_word(SimpleNamespace(pair=rejected)) == "rejected"
 
 
 def _bins_of_a_ten_metre_room():

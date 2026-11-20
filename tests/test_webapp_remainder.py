@@ -14,7 +14,10 @@ import pytest
 
 pytest.importorskip("fasthtml")
 
-from pyfds_evac.config.frontend import incapacitated_text  # noqa: E402
+from pyfds_evac.config.frontend import (  # noqa: E402
+    execution_outcome,
+    incapacitated_text,
+)
 from pyfds_evac.config.script import ExportError, python_script  # noqa: E402
 from pyfds_evac.webapp.pyexport import preview_script, run_status  # noqa: E402
 from pyfds_evac.webapp.runner import RunSpec, make_run_spec  # noqa: E402
@@ -42,9 +45,17 @@ def test_run_snapshot_keeps_the_scenario_time_limit():
     assert spec.expected_seed == 7  # blank seed: the scenario's own
 
 
-def test_failed_run_is_worded_failed():
-    assert run_status(_spec(status="error")) == "failed"
-    assert run_status(_spec(status="cancelled")) == "cancelled"
+@pytest.mark.parametrize(
+    ("status", "pair"),
+    [
+        ("error", ("finished", "rejected")),
+        ("error", ("crashed", "no_result")),
+        ("cancelled", ("cancelled", "no_result")),
+    ],
+)
+def test_run_without_a_result_is_worded_by_the_shared_function(status, pair):
+    spec = _spec(status=status, execution=pair[0], outcome=pair[1])
+    assert run_status(spec) == execution_outcome(*pair).label
 
 
 def test_incapacitated_figure_is_not_shown_when_it_is_unknown():

@@ -31,6 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   derived from the pair; exit codes are unchanged (0, 2, 1). The stop reason is
   worded in one place (`frontend.stop_reason_phrase`), so the exported script
   now words a deadlock as the CLI does ("deadlock, N agents stuck since t = s,").
+  The Web GUI and the terminal UI read the pair and word a refused run
+  ("Configuration rejected, no simulation was run") apart from a crash ("Run
+  crashed, no result"); both come from `frontend.execution_outcome`.
 - `--heat-endpoint` checks the SFPE Ch. 63 humidity limit (p. 2383, < 10 %
   water vapour by volume) when the FDS case has a `WATER VAPOR VOLUME
   FRACTION` slice: `heat_humidity` reads `ok` or `humid` per FED row, with the

@@ -25,6 +25,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
+from pyfds_evac.config.frontend import execution_outcome
+
 # The literal checks and the script body are shared with
 # pyfds_evac.config.python_script; the names stay importable from here.
 from pyfds_evac.config.script import (  # noqa: F401
@@ -38,7 +40,7 @@ from pyfds_evac.config.script import (  # noqa: F401
     export_options,
 )
 
-from .runner import RunSpec, run_outcome, run_stamp
+from .runner import RunSpec, run_stamp
 
 
 @dataclass(frozen=True)
@@ -168,17 +170,20 @@ def run_script(spec: RunSpec) -> ExportedScript:
 
 def run_status(spec: RunSpec) -> str:
     """One-line outcome of a run, worded as the results view words it."""
-    if spec.status == "error":
-        return "failed"
-    if spec.status == "cancelled":
-        return "cancelled"
-    if spec.status != "done" or spec.agents_remaining is None:
+    if spec.outcome is None:
         return "not recorded"
-    outcome = run_outcome(
-        spec.completion,
-        spec.agents_remaining,
-        spec.agents_not_spawned,
-        spec.end_reason,
+    if spec.outcome not in ("completed", "incomplete"):
+        return execution_outcome(
+            spec.execution, spec.outcome, sim_time=spec.last_sim_time
+        ).label
+    if spec.agents_remaining is None:
+        return "not recorded"
+    outcome = execution_outcome(
+        spec.execution,
+        spec.outcome,
+        remaining=spec.agents_remaining,
+        not_spawned=spec.agents_not_spawned,
+        end_reason=spec.end_reason,
         incapacitated=spec.agents_incapacitated,
     )
     if spec.incapacitation_modelled and spec.agents_incapacitated is not None:
