@@ -298,7 +298,8 @@ Four things to keep in mind:
   With a gas or heat FED model on that can incapacitate, a deadlock does
   not end the run while a stuck agent's dose can still reach that agent's
   incapacitation threshold before `max_simulation_time`: at its latest FED
-  rate, (threshold - dose) / rate is at most the time left, for the gas or
+  rate, (threshold - dose) / rate is at most the time left (rate and dose are
+  those of the latest FED update, up to one update interval old), for the gas or
   the heat dose, whichever is sooner (the agent's own drawn threshold in
   probabilistic mode). A rate of 0 never reaches it. The run then logs the
   detection once and goes on, so the stuck agents' incapacitation is

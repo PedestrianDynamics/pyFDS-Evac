@@ -19,9 +19,12 @@ from harness import (  # noqa: E402
     CorridorSpec,
     corridor_scenario,
     deterministic_heat_tenability,
+    make_fed_model,
     make_heat_model,
+    uniform,
 )
 
+from pyfds_evac.core.fed import TenabilityConfig  # noqa: E402
 from pyfds_evac.core.scenario import (  # noqa: E402
     _agents_reaching_threshold,
     _threshold_reach_s,
@@ -33,7 +36,7 @@ HOT_PATCH_C = 5000.0
 DEADLOCK_END_S = 103.0
 
 
-def _run(cool_c: float, t_max_s: float = 500.0):
+def _run_models(t_max_s, tenability, *, heat_model=None, fed_model=None):
     spec = CorridorSpec(
         length_m=12.0, width_m=0.6, num_agents=2, seed=42, max_simulation_time=t_max_s
     )
@@ -53,14 +56,61 @@ def _run(cool_c: float, t_max_s: float = 500.0):
         [1, 0.05],
     ]
 
-    def field(_t, x, _y):
-        return HOT_PATCH_C if 3.0 <= x <= 3.2 else cool_c
-
     return run_scenario(
         scenario,
         seed=spec.seed,
-        heat_fed_model=make_heat_model(field, update_interval_s=0.1),
-        tenability_config=deterministic_heat_tenability(),
+        heat_fed_model=heat_model,
+        fed_model=fed_model,
+        tenability_config=tenability,
+    )
+
+
+def _in_patch(x):
+    return 3.0 <= x <= 3.2
+
+
+def _run(cool_c: float, t_max_s: float = 500.0, tenability=None):
+    def field(_t, x, _y):
+        return HOT_PATCH_C if _in_patch(x) else cool_c
+
+    return _run_models(
+        t_max_s,
+        tenability or deterministic_heat_tenability(),
+        heat_model=make_heat_model(field, update_interval_s=0.1),
+    )
+
+
+def _run_gas(t_max_s: float):
+    """Heat boxes the agents in; the stuck one has only a gas dose.
+
+    The hot patch incapacitates the first agent by heat. Elsewhere the air
+    is at 20 C and carries 4000 ppm CO (about 0.15 FED/min), so the stuck
+    agent reaches the gas threshold of 1.0 at about 400 s.
+    """
+
+    def heat(_t, x, _y):
+        return HOT_PATCH_C if _in_patch(x) else 20.0
+
+    fed_model = make_fed_model(
+        co_volume_fraction=uniform(4000e-6),
+        co2_volume_fraction=uniform(0.0),
+        o2_volume_fraction=uniform(0.209),
+        update_interval_s=0.1,
+    )
+    tenability = TenabilityConfig(
+        enable_fic_speed=False,
+        enable_incapacitation=True,
+        fed_threshold=1.0,
+        incapacitation_mode="deterministic",
+        enable_heat_incapacitation=True,
+        heat_fed_threshold=50.0,
+        heat_incapacitation_mode="deterministic",
+    )
+    return _run_models(
+        t_max_s,
+        tenability,
+        heat_model=make_heat_model(heat, update_interval_s=0.1),
+        fed_model=fed_model,
     )
 
 
@@ -129,3 +179,61 @@ def test_only_stuck_agents_that_reach_their_threshold_by_the_limit_count(
     stuck = {1: (0.0, 0.0), 2: (1.0, 0.0)}
     reach = {1: math.inf, 2: 200.0, 3: 10.0}
     assert _agents_reaching_threshold(stuck, reach, t_max_s) == expected
+
+
+def test_a_heat_threshold_above_the_reach_ends_the_run_as_a_deadlock():
+    """The heat track uses the heat threshold, not the gas one (#988).
+
+    At 172 C the dose reaches 1.0 at about 210 s but 3.0 only after the
+    500 s limit; the gas threshold of 1.0 would let the run continue.
+    """
+    tenability = TenabilityConfig(
+        enable_fic_speed=False,
+        enable_incapacitation=False,
+        fed_threshold=1.0,
+        enable_heat_incapacitation=True,
+        heat_fed_threshold=3.0,
+        heat_incapacitation_mode="deterministic",
+    )
+    result = _run(COOL_C, 500.0, tenability)
+    try:
+        assert result.end_reason == "deadlock"
+        assert result.metrics["deadlock"]["ended_run"] is True
+    finally:
+        result.cleanup()
+
+
+def test_a_heat_threshold_below_the_gas_one_still_continues():
+    tenability = TenabilityConfig(
+        enable_fic_speed=False,
+        enable_incapacitation=False,
+        fed_threshold=50.0,
+        enable_heat_incapacitation=True,
+        heat_fed_threshold=1.0,
+        heat_incapacitation_mode="deterministic",
+    )
+    result = _run(COOL_C, 500.0, tenability)
+    try:
+        assert result.end_reason == "all_mobile_left"
+        assert result.metrics["deadlock"]["ended_run"] is False
+    finally:
+        result.cleanup()
+
+
+def test_a_gas_dose_that_reaches_its_threshold_keeps_the_run_going():
+    result = _run_gas(500.0)
+    try:
+        assert result.end_reason == "all_mobile_left"
+        assert result.metrics["deadlock"]["ended_run"] is False
+        assert result.agents_incapacitated == 2
+    finally:
+        result.cleanup()
+
+
+def test_a_gas_dose_that_misses_the_time_limit_ends_the_run_as_a_deadlock():
+    result = _run_gas(300.0)
+    try:
+        assert result.end_reason == "deadlock"
+        assert result.metrics["deadlock"]["ended_run"] is True
+    finally:
+        result.cleanup()

@@ -744,7 +744,9 @@ is the waypoint method of Börger, Belt and Arnold (2024), Eqs. (2) and
   ([Movement models](/models/movement.md#deadlock-behaviour)).
   Since #760 such a run stops when the whole crowd has stood still for
   100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in
-  `metrics["deadlock"]`, instead of running to `max_simulation_time`. The
+  `metrics["deadlock"]`, instead of running to `max_simulation_time`,
+  unless a FED model is on and a stuck agent's dose can still reach its
+  incapacitation threshold before the time limit (#988). The
   jam itself is not cleared.
   `familiarity_test_no_journey` with 5 agents at seed 23 ends `deadlock` at
   136 s (2 agents stuck since t = 36 s); with 20 agents, seeds 3, 12, 13
