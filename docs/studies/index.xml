@@ -1285,7 +1285,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/32839de375e45a4d368e3599b3b64f1d0910aadc">&lt;code>32839de&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/131e34032af2ce06432a07e323cd678e76067a11">&lt;code>131e340&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1316,7 +1316,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">cfc1ebe66b47f137d4fdac3b956c477a320abe94d001b6a622f2c8b63ed6cea7&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">64e312de982dc7cf339aaa353ae996fe44080c8299ad0d5e91723745deb5001c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2748,7 +2748,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/32839de375e45a4d368e3599b3b64f1d0910aadc">&lt;code>32839de&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/131e34032af2ce06432a07e323cd678e76067a11">&lt;code>131e340&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2779,7 +2779,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">0261c06031cf7b12bf23222d88a5554f82b42a83a2940c0f1d011217b661e695&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">872b1037e11e5722307ac81cdd086fea64a9e3a78cb2873adff55174f431f17b&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -4232,9 +4232,11 @@ maps.&lt;/li>
 and compared the exit use of the simulated survivors with survivor exit-use
 data (Fahy, Proulx &amp;amp; Flynn 2011, Table 2). The comparison was
 pre-registered: the criteria were frozen before the first FDS fire run.&lt;/p>
-&lt;p>&lt;strong>Every scored gate fails.&lt;/strong> V1 fails, V2 fails and V3, the primary claim,
-fails. V4 to V6 were not scored. The registered wording for the primary
-claim applies: &lt;strong>&amp;ldquo;coupling adds no measurable skill to exit choice here&amp;rdquo;&lt;/strong>.&lt;/p>
+&lt;p>&lt;strong>Every gate scored at first publication fails.&lt;/strong> V1 fails, V2 fails and
+V3, the primary claim, fails. V4 to V6 and the other owed items were scored
+afterwards, as disclosed results with some deviations
+(&lt;a href="#owed-items-scored-afterwards">below&lt;/a>). The registered wording for the
+primary claim applies: &lt;strong>&amp;ldquo;coupling adds no measurable skill to exit choice here&amp;rdquo;&lt;/strong>.&lt;/p>
 &lt;p>This page publishes the failure under the pre-registration&amp;rsquo;s failure
 policy (§8): &amp;ldquo;A failed criterion is published as a disclosed failure&amp;rdquo;.
 Nothing was tuned afterwards.&lt;/p>
@@ -4672,39 +4674,532 @@ against Purser&amp;rsquo;s 14.9 MJ/kg, so FED is biased low.&lt;/p>
 &lt;p>&lt;strong>Inputs.&lt;/strong> The geometry &lt;code>station_nist&lt;/code> is &amp;ldquo;provenance unverified&amp;rdquo;: the
 NCSTAR 2 App. L.2.2 deck, transcribed. Victim placement is an assumption;
 Spearpoint (2012) Table 1 gives no recovery sites. The fire field was
-not checked against NIST: the fire is model against model at best, because
-V6 was not scored.&lt;/p>
-&lt;h2>Owed and not yet produced&lt;span class="hx-absolute -hx-mt-20" id="owed-and-not-yet-produced">&lt;/span>
-&lt;a href="#owed-and-not-yet-produced" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>These items are required by the pre-registration and tracked in
-&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/950" target="_blank" rel="noopener">#950&lt;/a>.&lt;/p>
-&lt;ul>
-&lt;li>V4: first-target front-door share.&lt;/li>
-&lt;li>V5: 0.9 to 1.5 person/s through the 914 mm door.&lt;/li>
-&lt;li>V6: fire-side check, T5 in 65 to 100 s and T6 in 65 to 115 s. It needs
-fire slices that nobody has opened.&lt;/li>
-&lt;li>The §2 survival rates under Fahy resampling.&lt;/li>
-&lt;li>The §3 heat-only incapacitation, raised-floor FED and K
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365" target="_blank" rel="noopener">#365&lt;/a>
-is open), and the vestibule count at 86 s.&lt;/li>
-&lt;li>Censored shares and t_jam splits beside every sensitivity row. They are
-in score files 08 to 34 and not tabulated here.&lt;/li>
-&lt;/ul>
-&lt;p>The frozen tree has no scorer for these. The pre-registration forbids
-tuning, not implementing frozen analyses. None of them is a result of this
-page.&lt;/p>
+checked against NIST only afterwards, and only partly (see V6 below): the
+fire is model against model at best.&lt;/p>
+&lt;h2>Owed items, scored afterwards&lt;span class="hx-absolute -hx-mt-20" id="owed-items-scored-afterwards">&lt;/span>
+&lt;a href="#owed-items-scored-afterwards" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>
+&lt;div class="hx-overflow-x-auto hx-mt-6 hx-flex hx-rounded-lg hx-border hx-py-2 ltr:hx-pr-4 rtl:hx-pl-4 contrast-more:hx-border-current contrast-more:dark:hx-border-current hx-border-yellow-100 hx-bg-yellow-50 hx-text-yellow-900 dark:hx-border-yellow-200/30 dark:hx-bg-yellow-700/30 dark:hx-text-yellow-200">
+&lt;div class="ltr:hx-pl-3 ltr:hx-pr-2 rtl:hx-pr-3 rtl:hx-pl-2">&lt;div class="hx-select-none hx-text-xl" style="font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';">
+⚠️
+&lt;/div>&lt;/div>
+&lt;div class="hx-w-full hx-min-w-0 hx-leading-7">
+&lt;div class="hx-mt-6 hx-leading-7 first:hx-mt-0">
+These items are required by the pre-registration and were owed when the
+page was first published
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/950" target="_blank" rel="noopener">#950&lt;/a>).
+They are disclosed results, scored after V1 to V3 were known. The scorers
+are in &lt;code>assets/station_fahy/score_owed.py&lt;/code>. Each was committed with its
+tests before its first look, except where &lt;a href="#deviations-and-history">Deviations and
+history&lt;/a> lists a change after a look; every look is
+in the look log. They use the same runs (seeds 4 to 23, commit &lt;code>aaeda1f3&lt;/code>); nothing was
+re-run and nothing was tuned. The frozen &lt;code>validate.py&lt;/code> is unchanged
+(sha256 &lt;code>2313b91a…&lt;/code>). The scorers read the outputs with the current
+lockfile, not the freeze lockfile (&lt;code>uv.lock&lt;/code> differs only in pedpy 1.4.0 →
+1.5.1 and Playwright entries; jupedsim 1.4.2, fdsvismap 0.3.3 and fdsreader
+1.14.0 are as frozen; the runs do not differ).
+&lt;/div>
+&lt;/div>
+&lt;/div>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Item&lt;/th>
+&lt;th>Result&lt;/th>
+&lt;th>Registered band&lt;/th>
+&lt;th>Status&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>V4, first-target front share&lt;/td>
+&lt;td>not scored&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>The runs did not record the first target (&lt;code>output_route_history&lt;/code> was unset).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>V4, NIST construct, arm R&lt;/td>
+&lt;td>0.329 pooled (per seed 0.312 / 0.330 / 0.345)&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Reported. Arm C+jam 0.400 (0.387 / 0.398 / 0.420), arm U 0.408 (0.387 / 0.408 / 0.424).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>V5, highest 60 s moving mean&lt;/td>
+&lt;td>undefined as registered in all 20 seeds of C+jam, U and R. Post-hoc reading, disclosed: the 60 s window ending at t_jam, which starts before the first arrival, gives 3.0 to 3.3 (C+jam), 3.1 to 3.3 (U) and 2.05 to 2.27 (R) person/s&lt;/td>
+&lt;td>0.9 to 1.5 person/s&lt;/td>
+&lt;td>No 60 s window fits between the first arrival and t_jam. The post-hoc reading is above the band in every seed, against the registered direction (biased low). It is not a pass and not a fail.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>V6, T5 (50 % of dance-floor gas cells above 120 °C at the 1.5 m slice)&lt;/td>
+&lt;td>68.0 s (10 %: 67.0 s, 90 %: 72.0 s)&lt;/td>
+&lt;td>[65, 100] s&lt;/td>
+&lt;td>pass&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>V6, T6 (95 % of masked gas cells below 12 % O₂)&lt;/td>
+&lt;td>not reached by 250 s; the masked share peaks at 92.1 % at 234 s&lt;/td>
+&lt;td>[65, 115] s&lt;/td>
+&lt;td>not reached by 250 s, with the connectivity-only mask. The registered mask also subtracts bathrooms, office and storage by name; no coordinates are registered, and subtracting any room would be a post-hoc change&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>V6, 0.1 m grid check&lt;/td>
+&lt;td>not scored&lt;/td>
+&lt;td>T5, T6&lt;/td>
+&lt;td>The 0.1 m run has no output: the data folder holds the deck only.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>V6, realised against prescribed HRR&lt;/td>
+&lt;td>energy ratio 0.764; peak 52.1 MW at 92.0 s against 56.7 MW at 91 s&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Reported (central deck).&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Survival under Fahy resampling&lt;/td>
+&lt;td>see the table below&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>Reported beside V3.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Heat-incapacitated agents&lt;/td>
+&lt;td>not produced&lt;/td>
+&lt;td>reported&lt;/td>
+&lt;td>The runs did not compute heat FED: the recorded column is 0.0 everywhere and heat incapacitation was off.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Raised-floor FED&lt;/td>
+&lt;td>arm R: 212 of 367 agents (57.8 %) against 26.6 % elsewhere&lt;/td>
+&lt;td>reported&lt;/td>
+&lt;td>FED only; K is not recorded in the runs.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Vestibule count at 86 s&lt;/td>
+&lt;td>C+jam 4 to 8 (median 6), U 5 to 8 (6.5), R 1 to 4 (3)&lt;/td>
+&lt;td>reported&lt;/td>
+&lt;td>Ranges over the 20 seeds.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Censored shares and t_jam splits&lt;/td>
+&lt;td>table below&lt;/td>
+&lt;td>reported&lt;/td>
+&lt;td>Reported.&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>V5 and V6 are on the central fire and the primary row (arms C+jam, U and
+R). V5 is a secondary check and V6 a model-against-model check; neither
+validates the model.&lt;/p>
+&lt;p>&lt;strong>V4.&lt;/strong> NIST&amp;rsquo;s construct is (agents that exited by the front + agents
+stopped in the entry and sunroom) / (door users + stopped agents), over all
+agents. &amp;ldquo;Stopped&amp;rdquo; are the agents still on the grid when the run ended, which
+only arm R has (117 to 138 per seed). In arm R, 2542 front exits and 456
+stopped agents in the entry and sunroom stand against 6585 door users and
+2515 stopped agents over the 20 seeds. The entry and sunroom are boxes read
+from the deck plan (approximate in their source). The first-target share
+cannot be computed from these runs; a rerun with route history on would
+give it, and the pre-registration forbids re-running the matrix.&lt;/p>
+&lt;p>&lt;strong>V5.&lt;/strong> The first agent crosses the 914 mm interior-door line (y = −14.36
+m) at 30.5 to 34.1 s, and t_jam is 86 s, so the span is 51.9 to 55.5 s.
+Registered: the highest 60 s moving mean from the first arrival to t_jam.
+The window is not shortened and does not run past t_jam, so no V5 value
+exists as registered. In that span 182 to 197 agents cross in C+jam, 184 to
+200 in U and 123 to 136 in R; the crossings match the front exits. Flow
+before the first arrival is zero, so the 60 s window ending at t_jam holds
+every crossing. Its rate is 3.0 to 3.3 person/s in C+jam, 3.1 to 3.3 in U and
+2.05 to 2.27 in R (min to max over seeds), above 1.5 in every seed. This is a
+post-hoc reading, disclosed as such: it lets the window start before the
+first arrival (26 s), it is not the registered one, and it runs against the
+registered direction. The V5 result is &amp;ldquo;undefined as registered&amp;rdquo;; the
+post-hoc reading is neither a pass nor a fail (maintainer decision,
+2026-11-20). The first arrival is read as the first crossing of the door
+line, one reading of &amp;ldquo;first arrival&amp;rdquo;.&lt;/p>
+&lt;p>&lt;strong>V6.&lt;/strong> T5 is the first slice frame (1 s interval) at which at least half
+of the 654 gas nodes of the dance-floor box (A4) exceed 120 °C. NIST&amp;rsquo;s
+FDS 4 result is 80 to 85 s, so the model reaches it earlier, inside the
+registered window. The slice at the nominal 1.5 m is read at 1.6 m (the same
+cell, registered in C24), at the grid nodes. T6 needs a mask of &amp;ldquo;interior
+gas cells connected to the dance floor, minus the bathrooms, office and
+storage&amp;rdquo;. The registration gives no coordinates for those rooms, so the
+mask is built by connectivity only: nodes of the slice plane that can be
+reached from the dance floor in the closed initial state (10 522 of 14 453
+gas nodes). With it, the masked share below 12 % oxygen reaches 83 % at
+150 s and 92.1 % at 234 s, never 95 %. The T6 result is &amp;ldquo;not reached by 250 s&amp;rdquo;. The nodes still at or above 12 % at
+the end lie mostly in two groups (an observation), 433 nodes at x −3.4 to 1.6 m, y −1.4 to
+3.2 m and 360 nodes at x −12.0 to −10.2 m, y −6.8 to 0.4 m. Whether they
+are the excluded rooms is not established. The deck labels none of its obstructions
+as an office or storage room and one as bathroom fixtures, at x −1.42 m,
+y −1.24 m, inside the first group&amp;rsquo;s box; the second group has no room label.
+The groups are not excluded: excluding them would be a post-hoc change, and
+the registration does not make that choice (maintainer decision, 2026-11-20). By zone (O₂ 95 %):
+dance floor 102 s, sunroom 96 s, main bar 109 s, dart room 114 s, foyer
+122 s. The sunroom reaches 120 °C (half of its nodes) at 84 s on the 1.6 m
+plane; NIST&amp;rsquo;s &amp;ldquo;by 90 s&amp;rdquo; refers to a vertical slice.&lt;/p>
+&lt;p>&lt;strong>Survival of W differences under Fahy resampling.&lt;/strong> Registered as a rate
+reported beside the V3 sign test (plan, line 146): how often a W difference
+survives resampling of Fahy&amp;rsquo;s table. These are rates for a difference in W;
+they say nothing about occupants. Reading: 4000 multinomial resamples of
+Fahy&amp;rsquo;s table, one per draw, shared by all 20 seeds and both arms. Two
+readings of &amp;ldquo;survives&amp;rdquo; are given. &amp;ldquo;Sign&amp;rdquo; is primary (maintainer decision,
+2026-11-20): the difference keeps its observed sign; it reproduces the
+plan&amp;rsquo;s own figure (above 99 % for a uniform 0.03 difference), which the
+tests check on a synthetic case. &amp;ldquo;Size&amp;rdquo;, shown beside it: the difference
+keeps its sign and is at least 0.03, the reading used first; it gives 0.46 to
+0.50 for the rows at +0.030 to +0.033. The
+plan does not say whether its rates are the referee&amp;rsquo;s three synthetic cases
+or rates on observed differences. &amp;ldquo;V3 holds&amp;rdquo; is the share of draws in which V3
+as registered (R lower in at least 15 of 20 seeds and a mean at least 0.03
+lower) holds.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Row&lt;/th>
+&lt;th>Mean W(R) − W(C+jam)&lt;/th>
+&lt;th>Sign, per seed (min / median / max)&lt;/th>
+&lt;th>Sign, mean&lt;/th>
+&lt;th>Size, per seed&lt;/th>
+&lt;th>Size, mean&lt;/th>
+&lt;th>V3 holds&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>primary, central&lt;/td>
+&lt;td>+0.078&lt;/td>
+&lt;td>0.998 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.601 / 0.996 / 1.000&lt;/td>
+&lt;td>0.999&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>low yields&lt;/td>
+&lt;td>+0.092&lt;/td>
+&lt;td>1.000 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.971 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>high yields&lt;/td>
+&lt;td>+0.033&lt;/td>
+&lt;td>0.544 / 0.969 / 1.000&lt;/td>
+&lt;td>0.984&lt;/td>
+&lt;td>0.000 / 0.511 / 0.996&lt;/td>
+&lt;td>0.496&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>+15 s&lt;/td>
+&lt;td>+0.068&lt;/td>
+&lt;td>0.966 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.481 / 0.994 / 1.000&lt;/td>
+&lt;td>0.998&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>−15 s&lt;/td>
+&lt;td>+0.004&lt;/td>
+&lt;td>0.265 / 0.930 / 1.000&lt;/td>
+&lt;td>0.586&lt;/td>
+&lt;td>0.000 / 0.170 / 0.969&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;td>0.001&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>t_jam 71 s&lt;/td>
+&lt;td>+0.030&lt;/td>
+&lt;td>0.467 / 0.976 / 1.000&lt;/td>
+&lt;td>0.979&lt;/td>
+&lt;td>0.004 / 0.467 / 0.927&lt;/td>
+&lt;td>0.461&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>t_jam 102 s&lt;/td>
+&lt;td>+0.074&lt;/td>
+&lt;td>1.000 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.868 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>pre-movement zero&lt;/td>
+&lt;td>+0.106&lt;/td>
+&lt;td>1.000 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>1.000 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>pre-movement tracked&lt;/td>
+&lt;td>+0.096&lt;/td>
+&lt;td>1.000 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.995 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>w_queue&lt;/code> 0.024 (a Fahy fit)&lt;/td>
+&lt;td>+0.030&lt;/td>
+&lt;td>0.509 / 0.986 / 1.000&lt;/td>
+&lt;td>0.985&lt;/td>
+&lt;td>0.001 / 0.460 / 0.984&lt;/td>
+&lt;td>0.472&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R-na&lt;/td>
+&lt;td>+0.075&lt;/td>
+&lt;td>0.991 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.872 / 0.994 / 1.000&lt;/td>
+&lt;td>0.997&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>dose only&lt;/td>
+&lt;td>+0.072&lt;/td>
+&lt;td>0.999 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.749 / 1.000 / 1.000&lt;/td>
+&lt;td>1.000&lt;/td>
+&lt;td>0.000&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The V3m pairs (R against U) are scored the same way: the primary row has
+mean +0.093, per-seed sign survival 0.992 / 1.000 / 1.000 and size survival
+0.894 / 1.000 / 1.000. The result is the one already reported: the primary
+difference is positive (R worse) and keeps its sign under resampling; no row
+passes V3 in more than 0.1 % of draws.&lt;/p>
+&lt;p>&lt;strong>Raised floors.&lt;/strong> Agents are counted as on a raised floor when they start
+inside the platform or rear-strip boxes of the deck plan (302 and 66 placed
+survivors over 20 seeds, 367 in all: the boxes overlap by 0.15 m and one agent
+starts in both; the alcove holds none). In arm R 57.8 % of them
+reach FED 1 against 26.6 % of the others; in arm U, where nobody stops, 35.7 %
+against 23.7 %. The slice is sampled at an absolute height
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/365" target="_blank" rel="noopener">#365&lt;/a>), so on
+these floors it sits 0.2 to 0.6 m lower above the feet than elsewhere (the
+1.6 m plane is 1.0 m above the platform). No claim is made from the
+difference.&lt;/p>
+&lt;h3>Censored shares and t_jam splits&lt;span class="hx-absolute -hx-mt-20" id="censored-shares-and-t_jam-splits">&lt;/span>
+&lt;a href="#censored-shares-and-t_jam-splits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>Over the 20 seeds, T1 and W of the agents that exited before and at or
+after t_jam (descriptive, not a gate). After t_jam the front door is closed:
+in the clear-air rows nobody uses it, and the W values after t_jam rest on
+few agents.&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>Row&lt;/th>
+&lt;th>Arm&lt;/th>
+&lt;th>Censored&lt;/th>
+&lt;th>Before t_jam: T1, W&lt;/th>
+&lt;th>At or after t_jam: T1, W&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>primary&lt;/td>
+&lt;td>C+jam&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>49.7 %, 0.343&lt;/td>
+&lt;td>0.0 %, 0.564&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>primary&lt;/td>
+&lt;td>U&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>51.2 %, 0.329&lt;/td>
+&lt;td>0.0 %, 0.569&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>primary&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>39.4 %, 0.404&lt;/td>
+&lt;td>39.2 %, 0.567&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>low yields&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>37.8 %, 0.416&lt;/td>
+&lt;td>36.9 %, 0.463&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>high yields&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>40.8 %, 0.375&lt;/td>
+&lt;td>51.4 %, 0.505&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>+15 s&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>44.6 %, 0.395&lt;/td>
+&lt;td>21.5 %, 0.434&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>−15 s (234 s)&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>35.1 %, 0.410&lt;/td>
+&lt;td>35.2 %, 0.515&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>t_jam 71 s&lt;/td>
+&lt;td>C+jam&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>42.9 %, 0.379&lt;/td>
+&lt;td>0.0 %, 0.553&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>t_jam 71 s&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>38.4 %, 0.408&lt;/td>
+&lt;td>20.4 %, 0.376&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>t_jam 102 s&lt;/td>
+&lt;td>C+jam&lt;/td>
+&lt;td>2&lt;/td>
+&lt;td>54.6 %, 0.333&lt;/td>
+&lt;td>0.0 %, 0.608&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>t_jam 102 s&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>39.4 %, 0.404&lt;/td>
+&lt;td>39.3 %, 0.567&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>pre-movement zero&lt;/td>
+&lt;td>C+jam&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>57.9 %, 0.324&lt;/td>
+&lt;td>0.0 %, 0.611&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>pre-movement zero&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>44.7 %, 0.422&lt;/td>
+&lt;td>78.8 %, 0.378&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>pre-movement tracked&lt;/td>
+&lt;td>C+jam&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>52.2 %, 0.340&lt;/td>
+&lt;td>0.0 %, 0.579&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>pre-movement tracked&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>40.8 %, 0.410&lt;/td>
+&lt;td>43.4 %, 0.522&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>w_queue&lt;/code> 0.024 (a Fahy fit)&lt;/td>
+&lt;td>C+jam&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>38.5 %, 0.364&lt;/td>
+&lt;td>0.0 %, 0.562&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>w_queue&lt;/code> 0.024 (a Fahy fit)&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>32.9 %, 0.391&lt;/td>
+&lt;td>35.8 %, 0.631&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>R-na&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>0&lt;/td>
+&lt;td>39.9 %, 0.388&lt;/td>
+&lt;td>47.7 %, 0.598&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>dose only&lt;/td>
+&lt;td>R&lt;/td>
+&lt;td>1008 (15.1 %)&lt;/td>
+&lt;td>39.2 %, 0.403&lt;/td>
+&lt;td>0.0 %, 0.598&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>Censored counts are of 6660 placed survivor-agents per row. &lt;code>validate.py&lt;/code>
+takes an agent&amp;rsquo;s last recorded frame as its exit time, so in the R rows the
+group at or after t_jam includes agents that stopped near a door.&lt;/p>
 &lt;h2>Deviations and history&lt;span class="hx-absolute -hx-mt-20" id="deviations-and-history">&lt;/span>
 &lt;a href="#deviations-and-history" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>Pre-movement, &lt;code>w_queue&lt;/code> and t_jam rows have no arm-C build. They were
-scored for C+jam, U and R only.&lt;/li>
-&lt;li>R-na and dose-only were paired with the primary C+jam and U runs (the
-analyst&amp;rsquo;s choice). The same-agent check passed.&lt;/li>
-&lt;li>Arm C was scored without the t_jam split.&lt;/li>
-&lt;li>The look order was V1, V2, V3, V3m, context arms, fire variants,
-sensitivities. The analyst chose it; the pre-registration sets none.&lt;/li>
-&lt;li>The arm C-NIST row and the N = 440 and N = 462 rows were dropped before
-the freeze.&lt;/li>
-&lt;li>The look log is public in the data record
-(&lt;a href="https://doi.org/10.5281/zenodo.24226552" target="_blank" rel="noopener">doi:10.5281/zenodo.24226552&lt;/a>).&lt;/li>
+&lt;li>
+&lt;p>The owed scorers read the t_jam rows with &lt;code>assets/station_nist/config_full.json&lt;/code>
+and &lt;code>--horizon 234&lt;/code> where needed, because the built configs of the
+coupled matrix no longer exist. The frozen &lt;code>validate.py&lt;/code> with these
+configs reproduces all 32 score files of the data record (diff of every
+file).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The first version of the V6 mask read the slice at cell centres and its
+flood fill leaked through zero-thickness walls (fdsreader&amp;rsquo;s cell mask does
+not see them). T5 was the same in both versions and T6 was not reached in
+both. The version reported reads the plane at its grid nodes. The first
+result had been seen when the mask was changed; both are in the look log.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The slice used for V6 is read at 1.6 m (the cell of the 1.5 m request), as
+registered in C24.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The registration leaves some readings open: the first arrival of V5, the
+stopped agents and the entry and sunroom of V4, the rooms of the T6 mask,
+which agents are on a raised floor, and what &amp;ldquo;survives&amp;rdquo; means for a W
+difference. Each reading is stated above. Most were fixed in the scorer
+before its first look. These were changed or added after a look, and are
+disclosed as such: the cell-to-node mask of V6 (above); the rule for a T6
+or T5 value not reached by the last frame, first coded as &amp;ldquo;fail&amp;rdquo; after the
+first T6 result and relabelled &amp;ldquo;not reached by &lt;time> s&amp;rdquo; by maintainer
+decision (2026-11-20), and the list of masked nodes still above 12 %
+oxygen, added after the first T6 result; the count of heat-incapacitated
+agents, added after the first look at the agent scalars;
+the sign reading of &amp;ldquo;survives&amp;rdquo;, added after the size reading had given 0.46
+to 0.50 for differences of 0.03, against the plan&amp;rsquo;s 99 %; and the V5 rate of
+the window ending at t_jam, added after V5 was undefined.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Pre-movement, &lt;code>w_queue&lt;/code> and t_jam rows have no arm-C build. They were
+scored for C+jam, U and R only.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>R-na and dose-only were paired with the primary C+jam and U runs (the
+analyst&amp;rsquo;s choice). The same-agent check passed.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>Arm C was scored without the t_jam split.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The look order was V1, V2, V3, V3m, context arms, fire variants,
+sensitivities. The analyst chose it; the pre-registration sets none.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The arm C-NIST row and the N = 440 and N = 462 rows were dropped before
+the freeze.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>The look log is public in the data record
+(&lt;a href="https://doi.org/10.5281/zenodo.24226552" target="_blank" rel="noopener">doi:10.5281/zenodo.24226552&lt;/a>).
+That version ends on 2026-11-14. The looks of the owed scoring (2026-11-20)
+are appended to the log and are not in the record until it is updated.&lt;/p>
+&lt;/li>
 &lt;/ul>
 &lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
 &lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
