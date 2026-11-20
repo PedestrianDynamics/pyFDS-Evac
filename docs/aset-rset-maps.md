@@ -233,10 +233,11 @@ Run with `SCHROEDER2020_RELEASE` set to the unpacked Zenodo release
   C = −274.7 m² s.
 - **Stage 2, rebuild.** ASET and RSET rebuilt with this module (PedPy RSET)
   against row A of `scripts/docs/schroeder2020_reproduce.py`: min DIFF
-  differs by 2 s and the failing area by −9 %, within the predeclared 10 s
-  and 10 %.
-- Only the `nearest` cell rule is checked against the release. The default
-  `exists` rule (block maximum) has no release check.
+  differs by 2 s with the `nearest` and with the default `exists` cell
+  rule; the failing cell count by −9 % (`nearest`) and −6 % (`exists`), all
+  within the predeclared 10 s and 10 %. Row A reads the nearest node at the
+  release's grid points, so this checks the rebuild, not the release's own
+  cell rule.
 
 ## Limits
 

@@ -160,6 +160,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Schröder study scripts and `scripts/docs/first_fds_case_aset.py` are
+  thin wrappers over `pyfds_evac.analysis` (#997); their own FED formulas and
+  left-sum doses are gone. Figures are unchanged. Dose crossings now use the
+  engine's right-endpoint rule, so the standing-person FED 0.3 times on
+  [Your first FDS case](docs/first-fds-case.md) are 1 s earlier (260, 254,
+  261 s) and the total-flux heat dose on the Schröder page reaches 0.3 at
+  258 s (0.1 m) and 392 s (two doors), 1 s earlier. The study maps count each
+  cell's real floor area. `read_level_crossing` reads a first crossing of any
+  slice quantity, and the opt-in release check also covers the `exists` rule.
 - With a gas or heat FED model on, a deadlock no longer ends the run while
   a stuck agent's dose can still reach its incapacitation threshold before
   `max_simulation_time` at its latest FED rate (gas or heat, the agent's own
