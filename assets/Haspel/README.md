@@ -1,35 +1,8 @@
 # Haspel
 
-A real-building asset for a model-to-model comparison with a PathFinder student study, not a synthetic test deck. The building and headcount are the same as the study's; its evacuation times are the numbers to compare against. PathFinder is itself a model, so agreement would be cross-model verification, not validation against experimental data.
+A real-building asset, not a synthetic test deck: the ground floor of the BUW Campus Haspel building (Gebäude HC), with 260 agents and an FDS fire. It is a demonstration case. It has no citable reference result: an earlier comparison with a PathFinder student project was dropped, because that project is unpublished and cannot be cited (#230).
 
-## The reference
-
-> *Qualitative Entwurfsanalysen Evakuierungssimulation — Bergische Universität Wuppertal, Gebäude HC* (unpublished student project, architecture/civil engineering faculty), simulated in Thunderhead Engineering **PathFinder**, a commercial microscopic evacuation model.
-
-The report is not in this repository and has no authors, year or archive ID recorded here. Every number in the table below comes from it and has not been checked against the source; ask the maintainer for a copy.
-
-According to the report, the same building (BUW Campus Haspel, Gebäude HC) was modelled independently in PathFinder across four scenarios. Its walking speeds were 1.60 m/s on the level and 0.55 m/s up indoor stairs, the under-30 means in E DIN 18009-2:2021-06 (draft), Tab. G.1 and G.2. It used 1.19 m/s for impaired agents. In the draft that value is the level mean for people over 50 (Tab. G.1); DIN gives no value for people with reduced mobility.
-
-| # | Scenario | Population | Fire | PathFinder result |
-|---|---|---|---|---|
-| 1 | Evening comedy show | 300 (100 Hörsaal + 160+40 Mensa) | none | **~57s** to fully clear |
-| 2 | Same evening event | 300, 47 impaired | Mensa fire blocks the outside door *and* the upper-right terrace route | **~71s** to clear; last person off the safe outdoor walkway at **~101s** |
-| 3 | Daytime lecture + freshers' week | 450 (260 Hörsaal + 90 Mensa/Foyer + 100 upper floors) | none | **~74s** to clear, ~89s to all reach an exit |
-| 4 | Same daytime event | 450, same split | Mensa fire blocks the outside door | **~85s** to clear |
-
-This scenario places 260 agents (100 Hörsaal, 30 at the Mensa food counter, 30 eating in the Mensa, 50 roaming the Foyer, 50 roaming the exhibition area), so it matches no scenario headcount: scenario 1 has 300, scenario 3 has 450 including 100 on the upper floors. The comparison question is: **does a clear-air pyfds-evac run land anywhere near PathFinder's ~57s?** Not an exact match (different model, different assumptions), but close enough to explain the gap, or a signal something's genuinely wrong.
-
-### Inputs that differ from the reference
-
-| Input | Reference (per report) | `config.json` |
-|---|---|---|
-| Free walking speed | 1.60 m/s | 1.4 m/s (`v0`), constant |
-| Speed spread | not recorded here | none (`v0_distribution: constant`); DIN 18009-2 (draft) G.4.1 asks for a ±20 % normal spread |
-| Impaired agents | 47 in scenario 2 | none |
-| Blocked routes | scenarios 2 and 4 | none modelled |
-| Pre-movement, agent size, stairs | not recorded here | no pre-movement, radius 0.2 m, ground floor only |
-
-With a 12.5 % lower mean speed and no spread, a longer egress time is expected even on identical geometry and routes. A gap to PathFinder can only be read as a model disagreement once these inputs match.
+This scenario places 260 agents: 100 Hörsaal, 30 at the Mensa food counter, 30 eating in the Mensa, 50 roaming the Foyer and 50 roaming the exhibition area.
 
 ## Routes
 
@@ -52,7 +25,7 @@ These are the only two exits. The scenario has no checkpoints; the north exit an
 
 Until #894 the scenario prescribed three journeys with fixed exit shares (85/15, 90/10), and two of its checkpoints sat in doorways the agents then had to walk back from: the Hörsaal group turned back into its own queue at the north door, and the Mensa group walked north to the Foyer door and back south to `exit_south`. In clear air 74 of 300 agents deadlocked (#894, #132).
 
-## Current status: not a valid comparison yet
+## Results
 
 Clear air (no `--fds-dir`), seeds 1–10, this population: all 260 agents leave in every seed, the last after 114.4–122.9 s (median 117.2 s); 204–212 of them leave by `jps-exits_1` (south). The desk rows of the Hörsaal are closed at their west end in the WKT (a 0.2 m wall at x 13.73–13.93 joins the 13 desks), so each row opens only to the east aisle. With both ends open, the shortest path cut through the 0.58 m gaps between desks, and in 3 of 5 seeds an agent walking through a row met a seated agent walking out of it head-on at the west end, a deadlock with 2 agents left. The FDS deck keeps the desks as they were. The earlier result, 400 agents out by 103.2 s at seed 42, was for the old population and exits.
 
@@ -74,8 +47,6 @@ Fire against clear air, seeds 1–10, same code, `--fds-dir` the run above:
 
 The fire has no measurable effect on this evacuation. The burner reaches 200 kW only at 60 s and the last agent leaves at about 117 s, before the smoke at the slice height is dense enough to slow anyone by more than 1.2 % or to give a dose. Single seeds move by −5.4 s to +3.2 s against clear air because these small slowdowns change how the crowd interacts; no agent changes its exit. A fire comparison needs a faster or larger fire, or a later evacuation start.
 
-**Before running the comparison:** match the inputs above, and compare a clear-air run against scenario 1 (#230). Keep fire runs as a separate comparison against scenario 2, once its blocked routes and impaired agents are modelled.
-
 ## Parameters
 
 `config.json` overrides these routing defaults for this scenario only; the code defaults are unchanged.
@@ -85,7 +56,7 @@ The fire has no measurable effect on this evacuation. The burner reaches 200 kW 
 | `routing.fed_rejection_threshold` | 0.3 | 1.0 | not stated; consistent with the ISO 13571 threshold for susceptible populations |
 | `routing.visibility_extinction_threshold` | 0.15 1/m | 0.5 1/m | not stated; with C = 3 this is S = 3/K = 20 m |
 | `routing.w_smoke` | 40 | 1.0 | not stated |
-| `v0` | 1.4 m/s | | not stated; differs from the reference 1.60 m/s |
+| `v0` | 1.4 m/s | | not stated |
 
 In `haspel.fds` the fuel is labelled `N-HEPTANE`, but `HEAT_OF_COMBUSTION=20000` kJ/kg, `SOOT_YIELD=0.015` and `CO_YIELD=0.008` have no stated source. FDS produces soot and CO from yield × HRR / ΔHc, so the extinction field, and every agent's visibility and FED, depend on these values. Treat them as a generic fuel assumption.
 
