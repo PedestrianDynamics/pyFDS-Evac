@@ -1,0 +1,142 @@
+&HEAD CHID='heat_radiometer_grid2d',
+      TITLE='#308 layer room with a 7 x 7 grid of up-facing radiometers at 1.6 m (#276 D6)' /
+
+! Purpose: issue #276, decision D6 of plans/heat-274-276/contract.md. The
+! first FDS data with a real 2-D radiometer grid, for
+! --heat-radiant-source radiometer (bilinear interpolation on real output,
+! V1 of contract Sec. 4.5) and the V4 identity at matched points off the
+! device line. Scenario: assets/heat_radiometer_grid2d.
+! Copy of heat_radiometer_layer_308.fds: fire (none), layer, mesh, &PROP and
+! every other device unchanged; RAD_z16_up is replaced by the grid below.
+! Room 4 x 4 x 3 m, 0.1 m cells, four meshes split along x. Room size and
+! grid are assumptions of this deck (#224), not sourced values.
+! Run with: mpiexec -n 4 fds <deck>.fds
+! Copy of heat_radiometer_layer.fds for the layer regime of the heat model
+! (#308): adds the TEMPERATURE slice at 2.5 m (mid-layer) and the device
+! T_z25 on that slice. Every other namelist is unchanged.
+! The z-grid has cell faces at 1.6 and 1.8 m, so the slices below stay at
+! those heights.
+&MESH ID='M1', IJK=10,40,30, XB=0,1, 0,4, 0,3 /
+&MESH ID='M2', IJK=10,40,30, XB=1,2, 0,4, 0,3 /
+&MESH ID='M3', IJK=10,40,30, XB=2,3, 0,4, 0,3 /
+&MESH ID='M4', IJK=10,40,30, XB=3,4, 0,4, 0,3 /
+
+&TIME T_END=10. /
+&MISC TMPA=20. /
+
+! Adiabatic on all six faces: walls exchange no net heat with the room, so
+! they re-emit what they absorb.
+&SURF ID='ADIABATIC_WALL', ADIABATIC=.TRUE. /
+&VENT MB='XMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='XMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMAX', SURF_ID='ADIABATIC_WALL' /
+
+! Soot makes the gas absorb and emit; clear hot air is almost transparent.
+! Soot mass fraction and temperature are assumptions of this deck (#224),
+! not sourced values.
+&SPEC ID='SOOT' /
+
+! Hot sooty upper layer from 2.0 m to the ceiling, no fire. Its base is
+! 0.2 m above the highest device. The 2.0 m base is an assumption of this
+! deck (#224), not a sourced value.
+&INIT XB=0,4,0,4,2.0,3, TEMPERATURE=300., SPEC_ID(1)='SOOT', MASS_FRACTION(1)=0.005 /
+
+! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (FDS default, taken
+! as the skin emissivity: an assumption, not a sourced value), and
+! h = 8 W/(m2 K). 35 C and h are prescribed by issue #224 (spec 016
+! leaves h and T_skin open). FDS UG Eqs. 22.35-22.36: the gauge and the
+! radiometer share the gauge temperature, so gauge - radiometer =
+! h (T_g - 35 C).
+&PROP ID='skin', GAUGE_TEMPERATURE=35., HEAT_TRANSFER_COEFFICIENT=8. /
+
+! Every array has TEMPERATURE and INTEGRATED INTENSITY at the same points,
+! and gauges and radiometers facing up, +x, -x and down.
+! TIME_HISTORY=T writes each point to _devc.csv (without it FDS writes a
+! time-averaged _line.csv).
+&DEVC ID='T_z16', QUANTITY='TEMPERATURE', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='U_z16', QUANTITY='INTEGRATED INTENSITY', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_up', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_px', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_px', QUANTITY='RADIOMETER GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_mx', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_mx', QUANTITY='RADIOMETER GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_dn', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_dn', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+
+&DEVC ID='T_z25', QUANTITY='TEMPERATURE', XBP=0.45,3.45,2.05,2.05,2.5,2.5, POINTS=7, TIME_HISTORY=T /
+
+&DEVC ID='T_z18', QUANTITY='TEMPERATURE', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='U_z18', QUANTITY='INTEGRATED INTENSITY', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_up', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_up', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_px', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_px', QUANTITY='RADIOMETER GAS', ORIENTATION=1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_mx', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_mx', QUANTITY='RADIOMETER GAS', ORIENTATION=-1,0,0,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z18_dn', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z18_dn', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,-1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.8,1.8, POINTS=7, TIME_HISTORY=T /
+
+
+! Radiometer grid (#276 D6): RADIOMETER GAS facing up at 1.6 m, 7 x 7
+! points, 0.5 m spacing, x = 0.45-3.45 m, y = 0.55-3.55 m (cell centres,
+! 0.45 m or more from the walls, off the mesh seams). One &DEVC per row:
+! POINTS gives a 1-D line only (FDS UG 6.10.1 Sec. 22.2.5). The row
+! y = 2.05 m replaces RAD_z16_up of the #308 deck, at the same 7 points.
+&DEVC ID='RAD_up_r01', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,0.55,0.55,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_up_r02', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,1.05,1.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_up_r03', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,1.55,1.55,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_up_r04', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_up_r05', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.55,2.55,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_up_r06', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,3.05,3.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_up_r07', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,3.55,3.55,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+
+! Matched points for the V4 identity (contract Sec. 4.5): gauge and gas
+! temperature at grid nodes off the y = 2.05 m row (that row has GAUGE_z16_up
+! and T_z16 below).
+&DEVC ID='GAUGE_up_m1', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XYZ=0.95,0.55,1.6 /
+&DEVC ID='T_m1', QUANTITY='TEMPERATURE', XYZ=0.95,0.55,1.6 /
+&DEVC ID='GAUGE_up_m2', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XYZ=1.95,1.05,1.6 /
+&DEVC ID='T_m2', QUANTITY='TEMPERATURE', XYZ=1.95,1.05,1.6 /
+&DEVC ID='GAUGE_up_m3', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XYZ=2.95,3.05,1.6 /
+&DEVC ID='T_m3', QUANTITY='TEMPERATURE', XYZ=2.95,3.05,1.6 /
+&DEVC ID='GAUGE_up_m4', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XYZ=3.45,3.55,1.6 /
+&DEVC ID='T_m4', QUANTITY='TEMPERATURE', XYZ=3.45,3.55,1.6 /
+
+&SLCF PBZ=1.6, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=1.8, QUANTITY='INTEGRATED INTENSITY' /
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=1.8, QUANTITY='TEMPERATURE' /
+&SLCF PBZ=2.5, QUANTITY='TEMPERATURE' /
+&SLCF PBY=2.05, QUANTITY='TEMPERATURE' /
+&SLCF PBY=2.05, QUANTITY='INTEGRATED INTENSITY' /
+
+&TAIL /
