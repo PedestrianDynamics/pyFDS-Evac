@@ -1,0 +1,42 @@
+&HEAD CHID='pathfinder_fed_stationary',
+      TITLE='Room fire, FDS FED device and gas devices at 1.7 m (#208, stationary occupant)' /
+
+! The counterpart of the stationary case of Pathfinder's FED verification
+! (#208): a fire, gas devices and FDS's own FED device at one point, and the
+! gas slices pyFDS-Evac reads at that height. Pathfinder's FDS files are not
+! published, so this room is this repository's own. Room size, grid, burner
+! power, yields and opening are assumptions of this deck, not sourced values.
+! Run with: fds pathfinder_fed_stationary.fds
+&MESH ID='room', IJK=20,20,15, XB=0,4,0,4,0,3 /
+&TIME T_END=120. /
+&MISC TMPA=20. /
+
+! Propane with a high CO yield (an under-ventilated or smouldering burn), so
+! that the CO dose at 1.7 m is large enough to compare. FDS tracks CO, CO2,
+! O2 and soot through SIMPLE_CHEMISTRY.
+&REAC FUEL='PROPANE', CO_YIELD=0.2, SOOT_YIELD=0.05 /
+
+! 0.4 x 0.4 m burner at 1250 kW/m2 = 200 kW, reached over 10 s.
+&SURF ID='BURNER', HRRPUA=1250., TAU_Q=-10., COLOR='RED' /
+&VENT XB=0.6,1.0,0.6,1.0,0,0, SURF_ID='BURNER' /
+
+! Low opening, 1 m wide and 1 m high, in the +x wall: the smoke layer
+! stops its descent near the soffit, below the 1.7 m of the devices.
+&VENT XB=4,4,1.5,2.5,0,1.0, SURF_ID='OPEN' /
+
+! Horizontal slices through the middle of the cells of the 1.6-1.8 m layer
+! (dz = 0.2 m); the devices sit in the same plane.
+&DUMP DT_SLCF=0.5, DT_DEVC=0.5 /
+&SLCF PBZ=1.7, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&SLCF PBZ=1.7, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE'  /
+&SLCF PBZ=1.7, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN'          /
+&SLCF PBZ=1.7, QUANTITY='EXTINCTION COEFFICIENT', SPEC_ID='SOOT'     /
+
+! FDS's own FED at the occupant (the reference) and the three gases it is
+! built from, in the cell that holds the point (3.05, 3.05, 1.7).
+&DEVC ID='FED_occupant', XYZ=3.05,3.05,1.7, QUANTITY='FED' /
+&DEVC ID='CO_occupant',  XYZ=3.05,3.05,1.7, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON MONOXIDE' /
+&DEVC ID='CO2_occupant', XYZ=3.05,3.05,1.7, QUANTITY='VOLUME FRACTION', SPEC_ID='CARBON DIOXIDE' /
+&DEVC ID='O2_occupant',  XYZ=3.05,3.05,1.7, QUANTITY='VOLUME FRACTION', SPEC_ID='OXYGEN' /
+
+&TAIL /

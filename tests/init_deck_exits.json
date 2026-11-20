@@ -11209,6 +11209,30 @@
    ]
   ]
  },
+ "assets/pathfinder_fed_stationary/pathfinder_fed_stationary.fds":{
+  "vent_2":[
+   [
+    4.0,
+    1.5
+   ],
+   [
+    3.5,
+    1.5
+   ],
+   [
+    3.5,
+    2.5
+   ],
+   [
+    4.0,
+    2.5
+   ],
+   [
+    4.0,
+    1.5
+   ]
+  ]
+ },
  "assets/schroeder2015_route/a012_pvc_h30/a012_pvc_h30.fds":{
   "vent_2":[
    [

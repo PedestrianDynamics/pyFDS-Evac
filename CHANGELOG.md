@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Verification of Pathfinder's two FED cases (#208), on the new page
+  [Pathfinder's FED cases](docs/testing-pathfinder-fed.md): a moving occupant
+  through three gas mixtures reproduces Pathfinder's hand value 0.07896 to
+  1e-4 with the FED rate functions (three equal 10 m regions and ideal-gas
+  mass-to-volume conversion are assumptions; the O2 term is active in all
+  three), and to 9.9e-4 through the run loop; a stationary occupant in a new
+  FDS fire deck (`assets/pathfinder_fed_stationary`) matches FDS's own `FED`
+  device within 0.1 % at 119 s. Tests only; no model change.
 - Every model warns, at setup and in the effective configuration, when the
   region an agent centre can occupy (the walkable area eroded by the largest
   spawn radius plus the model's wall clearance) is farther than 0.03 m from an

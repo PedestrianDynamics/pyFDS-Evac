@@ -118,6 +118,7 @@ module:
         - "testing-homogeneous.md"
         - "testing-heat.md"
         - "testing-heat-radiometer.md"
+        - "testing-pathfinder-fed.md"
         - "testing-familiarity.md"
         - "assets.md"
     - source: ../artifacts
