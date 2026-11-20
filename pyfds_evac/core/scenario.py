@@ -27,7 +27,7 @@ import tempfile
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field, replace
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 try:
     import jupedsim as jps
@@ -951,6 +951,42 @@ class Scenario:
 def _not_spawned(has_flow: bool, numbers: list, counters: list) -> int:
     """Flow agents still to enter."""
     return max(0, sum(numbers) - sum(counters)) if has_flow else 0
+
+
+class _OutcomeCounts(NamedTuple):
+    """The agent counts of a finished run."""
+
+    total: int
+    evacuated: int
+    not_spawned: int
+    completed: bool
+
+
+def _outcome_counts(
+    initial: int,
+    has_flow: bool,
+    numbers: list,
+    counters: list,
+    remaining: int,
+) -> _OutcomeCounts:
+    """Count the agents of a finished run.
+
+    ``total`` is the agents that entered, ``evacuated`` those that entered and
+    left, and ``not_spawned`` the flow agents that never entered: cut off by
+    the time limit, or still without a free position when their window
+    closed. A run is complete only when every agent has entered and left; one
+    stopped by the time limit with agents inside or still to enter, or emptied
+    after its flow windows closed with agents still to enter, is incomplete
+    (#139, #434, #742).
+    """
+    total = initial + (sum(counters) if has_flow else 0)
+    not_spawned = _not_spawned(has_flow, numbers, counters)
+    return _OutcomeCounts(
+        total=total,
+        evacuated=total - remaining,
+        not_spawned=not_spawned,
+        completed=remaining == 0 and not_spawned == 0,
+    )
 
 
 def _mobile_positions(
@@ -4130,22 +4166,16 @@ def run_scenario(
 
         evacuation_time = simulation.elapsed_time()
         remaining = simulation.agent_count()
-        total_agents = initial_agent_count
-        if has_flow_spawning:
-            total_agents += sum(agent_counter_per_source)
-
-        # Flow agents that never entered: cut off by the time limit, or
-        # still without a free position when their window closed.
-        not_spawned = (
-            max(0, sum(num_agents_per_source) - sum(agent_counter_per_source))
-            if has_flow_spawning
-            else 0
+        counts = _outcome_counts(
+            initial_agent_count,
+            has_flow_spawning,
+            num_agents_per_source,
+            agent_counter_per_source,
+            remaining,
         )
-        # A run is complete only when every agent has entered and left; one
-        # stopped by the time limit with agents inside or still to enter, or
-        # emptied after its flow windows closed with agents still to enter,
-        # is incomplete (#139, #434, #742).
-        completed = remaining == 0 and not_spawned == 0
+        total_agents = counts.total
+        not_spawned = counts.not_spawned
+        completed = counts.completed
         if len(incapacitated_agents) > remaining:
             raise RuntimeError(
                 f"{len(incapacitated_agents)} agents incapacitated but only "
@@ -4171,7 +4201,7 @@ def run_scenario(
                 None if last_exit_time is None else round(last_exit_time, 2)
             ),
             "total_agents": total_agents,
-            "agents_evacuated": total_agents - remaining,
+            "agents_evacuated": counts.evacuated,
             "agents_remaining": remaining,
             "agents_not_spawned": not_spawned,
             "flow_spawns_deferred": sum(c for c, _, _ in deferred_spawns.values()),

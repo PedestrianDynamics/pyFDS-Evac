@@ -246,16 +246,21 @@ def test_a1_help_is_fast_and_imports_no_stack():
         "try:\n main(['--help'])\nexcept SystemExit: pass\n"
         "heavy={'textual','jupedsim','fdsreader','numpy','shapely','matplotlib'}"
         "&set(m.split('.')[0] for m in sys.modules)\n"
-        "print('HEAVY', sorted(heavy), time.perf_counter()-t)"
+        "print('HEAVY', sorted(heavy), time.perf_counter()-t)\n"
+        "pkgs=sorted({m.split('.')[0] for m,v in sys.modules.items()"
+        " if 'site-packages' in (getattr(v, '__file__', None) or '')"
+        " and not m.startswith('_')})\n"
+        "print('SITE', pkgs)"
     )
-    start = time.perf_counter()
     out = subprocess.run(
         [sys.executable, "-c", code], capture_output=True, text=True, check=True
     )
-    elapsed = time.perf_counter() - start
     assert "pyfds-evac-tui" in out.stdout
     assert "HEAVY []" in out.stdout
-    assert elapsed < 2.0, elapsed  # about 0.1 s here; generous for CI
+    # The help screen is fast because it imports no installed package at all,
+    # which is the deterministic form of a wall-clock bound. Names with a
+    # leading underscore are the virtualenv's own startup hooks.
+    assert "SITE []" in out.stdout
 
 
 def test_a1_first_screen_loads_no_simulation_stack(workdir):
