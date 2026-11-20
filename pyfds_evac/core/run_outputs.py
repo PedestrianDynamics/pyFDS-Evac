@@ -13,6 +13,7 @@ import shutil
 import sqlite3
 import sys
 
+from pyfds_evac.config.frontend import stop_reason_phrase
 from pyfds_evac.core.agent_scalars import write_agent_scalars
 from pyfds_evac.core.exposure_summary import (
     OUTCOMES,
@@ -463,18 +464,10 @@ def _ending(result) -> str:
 
 def _stop_reason(result) -> str:
     """The phrase for why an incomplete run stopped."""
-    end_reason = getattr(result, "end_reason", None) or ""
-    if end_reason == "deadlock":
-        deadlock = (getattr(result, "metrics", None) or {}).get("deadlock") or {}
-        stuck = deadlock.get("agents", 0)
-        agents = "1 agent" if stuck == 1 else f"{stuck} agents"
-        return (
-            f"deadlock, {agents} stuck since t = {deadlock.get('since_s', 0.0):.2f} s,"
-        )
-    return {
-        "flows_closed": "flow windows closed",
-        "all_mobile_left": "all mobile agents left",
-    }.get(end_reason, "time limit reached")
+    metrics = getattr(result, "metrics", None) or {}
+    return stop_reason_phrase(
+        getattr(result, "end_reason", None), metrics.get("deadlock")
+    )
 
 
 def apply_outputs(result, scenario, opts, log=print) -> list[str]:

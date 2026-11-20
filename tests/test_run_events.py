@@ -765,6 +765,7 @@ def test_result_event_is_the_run_outcome(tmp_path):
     result = stream_run(options(values), sent.append, frames=True)
     assert sent[-1] == result
     assert result.status == events.STATUS_INCOMPLETE and result.exit_code == 2
+    assert (result.execution, result.outcome) == ("finished", "incomplete")
     assert result.total == result.evacuated + result.remaining
     assert result.not_spawned > 0 and result.end_time_s == 300.0
     assert result.seed == 3 and result.incapacitated == 0
@@ -790,6 +791,8 @@ def test_a_failed_run_is_a_result_event(tmp_path):
     missing = str(tmp_path / "missing.json")
     result = stream_run(options({"scenario": missing}), sent.append)
     assert result.status == events.STATUS_FAILED and result.exit_code == 1
+    # Refused before the simulation started.
+    assert (result.execution, result.outcome) == ("finished", "rejected")
     assert result.error.startswith("FileNotFoundError") or "missing" in result.error
     assert result.evacuated is None and result.traceback is None
 
@@ -875,3 +878,4 @@ def test_a_cancelled_child_reports_cancelled():
     process.start()
     result = _drain(queue, process)[-1]
     assert (result.status, result.exit_code) == (events.STATUS_CANCELLED, None)
+    assert (result.execution, result.outcome) == ("cancelled", "no_result")

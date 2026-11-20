@@ -140,6 +140,38 @@ def agents_label(count: int | None) -> str:
     return f"{count} agent" if count == 1 else f"{count} agents"
 
 
+#: The words for each ``end_reason`` of an incomplete run; a missing or
+#: unknown one is the time limit. The one place these are written.
+STOP_REASONS = {
+    "time_limit": "time limit reached",
+    "flows_closed": "flow windows closed",
+    "all_mobile_left": "all mobile agents left",
+    "deadlock": "deadlock",
+}
+
+
+def stop_reason_phrase(
+    end_reason: str | None, deadlock: Mapping[str, Any] | None = None
+) -> str:
+    """The phrase for why an incomplete run stopped, shared by every front end.
+
+    *end_reason* is the run's ``end_reason`` metric; without it, or for
+    ``time_limit``, the run is worded as stopped by the time limit. A
+    ``deadlock`` end names the stuck agents and the time they stood still
+    from *deadlock* (the run's ``metrics["deadlock"]``); the phrase ends in
+    a comma because it is followed by `` after <t> s``. A deadlock that was
+    seen but did not end the run (``ended_run`` False, #988) is not an
+    ``end_reason`` and has no phrase here.
+    """
+    if end_reason == "deadlock":
+        info = deadlock or {}
+        stuck = info.get("agents", 0)
+        since = float(info.get("since_s", 0.0))
+        reason = STOP_REASONS["deadlock"]
+        return f"{reason}, {agents_label(stuck)} stuck since t = {since:.2f} s,"
+    return STOP_REASONS.get(end_reason or "", STOP_REASONS["time_limit"])
+
+
 def run_outcome(
     status: str | None,
     remaining: int | None,
@@ -160,25 +192,65 @@ def run_outcome(
         return Outcome(None, "Outcome not reported", "Simulated time")
     if status == "completed":
         return Outcome(True, "Complete: all agents evacuated", "Evacuation time")
+    reason = STOP_REASONS.get(end_reason or "", STOP_REASONS["time_limit"])
     if end_reason == "flows_closed":
-        label = f"Incomplete: flow windows closed, {not_spawned} not spawned"
+        label = f"Incomplete: {reason}, {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
     if end_reason == "all_mobile_left":
         dead = remaining if incapacitated is None else incapacitated
-        label = f"Incomplete: all mobile agents left, {dead} incapacitated inside"
+        label = f"Incomplete: {reason}, {dead} incapacitated inside"
         if not_spawned:
             label += f", {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
     if end_reason == "deadlock":
         stuck = (remaining or 0) - (incapacitated or 0)
-        label = f"Incomplete: deadlock, {agents_label(stuck)} stuck"
+        label = f"Incomplete: {reason}, {agents_label(stuck)} stuck"
         if not_spawned:
             label += f", {not_spawned} not spawned"
         return Outcome(False, label, "Simulated time")
-    label = f"Incomplete: time limit reached, {agents_label(remaining)} inside"
+    label = f"Incomplete: {reason}, {agents_label(remaining)} inside"
     if not_spawned:
         label += f", {not_spawned} not spawned"
     return Outcome(False, label, "Simulated time (limit reached)")
+
+
+def execution_outcome(
+    execution: str,
+    outcome: str,
+    *,
+    remaining: int | None = None,
+    not_spawned: int | None = None,
+    end_reason: str | None = None,
+    incapacitated: int | None = None,
+    sim_time: float | None = None,
+) -> Outcome:
+    """The :class:`Outcome` of a run from its (execution, outcome) pair.
+
+    A finished run with a result (``completed`` or ``incomplete``) goes to
+    :func:`run_outcome` with the counts. A ``rejected`` run was refused before
+    the simulation started; a ``no_result`` run is cancelled (*sim_time* is
+    its last progress sample) or crashed. Raises ``ValueError`` for a pair
+    a run cannot have.
+    """
+    if (execution, outcome) == ("cancelled", "no_result"):
+        return Outcome(None, cancelled_text(sim_time), "Simulated time")
+    if (execution, outcome) == ("crashed", "no_result"):
+        return Outcome(None, "Run crashed, no result", "Simulated time")
+    if (execution, outcome) == ("finished", "rejected"):
+        return Outcome(
+            None, "Configuration rejected, no simulation was run", "Simulated time"
+        )
+    if execution != "finished" or outcome not in ("completed", "incomplete"):
+        raise ValueError(
+            f"illegal run state: execution={execution!r}, outcome={outcome!r}"
+        )
+    return run_outcome(
+        outcome,
+        remaining,
+        not_spawned,
+        end_reason,
+        incapacitated=incapacitated,
+    )
 
 
 #: Extinction-coefficient bin edges K [1/m] of the smoke layers: below the

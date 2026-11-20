@@ -2278,6 +2278,7 @@ class TestRunOutcome:
         self, success, remaining, not_spawned, end_reason, capsys
     ):
         """The script prints run.py's summary line and exits 2 when incomplete."""
+        from pyfds_evac.config.frontend import stop_reason_phrase
         from pyfds_evac.webapp.pyexport import preview_script
         from run import _summary_line
 
@@ -2301,10 +2302,15 @@ class TestRunOutcome:
             agents_remaining=remaining,
             agents_not_spawned=not_spawned,
             end_reason=end_reason,
+            metrics={},
         )
         exit_code = 0
         # Test-only execution of the generated text; the GUI never runs it.
-        namespace = {"result": result, "sys": __import__("sys")}
+        namespace = {
+            "result": result,
+            "sys": __import__("sys"),
+            "stop_reason_phrase": stop_reason_phrase,
+        }
         exec(code[start:stop], namespace)
         assert capsys.readouterr().out.strip() == _summary_line(result)
         try:

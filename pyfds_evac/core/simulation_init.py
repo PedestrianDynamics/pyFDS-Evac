@@ -102,6 +102,13 @@ class AgentInsertionError(RuntimeError):
     """JuPedSim refused an agent at a position the sampler had given."""
 
 
+#: Errors of a spawn or insertion check: the configuration was refused, not
+#: the simulation broken. A front end words them as a rejection (#535), the
+#: CLI as one ``error:`` line (#692). A new check of this kind raises one of
+#: these types, or joins this tuple.
+CONFIGURATION_ERRORS = (SpawnCapacityError, SpawnConfigError, AgentInsertionError)
+
+
 def _capacity_error(dist_keys, requested, capacity) -> SpawnCapacityError:
     """Name the distributions, the requested count and the capacity."""
     names = ", ".join(f"'{key}'" for key in dist_keys)

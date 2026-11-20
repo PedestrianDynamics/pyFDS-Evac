@@ -70,7 +70,7 @@ with `--output-sqlite` it is copied beside the trajectory as
 | `scenario_path` | the scenario file that was loaded |
 | `fds_dir`, `fds_version` | absolute FDS directory, and the FDS version read from its `.smv`; `null` without FDS output |
 | `created_utc` | time the run finished, UTC |
-| `outcome` | how the run ended: `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed`, `all_mobile_left` or `deadlock`), `agents_remaining` and `agents_not_spawned`, and `deadlock` (`agents`, `since_s`, `positions`, `ended_run`) when a deadlock was detected, as in [Reading the results](#reading-the-results) |
+| `outcome` | how the run ended: `execution` (always `finished`: a manifest is written only for a run that finished), `status` (`completed` or `incomplete`), `end_reason` (`all_evacuated`, `time_limit`, `flows_closed`, `all_mobile_left` or `deadlock`), `agents_remaining` and `agents_not_spawned`, and `deadlock` (`agents`, `since_s`, `positions`, `ended_run`) when a deadlock was detected, as in [Reading the results](#reading-the-results) |
 | `heat_clothing` | `clothed` or `unclothed`, when an ISO 13571 convective heat law ran |
 | `heat_fed_threshold_override` | the `--heat-fed-threshold` value, only when it was set |
 | `heat_endpoint`, `heat_validity` | the SFPE endpoint and its validity limits, only with `--heat-endpoint`; `heat_validity` also holds `humidity` (`ok`, `humid` or `unknown`), `humid_rows`, `humid_agents` and `max_water_vapour_fraction` |

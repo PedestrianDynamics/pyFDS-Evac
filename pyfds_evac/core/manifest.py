@@ -348,8 +348,9 @@ def build_manifest(
     FDS slices (``FdsCoverageReport.to_dict``), recorded when FDS is sampled.
     ``fds_outside`` is the count of history rows sampled outside the FDS
     slices (``rows``, ``agents``, ``agent_seconds``), recorded with it.
-    ``outcome`` is how the run ended: ``status`` (``"completed"`` or
-    ``"incomplete"``), ``end_reason`` (``"all_evacuated"``, ``"time_limit"``,
+    ``outcome`` is how the run ended: ``execution`` (``"finished"``; a
+    manifest exists only for a run that finished, #535), ``status`` (the
+    outcome, ``"completed"`` or ``"incomplete"``), ``end_reason`` (``"all_evacuated"``, ``"time_limit"``,
     ``"flows_closed"``, ``"all_mobile_left"`` or ``"deadlock"``),
     ``agents_remaining`` and ``agents_not_spawned``, and ``deadlock``
     (``agents``, ``since_s``, ``positions``, ``ended_run``) when a deadlock was
