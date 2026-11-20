@@ -103,6 +103,7 @@ from .direct_steering_runtime import (
 )
 from .exit_queue import ExitQueueIndex
 from .exit_reach import exit_reach_warning
+from .exposure_summary import ExposureSummaryConfig, summarise_exposure
 from .fds_coverage import (
     apply_coverage_policy,
     check_fds_coverage,
@@ -1236,6 +1237,30 @@ class ScenarioResult:
     # Distribution key of every agent placed at the start (flow-spawned agents
     # are not listed); provisional.
     agent_distributions: dict[int, str] | None = None
+    # Simulation time [s] at which JuPedSim removed each agent that left
+    # through an exit; an agent still inside at the end has no entry.
+    exit_times: dict[int, float] = field(default_factory=dict)
+    # False when no heat model ran: the 20 degC in fed_history is ambient.
+    heat_evaluated: bool = False
+
+    def exposure_summary(
+        self, config: ExposureSummaryConfig | None = None
+    ) -> list[dict[str, Any]]:
+        """One row per agent: first threshold crossings and their margins.
+
+        See :mod:`pyfds_evac.core.exposure_summary`. Empty when the run kept
+        neither a FED nor a smoke history.
+        """
+        if self.fed_history is None and self.smoke_history is None:
+            return []
+        return summarise_exposure(
+            self.fed_history,
+            self.smoke_history,
+            self.exit_times,
+            gas_evaluated=bool(self.metrics.get("fed_enabled")),
+            heat_evaluated=self.heat_evaluated,
+            config=config,
+        )
 
     @property
     def success(self) -> bool:
@@ -2201,6 +2226,11 @@ def run_scenario(
         # left and cannot be incapacitated any more.
         leaving_agents: set[int] = set()
         last_exit_time: float | None = None
+        exit_times: dict[int, float] = {}
+        marked_for_removal: set[int] = set()
+        fed_irritant_columns = tuple(
+            getattr(getattr(fed_model, "field", None), "sampled_irritants", ())
+        )
         # Set when only incapacitated agents are left inside.
         stopped_all_mobile_left = False
         # Which track (gas / heat / both) tripped incapacitation for each
@@ -3787,6 +3817,7 @@ def run_scenario(
                                 "hcn_ppm": float(inputs.hcn_ppm),
                                 "no_ppm": float(inputs.no_ppm),
                                 "no2_ppm": float(inputs.no2_ppm),
+                                "hcl_ppm": float(inputs.hcl_ppm),
                                 "co_rate_per_min": float(components.co_rate_per_min),
                                 "cn_rate_per_min": float(components.cn_rate_per_min),
                                 "nox_rate_per_min": float(components.nox_rate_per_min),
@@ -3821,6 +3852,8 @@ def run_scenario(
                                 "speed_factor": float(effective_factor),
                             }
                         )
+                        for irritant in fed_irritant_columns:
+                            fed_history[-1][irritant] = float(getattr(inputs, irritant))
                         fed_history[-1].update(
                             heat_endpoint_row_fields(
                                 heat_endpoint,
@@ -4121,6 +4154,7 @@ def run_scenario(
                                     )
                                 else:
                                     last_exit_time = current_time
+                                    marked_for_removal.add(agent_id)
                                     if frame_recorder is not None:
                                         frame_recorder.leaves(
                                             agent_id, current_target_stage
@@ -4201,6 +4235,11 @@ def run_scenario(
             leaving_agents = {int(a) for a in simulation.removed_agents()}
             if leaving_agents:
                 last_exit_time = simulation.elapsed_time()
+            # Exit time: the clock after the step that removed the agent,
+            # for stage exits and for agents marked for removal alike.
+            for removed_id in leaving_agents | marked_for_removal:
+                exit_times.setdefault(removed_id, simulation.elapsed_time())
+            marked_for_removal.clear()
             removed_dead = leaving_agents & incapacitated_agents
             if removed_dead:
                 raise RuntimeError(
@@ -4478,6 +4517,8 @@ def run_scenario(
                 require_fds_coverage=require_fds_coverage,
             ),
             agents_incapacitated=len(incapacitated_agents),
+            exit_times=exit_times,
+            heat_evaluated=heat_fed_model is not None,
         )
         result_built = True
         return result

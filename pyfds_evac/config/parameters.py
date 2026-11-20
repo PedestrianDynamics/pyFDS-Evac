@@ -402,6 +402,59 @@ PARAMETERS: tuple[Parameter, ...] = (
         python="ScenarioResult.fed_history",
     ),
     Parameter(
+        "output_fed_summary",
+        ("--output-fed-summary",),
+        GROUP_OUTPUTS,
+        "Write one row per agent with the first time each exposure criterion "
+        "was reached (gas FED, heat FED, FIC, visibility), its margin to the "
+        "exit time and a pass/fail/open outcome; agents still inside are "
+        "censored. FIC uses the SFPE denominators (HCl 900 ppm), not ISO 13571",
+        python="ScenarioResult.exposure_summary()",
+    ),
+    Parameter(
+        "summary_fed_low",
+        ("--summary-fed-low",),
+        GROUP_OUTPUTS,
+        "Lower threshold of the exposure summary for the gas FED, the heat "
+        "FED and the FIC (default: 0.3)",
+        type=float,
+        default=0.3,
+        python="ExposureSummaryConfig.fed_thresholds[0]",
+    ),
+    Parameter(
+        "summary_fed_high",
+        ("--summary-fed-high",),
+        GROUP_OUTPUTS,
+        "Upper threshold of the exposure summary for the gas FED, the heat "
+        "FED and the FIC (default: 1)",
+        type=float,
+        default=1.0,
+        python="ExposureSummaryConfig.fed_thresholds[1]",
+    ),
+    Parameter(
+        "summary_visibility_c",
+        ("--summary-visibility-c",),
+        GROUP_OUTPUTS,
+        "Contrast constant C of the exposure summary's visibility crossing, "
+        "K >= C / limit (default: 3, light-reflecting signs; 8 for "
+        "light-emitting ones; Jin, vfdb TB 04-01 p.314, ISO 13571 Note 2)",
+        type=float,
+        default=3.0,
+        python="ExposureSummaryConfig.visibility_c",
+    ),
+    Parameter(
+        "summary_visibility_limit_m",
+        ("--summary-visibility-limit-m",),
+        GROUP_OUTPUTS,
+        "Visibility limit of the exposure summary [m] (default: 10; "
+        "Engineers Australia 2014 p.15, NZBC C/VM2 commentary p.30, vfdb "
+        "TB 04-01 Table 8.3). The vfdb limit D_L = 0.1 1/m is K = 0.23 1/m",
+        type=float,
+        default=10.0,
+        unit="m",
+        python="ExposureSummaryConfig.visibility_limit_m",
+    ),
+    Parameter(
         "inspect_fds",
         ("--inspect-fds",),
         GROUP_FDS,
@@ -989,6 +1042,11 @@ GUI_SECTIONS: tuple[tuple[str, tuple[str, ...]], ...] = (
             "output_sqlite",
             "output_smoke_history",
             "output_fed_history",
+            "output_fed_summary",
+            "summary_fed_low",
+            "summary_fed_high",
+            "summary_visibility_c",
+            "summary_visibility_limit_m",
             "output_route_history",
             "output_route_cost_history",
             "output_exit_history",
@@ -1016,6 +1074,11 @@ GUI_HIDDEN: frozenset[str] = frozenset(
         "cleanup",
         "output_pre_evacuation_times",
         "output_knowledge_history",
+        "output_fed_summary",
+        "summary_fed_low",
+        "summary_fed_high",
+        "summary_visibility_c",
+        "summary_visibility_limit_m",
     }
     | {p.dest for p in PARAMETERS if not p.run_option}
 )

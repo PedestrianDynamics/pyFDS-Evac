@@ -64,6 +64,9 @@ add and the failure modes that stay silent unless you read the warnings.
 | `--require-fds-coverage` | off | Stop the run when part of the scenario lies outside the FDS slices: at setup for the walkable area, an exit, checkpoint, spawn area, sign or route edge, and at any smoke, FED, heat or sign-visibility sample. Without it, those places read ambient air and clear sight, as in FDS+Evac; the run logs what lies outside at setup, with the bounds of the walkable area and of the FDS domain and a hint when swapped x and y or a shift could explain it, flags each history row with `in_fds_domain`, and counts the samples outside at the end. See [Outputs](outputs.md). |
 | `--output-smoke-history CSV` | none | Write the smoke history; columns on [Outputs](outputs.md#smoke-history). |
 | `--output-fed-history CSV` | none | Write the FED history; columns on [Outputs](outputs.md#fed-history). Not written when neither FED track runs. |
+| `--output-fed-summary CSV` | none | Write one row per agent: first time each criterion (gas FED, heat FED, FIC, visibility) was reached, the margin to the exit time and a `pass`/`fail`/`open` outcome; columns on [Outputs](outputs.md#exposure-summary). |
+| `--summary-fed-low X`, `--summary-fed-high X` | 0.3, 1 | Thresholds of the summary for the gas FED, the heat FED and the FIC. |
+| `--summary-visibility-limit-m M`, `--summary-visibility-c C` | 10 m, 3 | The summary's visibility crossing is *K* >= C / limit, 0.3 1/m by default; C = 8 for light-emitting signs. Sources on [Outputs](outputs.md#exposure-summary). |
 | `--inspect-fds` | off | List the FDS quantities of `--fds-dir` as JSON and exit. Needs `--fds-dir`. |
 
 ### Dynamic rerouting (smoke-aware route choice)

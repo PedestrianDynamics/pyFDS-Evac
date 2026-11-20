@@ -385,6 +385,16 @@
   "required": false,
   "type": null
  },
+ "--output-fed-summary": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": null,
+  "dest": "output_fed_summary",
+  "nargs": null,
+  "required": false,
+  "type": null
+ },
  "--output-knowledge-history": {
   "action": "_StoreAction",
   "choices": null,
@@ -541,6 +551,46 @@
   "const": null,
   "default": 1.0,
   "dest": "smoke_update_interval",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--summary-fed-high": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 1.0,
+  "dest": "summary_fed_high",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--summary-fed-low": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 0.3,
+  "dest": "summary_fed_low",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--summary-visibility-c": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 3.0,
+  "dest": "summary_visibility_c",
+  "nargs": null,
+  "required": false,
+  "type": "float"
+ },
+ "--summary-visibility-limit-m": {
+  "action": "_StoreAction",
+  "choices": null,
+  "const": null,
+  "default": 10.0,
+  "dest": "summary_visibility_limit_m",
   "nargs": null,
   "required": false,
   "type": "float"

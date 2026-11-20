@@ -162,6 +162,7 @@ FED_COLUMNS = [
     "hcn_ppm",
     "no_ppm",
     "no2_ppm",
+    "hcl_ppm",
     "co_rate_per_min",
     "cn_rate_per_min",
     "nox_rate_per_min",
@@ -280,4 +281,25 @@ def test_summary_line_names_the_placed_count_and_the_upper_bound():
     )
     assert run_outputs.summary_line(result) == (
         "Simulation finished in 12.00 s (5/5 evacuated). 'hall' placed 5 of at most 8."
+    )
+
+
+def test_fed_csv_writes_hcl_after_no2_and_sampled_irritants_after_it(tmp_path):
+    row = {name: "0" for name in FED_COLUMNS}
+    row["hbr_ppm"] = "5"
+    path = tmp_path / "irritants.csv"
+    run_outputs._write_fed_history_csv([row], str(path))
+    names, _ = _csv(path)
+    at = names.index("no2_ppm")
+    assert names[at + 1 : at + 3] == ["hcl_ppm", "hbr_ppm"]
+    assert "hf_ppm" not in names
+
+
+def test_exposure_summary_csv_writes_the_row_keys(tmp_path):
+    rows = [{"agent_id": 1, "censored": True, "exit_time_s": None}]
+    path = tmp_path / "summary.csv"
+    run_outputs._write_exposure_summary_csv(rows, str(path))
+    assert _csv(path) == (
+        ["agent_id", "censored", "exit_time_s"],
+        [{"agent_id": "1", "censored": "True", "exit_time_s": ""}],
     )
