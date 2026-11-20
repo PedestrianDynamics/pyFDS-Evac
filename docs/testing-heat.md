@@ -172,7 +172,7 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 | default law, Eq. (9): deterministic stop, 150 °C | 343 s | all 100 agents at 343 s |
 | default law, Eq. (9): deterministic stop, 200 °C | 122 s | all 100 agents at 122 s |
 | cause of every stop | `heat` | `heat` |
-| probabilistic, 150 °C, 10 seeds pooled: stopped by 999 s | 98.8 % | 985 of 1000 |
+| probabilistic, 150 °C, 10 seeds pooled: stopped by 999 s | 98.8 % | 985 of 1000 (982 on main, see below) |
 | probabilistic, 150 °C, 10 seeds pooled: largest gap between the curves | ≤ 0.043 | 0.034 (p = 0.21) |
 
 ## Pass criteria
@@ -274,7 +274,17 @@ corridor, that it reproduces the FED history of that code.
 The figures and numbers on this page come from the commands above at
 `92b8c5c`, stored in `<data>/fed_incap_heat_<T>c/evac_353/`; the ten
 probabilistic runs at `8ef8dc7`, in
-`<data>/fed_incap_heat_150c/evac_353/probabilistic_seeds/`. Earlier
+`<data>/fed_incap_heat_150c/evac_353/probabilistic_seeds/`.
+Rerun on main at `dce7eae7`, after the per-distribution seeds (#360,
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384)),
+in `<data>/fed_incap_heat_150c/evac_384/probabilistic_seeds/`, the pooled
+check gives the same D = 0.034 (p = 0.21) and per-seed D = 0.062 to 0.104,
+and every agent that stops in both runs stops at the same update. 982 of
+1000 stop by 999 s instead of 985: in seeds 43, 44 and 47 the last mobile
+agent is boxed in by incapacitated ones, and the run ends as `deadlock`
+at 715, 772 and 900 s, before that agent's threshold
+([#988](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988)).
+Earlier
 figures came from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
 model. On the same FDS

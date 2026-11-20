@@ -159,7 +159,12 @@ which takes much longer
 
 The numbers and figures on this page come from these commands, stored in
 `fds-evac-data/fed_incap_co_2000ppm/evac_353/`: the deterministic run at
-`fbe8878`, the ten probabilistic runs at `d22b6dc`.
+`fbe8878`, the ten probabilistic runs at `d22b6dc`. Rerun on main at
+`dce7eae7`, after the per-distribution seeds (#360,
+[#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384)),
+in `fds-evac-data/fed_incap_co_2000ppm/evac_384/`, they give the same
+numbers: all 100 agents at 786.0 s deterministic, and 599 of 1000 stopped
+by 999 s, pooled D = 0.023 (p = 0.68), per-seed D = 0.038 to 0.141.
 
 ## Limits
 
