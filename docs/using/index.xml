@@ -3259,7 +3259,7 @@ with &lt;code>--output-sqlite&lt;/code> it is copied beside the trajectory as
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>outcome&lt;/code>&lt;/td>
-&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code>, &lt;code>flows_closed&lt;/code>, &lt;code>all_mobile_left&lt;/code> or &lt;code>deadlock&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, and &lt;code>deadlock&lt;/code> (&lt;code>agents&lt;/code>, &lt;code>since_s&lt;/code>, &lt;code>positions&lt;/code>) when the run stopped as a deadlock, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
+&lt;td>how the run ended: &lt;code>status&lt;/code> (&lt;code>completed&lt;/code> or &lt;code>incomplete&lt;/code>), &lt;code>end_reason&lt;/code> (&lt;code>all_evacuated&lt;/code>, &lt;code>time_limit&lt;/code>, &lt;code>flows_closed&lt;/code>, &lt;code>all_mobile_left&lt;/code> or &lt;code>deadlock&lt;/code>), &lt;code>agents_remaining&lt;/code> and &lt;code>agents_not_spawned&lt;/code>, and &lt;code>deadlock&lt;/code> (&lt;code>agents&lt;/code>, &lt;code>since_s&lt;/code>, &lt;code>positions&lt;/code>, &lt;code>ended_run&lt;/code>) when a deadlock was detected, as in &lt;a href="#reading-the-results">Reading the results&lt;/a>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_clothing&lt;/code>&lt;/td>
@@ -3728,7 +3728,7 @@ spawn too. The web GUI and the terminal UI do not write this file.&lt;/p>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>end_reason&lt;/code>&lt;/td>
-&lt;td>why the run stopped: &lt;code>&amp;quot;all_evacuated&amp;quot;&lt;/code> for a completed run; &lt;code>&amp;quot;time_limit&amp;quot;&lt;/code> when &lt;code>max_simulation_time&lt;/code> stopped it; &lt;code>&amp;quot;flows_closed&amp;quot;&lt;/code> when the building emptied after the last flow window with agents still to enter had closed, before the time limit; &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code> when every mobile agent has left, only incapacitated agents remain inside and no flow window is open; &lt;code>&amp;quot;deadlock&amp;quot;&lt;/code> when every mobile agent inside stood still (net displacement below 0.03 m over the last 100 s) and no agent was in pre-movement, at a waiting stage or still to spawn. The run stops at once, before the time limit. Also in &lt;code>metrics[&amp;quot;end_reason&amp;quot;]&lt;/code>&lt;/td>
+&lt;td>why the run stopped: &lt;code>&amp;quot;all_evacuated&amp;quot;&lt;/code> for a completed run; &lt;code>&amp;quot;time_limit&amp;quot;&lt;/code> when &lt;code>max_simulation_time&lt;/code> stopped it; &lt;code>&amp;quot;flows_closed&amp;quot;&lt;/code> when the building emptied after the last flow window with agents still to enter had closed, before the time limit; &lt;code>&amp;quot;all_mobile_left&amp;quot;&lt;/code> when every mobile agent has left, only incapacitated agents remain inside and no flow window is open; &lt;code>&amp;quot;deadlock&amp;quot;&lt;/code> when every mobile agent inside stood still (net displacement below 0.03 m over the last 100 s) and no agent was in pre-movement, at a waiting stage or still to spawn. The run stops at once, before the time limit, unless a FED model is on and a stuck agent&amp;rsquo;s dose can still reach its threshold before the time limit (see below). Also in &lt;code>metrics[&amp;quot;end_reason&amp;quot;]&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>success&lt;/code>&lt;/td>
@@ -3777,8 +3777,24 @@ closed or whose &lt;code>max_throughput&lt;/code> lets an agent through less oft
 every 100 s, can be reported the same way.
 &lt;code>evacuation_time&lt;/code> is the detection time, not an egress time, and
 &lt;code>metrics[&amp;quot;deadlock&amp;quot;]&lt;/code> and the manifest &lt;code>outcome[&amp;quot;deadlock&amp;quot;]&lt;/code> list the
-stuck agents&amp;rsquo; count, the start of the window (&lt;code>since_s&lt;/code>) and their
-positions. A working bottleneck, with some agents still moving, never
+stuck agents&amp;rsquo; count, the start of the window (&lt;code>since_s&lt;/code>), their
+positions and &lt;code>ended_run&lt;/code>.
+With a gas or heat FED model on that can incapacitate, a deadlock does
+not end the run while a stuck agent&amp;rsquo;s dose can still reach that agent&amp;rsquo;s
+incapacitation threshold before &lt;code>max_simulation_time&lt;/code>: at its latest FED
+rate, (threshold - dose) / rate is at most the time left (rate and dose are
+those of the latest FED update, up to one update interval old), for the gas or
+the heat dose, whichever is sooner (the agent&amp;rsquo;s own drawn threshold in
+probabilistic mode). A rate of 0 never reaches it. The run then logs the
+detection once and goes on, so the stuck agents&amp;rsquo; incapacitation is
+recorded. The criterion is checked at every deadlock check, so a run that
+went on can still end as a deadlock later. It otherwise ends by the usual
+rules (&lt;code>all_mobile_left&lt;/code>, &lt;code>time_limit&lt;/code>), and &lt;code>metrics[&amp;quot;deadlock&amp;quot;]&lt;/code> keeps
+the deadlock that ended the run, or the first one with &lt;code>ended_run&lt;/code> &lt;code>False&lt;/code>
+when the run went on to another end
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988" target="_blank" rel="noopener">#988&lt;/a>).
+Cool air, where the dose cannot reach the threshold in time, leaves the
+rule as it was. A working bottleneck, with some agents still moving, never
 fires the rule. pyFDS-Evac only reports the jam; it does not clear it
 (see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/understanding/limitations/#known-defects">Known defects&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>No FED is not zero FED.&lt;/strong> If neither FED track ran, &lt;code>fed_history&lt;/code> is
@@ -3953,7 +3969,7 @@ In the old format the key sits on &lt;code>journeys[]&lt;/code>.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.max_simulation_time&lt;/code>&lt;/td>
 &lt;td>300 s&lt;/td>
-&lt;td>The run stops here. The run also ends earlier, with &lt;code>end_reason&lt;/code> &lt;code>all_mobile_left&lt;/code>, when only incapacitated agents remain, or with &lt;code>deadlock&lt;/code> when every mobile agent has stood still for 100 s; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>. With &lt;code>--fds-dir&lt;/code> it must not exceed the last FDS slice time by more than one output interval, unless &lt;code>--allow-fds-horizon-hold&lt;/code> is given (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>).&lt;/td>
+&lt;td>The run stops here. The run also ends earlier, with &lt;code>end_reason&lt;/code> &lt;code>all_mobile_left&lt;/code>, when only incapacitated agents remain, or with &lt;code>deadlock&lt;/code> when every mobile agent has stood still for 100 s and no stuck agent&amp;rsquo;s FED dose can still reach its incapacitation threshold before this time; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/docs/using/outputs/#reading-the-results">Reading the results&lt;/a>. With &lt;code>--fds-dir&lt;/code> it must not exceed the last FDS slice time by more than one output interval, unless &lt;code>--allow-fds-horizon-hold&lt;/code> is given (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/340" target="_blank" rel="noopener">#340&lt;/a>).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>simulationParams.model_type&lt;/code>&lt;/td>
@@ -7883,7 +7899,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/3fbf407cc5d1df7fd4f310de473cef20effffd87">&lt;code>3fbf407&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9bc21cdfd83006338262238c188e6415a4a4f85d">&lt;code>9bc21cd&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7907,7 +7923,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bf0c2e169f4b8f0731f1644ef8947dc1c2ec245ca88f5d079b1ce70924c7a59b&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3198de5146e22f8e92a3fa355b52b6266174d0483f9d738ddf6217bd8c811f20&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
