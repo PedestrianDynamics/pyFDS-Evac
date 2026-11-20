@@ -460,17 +460,47 @@ def test_v6_times_on_a_synthetic_room():
     assert not result["mask_touches_domain_edge"]
 
 
-def test_lattice_and_free_mask_of_a_real_fds_mesh():
+def test_node_lattice_and_free_mask_of_a_real_fds_mesh():
     pytest.importorskip("fdsreader")
     from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
     case = ASSET.parents[1] / "tests" / "data" / "cell_centred"
     sim = open_fds_simulation(str(case))
-    xc, yc, free = S._lattice_and_free(sim, 1.75)
-    # One 2 m x 2 m mesh of 0.5 m cells without obstructions.
-    assert list(xc) == pytest.approx([0.25, 0.75, 1.25, 1.75])
-    assert list(yc) == pytest.approx([0.25, 0.75, 1.25, 1.75])
-    assert free.shape == (4, 4) and free.all()
+    xc, yc, free = S._node_lattice_and_free(sim, 1.5)
+    # One 2 m x 2 m mesh of 0.5 m cells without obstructions: 5 x 5 nodes.
+    assert list(xc) == pytest.approx([0.0, 0.5, 1.0, 1.5, 2.0])
+    assert list(yc) == pytest.approx([0.0, 0.5, 1.0, 1.5, 2.0])
+    assert free.shape == (5, 5) and free.all()
+
+
+class _Mesh:
+    """Two 1 m meshes side by side; asks for the node mask and blocks one node."""
+
+    def __init__(self, x0, blocked):
+        self.coordinates = {
+            "x": [x0, x0 + 0.5, x0 + 1.0],
+            "y": [0.0, 0.5, 1.0],
+            "z": [0.0, 1.0, 2.0],
+        }
+        self._blocked = blocked
+
+    def get_obstruction_mask(self, times, cell_centered=False):
+        assert not cell_centered, "a zero-thickness wall blocks nodes, not cells"
+        mask = np.ones((1, 3, 3, 3), dtype=bool)
+        for i, j in self._blocked:
+            mask[0, i, j, :] = False
+        return mask
+
+
+def test_node_free_mask_uses_node_mask_and_the_and_of_shared_nodes():
+    class Sim:
+        # Node x = 1.0 is shared; mesh B blocks it at y = 0.5 (a thin wall edge).
+        meshes = [_Mesh(0.0, []), _Mesh(1.0, [(0, 1)])]
+
+    xc, yc, free = S._node_lattice_and_free(Sim(), 1.0)
+    assert list(xc) == pytest.approx([0.0, 0.5, 1.0, 1.5, 2.0])
+    assert not free[1, 2]  # blocked through mesh B although mesh A holds it free
+    assert free.sum() == free.size - 1
 
 
 def test_missing_fire_quantity_names_the_quantity(tmp_path):

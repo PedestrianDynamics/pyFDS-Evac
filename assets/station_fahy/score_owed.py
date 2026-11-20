@@ -604,10 +604,12 @@ def exceedance_fractions(frames, cells: np.ndarray, test) -> np.ndarray:
 def read_fire_fields(fds_dir: Path, height_m: float = 1.5):
     """Open an FDS case and return what T5 and T6 need at *height_m*.
 
-    Returns ``(times, temperature_frames, o2_frames, xc, yc, free)``: slice
-    frame times, the (ny, nx) fields per frame, the lattice cell centres and
-    the gas-cell mask of the initial (closed) state at the slice's cell.
-    Uses the repo's fdsreader adapter and slice sampler.
+    Returns ``(times, temperature_frames, o2_frames, xc, yc, free, z)``: slice
+    frame times, the (ny, nx) fields per frame at the grid nodes of the
+    slice plane, the node coordinates, the gas-node mask of the initial
+    (closed) state and the plane height. The slices are node slices, so the
+    "cells" of the registration are the nodes of the plane. Uses the repo's
+    fdsreader adapter and slice sampler.
     """
     from pyfds_evac.core.fds_sampling import (
         SliceGrid,
@@ -617,57 +619,65 @@ def read_fire_fields(fds_dir: Path, height_m: float = 1.5):
     from pyfds_evac.core.fdsreader_adapter import open_fds_simulation
 
     sim = open_fds_simulation(str(fds_dir))
-    xc, yc, free = _lattice_and_free(sim, height_m)
-    fields = {}
-    times = None
-    for key, quantity in (
-        ("temperature", "TEMPERATURE"),
-        ("o2", "OXYGEN VOLUME FRACTION"),
-    ):
-        sampler = load_slice_sampler(
+    samplers = {
+        key: load_slice_sampler(
             str(fds_dir), quantity, simulation=sim, slice_height_m=height_m
         )
+        for key, quantity in (
+            ("temperature", "TEMPERATURE"),
+            ("o2", "OXYGEN VOLUME FRACTION"),
+        )
+    }
+    z = _slice_z_mid(samplers["temperature"]._slice)
+    xc, yc, free = _node_lattice_and_free(sim, z)
+    fields = {}
+    times = None
+    for key, sampler in samplers.items():
         grid = SliceGrid(sampler, xc, yc)
         n = len(sampler._slice.times)
         if times is not None and n != len(times):
-            raise ValueError(f"{quantity}: {n} frames, expected {len(times)}")
+            raise ValueError(f"{key}: {n} frames, expected {len(times)}")
         times = np.array([grid.frame_time_s(i) for i in range(n)])
         fields[key] = [grid.values(i) for i in range(n)]
-        z_mid = _slice_z_mid(sampler._slice)
-    return times, fields["temperature"], fields["o2"], xc, yc, free, z_mid
+    return times, fields["temperature"], fields["o2"], xc, yc, free, z
 
 
-def _lattice_and_free(sim, height_m: float):
-    """Global cell centres and the gas mask at the slice's cell, initial state."""
+def _node_lattice_and_free(sim, z_m: float):
+    """Global grid nodes of the plane ``z = z_m`` and the gas-node mask, initial state.
+
+    fdsreader's node mask blocks the nodes inside an obstruction and on its
+    faces, so a zero-thickness wall blocks the nodes along it. The cell mask
+    does not see such a wall, so a flood fill over cells leaks through it.
+    A node in several meshes is gas only if no mesh blocks it; a node in no
+    mesh is not gas.
+    """
     meshes = list(sim.meshes)
-    xs = sorted({round(float(c), 6) for m in meshes for c in _centres(m, "x")})
-    ys = sorted({round(float(c), 6) for m in meshes for c in _centres(m, "y")})
+    xs = sorted({round(float(c), 6) for m in meshes for c in m.coordinates["x"]})
+    ys = sorted({round(float(c), 6) for m in meshes for c in m.coordinates["y"]})
     xc, yc = np.array(xs), np.array(ys)
-    free = np.zeros((len(ys), len(xs)), dtype=bool)
+    free = np.ones((len(ys), len(xs)), dtype=bool)
+    covered = np.zeros_like(free)
     for mesh in meshes:
         z = np.asarray(mesh.coordinates["z"], dtype=float)
-        k = int(np.clip(np.searchsorted(z, height_m, side="right") - 1, 0, z.size - 2))
-        mask = mesh.get_obstruction_mask([0.0], cell_centered=True)[0][:, :, k]
-        ix = np.searchsorted(xc, np.round(_centres(mesh, "x"), 6))
-        iy = np.searchsorted(yc, np.round(_centres(mesh, "y"), 6))
-        free[np.ix_(iy, ix)] = mask.T
-    return xc, yc, free
-
-
-def _centres(mesh, axis: str) -> np.ndarray:
-    nodes = np.asarray(mesh.coordinates[axis], dtype=float)
-    return 0.5 * (nodes[1:] + nodes[:-1])
+        k = int(np.argmin(np.abs(z - z_m)))
+        mask = mesh.get_obstruction_mask([0.0], cell_centered=False)[0][:, :, k]
+        ix = np.searchsorted(xc, np.round(np.asarray(mesh.coordinates["x"], float), 6))
+        iy = np.searchsorted(yc, np.round(np.asarray(mesh.coordinates["y"], float), 6))
+        free[np.ix_(iy, ix)] &= mask.T
+        covered[np.ix_(iy, ix)] = True
+    return xc, yc, free & covered
 
 
 def v6_times(times, temperature, o2, xc, yc, free) -> dict:
     """T5 and T6 and their per-zone times.
 
     T5 (A7): the first time at which at least 50 % of the dance-floor box's
-    gas cells at the slice exceed 120 C; the 10 % and 90 % crossings are
+    gas cells (the unblocked nodes of the slice plane) exceed 120 C; the 10 % and 90 % crossings are
     also given. T6: the first time at which at least 95 % of the masked gas
     cells have X_O2 < 0.12; the mask is the gas cells connected to the dance
     floor in the initial (closed) state, which excludes sealed rooms by
-    connectivity and not by coordinates (none are registered).
+    connectivity and not by coordinates (none are registered). The
+    fraction-below-12-% series (``o2_fraction``) is reported beside it.
     """
     dance = box_cells(xc, yc, DANCE_FLOOR_BOX) & free
     mask, leaks = interior_mask(free, dance)
@@ -699,6 +709,10 @@ def v6_times(times, temperature, o2, xc, yc, free) -> dict:
     return {
         "T5": t5,
         "T6": t6,
+        "o2_fraction": [
+            (float(t), float(f))
+            for t, f in zip(times, exceedance_fractions(o2, mask, o2_below))
+        ],
         "mask_cells": int(mask.sum()),
         "gas_cells": int(free.sum()),
         "dance_cells": int(dance.sum()),
