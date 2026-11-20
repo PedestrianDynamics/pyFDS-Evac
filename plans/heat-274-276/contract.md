@@ -622,3 +622,30 @@ Open items, each blocking only its PR:
 - D8: #275 no code; one regime per run, documented; issue stays open as
   needing a source.
 - D9, D10: docs PRs (6th-edition citations; spec 016 status and T_s).
+
+## 14. D6 results and E1 dropped (2026-11-20)
+
+Runs in `fds-evac-data/heat_radiometer/{grid2d,layer_274,layer_274_pl,layer_height_xb}`
+(FDS 6.10.1, decks from 9f11ee54).
+
+- O2: `LAYER HEIGHT` is measured from the bottom of the device line's
+  `XB`, and FDS takes T_l from the line's lowest cell. Layer lines must
+  start at the floor.
+- V10 missed: the interface at t = 1 s is 2.13-2.18 m, not 2.0 +- 0.1 m.
+  FDS UG Eq. 22.25 on the cell temperatures reproduces it; with T_l fixed
+  at 20 C it gives 1.96 m. The warming floor cell lifts it.
+- O3: `PATH_LENGTH` changes the layer kappa by 3.7 % and also the clear-air
+  kappa, so each variant has its own gauges.
+- V12 preview (facing up, 21 cases, +-30 %): E1 gives 20/21 and 17/21 and
+  pulls the ratios below 1; eps_L = 1 at the FDS interface gives 21/21
+  for both `PATH_LENGTH` values.
+- Deck A: the first full CLI run with `--heat-radiant-source radiometer`
+  on real FDS output passes V4 (2.8e-7 kW/m2, 11 nodes x 8 times),
+  |q/q_gauge - 1| <= 2.94 %.
+
+**Maintainer decision: E1 is dropped.** 1.8 D is Hottel's mean beam
+length for a slab radiating to its own boundary, not to a head below it
+seen through phi, and it made agreement worse. #274 keeps L2 (layer
+temperature from FDS devices) with eps_L a user input; layered cases are
+pointed to the radiometer source. The base of phi (FDS interface or a
+fixed height) is still open.
