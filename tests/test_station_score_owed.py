@@ -231,6 +231,25 @@ def test_heat_fed_recorded_counts_only_non_null_rows(tmp_path):
     assert S.heat_fed_recorded(db) == 1
 
 
+def test_heat_incapacitated_counts_agents_at_or_above_one(tmp_path):
+    db = _db(tmp_path, [(0, 1, 0, 0)])
+    con = sqlite3.connect(db)
+    con.execute(
+        "CREATE TABLE agent_scalars(frame INT, id INT, fed REAL, heat_fed REAL)"
+    )
+    con.executemany(
+        "INSERT INTO agent_scalars VALUES (?, ?, 0.0, ?)",
+        [(0, 1, 0.4), (1, 1, 1.0), (2, 1, 1.5), (0, 2, 0.99), (0, 3, None)],
+    )
+    con.commit()
+    con.close()
+    assert S.heat_incapacitated(db) == (1, 1.5)
+
+
+def test_heat_incapacitated_without_any_heat_fed(tmp_path):
+    assert S.heat_incapacitated(_db(tmp_path, [(0, 1, 0, 0)])) == (0, None)
+
+
 def test_heat_fed_recorded_without_a_scalars_table(tmp_path):
     assert S.heat_fed_recorded(_db(tmp_path, [(0, 1, 0, 0)])) == 0
 

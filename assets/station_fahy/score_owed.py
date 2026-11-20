@@ -349,6 +349,29 @@ def heat_fed_recorded(sqlite_path: Path) -> int:
     return int(n)
 
 
+def heat_incapacitated(sqlite_path: Path) -> tuple[int, float | None]:
+    """Agents whose recorded heat FED reached 1, and the largest heat FED seen.
+
+    The pre-registration reports heat-incapacitated agents separately: heat
+    never reaches route choice. The runs score no heat incapacitation
+    (``enable_heat_incapacitation`` is off), so this counts the dose that a
+    recorded ``heat_fed`` column reached, not agents that stopped. The
+    largest value is None when no row has a heat FED.
+    """
+    con = sqlite3.connect(sqlite_path)
+    try:
+        if not V._has_table(con, "agent_scalars"):
+            return 0, None
+        peak = con.execute("SELECT MAX(heat_fed) FROM agent_scalars").fetchone()[0]
+        (n,) = con.execute(
+            "SELECT COUNT(DISTINCT id) FROM agent_scalars WHERE heat_fed >= ?",
+            (V.FED_INCAPACITATED,),
+        ).fetchone()
+    finally:
+        con.close()
+    return int(n), peak
+
+
 def raised_floor_fed(agents: Sequence[V.AgentExit]) -> dict[str, dict[str, int | None]]:
     """FED >= 1 of placed survivors that start on a raised floor.
 
@@ -733,6 +756,12 @@ def cmd_scalars(args) -> None:
     horizon = _horizon(args)
     heat = sum(heat_fed_recorded(p) for p in args.sqlite)
     print(f"heat FED rows recorded over {len(args.sqlite)} runs: {heat}")
+    reached = [heat_incapacitated(p) for p in args.sqlite]
+    peaks = [pk for _, pk in reached if pk is not None]
+    print(
+        f"agents with heat FED >= 1: {sum(n for n, _ in reached)}; "
+        f"largest heat FED: {max(peaks) if peaks else 'n/a'}"
+    )
     total: Counter = Counter()
     n_total: Counter = Counter()
     for path in args.sqlite:
