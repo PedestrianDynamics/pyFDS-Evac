@@ -139,8 +139,8 @@ species of the New Zealand C/VM2 pre-flashover design fire (α = 0.0469
 kW/s², soot yield 0.07, CO yield 0.04 kg/kg, 20 MJ/kg; see
 [Design fires](/fundamentals/design-fires.md#fires-used-in-pyfds-evac-studies)).
 It is a sensitivity case for
-[#419](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/419) and has
-not been run: no number on this page comes from it.
+[#419](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/419). It has
+an FDS run but no evacuation runs: no number on this page comes from it.
 
 ### How the main fire was chosen
 

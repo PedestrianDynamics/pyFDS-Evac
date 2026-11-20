@@ -22,7 +22,7 @@ repository.
 | `a047_pvc_h40/a047_pvc_h40.fds` | Main fire: t², α = 0.047 kW/s² to 1.5 MW, PVC, ceiling 4.0 m |
 | `a047_pvc_h35/a047_pvc_h35.fds` | Comparison fire: as the main fire, ceiling 3.5 m |
 | `a012_pvc_h30/a012_pvc_h30.fds` | Comparison fire: α = 0.012 kW/s², ceiling 3.0 m |
-| `a047_cvm2_h40/a047_cvm2_h40.fds` | Sensitivity fire, not run: the main fire with the NZ C/VM2 pre-flashover growth and species (#419). Not in the page's example files; `make_decks.py --only a047_cvm2_h40` writes it |
+| `a047_cvm2_h40/a047_cvm2_h40.fds` | Sensitivity fire, FDS run only (no evacuation runs): the main fire with the NZ C/VM2 pre-flashover growth and species (#419). Not in the page's example files; `make_decks.py --only a047_cvm2_h40` writes it |
 | `run_p1.sh` | Runs the evacuation arms for seeds 1–10 on one FDS output |
 
 `make_decks.py` writes the four decks byte for byte; it writes the
