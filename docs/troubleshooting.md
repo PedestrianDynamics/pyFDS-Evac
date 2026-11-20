@@ -70,6 +70,7 @@ Each message, its cause and its fix are in
 | `--heat-… has no effect without --enable-heat-fed.` | A heat option without the heat dose. | Add `--enable-heat-fed`, or drop the option. |
 | `--heat-fed-threshold … departs from ISO 13571:2012 …` | A separate heat threshold is set. | Intended if you set it; the manifest records it. |
 | `Distribution '…' sets no pre-movement; using the FDS+Evac default, a constant 10 s.` | The spawn area has no pre-movement keys. | Set `use_premovement` and the `premovement_*` keys ([Scenario JSON](scenario-json.md)). |
+| `<Model>: agent centres stay … m (radius … + clearance …) from walls and may not come within 0.03 m of exit …` | The model keeps agent centres too far from the wall to reach an exit that is flush with it. An agent that heads straight at the exit stops short; one that arrives at an angle may still get in. The check is a necessary condition for one agent, not a guarantee: a crowd can strand agents while it is silent. | Deepen the exit, reduce the radius or the wall clearance ([Movement models › Wall clearance](/models/movement.md#wall-clearance-and-flush-exits)). |
 | `pyfds-evac: warning: import_report.json marks this scenario not runnable` | `pyfds-evac init` wrote the folder as not runnable and lists why. The run goes on, since the folder may have been fixed by hand after `init`; a stale cause can still stop it later. | Fix what the reasons name and import again, or edit the folder by hand ([Start from an FDS deck](start-from-fds-deck.md)). |
 
 ## Harmless log lines
