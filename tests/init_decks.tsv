@@ -204,8 +204,13 @@ assets/fic_vs_fed_speed/fic_vs_fed_speed.fds	3	196.86	0	0	no exit found; no agen
 assets/heat_integrated_intensity/heat_integrated_intensity.fds	3	4.00	0	0	no exit found; no agents to place	21ccc17981d324e76a7a00a6bb6e4a7e794b03df6ce94ebc69abdc2752fd42be
 assets/heat_only_no_soot/heat_only_no_soot.fds	3	900.00	0	0	no exit found; no agents to place	04138a46de74e5edad1d8e2e22b2db49061012d3fc0f2aca6fbfc6b1239667f6
 assets/heat_radiometer/heat_radiometer_burner.fds	3	24.00	10	100	spawn area spawn_1 (15.000 m2) holds about 59 agents of radius 0.2 m, but 100 are requested: pass --agents N with a smaller N, or enlarge the walkable area	73c6c3e0b08458769167ff2200067f7c534f6726872ab05e845b8e3bac5c04bf
+assets/heat_radiometer/heat_radiometer_descending.fds	3	16.00	1	100	spawn area spawn_1 (15.800 m2) holds about 62 agents of radius 0.2 m, but 100 are requested: pass --agents N with a smaller N, or enlarge the walkable area	fdb4f245ccf429d6f114a681069b1958bbcb0c0e4f5a9c90df2aaef5b46eb35f
+assets/heat_radiometer/heat_radiometer_grid2d.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
 assets/heat_radiometer/heat_radiometer_layer.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
+assets/heat_radiometer/heat_radiometer_layer_274.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
+assets/heat_radiometer/heat_radiometer_layer_274_pl.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
 assets/heat_radiometer/heat_radiometer_layer_308.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
+assets/heat_radiometer/heat_radiometer_layer_height_xb.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
 assets/heat_radiometer/heat_radiometer_uniform.fds	3	16.00	0	0	no exit found; no agents to place	fe79e88fc83cd9489f6902e0a11786b0bc7ca0f788709826af51b6569531020d
 assets/iso_table21_coupled/iso_table21_coupled.fds	3	200.00	0	0	no exit found; no agents to place	181f16afdeda169f06503445cb5c8ff139c2acbfbc0f5fa164ba2aaa57e5a05c
 assets/iso_table22_coupled/iso_table22_a.fds	3	100.00	0	0	no exit found; no agents to place	1892138c4a2cfa579e7775dfe0bf4d9bf1ac0863329728c6c25ba1c1102b94b2

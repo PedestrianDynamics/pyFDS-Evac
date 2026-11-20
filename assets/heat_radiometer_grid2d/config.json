@@ -1,0 +1,289 @@
+{
+  "project_version": "2.0",
+  "config": {
+    "simulation_settings": {
+      "simulationParams": {
+        "max_simulation_time": 10,
+        "model_type": "CollisionFreeSpeedModel"
+      },
+      "numberOfSimulations": 1,
+      "baseSeed": 42
+    },
+    "ui_state": {
+      "useShortestPaths": false
+    }
+  },
+  "exits": {
+    "exit_inner": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          2.8,
+          2.8
+        ],
+        [
+          3.2,
+          2.8
+        ],
+        [
+          3.2,
+          3.2
+        ],
+        [
+          2.8,
+          3.2
+        ],
+        [
+          2.8,
+          2.8
+        ]
+      ],
+      "enable_throughput_throttling": false,
+      "max_throughput": 0
+    }
+  },
+  "distributions": {
+    "walk_a": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          0.6900000000000001,
+          0.79
+        ],
+        [
+          0.91,
+          0.79
+        ],
+        [
+          0.91,
+          1.01
+        ],
+        [
+          0.6900000000000001,
+          1.01
+        ],
+        [
+          0.6900000000000001,
+          0.79
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.1,
+        "v0": 0.5,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": true,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 1.0,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "discovery"
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 100.0
+        }
+      ]
+    },
+    "walk_b": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          0.79,
+          3.0900000000000003
+        ],
+        [
+          1.01,
+          3.0900000000000003
+        ],
+        [
+          1.01,
+          3.31
+        ],
+        [
+          0.79,
+          3.31
+        ],
+        [
+          0.79,
+          3.0900000000000003
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.1,
+        "v0": 0.5,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": true,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 1.0,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "discovery"
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 100.0
+        }
+      ]
+    },
+    "walk_c": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          2.99,
+          0.6900000000000001
+        ],
+        [
+          3.21,
+          0.6900000000000001
+        ],
+        [
+          3.21,
+          0.91
+        ],
+        [
+          2.99,
+          0.91
+        ],
+        [
+          2.99,
+          0.6900000000000001
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.1,
+        "v0": 0.5,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": true,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 1.0,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "discovery"
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 100.0
+        }
+      ]
+    },
+    "stay_d": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          1.5899999999999999,
+          2.19
+        ],
+        [
+          1.81,
+          2.19
+        ],
+        [
+          1.81,
+          2.4099999999999997
+        ],
+        [
+          1.5899999999999999,
+          2.4099999999999997
+        ],
+        [
+          1.5899999999999999,
+          2.19
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.1,
+        "v0": 0.5,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": true,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 100.0,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "discovery"
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 100.0
+        }
+      ]
+    },
+    "stay_e": {
+      "type": "polygon",
+      "coordinates": [
+        [
+          2.0900000000000003,
+          1.19
+        ],
+        [
+          2.31,
+          1.19
+        ],
+        [
+          2.31,
+          1.4100000000000001
+        ],
+        [
+          2.0900000000000003,
+          1.4100000000000001
+        ],
+        [
+          2.0900000000000003,
+          1.19
+        ]
+      ],
+      "parameters": {
+        "number": 1,
+        "radius": 0.1,
+        "v0": 0.5,
+        "use_flow_spawning": false,
+        "distribution_mode": "by_number",
+        "percentage": null,
+        "use_premovement": true,
+        "premovement_distribution": "constant",
+        "premovement_param_a": 100.0,
+        "premovement_seed": null,
+        "radius_distribution": "constant",
+        "v0_distribution": "constant",
+        "familiarity": "discovery"
+      },
+      "journey_weights": [
+        {
+          "journey_id": "journey_0",
+          "weight": 100.0
+        }
+      ]
+    }
+  },
+  "checkpoints": {},
+  "zones": {},
+  "journeys_v2": [
+    {
+      "id": "journey_0",
+      "name": "journey_0",
+      "color": "#4e79a7",
+      "sequence": [
+        "exit_inner"
+      ]
+    }
+  ]
+}

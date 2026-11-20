@@ -622,3 +622,158 @@ Open items, each blocking only its PR:
 - D8: #275 no code; one regime per run, documented; issue stays open as
   needing a source.
 - D9, D10: docs PRs (6th-edition citations; spec 016 status and T_s).
+
+## 14. D6 results and E1 dropped (2026-11-20)
+
+Runs in `fds-evac-data/heat_radiometer/{grid2d,layer_274,layer_274_pl,layer_height_xb}`
+(FDS 6.10.1, decks from 9f11ee54).
+
+- O2: `LAYER HEIGHT` is measured from the bottom of the device line's
+  `XB`, and FDS takes T_l from the line's lowest cell. Layer lines must
+  start at the floor.
+- V10 missed: the interface at t = 1 s is 2.13-2.18 m, not 2.0 +- 0.1 m.
+  FDS UG Eq. 22.25 on the cell temperatures reproduces it; with T_l fixed
+  at 20 C it gives 1.96 m. The warming floor cell lifts it.
+- O3: `PATH_LENGTH` changes the layer kappa by 3.7 % and also the clear-air
+  kappa, so each variant has its own gauges.
+- V12 preview (facing up, 21 cases, +-30 %): E1 gives 20/21 and 17/21 and
+  pulls the ratios below 1; eps_L = 1 at the FDS interface gives 21/21
+  for both `PATH_LENGTH` values.
+- Deck A: the first full CLI run with `--heat-radiant-source radiometer`
+  on real FDS output passes V4 (2.8e-7 kW/m2, 11 nodes x 8 times),
+  |q/q_gauge - 1| <= 2.94 %.
+
+**Maintainer decision: E1 is dropped.** 1.8 D is Hottel's mean beam
+length for a slab radiating to its own boundary, not to a head below it
+seen through phi, and it made agreement worse. #274 keeps L2 (layer
+temperature from FDS devices) with eps_L a user input; layered cases are
+pointed to the radiometer source. The base of phi (FDS interface or a
+fixed height) is still open.
+
+## 15. Base of phi: FDS interface (I) or fixed height (F), predeclared (2026-11-20)
+
+Question: in the layer term q = h (T_g - T_s) + phi eps_L sigma
+(T_u^4 - T_s^4), where is the base of the layer that phi sees?
+
+- (I): the FDS interface, `LAYER HEIGHT` of the column, read at every
+  output time.
+- (F): a fixed height set by the user, as `--heat-layer-height` today.
+  Scored at 1.8, 2.0 and 2.5 m.
+
+Written before the descending run (step 2). The step-1 numbers below were
+known when this section was written; the descending run was not.
+
+### 15.1 Criterion
+
+- Facing up only. T_u = `UPPER TEMPERATURE` of the column, T_g =
+  `TEMPERATURE` at 1.6 m (device), eps_L = 1, h = 8 W/(m2 K), T_s = 35 C.
+  phi = Howell C-11 from the gauge (1.6 m, the 4 x 4 m footprint) to the
+  base, `phi_up` with `scripts/verification/heat_layer_view_factor.py`.
+- Reference: `GAUGE HEAT FLUX GAS` facing up at 1.6 m, same column, same
+  run. Check first that gauge - radiometer = h (T_g - 35 C) / 1000.
+- Score: model / gauge within +-30 % (the #308 band).
+- Pairwise: (I) against each of F1.8, F2.0, F2.5; three verdicts. The
+  option with more scored rows within +-30 % wins the pair; a tie goes to
+  (F) (simpler, implemented). Overall, (I) is adopted only if it wins all
+  three pairs, since the user may set any fixed height.
+- Deciding data: the descending run alone. Step 1 (`layer_274`,
+  `layer_274_pl`) is reported beside it, not pooled.
+- Sample times, set from `LAYER HEIGHT` only: t_a = first output time with
+  the median interface over the 7 columns below 2.6 m, t_b = first time it
+  is at or below 1.3 m (T_END if never). 8 times equally spaced over
+  [t_a, t_b], both ends included.
+- Values: model flux and gauge are each averaged over a centred 2 s window
+  (output rows in [t - 1, t + 1]); the ratio is the ratio of those means.
+  Point values are reported as a sensitivity.
+- Floor: rows with mean gauge below 0.5 kW/m2 are listed, not scored.
+- Head in the layer (interface at or below 1.6 m): outside the layer
+  regime, which assumes clear air at the head. Not scored. Listed with
+  phi = 1 for (I) (the limit of C-11 as the base reaches the gauge).
+- Report per option: count within +-30 %, median ratio, worst miss.
+- Sensitivity only, not gates: bands +-20 % and +-40 %, per-time counts,
+  point values, and dropping the column nearest the fire.
+
+### 15.2 Step 1 (no new runs; t = 3, 6, 9 s, 7 columns, point values)
+
+| run | option | within +-30 % | median | worst |
+|---|---|---|---|---|
+| layer_274 | I | 21/21 | 1.096 | 1.257 |
+| layer_274 | F1.8 | 18/21 | 1.228 | 1.380 |
+| layer_274 | F2.0 | 20/21 | 1.184 | 1.310 |
+| layer_274 | F2.5 | 21/21 | 1.031 | 0.788 |
+| layer_274_pl | I | 21/21 | 1.031 | 1.150 |
+| layer_274_pl | F1.8 | 21/21 | 1.160 | 1.287 |
+| layer_274_pl | F2.0 | 21/21 | 1.123 | 1.236 |
+| layer_274_pl | F2.5 | 20/21 | 0.952 | 0.663 |
+
+The interface stays at 1.85-2.59 m, so the head is never in the layer.
+(I) has the smallest spread; F2.0 is 20/21 and 21/21.
+
+### 15.3 Step 2: descending run
+
+`fds-evac-data/heat_radiometer/descending/` (deck
+`assets/heat_radiometer/heat_radiometer_descending.fds`, FDS 6.10.1,
+4 ranks, wall time 4 min 18 s, exit 0 and "STOP: FDS completed
+successfully"). About 100 kW propane burner at the y = 4 m wall, soot
+yield 0.1, low vent 0.4 x 0.3 m at the floor, adiabatic walls, T_END 60 s.
+gauge - radiometer = h (T_g - 35 C) to 1.2e-7 kW/m2.
+
+Interface (median over the 7 columns, min-max):
+
+| t (s) | 0 | 5 | 10 | 15 | 20 | 25 | 30 | 40 | 50 | 60 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| z_int (m) | 3.00 | 2.80 | 2.56 | 2.02 | 1.35 | 1.19 | 1.15 | 0.92 | 0.71 | 0.69 |
+| min-max | 3.00 | 2.29-3.00 | 2.19-2.96 | 1.36-2.28 | 1.12-1.66 | 1.10-1.28 | 0.96-1.21 | 0.83-1.09 | 0.60-0.82 | 0.65-0.73 |
+| T_u median (C) | 20 | 54 | 59 | 66 | 71 | 82 | 92 | 114 | 133 | 158 |
+
+The head (1.6 m) is inside the layer at most columns from about 18 s on.
+Sample times by the 15.1 rule: t_a = 9.97 s, t_b = 21.61 s, 8 times.
+Of 56 rows, 33 are under the 0.5 kW/m2 floor (the layer is 55-70 C while
+it is above the head), 16 have the head in the layer, 7 are scored. The
+floor is applied first: some floor rows also have the head in the layer.
+
+| option | within +-30 % | median | worst | +-40 % |
+|---|---|---|---|---|
+| I | 0/7 | 0.612 | 0.561 | 5/7 |
+| F1.8 | 0/7 | 0.604 | 0.558 | 4/7 |
+| F2.0 | 0/7 | 0.579 | 0.525 | 3/7 |
+| F2.5 | 0/7 | 0.505 | 0.435 | 0/7 |
+
+Point values: I 2/8, F1.8 2/8, F2.0 1/8, F2.5 0/8. Dropping the column
+nearest the fire (c5): all 0/6. Head-in-layer rows with phi = 1 for (I):
+I 2/16, each F 0/16, medians 0.56-0.64.
+
+- Every option is about 40 % low. The layer term misses a source the
+  gauge sees: the sooty flame and plume above 1.6 m, warm walls and warm
+  lower gas; this run does not separate them. The T^4 mean of the column
+  above z_int is within 3 C of T_u, so D7 does not explain it.
+- Pairs at +-30 %: 0-0 against F1.8, F2.0 and F2.5, a tie each, so (F)
+  under the tie rule.
+
+### 15.4 Verdict
+
+By the predeclared rule, **(F) wins** on the descending run, by ties at
+0 scored rows each. The win is not informative: no option meets the band
+and only 7 rows pass the floor.
+
+Robustness, post hoc (not part of the rule):
+
+- Descending, +-40 %: (I) 5/7, F1.8 4/7, F2.0 3/7, F2.5 0/7. (I) leads
+  only there, nowhere at +-30 %.
+- Descending, no floor (head below the interface, 38 rows): (I) 1/38,
+  F1.8 6/38, F2.0 1/38, F2.5 1/38 at +-30 %; at +-40 % F1.8 19/38 against
+  (I) 10/38. Without the floor F1.8 leads (I) outright.
+- Step 1 under the pairwise rule: in `layer_274` (I) beats F1.8 and F2.0
+  and ties F2.5 (medians 1.096 and 1.031: F2.5 is closer to 1); in
+  `layer_274_pl` (I) ties F1.8 and F2.0 and beats F2.5. (I) wins all three
+  pairs in neither run. Pooled over 42 rows: (I) 42, F1.8 39, F2.0 41,
+  F2.5 41.
+- Which fixed height reaches 21/21 flips between `layer_274` (F2.5) and
+  `layer_274_pl` (F1.8, F2.0) with nearly the same interface; the gauges
+  differ by 5-6 % between the two (Sec. 14 O3).
+- As the interface reaches the head, (I) and F1.8 converge (phi near 1
+  for both).
+
+Open for the maintainer: keep (F) as the rule's outcome, or approve one
+more run with a hotter layer above the head (the 15.1 criterion stays as
+written; a new folder).
