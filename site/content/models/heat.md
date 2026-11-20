@@ -411,10 +411,10 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
   facing down gets about 0.13 *U* and some facing sideways about 0.22 *U*,
   less than *f* = 0.25 gives. Beside a burner, plates facing up or away
   from the flame get about 0.12–0.14 *U*. One *f* serves one orientation.
-- **Gauge devices are the preferred input** (spec 016): FDS
-  `GAUGE HEAT FLUX GAS` devices give the flux to a skin-like plate from the
-  full radiation solution, with no factor (FDS User's Guide 6.10.1,
-  Eq. 22.35, p. 381). They are not read yet
+- **Devices give the flux to a skin-like plate with no factor** (spec 016):
+  FDS `RADIOMETER GAS` devices (FDS User's Guide 6.10.1, Eq. 22.36, p. 381)
+  are read by
+  [`--heat-radiant-source radiometer`](#radiant-flux-from-fds-radiometers)
   ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
 - **Possible double count with convection.** The hot-air data behind
   Eqs. 63.45–63.47 may already include radiation from the walls of the test
@@ -423,6 +423,139 @@ incident *f U*), and the rate is \(q^{1.33}/D\) as above.
   ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
 - **Falling exposure.** As for every summed dose, Eq. 63.48 holds only
   while exposure is steady or rising.
+
+### Radiant flux from FDS radiometers
+
+`--heat-radiant-source radiometer` (opt-in, total-flux only; default `gas`)
+takes the radiant term from FDS `RADIOMETER GAS` devices, which give the
+flux to a plate at a gauge temperature from the full radiation solution,
+with no orientation factor
+([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)). FDS
+defines the radiometer reading as
+
+$$
+R = \varepsilon_d\,(q_{\mathrm{inc}} - \sigma T_{\mathrm{gauge}}^4)
+\quad [\mathrm{kW/m^2}]
+$$
+
+(FDS User's Guide 6.10.1, Eq. 22.36, p. 381; \(\varepsilon_d\) is the
+device's `GAUGE_EMISSIVITY`, default 1), the same basis as the excess of the
+`INTEGRATED INTENSITY` source with \(T_{\mathrm{gauge}} = T_s\). The flux
+to the skin is
+
+$$
+q = R + \frac{h\,(T_g - T_s)}{1000} \quad [\mathrm{kW/m^2}],
+$$
+
+with \(T_g\) from the `TEMPERATURE` slice and h from
+`--heat-convective-coefficient`. Unlike the FDS gauge (Eq. 22.35), the
+radiometer has no convective part, so convection is added once, from the
+slice, after the radiant threshold. The rate is \(q^{1.33}/D\) as above.
+
+- **One orientation per run.** `--heat-radiometer-orientation x,y,z` is
+  required with this source and has no default; it is an error without the
+  source. `0,0,1` faces up (the crown, an agent below a hot layer), a
+  horizontal vector a face. The devices are selected by quantity
+  (`RADIOMETER`, with or without `GAS`: FDS 6.10.1 reports `RADIOMETER`),
+  orientation (to 10⁻⁶) and height; their IDs need no naming convention.
+- **The input the case needs.** Radiometers facing that orientation at the
+  height of the `TEMPERATURE` slice (default 1.6 m), on a regular
+  rectangular grid, with a `&PROP` that sets `GAUGE_TEMPERATURE` to the
+  skin temperature. `POINTS` writes a line, so one `&DEVC` per grid row:
+
+  ```fortran
+  &PROP ID='skin', GAUGE_TEMPERATURE=35. /   ! = --heat-skin-temperature
+  &DEVC ID='RAD_up_r01', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+        PROP_ID='skin', XBP=x0,x1, y1,y1, 1.6,1.6, POINTS=nx, TIME_HISTORY=T /
+  &SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+  ```
+
+  Without matching devices the run stops with an error that shows this
+  `&DEVC` line for the orientation and height asked for. There is no
+  fall-back to the gas term, to *U* or to the layer term.
+- **The `&PROP` is read from the deck.** fdsreader does not expose it, so the
+  reader parses `<CHID>.fds` next to the output. A missing deck, or a
+  `GAUGE_TEMPERATURE` that differs from `--heat-skin-temperature` (to
+  10⁻⁶ °C), is an error: the reading is the flux to a plate at the gauge
+  temperature, and FDS defaults it to `TMPA` (20 °C), not to the skin. A
+  `&PROP` without `GAUGE_TEMPERATURE` therefore fails unless \(T_s\) equals
+  `TMPA`. The selected devices must share one `GAUGE_EMISSIVITY`; the
+  device `HEAT_TRANSFER_COEFFICIENT` does not enter the radiometer.
+- **Height.** The devices must lie within half a mesh cell of the
+  `TEMPERATURE` slice, so that convection and radiation come from one
+  height; otherwise the run stops with an error that names both heights.
+- **Space.** The points must form a full regular grid (uniform spacing to
+  10⁻⁶ m, every node present). The reading is bilinear in x and y and exact
+  at the nodes. A grid one row wide serves only agents on that row (to
+  10⁻⁶ m).
+- **Time.** The reading is linear between output times. The horizon rules of
+  the slices apply: up to one output interval past the last frame the last
+  frame is held (this also absorbs float noise at the last output time);
+  later it is an `FdsHorizonError`, or, with `--allow-fds-horizon-hold`,
+  held after one warning.
+- **Coverage.** An agent inside the `TEMPERATURE` slice but outside the
+  radiometer grid stops the run with an error; a missing reading is not
+  read as zero. Outside the FDS domain the reading and *q* are NaN in the
+  FED history and the rate is zero, with one warning per run, or an
+  `FdsDomainError` with `--require-fds-coverage`, as for *U*.
+- **The threshold acts on the net reading** *R*, as for every source: *R* is
+  counted in the dose only at 2.5 kW/m² or more, and convection always. ISO
+  13571:2012 §8.2 gates an incident flux; with \(\varepsilon_d\) = 1 the
+  incident flux is *R* + σ\(T_s^4\), 0.511 kW/m² more at \(T_s\) = 35 °C,
+  so *R* ≥ 2.5 is an incident flux of 3.01 kW/m² or more
+  ([Where the radiant threshold acts](#where-the-radiant-threshold-acts)).
+- **With `--heat-regime layer` as well, the reading supplies the radiant
+  term** and the layer term is not added: one warning, and the manifest
+  records `layer_term: false`. `--heat-emissivity` and `--heat-u-factor` are
+  ignored (a warning each).
+- `heat_flux_kw_m2` keeps the physical *q*, before the threshold, as for the
+  other sources.
+
+**Against the FDS gauges of the #224 and #308 decks.** At the 7 device
+positions (z = 1.6 m, y = 2.05 m, h = 8, \(T_s\) = 35 °C), for the four
+orientations of the layer and uniform decks:
+
+- The reading the model uses equals an independent linear interpolation in
+  time of the `RADIOMETER` device to 10⁻⁶ kW/m² (reader check).
+- *q* − gauge = h (\(T_{\mathrm{slice}} - T_{\mathrm{dev}}\)) / 1000 to
+  10⁻⁶ kW/m², an identity of Eq. 22.35 given the reading. The only
+  difference between *q* and the gauge is the temperature of the slice
+  against the device, so this checks the reader and the assembly of *q*, not
+  the model: both contain the same radiation solution. It does not say
+  whether a plate is a person.
+- *q* against the gauge for the four orientations at *t* = 3, 6, 9 s: the
+  median miss is at most 0.3 % at 3 s and 6 s and at most 4.1 % at 9 s
+  (facing down; 6.3 % at the worst point); it is zero in the uniform room.
+  Reported, not gated; see
+  [Verification › Heat radiometer](/verification/testing-heat-radiometer.md).
+- The 21 (orientation, position) cases of the #308 layer-regime check
+  (facing up, +x, −x at 7 positions) lie within the ±30 % band at
+  *t* = 3, 6, 9 s in all 63 cases (the layer term had 54 of 63;
+  [Verification › Heat dose](/verification/testing-heat.md)). The largest
+  miss is −3.5 %, the temperature difference above.
+- On the burner deck, where the net reading is 2.5 kW/m² or more the dose
+  rate has the radiation in it, and below that it is the convective part
+  alone.
+
+### Limits of the radiometer source
+
+- **A plate, not a body.** One orientation per run: a standing person sees a
+  different hemisphere facing and walking. Walking-direction faces are a
+  later extension, not implemented.
+- **One height.** The height is the `TEMPERATURE` slice height, as for
+  every heat source; the readings do not follow a crouching agent.
+- **Interpolation does not know walls.** Bilinear interpolation mixes
+  rooms across a wall, and a device inside an obstruction reads meaningless
+  values. Neither is checked. Spacing is the user's choice: 0.5 m or less
+  and a cell or more from walls is advised (no source); a sparse grid
+  smooths a flame peak.
+- **The 2-D grid is verified on synthetic data only.** The FDS data of #224
+  hold one row of devices; interpolation across rows is tested against
+  hand-computed values, not against a 2-D FDS run.
+- **The setup coverage report does not include the grid.** An agent outside
+  the grid is found when the run samples it, not at setup.
+- **Possible double count with convection** and **falling exposure**, as
+  for the *U* source (see above).
 
 ## Incapacitation
 
@@ -476,6 +609,7 @@ the same way and set the same `incapacitated` flag; only
 | `heat_fed_method` | `"convective"` | `--heat-fed-method` |
 | `heat_radiant_source` | `"gas"` | `--heat-radiant-source` |
 | `heat_u_factor` | none, required with `integrated-intensity` | `--heat-u-factor` |
+| `heat_radiometer_orientation` | none, required with `radiometer` | `--heat-radiometer-orientation` |
 | `heat_regime` | `"smoke"` | `--heat-regime` |
 
 The 2.5 kW/m² radiant threshold of [Total flux](#total-flux) is not a heat
@@ -518,7 +652,16 @@ it still records ε, which has no effect in that regime. With
 `--heat-radiant-source integrated-intensity` the FED history also carries
 `heat_integrated_intensity_kw_m2` (*U*), and `heat_flux_parameters` adds
 `radiant_source`, `u_factor` and `radiant_flux` (`excess`); ε is then not
-listed as assumed, as it is not used.
+listed as assumed, as it is not used. With `--heat-radiant-source radiometer`
+the FED history carries `heat_radiometer_kw_m2` (the net reading *R*) and
+`heat_radiometer_incident_kw_m2` (a diagnostic, *R*/\(\varepsilon_d\) +
+σ\(T_s^4\), not used in the dose), and `heat_flux_parameters` adds
+`radiant_source`, `radiant_flux` (`net`), `radiometer_orientation`,
+`radiometer_height_m`, `radiometer_gauge_temperature_celsius`,
+`radiometer_gauge_emissivity`, `radiometer_device_count`,
+`radiometer_grid_origin_m`, `radiometer_grid_spacing_m` and
+`fds_deck_sha256` (the sha256 of the deck the `&PROP` values were read
+from); ε is not listed as assumed there either.
 `heat_flux_kw_m2` is the physical *q*, before the radiant threshold. Where
 the radiant term is below 2.5 kW/m², `heat_fed_rate_per_min` is therefore
 not `heat_flux_kw_m2`^1.33/*D*: it is the convective part alone raised to
@@ -550,10 +693,12 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   layer. Flux from hot surfaces or a flame in view enters only through
   `--heat-radiant-source integrated-intensity`, with a user factor (see
   [Limits of the INTEGRATED INTENSITY source](#limits-of-the-integrated-intensity-source)).
-  Gauge devices are not read
-  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
+  `--heat-radiant-source radiometer` reads FDS radiometers for one
+  orientation per run, without a factor (see
+  [Radiant flux from FDS radiometers](#radiant-flux-from-fds-radiometers)
+  and [#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221),
   [#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
-  FDS reference data for that term exist but are not read by the model:
+  The FDS reference data for that term are described in
   [Heat radiometer reference decks](/verification/testing-heat-radiometer.md)
   ([#224](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224)).
 - **Layer temperature and emissivity.** The layer temperature is read from
@@ -568,7 +713,10 @@ in [Assumptions (unsourced values)](#assumptions-unsourced-values).
   `--heat-emissivity 0.05` for clear air. Below about 285 °C the radiant
   term is under the 2.5 kW/m² threshold for either value, and ε does not
   change the dose. In the layer regime an agent that walks into the smoke
-  still gets the layer formula. How to decide the regime per agent is open
+  still gets the layer formula. With an FDS radiation source (*U* or the
+  radiometers) the regime does not touch the radiant term; users who need
+  both regimes in one case can use the radiometer source. How to decide the
+  regime per agent is open
   (spec 016, open question 4;
   [#275](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275)).
 - **Total-flux parameters.** h, \(T_s\) and ε are assumptions (see
@@ -663,9 +811,10 @@ result; none is a Handbook tolerance.
 | Temperature fallback | 20 °C | none (`HeatFedInputs.temperature_celsius`) | Temperature at the head outside the `TEMPERATURE` slice; layer temperature where the layer slice has no value ([#222](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/222)) | A room ambient; below \(T_s\) it gives a small negative layer flux, which counts as zero in the dose and shows only in `heat_flux_kw_m2` | The case's ambient `TMPA` |
 | Convective validity limit | 205 °C | none (`HEAT_CONVECTIVE_VALIDITY_MAX_C`) | `heat_outside_validity` flag with `--heat-endpoint` (Eqs. 63.45–63.47, [#220](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/220)); does not clip the rate | Highest dry-air tolerance point of Table 63.17 (Veghte, 4 min, p. 2375); the Handbook gives no upper temperature | The temperature range of the data Purser fitted Eqs. 63.45–63.47 to |
 | Radiant threshold basis | 2.5 kW/m² on the net or excess radiant term | none (`ISO_RADIANT_THRESHOLD_KW_M2`, fixed) | Total-flux radiant term, every regime and source | ISO 13571:2012 §8.2, §8.4 give 2.5 kW/m² as an incident flux level; the code compares it with the radiant term it computes, about 18 % below incident at the 200 °C anchor (2.33 against 2.84 kW/m², spec 016) | Whether the threshold, and the radiant tolerance data, hold for incident flux or for net flux at the skin |
-| U factor *f* | in [0.25, 1], no default | `--heat-u-factor` / `u_factor` (`HEAT_U_FACTOR_RANGE`) | `--heat-radiant-source integrated-intensity` ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)) | Geometric bounds: *U*/4 for a sphere or an isotropic field, *U* for one small source face-on; the #224 data put some orientations below 0.25 | Gauge devices per orientation ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
+| U factor *f* | in [0.25, 1], no default | `--heat-u-factor` / `u_factor` (`HEAT_U_FACTOR_RANGE`) | `--heat-radiant-source integrated-intensity` ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)) | Geometric bounds: *U*/4 for a sphere or an isotropic field, *U* for one small source face-on; the #224 data put some orientations below 0.25 | Radiometer devices per orientation (`--heat-radiant-source radiometer`, [#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
 | Flux basis of *f U* | excess over a skin-temperature isotropic field, *f* (*U* − 4σ\(T_s^4\)) | none (fixed) | `--heat-radiant-source integrated-intensity` | Maintainer decision: surroundings at skin temperature give no flux for any *f*; at *f* = 1/4 equals Eq. 63.49 with ε = 1 and the FDS skin gauge (FDS User's Guide 6.10.1, Eq. 22.35). The Handbook calls Eq. 63.49 incident (p. 2383) | Whether the radiant tolerance data (Table 63.19) hold for incident flux or for flux above the skin's own exchange |
-| *U* with the layer regime | *U* supplies the radiant term; layer term not added | `--heat-regime layer` with `--heat-radiant-source integrated-intensity` | Total-flux *q* when both are set | *U* already contains the layer's emission and is the better-resolved input | Gauge devices, which replace both ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
+| *U* with the layer regime | *U* supplies the radiant term; layer term not added | `--heat-regime layer` with `--heat-radiant-source integrated-intensity` | Total-flux *q* when both are set | *U* already contains the layer's emission and is the better-resolved input | The radiometer source, which also replaces both ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)) |
+| Radiometer source | net reading *R* (FDS Eq. 22.36) as the radiant term, one orientation per run, convection from the slice added after the threshold | `--heat-radiant-source radiometer`, `--heat-radiometer-orientation` | Total-flux *q* | The device gives the flux to a plate from the full radiation solution; `GAUGE_TEMPERATURE` must equal \(T_s\) (checked), the threshold is on the net reading as for every source (maintainer decision), a plate stands in for the head | Whether the radiant tolerance data hold for a plate flux; walking-direction faces |
 | Heat σ | 0.94 | `--heat-susceptibility-sigma` / `heat_susceptibility_sigma` | Probabilistic heat mode only (`--heat-incapacitation-mode probabilistic`) | Borrowed from the gas dose ([#225](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/225)); the radiant lethality probits reviewed by Hockey & Rew (1996) give 0.39 | A population spread for the convective dose; Hockey & Rew give none |
 | Clothing | fully clothed, every agent | `--heat-clothing` / `heat_clothing` (`DEFAULT_HEAT_CLOTHING`) | Convective law without `--heat-endpoint` or total flux ([#290](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/290)) | Maintainer decision following ISO 13571:2012, which recommends Eq. (9) for fully clothed subjects (§8.3.1); SFPE Ch. 63 treats the unclothed law as the relevant one unless protective clothing is worn (p. 2336); the 6th edition refers clothed subjects to ISO 13571 (Ch. 70, p. 2283) | Clothing data per occupancy or per agent |
 | One threshold for gas and heat | heat threshold = `fed_threshold` | `--heat-fed-threshold` / `heat_fed_threshold` overrides it | Heat incapacitation | Maintainer reading of ISO 13571:2012 §5.4 with §8.5; the standard does not say whether the heat FED shares the gas threshold ([Incapacitation thresholds](/fundamentals/incapacitation-thresholds.md#heat)) | A statement of the standard, or data on heat and gas thresholds in the same people |
@@ -699,4 +848,4 @@ they do not affect a run.
   Ch. 70. Reviewed by D. Purser (personal communication, 2026).
 - McGrattan, K., et al. (2025). *Fire Dynamics Simulator User's Guide*,
   FDS 6.10.1. NIST Special Publication 1019. Table 22.4 (p. 403) and
-  Eq. 22.35 (p. 381).
+  Eqs. 22.35 and 22.36 (p. 381, Sec. 22.10.12).

@@ -1,7 +1,11 @@
 # 016 — Heat dose: total heat flux to the skin
 
-Status: design, not implemented. The implemented heat dose is described on
-Models › Heat (`site/content/models/heat.md`).
+Status: implemented. The total-flux method, the layer regime, the
+`INTEGRATED INTENSITY` source (#221–#223) and the `RADIOMETER GAS` source
+(#276) are in the code; the regime per agent (#275) and the layer
+temperature and emissivity from FDS (#274) are not. The implemented heat
+dose is described on Models › Heat (`site/content/models/heat.md`); where
+this design differs, the page is right.
 
 ## Problem
 
@@ -109,14 +113,14 @@ than on incident flux. Recorded, not corrected.
 
 **Convection check.** Converting hot-air temperatures to convective flux
 should reproduce the hot-air tolerance data. Convection alone (h = 5,
-T_s = 36 °C, D = 1.33), minutes to pain:
+T_s = 35 °C, the default, D = 1.33), minutes to pain:
 
 | T (°C) | h(T − T_s) only | Eq. 63.44 | Eq. 63.45 |
 |---|---|---|---|
-| 100 | 6.0 | 7.9 | 12.3 |
-| 120 | 4.2 | 4.3 | 6.2 |
-| 140 | 3.2 | 2.5 | 3.5 |
-| 180 | 2.1 | 1.1 | 1.35 |
+| 100 | 5.93 | 7.9 | 12.3 |
+| 120 | 4.15 | 4.3 | 6.2 |
+| 140 | 3.13 | 2.5 | 3.5 |
+| 180 | 2.04 | 1.1 | 1.35 |
 
 Agreement is close from 100 to 140 °C; the flux form is flatter above about
 160 °C. Adding ε = 0.5–0.9 radiation to the same air temperature shortens the
@@ -154,12 +158,17 @@ cos θ, so q ≤ U:
 
 No single factor holds. Input options, in order of preference:
 
-1. **Gauge devices on a head-height grid.** `GAUGE HEAT FLUX GAS` with
+1. **Gauge devices on a head-height grid.** Implemented (#276) with
+   `RADIOMETER GAS` instead of `GAUGE HEAT FLUX GAS`: the radiometer has no
+   convective part, so the convection stays the slice term with the user's h
+   and nothing is counted twice (FDS UG Eq. 22.36; contract in
+   `plans/heat-274-276/contract.md`). `&PROP GAUGE_TEMPERATURE` must equal
+   the skin temperature (checked from the deck). On a `POINTS` array at head
+   height, one orientation per run, it acts as a flux slice sampled along
+   paths. The face could use the agent's walking direction (not
+   implemented). (The gauge form was: `GAUGE HEAT FLUX GAS` with
    `&PROP GAUGE_TEMPERATURE=35, HEAT_TRANSFER_COEFFICIENT=<h>` computes
-   \(q_{\mathrm{tot}}\) with the full radiation solution (FDS UG Eq. 22.35). On
-   a `POINTS` array at head height, facing up (crown) and sideways (face),
-   it acts as a flux slice that can be sampled along paths. The face could
-   use the agent's walking direction. `RADIATIVE HEAT FLUX GAS` is net flux,
+   \(q_{\mathrm{tot}}\) with the full radiation solution, FDS UG Eq. 22.35.) `RADIATIVE HEAT FLUX GAS` is net flux,
    not a gauge.
 2. **`INTEGRATED INTENSITY` slice** with a user-chosen factor in [0.25, 1],
    no default until the validation deck has run.

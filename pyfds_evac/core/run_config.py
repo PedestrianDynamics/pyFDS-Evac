@@ -266,6 +266,14 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         _check_integrated_intensity_source(opts, method, inventory)
         field_kwargs["integrated_intensity"] = True
         log(f"Radiant flux: {opts.heat_u_factor} x INTEGRATED INTENSITY.")
+    orientation = option(opts, "heat_radiometer_orientation")
+    if radiant_source == "radiometer":
+        _check_radiometer_source(opts, method)
+        field_kwargs["radiometer_orientation"] = orientation
+        field_kwargs["skin_temperature_celsius"] = option(opts, "heat_skin_temperature")
+        log(f"Radiant flux: RADIOMETER readings facing {orientation}.")
+    elif orientation is not None:
+        raise ValueError(messages.ORIENTATION_NEEDS_RADIOMETER)
     return DefaultHeatFedModel(
         FdsHeatField.from_fds(opts.fds_dir, **field_kwargs),
         heat_fed_config,
@@ -277,6 +285,7 @@ def _build_heat_fed_model(opts: Any, log: Logger):
         skin_temperature_celsius=option(opts, "heat_skin_temperature"),
         radiant_source=radiant_source,
         u_factor=option(opts, "heat_u_factor"),
+        radiometer_orientation=orientation,
         **_heat_layer_kwargs(opts),
     )
 
@@ -305,6 +314,18 @@ def _heat_clothing(opts: Any, endpoint: str | None, method: str) -> str:
     if endpoint is not None or method != "convective":
         _logger.warning(messages.HEAT_CLOTHING_OVERRIDDEN)
     return clothing
+
+
+def _check_radiometer_source(opts: Any, method: str) -> None:
+    """Raise ValueError when the radiometer source cannot run (#276).
+
+    ``--heat-emissivity`` and ``--heat-u-factor`` are ignored by it; the
+    inactive-option warning (D18) says so.
+    """
+    if method != "total-flux":
+        raise ValueError(messages.RADIOMETER_NEEDS_TOTAL_FLUX)
+    if option(opts, "heat_radiometer_orientation") is None:
+        raise ValueError(messages.RADIOMETER_NEEDS_ORIENTATION)
 
 
 def _check_integrated_intensity_source(opts: Any, method: str, inventory) -> None:

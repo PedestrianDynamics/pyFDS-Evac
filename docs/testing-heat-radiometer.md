@@ -8,10 +8,10 @@ math: true
 | | |
 |---|---|
 | **Component** | Radiant heat to a person, reference data for the total-flux heat dose and its `INTEGRATED INTENSITY` source ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)–[#223](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/223)) |
-| **Level** | FDS case, FDS only: no pyFDS-Evac run on these decks |
+| **Level** | FDS case (the decks are FDS only; the `radiometer` source reads their output in tests) |
 | **Asset** | `assets/heat_radiometer` (`_layer`, `_uniform`, `_burner`) |
 | **Expected value from** | radiation geometry (q/U = 1/4, 1/2, 1) and FDS's own gauge equations (FDS User's Guide Eqs. 22.35–22.36) |
-| **Status** | FDS-only reference data; no run reads these decks (a copy of the layer deck, with a 2.5 m slice, is read by the layer-regime case of [#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308); see [Heat dose](testing-heat.md#layer-regime-against-fds-gauges)). The uniform room is the expected value of the *f* = 1/4 check of the `INTEGRATED INTENSITY` source (`test_heat_integrated_intensity_coupled.py`) |
+| **Status** | Reference data, read by the `radiometer` radiant source ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276); see [Heat dose](testing-heat.md#radiometer-source-against-fds-gauges)): the model's radiometer term and the FDS gauge differ only by the slice-against-device temperature. A copy of the layer deck, with a 2.5 m slice, is read by the layer-regime case of [#308](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308); see [Heat dose](testing-heat.md#layer-regime-against-fds-gauges). The uniform room is the expected value of the *f* = 1/4 check of the `INTEGRATED INTENSITY` source (`test_heat_integrated_intensity_coupled.py`) |
 
 ![Where the incident flux q sits between U/4 and U at 1.6 m for plates facing up, +x, −x and down, in the three decks](/images/verification/heat_radiometer_ratio.png)
 
@@ -225,12 +225,17 @@ HEAT_RADIOMETER_DATA=<data>/heat_radiometer uv run pytest tests/verification/tes
 
 ## Limits
 
-- **Runs do not read these decks.** They are reference data: the
-  `INTEGRATED INTENSITY` source of the total-flux dose is checked against
-  them in `tests/verification/test_heat_integrated_intensity_coupled.py`
-  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)).
-  Reading gauge devices as an input is not implemented
+- **Runs on these decks need the deck beside the output.** They are
+  reference data: the `INTEGRATED INTENSITY` source of the total-flux dose is
+  checked against them in
+  `tests/verification/test_heat_integrated_intensity_coupled.py`
+  ([#221](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221)) and
+  the `radiometer` source in
+  `tests/verification/test_heat_radiometer_source_fds.py`
   ([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)).
+  The decks hold one row of devices (y = 2.05 m), so only agents on that row
+  can be run with the radiometer source; the 2-D interpolation is not
+  checked on FDS data.
 - **A plate is not a person.** The gauges are flat, single-sided and fixed
   in orientation; a body receives flux on many faces at once and moves.
 - **One set of conditions.** One layer temperature, one soot load, one grid,

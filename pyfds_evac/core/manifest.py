@@ -217,6 +217,7 @@ _HEAT_ATTRIBUTES = (
     "skin_temperature_celsius",
     "radiant_source",
     "u_factor",
+    "radiometer_orientation",
     "regime",
     "view_factor",
     "layer_emissivity",

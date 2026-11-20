@@ -69,6 +69,17 @@ def _u_factor(text: str) -> float:
     return value
 
 
+def _orientation(text: str) -> str:
+    """Parse --heat-radiometer-orientation: x,y,z, finite, not all zero."""
+    from pyfds_evac.core.radiometer_grid import RadiometerGridError, parse_orientation
+
+    try:
+        parse_orientation(text)
+    except RadiometerGridError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+    return text.strip()
+
+
 @dataclass(frozen=True)
 class Group:
     """A help group of the CLI."""
@@ -838,7 +849,10 @@ PARAMETERS: tuple[Parameter, ...] = (
         "excess f*(U - 4 sigma T_s^4) over an isotropic field at the skin "
         "temperature, from the FDS INTEGRATED INTENSITY slice at the slice "
         "height, replacing the gas term (and the layer term of --heat-regime "
-        "layer); needs --heat-u-factor",
+        "layer); needs --heat-u-factor. radiometer: the net reading of FDS "
+        "RADIOMETER GAS devices on a regular grid at the slice height, "
+        "replacing the gas term (and the layer term); needs "
+        "--heat-radiometer-orientation",
         choices=HEAT_RADIANT_SOURCES,
         default=HEAT_RADIANT_SOURCE,
         python=f"{_HEAT_MODEL}.radiant_source",
@@ -857,6 +871,18 @@ PARAMETERS: tuple[Parameter, ...] = (
         checked="[0.25, 1], at parse",
     ),
     Parameter(
+        "heat_radiometer_orientation",
+        ("--heat-radiometer-orientation",),
+        GROUP_HEAT,
+        "Direction x,y,z that the plate of the radiometers faces, for "
+        "--heat-radiant-source radiometer: 0,0,1 faces up (crown), a "
+        "horizontal vector a face. One orientation per run; the case needs "
+        "radiometers with that ORIENTATION and no default",
+        type=_orientation,
+        python=f"{_HEAT_MODEL}.radiometer_orientation",
+        checked="x,y,z, at parse",
+    ),
+    Parameter(
         "heat_regime",
         ("--heat-regime",),
         GROUP_HEAT,
@@ -867,8 +893,8 @@ PARAMETERS: tuple[Parameter, ...] = (
         "a TEMPERATURE slice at --heat-layer-height, with no radiant term of "
         "the gas at the head; needs --heat-layer-height, --heat-view-factor and "
         "--heat-layer-emissivity. With --heat-radiant-source "
-        "integrated-intensity, U supplies the radiant term instead and the "
-        "layer term is not added (one warning)",
+        "integrated-intensity or radiometer, FDS supplies the radiant term "
+        "instead and the layer term is not added (one warning)",
         choices=HEAT_FLUX_REGIMES,
         default=HEAT_REGIME,
         python=f"{_HEAT_MODEL}.regime",

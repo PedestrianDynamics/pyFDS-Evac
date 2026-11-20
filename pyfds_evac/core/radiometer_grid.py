@@ -13,15 +13,24 @@ matched with and without the ``GAS`` suffix: FDS 6.10.1 reports
 
 from __future__ import annotations
 
+import hashlib
+import logging
 import math
 import re
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 
-from pyfds_evac.core.fds_deck import FdsDeck
-from pyfds_evac.core.fdsreader_adapter import DevicePoint, DeviceSet
+from pyfds_evac.core.fds_deck import FdsDeck, FdsDeckError, parse_fds_deck
+from pyfds_evac.core.fdsreader_adapter import (
+    DevicePoint,
+    DeviceSet,
+    read_fds_devices,
+)
+
+_logger = logging.getLogger(__name__)
 
 #: Tolerance (m, or unit-vector component) for orientation, z and grid spacing.
 TOLERANCE = 1e-6
@@ -57,10 +66,22 @@ def _listed(items: Sequence[object]) -> str:
     return shown if more <= 0 else f"{shown}, ... ({more} more)"
 
 
-def select_radiometers(
-    devices: DeviceSet, orientation: Sequence[float], z: float
-) -> tuple[DevicePoint, ...]:
-    """The radiometer points facing *orientation* at height *z* (to 1e-6)."""
+def parse_orientation(text: str) -> tuple[float, float, float]:
+    """Parse ``--heat-radiometer-orientation``: ``x,y,z``, not all zero, finite."""
+    parts = [part.strip() for part in str(text).split(",")]
+    try:
+        vector = tuple(float(part) for part in parts)
+    except ValueError:
+        vector = ()
+    if len(vector) != 3 or not all(math.isfinite(v) for v in vector):
+        raise RadiometerGridError(
+            f"radiometer orientation must be three numbers x,y,z, got {text!r}"
+        )
+    return _unit(vector)
+
+
+def _facing(devices: DeviceSet, orientation: Sequence[float]) -> list[DevicePoint]:
+    """The radiometer points facing *orientation*, at every height."""
     wanted = _unit(orientation)
     radiometers = [p for p in devices.points if p.quantity in RADIOMETER_QUANTITIES]
     if not radiometers:
@@ -78,12 +99,31 @@ def select_radiometers(
             f"no RADIOMETER device with orientation {wanted} in {devices.case_dir}; "
             f"orientations present: {_listed(found)}"
         )
+    return facing
+
+
+def radiometer_heights(
+    devices: DeviceSet, orientation: Sequence[float]
+) -> tuple[float, ...]:
+    """The distinct heights (to 1e-6 m) of the radiometers facing *orientation*."""
+    heights: list[float] = []
+    for z in sorted(p.xyz[2] for p in _facing(devices, orientation)):
+        if not heights or z - heights[-1] > TOLERANCE:
+            heights.append(z)
+    return tuple(heights)
+
+
+def select_radiometers(
+    devices: DeviceSet, orientation: Sequence[float], z: float
+) -> tuple[DevicePoint, ...]:
+    """The radiometer points facing *orientation* at height *z* (to 1e-6)."""
+    facing = _facing(devices, orientation)
     selected = tuple(p for p in facing if abs(p.xyz[2] - z) <= TOLERANCE)
     if not selected:
         heights = sorted({p.xyz[2] for p in facing})
         raise RadiometerGridError(
-            f"no RADIOMETER device with orientation {wanted} at z={z} m in "
-            f"{devices.case_dir}; heights present: {_listed(heights)}"
+            f"no RADIOMETER device with orientation {_unit(orientation)} at z={z} m "
+            f"in {devices.case_dir}; heights present: {_listed(heights)}"
         )
     return selected
 
@@ -283,3 +323,217 @@ class RadiometerGrid:
         k = min(k, self.times.size - 2)
         w = (time - self.times[k]) / (self.times[k + 1] - self.times[k])
         return self.values[k] * (1 - w) + self.values[k + 1] * w
+
+
+#: Slack [s] on the last output time: absorbs float noise in the clock.
+TIME_TOLERANCE_S = 1e-6
+
+_DEVC_EXAMPLE = (
+    "&PROP ID='skin', GAUGE_TEMPERATURE={t_skin:g} /   ! = --heat-skin-temperature\n"
+    "&DEVC ID='RAD_r01', QUANTITY='RADIOMETER GAS', ORIENTATION={orientation},\n"
+    "      PROP_ID='skin', XBP=x0,x1, y1,y1, {z:g},{z:g}, POINTS=nx, TIME_HISTORY=T /"
+    "   ! one &DEVC per row y_j\n"
+)
+
+
+def _no_devices_message(
+    fds_dir: str, orientation: str, z: float, t_skin: float, reason: str
+) -> str:
+    """The error for a case without usable radiometers, with the line to add."""
+    return (
+        f"--heat-radiant-source radiometer: {reason}. Add radiometers facing "
+        f"{orientation} at z={z:g} m (the TEMPERATURE slice height) on a regular "
+        f"grid, one &DEVC per row, to the FDS case in {fds_dir}:\n"
+        + _DEVC_EXAMPLE.format(t_skin=t_skin, orientation=orientation, z=z)
+    )
+
+
+@dataclass
+class RadiometerSource:
+    """The radiometer readings the heat model uses as its radiant term (#276).
+
+    ``reading`` is the net radiant flux to a plate at the gauge temperature
+    (FDS UG 6.10.1 Eq. 22.36, kW/m2), bilinear in x, y and linear in time.
+    Time follows the slice rule: a time up to one output interval past the
+    last frame holds the last frame; later it is an ``FdsHorizonError``, or,
+    with *allow_horizon_hold*, held after one warning.
+    """
+
+    grid: RadiometerGrid
+    orientation: tuple[float, float, float]
+    z_m: float
+    gauge_temperature_c: float
+    gauge_emissivity: float
+    n_devices: int
+    deck_path: Path
+    deck_sha256: str
+    allow_horizon_hold: bool = False
+    _warned_horizon: bool = field(default=False, repr=False)
+
+    def covers(self, x: float, y: float) -> bool:
+        """Whether the point lies in the radiometer grid."""
+        return bool(self.grid.contains(x, y))
+
+    def reading(self, time_s: float, x: float, y: float) -> float:
+        """The net reading at one time and x/y point; outside the grid raises."""
+        if not self.covers(x, y):
+            raise RadiometerGridError(
+                f"Point ({x}, {y}) lies in the TEMPERATURE slice but outside the "
+                f"radiometer grid (x {self.grid.xs[0]} to {self.grid.xs[-1]} m, "
+                f"y {self.grid.ys[0]} to {self.grid.ys[-1]} m); the heat FED needs "
+                "a radiometer reading at every agent."
+            )
+        return float(self.grid.sample(self._held(float(time_s)), x, y))
+
+    def _held(self, time_s: float) -> float:
+        """*time_s* clamped to the output, after the horizon rule."""
+        times = self.grid.times
+        first, last = float(times[0]), float(times[-1])
+        if first <= time_s <= last:
+            return time_s
+        if time_s < first:
+            return first
+        interval = float(np.max(np.diff(times))) if times.size > 1 else 0.0
+        if time_s <= last + interval + TIME_TOLERANCE_S:
+            return last
+        from pyfds_evac.core.fds_sampling import (
+            FdsHorizonError,
+            horizon_error_message,
+        )
+
+        message = horizon_error_message("RADIOMETER", time_s, last, interval)
+        if not self.allow_horizon_hold:
+            raise FdsHorizonError(message)
+        if not self._warned_horizon:
+            self._warned_horizon = True
+            _logger.warning(
+                "'RADIOMETER' past the FDS output (t=%.1f s > %.1f s): holding "
+                "the last frame for the rest of the run (--allow-fds-horizon-hold).",
+                time_s,
+                last,
+            )
+        return last
+
+    def manifest_entry(self) -> dict[str, object]:
+        """The run-manifest fields of this source."""
+        return {
+            "radiometer_orientation": list(self.orientation),
+            "radiometer_height_m": self.z_m,
+            "radiometer_gauge_temperature_celsius": self.gauge_temperature_c,
+            "radiometer_gauge_emissivity": self.gauge_emissivity,
+            "radiometer_device_count": self.n_devices,
+            "radiometer_grid_origin_m": [
+                float(self.grid.xs[0]),
+                float(self.grid.ys[0]),
+            ],
+            "radiometer_grid_spacing_m": [
+                _spacing(self.grid.xs),
+                _spacing(self.grid.ys),
+            ],
+            "fds_deck_sha256": self.deck_sha256,
+        }
+
+
+def _spacing(axis: np.ndarray) -> float | None:
+    """The node spacing of *axis*; None for a single node."""
+    return round(float(axis[1] - axis[0]), 9) if axis.size > 1 else None
+
+
+def load_radiometer_source(
+    fds_dir: str | Path,
+    *,
+    orientation: str,
+    skin_temperature_c: float,
+    slice_z_m: float,
+    half_cell_m: float,
+    allow_horizon_hold: bool = False,
+) -> RadiometerSource:
+    """Read the radiometers of the case in *fds_dir* as the radiant source.
+
+    Selects the radiometers facing *orientation* at the height nearest
+    *slice_z_m*, which must lie within *half_cell_m* of it; checks that
+    every selected ``&PROP`` has ``GAUGE_TEMPERATURE`` equal to
+    *skin_temperature_c* (to 1e-6 deg C) and one emissivity; and records
+    the sha256 of the deck. Raises ``RadiometerGridError`` otherwise.
+    """
+    unit = parse_orientation(orientation)
+    try:
+        devices = read_fds_devices(fds_dir)
+        heights = radiometer_heights(devices, unit)
+    except (ValueError, RadiometerGridError) as exc:
+        # A case without any device output has no TIME device either.
+        raise RadiometerGridError(
+            _no_devices_message(
+                str(fds_dir), orientation, slice_z_m, skin_temperature_c, str(exc)
+            )
+        ) from exc
+    z = min(heights, key=lambda h: abs(h - slice_z_m))
+    if abs(z - slice_z_m) > half_cell_m + TOLERANCE:
+        raise RadiometerGridError(
+            f"the radiometers facing {orientation} in {fds_dir} are at z="
+            f"{_listed(list(heights))} m but the TEMPERATURE slice is at z="
+            f"{slice_z_m:g} m; they must lie within half a cell "
+            f"({half_cell_m:g} m) of it, so that convection and radiation come "
+            "from one height."
+        )
+    points = select_radiometers(devices, unit, z)
+    deck_path, deck = _read_deck(devices, fds_dir)
+    props = radiometer_props(deck, points)
+    gauge_t, emissivity = _checked_props(props, skin_temperature_c, deck_path)
+    grid = RadiometerGrid.from_points(points, devices.times)
+    _check_units(points)
+    return RadiometerSource(
+        grid=grid,
+        orientation=unit,
+        z_m=z,
+        gauge_temperature_c=gauge_t,
+        gauge_emissivity=emissivity,
+        n_devices=len(points),
+        deck_path=deck_path,
+        deck_sha256=hashlib.sha256(deck_path.read_bytes()).hexdigest(),
+        allow_horizon_hold=allow_horizon_hold,
+    )
+
+
+def _read_deck(devices: DeviceSet, fds_dir) -> tuple[Path, FdsDeck]:
+    """The case's ``<CHID>.fds``; a missing deck is an error (the &PROP is in it)."""
+    path = devices.case_dir / f"{devices.chid}.fds"
+    if not path.is_file():
+        raise RadiometerGridError(
+            f"the FDS deck {path} is not in the case folder {fds_dir}; the "
+            "radiometer source reads GAUGE_TEMPERATURE from its &PROP and "
+            "needs the deck next to the output."
+        )
+    try:
+        return path, parse_fds_deck(path)
+    except FdsDeckError as exc:
+        raise RadiometerGridError(f"cannot read the &PROP from {path}: {exc}") from exc
+
+
+def _checked_props(
+    props: dict[str, RadiometerProp], skin_temperature_c: float, deck_path: Path
+) -> tuple[float, float]:
+    """The shared gauge temperature and emissivity, or an error."""
+    for prop in props.values():
+        if abs(prop.gauge_temperature_c - skin_temperature_c) > TOLERANCE:
+            raise RadiometerGridError(
+                f"radiometer {prop.device_id!r} in {deck_path} has "
+                f"GAUGE_TEMPERATURE={prop.gauge_temperature_c:g} C but "
+                f"--heat-skin-temperature is {skin_temperature_c:g} C; the "
+                "reading is the flux to a plate at the gauge temperature, so "
+                "they must be equal. Set GAUGE_TEMPERATURE in the &PROP of the "
+                "radiometers (FDS defaults it to TMPA)."
+            )
+    emissivities = sorted({p.gauge_emissivity for p in props.values()})
+    if len(emissivities) != 1:
+        raise RadiometerGridError(
+            f"the radiometers in {deck_path} have different GAUGE_EMISSIVITY "
+            f"values {emissivities}; one grid needs one."
+        )
+    return skin_temperature_c, emissivities[0]
+
+
+def _check_units(points: Sequence[DevicePoint]) -> None:
+    bad = sorted({p.unit for p in points if p.unit.replace(" ", "") != "kW/m2"})
+    if bad:
+        raise RadiometerGridError(f"radiometer devices report in {bad}, expected kW/m2")

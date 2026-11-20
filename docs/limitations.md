@@ -144,9 +144,14 @@ JuPedSim behaviour and is not modelled.
 default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
 an FDS `TEMPERATURE` slice. Radiation enters only through the opt-in
 `--heat-fed-method total-flux`, from the gas at the head, a hot layer above
-it (`--heat-regime layer`), or the FDS `INTEGRATED INTENSITY` slice with a
-user factor; radiant flux from hot surfaces or a flame is otherwise missed
-([#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)). In
+it (`--heat-regime layer`), the FDS `INTEGRATED INTENSITY` slice with a
+user factor, or FDS `RADIOMETER GAS` devices for one plate orientation per
+run (`--heat-radiant-source radiometer`,
+[#276](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276)); radiant flux from hot surfaces or a flame is otherwise
+missed. The radiometer source is a plate, not a body, reads one height and one
+orientation, interpolates bilinearly without knowing walls, and its 2-D
+grid is checked on synthetic data only
+([Models › Heat › Limits of the radiometer source](/models/heat.md#limits-of-the-radiometer-source)). In
 every total-flux variant a radiant term below the ISO 2.5 kW/m² threshold
 counts as zero, and the code applies that threshold to a net or excess flux
 rather than an incident one; the consequences, with numbers, are on

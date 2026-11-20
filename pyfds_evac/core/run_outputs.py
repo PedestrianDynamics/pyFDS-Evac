@@ -173,6 +173,9 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         fieldnames.append("heat_flux_kw_m2")
     if rows and "heat_integrated_intensity_kw_m2" in rows[0]:
         fieldnames.append("heat_integrated_intensity_kw_m2")
+    for column in ("heat_radiometer_kw_m2", "heat_radiometer_incident_kw_m2"):
+        if rows and column in rows[0]:
+            fieldnames.append(column)
     if rows and "heat_layer_temperature_c" in rows[0]:
         fieldnames.append("heat_layer_temperature_c")
     if rows and "in_fds_domain" in rows[0]:

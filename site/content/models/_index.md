@@ -80,7 +80,8 @@ on one slice, not a 3-D ray up to the sign.
   term inside the one heat dose, not a second dose. It comes from the gas
   at the head by default, from a hot layer with `--heat-regime layer`, or
   from the FDS `INTEGRATED INTENSITY` slice with
-  `--heat-radiant-source integrated-intensity`
+  `--heat-radiant-source integrated-intensity` or, for one plate orientation
+  per run, from FDS radiometers with `--heat-radiant-source radiometer`
   ([Heat › Total flux](/models/heat.md#total-flux)).
 
 {{< cards >}}

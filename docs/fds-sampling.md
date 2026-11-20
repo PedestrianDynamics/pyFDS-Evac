@@ -328,6 +328,16 @@ stops with a `ValueError` that names both heights. The layer regime
 (`--heat-regime layer`) reads a second `TEMPERATURE` slice at
 `--heat-layer-height`.
 
+With `--heat-radiant-source radiometer` the field also reads the FDS
+`RADIOMETER` devices of one orientation (`radiometer_orientation="x,y,z"`,
+`skin_temperature_celsius=` for the `&PROP` check). Devices have no slice
+height to match, so the rule is: their z must lie within half a mesh cell
+of the `TEMPERATURE` slice, or the call stops with a `RadiometerGridError`
+(a `ValueError`) that names both heights. The device times follow the
+slice horizon rules: a time up to one output interval past the last frame
+holds the last frame, a later one raises `FdsHorizonError` unless
+`allow_horizon_hold` is set.
+
 ### Line-of-sight extinction
 
 The `integrated_extinction_along_los()` function in

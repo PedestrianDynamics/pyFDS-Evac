@@ -174,7 +174,8 @@ the speed to zero at the agent's threshold. Script:
 
 - Radiant heat from hot surfaces or a flame, except as the excess f·(U − 4σT_s⁴) from FDS
   `INTEGRATED INTENSITY` with `--heat-radiant-source integrated-intensity`
-  and a user factor. Otherwise the heat dose is convective, or with
+  and a user factor, or the net reading of FDS radiometers with
+  `--heat-radiant-source radiometer` (one orientation per run). Otherwise the heat dose is convective, or with
   `--heat-fed-method total-flux` adds the radiation of the gas at the head,
   or with `--heat-regime layer` that of a hot upper layer
   ([Heat](/models/heat.md)).

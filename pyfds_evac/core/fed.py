@@ -11,6 +11,7 @@ from .fds_import_people import HUMAN_SMOKE_HEIGHT_M
 # heat constants of this module reach the CLI parser without numpy (#503).
 if TYPE_CHECKING:
     from .fds_sampling import SliceFieldSampler
+    from .radiometer_grid import RadiometerSource
 
 _logger = logging.getLogger(__name__)
 
@@ -275,6 +276,8 @@ class HeatFedInputs:
     # FDS water-vapour volume fraction [mol/mol, 0-1] at the heat slice height,
     # sampled only for ``--heat-endpoint`` when the case has the slice (#272).
     water_vapour_fraction: float | None = None
+    # FDS radiometer reading, net kW/m2 (#276); None when not sampled.
+    radiometer_kw_m2: float | None = None
 
 
 # ISO 13571:2012 §8.3, air with less than 10 % water vapour by volume:
@@ -500,8 +503,10 @@ HEAT_FLUX_ASSUMED_PARAMETERS = (
 # Radiant term of the total-flux method (#221): "gas" is eps sigma
 # (T_g^4 - T_s^4) of Eq. 63.49; "integrated-intensity" is the excess
 # f (U - 4 sigma T_s^4) over an isotropic field at the skin temperature, from
-# the FDS INTEGRATED INTENSITY slice, with f given by the user (no default).
-HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity")
+# the FDS INTEGRATED INTENSITY slice, with f given by the user (no default);
+# "radiometer" is the net reading of FDS RADIOMETER GAS devices facing one
+# orientation given by the user (#276).
+HEAT_RADIANT_SOURCES = ("gas", "integrated-intensity", "radiometer")
 HEAT_U_FACTOR_RANGE = (0.25, 1.0)  # sphere / isotropic field .. source face-on
 # Largest z difference [m] accepted between the TEMPERATURE and INTEGRATED
 # INTENSITY slices: a numerical tolerance only. FDS moves every slice at one
@@ -638,12 +643,25 @@ def _check_heat_flux_parameters(
         )
 
 
-def _check_radiant_source(radiant_source: str, method: str, u_factor) -> None:
-    """Raise ValueError for an unknown source, or a U source without f or flux."""
+def _check_radiant_source(
+    radiant_source: str, method: str, u_factor, radiometer_orientation=None
+) -> None:
+    """Raise ValueError for an unknown source or one missing its input.
+
+    The U source needs f and the radiometer source an orientation; the
+    orientation is refused with any other source.
+    """
     if radiant_source not in HEAT_RADIANT_SOURCES:
         raise ValueError(
             f"Unknown heat radiant source {radiant_source!r}; "
             f"expected one of {HEAT_RADIANT_SOURCES}"
+        )
+    if radiant_source == "radiometer":
+        _check_radiometer_source(method, radiometer_orientation)
+        return
+    if radiometer_orientation is not None:
+        raise ValueError(
+            "--heat-radiometer-orientation needs --heat-radiant-source radiometer."
         )
     if radiant_source != "integrated-intensity":
         return
@@ -652,6 +670,25 @@ def _check_radiant_source(radiant_source: str, method: str, u_factor) -> None:
             "The INTEGRATED INTENSITY radiant source needs the total-flux method."
         )
     _check_u_factor(u_factor)
+
+
+def _check_radiometer_source(method: str, orientation) -> None:
+    """Raise ValueError unless the radiometer source has the method and an orientation."""
+    from .radiometer_grid import RadiometerGridError, parse_orientation
+
+    if method != "total-flux":
+        raise ValueError(
+            "--heat-radiant-source radiometer needs --heat-fed-method total-flux."
+        )
+    if orientation is None:
+        raise ValueError(
+            "--heat-radiant-source radiometer needs --heat-radiometer-orientation "
+            "x,y,z (0,0,1 faces up); there is no default."
+        )
+    try:
+        parse_orientation(orientation)
+    except RadiometerGridError as exc:
+        raise ValueError(f"--heat-radiometer-orientation: {exc}") from exc
 
 
 def _check_layer_parameters(
@@ -689,14 +726,21 @@ def heat_flux_row_fields(
     temperature_celsius: float,
     layer_temperature_celsius: float | None = None,
     integrated_intensity_kw_m2: float | None = None,
+    radiometer_kw_m2: float | None = None,
 ) -> dict:
     """Return the FED history fields of the total-flux method; ``{}`` otherwise.
 
     In the layer regime the row also carries ``heat_layer_temperature_c``;
-    with the INTEGRATED INTENSITY source it also carries U (#221).
+    with the INTEGRATED INTENSITY source it also carries U (#221), and with
+    the radiometer source the net reading and the incident flux it implies
+    (#276).
     """
     if getattr(heat_fed_model, "method", "convective") != "total-flux":
         return {}
+    if getattr(heat_fed_model, "radiant_source", "gas") == "radiometer":
+        return _radiometer_row_fields(
+            heat_fed_model, temperature_celsius, radiometer_kw_m2
+        )
     if getattr(heat_fed_model, "uses_layer_term", False):
         return {
             "heat_flux_kw_m2": heat_fed_model.heat_flux_kw_m2(
@@ -712,6 +756,23 @@ def heat_flux_row_fields(
             temperature_celsius, integrated_intensity_kw_m2=u
         ),
         "heat_integrated_intensity_kw_m2": float(u),
+    }
+
+
+def _radiometer_row_fields(model, temperature_celsius: float, reading) -> dict:
+    """The history fields of the radiometer source; NaN outside the FDS domain."""
+    r = math.nan if reading is None else float(reading)
+    source = model.field.radiometer
+    t_skin_k = model.skin_temperature_celsius + _KELVIN
+    incident = (
+        r / source.gauge_emissivity + STEFAN_BOLTZMANN_W_M2_K4 * t_skin_k**4 / 1000.0
+    )
+    return {
+        "heat_flux_kw_m2": model.heat_flux_kw_m2(
+            temperature_celsius, radiometer_kw_m2=r
+        ),
+        "heat_radiometer_kw_m2": r,
+        "heat_radiometer_incident_kw_m2": incident,
     }
 
 
@@ -1318,8 +1379,12 @@ class FdsHeatField:
         *,
         require_fds_coverage: bool = False,
         water_vapour_sampler: "SliceFieldSampler | None" = None,
+        radiometer: "RadiometerSource | None" = None,
     ):
         """Wrap the TEMPERATURE and, optionally, INTEGRATED INTENSITY samplers.
+
+        *radiometer* (#276) is the radiometer source of the heat model; the
+        field then samples its net reading with the temperature.
 
         *water_vapour_sampler* reads the WATER VAPOR VOLUME FRACTION slice for
         the humidity check of ``--heat-endpoint`` (#272); it never changes
@@ -1332,6 +1397,7 @@ class FdsHeatField:
         self._intensity_sampler = intensity_sampler
         self._water_vapour_sampler = water_vapour_sampler
         self._require_fds_coverage = require_fds_coverage
+        self.radiometer = radiometer
 
     def _check_outside_allowed(self, time_s: float, x, y) -> None:
         """Raise ``FdsDomainError`` for a point outside, in strict mode."""
@@ -1358,11 +1424,16 @@ class FdsHeatField:
         allow_horizon_hold: bool = False,
         require_fds_coverage: bool = False,
         water_vapour: bool = False,
+        radiometer_orientation: str | None = None,
+        skin_temperature_celsius: float = DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     ) -> "FdsHeatField":
         """Load the TEMPERATURE slice from an FDS case directory.
 
         With *integrated_intensity* also the INTEGRATED INTENSITY slice
-        (#221), at the same height. With *water_vapour* also the WATER VAPOR
+        (#221), at the same height. With *radiometer_orientation* ("x,y,z")
+        also the radiometers facing it (#276), which must lie within half a
+        cell of the slice height and carry *skin_temperature_celsius* as
+        ``GAUGE_TEMPERATURE``. With *water_vapour* also the WATER VAPOR
         VOLUME FRACTION slice when the case has one (#272).
         """
         from .fds_sampling import load_slice_sampler
@@ -1389,11 +1460,21 @@ class FdsHeatField:
             vapour_sampler = _load_water_vapour_sampler(
                 fds_dir, simulation, slice_height_m, allow_horizon_hold, sampler
             )
+        radiometer = None
+        if radiometer_orientation is not None:
+            radiometer = _load_radiometer(
+                fds_dir,
+                sampler,
+                radiometer_orientation,
+                skin_temperature_celsius,
+                allow_horizon_hold,
+            )
         field = cls(
             sampler,
             intensity_sampler=intensity_sampler,
             require_fds_coverage=require_fds_coverage,
             water_vapour_sampler=vapour_sampler,
+            radiometer=radiometer,
         )
         field.fds_dir = str(fds_dir)
         return field
@@ -1416,6 +1497,8 @@ class FdsHeatField:
         no unit conversion.
         """
         temperature_celsius = _sample_or_none(self._sampler, time_s, x, y)
+        if self.radiometer is not None:
+            return self._radiometer_inputs(temperature_celsius, time_s, x, y)
         if self._intensity_sampler is None:
             if temperature_celsius is None:
                 self._check_outside_allowed(time_s, x, y)
@@ -1431,6 +1514,40 @@ class FdsHeatField:
             temperature_celsius=temperature_celsius,
             integrated_intensity_kw_m2=intensity,
         )
+
+    def _radiometer_inputs(
+        self, temperature_celsius: float | None, time_s: float, x: float, y: float
+    ) -> HeatFedInputs:
+        """The temperature and the radiometer reading at one point (#276).
+
+        Outside the TEMPERATURE slice: no reading (NaN), so no radiant dose,
+        or ``FdsDomainError`` in strict mode. Inside it but outside the
+        radiometer grid: ``RadiometerGridError``, never a zero.
+        """
+        if temperature_celsius is None:
+            self._check_outside_allowed(time_s, x, y)
+            return HeatFedInputs(radiometer_kw_m2=math.nan)
+        reading = self.radiometer.reading(time_s, x, y)  # type: ignore[union-attr]
+        return HeatFedInputs(
+            temperature_celsius=temperature_celsius, radiometer_kw_m2=reading
+        )
+
+
+def _load_radiometer(
+    fds_dir, sampler, orientation: str, skin_temperature_celsius: float, hold: bool
+):
+    """Return the radiometer source at the height of the TEMPERATURE slice."""
+    from .fds_sampling import _slice_z_mid, slice_cell_height_m
+    from .radiometer_grid import load_radiometer_source
+
+    return load_radiometer_source(
+        fds_dir,
+        orientation=orientation,
+        skin_temperature_c=skin_temperature_celsius,
+        slice_z_m=_slice_z_mid(sampler._slice),
+        half_cell_m=0.5 * slice_cell_height_m(sampler._slice),
+        allow_horizon_hold=hold,
+    )
 
 
 def _load_water_vapour_sampler(
@@ -1568,6 +1685,12 @@ class DefaultHeatFedModel:
     field at the skin temperature instead of the gas term, and *u_factor* f
     in [0.25, 1] is required. Outside the FDS domain U is
     NaN and the rate is zero; the first such sample logs one warning.
+    With ``radiant_source="radiometer"`` (total-flux only, #276) the radiant
+    term is the net reading of the FDS radiometers facing
+    *radiometer_orientation* ("x,y,z", required), read through
+    ``field.radiometer``; the threshold applies to that reading and
+    convection is added after it from the slice. *emissivity* and *u_factor*
+    are not used.
 
     *regime* (total-flux only, spec 016): ``"smoke"`` (default) applies
     Eq. 63.49 at the head. ``"layer"`` takes the head to be in clear air below
@@ -1599,6 +1722,7 @@ class DefaultHeatFedModel:
         layer_emissivity: float | None = None,
         layer_height_m: float | None = None,
         clothing: str = DEFAULT_HEAT_CLOTHING,
+        radiometer_orientation: str | None = None,
     ):
         """Store the temperature field sampler, FED settings and heat law."""
         if endpoint is not None and endpoint not in HEAT_ENDPOINTS:
@@ -1610,10 +1734,18 @@ class DefaultHeatFedModel:
         _check_heat_flux_parameters(
             method, emissivity, convective_coefficient, skin_temperature_celsius
         )
-        _check_radiant_source(radiant_source, method, u_factor)
+        _check_radiant_source(radiant_source, method, u_factor, radiometer_orientation)
         _check_layer_parameters(
             regime, method, layer_field, view_factor, layer_emissivity
         )
+        if (
+            radiant_source == "radiometer"
+            and getattr(field, "radiometer", None) is None
+        ):
+            raise ValueError(
+                "The radiometer radiant source needs a field with radiometers "
+                "(FdsHeatField.from_fds(..., radiometer_orientation=...))."
+            )
         self.field = field
         self.config = config
         self.endpoint = endpoint
@@ -1624,15 +1756,25 @@ class DefaultHeatFedModel:
         self.skin_temperature_celsius = skin_temperature_celsius
         self.radiant_source = radiant_source
         self.u_factor = u_factor
+        self.radiometer_orientation = radiometer_orientation
         self.regime = regime
-        # The layer term is used only when U is not the radiant source.
-        self.uses_layer_term = (
-            regime == "layer" and radiant_source != "integrated-intensity"
+        # The layer term is used only when an FDS radiation source (U or the
+        # radiometers) is not the radiant source.
+        self.uses_layer_term = regime == "layer" and radiant_source not in (
+            "integrated-intensity",
+            "radiometer",
         )
-        if regime == "layer" and not self.uses_layer_term:
+        if regime == "layer" and radiant_source == "integrated-intensity":
             _logger.warning(
                 "--heat-regime layer and --heat-radiant-source "
                 "integrated-intensity are both set: U already contains the "
+                "layer's emission, so it supplies the radiant term and the "
+                "layer term is not added."
+            )
+        if regime == "layer" and radiant_source == "radiometer":
+            _logger.warning(
+                "--heat-regime layer and --heat-radiant-source radiometer are "
+                "both set: the radiometer reading already contains the "
                 "layer's emission, so it supplies the radiant term and the "
                 "layer term is not added."
             )
@@ -1641,6 +1783,7 @@ class DefaultHeatFedModel:
         self.layer_emissivity = layer_emissivity
         self.layer_height_m = layer_height_m
         self._warned_missing_intensity = False
+        self._warned_missing_radiometer = False
 
     def convective_clothing(self) -> str | None:
         """Return the clothing of the ISO law in use, None under another law."""
@@ -1666,6 +1809,8 @@ class DefaultHeatFedModel:
                 layer_height_m=self.layer_height_m,
                 layer_term=self.uses_layer_term,
             )
+        if self.radiant_source == "radiometer":
+            return self._radiometer_parameters(params)
         if self.radiant_source != "integrated-intensity":
             return params
         # eps is not used with this source; f is user-given, not assumed.
@@ -1677,12 +1822,24 @@ class DefaultHeatFedModel:
         params["radiant_flux"] = "excess"
         return params
 
+    def _radiometer_parameters(self, params: dict[str, object]) -> dict[str, object]:
+        """Add the radiometer source to the manifest parameters (#276)."""
+        # eps is not used; the device's own emissivity is recorded below.
+        params["assumed"] = [
+            name for name in HEAT_FLUX_ASSUMED_PARAMETERS if name != "emissivity"
+        ]
+        params["radiant_source"] = self.radiant_source
+        params["radiant_flux"] = "net"
+        params.update(self.field.radiometer.manifest_entry())  # type: ignore[union-attr]
+        return params
+
     def heat_flux_kw_m2(
         self,
         temperature_celsius: float,
         layer_temperature_celsius: float | None = None,
         integrated_intensity_kw_m2: float | None = None,
         *,
+        radiometer_kw_m2: float | None = None,
         radiant_threshold: bool = False,
     ) -> float:
         """Return the total-flux q in kW/m2 for one gas temperature.
@@ -1692,11 +1849,16 @@ class DefaultHeatFedModel:
         q = f (U - 4 sigma T_s^4 / 1000) + h (T_g - T_s) / 1000 (excess over
         an isotropic field at the skin temperature, maintainer decision on
         #221): U already holds the gas emission, so the eps term is not added.
+        With the radiometer source the radiant term is *radiometer_kw_m2*, the
+        net reading, and convection is added from the gas temperature (#276).
         With *radiant_threshold* the radiant term is zero below 2.5 kW/m2
         (ISO 13571:2012 §8.2, §8.4); the dose uses that q.
         """
         radiant = self._radiant_flux_kw_m2(
-            temperature_celsius, layer_temperature_celsius, integrated_intensity_kw_m2
+            temperature_celsius,
+            layer_temperature_celsius,
+            integrated_intensity_kw_m2,
+            radiometer_kw_m2,
         )
         if radiant_threshold:
             radiant = counted_radiant_flux_kw_m2(radiant)
@@ -1713,10 +1875,13 @@ class DefaultHeatFedModel:
         temperature_celsius: float,
         layer_temperature_celsius: float | None,
         integrated_intensity_kw_m2: float | None,
+        radiometer_kw_m2: float | None = None,
     ) -> float:
-        """Return the radiant term of q in kW/m2: layer, U or gas source."""
+        """Return the radiant term of q in kW/m2: layer, radiometer, U or gas."""
         if self.uses_layer_term:
             return self._layer_radiant_flux_kw_m2(layer_temperature_celsius)
+        if self.radiant_source == "radiometer":
+            return math.nan if radiometer_kw_m2 is None else radiometer_kw_m2
         if self.radiant_source != "integrated-intensity":
             return total_heat_flux_kw_m2(
                 temperature_celsius,
@@ -1756,6 +1921,7 @@ class DefaultHeatFedModel:
         q = self.heat_flux_kw_m2(
             inputs.temperature_celsius,
             inputs.layer_temperature_celsius,
+            radiometer_kw_m2=inputs.radiometer_kw_m2,
             integrated_intensity_kw_m2=inputs.integrated_intensity_kw_m2,
             radiant_threshold=True,
         )
@@ -1793,6 +1959,9 @@ class DefaultHeatFedModel:
 
     def _warn_missing_intensity_once(self, inputs: HeatFedInputs) -> None:
         """Log once per model when U is missing, e.g. outside the FDS domain."""
+        if self.radiant_source == "radiometer":
+            self._warn_missing_radiometer_once(inputs)
+            return
         if self.radiant_source != "integrated-intensity":
             return
         if self._warned_missing_intensity:
@@ -1805,6 +1974,21 @@ class DefaultHeatFedModel:
             "An agent is outside the INTEGRATED INTENSITY slice (outside the "
             "FDS domain) or U is not finite: its heat dose rate is zero there, "
             "and U and q read NaN in the FED history. Logged once per run."
+        )
+
+    def _warn_missing_radiometer_once(self, inputs: HeatFedInputs) -> None:
+        """Log once per model when the radiometer reading is not finite."""
+        if self._warned_missing_radiometer:
+            return
+        reading = inputs.radiometer_kw_m2
+        if reading is not None and math.isfinite(reading):
+            return
+        self._warned_missing_radiometer = True
+        _logger.warning(
+            "An agent is outside the TEMPERATURE slice (outside the FDS "
+            "domain) or its radiometer reading is not finite: its heat dose "
+            "rate is zero there, and the reading and q read NaN in the FED "
+            "history. Logged once per run."
         )
 
     def advance(

@@ -37,6 +37,7 @@ quantity name `load_slice_sampler` looks up
 | CO **and** CO2 **and** O2 | FED toxic dose | **FED is switched off and the run continues** (see below) |
 | TEMPERATURE | heat FED (ISO 13571:2012 Eq. (9) or (10)), only with `--enable-heat-fed` | **heat FED is switched off and the run continues** (see below) |
 | TEMPERATURE at `--heat-layer-height` | the hot-layer temperature, only with `--heat-regime layer` | the run stops |
+| RADIOMETER GAS devices | radiant flux (net reading), only with `--heat-radiant-source radiometer`; one orientation, a regular grid at the TEMPERATURE slice z within half a cell, `&PROP` `GAUGE_TEMPERATURE` = `--heat-skin-temperature`, the `.fds` deck beside the output | `ValueError`: the run stops, with the `&DEVC` line to add (also for a gauge temperature that differs, a missing deck, or an agent inside the slice but outside the grid) |
 | INTEGRATED INTENSITY | radiant flux f·(U − 4σT_s⁴), only with `--heat-radiant-source integrated-intensity`; at the TEMPERATURE slice z, covering the same area | `ValueError`: the run stops (also for another z, or an agent inside only one of the two slices) |
 
 It is all three gases or none of them; there is no partial FED. TEMPERATURE

@@ -24,6 +24,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `--heat-radiant-source radiometer` with `--heat-radiometer-orientation x,y,z`
+  takes the radiant term of the total-flux heat dose from FDS
+  `RADIOMETER GAS` devices of one orientation, with no orientation factor
+  (#276). The orientation is required with the source and an error without
+  it. The reading is bilinear in x and y and linear in time over a regular
+  grid at the `TEMPERATURE` slice height (within half a cell); the 2.5 kW/m²
+  threshold acts on the net reading and convection h (T_g - T_s) / 1000 is
+  added after it from the slice, once. The deck is parsed and the run stops
+  if `GAUGE_TEMPERATURE` differs from `--heat-skin-temperature` or the deck
+  is missing; an agent inside the slice but outside the grid, or a case
+  without matching radiometers (the message shows the `&DEVC` line to add),
+  stops the run. With `--heat-regime layer` the layer term is dropped (one
+  warning); `--heat-emissivity` and `--heat-u-factor` are ignored. The FED
+  history gains `heat_radiometer_kw_m2` and `heat_radiometer_incident_kw_m2`,
+  and `heat_flux_parameters` records the source, orientation, gauge
+  temperature and emissivity, device count, grid origin and spacing, and the
+  sha256 of the deck. Default runs are unchanged. Against the #224 FDS
+  gauges the radiometer term and q - gauge = h (T_slice - T_dev) / 1000 hold
+  to 1e-6 kW/m²; all 63 #308 comparisons are inside ±30 % (the layer term had
+  54 of 63).
 - `pyfds_evac.analysis` gains `plot_maps` (ASET, RSET, DIFF and the deciding
   criterion as one matplotlib figure; #1002), `AsetMap.deciding()` (which
   criterion sets each cell's ASET, ties joined with `+`; #1003) and
