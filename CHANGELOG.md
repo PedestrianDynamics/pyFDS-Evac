@@ -29,6 +29,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   gains `humid_rows`, `humid_agents` and `max_water_vapour_fraction`. One
   warning is logged when any sample is humid. Observational only: dose and
   thresholds are unchanged; without the slice the output is as before (#272).
+- `--output-fed-summary` writes one row per agent with the first time the
+  gas FED, heat FED, FIC and visibility reached their thresholds, the margin
+  to the exit time, and a `pass`/`fail`/`open` outcome; an agent still inside
+  is censored, not computed from the last frame; heat is `not_evaluated`
+  without a TEMPERATURE slice (#210). Thresholds: `--summary-fed-low`,
+  `--summary-fed-high`, `--summary-visibility-limit-m` (10 m),
+  `--summary-visibility-c` (3). `ScenarioResult.exit_times` and
+  `ScenarioResult.exposure_summary()` are new, and a new how-to,
+  [ASET/RSET check with FED](docs/howto-aset-rset-check.md).
+- `--output-fed-history` has `hcl_ppm` after `no2_ppm`, and `hbr_ppm`,
+  `hf_ppm`, `so2_ppm`, `acrolein_ppm`, `formaldehyde_ppm` after it when the
+  run samples that species (#210). The file gains columns; no value changes.
 - Verification of Pathfinder's two FED cases (#208), on the new page
   [Pathfinder's FED cases](docs/testing-pathfinder-fed.md): a moving occupant
   through three gas mixtures reproduces Pathfinder's hand value 0.07896 to

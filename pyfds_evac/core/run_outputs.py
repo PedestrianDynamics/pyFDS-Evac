@@ -14,6 +14,11 @@ import sqlite3
 import sys
 
 from pyfds_evac.core.agent_scalars import write_agent_scalars
+from pyfds_evac.core.exposure_summary import (
+    OUTCOMES,
+    ExposureSummaryConfig,
+    exposure_totals,
+)
 from pyfds_evac.core.manifest import manifest_path_for
 
 
@@ -65,6 +70,60 @@ def _write_smoke_history_csv(rows, output_path: str) -> None:
             writer.writerow(row)
 
 
+# Irritants written after hcl_ppm only when the run sampled them.
+_EXTRA_IRRITANT_COLUMNS = (
+    "hbr_ppm",
+    "hf_ppm",
+    "so2_ppm",
+    "acrolein_ppm",
+    "formaldehyde_ppm",
+)
+
+
+def summary_config(opts) -> ExposureSummaryConfig:
+    """The exposure-summary thresholds from the ``--summary-*`` options.
+
+    Raises ``ValueError`` for a value that is not a positive number.
+    """
+    defaults = ExposureSummaryConfig()
+    return ExposureSummaryConfig(
+        fed_thresholds=(
+            float(getattr(opts, "summary_fed_low", defaults.fed_thresholds[0])),
+            float(getattr(opts, "summary_fed_high", defaults.fed_thresholds[1])),
+        ),
+        visibility_c=float(
+            getattr(opts, "summary_visibility_c", defaults.visibility_c)
+        ),
+        visibility_limit_m=float(
+            getattr(opts, "summary_visibility_limit_m", defaults.visibility_limit_m)
+        ),
+    )
+
+
+def _write_fed_summary(result, opts, output_path, artifacts, log) -> None:
+    """Write the exposure summary and log its totals, when the run has data."""
+    rows = result.exposure_summary(summary_config(opts))
+    if not rows:
+        return
+    _write_exposure_summary_csv(rows, output_path)
+    artifacts.append(f"Exposure summary CSV: {output_path}")
+    for key, total in exposure_totals(rows).items():
+        counts = ", ".join(f"{name} {total[name]}" for name in OUTCOMES)
+        first = "-" if total["first_s"] is None else f"{total['first_s']:g} s"
+        log(f"Exposure {key}: {counts}; first crossing {first}")
+
+
+def _write_exposure_summary_csv(rows, output_path: str) -> None:
+    """Write the per-agent exposure summary rows to a CSV file."""
+    destination = pathlib.Path(output_path).resolve()
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with destination.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+        writer.writeheader()
+        for row in rows:
+            writer.writerow(row)
+
+
 def _write_fed_history_csv(rows, output_path: str) -> None:
     """Write sampled FED history rows to a CSV file."""
     destination = pathlib.Path(output_path).resolve()
@@ -80,6 +139,7 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "hcn_ppm",
         "no_ppm",
         "no2_ppm",
+        "hcl_ppm",
         "co_rate_per_min",
         "cn_rate_per_min",
         "nox_rate_per_min",
@@ -99,6 +159,10 @@ def _write_fed_history_csv(rows, output_path: str) -> None:
         "desired_speed",
         "speed_factor",
     ]
+    extra = [c for c in _EXTRA_IRRITANT_COLUMNS if rows and c in rows[0]]
+    fieldnames[fieldnames.index("hcl_ppm") + 1 : fieldnames.index("hcl_ppm") + 1] = (
+        extra
+    )
     if rows and "heat_endpoint" in rows[0]:
         fieldnames += ["heat_endpoint", "heat_outside_validity", "heat_humidity"]
         # Rows outside the vapour slice lack the key; DictWriter writes "".
@@ -432,6 +496,9 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
     if opts.output_fed_history and result.fed_history is not None:
         _write_fed_history_csv(result.fed_history, opts.output_fed_history)
         artifacts.append(f"FED history CSV: {opts.output_fed_history}")
+    output_fed_summary = getattr(opts, "output_fed_summary", None)
+    if output_fed_summary:
+        _write_fed_summary(result, opts, output_fed_summary, artifacts, log)
     if opts.output_route_history and result.route_history is not None:
         _write_route_history_csv(result.route_history, opts.output_route_history)
         artifacts.append(f"Route history CSV: {opts.output_route_history}")

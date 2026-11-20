@@ -986,6 +986,9 @@ def time_to_heat_fed_threshold_s(
     return (remaining / rate_per_min) * _SECONDS_PER_MINUTE
 
 
+_EXTRA_IRRITANTS = ("hbr", "hf", "so2", "acrolein", "formaldehyde")
+
+
 class FdsFedField:
     """Sample FED input quantities from FDS slice outputs via fdsreader.
 
@@ -1038,6 +1041,19 @@ class FdsFedField:
         self._so2 = optional_samplers.get("so2")
         self._acrolein = optional_samplers.get("acrolein")
         self._formaldehyde = optional_samplers.get("formaldehyde")
+
+    @property
+    def sampled_irritants(self) -> tuple[str, ...]:
+        """History column names of the optional irritants this field samples.
+
+        HCl is not listed: its column is always written. HCN, NO and NO2 are
+        not listed either: they have always been columns.
+        """
+        return tuple(
+            f"{name}_ppm"
+            for name in _EXTRA_IRRITANTS
+            if getattr(self, f"_{name}") is not None
+        )
 
     @classmethod
     def from_fds(

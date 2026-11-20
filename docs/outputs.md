@@ -19,6 +19,7 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | Route history | `--output-route-history CSV` | rerouting is on (the default), or an exit has `open_from_s` or `closed_after_s`; without rerouting it then holds only the rows of agents whose exit is closed: `exit_closed`, `initial` (exit not open yet) or `default_route` ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
 | Route cost history | `--output-route-cost-history CSV` | rerouting is on | one per candidate route per agent per evaluation |
 | Exit history | `--output-exit-history CSV` | always | one per agent that walks the stage graph |
+| Exposure summary | `--output-fed-summary CSV` | a FED or a smoke history was kept | one per agent |
 | Pre-evacuation times | `--output-pre-evacuation-times CSV` | always; header only when no agent has a pre-movement time | one per agent with a pre-movement time |
 
 A run of the terminal UI also leaves `child.log` (the run's own messages) in
@@ -124,7 +125,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 |---|---|---|
 | `time_s`, `agent_id`, `x`, `y` | s, —, m | as in the smoke history |
 | `co_percent`, `co2_percent`, `o2_percent` | vol % | gas concentrations at the agent |
-| `hcn_ppm`, `no_ppm`, `no2_ppm` | ppm | 0 when the case has no such slice |
+| `hcn_ppm`, `no_ppm`, `no2_ppm`, `hcl_ppm` | ppm | 0 when the case has no such slice |
 | `co_rate_per_min`, `cn_rate_per_min`, `nox_rate_per_min`, `fld_rate_per_min` | 1/min | narcotic and irritant terms, before the CO₂ hyperventilation factor |
 | `hv_co2` | — | CO₂ hyperventilation factor that multiplies the four terms above |
 | `o2_rate_per_min` | 1/min | hypoxia term, added after the factor |
@@ -133,7 +134,7 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 | `temperature_celsius` | °C | gas temperature at the agent |
 | `heat_fed_rate_per_min`, `heat_fed_cumulative` | 1/min, — | heat FED rate and running total, a separate track |
 | `incapacitation_cause` | — | empty, `gas`, `heat` or `gas+heat` on the agent's last row, the update at which the threshold was crossed |
-| `fic` | — | fractional irritant concentration |
+| `fic` | — | fractional irritant concentration, with the SFPE incapacitation denominators (HCl 900 ppm), not the ISO 13571 ones (HCl 1000 ppm) |
 | `fic_speed_factor` | — | irritant speed fraction F_irr (Eq. 70.11), 1 unless `--enable-fic-speed` |
 | `incapacitated` | — | `True` on the agent's last row, the update at which a threshold is crossed; the record ends there |
 | `base_speed`, `desired_speed`, `speed_factor` | m/s, m/s, — | speed as the agent is moving at this update, all slowdowns combined |
@@ -147,10 +148,53 @@ Extra columns appear with some heat options:
 | `heat_flux_kw_m2` | `--heat-fed-method total-flux`: the heat flux to the skin [kW/m²] |
 | `heat_integrated_intensity_kw_m2` | `--heat-radiant-source integrated-intensity`: *U* at the agent [kW/m²] |
 | `heat_layer_temperature_c` | `--heat-regime layer`: layer temperature [°C] |
+| `hbr_ppm`, `hf_ppm`, `so2_ppm`, `acrolein_ppm`, `formaldehyde_ppm` | FDS output with that species slice; each is written right after `hcl_ppm`, only when sampled |
 | `in_fds_domain` | FDS output: `True` where every sampled gas and heat slice covers the agent, `False` where it reads ambient air outside them |
 
 The equations behind each rate are on [Models › FED](/models/fed.md) and
 [Models › Heat](/models/heat.md).
+
+## Exposure summary
+
+`--output-fed-summary CSV` writes one row per agent from the FED and smoke
+histories and the exit times of the run (`ScenarioResult.exit_times`,
+the simulation time at which JuPedSim removed the agent). In Python,
+`result.exposure_summary()` returns the same rows. A run that kept neither
+history writes no file. The run's console output ends with one line per
+criterion: outcome counts and the first crossing time. The same totals
+are `exposure_totals(rows)` in `pyfds_evac.core.exposure_summary`; they are
+not written to the CSV. How to read it:
+[ASET/RSET check with FED](howto-aset-rset-check.md).
+
+| Column | Unit | Meaning |
+|---|---|---|
+| `agent_id` | — | JuPedSim id |
+| `exit_time_s` | s | simulation time at which the agent was removed; empty if it is still inside |
+| `censored` | — | `True` when the agent is still inside at the end of the run (time limit, deadlock, incapacitated and left in place). Never inferred from the last frame |
+| `last_sample_s`, `incapacitated_s` | s | last history sample while inside; time of incapacitation, empty if none (the record ends there, so later crossings are unobserved) |
+| `outside_fds_samples` | — | with FDS output: samples read as ambient air outside the slices; a crossing there is not evidence |
+| `heat_evaluated` | — | `False` when no heat model ran |
+| `fed_max`, `heat_fed_max`, `fic_max`, `k_max` | —, —, —, 1/m | maximum of the gas FED, the heat FED, the FIC and the extinction coefficient while inside |
+| `t_fed_ge_<thr>_s`, `t_heat_fed_ge_<thr>_s`, `t_fic_ge_<thr>_s` | s | first sample time with the value `>=` the threshold; empty if never. Exactly two thresholds, `--summary-fed-low` and `--summary-fed-high` (0.3 and 1); in Python, `ExposureSummaryConfig.fed_thresholds` takes any list |
+| `t_k_ge_<K>_s` | s | first sample time with *K* `>=` C / limit; `<K>` is that number (0.3 by default) |
+| `diff_<criterion>_s` | s | crossing time minus exit time: negative means the limit was reached before the agent left; empty when censored or never crossed |
+| `outcome_<criterion>` | — | `fail`: crossed while inside (an agent still inside that crossed fails, without a margin); `pass`: left, with no crossing; `open`: still inside with no crossing, or no sample, so the margin is undetermined; `not_evaluated`: the run did not compute the quantity |
+
+- The FIC is the engine's: SFPE incapacitation denominators (HCl 900 ppm),
+  not the ISO 13571 FEC (HCl 1000 ppm), and one threshold list serves the
+  FED and the FIC. No ISO FEC is reported.
+- Visibility: *K* `>=` C / limit. The defaults are a limit of 10 m
+  (Engineers Australia 2014 p. 15, NZBC C/VM2 commentary p. 30, vfdb TB 04-01
+  Table 8.3) and C = 3 for light-reflecting signs, so *K* = 0.3 1/m; use
+  `--summary-visibility-c 8` for light-emitting signs (C from Jin, as quoted
+  in vfdb p. 314 and ISO 13571:2012 Note 2 p. 11). The vfdb limit
+  D_L = 0.1 1/m is *K* = 0.23 1/m, which Schröder et al. (2020) used.
+- A criterion without its history reads `not_evaluated` with empty cells:
+  heat without a heat model (the 20 °C of the FED history is ambient, not a
+  result), the gas FED and the FIC in a heat-only run, *K* without a smoke
+  model.
+- Crossing times have the resolution of the history: the first sample at or
+  after the true crossing. The sample at the exit time counts as inside.
 
 ## Route history
 
