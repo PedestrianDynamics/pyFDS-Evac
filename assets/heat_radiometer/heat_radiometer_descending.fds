@@ -1,0 +1,99 @@
+&HEAD CHID='heat_radiometer_descending',
+      TITLE='Descending smoke layer from a burner in a room with a low vent (#274)' /
+
+! Purpose: issue #274, plans/heat-274-276/contract.md Sec. 15: the base of
+! the view factor phi, FDS interface or a fixed height, on a layer that
+! comes down during the run. Same room, grid, &PROP and device line as
+! heat_radiometer_layer_274.fds, so the view-factor constants of
+! scripts/verification/heat_layer_view_factor.py hold (4 x 4 m footprint,
+! gauges at y = 2.05 m, x = 0.45-3.45 m, z = 1.6 m).
+! Room 4 x 4 x 3 m, 0.1 m cells, four meshes split along x. Room size and
+! grid are assumptions of this deck (#224), not sourced values.
+! Run with: mpiexec -n 4 fds <deck>.fds
+&MESH ID='M1', IJK=10,40,30, XB=0,1, 0,4, 0,3 /
+&MESH ID='M2', IJK=10,40,30, XB=1,2, 0,4, 0,3 /
+&MESH ID='M3', IJK=10,40,30, XB=2,3, 0,4, 0,3 /
+&MESH ID='M4', IJK=10,40,30, XB=3,4, 0,4, 0,3 /
+
+&TIME T_END=60. /
+&MISC TMPA=20. /
+
+! Low vent, 0.4 x 0.3 m at the floor of the y = 0 wall: relieves the
+! pressure, so the layer fills the room from the ceiling down. Its top
+! (0.3 m) is far below the gauges. Size and place are assumptions.
+&VENT XB=1.4,1.8,0,0,0,0.3, SURF_ID='OPEN' /
+
+! 0.4 x 0.4 m propane burner on the floor against the y = 4 m wall, away
+! from the device line (1.55 m from it). 625 kW/m2, about 100 kW. A wall
+! fire entrains about 0.2 z^(5/3) kg/s (half of a 2Q plume), which puts
+! the interface near 1-1.5 m at 30-50 s. Soot yield 0.1 makes the layer
+! sooty, so eps_L = 1 is not far off. Fuel, size, HRR, place and soot yield
+! are assumptions of this deck, not sourced values.
+&REAC FUEL='PROPANE', SOOT_YIELD=0.1 /
+&SURF ID='BURNER', HRRPUA=625., COLOR='RED' /
+&VENT XB=2.1,2.5,3.6,4.0,0,0, SURF_ID='BURNER' /
+
+! Adiabatic on all six faces, as in the #308 decks: walls exchange no net
+! heat with the room. An assumption of this deck, not a sourced value.
+! Listed after the vent and the burner: where VENTs overlap, FDS keeps
+! the first and ignores the later ones (UG 6.10.1 Sec. 7.4.1).
+&SURF ID='ADIABATIC_WALL', ADIABATIC=.TRUE. /
+&VENT MB='XMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='XMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='YMAX', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMIN', SURF_ID='ADIABATIC_WALL' /
+&VENT MB='ZMAX', SURF_ID='ADIABATIC_WALL' /
+
+! Skin: gauge at 35 C (GAUGE_TEMPERATURE), emissivity 1 (FDS default, taken
+! as the skin emissivity: an assumption, not a sourced value), and
+! h = 8 W/(m2 K). 35 C and h are prescribed by issue #224. FDS UG
+! Eqs. 22.35-22.36: gauge - radiometer = h (T_g - 35 C).
+&PROP ID='skin', GAUGE_TEMPERATURE=35., HEAT_TRANSFER_COEFFICIENT=8. /
+
+! Head height 1.6 m on the #308 line, facing up. TIME_HISTORY=T writes
+! each point to _devc.csv.
+&DEVC ID='T_z16', QUANTITY='TEMPERATURE', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='GAUGE_z16_up', QUANTITY='GAUGE HEAT FLUX GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+&DEVC ID='RAD_z16_up', QUANTITY='RADIOMETER GAS', ORIENTATION=0,0,1,
+      PROP_ID='skin', XBP=0.45,3.45,2.05,2.05,1.6,1.6, POINTS=7, TIME_HISTORY=T /
+
+! Layer columns, one per device x (y = 2.05 m): LAYER HEIGHT, UPPER and
+! LOWER TEMPERATURE on a line from floor to ceiling (FDS UG 6.10.1
+! Sec. 22.10.7; the line must start at the floor, contract Sec. 14 O2),
+! and TEMPERATURE at the 30 cell centres for checks.
+&DEVC ID='LH_c1', QUANTITY='LAYER HEIGHT', XB=0.45,0.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c1', QUANTITY='UPPER TEMPERATURE', XB=0.45,0.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c1', QUANTITY='LOWER TEMPERATURE', XB=0.45,0.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c1', QUANTITY='TEMPERATURE', XBP=0.45,0.45,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='LH_c2', QUANTITY='LAYER HEIGHT', XB=0.95,0.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c2', QUANTITY='UPPER TEMPERATURE', XB=0.95,0.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c2', QUANTITY='LOWER TEMPERATURE', XB=0.95,0.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c2', QUANTITY='TEMPERATURE', XBP=0.95,0.95,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='LH_c3', QUANTITY='LAYER HEIGHT', XB=1.45,1.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c3', QUANTITY='UPPER TEMPERATURE', XB=1.45,1.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c3', QUANTITY='LOWER TEMPERATURE', XB=1.45,1.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c3', QUANTITY='TEMPERATURE', XBP=1.45,1.45,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='LH_c4', QUANTITY='LAYER HEIGHT', XB=1.95,1.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c4', QUANTITY='UPPER TEMPERATURE', XB=1.95,1.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c4', QUANTITY='LOWER TEMPERATURE', XB=1.95,1.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c4', QUANTITY='TEMPERATURE', XBP=1.95,1.95,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='LH_c5', QUANTITY='LAYER HEIGHT', XB=2.45,2.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c5', QUANTITY='UPPER TEMPERATURE', XB=2.45,2.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c5', QUANTITY='LOWER TEMPERATURE', XB=2.45,2.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c5', QUANTITY='TEMPERATURE', XBP=2.45,2.45,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='LH_c6', QUANTITY='LAYER HEIGHT', XB=2.95,2.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c6', QUANTITY='UPPER TEMPERATURE', XB=2.95,2.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c6', QUANTITY='LOWER TEMPERATURE', XB=2.95,2.95,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c6', QUANTITY='TEMPERATURE', XBP=2.95,2.95,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+&DEVC ID='LH_c7', QUANTITY='LAYER HEIGHT', XB=3.45,3.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TU_c7', QUANTITY='UPPER TEMPERATURE', XB=3.45,3.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TL_c7', QUANTITY='LOWER TEMPERATURE', XB=3.45,3.45,2.05,2.05,0.0,3.0 /
+&DEVC ID='TCOL_c7', QUANTITY='TEMPERATURE', XBP=3.45,3.45,2.05,2.05,0.05,2.95, POINTS=30, TIME_HISTORY=T /
+
+&SLCF PBZ=1.6, QUANTITY='TEMPERATURE' /
+&SLCF PBY=2.05, QUANTITY='TEMPERATURE' /
+&SLCF PBX=2.3, QUANTITY='TEMPERATURE' /
+
+&TAIL /

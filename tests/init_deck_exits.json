@@ -11147,6 +11147,30 @@
    ]
   ]
  },
+ "assets/heat_radiometer/heat_radiometer_descending.fds":{
+  "vent_1":[
+   [
+    1.4,
+    0.5
+   ],
+   [
+    1.8,
+    0.5
+   ],
+   [
+    1.8,
+    0.0
+   ],
+   [
+    1.4,
+    0.0
+   ],
+   [
+    1.4,
+    0.5
+   ]
+  ]
+ },
  "assets/heat_radiometer/heat_radiometer_grid2d.fds":{},
  "assets/heat_radiometer/heat_radiometer_layer.fds":{},
  "assets/heat_radiometer/heat_radiometer_layer_274.fds":{},

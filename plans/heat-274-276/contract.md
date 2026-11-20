@@ -708,3 +708,59 @@ known when this section was written; the descending run was not.
 
 The interface stays at 1.85-2.59 m, so the head is never in the layer.
 (I) has the smallest spread; F2.0 is 20/21 and 21/21.
+
+### 15.3 Step 2: descending run
+
+`fds-evac-data/heat_radiometer/descending/` (deck
+`assets/heat_radiometer/heat_radiometer_descending.fds`, FDS 6.10.1,
+4 ranks, wall time 4 min 18 s, exit 0 and "STOP: FDS completed
+successfully"). About 100 kW propane burner at the y = 4 m wall, soot
+yield 0.1, low vent 0.4 x 0.3 m at the floor, adiabatic walls, T_END 60 s.
+gauge - radiometer = h (T_g - 35 C) to 1.2e-7 kW/m2.
+
+Interface (median over the 7 columns, min-max):
+
+| t (s) | 0 | 5 | 10 | 15 | 20 | 25 | 30 | 40 | 50 | 60 |
+|---|---|---|---|---|---|---|---|---|---|---|
+| z_int (m) | 3.00 | 2.80 | 2.56 | 2.02 | 1.35 | 1.19 | 1.15 | 0.92 | 0.71 | 0.69 |
+| min-max | 3.00 | 2.29-3.00 | 2.19-2.96 | 1.36-2.28 | 1.12-1.66 | 1.10-1.28 | 0.96-1.21 | 0.83-1.09 | 0.60-0.82 | 0.65-0.73 |
+| T_u median (C) | 20 | 54 | 59 | 66 | 71 | 82 | 92 | 114 | 133 | 158 |
+
+The head (1.6 m) is inside the layer at most columns from about 18 s on.
+Sample times by the 15.1 rule: t_a = 9.97 s, t_b = 21.61 s, 8 times.
+Of 56 rows, 33 are under the 0.5 kW/m2 floor (the layer is 55-70 C while
+it is above the head), 16 have the head in the layer, 7 are scored.
+
+| option | within +-30 % | median | worst | +-40 % |
+|---|---|---|---|---|
+| I | 0/7 | 0.612 | 0.561 | 5/7 |
+| F1.8 | 0/7 | 0.604 | 0.558 | 4/7 |
+| F2.0 | 0/7 | 0.579 | 0.525 | 3/7 |
+| F2.5 | 0/7 | 0.505 | 0.435 | 0/7 |
+
+Point values: I 2/8, F1.8 2/8, F2.0 1/8, F2.5 0/8. Dropping the column
+nearest the fire (c5): all 0/6. Head-in-layer rows with phi = 1 for (I):
+I 2/16, each F 0/16, medians 0.56-0.64.
+
+- Every option is about 40 % low. The layer term misses a source the
+  gauge sees: the sooty flame and plume above 1.6 m, warm walls and warm
+  lower gas; this run does not separate them. The T^4 mean of the column
+  above z_int is within 3 C of T_u, so D7 does not explain it.
+- Pairs at +-30 %: 0-0 against F1.8, F2.0 and F2.5, a tie each, so (F)
+  under the tie rule.
+
+### 15.4 Verdict
+
+By the predeclared rule, **(F) wins** on the descending run, by ties at
+0 scored rows each. The win is not robust and not informative: no option
+meets the band, only 7 rows pass the floor, and the order flips with the
+band (at +-40 % (I) leads 5/7 to 4/7, 3/7, 0/7). Where the layer is
+above the head, (I) has the median closest to 1 and the smallest spread
+in all three runs (step 1: 21/21 twice, medians 1.10 and 1.03); a fixed
+height is as good only when it happens to be near the interface (F2.5 in
+`layer_274`, F1.8-F2.0 in `layer_274_pl`). As the interface reaches the
+head, (I) and F1.8 converge (phi near 1 for both).
+
+Open for the maintainer: keep (F) as the rule's outcome, or approve one
+more run with a hotter layer above the head (the 15.1 criterion stays as
+written; a new folder).
