@@ -4340,7 +4340,10 @@ def run_scenario(
             )
 
         if heat_endpoint is not None and heat_fed_model is not None:
-            metrics["heat_humidity"] = _report_heat_humidity(fed_history)
+            summary = _report_heat_humidity(fed_history)
+            # Without a water-vapour slice the metrics stay as before #272.
+            if summary["humidity"] != "unknown":
+                metrics["heat_humidity"] = summary
 
         if fds_coverage is not None:
             metrics["fds_coverage"] = fds_coverage.to_dict()

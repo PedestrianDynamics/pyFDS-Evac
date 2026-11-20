@@ -1363,7 +1363,7 @@ class FdsHeatField:
         vapour_sampler = None
         if water_vapour:
             vapour_sampler = _load_water_vapour_sampler(
-                fds_dir, simulation, slice_height_m, allow_horizon_hold
+                fds_dir, simulation, slice_height_m, allow_horizon_hold, sampler
             )
         field = cls(
             sampler,
@@ -1410,7 +1410,11 @@ class FdsHeatField:
 
 
 def _load_water_vapour_sampler(
-    fds_dir, simulation, slice_height_m: float, allow_horizon_hold: bool
+    fds_dir,
+    simulation,
+    slice_height_m: float,
+    allow_horizon_hold: bool,
+    temperature_sampler=None,
 ):
     """Return the water-vapour slice sampler, or None when the case has none."""
     from .fds_sampling import load_slice_sampler
@@ -1419,13 +1423,32 @@ def _load_water_vapour_sampler(
     sim = simulation if simulation is not None else open_fds_simulation(fds_dir)
     if not sim.slices.filter_by_quantity(HEAT_WATER_VAPOUR_QUANTITY):
         return None
-    return load_slice_sampler(
+    sampler = load_slice_sampler(
         fds_dir,
         HEAT_WATER_VAPOUR_QUANTITY,
         simulation=sim,
         slice_height_m=slice_height_m,
         allow_horizon_hold=allow_horizon_hold,
     )
+    if temperature_sampler is not None and not _same_height(
+        temperature_sampler, sampler
+    ):
+        # Unlike U, the vapour is only a validity check: a slice at another
+        # height would flag the wrong air, so say so and report unknown.
+        _logger.warning(
+            "The %s slice in %s is not at the height of the TEMPERATURE slice; "
+            "heat_humidity stays unknown. Add `&SLCF PBZ=<z>, QUANTITY='VOLUME "
+            "FRACTION', SPEC_ID='WATER VAPOR' /` at the temperature height.",
+            HEAT_WATER_VAPOUR_QUANTITY,
+            fds_dir,
+        )
+        return None
+    return sampler
+
+
+def _same_height(a, b) -> bool:
+    """Return whether two slice samplers lie at the same z."""
+    return abs(a.z_m - b.z_m) <= HEAT_SLICE_Z_TOLERANCE_M
 
 
 def _raise_outside(require_fds_coverage: bool, sampler, time_s: float, x, y) -> None:

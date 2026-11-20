@@ -20,10 +20,13 @@ from pyfds_evac.core.fed import (
 
 
 class _Sampler:
-    def __init__(self, value):
+    def __init__(self, value, z_m=1.6):
         self._value = value
+        self.z_m = z_m
 
     def sample(self, time_s, x, y):
+        if callable(self._value):
+            return float(self._value(time_s, x, y))
         return float(self._value)
 
 
@@ -152,14 +155,15 @@ class _Sim:
         self.slices = _Slices(quantities)
 
 
-def _patch_loader(monkeypatch):
+def _patch_loader(monkeypatch, vapour_z_m=1.6):
     from pyfds_evac.core import fds_sampling
 
     loaded = []
 
     def load(fds_dir, quantity, **kwargs):
         loaded.append(quantity)
-        return _Sampler(20.0)
+        height = vapour_z_m if "WATER" in quantity else 1.6
+        return _Sampler(20.0, z_m=height)
 
     monkeypatch.setattr(fds_sampling, "load_slice_sampler", load)
     return loaded
@@ -182,3 +186,44 @@ def test_from_fds_without_slice_or_request_keeps_unknown(monkeypatch):
     field = FdsHeatField.from_fds("c", simulation=sim)
     assert field._water_vapour_sampler is None
     assert "WATER VAPOR VOLUME FRACTION" not in loaded
+
+
+def test_vapour_slice_at_another_height_warns_and_stays_unknown(monkeypatch, caplog):
+    loaded = _patch_loader(monkeypatch, vapour_z_m=2.4)
+    sim = _Sim({"TEMPERATURE", "WATER VAPOR VOLUME FRACTION"})
+    with caplog.at_level("WARNING"):
+        field = FdsHeatField.from_fds("c", simulation=sim, water_vapour=True)
+    assert "WATER VAPOR VOLUME FRACTION" in loaded
+    assert field._water_vapour_sampler is None
+    assert "not at the height of the TEMPERATURE slice" in caplog.text
+
+
+def test_vapour_is_sampled_at_the_time_and_point_of_the_temperature():
+    """A time- and space-varying vapour field pins the sample arguments."""
+    field = FdsHeatField(
+        _Sampler(150.0),  # type: ignore[arg-type]
+        water_vapour_sampler=_Sampler(lambda t, x, y: 0.001 * t + 0.01 * x + 0.1 * y),  # type: ignore[arg-type]
+    )
+    assert field.sample_inputs(30.0, 2.0, 0.5).water_vapour_fraction == (
+        pytest.approx(0.03 + 0.02 + 0.05)
+    )
+    assert field.sample_inputs(60.0, 4.0, 0.0).water_vapour_fraction == (
+        pytest.approx(0.06 + 0.04)
+    )
+
+
+def test_fed_csv_with_a_late_vapour_column_does_not_crash(tmp_path):
+    """The first row lacks the sample (outside the slice); a later row has it."""
+    from pyfds_evac.core import run_outputs
+
+    base = {"heat_endpoint": "fatal", "heat_outside_validity": False}
+    rows = [
+        {**base, "heat_humidity": "unknown"},
+        {**base, "heat_humidity": "humid", "heat_water_vapour_fraction": 0.12},
+    ]
+    path = tmp_path / "fed.csv"
+    run_outputs._write_fed_history_csv(rows, str(path))
+    lines = path.read_text().splitlines()
+    assert lines[0].endswith("heat_humidity,heat_water_vapour_fraction")
+    assert lines[1].endswith("unknown,")
+    assert lines[2].endswith("humid,0.12")

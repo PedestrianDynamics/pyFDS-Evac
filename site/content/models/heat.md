@@ -492,7 +492,8 @@ and `heat_humidity`. When the case has a `WATER VAPOR VOLUME FRACTION` slice
 at the heat slice height, it is sampled with the temperature: the fraction
 (mol/mol, 0-1) goes to `heat_water_vapour_fraction` and `heat_humidity` reads
 `ok` below 0.10 (10 % by volume) and `humid` at or above it. Without the slice
-it reads `unknown`. The laws hold for air with less than 10 % water vapour
+it reads `unknown`; so it does if the slice lies at another height than the
+temperature slice, which also logs a warning. The laws hold for air with less than 10 % water vapour
 (p. 2383) and overestimate the tolerance time in humid air; the check is
 observational, so the dose, thresholds and incapacitation do not change, and
 the run logs one warning when any sample is `humid`. The other heat modes do
