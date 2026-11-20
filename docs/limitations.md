@@ -333,7 +333,9 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   ([Movement models](/models/movement.md#deadlock-behaviour)).
   Since #760 such a run stops when the whole crowd has stood still for
   100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in
-  `metrics["deadlock"]`, instead of running to `max_simulation_time`. The
+  `metrics["deadlock"]`, instead of running to `max_simulation_time`,
+  unless a FED model is on and a stuck agent's dose can still reach its
+  incapacitation threshold before the time limit (#988). The
   jam itself is not cleared.
   `HUT_Library` at 0.15 m ends `deadlock` in seeds 2 and 6 of seeds 1–8
   (seed 2: 40 agents stuck since t = 139 s, stopped at 239 s with 80 of 120
@@ -365,7 +367,9 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   ([Movement models](/models/movement.md#deadlock-behaviour)).
   Since #760 such a run stops when the whole crowd has stood still for
   100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in
-  `metrics["deadlock"]`, instead of running to `max_simulation_time`. The
+  `metrics["deadlock"]`, instead of running to `max_simulation_time`,
+  unless a FED model is on and a stuck agent's dose can still reach its
+  incapacitation threshold before the time limit (#988). The
   jam itself is not cleared.
   `familiarity_test_no_journey` with 5 agents at seed 23 ends `deadlock` at
   136 s (2 agents stuck since t = 36 s); with 20 agents, seeds 3, 12, 13
@@ -410,7 +414,9 @@ re-entered it (Wood 1972, Fig. 5, p. 48; Wood 1980, Table 6.3, p. 87): 53 % of m
   [#959](https://github.com/PedestrianDynamics/pyFDS-Evac/pull/959)).
   Since #760 such a run stops when the whole crowd has stood still for
   100 s, with `end_reason` `"deadlock"` and the stuck agents' positions in
-  `metrics["deadlock"]`, instead of running to `max_simulation_time`. The
+  `metrics["deadlock"]`, instead of running to `max_simulation_time`,
+  unless a FED model is on and a stuck agent's dose can still reach its
+  incapacitation threshold before the time limit (#988). The
   jam itself is not cleared.
   So configured, at `7689907e` (seeds 1–3), `CollisionFreeSpeedModel`
   ends `deadlock` on both cases. On Iso-06-counterflow-50, 149, 150

@@ -172,7 +172,7 @@ and on the closed form at the deck value (◆), up to the 1 s update.
 | default law, Eq. (9): deterministic stop, 150 °C | 343 s | all 100 agents at 343 s |
 | default law, Eq. (9): deterministic stop, 200 °C | 122 s | all 100 agents at 122 s |
 | cause of every stop | `heat` | `heat` |
-| probabilistic, 150 °C, 10 seeds pooled: stopped by 999 s | 98.8 % | 985 of 1000 (982 on main, see below) |
+| probabilistic, 150 °C, 10 seeds pooled: stopped by 999 s | 98.8 % | 985 of 1000 |
 | probabilistic, 150 °C, 10 seeds pooled: largest gap between the curves | ≤ 0.043 | 0.034 (p = 0.21) |
 
 ## Pass criteria
@@ -278,12 +278,19 @@ probabilistic runs at `8ef8dc7`, in
 Rerun on main at `dce7eae7`, after the per-distribution seeds (#360,
 [#384](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/384)),
 in `<data>/fed_incap_heat_150c/evac_384/probabilistic_seeds/`, the pooled
-check gives the same D = 0.034 (p = 0.21) and per-seed D = 0.062 to 0.104,
-and every agent that stops in both runs stops at the same update. 982 of
-1000 stop by 999 s instead of 985: in seeds 43, 44 and 47 the last mobile
-agent is boxed in by incapacitated ones, and the run ends as `deadlock`
-at 715, 772 and 900 s, before that agent's threshold
+check gave the same D = 0.034 (p = 0.21), but 982 of 1000 stopped by 999 s:
+in seeds 43, 44 and 47 the last mobile agent was boxed in by incapacitated
+ones, and the run ended as `deadlock` at 715, 772 and 900 s, before that
+agent's threshold
 ([#988](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/988)).
+A deadlock no longer ends a run while a stuck agent's dose can still reach its threshold before the time limit.
+Rerun with that rule on `632a97f4` plus the change, in
+`<data>/fed_incap_heat_150c/evac_988/probabilistic_seeds/`, 985 of 1000
+stop by 999 s again, and every agent stops at the same update as in
+`evac_353` (max |Δt| = 0 s in all ten seeds). Seeds 43 and 47 end as
+`all_mobile_left` at 786 s and 910 s. In seeds 44, 48 and 49 the agents
+still inside cannot reach their thresholds by 1000 s, so the run ends as
+`deadlock` (`ended_run` true). The pooled check is D = 0.034 (p = 0.21).
 Earlier
 figures came from runs that also passed
 `--constant-extinction 0 --no-visibility`, which ran without a visibility
