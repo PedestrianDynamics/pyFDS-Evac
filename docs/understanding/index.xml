@@ -117,8 +117,8 @@ while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
-radiant heat from a hot layer enters only with the opt-in &lt;code>--heat-regime layer&lt;/code> or &lt;code>--heat-radiant-source integrated-intensity&lt;/code>, and from a flame or
-hot surfaces only with the latter, with a user factor. The published dose laws are on
+radiant heat from a hot layer enters only with the opt-in &lt;code>--heat-regime layer&lt;/code>, &lt;code>--heat-radiant-source integrated-intensity&lt;/code> or &lt;code>--heat-radiant-source radiometer&lt;/code>, and from a flame or hot surfaces only with the last two (a user
+factor for the first, one orientation per run for the second). The published dose laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.
@@ -558,9 +558,14 @@ JuPedSim behaviour and is not modelled.&lt;/p>
 default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
 an FDS &lt;code>TEMPERATURE&lt;/code> slice. Radiation enters only through the opt-in
 &lt;code>--heat-fed-method total-flux&lt;/code>, from the gas at the head, a hot layer above
-it (&lt;code>--heat-regime layer&lt;/code>), or the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a
-user factor; radiant flux from hot surfaces or a flame is otherwise missed
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>). In
+it (&lt;code>--heat-regime layer&lt;/code>), the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a
+user factor, or FDS &lt;code>RADIOMETER GAS&lt;/code> devices for one plate orientation per
+run (&lt;code>--heat-radiant-source radiometer&lt;/code>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>); radiant flux from hot surfaces or a flame is otherwise
+missed. The radiometer source is a plate, not a body, reads one height and one
+orientation, interpolates bilinearly without knowing walls, and its 2-D
+grid is checked on synthetic data only
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#limits-of-the-radiometer-source">Models › Heat › Limits of the radiometer source&lt;/a>). In
 every total-flux variant a radiant term below the ISO 2.5 kW/m² threshold
 counts as zero, and the code applies that threshold to a net or excess flux
 rather than an incident one; the consequences, with numbers, are on

@@ -1285,7 +1285,7 @@ lies outside this study.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS decks and scenarios of both families (release conditions and the room rebuilt from the paper), their generators, run.py, the map, animation and grid scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result. No file of the authors&amp;#39; release is included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1308 s (rel_1door), 1708 s (rel_2door) and 15260 s (rel_1door_dx010) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 5 min for the 160 runs and the maps, 6 workers&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| 1door capped 1.00 p/s, pre-movement 0 | 60.5 ± 0.5 | 20.5 ± 0.5 | 100-101 s |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.2 m, 1 door | -27 at (29.7, 8.1) | -27 | 6.7 | -112 | -124 | 718/21/0 |&lt;/code>&lt;br>&lt;code>| 1door capped 1.00 p/s, pre-movement 0, 0.1 m, 1 door | -27 at (29.7, 8.7) | -27 | 6.4 | -107 | -116 | 719/20/0 |&lt;/code>&lt;br>&lt;code>| 2door capped 1.00 p/s, pre-movement 0, 0.2 m, 2 doors | -40 at (0.3, 8.7) | -40 | 7.4 | -174 | -175 | 722/23/0 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -1316,7 +1316,7 @@ lies outside this study.&lt;/p>
 &lt;li>&lt;code>scripts/docs/first_fds_case_figures.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">685776c0cdff367929dd2ef8acd967986426ce0f085f42d33eb8bbb01f59dd26&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">d0b8b15a7c921fe92e15875545597d5e840bc55a2de105acd47eeaed35d829bf&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS decks, the scenarios and their generators are in
@@ -2392,7 +2392,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, run.py, the scenario folder assets/ISO-table21, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 3 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>clear air: 79.24 s&lt;/code>&lt;br>&lt;code>K = 3.0 1/m: 104.39 s&lt;/code>&lt;br>&lt;code>speed factor in smoke: 0.7578&lt;/code>&lt;br>&lt;code>time ratio smoke/clear: 1.3174&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -2411,7 +2411,7 @@ how smoke changes walking speed and evacuation time.&lt;/p>
 &lt;li>&lt;code>assets/ISO-table21/README.md&lt;/code>: what the scenario is and where it comes from&lt;/li>
 &lt;li>&lt;code>run.py&lt;/code>: the pyFDS-Evac command line, which the page compares with run_scenario&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">f96252ae58d3d94ce4ceab3f2474bfb23e100518d38ba0933317f463c003f6c1&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">3fd7f47046ecfda6cf36cad2131c41851209263e8db0999127cc907c1f90869a&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>You need one of:&lt;/p>
@@ -3185,8 +3185,8 @@ while the doses are still logged.&lt;/p>
 &lt;p>Two consequences matter when you read a result. An FED below the threshold
 leaves the walking speed unchanged, however close it comes. And the heat dose
 only incapacitates: it neither slows agents nor affects route choice, and
-radiant heat from a hot layer enters only with the opt-in &lt;code>--heat-regime layer&lt;/code> or &lt;code>--heat-radiant-source integrated-intensity&lt;/code>, and from a flame or
-hot surfaces only with the latter, with a user factor. The published dose laws are on
+radiant heat from a hot layer enters only with the opt-in &lt;code>--heat-regime layer&lt;/code>, &lt;code>--heat-radiant-source integrated-intensity&lt;/code> or &lt;code>--heat-radiant-source radiometer&lt;/code>, and from a flame or hot surfaces only with the last two (a user
+factor for the first, one orientation per run for the second). The published dose laws are on
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/asphyxiant-fed/">Asphyxiant fractional effective dose&lt;/a>,
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/irritants/">Irritant gases&lt;/a>, &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/heat/">Heat&lt;/a>
 and &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/fundamentals/incapacitation-thresholds/">Incapacitation thresholds&lt;/a>.
@@ -4114,7 +4114,8 @@ at constant CO.&lt;/li>
 &lt;a href="#what-is-not-modelled" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
 &lt;li>Radiant heat from hot surfaces or a flame, except as the excess f·(U − 4σT_s⁴) from FDS
 &lt;code>INTEGRATED INTENSITY&lt;/code> with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>
-and a user factor. Otherwise the heat dose is convective, or with
+and a user factor, or the net reading of FDS radiometers with
+&lt;code>--heat-radiant-source radiometer&lt;/code> (one orientation per run). Otherwise the heat dose is convective, or with
 &lt;code>--heat-fed-method total-flux&lt;/code> adds the radiation of the gas at the head,
 or with &lt;code>--heat-regime layer&lt;/code> that of a hot upper layer
 (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/">Heat&lt;/a>).&lt;/li>
@@ -4394,7 +4395,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;/div>
 &lt;p class="docs-files__summary">The two FDS decks and their scenarios, the example script, run.py, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 40 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 10 s (iso_table21_coupled) and 30 s (iso_table22_a) wall clock, one process each, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 15 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>exit time: 78.44 s clear, 85.30 s in smoke&lt;/code>&lt;br>&lt;code>FED &amp;gt;= 1 at t = 982 s; incapacitated: True&lt;/code>&lt;br>&lt;code>FED max: 1.000&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -4419,7 +4420,7 @@ shows two of the failure modes listed there.&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/build_geometry.py&lt;/code>: writes the gas-room decks, scenarios and geometry&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas-room cases are and where they come from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">5ca6c9bf54177c4c99695c7efc5f6ff6c42e84b94c291fe9c7ec2ec124136809&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bb34d295622f8b06f4d37c6b3df6612468ea47a6db25fb4254e768c056de1732&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The full script is &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/blob/main/examples/walkthrough.py" target="_blank" rel="noopener">&lt;code>examples/walkthrough.py&lt;/code>&lt;/a>.
@@ -5871,7 +5872,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the geometry and deck generators, the two scenarios, the run script, run.py, the two figure scripts, the animation script and its helpers, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 5423 s (a047_pvc_h40), 5929 s (a047_pvc_h35) and 3662 s (a012_pvc_h30) wall clock with 6 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 25-40 s per run, 100 runs&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>main fire, exit-E share: no fire 0.520, gate 0.689, additive 0.447&lt;/code>&lt;br>&lt;code>main fire, additive dy: -0.90 m (-1.16, -0.64)&lt;/code>&lt;br>&lt;code>main fire, gate door-B share: 0.04 for starts 30-120 s, 0.83 for starts 150-300 s&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>c619a046&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -5902,7 +5903,7 @@ fuel (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/796" t
 &lt;li>&lt;code>scripts/docs/schroeder_room_maps.py&lt;/code>: imported by the animation script (not used for this page)&lt;/li>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the animation script&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">480bc18eeaa74b02781b7a45556245dff33867ff5f00880f94e4bef74ca511f8&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">24950052b5529acb12a1bd8e25368151be40a8e4cf5df1171fc874105c348a57&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The inputs are in &lt;code>assets/schroeder2015_route/&lt;/code>. Run every command from
@@ -7369,7 +7370,7 @@ step 3 shows how.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The FDS deck, the scenario, run.py, the example and figure scripts, pinned package versions and a README.txt with every command, the runtimes and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 1120 s wall clock (about 19 min) with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s for the fire run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>evacuated: 89/150 in 300 s&lt;/code>&lt;br>&lt;code>FED max: 0.35&lt;/code>&lt;br>&lt;code>route history rows by reason: {&amp;#39;default_route&amp;#39;: 150, &amp;#39;initial&amp;#39;: 1, &amp;#39;smoke_reroute&amp;#39;: 2, &amp;#39;learned_exit&amp;#39;: 10}&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>a82a5b4c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -7390,7 +7391,7 @@ step 3 shows how.&lt;/p>
 &lt;li>&lt;code>scripts/animate_agents_smoke.py&lt;/code>: animation helpers used by the figure script&lt;/li>
 &lt;li>&lt;code>scripts/docs/first_fds_case_aset.py&lt;/code>: the numbers and figures of section 6 (ASET and RSET)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">42185b1eb20e464a60affd12b44d21a7f9d74169ba135453293305cac0492527&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">15e94360c51428e435391eccfd7da26737de75c93e07b5194d2960d558e10f9c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Run every command on this page from one of:&lt;/p>
@@ -8832,10 +8833,10 @@ below a hot layer the plate facing up gets about 0.41 &lt;em>U&lt;/em>, but a pl
 facing down gets about 0.13 &lt;em>U&lt;/em> and some facing sideways about 0.22 &lt;em>U&lt;/em>,
 less than &lt;em>f&lt;/em> = 0.25 gives. Beside a burner, plates facing up or away
 from the flame get about 0.12–0.14 &lt;em>U&lt;/em>. One &lt;em>f&lt;/em> serves one orientation.&lt;/li>
-&lt;li>&lt;strong>Gauge devices are the preferred input&lt;/strong> (spec 016): FDS
-&lt;code>GAUGE HEAT FLUX GAS&lt;/code> devices give the flux to a skin-like plate from the
-full radiation solution, with no factor (FDS User&amp;rsquo;s Guide 6.10.1,
-Eq. 22.35, p. 381). They are not read yet
+&lt;li>&lt;strong>Devices give the flux to a skin-like plate with no factor&lt;/strong> (spec 016):
+FDS &lt;code>RADIOMETER GAS&lt;/code> devices (FDS User&amp;rsquo;s Guide 6.10.1, Eq. 22.36, p. 381)
+are read by
+&lt;a href="#radiant-flux-from-fds-radiometers">&lt;code>--heat-radiant-source radiometer&lt;/code>&lt;/a>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Possible double count with convection.&lt;/strong> The hot-air data behind
 Eqs. 63.45–63.47 may already include radiation from the walls of the test
@@ -8844,6 +8845,158 @@ radiation twice. This is an open question
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Falling exposure.&lt;/strong> As for every summed dose, Eq. 63.48 holds only
 while exposure is steady or rising.&lt;/li>
+&lt;/ul>
+&lt;h3>Radiant flux from FDS radiometers&lt;span class="hx-absolute -hx-mt-20" id="radiant-flux-from-fds-radiometers">&lt;/span>
+&lt;a href="#radiant-flux-from-fds-radiometers" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>&lt;code>--heat-radiant-source radiometer&lt;/code> (opt-in, total-flux only; default &lt;code>gas&lt;/code>)
+takes the radiant term from FDS &lt;code>RADIOMETER GAS&lt;/code> devices, which give the
+flux to a plate at a gauge temperature from the full radiation solution,
+with no orientation factor
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>). FDS
+defines the radiometer reading as&lt;/p>
+$$
+R = \varepsilon_d\,(q_{\mathrm{inc}} - \sigma T_{\mathrm{gauge}}^4)
+\quad [\mathrm{kW/m^2}]
+$$&lt;p>(FDS User&amp;rsquo;s Guide 6.10.1, Eq. 22.36, p. 381; \(\varepsilon_d\) is the
+device&amp;rsquo;s &lt;code>GAUGE_EMISSIVITY&lt;/code>, default 1), the same basis as the excess of the
+&lt;code>INTEGRATED INTENSITY&lt;/code> source with \(T_{\mathrm{gauge}} = T_s\). The flux
+to the skin is&lt;/p>
+$$
+q = R + \frac{h\,(T_g - T_s)}{1000} \quad [\mathrm{kW/m^2}],
+$$&lt;p>with \(T_g\) from the &lt;code>TEMPERATURE&lt;/code> slice and h from
+&lt;code>--heat-convective-coefficient&lt;/code>. Unlike the FDS gauge (Eq. 22.35), the
+radiometer has no convective part, so convection is added once, from the
+slice, after the radiant threshold. The rate is \(q^{1.33}/D\) as above.&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>&lt;strong>One orientation per run.&lt;/strong> &lt;code>--heat-radiometer-orientation x,y,z&lt;/code> is
+required with this source and has no default; it is an error without the
+source. &lt;code>0,0,1&lt;/code> faces up (the crown, an agent below a hot layer), a
+horizontal vector a face. The devices are selected by quantity
+(&lt;code>RADIOMETER&lt;/code>, with or without &lt;code>GAS&lt;/code>: FDS 6.10.1 reports &lt;code>RADIOMETER&lt;/code>),
+orientation (to 10⁻⁶) and height; their IDs need no naming convention.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The input the case needs.&lt;/strong> Radiometers facing that orientation at the
+height of the &lt;code>TEMPERATURE&lt;/code> slice (default 1.6 m), on a regular
+rectangular grid, with a &lt;code>&amp;amp;PROP&lt;/code> that sets &lt;code>GAUGE_TEMPERATURE&lt;/code> to the
+skin temperature. &lt;code>POINTS&lt;/code> writes a line, so one &lt;code>&amp;amp;DEVC&lt;/code> per grid row:&lt;/p>
+&lt;div class="hextra-code-block hx-relative hx-mt-6 first:hx-mt-0 hx-group/code">
+&lt;div>&lt;div class="highlight">&lt;pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;">&lt;code class="language-fortran" data-lang="fortran">&lt;span style="display:flex;">&lt;span>&amp;amp;PROP ID&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;skin&amp;#39;&lt;/span>, GAUGE_TEMPERATURE&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">3&lt;/span>&lt;span style="color:#ae81ff">5.&lt;/span> &lt;span style="color:#f92672">/&lt;/span> &lt;span style="color:#75715e">! = --heat-skin-temperature
+&lt;/span>&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&lt;span style="color:#75715e">&lt;/span>&amp;amp;DEVC ID&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;RAD_up_r01&amp;#39;&lt;/span>, QUANTITY&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;RADIOMETER GAS&amp;#39;&lt;/span>, ORIENTATION&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">0&lt;/span>,&lt;span style="color:#ae81ff">0&lt;/span>,&lt;span style="color:#ae81ff">1&lt;/span>,
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span> PROP_ID&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;skin&amp;#39;&lt;/span>, XBP&lt;span style="color:#f92672">=&lt;/span>x0,x1, y1,y1, &lt;span style="color:#ae81ff">1.6&lt;/span>,&lt;span style="color:#ae81ff">1.6&lt;/span>, POINTS&lt;span style="color:#f92672">=&lt;/span>nx, TIME_HISTORY&lt;span style="color:#f92672">=&lt;/span>T &lt;span style="color:#f92672">/&lt;/span>
+&lt;/span>&lt;/span>&lt;span style="display:flex;">&lt;span>&amp;amp;SLCF PBZ&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#ae81ff">1.6&lt;/span>, QUANTITY&lt;span style="color:#f92672">=&lt;/span>&lt;span style="color:#e6db74">&amp;#39;TEMPERATURE&amp;#39;&lt;/span> &lt;span style="color:#f92672">/&lt;/span>&lt;/span>&lt;/span>&lt;/code>&lt;/pre>&lt;/div>&lt;/div>&lt;div class="hextra-code-copy-btn-container hx-opacity-0 hx-transition group-hover/code:hx-opacity-100 hx-flex hx-gap-1 hx-absolute hx-m-[11px] hx-right-0 hx-top-0">
+&lt;button
+class="hextra-code-copy-btn hx-group/copybtn hx-transition-all active:hx-opacity-50 hx-bg-primary-700/5 hx-border hx-border-black/5 hx-text-gray-600 hover:hx-text-gray-900 hx-rounded-md hx-p-1.5 dark:hx-bg-primary-300/10 dark:hx-border-white/10 dark:hx-text-gray-400 dark:hover:hx-text-gray-50"
+title="Copy code"
+>
+&lt;div class="copy-icon group-[.copied]/copybtn:hx-hidden hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;div class="success-icon hx-hidden group-[.copied]/copybtn:hx-block hx-pointer-events-none hx-h-4 hx-w-4">&lt;/div>
+&lt;/button>
+&lt;/div>
+&lt;/div>
+&lt;p>Without matching devices the run stops with an error that shows this
+&lt;code>&amp;amp;DEVC&lt;/code> line for the orientation and height asked for. There is no
+fall-back to the gas term, to &lt;em>U&lt;/em> or to the layer term.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The &lt;code>&amp;amp;PROP&lt;/code> is read from the deck.&lt;/strong> fdsreader does not expose it, so the
+reader parses &lt;code>&amp;lt;CHID&amp;gt;.fds&lt;/code> next to the output. A missing deck, or a
+&lt;code>GAUGE_TEMPERATURE&lt;/code> that differs from &lt;code>--heat-skin-temperature&lt;/code> (to
+10⁻⁶ °C), is an error: the reading is the flux to a plate at the gauge
+temperature, and FDS defaults it to &lt;code>TMPA&lt;/code> (20 °C), not to the skin. A
+&lt;code>&amp;amp;PROP&lt;/code> without &lt;code>GAUGE_TEMPERATURE&lt;/code> therefore fails unless \(T_s\) equals
+&lt;code>TMPA&lt;/code>. The selected devices must share one &lt;code>GAUGE_EMISSIVITY&lt;/code>; the
+device &lt;code>HEAT_TRANSFER_COEFFICIENT&lt;/code> does not enter the radiometer.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Height.&lt;/strong> The devices must lie within half a mesh cell of the
+&lt;code>TEMPERATURE&lt;/code> slice, so that convection and radiation come from one
+height; otherwise the run stops with an error that names both heights.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Space.&lt;/strong> The points must form a full regular grid (uniform spacing to
+10⁻⁶ m, every node present). The reading is bilinear in x and y and exact
+at the nodes. A grid one row wide serves only agents on that row (to
+10⁻⁶ m).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Time.&lt;/strong> The reading is linear between output times. The horizon rules of
+the slices apply: up to one output interval past the last frame the last
+frame is held (this also absorbs float noise at the last output time);
+later it is an &lt;code>FdsHorizonError&lt;/code>, or, with &lt;code>--allow-fds-horizon-hold&lt;/code>,
+held after one warning.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>Coverage.&lt;/strong> An agent inside the &lt;code>TEMPERATURE&lt;/code> slice but outside the
+radiometer grid stops the run with an error; a missing reading is not
+read as zero. Outside the FDS domain the reading and &lt;em>q&lt;/em> are NaN in the
+FED history and the rate is zero, with one warning per run, or an
+&lt;code>FdsDomainError&lt;/code> with &lt;code>--require-fds-coverage&lt;/code>, as for &lt;em>U&lt;/em>.&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>The threshold acts on the net reading&lt;/strong> &lt;em>R&lt;/em>, as for every source: &lt;em>R&lt;/em> is
+counted in the dose only at 2.5 kW/m² or more, and convection always. ISO
+13571:2012 §8.2 gates an incident flux; with \(\varepsilon_d\) = 1 the
+incident flux is &lt;em>R&lt;/em> + σ\(T_s^4\), 0.511 kW/m² more at \(T_s\) = 35 °C,
+so &lt;em>R&lt;/em> ≥ 2.5 is an incident flux of 3.01 kW/m² or more
+(&lt;a href="#where-the-radiant-threshold-acts">Where the radiant threshold acts&lt;/a>).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;strong>With &lt;code>--heat-regime layer&lt;/code> as well, the reading supplies the radiant
+term&lt;/strong> and the layer term is not added: one warning, and the manifest
+records &lt;code>layer_term: false&lt;/code>. &lt;code>--heat-emissivity&lt;/code> and &lt;code>--heat-u-factor&lt;/code> are
+ignored (a warning each).&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>&lt;code>heat_flux_kw_m2&lt;/code> keeps the physical &lt;em>q&lt;/em>, before the threshold, as for the
+other sources.&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>Against the FDS gauges of the #224 and #308 decks.&lt;/strong> At the 7 device
+positions (z = 1.6 m, y = 2.05 m, h = 8, \(T_s\) = 35 °C), for the four
+orientations of the layer and uniform decks:&lt;/p>
+&lt;ul>
+&lt;li>The reading the model uses equals an independent linear interpolation in
+time of the &lt;code>RADIOMETER&lt;/code> device to 10⁻⁶ kW/m² (reader check).&lt;/li>
+&lt;li>&lt;em>q&lt;/em> − gauge = h (\(T_{\mathrm{slice}} - T_{\mathrm{dev}}\)) / 1000 to
+10⁻⁶ kW/m², an identity of Eq. 22.35 given the reading. The only
+difference between &lt;em>q&lt;/em> and the gauge is the temperature of the slice
+against the device, so this checks the reader and the assembly of &lt;em>q&lt;/em>, not
+the model: both contain the same radiation solution. It does not say
+whether a plate is a person.&lt;/li>
+&lt;li>&lt;em>q&lt;/em> against the gauge for the four orientations at &lt;em>t&lt;/em> = 3, 6, 9 s: the
+median miss is at most 0.3 % at 3 s and 6 s and at most 4.1 % at 9 s
+(facing down; 6.3 % at the worst point); it is zero in the uniform room.
+Reported, not gated; see
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat-radiometer/">Verification › Heat radiometer&lt;/a>.&lt;/li>
+&lt;li>The 21 (orientation, position) cases of the #308 layer-regime check
+(facing up, +x, −x at 7 positions) lie within the ±30 % band at
+&lt;em>t&lt;/em> = 3, 6, 9 s in all 63 cases (the layer term had 54 of 63;
+&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/">Verification › Heat dose&lt;/a>). The largest
+miss is −3.5 %, the temperature difference above.&lt;/li>
+&lt;li>On the burner deck, where the net reading is 2.5 kW/m² or more the dose
+rate has the radiation in it, and below that it is the convective part
+alone.&lt;/li>
+&lt;/ul>
+&lt;h3>Limits of the radiometer source&lt;span class="hx-absolute -hx-mt-20" id="limits-of-the-radiometer-source">&lt;/span>
+&lt;a href="#limits-of-the-radiometer-source" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;ul>
+&lt;li>&lt;strong>A plate, not a body.&lt;/strong> One orientation per run: a standing person sees a
+different hemisphere facing and walking. Walking-direction faces are a
+later extension, not implemented.&lt;/li>
+&lt;li>&lt;strong>One height.&lt;/strong> The height is the &lt;code>TEMPERATURE&lt;/code> slice height, as for
+every heat source; the readings do not follow a crouching agent.&lt;/li>
+&lt;li>&lt;strong>Interpolation does not know walls.&lt;/strong> Bilinear interpolation mixes
+rooms across a wall, and a device inside an obstruction reads meaningless
+values. Neither is checked. Spacing is the user&amp;rsquo;s choice: 0.5 m or less
+and a cell or more from walls is advised (no source); a sparse grid
+smooths a flame peak.&lt;/li>
+&lt;li>&lt;strong>The 2-D grid is verified on synthetic data only.&lt;/strong> The FDS data of #224
+hold one row of devices; interpolation across rows is tested against
+hand-computed values, not against a 2-D FDS run.&lt;/li>
+&lt;li>&lt;strong>The setup coverage report does not include the grid.&lt;/strong> An agent outside
+the grid is found when the run samples it, not at setup.&lt;/li>
+&lt;li>&lt;strong>Possible double count with convection&lt;/strong> and &lt;strong>falling exposure&lt;/strong>, as
+for the &lt;em>U&lt;/em> source (see above).&lt;/li>
 &lt;/ul>
 &lt;h2>Incapacitation&lt;span class="hx-absolute -hx-mt-20" id="incapacitation">&lt;/span>
 &lt;a href="#incapacitation" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>When the cumulative heat dose reaches the agent&amp;rsquo;s heat threshold, the agent
@@ -8938,6 +9091,11 @@ the same way and set the same &lt;code>incapacitated&lt;/code> flag; only
 &lt;td>&lt;code>--heat-u-factor&lt;/code>&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>heat_radiometer_orientation&lt;/code>&lt;/td>
+&lt;td>none, required with &lt;code>radiometer&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-radiometer-orientation&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>heat_regime&lt;/code>&lt;/td>
 &lt;td>&lt;code>&amp;quot;smoke&amp;quot;&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-regime&lt;/code>&lt;/td>
@@ -8980,7 +9138,16 @@ it still records ε, which has no effect in that regime. With
 &lt;code>--heat-radiant-source integrated-intensity&lt;/code> the FED history also carries
 &lt;code>heat_integrated_intensity_kw_m2&lt;/code> (&lt;em>U&lt;/em>), and &lt;code>heat_flux_parameters&lt;/code> adds
 &lt;code>radiant_source&lt;/code>, &lt;code>u_factor&lt;/code> and &lt;code>radiant_flux&lt;/code> (&lt;code>excess&lt;/code>); ε is then not
-listed as assumed, as it is not used.
+listed as assumed, as it is not used. With &lt;code>--heat-radiant-source radiometer&lt;/code>
+the FED history carries &lt;code>heat_radiometer_kw_m2&lt;/code> (the net reading &lt;em>R&lt;/em>) and
+&lt;code>heat_radiometer_incident_kw_m2&lt;/code> (a diagnostic, &lt;em>R&lt;/em>/\(\varepsilon_d\) +
+σ\(T_s^4\), not used in the dose), and &lt;code>heat_flux_parameters&lt;/code> adds
+&lt;code>radiant_source&lt;/code>, &lt;code>radiant_flux&lt;/code> (&lt;code>net&lt;/code>), &lt;code>radiometer_orientation&lt;/code>,
+&lt;code>radiometer_height_m&lt;/code>, &lt;code>radiometer_gauge_temperature_celsius&lt;/code>,
+&lt;code>radiometer_gauge_emissivity&lt;/code>, &lt;code>radiometer_device_count&lt;/code>,
+&lt;code>radiometer_grid_origin_m&lt;/code>, &lt;code>radiometer_grid_spacing_m&lt;/code> and
+&lt;code>fds_deck_sha256&lt;/code> (the sha256 of the deck the &lt;code>&amp;amp;PROP&lt;/code> values were read
+from); ε is not listed as assumed there either.
 &lt;code>heat_flux_kw_m2&lt;/code> is the physical &lt;em>q&lt;/em>, before the radiant threshold. Where
 the radiant term is below 2.5 kW/m², &lt;code>heat_fed_rate_per_min&lt;/code> is therefore
 not &lt;code>heat_flux_kw_m2&lt;/code>^1.33/&lt;em>D&lt;/em>: it is the convective part alone raised to
@@ -9008,10 +9175,12 @@ gas around the head, or with &lt;code>--heat-regime layer&lt;/code> that of a ho
 layer. Flux from hot surfaces or a flame in view enters only through
 &lt;code>--heat-radiant-source integrated-intensity&lt;/code>, with a user factor (see
 &lt;a href="#limits-of-the-integrated-intensity-source">Limits of the INTEGRATED INTENSITY source&lt;/a>).
-Gauge devices are not read
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>,
+&lt;code>--heat-radiant-source radiometer&lt;/code> reads FDS radiometers for one
+orientation per run, without a factor (see
+&lt;a href="#radiant-flux-from-fds-radiometers">Radiant flux from FDS radiometers&lt;/a>
+and &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>,
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
-FDS reference data for that term exist but are not read by the model:
+The FDS reference data for that term are described in
 &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat-radiometer/">Heat radiometer reference decks&lt;/a>
 (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/224" target="_blank" rel="noopener">#224&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Layer temperature and emissivity.&lt;/strong> The layer temperature is read from
@@ -9026,7 +9195,10 @@ Above about 285 °C that overestimates the dose in clear hot air; set
 &lt;code>--heat-emissivity 0.05&lt;/code> for clear air. Below about 285 °C the radiant
 term is under the 2.5 kW/m² threshold for either value, and ε does not
 change the dose. In the layer regime an agent that walks into the smoke
-still gets the layer formula. How to decide the regime per agent is open
+still gets the layer formula. With an FDS radiation source (&lt;em>U&lt;/em> or the
+radiometers) the regime does not touch the radiant term; users who need
+both regimes in one case can use the radiometer source. How to decide the
+regime per agent is open
 (spec 016, open question 4;
 &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/275" target="_blank" rel="noopener">#275&lt;/a>).&lt;/li>
 &lt;li>&lt;strong>Total-flux parameters.&lt;/strong> h, \(T_s\) and ε are assumptions (see
@@ -9209,7 +9381,7 @@ result; none is a Handbook tolerance.&lt;/p>
 &lt;td>&lt;code>--heat-u-factor&lt;/code> / &lt;code>u_factor&lt;/code> (&lt;code>HEAT_U_FACTOR_RANGE&lt;/code>)&lt;/td>
 &lt;td>&lt;code>--heat-radiant-source integrated-intensity&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>)&lt;/td>
 &lt;td>Geometric bounds: &lt;em>U&lt;/em>/4 for a sphere or an isotropic field, &lt;em>U&lt;/em> for one small source face-on; the #224 data put some orientations below 0.25&lt;/td>
-&lt;td>Gauge devices per orientation (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>)&lt;/td>
+&lt;td>Radiometer devices per orientation (&lt;code>--heat-radiant-source radiometer&lt;/code>, &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Flux basis of &lt;em>f U&lt;/em>&lt;/td>
@@ -9225,7 +9397,15 @@ result; none is a Handbook tolerance.&lt;/p>
 &lt;td>&lt;code>--heat-regime layer&lt;/code> with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>&lt;/td>
 &lt;td>Total-flux &lt;em>q&lt;/em> when both are set&lt;/td>
 &lt;td>&lt;em>U&lt;/em> already contains the layer&amp;rsquo;s emission and is the better-resolved input&lt;/td>
-&lt;td>Gauge devices, which replace both (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>)&lt;/td>
+&lt;td>The radiometer source, which also replaces both (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>)&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Radiometer source&lt;/td>
+&lt;td>net reading &lt;em>R&lt;/em> (FDS Eq. 22.36) as the radiant term, one orientation per run, convection from the slice added after the threshold&lt;/td>
+&lt;td>&lt;code>--heat-radiant-source radiometer&lt;/code>, &lt;code>--heat-radiometer-orientation&lt;/code>&lt;/td>
+&lt;td>Total-flux &lt;em>q&lt;/em>&lt;/td>
+&lt;td>The device gives the flux to a plate from the full radiation solution; &lt;code>GAUGE_TEMPERATURE&lt;/code> must equal \(T_s\) (checked), the threshold is on the net reading as for every source (maintainer decision), a plate stands in for the head&lt;/td>
+&lt;td>Whether the radiant tolerance data hold for a plate flux; walking-direction faces&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>Heat σ&lt;/td>
@@ -9287,7 +9467,7 @@ Ch. 70. Reviewed by D. Purser (personal communication, 2026).&lt;/p>
 &lt;li>
 &lt;p>McGrattan, K., et al. (2025). &lt;em>Fire Dynamics Simulator User&amp;rsquo;s Guide&lt;/em>,
 FDS 6.10.1. NIST Special Publication 1019. Table 22.4 (p. 403) and
-Eq. 22.35 (p. 381).&lt;/p>
+Eqs. 22.35 and 22.36 (p. 381, Sec. 22.10.12).&lt;/p>
 &lt;/li>
 &lt;/ul></description></item><item><title>Dynamic route rerouting</title><link>https://pedestriandynamics.org/pyFDS-Evac/models/routing/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://pedestriandynamics.org/pyFDS-Evac/models/routing/</guid><description>
 &lt;div class="gh-alert gh-alert-note" role="note">
@@ -10198,7 +10378,7 @@ and its output.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">Two FDS decks, the T-junction and the ISO 20414 corridor, the hand-drawn walkable area of the T-junction, pinned package versions and a README.txt with the commands and the expected result.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>not needed&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds per run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>Simulation finished in 34.70 s (40/40 evacuated).&lt;/code>&lt;br>&lt;code>Simulation finished in 89.12 s (20/20 evacuated).&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>29be041c&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -10214,7 +10394,7 @@ and its output.&lt;/p>
 &lt;li>&lt;code>assets/t_junction/geometry.wkt&lt;/code>: the hand-drawn walkable area, to compare with the derived one (step 2)&lt;/li>
 &lt;li>&lt;code>assets/ISO-table21/ISO-table21.fds&lt;/code>: plain FDS deck with no exit (step 4)&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">059d6a208121d13346238bd64ffc824f77b479c4f251dee10fd3ed5ba8280c90&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">60e8a2bfbb7b1b0091a029361f1e249832d815554987cc13f425ae8f52624f38&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>Install the packages of the zip&amp;rsquo;s &lt;code>requirements.txt&lt;/code>, which include
@@ -12434,6 +12614,11 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;td>TEMPERATURE at &lt;code>--heat-layer-height&lt;/code>&lt;/td>
 &lt;td>the hot-layer temperature, only with &lt;code>--heat-regime layer&lt;/code>&lt;/td>
 &lt;td>the run stops&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>RADIOMETER GAS devices&lt;/td>
+&lt;td>radiant flux (net reading), only with &lt;code>--heat-radiant-source radiometer&lt;/code>; one orientation, a regular grid at the TEMPERATURE slice z within half a cell, &lt;code>&amp;amp;PROP&lt;/code> &lt;code>GAUGE_TEMPERATURE&lt;/code> = &lt;code>--heat-skin-temperature&lt;/code>, the &lt;code>.fds&lt;/code> deck beside the output&lt;/td>
+&lt;td>&lt;code>ValueError&lt;/code>: the run stops, with the &lt;code>&amp;amp;DEVC&lt;/code> line to add (also for a gauge temperature that differs, a missing deck, or an agent inside the slice but outside the grid)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>INTEGRATED INTENSITY&lt;/td>
@@ -16494,14 +16679,20 @@ each flag sets.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--heat-radiant-source S&lt;/code>&lt;/td>
 &lt;td>&lt;code>gas&lt;/code>&lt;/td>
-&lt;td>&lt;code>gas&lt;/code>, &lt;code>integrated-intensity&lt;/code>&lt;/td>
-&lt;td>Radiant term from the gas at the head, or the excess flux from the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice. &lt;code>integrated-intensity&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-u-factor&lt;/code>, and the slice at the slice height.&lt;/td>
+&lt;td>&lt;code>gas&lt;/code>, &lt;code>integrated-intensity&lt;/code>, &lt;code>radiometer&lt;/code>&lt;/td>
+&lt;td>Radiant term from the gas at the head, the excess flux from the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice, or the net reading of FDS &lt;code>RADIOMETER GAS&lt;/code> devices. &lt;code>integrated-intensity&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-u-factor&lt;/code>, and the slice at the slice height. &lt;code>radiometer&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-radiometer-orientation&lt;/code>, radiometers at the slice height on a regular grid, and the deck with &lt;code>GAUGE_TEMPERATURE&lt;/code> equal to &lt;code>--heat-skin-temperature&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--heat-u-factor F&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>[0.25, 1]&lt;/td>
 &lt;td>Factor &lt;em>f&lt;/em> on the integrated intensity &lt;em>U&lt;/em>; required with &lt;code>integrated-intensity&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-radiometer-orientation X,Y,Z&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>three numbers, not all zero&lt;/td>
+&lt;td>Direction the radiometer plate faces, for example &lt;code>0,0,1&lt;/code> (up); one orientation per run. Required with &lt;code>radiometer&lt;/code>, an error without it.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--heat-regime R&lt;/code>&lt;/td>
@@ -19535,6 +19726,14 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;td>&lt;code>--heat-radiant-source integrated-intensity&lt;/code>: &lt;em>U&lt;/em> at the agent [kW/m²]&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>heat_radiometer_kw_m2&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-radiant-source radiometer&lt;/code>: the net radiometer reading at the agent [kW/m²]; NaN outside the FDS domain&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_radiometer_incident_kw_m2&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-radiant-source radiometer&lt;/code>: the incident flux that reading implies, reading/ε + σT_s⁴ [kW/m²], a diagnostic that does not enter the dose&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>heat_layer_temperature_c&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-regime layer&lt;/code>: layer temperature [°C]&lt;/td>
 &lt;/tr>
@@ -20408,9 +20607,14 @@ JuPedSim behaviour and is not modelled.&lt;/p>
 default, convective only: ISO 13571:2012 Eq. (9) from the gas temperature of
 an FDS &lt;code>TEMPERATURE&lt;/code> slice. Radiation enters only through the opt-in
 &lt;code>--heat-fed-method total-flux&lt;/code>, from the gas at the head, a hot layer above
-it (&lt;code>--heat-regime layer&lt;/code>), or the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a
-user factor; radiant flux from hot surfaces or a flame is otherwise missed
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>). In
+it (&lt;code>--heat-regime layer&lt;/code>), the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice with a
+user factor, or FDS &lt;code>RADIOMETER GAS&lt;/code> devices for one plate orientation per
+run (&lt;code>--heat-radiant-source radiometer&lt;/code>,
+&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>); radiant flux from hot surfaces or a flame is otherwise
+missed. The radiometer source is a plate, not a body, reads one height and one
+orientation, interpolates bilinearly without knowing walls, and its 2-D
+grid is checked on synthetic data only
+(&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/models/heat/#limits-of-the-radiometer-source">Models › Heat › Limits of the radiometer source&lt;/a>). In
 every total-flux variant a radiant term below the ISO 2.5 kW/m² threshold
 counts as zero, and the code applies that threshold to a net or excess flux
 rather than an incident one; the consequences, with numbers, are on
@@ -27601,6 +27805,56 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;td>Use a value in [0.25, 1].&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiant-source radiometer needs --heat-radiometer-orientation x,y,z …&lt;/code>&lt;/td>
+&lt;td>The orientation has no default.&lt;/td>
+&lt;td>Set it, for example &lt;code>--heat-radiometer-orientation 0,0,1&lt;/code> for the crown.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiometer-orientation needs --heat-radiant-source radiometer.&lt;/code>&lt;/td>
+&lt;td>The orientation without the radiometer source.&lt;/td>
+&lt;td>Add &lt;code>--heat-radiant-source radiometer&lt;/code>, or drop the orientation.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiant-source radiometer needs --heat-fed-method total-flux.&lt;/code>&lt;/td>
+&lt;td>As above, for the radiometer source.&lt;/td>
+&lt;td>Add &lt;code>--heat-fed-method total-flux&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: argument --heat-radiometer-orientation: …&lt;/code>&lt;/td>
+&lt;td>Not three numbers, or all zero.&lt;/td>
+&lt;td>Give &lt;code>x,y,z&lt;/code>, for example &lt;code>1,0,0&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: --heat-radiant-source radiometer: no RADIOMETER device … Add radiometers facing …&lt;/code>&lt;/td>
+&lt;td>The case has no radiometers with that orientation (or none at all). The message shows the &lt;code>&amp;amp;DEVC&lt;/code> line to add.&lt;/td>
+&lt;td>Add the &lt;code>&amp;amp;PROP&lt;/code> and one &lt;code>&amp;amp;DEVC&lt;/code> per grid row at the &lt;code>TEMPERATURE&lt;/code> slice height and rerun FDS.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: the radiometers facing … are at z=… m but the TEMPERATURE slice is at z=… m …&lt;/code>&lt;/td>
+&lt;td>The devices are further than half a cell from the slice height.&lt;/td>
+&lt;td>Put the devices at the slice height, or add a &lt;code>TEMPERATURE&lt;/code> slice at the device height.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: radiometer '…' … has GAUGE_TEMPERATURE=… C but --heat-skin-temperature is … C …&lt;/code>&lt;/td>
+&lt;td>The &lt;code>&amp;amp;PROP&lt;/code> of the radiometers does not hold the skin temperature (FDS defaults it to &lt;code>TMPA&lt;/code>).&lt;/td>
+&lt;td>Set &lt;code>GAUGE_TEMPERATURE&lt;/code> in the &lt;code>&amp;amp;PROP&lt;/code>, or &lt;code>--heat-skin-temperature&lt;/code>, so they are equal.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: the FDS deck …/CHID.fds is not in the case folder …&lt;/code>&lt;/td>
+&lt;td>The radiometer source reads the &lt;code>&amp;amp;PROP&lt;/code> from the deck.&lt;/td>
+&lt;td>Copy the &lt;code>.fds&lt;/code> deck next to the FDS output.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: radiometer points do not fill the grid …&lt;/code> or &lt;code>… not uniform in x&lt;/code>&lt;/td>
+&lt;td>The devices are not a regular full grid.&lt;/td>
+&lt;td>Use one &lt;code>&amp;amp;DEVC&lt;/code> per row with the same &lt;code>XBP&lt;/code> x range, &lt;code>POINTS&lt;/code> and a constant row spacing.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: Point (x, y) lies in the TEMPERATURE slice but outside the radiometer grid …&lt;/code>&lt;/td>
+&lt;td>An agent stands inside the slice but outside the radiometer grid; a missing reading is never read as zero.&lt;/td>
+&lt;td>Extend the radiometer grid over the walkable area (a grid one row wide serves only agents on that row).&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>&lt;code>pyfds-evac: error: Distribution '…': requested N agents but area can hold at most ~C. …&lt;/code>&lt;/td>
 &lt;td>A spawn area asks for more agents than the run&amp;rsquo;s capacity estimate. Also printed by &lt;code>--export-only&lt;/code>.&lt;/td>
 &lt;td>Lower &lt;code>number&lt;/code>, or enlarge the polygon in &lt;code>distributions.&amp;lt;id&amp;gt;.coordinates&lt;/code>.&lt;/td>
@@ -29265,7 +29519,7 @@ not finish, and do not use its time as a value censored at
 &lt;/div>
 &lt;p class="docs-files__summary">The example script, the two scenarios, the FDS deck of part 2, run.py, pinned package versions and a README.txt with the commands and the expected result. FDS output is not included: a clone of the repository has it, or you write it with FDS in about 30 s.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 30 s wall clock, one process, on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>about 10 s&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>mean = 44.5 s, SD = 1.8 s&lt;/code>&lt;br>&lt;code>min-max = 41.5-46.0 s&lt;/code>&lt;br>&lt;code>95th percentile = 46.0 s&lt;/code>&lt;br>&lt;code>exit times [], incapacitated 1, remaining 1&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -29289,7 +29543,7 @@ not finish, and do not use its time as a value censored at
 &lt;li>&lt;code>assets/iso_table22_coupled/geometry.wkt&lt;/code>: walkable area of the gas room&lt;/li>
 &lt;li>&lt;code>assets/iso_table22_coupled/README.md&lt;/code>: what the gas room is and where it comes from&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">08faeddacefecdaaec812b443dcc2484f3fc594522d2ff0f664aa0a5203adb3f&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">bc560761dffd09c5d5a4a793cbcbf438ae11184bd13932490ff70c510b0ff2bf&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The zip holds the decks but no FDS output; its &lt;code>README.txt&lt;/code> runs the
@@ -30257,6 +30511,102 @@ the 6 and 9 s deviations exceed the 2 % used for the slice–device check of
 4 ranks, 6 s wall time; output and the predeclared table in
 &lt;code>fds-evac-data/heat_radiometer/layer_308&lt;/code>). The test is
 &lt;code>external_data&lt;/code> and skips without that folder.&lt;/p>
+&lt;h2>Radiometer source against FDS gauges&lt;span class="hx-absolute -hx-mt-20" id="radiometer-source-against-fds-gauges">&lt;/span>
+&lt;a href="#radiometer-source-against-fds-gauges" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>&lt;code>--heat-radiant-source radiometer&lt;/code> (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>)
+reads the FDS &lt;code>RADIOMETER GAS&lt;/code> devices of the #224 decks as the radiant term
+and adds convection from the &lt;code>TEMPERATURE&lt;/code> slice. Setting: seven device
+positions on y = 2.05 m, z = 1.6 m, orientations up, +x, −x and down, h = 8
+W/(m²·K), &lt;em>T&lt;/em>&lt;sub>s&lt;/sub> = 35 °C (the &lt;code>&amp;amp;PROP&lt;/code> of the decks). The
+radiometer and the FDS gauge hold the same radiation solution, so the
+comparison checks the reader and the assembly of &lt;em>q&lt;/em>, not the model, and
+says nothing about whether a plate is a person.&lt;/p>
+&lt;p>&lt;strong>Gated&lt;/strong> (&lt;code>tests/verification/test_heat_radiometer_source_fds.py&lt;/code>; marked
+&lt;code>external_data&lt;/code>, skipped without the sciebo data):&lt;/p>
+&lt;ul>
+&lt;li>&lt;em>Reading.&lt;/em> The radiometer term of the history row (the fields
+&lt;code>heat_flux_row_fields&lt;/code> writes, sampled at the device positions through the
+model) equals an independent linear interpolation in time of &lt;code>RAD_z16_&amp;lt;o&amp;gt;-k&lt;/code> at eight times between 1 and
+9.99 s, for the layer and uniform decks and all four orientations, to
+10⁻⁶ kW/m².&lt;/li>
+&lt;li>&lt;em>Identity.&lt;/em> &lt;em>q&lt;/em> − &lt;code>GAUGE_z16_&amp;lt;o&amp;gt;-k&lt;/code> = h (&lt;em>T&lt;/em>&lt;sub>slice&lt;/sub> −
+&lt;code>T_z16-k&lt;/code>) / 1000 to 10⁻⁶ kW/m², the same cases, an identity of FDS
+Eq. 22.35 given the reading.&lt;/li>
+&lt;li>&lt;em>Threshold on the burner deck.&lt;/em> Where the net reading is 2.5 kW/m² or
+more the dose rate is &lt;em>q&lt;/em>^1.33/16.7 per minute with the reading counted;
+below that it is the convective part alone, at every device position and
+every 0.5 s, facing +x and up.&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>Reported, not gated.&lt;/strong> |&lt;em>q&lt;/em> / &lt;em>q&lt;/em>&lt;sub>gauge&lt;/sub> − 1| in percent
+(min / median / max over the 7 positions), which equals h Δ&lt;em>T&lt;/em> / &lt;em>q&lt;/em> with
+Δ&lt;em>T&lt;/em> the slice against the device temperature:&lt;/p>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>deck&lt;/th>
+&lt;th>facing&lt;/th>
+&lt;th>&lt;em>t&lt;/em> = 3 s&lt;/th>
+&lt;th>&lt;em>t&lt;/em> = 6 s&lt;/th>
+&lt;th>&lt;em>t&lt;/em> = 9 s&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>layer&lt;/td>
+&lt;td>up&lt;/td>
+&lt;td>0.00 / 0.01 / 0.01&lt;/td>
+&lt;td>0.02 / 0.06 / 0.19&lt;/td>
+&lt;td>0.47 / 1.22 / 1.92&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>layer&lt;/td>
+&lt;td>+x&lt;/td>
+&lt;td>0.01 / 0.01 / 0.02&lt;/td>
+&lt;td>0.04 / 0.12 / 0.34&lt;/td>
+&lt;td>0.88 / 2.06 / 3.48&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>layer&lt;/td>
+&lt;td>−x&lt;/td>
+&lt;td>0.01 / 0.01 / 0.02&lt;/td>
+&lt;td>0.05 / 0.12 / 0.42&lt;/td>
+&lt;td>0.80 / 2.36 / 3.39&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>layer&lt;/td>
+&lt;td>down&lt;/td>
+&lt;td>0.02 / 0.03 / 0.05&lt;/td>
+&lt;td>0.09 / 0.26 / 0.84&lt;/td>
+&lt;td>1.63 / 4.09 / 6.29&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>uniform&lt;/td>
+&lt;td>all four&lt;/td>
+&lt;td>0.00 / 0.00 / 0.00&lt;/td>
+&lt;td>0.00 / 0.00 / 0.00&lt;/td>
+&lt;td>0.00 / 0.00 / 0.00&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;p>The miss grows with time because the head air heats and the slice and the
+device differ most then; it is largest facing down, where the gauge is
+smallest (about 0.9 kW/m²) and the same h Δ&lt;em>T&lt;/em> is a larger share.&lt;/p>
+&lt;p>&lt;strong>The 21 cases of #308 with the radiometer source&lt;/strong> (&lt;code>layer_308&lt;/code>, facing up,
++x and −x at the 7 positions, &lt;em>t&lt;/em> = 3, 6, 9 s): all 63 (position, time)
+pairs are inside ±30 %, against 54 of 63 for the layer term above. The
+ratio &lt;em>q&lt;/em>&lt;sub>model&lt;/sub> / &lt;em>q&lt;/em>&lt;sub>FDS&lt;/sub> − 1 is −1.9 % at most facing up
+(median −0.06 %), −3.5 % facing +x (median −0.12 %) and −3.4 % facing −x
+(median −0.12 %); the identity above holds in each case. The wall-facing
+gauges that the layer term missed by 33–54 % are within 3.5 %, as the
+reading is FDS&amp;rsquo;s own radiation solution at the point, walls included. The #308 agents spawn anywhere in 0.22 m boxes, off the one-row grid,
+so the 21 cases are sampled at the device positions through the model, not
+through coupled runs; the CLI stops with the coverage error for the
+committed #308 scenario (also tested).&lt;/p>
+&lt;p>What this does not show: the radiometer source on a 2-D grid of FDS devices
+(the #224 data hold one row; the 2-D interpolation is tested on synthetic
+values only), and any difference between a plate and a body. A new FDS run
+with a grid would show the first.&lt;/p>
+&lt;p>Reproduction: &lt;code>HEAT_RADIOMETER_DATA=&amp;lt;data&amp;gt;/heat_radiometer uv run pytest tests/verification/test_heat_radiometer_source_fds.py -s&lt;/code> prints the tables.
+The data folders are read through a mirror and not changed.&lt;/p>
 &lt;h2>Test and reference-deck assumptions&lt;span class="hx-absolute -hx-mt-20" id="test-and-reference-deck-assumptions">&lt;/span>
 &lt;a href="#test-and-reference-deck-assumptions" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;p>Values of the test decks and test bands that no consulted source fixes. They
 decide whether a test passes; they do not affect a run. The model&amp;rsquo;s own
@@ -30385,6 +30735,10 @@ and on an FDS case with a geometric view factor
 #224 radiometer decks are the reference data of the isotropic and burner
 checks (&lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat-radiometer/">Heat radiometer&lt;/a>); the #308 case reads
 a copy of the layer deck.
+The &lt;code>radiometer&lt;/code> source is checked in &lt;code>tests/test_heat_radiometer_source.py&lt;/code>
+(hand formulas, coverage, horizon, &lt;code>&amp;amp;PROP&lt;/code>, CLI rules) and, against the FDS
+data, in &lt;code>tests/verification/test_heat_radiometer_source_fds.py&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
 The &lt;code>INTEGRATED INTENSITY&lt;/code> source is checked in
 &lt;code>tests/test_heat_integrated_intensity.py&lt;/code> and
 &lt;code>tests/verification/test_heat_integrated_intensity_coupled.py&lt;/code>
@@ -30501,7 +30855,7 @@ default). An agent that crossed between its last sample and its exit reads
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Level&lt;/strong>&lt;/td>
-&lt;td>FDS case, FDS only: no pyFDS-Evac run on these decks&lt;/td>
+&lt;td>FDS case (the decks are FDS only; the &lt;code>radiometer&lt;/code> source reads their output in tests)&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Asset&lt;/strong>&lt;/td>
@@ -30513,7 +30867,7 @@ default). An agent that crossed between its last sample and its exit reads
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;strong>Status&lt;/strong>&lt;/td>
-&lt;td>FDS-only reference data; no run reads these decks (a copy of the layer deck, with a 2.5 m slice, is read by the layer-regime case of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308" target="_blank" rel="noopener">#308&lt;/a>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/#layer-regime-against-fds-gauges">Heat dose&lt;/a>). The uniform room is the expected value of the &lt;em>f&lt;/em> = 1/4 check of the &lt;code>INTEGRATED INTENSITY&lt;/code> source (&lt;code>test_heat_integrated_intensity_coupled.py&lt;/code>)&lt;/td>
+&lt;td>Reference data, read by the &lt;code>radiometer&lt;/code> radiant source (&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/#radiometer-source-against-fds-gauges">Heat dose&lt;/a>): the model&amp;rsquo;s radiometer term and the FDS gauge differ only by the slice-against-device temperature. A copy of the layer deck, with a 2.5 m slice, is read by the layer-regime case of &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/308" target="_blank" rel="noopener">#308&lt;/a>; see &lt;a href="https://pedestriandynamics.org/pyFDS-Evac/verification/testing-heat/#layer-regime-against-fds-gauges">Heat dose&lt;/a>. The uniform room is the expected value of the &lt;em>f&lt;/em> = 1/4 check of the &lt;code>INTEGRATED INTENSITY&lt;/code> source (&lt;code>test_heat_integrated_intensity_coupled.py&lt;/code>)&lt;/td>
 &lt;/tr>
 &lt;/tbody>
 &lt;/table>
@@ -30819,7 +31173,7 @@ existed.&lt;/p>
 &lt;/div>
 &lt;p class="docs-files__summary">The three FDS decks, the analysis and figure scripts, pinned package versions and a README.txt with the commands, the runtimes and the expected result. FDS output is not included.&lt;/p>
 &lt;dl class="docs-files__facts">
-&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/a309ae0369d29441c2cebff98dcf325d668fddd4">&lt;code>a309ae0&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
+&lt;div>&lt;dt>Built from&lt;/dt>&lt;dd>pyFDS-Evac &lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/commit/9b5695f7a1a2ae7bc4463e0b418f41cbd6305d2f">&lt;code>9b5695f&lt;/code>&lt;/a>; &lt;code>requirements.txt&lt;/code> pins the packages of &lt;code>uv.lock&lt;/code>&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>FDS&lt;/dt>&lt;dd>you run it; the page used &lt;code>FDS-6.10.1-0-g12efa16-release&lt;/code>, 11 s (uniform), 13 s (layer) and 306 s (burner) wall clock with 4 MPI processes on an Apple M3 Pro, macOS&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>pyFDS-Evac run&lt;/dt>&lt;dd>a few seconds; no evacuation is run&lt;/dd>&lt;/div>
 &lt;div>&lt;dt>Expected result&lt;/dt>&lt;dd>&lt;code>| case | z (m) | facing | q/U min / median / max | excess min / median / max |&lt;/code>&lt;br>&lt;code>| uniform | 1.6 | up | 0.250 / 0.250 / 0.250 | 0.250 / 0.250 / 0.250 |&lt;/code>&lt;br>&lt;code>| layer | 1.6 | up | 0.404 / 0.416 / 0.417 | 0.438 / 0.450 / 0.451 |&lt;/code>&lt;br>&lt;code>| burner | 1.6 | px | 0.395 / 0.530 / 0.570 | 0.625 / 0.789 / 0.859 |&lt;/code>&lt;br>&lt;span class="docs-files__note">made at commit &lt;code>9c820e0f&lt;/code>&lt;/span>&lt;/dd>&lt;/div>
@@ -30837,7 +31191,7 @@ existed.&lt;/p>
 &lt;li>&lt;code>scripts/verification/heat_radiometer.py&lt;/code>: prints the q/U table of the page&lt;/li>
 &lt;li>&lt;code>scripts/verification/heat_radiometer_figures.py&lt;/code>: draws the page&amp;#39;s figure&lt;/li>
 &lt;/ul>
-&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">05421101e23fd7dbfb6317f6b4c2e49e2f96cc8c0ef449afecfcbaa67161f871&lt;/code>&lt;/p>
+&lt;p class="docs-files__note">&lt;code>README.txt&lt;/code> lists the exact versions and the commands. SHA-256: &lt;code class="docs-files__hash">2225860fc4ae3e135f0fcf9f4cf9406d5eaee5ad3816cd57dcb9c574277dce8c&lt;/code>&lt;/p>
 &lt;/details>
 &lt;/aside>
 &lt;p>The FDS output is not in the repository. Either get it from the project&amp;rsquo;s
@@ -30874,12 +31228,17 @@ title="Copy code"
 &lt;/div>
 &lt;h2>Limits&lt;span class="hx-absolute -hx-mt-20" id="limits">&lt;/span>
 &lt;a href="#limits" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h2>&lt;ul>
-&lt;li>&lt;strong>Runs do not read these decks.&lt;/strong> They are reference data: the
-&lt;code>INTEGRATED INTENSITY&lt;/code> source of the total-flux dose is checked against
-them in &lt;code>tests/verification/test_heat_integrated_intensity_coupled.py&lt;/code>
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>).
-Reading gauge devices as an input is not implemented
-(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).&lt;/li>
+&lt;li>&lt;strong>Runs on these decks need the deck beside the output.&lt;/strong> They are
+reference data: the &lt;code>INTEGRATED INTENSITY&lt;/code> source of the total-flux dose is
+checked against them in
+&lt;code>tests/verification/test_heat_integrated_intensity_coupled.py&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/221" target="_blank" rel="noopener">#221&lt;/a>) and
+the &lt;code>radiometer&lt;/code> source in
+&lt;code>tests/verification/test_heat_radiometer_source_fds.py&lt;/code>
+(&lt;a href="https://github.com/PedestrianDynamics/pyFDS-Evac/issues/276" target="_blank" rel="noopener">#276&lt;/a>).
+The decks hold one row of devices (y = 2.05 m), so only agents on that row
+can be run with the radiometer source; the 2-D interpolation is not
+checked on FDS data.&lt;/li>
 &lt;li>&lt;strong>A plate is not a person.&lt;/strong> The gauges are flat, single-sided and fixed
 in orientation; a body receives flux on many faces at once and moves.&lt;/li>
 &lt;li>&lt;strong>One set of conditions.&lt;/strong> One layer temperature, one soot load, one grid,

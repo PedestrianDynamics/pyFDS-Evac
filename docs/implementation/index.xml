@@ -1147,6 +1147,15 @@ default). With &lt;code>integrated_intensity=True&lt;/code>, used by
 stops with a &lt;code>ValueError&lt;/code> that names both heights. The layer regime
 (&lt;code>--heat-regime layer&lt;/code>) reads a second &lt;code>TEMPERATURE&lt;/code> slice at
 &lt;code>--heat-layer-height&lt;/code>.&lt;/p>
+&lt;p>With &lt;code>--heat-radiant-source radiometer&lt;/code> the field also reads the FDS
+&lt;code>RADIOMETER&lt;/code> devices of one orientation (&lt;code>radiometer_orientation=&amp;quot;x,y,z&amp;quot;&lt;/code>,
+&lt;code>skin_temperature_celsius=&lt;/code> for the &lt;code>&amp;amp;PROP&lt;/code> check). Devices have no slice
+height to match, so the rule is: their z must lie within half a mesh cell
+of the &lt;code>TEMPERATURE&lt;/code> slice, or the call stops with a &lt;code>RadiometerGridError&lt;/code>
+(a &lt;code>ValueError&lt;/code>) that names both heights. The device times follow the
+slice horizon rules: a time up to one output interval past the last frame
+holds the last frame, a later one raises &lt;code>FdsHorizonError&lt;/code> unless
+&lt;code>allow_horizon_hold&lt;/code> is set.&lt;/p>
 &lt;h3>Line-of-sight extinction&lt;span class="hx-absolute -hx-mt-20" id="line-of-sight-extinction">&lt;/span>
 &lt;a href="#line-of-sight-extinction" class="subheading-anchor" aria-label="Permalink for this section">&lt;/a>&lt;/h3>&lt;p>The &lt;code>integrated_extinction_along_los()&lt;/code> function in
 &lt;code>pyfds_evac/core/route_graph.py&lt;/code> computes the Beer-Lambert path-integrated

@@ -57,6 +57,11 @@ quantity name &lt;code>load_slice_sampler&lt;/code> looks up
 &lt;td>the run stops&lt;/td>
 &lt;/tr>
 &lt;tr>
+&lt;td>RADIOMETER GAS devices&lt;/td>
+&lt;td>radiant flux (net reading), only with &lt;code>--heat-radiant-source radiometer&lt;/code>; one orientation, a regular grid at the TEMPERATURE slice z within half a cell, &lt;code>&amp;amp;PROP&lt;/code> &lt;code>GAUGE_TEMPERATURE&lt;/code> = &lt;code>--heat-skin-temperature&lt;/code>, the &lt;code>.fds&lt;/code> deck beside the output&lt;/td>
+&lt;td>&lt;code>ValueError&lt;/code>: the run stops, with the &lt;code>&amp;amp;DEVC&lt;/code> line to add (also for a gauge temperature that differs, a missing deck, or an agent inside the slice but outside the grid)&lt;/td>
+&lt;/tr>
+&lt;tr>
 &lt;td>INTEGRATED INTENSITY&lt;/td>
 &lt;td>radiant flux f·(U − 4σT_s⁴), only with &lt;code>--heat-radiant-source integrated-intensity&lt;/code>; at the TEMPERATURE slice z, covering the same area&lt;/td>
 &lt;td>&lt;code>ValueError&lt;/code>: the run stops (also for another z, or an agent inside only one of the two slices)&lt;/td>
@@ -1543,14 +1548,20 @@ each flag sets.&lt;/p>
 &lt;tr>
 &lt;td>&lt;code>--heat-radiant-source S&lt;/code>&lt;/td>
 &lt;td>&lt;code>gas&lt;/code>&lt;/td>
-&lt;td>&lt;code>gas&lt;/code>, &lt;code>integrated-intensity&lt;/code>&lt;/td>
-&lt;td>Radiant term from the gas at the head, or the excess flux from the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice. &lt;code>integrated-intensity&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-u-factor&lt;/code>, and the slice at the slice height.&lt;/td>
+&lt;td>&lt;code>gas&lt;/code>, &lt;code>integrated-intensity&lt;/code>, &lt;code>radiometer&lt;/code>&lt;/td>
+&lt;td>Radiant term from the gas at the head, the excess flux from the FDS &lt;code>INTEGRATED INTENSITY&lt;/code> slice, or the net reading of FDS &lt;code>RADIOMETER GAS&lt;/code> devices. &lt;code>integrated-intensity&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-u-factor&lt;/code>, and the slice at the slice height. &lt;code>radiometer&lt;/code> needs &lt;code>total-flux&lt;/code> and &lt;code>--heat-radiometer-orientation&lt;/code>, radiometers at the slice height on a regular grid, and the deck with &lt;code>GAUGE_TEMPERATURE&lt;/code> equal to &lt;code>--heat-skin-temperature&lt;/code>.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--heat-u-factor F&lt;/code>&lt;/td>
 &lt;td>none&lt;/td>
 &lt;td>[0.25, 1]&lt;/td>
 &lt;td>Factor &lt;em>f&lt;/em> on the integrated intensity &lt;em>U&lt;/em>; required with &lt;code>integrated-intensity&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>--heat-radiometer-orientation X,Y,Z&lt;/code>&lt;/td>
+&lt;td>none&lt;/td>
+&lt;td>three numbers, not all zero&lt;/td>
+&lt;td>Direction the radiometer plate faces, for example &lt;code>0,0,1&lt;/code> (up); one orientation per run. Required with &lt;code>radiometer&lt;/code>, an error without it.&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>--heat-regime R&lt;/code>&lt;/td>
@@ -3534,6 +3545,14 @@ without the gas FED, the gases read 0 (O₂ 20.9 %) and every gas rate and
 &lt;tr>
 &lt;td>&lt;code>heat_integrated_intensity_kw_m2&lt;/code>&lt;/td>
 &lt;td>&lt;code>--heat-radiant-source integrated-intensity&lt;/code>: &lt;em>U&lt;/em> at the agent [kW/m²]&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_radiometer_kw_m2&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-radiant-source radiometer&lt;/code>: the net radiometer reading at the agent [kW/m²]; NaN outside the FDS domain&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>heat_radiometer_incident_kw_m2&lt;/code>&lt;/td>
+&lt;td>&lt;code>--heat-radiant-source radiometer&lt;/code>: the incident flux that reading implies, reading/ε + σT_s⁴ [kW/m²], a diagnostic that does not enter the dose&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>heat_layer_temperature_c&lt;/code>&lt;/td>
@@ -7758,6 +7777,56 @@ them. The deck-side causes (missing slices, &lt;code>&amp;amp;REAC&lt;/code> yie
 &lt;td>&lt;code>pyfds-evac: error: argument --heat-u-factor: must be in [0.25, 1.0], got …&lt;/code>&lt;/td>
 &lt;td>&lt;em>f&lt;/em> outside its range.&lt;/td>
 &lt;td>Use a value in [0.25, 1].&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiant-source radiometer needs --heat-radiometer-orientation x,y,z …&lt;/code>&lt;/td>
+&lt;td>The orientation has no default.&lt;/td>
+&lt;td>Set it, for example &lt;code>--heat-radiometer-orientation 0,0,1&lt;/code> for the crown.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiometer-orientation needs --heat-radiant-source radiometer.&lt;/code>&lt;/td>
+&lt;td>The orientation without the radiometer source.&lt;/td>
+&lt;td>Add &lt;code>--heat-radiant-source radiometer&lt;/code>, or drop the orientation.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>ValueError: --heat-radiant-source radiometer needs --heat-fed-method total-flux.&lt;/code>&lt;/td>
+&lt;td>As above, for the radiometer source.&lt;/td>
+&lt;td>Add &lt;code>--heat-fed-method total-flux&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>pyfds-evac: error: argument --heat-radiometer-orientation: …&lt;/code>&lt;/td>
+&lt;td>Not three numbers, or all zero.&lt;/td>
+&lt;td>Give &lt;code>x,y,z&lt;/code>, for example &lt;code>1,0,0&lt;/code>.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: --heat-radiant-source radiometer: no RADIOMETER device … Add radiometers facing …&lt;/code>&lt;/td>
+&lt;td>The case has no radiometers with that orientation (or none at all). The message shows the &lt;code>&amp;amp;DEVC&lt;/code> line to add.&lt;/td>
+&lt;td>Add the &lt;code>&amp;amp;PROP&lt;/code> and one &lt;code>&amp;amp;DEVC&lt;/code> per grid row at the &lt;code>TEMPERATURE&lt;/code> slice height and rerun FDS.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: the radiometers facing … are at z=… m but the TEMPERATURE slice is at z=… m …&lt;/code>&lt;/td>
+&lt;td>The devices are further than half a cell from the slice height.&lt;/td>
+&lt;td>Put the devices at the slice height, or add a &lt;code>TEMPERATURE&lt;/code> slice at the device height.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: radiometer '…' … has GAUGE_TEMPERATURE=… C but --heat-skin-temperature is … C …&lt;/code>&lt;/td>
+&lt;td>The &lt;code>&amp;amp;PROP&lt;/code> of the radiometers does not hold the skin temperature (FDS defaults it to &lt;code>TMPA&lt;/code>).&lt;/td>
+&lt;td>Set &lt;code>GAUGE_TEMPERATURE&lt;/code> in the &lt;code>&amp;amp;PROP&lt;/code>, or &lt;code>--heat-skin-temperature&lt;/code>, so they are equal.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: the FDS deck …/CHID.fds is not in the case folder …&lt;/code>&lt;/td>
+&lt;td>The radiometer source reads the &lt;code>&amp;amp;PROP&lt;/code> from the deck.&lt;/td>
+&lt;td>Copy the &lt;code>.fds&lt;/code> deck next to the FDS output.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: radiometer points do not fill the grid …&lt;/code> or &lt;code>… not uniform in x&lt;/code>&lt;/td>
+&lt;td>The devices are not a regular full grid.&lt;/td>
+&lt;td>Use one &lt;code>&amp;amp;DEVC&lt;/code> per row with the same &lt;code>XBP&lt;/code> x range, &lt;code>POINTS&lt;/code> and a constant row spacing.&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>RadiometerGridError: Point (x, y) lies in the TEMPERATURE slice but outside the radiometer grid …&lt;/code>&lt;/td>
+&lt;td>An agent stands inside the slice but outside the radiometer grid; a missing reading is never read as zero.&lt;/td>
+&lt;td>Extend the radiometer grid over the walkable area (a grid one row wide serves only agents on that row).&lt;/td>
 &lt;/tr>
 &lt;tr>
 &lt;td>&lt;code>pyfds-evac: error: Distribution '…': requested N agents but area can hold at most ~C. …&lt;/code>&lt;/td>
