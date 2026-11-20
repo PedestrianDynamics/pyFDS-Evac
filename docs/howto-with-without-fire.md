@@ -225,8 +225,8 @@ times from ignition:
 | Point | *K* ≥ 0.3 1/m | HCl ≥ 300 ppm | HCl ≥ 1000 ppm | FED ≥ 0.3 |
 |---|---|---|---|---|
 | Exit B | 17 s | 22 s | 33 s | not by 300 s |
-| Junction | 23 s | 26 s | 57 s | 261 s |
-| Branch mouth | 42 s | 48 s | 62 s | 262 s |
+| Junction | 23 s | 26 s | 57 s | 260 s |
+| Branch mouth | 42 s | 48 s | 62 s | 261 s |
 | Exit A | 46 s | 46 s | 48 s | not by 300 s |
 
 The *K* limit is the Engineers Australia visibility of 10 m with *C* = 3
@@ -528,7 +528,7 @@ not reached by 300 s (exit B, exit A).
   FED 0.3 passes in every seed of U, S, R and R-na at 0 and 30 s. At 60 s
   U passes at all four points, but at the junction and the branch mouth R
   fails in 1 seed (seed 13: its last agent leaves at 265.8 s, after
-  261 and 262 s), S in 2 seeds and R-na in 1, the last two because people
+  260 and 261 s), S in 2 seeds and R-na in 1, the last two because people
   are still inside at 270 s. R+FIC fails there in 5 of 10 seeds at 30 s and
   3 of 10 at 60 s for the same reason
   ([Sensitivity arms](#sensitivity-arms)).

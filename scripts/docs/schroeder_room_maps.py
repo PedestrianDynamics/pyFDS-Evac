@@ -4,8 +4,11 @@ Source of the method: B. Schröder, L. Arnold, A. Seyfried, "A map
 representation of the ASET-RSET concept", Fire Safety Journal 115 (2020)
 103154, doi:10.1016/j.firesaf.2020.103154 (Sect. 2, Eqs. 2-8). This is the
 same experiment rerun with our own FDS 6.10.1 deck and pyFDS-Evac; none of the
-authors' data is used as input. pyFDS-Evac does not build these maps
-itself (#210): this script does.
+authors' data is used as input. The maps, the DIFF classification, the
+measures, the seed pooling and the FED dose criteria are those of
+``pyfds_evac.analysis``; this script adds the study around them (the runs, the
+release's nearest-resize and the forall cell rules, the criterion screen, the
+figures).
 
 Two families of FDS runs, chosen with ``--family``:
 
@@ -63,7 +66,6 @@ import re
 import sqlite3
 import subprocess
 import sys
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -82,8 +84,26 @@ from matplotlib.patches import Patch, Rectangle
 from matplotlib.patches import Polygon as PolygonPatch
 from shapely import box, wkt
 
+from pyfds_evac.analysis import (
+    AsetCriteria,
+    AsetMap,
+    CellState,
+    PointSeries,
+    RsetMap,
+    bootstrap_ci,
+    diff_map,
+    first_crossing_dose,
+    first_crossing_level,
+    grid_from_walkable,
+    pool_seeds,
+    read_crossings,
+    read_level_crossing,
+    reduce_to_cells,
+    rset_map,
+)
+from pyfds_evac.analysis import measures as module_measures
+from pyfds_evac.core.fds_sampling import load_slice_sampler
 from pyfds_evac.core.fed import (
-    DEFAULT_HEAT_CONVECTIVE_COEFFICIENT,
     DEFAULT_HEAT_SKIN_TEMPERATURE_C,
     HEAT_ENDPOINTS,
     ISO_RADIANT_THRESHOLD_KW_M2,
@@ -94,6 +114,7 @@ from pyfds_evac.core.fed import (
     HeatFedInputs,
     default_fed_rate_per_minute,
     default_heat_fed_rate_per_minute,
+    total_flux_heat_fed_rate_per_minute,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -273,6 +294,21 @@ QUANTITIES = {
 U_FACTORS = (0.25, 1.0)
 HEAT_TF_ENDPOINTS = ("tolerance", "fatal")
 
+RADIANT_OFFSET_KW_M2 = (
+    0.25 * 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * (T_AMBIENT_C + 273.15) ** 4 / 1000.0
+)
+# Level key -> (FDS slice quantity, factor from the slice value to the criterion's
+# unit, shift added to the limit). RAD is the radiant proxy 0.25 U - c, so the
+# criterion is 0.25 U >= limit + c.
+LEVEL_SLICE = {
+    "K": (QUANTITIES["K"], 1.0, 0.0),
+    "T": (QUANTITIES["T"], 1.0, 0.0),
+    "CO": (QUANTITIES["CO"], 1e6, 0.0),
+    "CO2": (QUANTITIES["CO2"], 100.0, 0.0),
+    "RAD": (QUANTITIES["U"], 0.25, RADIANT_OFFSET_KW_M2),
+}
+GAS_QUANTITIES = (QUANTITIES["CO"], QUANTITIES["CO2"], QUANTITIES["O2"])
+
 TEXT = "dimgrey"
 NEVER = "#f3e3b5"  # censored cells: not by 600 s (as on "A crowd in a fire")
 UNVISITED = "#e6e6e6"
@@ -402,10 +438,13 @@ def check_identity(runs):
 
 @dataclass
 class Grid:
+    """The map grid, row 0 at y = 0; ``mod`` is the module's (row 0 at max y)."""
+
     x_edges: np.ndarray
     y_edges: np.ndarray
     area: np.ndarray  # true cell area inside the walkable area, m²
     near_burner: np.ndarray  # cell centre within 2 m of the burner
+    mod: object  # pyfds_evac.analysis.Grid
 
     @property
     def shape(self):
@@ -419,46 +458,36 @@ class Grid:
 
 
 def make_grid(walkable):
-    """PedPy's edges (same expression as PedPy), row 0 at y = 0.
+    """The module's grid (PedPy's shape), flipped to row 0 at y = 0.
 
     PedPy's arange overshoots the room by one column (PedPy#581); that column
-    has zero area here and is never visited.
+    has zero area and the module gives it no ASET.
     """
-    min_x, min_y, max_x, max_y = walkable.bounds
-    xe = np.arange(min_x, max_x + CELL, CELL)
-    ye = np.arange(min_y, max_y + CELL, CELL)
-    ny, nx = len(ye) - 1, len(xe) - 1
-    area = np.zeros((ny, nx))
+    mod = grid_from_walkable(walkable, CELL)
+    ny, nx = mod.shape
     near = np.zeros((ny, nx), dtype=bool)
     burner = box(BURNER[0], BURNER[1], BURNER[0] + BURNER[2], BURNER[1] + BURNER[3])
     for j in range(ny):
         for i in range(nx):
-            cell = box(xe[i], ye[j], xe[i + 1], ye[j + 1])
-            area[j, i] = cell.intersection(walkable).area
+            cell = box(
+                mod.x_edges[i], mod.y_edges[j], mod.x_edges[i + 1], mod.y_edges[j + 1]
+            )
             near[j, i] = cell.centroid.distance(burner) <= 2.0
-    return Grid(xe, ye, area, near)
+    return Grid(mod.x_edges, mod.y_edges, np.flipud(mod.area), near, mod)
 
 
-def pedpy_rset(df, walkable, grid):
-    """PedPy RSET map (last time in the cell), flipped to row 0 at y = 0."""
+def module_rset(df, walkable, grid):
+    """Module RSET map (last time in the cell), flipped to row 0 at y = 0.
+
+    Every run empties the room (asserted in run_all), so every agent has left
+    and no cell is censored.
+    """
     import pedpy
 
     data = pedpy.TrajectoryData(data=df[["id", "frame", "x", "y"]], frame_rate=FPS)
-    rset = pedpy.compute_rset_map(
-        traj_data=data,
-        walkable_area=pedpy.WalkableArea(walkable),
-        grid_size=CELL,
-        method=pedpy.RsetMethod.MAX,
-    )
-    assert rset.shape == grid.shape, f"PedPy grid {rset.shape} != {grid.shape}"
-    return np.flipud(rset)
-
-
-def check_orientation(walkable, grid):
-    """Assert PedPy's row 0 is max y, so the flip in pedpy_rset is right."""
-    probe = pd.DataFrame({"id": [1], "frame": [70], "x": [2.1], "y": [0.1]})
-    rset = pedpy_rset(probe, walkable, grid)
-    assert rset[0, 3] == 7.0, "PedPy orientation changed"
+    left = {int(i): 0.0 for i in df["id"].unique()}
+    rset = rset_map(data, pedpy.WalkableArea(walkable), grid.mod, exit_times=left)
+    return np.flipud(rset.time_s)
 
 
 # --- Fire fields ---------------------------------------------------------
@@ -486,98 +515,143 @@ def read_slices(fds_dir):
     return out, times, xs, ys
 
 
-def gas_fed_rate(co, co2, o2):
-    """FDS+Evac-form FED rate in 1/min (fed.py), vectorised.
-
-    CO ppm = X_CO 1e6; CO2 and O2 in %. No HCN, NOx or irritants tracked.
-    """
-    co_ppm = np.maximum(co, 0.0) * 1e6
-    rate_co = np.where(co_ppm > 0, 2.764e-5 * co_ppm**1.036, 0.0)
-    co2_pct = co2 * 100.0
-    hv = np.where(co2_pct > 0, np.exp(0.1903 * co2_pct + 2.0004) / 7.1, 1.0)
-    o2_pct = o2 * 100.0
-    rate_o2 = np.where(o2_pct < 20.0, np.exp(-(8.13 - 0.54 * (20.9 - o2_pct))), 0.0)
-    return rate_co * hv + rate_o2
-
-
-def heat_fed_rate(temp):
-    """ISO 13571 Eq. (9) clothed convective rate in 1/min (fed.py), vectorised."""
-    return np.where(temp > 0, np.maximum(temp, 0.0) ** 3.61 / 4.1e8, 0.0)
-
-
-def total_flux_rate(temp, u, endpoint, factor):
-    """Total-flux heat FED rate in 1/min (fed.py, U source), vectorised."""
-    t_skin = DEFAULT_HEAT_SKIN_TEMPERATURE_C
-    u_skin = 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * (t_skin + 273.15) ** 4 / 1000.0
-    radiant = factor * (u - u_skin)
-    radiant = np.where(radiant < ISO_RADIANT_THRESHOLD_KW_M2, 0.0, radiant)
-    q = radiant + DEFAULT_HEAT_CONVECTIVE_COEFFICIENT * (temp - t_skin) / 1000.0
-    dose_r = HEAT_ENDPOINTS[endpoint].radiant_dose
-    return np.where(q > 0, np.maximum(q, 0.0) ** 1.33 / dose_r, 0.0)
-
-
-def check_total_flux(fields, n=3000):
-    """The vectorised total-flux rate must equal DefaultHeatFedModel's."""
-    rng = np.random.default_rng(1)
-    flat_t, flat_u = fields["T"].reshape(-1), fields["U"].reshape(-1)
-    hot = np.flatnonzero(flat_u >= ISO_RADIANT_THRESHOLD_KW_M2)
-    picks = np.concatenate([rng.integers(0, flat_t.size, n), hot[:n]])
-    for endpoint, factor in ((e, f) for e in HEAT_TF_ENDPOINTS for f in U_FACTORS):
-        model = DefaultHeatFedModel(
-            None,
-            DefaultFedConfig(),
-            endpoint=endpoint,
-            method="total-flux",
-            radiant_source="integrated-intensity",
-            u_factor=factor,
-        )
-        for idx in picks:
-            t, u = float(flat_t[idx]), float(flat_u[idx])
-            ref = model._total_flux_rate(
-                HeatFedInputs(temperature_celsius=t, integrated_intensity_kw_m2=u)
-            )
-            assert np.isclose(total_flux_rate(t, u, endpoint, factor), ref, rtol=1e-9)
-
-
-def check_fed_formulas(fields, n=3000):
-    """The vectorised rates must equal fed.py's scalar functions."""
-    rng = np.random.default_rng(0)
-    flat = {k: fields[k].reshape(-1) for k in ("CO", "CO2", "O2", "T")}
-    for idx in rng.integers(0, flat["CO"].size, n):
-        co, co2, o2, t = (flat[k][idx] for k in ("CO", "CO2", "O2", "T"))
-        gas = DefaultFedInputs(
-            co_volume_fraction_percent=100 * co,
-            co2_volume_fraction_percent=100 * co2,
-            o2_volume_fraction_percent=100 * o2,
-        )
-        ref = default_fed_rate_per_minute(gas)
-        co, co2, o2, t = float(co), float(co2), float(o2), float(t)
-        assert np.isclose(gas_fed_rate(co, co2, o2), ref, rtol=1e-9, atol=1e-15)
-        ref = default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=t))
-        assert np.isclose(heat_fed_rate(t), ref, rtol=1e-9, atol=1e-15)
-
-
 def radiant_proxy(u):
     """Net radiant flux on a small body, 0.25 (U - 4 sigma T_amb^4), kW/m².
 
     INTEGRATED INTENSITY U is the integral of the intensity over all
     directions; a small body in an isotropic field receives about U / 4.
     """
-    t_amb = T_AMBIENT_C + 273.15
-    return 0.25 * (u - 4.0 * STEFAN_BOLTZMANN_W_M2_K4 * t_amb**4 / 1000.0)
+    return 0.25 * u - RADIANT_OFFSET_KW_M2
 
 
-def dose(rate, times):
-    """Dose accumulated from ignition by someone standing still (left sum)."""
-    dt_min = np.diff(times)[:, None, None] / 60.0
-    acc = np.cumsum(rate[:-1] * dt_min, axis=0)
-    return np.concatenate([np.zeros_like(rate[:1]), acc])
+def node_xy(xs, ys):
+    """Flattened node coordinates of the stitched (ny, nx) node grid."""
+    gy, gx = np.meshgrid(ys, xs, indexing="ij")
+    return gx.ravel(), gy.ravel()
 
 
-def first_time(over, times):
-    """First time each node's criterion holds; inf when never."""
-    hit = over.any(axis=0)
-    return np.where(hit, times[over.argmax(axis=0)], np.inf)
+def levels_first(values, times, limit, xs, ys):
+    """First time each stitched node's value reaches *limit* (module rule)."""
+    x, y = node_xy(xs, ys)
+    frames = values.reshape(len(times), -1)
+    series = PointSeries(x, y, times, np.arange(len(times)), frames)
+    return first_crossing_level(series, limit).reshape(len(ys), len(xs))
+
+
+def on_node_grid(x, y, first, xs, ys):
+    """Per-point first times of a module crossing on the stitched node grid.
+
+    Points on a mesh seam appear once per mesh with the same value.
+    """
+    ix = np.abs(xs[None, :] - x[:, None]).argmin(axis=1)
+    iy = np.abs(ys[None, :] - y[:, None]).argmin(axis=1)
+    out = np.full((len(ys), len(xs)), np.inf)
+    seen = np.zeros(out.shape, dtype=bool)
+    np.minimum.at(out, (iy, ix), first)
+    seen[iy, ix] = True
+    assert seen.all(), "the crossing does not cover every stitched node"
+    return out
+
+
+def node_first(fds_dir, key, limit, xs, ys):
+    """Node first-crossing times of one criterion, from ``pyfds_evac.analysis``."""
+    if key in ("FED", "HFED"):
+        doses = {"FED": {"fed": limit}, "HFED": {"heat_fed": limit}}[key]
+        none = {"visibility_limit_m": None, "temperature_c": None}
+        criteria = AsetCriteria(**{**none, "fed": None, "heat_fed": None, **doses})
+        (c,) = read_crossings(str(fds_dir), criteria, slice_height_m=Z)
+    else:
+        quantity, scale, shift = LEVEL_SLICE[key]
+        c = read_level_crossing(
+            str(fds_dir), quantity, limit + shift, scale=scale, slice_height_m=Z
+        )
+    return on_node_grid(c.x, c.y, c.first_s, xs, ys)
+
+
+def stationary_dose(fds_dir, quantities, rate_of, threshold, xs, ys):
+    """First crossing of *threshold* and final dose of someone standing from t = 0.
+
+    The engine's rule, as in ``pyfds_evac.analysis``: clock 0, 1, 2 ... s,
+    the nearest frame of each quantity, right endpoint (``first_crossing_dose``).
+    *rate_of* maps the quantity values at the nodes to the dose rate per
+    minute with the engine's rate functions. The final dose is the same sum to
+    the last time; the module returns crossing times only, so it is summed
+    here (a screen value, not a map input).
+    """
+    samplers = {
+        q: load_slice_sampler(str(fds_dir), q, slice_height_m=Z) for q in quantities
+    }
+    times = np.arange(0.0, min(s.end_time_s for s in samplers.values()) + 1e-9, 1.0)
+    px, py, first, final = [], [], [], []
+    for ax, ay in next(iter(samplers.values())).node_axes():
+        grids = {q: s.grid(ax, ay) for q, s in samplers.items()}
+        gx, gy = np.meshgrid(ax, ay)
+        rates = np.empty((len(times), gx.size))
+        for k, t in enumerate(times):
+            values = {q: g.values(g.time_index(t)).ravel() for q, g in grids.items()}
+            assert not any(np.isnan(v).any() for v in values.values()), fds_dir
+            rates[k] = rate_of(values)
+        series = PointSeries(
+            gx.ravel(), gy.ravel(), times, np.arange(len(times)), rates
+        )
+        first.append(first_crossing_dose(series, threshold))
+        final.append(rates[1:].sum(axis=0) * np.diff(times).mean() / 60.0)
+        px.append(gx.ravel())
+        py.append(gy.ravel())
+    first_nodes = on_node_grid(
+        np.concatenate(px), np.concatenate(py), np.concatenate(first), xs, ys
+    )
+    return first_nodes, float(np.concatenate(final).max())
+
+
+def _gas_rate(values):
+    co, co2, o2 = (values[q] for q in GAS_QUANTITIES)
+    return [
+        default_fed_rate_per_minute(
+            DefaultFedInputs(
+                co_volume_fraction_percent=100.0 * a,
+                co2_volume_fraction_percent=100.0 * b,
+                o2_volume_fraction_percent=100.0 * c,
+            )
+        )
+        for a, b, c in zip(co, co2, o2)
+    ]
+
+
+def _heat_rate(values):
+    return [
+        default_heat_fed_rate_per_minute(HeatFedInputs(temperature_celsius=float(t)))
+        for t in values[QUANTITIES["T"]]
+    ]
+
+
+def _total_flux_rate(endpoint, factor):
+    """Total-flux heat dose rate of the engine: q^1.33 / D, U source (SFPE Eq. 70.41)."""
+    model = DefaultHeatFedModel(
+        None,
+        DefaultFedConfig(),
+        endpoint=endpoint,
+        method="total-flux",
+        radiant_source="integrated-intensity",
+        u_factor=factor,
+    )
+    dose_r = HEAT_ENDPOINTS[endpoint].radiant_dose
+
+    def rate_of(values):
+        return [
+            total_flux_heat_fed_rate_per_minute(
+                model.heat_flux_kw_m2(
+                    float(t),
+                    None,
+                    integrated_intensity_kw_m2=float(u),
+                    radiant_threshold=True,
+                ),
+                dose_r,
+            )
+            for t, u in zip(values[QUANTITIES["T"]], values[QUANTITIES["U"]])
+        ]
+
+    return rate_of
 
 
 def paper_steps(times):
@@ -597,9 +671,17 @@ class Fire:
     raw: dict = field(default_factory=dict)  # criterion -> (t, ny, nx) bool
 
 
+# Bump when the cached quantities change; v2: right-endpoint doses (#997).
+CACHE_VERSION = 2
+
+
 def fire_fields(fds_dir, cache):
-    """Node first-crossing times per criterion and the screen values, cached."""
-    path = cache / f"{fds_dir.name}.npz"
+    """Node first-crossing times per criterion and the screen values, cached.
+
+    The file name carries ``CACHE_VERSION``, so a cache written by an older
+    rule is never read.
+    """
+    path = cache / f"{fds_dir.name}.v{CACHE_VERSION}.npz"
     if path.exists():
         z = np.load(path, allow_pickle=True)
         fire = Fire(fds_dir.name, z["times"], z["xs"], z["ys"])
@@ -612,33 +694,47 @@ def fire_fields(fds_dir, cache):
         assert not missing, f"stale cache {path}: {missing}; delete it"
         return fire
     f, times, xs, ys = read_slices(fds_dir)
-    check_fed_formulas(f)
-    check_total_flux(f)
     derived = {
         "K": f["K"],
         "T": f["T"],
         "CO": f["CO"] * 1e6,
-        "FED": dose(gas_fed_rate(f["CO"], f["CO2"], f["O2"]), times),
-        "HFED": dose(heat_fed_rate(f["T"]), times),
         "CO2": f["CO2"] * 100.0,
         "RAD": radiant_proxy(f["U"]),
     }
     fire = Fire(fds_dir.name, times, xs, ys)
     for name, (key, limit, _) in CRITERIA.items():
-        fire.node[name] = first_time(derived[key] >= limit, times)
+        fire.node[name] = node_first(fds_dir, key, limit, xs, ys)
+    # Doses: the first crossing from the module, the screen values summed here.
+    gas_first, gas_final = stationary_dose(
+        fds_dir, GAS_QUANTITIES, _gas_rate, 0.3, xs, ys
+    )
+    assert np.array_equal(gas_first, fire.node["FED 0.3"]), "FED paths differ"
+    heat_first, heat_final = stationary_dose(
+        fds_dir, (QUANTITIES["T"],), _heat_rate, 0.3, xs, ys
+    )
+    assert np.array_equal(heat_first, fire.node["heat FED 0.3"]), (
+        "heat FED paths differ"
+    )
     for endpoint in HEAT_TF_ENDPOINTS:
         for factor in U_FACTORS:
-            tf = dose(total_flux_rate(f["T"], f["U"], endpoint, factor), times)
+            first, final = stationary_dose(
+                fds_dir,
+                (QUANTITIES["T"], QUANTITIES["U"]),
+                _total_flux_rate(endpoint, factor),
+                0.3,
+                xs,
+                ys,
+            )
             tag = f"total flux f = {factor:g}, {endpoint}"
-            fire.node[f"heat FED 0.3, {tag}"] = first_time(tf >= 0.3, times)
-            fire.screen[f"heat FED max, {tag}"] = float(tf[-1].max())
-    # The ∀ rule needs the raw exceedance, not the node first times.
+            fire.node[f"heat FED 0.3, {tag}"] = first
+            fire.screen[f"heat FED max, {tag}"] = final
+    # The forall rule needs the raw exceedance, not the node first times.
     fire.raw["K 0.23"] = f["K"] >= CRITERIA["K 0.23"][1]
     steps = paper_steps(times)
     for name in ("K 0.23", "T 45"):
         key, limit, _ = CRITERIA[name]
-        fire.node[f"{name} @10 s"] = first_time(
-            derived[key][steps] >= limit, times[steps]
+        fire.node[f"{name} @10 s"] = levels_first(
+            derived[key][steps], times[steps], limit, xs, ys
         )
     fire.screen |= {
         "K max 1/m": float(f["K"].max()),
@@ -648,8 +744,8 @@ def fire_fields(fds_dir, cache):
         "O2 min %": float(100 * f["O2"].min()),
         "U max kW/m²": float(f["U"].max()),
         "radiant proxy max kW/m²": float(derived["RAD"].max()),
-        "gas FED max": float(derived["FED"][-1].max()),
-        "heat FED max": float(derived["HFED"][-1].max()),
+        "gas FED max": gas_final,
+        "heat FED max": heat_final,
         "T ≥ 45 °C node share": float((fire.node["T 45"] < np.inf).mean()),
         "U ≥ 2.5 kW/m² node share": float(
             (f["U"] >= ISO_RADIANT_THRESHOLD_KW_M2).any(axis=0).mean()
@@ -702,22 +798,20 @@ def nearest_index(coords, n_room, n_cells):
 
 
 def cell_aset(node_first, fire, grid, rule="exists"):
-    """ASET per map cell (row 0 at y = 0); inf = not by the end; NaN = no floor."""
+    """ASET per map cell (row 0 at y = 0); inf = not by the end; NaN = no floor.
+
+    ``exists`` is the module's block maximum; ``nearest`` is the release's
+    resize, which stays here.
+    """
     ny, nx = grid.shape
-    if rule == "nearest":
-        n_room_x = round((ROOM[2] - ROOM[0]) / CELL)
-        n_room_y = int(np.ceil((ROOM[3] - ROOM[1]) / CELL - 1e-9))
-        ix = nearest_index(fire.xs, n_room_x, nx)
-        iy = nearest_index(fire.ys, n_room_y, ny)
-        out = node_first[np.ix_(iy, ix)].astype(float)
-    else:
-        cols = members(fire.xs, grid.x_edges, nx)
-        rows = members(fire.ys, grid.y_edges, ny)
-        out = np.full((ny, nx), np.nan)
-        for j, r in enumerate(rows):
-            out[j] = [
-                node_first[np.ix_(r, c)].min() if c.size else np.nan for c in cols
-            ]
+    if rule == "exists":
+        x, y = node_xy(fire.xs, fire.ys)
+        return np.flipud(reduce_to_cells(grid.mod, x, y, node_first.ravel(), "exists"))
+    n_room_x = round((ROOM[2] - ROOM[0]) / CELL)
+    n_room_y = int(np.ceil((ROOM[3] - ROOM[1]) / CELL - 1e-9))
+    ix = nearest_index(fire.xs, n_room_x, nx)
+    iy = nearest_index(fire.ys, n_room_y, ny)
+    out = node_first[np.ix_(iy, ix)].astype(float)
     return np.where(grid.area > 0, out, np.nan)
 
 
@@ -744,52 +838,46 @@ def combined(fire, names, suffix=""):
 
 
 def pool(maps, how):
-    """Pool seeds per cell over the seeds that visit it; NaN if none does."""
-    stack = np.dstack(maps)
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN cells
-        if how == "max":
-            return np.nanmax(stack, axis=2)
-        return np.nanpercentile(stack, 95, axis=2)
+    """Pool seeds per cell over the seeds that visit it (module rule); NaN if none."""
+    return pool_seeds(maps, how).values
 
 
 def measures(aset, rset, grid):
     """min DIFF, negative area, C and the five states on visited cells.
 
+    The module's DIFF map and measures; the arrays here have row 0 at y = 0.
     Every run empties the room before T_END (asserted in run_all), so no
     RSET is censored and the "<= bound" and "undetermined" states are empty.
     """
-    visited = np.isfinite(rset) & (grid.area > 0)
-    exact = visited & np.isfinite(aset)
-    diff = np.where(exact, aset - rset, np.nan)
-    fail = exact & (diff < 0)
+    a, r = np.flipud(aset), np.flipud(rset)
+    diff_mod = diff_map(
+        AsetMap(a, T_END), RsetMap(r, np.zeros(r.shape, dtype=bool), T_END), grid.mod
+    )
+    m = module_measures(diff_mod)
+    diff = np.flipud(diff_mod.diff_s)
     j, i = np.unravel_index(np.nanargmin(diff), diff.shape)
     far = np.where(grid.near_burner, np.nan, diff)
-    neg = diff[fail]
-    centres = (np.floor(neg / BIN) + 0.5) * BIN
     return {
-        "min": float(np.nanmin(diff)),
+        "min": m.min_diff_s,
         "min_at": grid.centre(j, i),
         "min_far": float(np.nanmin(far)),
-        "area": float(grid.area[fail].sum()),
-        "c_free": float((neg * grid.area[fail]).sum()),
-        "c_binned": float((centres * grid.area[fail]).sum()),
-        "pass": int((exact & (diff >= 0)).sum()),
-        "fail": int(fail.sum()),
-        ">= bound": int((visited & np.isinf(aset)).sum()),
-        "<= bound": 0,
-        "undetermined": 0,
+        "area": m.fail_area_m2,
+        "c_free": m.c_m2s,
+        "c_binned": m.c_binned_m2s,
+        "pass": m.counts["pass"],
+        "fail": m.n_fail,
+        ">= bound": m.counts["aset_open"],
+        "<= bound": m.counts["rset_censored"],
+        "undetermined": m.counts["undetermined"],
         "diff": diff,
-        "censored": visited & np.isinf(aset),
+        "censored": np.flipud(diff_mod.state == int(CellState.ASET_OPEN)),
     }
 
 
 def bootstrap(values, n=4000):
-    """Mean and 95 % bootstrap CI of per-seed values."""
-    rng = np.random.default_rng(0)
-    values = np.asarray(values, dtype=float)
-    means = rng.choice(values, (n, values.size)).mean(axis=1)
-    return values.mean(), *np.percentile(means, [2.5, 97.5])
+    """Mean and 95 % bootstrap CI of per-seed values (module rule, seed 0)."""
+    interval = bootstrap_ci(values, n_boot=n)
+    return interval.mean, interval.low, interval.high
 
 
 @dataclass
@@ -818,7 +906,7 @@ def rset_results(runs, walkable, grid):
         maps, curves = [], {}
         for seed in SEEDS:
             df = trajectory(run_dir(runs, v, fds, seed))
-            maps.append(pedpy_rset(df, walkable[v.layout], grid))
+            maps.append(module_rset(df, walkable[v.layout], grid))
             curves[seed] = remaining_curve(df, v.n)
         results[(v.layout, v.name)] = Result(
             v,
@@ -2172,7 +2260,6 @@ def main():
         assert np.array_equal(getattr(grids["1door"], k), getattr(grids["2door"], k))
     grid = grids["1door"]
     # Cell areas differ by layout (jambs); use each layout's own floor.
-    check_orientation(walkable["1door"], grid)
     print(
         f"- grid {grid.shape[0]} × {grid.shape[1]} cells of {CELL} m (PedPy edges); "
         f"top row {ROOM[3] - grid.y_edges[-2]:.1f} m; last column past x = 30 has area 0\n"

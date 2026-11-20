@@ -120,14 +120,18 @@ def _node_points(ax: np.ndarray, ay: np.ndarray):
 
 
 def _level_crossing(
-    sampler: SliceFieldSampler, name: str, limit: float, description: str
+    sampler: SliceFieldSampler,
+    name: str,
+    limit: float,
+    description: str,
+    scale: float = 1.0,
 ) -> PointCrossing:
-    """First time a slice quantity reaches *limit* at every node, on frame times."""
+    """First time ``scale * quantity`` reaches *limit* at every node, on frame times."""
     xs, ys, firsts = [], [], []
     times = sampler.frame_times_s
     for ax, ay in sampler.node_axes():
         grid = sampler.grid(ax, ay)
-        frames = _no_nan(_frames(grid, range(len(times))), name)
+        frames = scale * _no_nan(_frames(grid, range(len(times))), name)
         x, y = _node_points(ax, ay)
         series = PointSeries(x, y, times, np.arange(len(times)), frames)
         xs.append(x)
@@ -264,6 +268,38 @@ def _heat_crossing(
         float(times[-1]),
         sampler.z_m,
         f"convective heat FED >= {threshold:g} ({clothing}), standing still from t = 0",
+    )
+
+
+def read_level_crossing(
+    fds_dir: str,
+    quantity: str,
+    limit: float,
+    *,
+    scale: float = 1.0,
+    name: str | None = None,
+    slice_height_m: float = HUMAN_SMOKE_HEIGHT_M,
+    simulation=None,
+) -> PointCrossing:
+    """First time ``scale * quantity >= limit`` at every node of one slice.
+
+    For the level criteria ``AsetCriteria`` does not name: CO or HCl in ppm
+    (*scale* ``1e6`` for a volume fraction), CO2 in per cent (*scale* ``100``),
+    or a second extinction limit. *quantity* is the FDS slice quantity name,
+    for example ``"CARBON MONOXIDE VOLUME FRACTION"``. Frame times, no
+    interpolation; an uncovered node raises, as in ``read_crossings``.
+    """
+    if not limit > 0 or not scale > 0:
+        raise ValueError(
+            f"read_level_crossing {quantity!r}: limit and scale must be positive, "
+            f"got limit {limit}, scale {scale}"
+        )
+    sampler = load_slice_sampler(
+        fds_dir, quantity, simulation=simulation, slice_height_m=slice_height_m
+    )
+    label = name or f"{quantity} {limit:g}"
+    return _level_crossing(
+        sampler, label, limit, f"{scale:g} x {quantity} >= {limit:g}", scale
     )
 
 

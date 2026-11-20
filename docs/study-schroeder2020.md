@@ -222,7 +222,7 @@ only), convective heat FED 0.070 / 0.097.
   1.7 kW/m² and stays below the 2.5 kW/m² from which ISO counts it, so the
   dose comes from the convective part alone and is the same for f = 0.25
   and f = 1. The tolerance dose reaches 0.3 in 3 cells next to the burner,
-  from 344 s (0.2 m), 259 s (0.1 m) or 393 s (two doors).
+  from 344 s (0.2 m), 258 s (0.1 m) or 392 s (two doors).
 
 {{< /details >}}
 

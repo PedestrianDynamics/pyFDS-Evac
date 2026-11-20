@@ -357,7 +357,7 @@ tenability limit, and whether the agent got out before that.
 - **The toxic dose stayed low.** One agent reached FED 0.3, at 275 s, shortly
   before it left; the highest was 0.35. A person standing at the junction,
   the spawn centre or the branch mouth from ignition would reach it only at
-  255–262 s.
+  254–261 s.
 
 "Nobody reached FED 1" therefore does not mean "everyone had time". This is
 one fire, one seed, and research software. The result describes this run
@@ -454,10 +454,10 @@ and it says nothing about who was there.
 | Location (x, y) [m] | *K* ≥ 0.3 1/m | HCl ≥ 300 ppm (ISO FEC 0.3) | HCl ≥ 1000 ppm (ISO FEC 1) | FED ≥ 0.3, standing there from t = 0 |
 |---|---|---|---|---|
 | Exit B (29, 11.5) | 17 s | 22 s | 33 s | not by 300 s |
-| Junction (18.5, 11.5) | 23 s | 26 s | 57 s | 261 s |
+| Junction (18.5, 11.5) | 23 s | 26 s | 57 s | 260 s |
 | Left corridor (10, 11.5) | 35 s | 36 s | 42 s | not by 300 s |
-| Spawn centre (20, 4.5) | 41 s | 42 s | 58 s | 255 s |
-| Branch mouth (20, 9) | 42 s | 48 s | 62 s | 262 s |
+| Spawn centre (20, 4.5) | 41 s | 42 s | 58 s | 254 s |
+| Branch mouth (20, 9) | 42 s | 48 s | 62 s | 261 s |
 | Exit A (1, 11.5) | 46 s | 46 s | 48 s | not by 300 s |
 
 CO does not reach 2,700 ppm at any of these points within 300 s.
@@ -620,11 +620,13 @@ its exit:
 has the same two denominators, so the check cannot exclude it; the deck's
 species list (N₂, O₂, H₂O, CO₂, CO, soot, HCl, vinyl chloride) rules it out.
 
-**At fixed points and on the grid.** The script samples once per second
-from 0 to 300 s with `ExtinctionField.from_fds` and `FdsFedField.from_fds`,
-the readers the engine uses. It first asserts that the extinction, HCl and CO
-slices are at z = 2.0 m. The FED column adds `DefaultFedModel.sample_rate`
-× 1 s / 60 from t = 0.
+**At fixed points and on the grid.** The script reads the slice nodes with
+`pyfds_evac.analysis` (`read_level_crossing` for K, HCl and CO,
+`read_crossings` for FED) and takes the node nearest each point or cell
+centre. It first asserts that the extinction, HCl and CO slices are at
+z = 2.0 m. Level criteria are read on the FDS frame times. The FED column is
+the dose of someone standing there from t = 0 with the engine's rule: its
+rate functions on a 1 s clock, summed at the right endpoint.
 
 **Sign visibility.** fdsvismap 0.3.3, with the three signs of
 `config.json` (*c* = 3, their positions and directions), visibility between

@@ -177,7 +177,7 @@ def pooled_diff(runs, v, fds, walkable, grid, aset):
     rsets, last = [], {}
     for seed in maps.SEEDS:
         df = maps.trajectory(maps.run_dir(runs, v, fds, seed))
-        rsets.append(maps.pedpy_rset(df, walkable, grid))
+        rsets.append(maps.module_rset(df, walkable, grid))
         last[seed] = df.frame.max() / maps.FPS
     m = maps.measures(aset, maps.pool(rsets, "max"), grid)
     seed, med = median_seed(last)

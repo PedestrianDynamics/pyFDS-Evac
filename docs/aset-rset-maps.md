@@ -145,6 +145,11 @@ fourth panel.
 - Visibility and the limit are separate inputs. Schröder et al. use
   K ≥ 0.23 1/m (`extinction_per_m=0.23`, from the vfdb smoke density limit
   of 0.1 1/m) and 45 °C; the reproduction passes those.
+- Level criteria that `AsetCriteria` does not name (CO or HCl in ppm, CO₂ in
+  per cent, a second extinction limit) come from
+  `read_level_crossing(fds_dir, quantity, limit, scale=...)`, with the FDS slice
+  quantity name and *scale* from the volume fraction to the limit's unit. It
+  returns the same per-point crossing and feeds `aset_map` like the others.
 - The study uses no FED criterion. The FED and heat FED maps **go beyond the
   paper**.
 - The FED and heat FED maps are **location-only**: the dose of someone who
@@ -228,10 +233,11 @@ Run with `SCHROEDER2020_RELEASE` set to the unpacked Zenodo release
   C = −274.7 m² s.
 - **Stage 2, rebuild.** ASET and RSET rebuilt with this module (PedPy RSET)
   against row A of `scripts/docs/schroeder2020_reproduce.py`: min DIFF
-  differs by 2 s and the failing area by −9 %, within the predeclared 10 s
-  and 10 %.
-- Only the `nearest` cell rule is checked against the release. The default
-  `exists` rule (block maximum) has no release check.
+  differs by 2 s with the `nearest` and with the default `exists` cell
+  rule; the failing cell count by −9 % (`nearest`) and −6 % (`exists`), all
+  within the predeclared 10 s and 10 %. Row A reads the nearest node at the
+  release's grid points, so this checks the rebuild, not the release's own
+  cell rule.
 
 ## Limits
 
