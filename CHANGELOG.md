@@ -24,6 +24,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `pyfds_evac.analysis` gains `plot_maps` (ASET, RSET, DIFF and the deciding
+  criterion as one matplotlib figure; #1002), `AsetMap.deciding()` (which
+  criterion sets each cell's ASET, ties joined with `+`; #1003) and
+  `load_exit_times` (#1001). The CLI writes an `agent_exits(id, exit_time_s)`
+  table into every `--output-sqlite` file, so `rset_map` can censor by agent
+  for a CLI run too; the base JuPedSim tables are unchanged.
+  `examples/aset_rset_maps.py` draws its figure with `plot_maps`.
 - A run reports an execution (`finished`, `cancelled`, `crashed`) and an
   outcome (`completed`, `incomplete`, `rejected`, `no_result`) apart (#535).
   `ResultEvent` gains `execution` and `outcome`; the manifest `outcome` block

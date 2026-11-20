@@ -1,8 +1,8 @@
 """Post-processing of finished runs and FDS output: ASET, RSET, DIFF maps.
 
 ``aset_rset`` is the array layer (numpy only), ``fds_fields`` reads the
-ASET inputs from FDS output, ``rset`` builds the RSET map with PedPy. The
-names below are the public API.
+ASET inputs from FDS output, ``rset`` builds the RSET map with PedPy and
+``plot`` draws the maps. The names below are the public API.
 """
 
 from .aset_rset import (
@@ -33,7 +33,8 @@ from .aset_rset import (
     seed_measures,
 )
 from .fds_fields import STAY_TEMPERATURE_C, AsetCriteria, read_crossings
-from .rset import grid_from_walkable, load_trajectory, rset_map
+from .plot import plot_maps
+from .rset import grid_from_walkable, load_exit_times, load_trajectory, rset_map
 
 __all__ = [
     "STAY_TEMPERATURE_C",
@@ -58,8 +59,10 @@ __all__ = [
     "first_crossing_dose",
     "first_crossing_level",
     "grid_from_walkable",
+    "load_exit_times",
     "load_trajectory",
     "measures",
+    "plot_maps",
     "pool_rset",
     "pool_seeds",
     "read_crossings",

@@ -274,6 +274,22 @@ class AsetMap:
         """Cells the fire data never made untenable by ``horizon_s``."""
         return np.asarray(np.isinf(self.time_s))
 
+    def deciding(self) -> np.ndarray:
+        """Name of the criterion that sets each cell's ASET (a str array).
+
+        The names are the keys of ``per_criterion``, the ``PointCrossing``
+        names (``K 0.3``, ``T 45``, ``FED 0.3``, ``heat FED 0.3``). Criteria
+        that tie are joined with ``+`` in ``per_criterion`` order. Cells
+        without data, or never untenable, are the empty string.
+        """
+        out = np.full(self.time_s.shape, "", dtype=object)
+        decided = np.isfinite(self.time_s)
+        for name, first in self.per_criterion.items():
+            hit = decided & (first == self.time_s)
+            joined = np.where(out == "", name, out + "+" + name)
+            out = np.where(hit, joined, out)
+        return out.astype(str)
+
 
 def aset_map(
     grid: Grid,

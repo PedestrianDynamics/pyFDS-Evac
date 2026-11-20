@@ -14,6 +14,7 @@ fields of the `ScenarioResult` that `run_scenario()` returns.
 | Trajectory SQLite | `--output-sqlite PATH` | always | JuPedSim frames at 10 frames/s |
 | Run manifest | with `--output-sqlite` | always | one JSON object, `<stem>.manifest.json` beside the SQLite |
 | `agent_scalars` table | inside the SQLite | a FED track ran | one per agent per FED update |
+| `agent_exits` table | inside the SQLite | always | one per agent that left |
 | Smoke history | `--output-smoke-history CSV` | a smoke model ran (`--fds-dir` with an extinction slice, or `--constant-extinction`) | one per agent per `--smoke-update-interval` |
 | FED history | `--output-fed-history CSV` | the gas FED or the heat FED ran | one per agent per `--smoke-update-interval` |
 | Route history | `--output-route-history CSV` | rerouting is on (the default), or an exit has `open_from_s` or `closed_after_s`; without rerouting it then holds only the rows of agents whose exit is closed: `exit_closed`, `initial` (exit not open yet) or `default_route` ([#395](https://github.com/PedestrianDynamics/pyFDS-Evac/issues/395)) | one per change of target: switch, fallback, better path, explore or wander; `initial` only when an agent without an exit is first given one, so a deck whose agents start with an exit can write a file with only its header |
@@ -52,6 +53,11 @@ frame of a FED update, and `in_fds_domain` (1 inside the FDS slices, 0 outside,
 `NULL` without FDS output; see the FED history). The JuPedSim tables are
 untouched, so JuPedSim tools still read the file. `heat_fed` sits before
 `speed`: read the columns by name, not by position.
+
+Every file also holds `agent_exits(id, exit_time_s)`: the time each agent
+that left did so (`ScenarioResult.exit_times`). An agent still inside at the
+end has no row. `pyfds_evac.analysis.load_exit_times` reads it for the RSET
+map ([ASET/RSET maps](aset-rset-maps.md)).
 
 ## Run manifest
 

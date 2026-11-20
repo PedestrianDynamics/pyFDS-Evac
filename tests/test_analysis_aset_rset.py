@@ -200,6 +200,22 @@ def test_open_cells_stay_open_and_criteria_are_cut_at_the_shorter_horizon():
     assert aset_map(grid, [long, other]).time_s[0, 0] == 40.0  # the earliest wins
 
 
+def test_deciding_names_the_earliest_criterion_and_joins_ties():
+    grid = _grid(4, 1)
+    x, y = np.array([0.5, 1.5, 2.5, 3.5]), np.array([0.5] * 4)
+    smoke = PointCrossing("K 0.3", x, y, np.array([10.0, 30.0, 20.0, INF]), 100.0)
+    heat = PointCrossing("T 45", x, y, np.array([15.0, 25.0, 20.0, INF]), 100.0)
+    aset = aset_map(grid, [smoke, heat])
+    assert aset.deciding().tolist() == [["K 0.3", "T 45", "K 0.3+T 45", ""]]
+
+
+def test_deciding_is_empty_where_there_is_no_data():
+    grid = _grid(2, 1, area=np.array([[1.0, 0.0]]))
+    x, y = np.array([0.5, 1.5]), np.array([0.5, 0.5])
+    aset = aset_map(grid, [PointCrossing("FED 0.3", x, y, np.array([5.0, 5.0]), 50.0)])
+    assert aset.deciding().tolist() == [["FED 0.3", ""]]
+
+
 def test_aset_map_needs_a_criterion():
     with pytest.raises(ValueError, match="at least one"):
         aset_map(_grid(), [])

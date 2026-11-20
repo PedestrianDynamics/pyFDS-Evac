@@ -14,7 +14,7 @@ import sqlite3
 import sys
 
 from pyfds_evac.config.frontend import stop_reason_phrase
-from pyfds_evac.core.agent_scalars import write_agent_scalars
+from pyfds_evac.core.agent_scalars import write_agent_exits, write_agent_scalars
 from pyfds_evac.core.exposure_summary import (
     OUTCOMES,
     ExposureSummaryConfig,
@@ -534,6 +534,7 @@ def apply_outputs(result, scenario, opts, log=print) -> list[str]:
         if manifest_path is not None:
             artifacts.append(f"Run manifest: {manifest_path}")
         _maybe_write_agent_scalars(output_path, result.fed_history)
+        write_agent_exits(output_path, getattr(result, "exit_times", None) or {})
         write_agent_distributions(output_path, scenario, result)
 
     if getattr(opts, "cleanup", False):
