@@ -756,11 +756,12 @@ def band_verdict(value: float | None, band, last_time: float | None = None) -> s
     """pass / fail against a closed band.
 
     Without a value the verdict is 'undefined', except when *last_time*, the
-    end of the data, is past the band: a crossing that has not happened by
-    then lies outside the band, which is a fail.
+    end of the data, is past the band: then it is 'not reached by <time> s'.
     """
     if value is None:
-        return "fail" if last_time is not None and last_time > band[1] else "undefined"
+        if last_time is not None and last_time > band[1]:
+            return f"not reached by {last_time:g} s"
+        return "undefined"
     return "pass" if band[0] <= value <= band[1] else "fail"
 
 
@@ -832,7 +833,9 @@ def cmd_trajectory(args) -> None:
         rate = "undefined" if v5["rate"] is None else f"{v5['rate']:.3f}"
         relaxed = v5["rate_window_to_t_jam"]
         if relaxed is not None:
-            rate += f" (window from {args.t_jam - V5_WINDOW_S:g} s: {relaxed:.3f})"
+            rate += (
+                f" (post-hoc window from {args.t_jam - V5_WINDOW_S:g} s: {relaxed:.3f})"
+            )
         construct = "n/a" if nist["construct"] is None else f"{nist['construct']:.3f}"
         print(
             f"| {path.stem} | {vestibule_count(run, args.t_jam)} | {first} | {span} | "

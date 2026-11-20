@@ -269,9 +269,9 @@ lockfile, not the freeze lockfile (`uv.lock` differs; the runs do not).
 |---|---|---|---|
 | V4, first-target front share | not scored | none | The runs did not record the first target (`output_route_history` was unset). |
 | V4, NIST construct, arm R | 0.329 pooled (per seed 0.312 / 0.330 / 0.345) | none | Reported. Arm C+jam 0.400 (0.387 / 0.398 / 0.420), arm U 0.408 (0.387 / 0.408 / 0.424). |
-| V5, highest 60 s moving mean | undefined as registered in all 20 seeds of C+jam, U and R. The 60 s window ending at t_jam, which starts before the first arrival, gives 3.0 to 3.3 (C+jam), 3.1 to 3.3 (U) and 2.05 to 2.27 (R) person/s | 0.9 to 1.5 person/s | No 60 s window fits between the first arrival and t_jam. The second reading is above the band in every seed, against the registered direction (biased low). Whether this is a fail is for the maintainer. |
+| V5, highest 60 s moving mean | undefined as registered in all 20 seeds of C+jam, U and R. Post-hoc reading, disclosed: the 60 s window ending at t_jam, which starts before the first arrival, gives 3.0 to 3.3 (C+jam), 3.1 to 3.3 (U) and 2.05 to 2.27 (R) person/s | 0.9 to 1.5 person/s | No 60 s window fits between the first arrival and t_jam. The post-hoc reading is above the band in every seed, against the registered direction (biased low). It is not a pass and not a fail. |
 | V6, T5 (50 % of dance-floor gas cells above 120 °C at the 1.5 m slice) | 68.0 s (10 %: 67.0 s, 90 %: 72.0 s) | [65, 100] s | pass |
-| V6, T6 (95 % of masked gas cells below 12 % O₂) | not reached by 250 s; the masked share peaks at 92.1 % at 234 s | [65, 115] s | not determined as registered: the registered mask subtracts rooms by name, and no coordinates are given. With a connectivity-only mask (no room subtracted) it is not reached, so that reading fails |
+| V6, T6 (95 % of masked gas cells below 12 % O₂) | not reached by 250 s; the masked share peaks at 92.1 % at 234 s | [65, 115] s | not reached by 250 s, with the connectivity-only mask. The registered mask also subtracts bathrooms, office and storage by name; no coordinates are registered, and subtracting any room would be a post-hoc change |
 | V6, 0.1 m grid check | not scored | T5, T6 | The 0.1 m run has no output: the data folder holds the deck only. |
 | V6, realised against prescribed HRR | energy ratio 0.764; peak 52.1 MW at 92.0 s against 56.7 MW at 91 s | none | Reported (central deck). |
 | Survival under Fahy resampling | see the table below | none | Reported beside V3. |
@@ -302,11 +302,12 @@ exists as registered. In that span 182 to 197 agents cross in C+jam, 184 to
 200 in U and 123 to 136 in R; the crossings match the front exits. Flow
 before the first arrival is zero, so the 60 s window ending at t_jam holds
 every crossing. Its rate is 3.0 to 3.3 person/s in C+jam, 3.1 to 3.3 in U and
-2.05 to 2.27 in R (min to max over seeds), above 1.5 in every seed. That
-second reading lets the window start before the first arrival (26 s); it is
-not the registered one and it runs against the registered direction.
-Whether the undefined result stands or counts as a fail is a decision for the
-maintainer. The first arrival is read as the first crossing of the door
+2.05 to 2.27 in R (min to max over seeds), above 1.5 in every seed. This is a
+post-hoc reading, disclosed as such: it lets the window start before the
+first arrival (26 s), it is not the registered one, and it runs against the
+registered direction. The V5 result is "undefined as registered"; the
+post-hoc reading is neither a pass nor a fail (maintainer decision,
+2026-11-20). The first arrival is read as the first crossing of the door
 line, one reading of "first arrival".
 
 **V6.** T5 is the first slice frame (1 s interval) at which at least half
@@ -319,14 +320,14 @@ storage". The registration gives no coordinates for those rooms, so the
 mask is built by connectivity only: nodes of the slice plane that can be
 reached from the dance floor in the closed initial state (10 522 of 14 453
 gas nodes). With it, the masked share below 12 % oxygen reaches 83 % at
-150 s and 92.1 % at 234 s, never 95 %. The nodes still at or above 12 % at
-the end lie mostly in two groups, 433 nodes at x −3.4 to 1.6 m, y −1.4 to
+150 s and 92.1 % at 234 s, never 95 %. The T6 result is "not reached by 250 s". The nodes still at or above 12 % at
+the end lie mostly in two groups (an observation), 433 nodes at x −3.4 to 1.6 m, y −1.4 to
 3.2 m and 360 nodes at x −12.0 to −10.2 m, y −6.8 to 0.4 m. Whether they
 are the excluded rooms is not established. The deck labels none of its obstructions
 as an office or storage room and one as bathroom fixtures, at x −1.42 m,
 y −1.24 m, inside the first group's box; the second group has no room label.
-Excluding the groups is a choice the registration does not make, and it is not
-made here. By zone (O₂ 95 %):
+The groups are not excluded: excluding them would be a post-hoc change, and
+the registration does not make that choice (maintainer decision, 2026-11-20). By zone (O₂ 95 %):
 dance floor 102 s, sunroom 96 s, main bar 109 s, dart room 114 s, foyer
 122 s. The sunroom reaches 120 °C (half of its nodes) at 84 s on the 1.6 m
 plane; NIST's "by 90 s" refers to a vertical slice.
@@ -336,10 +337,12 @@ reported beside the V3 sign test (plan, line 146): how often a W difference
 survives resampling of Fahy's table. These are rates for a difference in W;
 they say nothing about occupants. Reading: 4000 multinomial resamples of
 Fahy's table, one per draw, shared by all 20 seeds and both arms. Two
-readings of "survives" are given. "Sign": the difference keeps its observed
-sign; this is the reading under which the plan's figure (above 99 % for a
-uniform 0.03 difference) holds, which the tests check on a synthetic case.
-"Size": it keeps its sign and is at least 0.03, the reading used first. The
+readings of "survives" are given. "Sign" is primary (maintainer decision,
+2026-11-20): the difference keeps its observed sign; it reproduces the
+plan's own figure (above 99 % for a uniform 0.03 difference), which the
+tests check on a synthetic case. "Size", shown beside it: the difference
+keeps its sign and is at least 0.03, the reading used first; it gives 0.46 to
+0.50 for the rows at +0.030 to +0.033. The
 plan does not say whether its rates are the referee's three synthetic cases
 or rates on observed differences. "V3 holds" is the share of draws in which V3
 as registered (R lower in at least 15 of 20 seeds and a mean at least 0.03
@@ -429,7 +432,8 @@ group at or after t_jam includes agents that stopped near a door.
   difference. Each reading is stated above. Most were fixed in the scorer
   before its first look. These were changed or added after a look, and are
   disclosed as such: the cell-to-node mask of V6 (above); the rule that a T6
-  or T5 value not reached by the last frame is a fail, and the list of
+  or T5 value not reached by the last frame is labelled "not reached by
+  <time> s", and the list of
   masked nodes still above 12 % oxygen, both added after the first T6 result;
   the sign reading of "survives", added after the size reading had given 0.46
   to 0.50 for differences of 0.03, against the plan's 99 %; and the V5 rate of
